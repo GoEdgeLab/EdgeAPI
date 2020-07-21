@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package dns;
+
+option go_package = "./dns";
+
+service Service {
+
+}

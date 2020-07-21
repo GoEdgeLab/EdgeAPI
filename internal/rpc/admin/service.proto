@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package admin;
+
+option go_package = "./admin";
+
+service Service {
+	rpc login (LoginRequest) returns (LoginResponse) {
+	}
+}
+
+message LoginRequest {
+
+}
+
+message LoginResponse {
+
+}

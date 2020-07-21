@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package node;
+
+option go_package = "./node";
+
+service Service {
+	rpc node (NodeRequest) returns (NodeResponse) {
+
+	}
+}
+
+message NodeRequest {
+
+}
+
+message NodeResponse {
+
+}
