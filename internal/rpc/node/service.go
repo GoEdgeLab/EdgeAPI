@@ -8,7 +8,9 @@ import (
 type Service struct {
 }
 
-func (this *Service) Node(context.Context, *NodeRequest) (*NodeResponse, error) {
+func (this *Service) Config(ctx context.Context, req *ConfigRequest) (*ConfigResponse, error) {
 	logs.Println("you called me")
-	return &NodeResponse{}, nil
+	return &ConfigResponse{
+		Id: req.NodeId,
+	}, nil
 }

@@ -5,15 +5,15 @@ package node;
 option go_package = "./node";
 
 service Service {
-	rpc node (NodeRequest) returns (NodeResponse) {
+	rpc config (ConfigRequest) returns (ConfigResponse) {
 
 	}
 }
 
-message NodeRequest {
-
+message ConfigRequest {
+	string nodeId = 1;
 }
 
-message NodeResponse {
-
+message ConfigResponse {
+	string id = 1;
 }

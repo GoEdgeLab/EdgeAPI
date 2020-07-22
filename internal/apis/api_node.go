@@ -3,6 +3,7 @@ package apis
 import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/admin"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/log"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/monitor"
@@ -10,6 +11,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/provider"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/stat"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/user"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/logs"
 	"google.golang.org/grpc"
 	"net"
@@ -36,6 +38,9 @@ func (this *APINode) Start() {
 	}
 	sharedAPIConfig = config
 
+	// 设置rlimit
+	_ = utils.SetRLimit(1024 * 1024)
+
 	// 监听RPC服务
 	logs.Println("[API]start rpc: " + config.RPC.Listen)
 	err = this.listenRPC()
@@ -59,6 +64,7 @@ func (this *APINode) listenRPC() error {
 	provider.RegisterServiceServer(rpcServer, &provider.Service{})
 	stat.RegisterServiceServer(rpcServer, &stat.Service{})
 	user.RegisterServiceServer(rpcServer, &user.Service{})
+	admin.RegisterServiceServer(rpcServer, &admin.Service{})
 	err = rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())

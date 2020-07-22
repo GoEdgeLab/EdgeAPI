@@ -1,0 +1,30 @@
+package models
+
+//
+type NodeGrant struct {
+	Id          uint32 `field:"id"`          // ID
+	Name        string `field:"name"`        // 名称
+	Username    string `field:"username"`    // 用户名
+	Password    string `field:"password"`    // 密码
+	Su          uint8  `field:"su"`          // 是否需要su
+	PrivateKey  string `field:"privateKey"`  // 密钥
+	Description string `field:"description"` // 备注
+	NodeId      uint32 `field:"nodeId"`      // 专有节点
+	State       uint8  `field:"state"`       // 状态
+}
+
+type NodeGrantOperator struct {
+	Id          interface{} // ID
+	Name        interface{} // 名称
+	Username    interface{} // 用户名
+	Password    interface{} // 密码
+	Su          interface{} // 是否需要su
+	PrivateKey  interface{} // 密钥
+	Description interface{} // 备注
+	NodeId      interface{} // 专有节点
+	State       interface{} // 状态
+}
+
+func NewNodeGrantOperator() *NodeGrantOperator {
+	return &NodeGrantOperator{}
+}

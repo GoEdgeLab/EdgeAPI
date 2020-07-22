@@ -29,14 +29,16 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type NodeRequest struct {
+type ConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	NodeId string `protobuf:"bytes,1,opt,name=nodeId,proto3" json:"nodeId,omitempty"`
 }
 
-func (x *NodeRequest) Reset() {
-	*x = NodeRequest{}
+func (x *ConfigRequest) Reset() {
+	*x = ConfigRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_node_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -44,13 +46,13 @@ func (x *NodeRequest) Reset() {
 	}
 }
 
-func (x *NodeRequest) String() string {
+func (x *ConfigRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NodeRequest) ProtoMessage() {}
+func (*ConfigRequest) ProtoMessage() {}
 
-func (x *NodeRequest) ProtoReflect() protoreflect.Message {
+func (x *ConfigRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_node_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -62,19 +64,28 @@ func (x *NodeRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NodeRequest.ProtoReflect.Descriptor instead.
-func (*NodeRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ConfigRequest.ProtoReflect.Descriptor instead.
+func (*ConfigRequest) Descriptor() ([]byte, []int) {
 	return file_node_service_proto_rawDescGZIP(), []int{0}
 }
 
-type NodeResponse struct {
+func (x *ConfigRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+type ConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *NodeResponse) Reset() {
-	*x = NodeResponse{}
+func (x *ConfigResponse) Reset() {
+	*x = ConfigResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_node_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -82,13 +93,13 @@ func (x *NodeResponse) Reset() {
 	}
 }
 
-func (x *NodeResponse) String() string {
+func (x *ConfigResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NodeResponse) ProtoMessage() {}
+func (*ConfigResponse) ProtoMessage() {}
 
-func (x *NodeResponse) ProtoReflect() protoreflect.Message {
+func (x *ConfigResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_node_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -100,23 +111,33 @@ func (x *NodeResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NodeResponse.ProtoReflect.Descriptor instead.
-func (*NodeResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ConfigResponse.ProtoReflect.Descriptor instead.
+func (*ConfigResponse) Descriptor() ([]byte, []int) {
 	return file_node_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ConfigResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 var File_node_service_proto protoreflect.FileDescriptor
 
 var file_node_service_proto_rawDesc = []byte{
 	0x0a, 0x12, 0x6e, 0x6f, 0x64, 0x65, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x22, 0x0d, 0x0a, 0x0b, 0x4e, 0x6f,
-	0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x0e, 0x0a, 0x0c, 0x4e, 0x6f, 0x64,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x3a, 0x0a, 0x07, 0x53, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x12, 0x2f, 0x0a, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x12, 0x11, 0x2e, 0x6e,
-	0x6f, 0x64, 0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x12, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x08, 0x5a, 0x06, 0x2e, 0x2f, 0x6e, 0x6f, 0x64, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x22, 0x27, 0x0a, 0x0d, 0x43, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x6e,
+	0x6f, 0x64, 0x65, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6e, 0x6f, 0x64,
+	0x65, 0x49, 0x64, 0x22, 0x20, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x02, 0x69, 0x64, 0x32, 0x40, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x12, 0x35, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x13, 0x2e, 0x6e, 0x6f, 0x64,
+	0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x14, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x08, 0x5a, 0x06, 0x2e, 0x2f, 0x6e, 0x6f, 0x64,
+	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -133,12 +154,12 @@ func file_node_service_proto_rawDescGZIP() []byte {
 
 var file_node_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_node_service_proto_goTypes = []interface{}{
-	(*NodeRequest)(nil),  // 0: node.NodeRequest
-	(*NodeResponse)(nil), // 1: node.NodeResponse
+	(*ConfigRequest)(nil),  // 0: node.ConfigRequest
+	(*ConfigResponse)(nil), // 1: node.ConfigResponse
 }
 var file_node_service_proto_depIdxs = []int32{
-	0, // 0: node.Service.node:input_type -> node.NodeRequest
-	1, // 1: node.Service.node:output_type -> node.NodeResponse
+	0, // 0: node.Service.config:input_type -> node.ConfigRequest
+	1, // 1: node.Service.config:output_type -> node.ConfigResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -153,7 +174,7 @@ func file_node_service_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_node_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NodeRequest); i {
+			switch v := v.(*ConfigRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -165,7 +186,7 @@ func file_node_service_proto_init() {
 			}
 		}
 		file_node_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NodeResponse); i {
+			switch v := v.(*ConfigResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -209,7 +230,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ServiceClient interface {
-	Node(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*NodeResponse, error)
+	Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error)
 }
 
 type serviceClient struct {
@@ -220,9 +241,9 @@ func NewServiceClient(cc grpc.ClientConnInterface) ServiceClient {
 	return &serviceClient{cc}
 }
 
-func (c *serviceClient) Node(ctx context.Context, in *NodeRequest, opts ...grpc.CallOption) (*NodeResponse, error) {
-	out := new(NodeResponse)
-	err := c.cc.Invoke(ctx, "/node.Service/node", in, out, opts...)
+func (c *serviceClient) Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error) {
+	out := new(ConfigResponse)
+	err := c.cc.Invoke(ctx, "/node.Service/config", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -231,35 +252,35 @@ func (c *serviceClient) Node(ctx context.Context, in *NodeRequest, opts ...grpc.
 
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
-	Node(context.Context, *NodeRequest) (*NodeResponse, error)
+	Config(context.Context, *ConfigRequest) (*ConfigResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedServiceServer struct {
 }
 
-func (*UnimplementedServiceServer) Node(context.Context, *NodeRequest) (*NodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Node not implemented")
+func (*UnimplementedServiceServer) Config(context.Context, *ConfigRequest) (*ConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Config not implemented")
 }
 
 func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
 	s.RegisterService(&_Service_serviceDesc, srv)
 }
 
-func _Service_Node_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NodeRequest)
+func _Service_Config_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServiceServer).Node(ctx, in)
+		return srv.(ServiceServer).Config(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/node.Service/Node",
+		FullMethod: "/node.Service/Config",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).Node(ctx, req.(*NodeRequest))
+		return srv.(ServiceServer).Config(ctx, req.(*ConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -269,8 +290,8 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "node",
-			Handler:    _Service_Node_Handler,
+			MethodName: "config",
+			Handler:    _Service_Config_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

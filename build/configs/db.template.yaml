@@ -1,0 +1,11 @@
+default:
+  db: "dev"
+  prefix: ""
+
+dbs:
+  dev:
+    driver: "mysql"
+    dsn: "root:123456@tcp(127.0.0.1:3306)/db_shield?charset=utf8mb4&timeout=30s"
+    prefix: "shield"
+    models:
+      package: internal/web/models
