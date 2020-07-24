@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 
-function proto_compile() {
-	protoc --go_out=plugins=grpc:../internal/rpc --proto_path=../internal/rpc ../internal/rpc/${1}/*.proto
-}
+ADMIN_PROJECT="../../EdgeAdmin"
 
-proto_compile "admin"
-proto_compile "dns"
-proto_compile "log"
-proto_compile "provider"
-proto_compile "stat"
-proto_compile "user"
-proto_compile "monitor"
-proto_compile "node"
+protoc --go_out=plugins=grpc:../internal/rpc --proto_path=../internal/rpc/protos ../internal/rpc/protos/*.proto
+
+#admin
+cp ../internal/rpc/protos/service_admin.proto ${ADMIN_PROJECT}/internal/rpc/protos/
+cp ../internal/rpc/pb/service_admin.pb.go ${ADMIN_PROJECT}/internal/rpc/pb/
+cp ../internal/rpc/pb/model_*.go ${ADMIN_PROJECT}/internal/rpc/pb/
+

@@ -55,7 +55,7 @@ func (this *NodeClusterDAO) FindEnabledNodeCluster(id uint32) (*NodeCluster, err
 }
 
 // 根据主键查找名称
-func (this *NodeClusterDAO) FindNodeClusterName(id uint32) (string, error) {
+func (this *NodeClusterDAO) FindNodeClusterName(id int64) (string, error) {
 	return this.Query().
 		Pk(id).
 		Result("name").

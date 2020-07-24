@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pb";
+
+service NodeService {
+	rpc config (ConfigRequest) returns (ConfigResponse) {
+
+	}
+}
+
+message ConfigRequest {
+	string nodeId = 1;
+}
+
+message ConfigResponse {
+	string id = 1;
+}

@@ -1,0 +1,10 @@
+syntax = "proto3";
+option go_package = "./pb";
+
+package pb;
+
+message Cluster {
+	int64 id = 1;
+	string name = 2;
+	int64 createdAt = 3;
+}

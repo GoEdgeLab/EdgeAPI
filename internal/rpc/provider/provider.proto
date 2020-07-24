@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package provider;
-
-option go_package = "./provider";
-
-service Service {
-
-}

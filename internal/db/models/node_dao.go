@@ -4,6 +4,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/rands"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -61,4 +63,49 @@ func (this *NodeDAO) FindNodeName(id uint32) (string, error) {
 		Result("name").
 		FindCol("")
 	return name.(string), err
+}
+
+// 创建节点
+func (this *NodeDAO) CreateNode(name string, clusterId int) (nodeId int, err error) {
+	op := NewNodeOperator()
+	op.Name = name
+	op.NodeId = rands.HexString(32)
+	op.Secret = rands.String(32)
+	op.ClusterId = clusterId
+	op.State = NodeStateEnabled
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+
+	return types.Int(op.Id), nil
+}
+
+// 修改节点
+func (this *NodeDAO) UpdateNode(nodeId int, name string, clusterId int) error {
+	op := NewNodeOperator()
+	op.Id = nodeId
+	op.Name = name
+	op.ClusterId = clusterId
+	_, err := this.Save(op)
+	return err
+}
+
+// 计算所有节点数量
+func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Count()
+}
+
+// 列出单页节点
+func (this *NodeDAO) ListEnabledNodes(offset int64, size int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Offset(int(offset)).
+		Limit(int(size)).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
 }

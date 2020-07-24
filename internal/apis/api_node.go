@@ -3,14 +3,8 @@ package apis
 import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/admin"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/dns"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/log"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/monitor"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/node"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/provider"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/stat"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/user"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/logs"
 	"google.golang.org/grpc"
@@ -57,14 +51,14 @@ func (this *APINode) listenRPC() error {
 		return errors.New("[API]listen rpc failed: " + err.Error())
 	}
 	rpcServer := grpc.NewServer()
-	dns.RegisterServiceServer(rpcServer, &dns.Service{})
-	log.RegisterServiceServer(rpcServer, &log.Service{})
-	monitor.RegisterServiceServer(rpcServer, &monitor.Service{})
-	node.RegisterServiceServer(rpcServer, &node.Service{})
-	provider.RegisterServiceServer(rpcServer, &provider.Service{})
-	stat.RegisterServiceServer(rpcServer, &stat.Service{})
-	user.RegisterServiceServer(rpcServer, &user.Service{})
-	admin.RegisterServiceServer(rpcServer, &admin.Service{})
+	pb.RegisterDnsServiceServer(rpcServer, &services.DNSService{})
+	pb.RegisterLogServiceServer(rpcServer, &services.LogService{})
+	pb.RegisterMonitorServiceServer(rpcServer, &services.MonitorService{})
+	pb.RegisterNodeServiceServer(rpcServer, &services.NodeService{})
+	pb.RegisterProviderServiceServer(rpcServer, &services.ProviderService{})
+	pb.RegisterStatServiceServer(rpcServer, &services.StatService{})
+	pb.RegisterUserServiceServer(rpcServer, &services.UserService{})
+	pb.RegisterAdminServiceServer(rpcServer, &services.AdminService{})
 	err = rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())

@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package monitor;
-
-option go_package = "./monitor";
-
-service Service {
-
-}

@@ -3,8 +3,8 @@ package tests
 import (
 	"context"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/admin"
-	nodepb "github.com/TeaOSLab/EdgeAPI/internal/rpc/node"
+	pb2 "github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	pb "github.com/TeaOSLab/EdgeAPI/internal/tests/helloworld"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -42,8 +42,7 @@ func TestTCPServer(t *testing.T) {
 
 	s := grpc.NewServer()
 	pb.RegisterGreeterServer(s, &server{})
-	nodepb.RegisterServiceServer(s, &nodepb.Service{})
-	admin.RegisterServiceServer(s, &admin.Service{})
+	pb2.RegisterNodeServiceServer(s, &services.NodeService{})
 
 	err = s.Serve(listener)
 	if err != nil {
@@ -85,13 +84,13 @@ func TestTCPClient_Node(t *testing.T) {
 		_ = conn.Close()
 	}()
 
-	c := nodepb.NewServiceClient(conn)
+	c := pb2.NewNodeServiceClient(conn)
 
 	before := time.Now()
 
 	ctx := context.Background()
 	ctx = metadata.AppendToOutgoingContext(ctx, "name", "liu", "age", "20")
-	reply, err := c.Config(ctx, &nodepb.ConfigRequest{
+	reply, err := c.Config(ctx, &pb2.ConfigRequest{
 	})
 	if err != nil {
 		t.Fatal(err)

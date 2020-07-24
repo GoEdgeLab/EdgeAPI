@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "./pb";
+
+package pb;
+
+import "model_cluster.proto";
+
+message Node {
+	int64 id = 1;
+	string name = 2;
+
+	Cluster cluster = 32;
+}
