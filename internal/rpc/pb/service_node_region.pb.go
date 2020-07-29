@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.25.0
 // 	protoc        v3.12.3
-// source: service_log.proto
+// source: service_node_region.proto
 
 package pb
 
@@ -24,16 +24,16 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-var File_service_log_proto protoreflect.FileDescriptor
+var File_service_node_region_proto protoreflect.FileDescriptor
 
-var file_service_log_proto_rawDesc = []byte{
-	0x0a, 0x11, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6c, 0x6f, 0x67, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_service_node_region_proto_rawDesc = []byte{
+	0x0a, 0x19, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6e, 0x6f, 0x64, 0x65, 0x5f, 0x72,
+	0x65, 0x67, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x42,
+	0x06, 0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
-var file_service_log_proto_goTypes = []interface{}{}
-var file_service_log_proto_depIdxs = []int32{
+var file_service_node_region_proto_goTypes = []interface{}{}
+var file_service_node_region_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -41,26 +41,26 @@ var file_service_log_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_service_log_proto_init() }
-func file_service_log_proto_init() {
-	if File_service_log_proto != nil {
+func init() { file_service_node_region_proto_init() }
+func file_service_node_region_proto_init() {
+	if File_service_node_region_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_service_log_proto_rawDesc,
+			RawDescriptor: file_service_node_region_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_service_log_proto_goTypes,
-		DependencyIndexes: file_service_log_proto_depIdxs,
+		GoTypes:           file_service_node_region_proto_goTypes,
+		DependencyIndexes: file_service_node_region_proto_depIdxs,
 	}.Build()
-	File_service_log_proto = out.File
-	file_service_log_proto_rawDesc = nil
-	file_service_log_proto_goTypes = nil
-	file_service_log_proto_depIdxs = nil
+	File_service_node_region_proto = out.File
+	file_service_node_region_proto_rawDesc = nil
+	file_service_node_region_proto_goTypes = nil
+	file_service_node_region_proto_depIdxs = nil
 }

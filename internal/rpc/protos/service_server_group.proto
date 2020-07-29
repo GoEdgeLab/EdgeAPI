@@ -1,9 +1,5 @@
 syntax = "proto3";
+option go_package = "./pb";
 
 package pb;
 
-option go_package = "./pb";
-
-service StatService {
-
-}

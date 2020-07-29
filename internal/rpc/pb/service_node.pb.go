@@ -29,16 +29,18 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type ConfigRequest struct {
+// 创建节点
+type CreateNodeRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NodeId string `protobuf:"bytes,1,opt,name=nodeId,proto3" json:"nodeId,omitempty"`
+	Name      string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	ClusterId int64  `protobuf:"varint,2,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
 }
 
-func (x *ConfigRequest) Reset() {
-	*x = ConfigRequest{}
+func (x *CreateNodeRequest) Reset() {
+	*x = CreateNodeRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_node_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -46,13 +48,13 @@ func (x *ConfigRequest) Reset() {
 	}
 }
 
-func (x *ConfigRequest) String() string {
+func (x *CreateNodeRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigRequest) ProtoMessage() {}
+func (*CreateNodeRequest) ProtoMessage() {}
 
-func (x *ConfigRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateNodeRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_node_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -64,28 +66,35 @@ func (x *ConfigRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigRequest.ProtoReflect.Descriptor instead.
-func (*ConfigRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateNodeRequest.ProtoReflect.Descriptor instead.
+func (*CreateNodeRequest) Descriptor() ([]byte, []int) {
 	return file_service_node_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConfigRequest) GetNodeId() string {
+func (x *CreateNodeRequest) GetName() string {
 	if x != nil {
-		return x.NodeId
+		return x.Name
 	}
 	return ""
 }
 
-type ConfigResponse struct {
+func (x *CreateNodeRequest) GetClusterId() int64 {
+	if x != nil {
+		return x.ClusterId
+	}
+	return 0
+}
+
+type CreateNodeResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	NodeId int64 `protobuf:"varint,1,opt,name=nodeId,proto3" json:"nodeId,omitempty"`
 }
 
-func (x *ConfigResponse) Reset() {
-	*x = ConfigResponse{}
+func (x *CreateNodeResponse) Reset() {
+	*x = CreateNodeResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_node_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -93,13 +102,13 @@ func (x *ConfigResponse) Reset() {
 	}
 }
 
-func (x *ConfigResponse) String() string {
+func (x *CreateNodeResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConfigResponse) ProtoMessage() {}
+func (*CreateNodeResponse) ProtoMessage() {}
 
-func (x *ConfigResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateNodeResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_node_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -111,33 +120,250 @@ func (x *ConfigResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConfigResponse.ProtoReflect.Descriptor instead.
-func (*ConfigResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateNodeResponse.ProtoReflect.Descriptor instead.
+func (*CreateNodeResponse) Descriptor() ([]byte, []int) {
 	return file_service_node_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ConfigResponse) GetId() string {
+func (x *CreateNodeResponse) GetNodeId() int64 {
 	if x != nil {
-		return x.Id
+		return x.NodeId
 	}
-	return ""
+	return 0
+}
+
+// 节点数量
+type CountAllEnabledNodesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *CountAllEnabledNodesRequest) Reset() {
+	*x = CountAllEnabledNodesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_node_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CountAllEnabledNodesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountAllEnabledNodesRequest) ProtoMessage() {}
+
+func (x *CountAllEnabledNodesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_node_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountAllEnabledNodesRequest.ProtoReflect.Descriptor instead.
+func (*CountAllEnabledNodesRequest) Descriptor() ([]byte, []int) {
+	return file_service_node_proto_rawDescGZIP(), []int{2}
+}
+
+type CountAllEnabledNodesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+}
+
+func (x *CountAllEnabledNodesResponse) Reset() {
+	*x = CountAllEnabledNodesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_node_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CountAllEnabledNodesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountAllEnabledNodesResponse) ProtoMessage() {}
+
+func (x *CountAllEnabledNodesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_node_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountAllEnabledNodesResponse.ProtoReflect.Descriptor instead.
+func (*CountAllEnabledNodesResponse) Descriptor() ([]byte, []int) {
+	return file_service_node_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CountAllEnabledNodesResponse) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// 列出单页节点
+type ListEnabledNodesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
+	Size   int64 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+}
+
+func (x *ListEnabledNodesRequest) Reset() {
+	*x = ListEnabledNodesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_node_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListEnabledNodesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnabledNodesRequest) ProtoMessage() {}
+
+func (x *ListEnabledNodesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_node_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnabledNodesRequest.ProtoReflect.Descriptor instead.
+func (*ListEnabledNodesRequest) Descriptor() ([]byte, []int) {
+	return file_service_node_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListEnabledNodesRequest) GetOffset() int64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *ListEnabledNodesRequest) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+type ListEnabledNodesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Nodes []*Node `protobuf:"bytes,1,rep,name=nodes,proto3" json:"nodes,omitempty"`
+}
+
+func (x *ListEnabledNodesResponse) Reset() {
+	*x = ListEnabledNodesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_node_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListEnabledNodesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnabledNodesResponse) ProtoMessage() {}
+
+func (x *ListEnabledNodesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_node_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnabledNodesResponse.ProtoReflect.Descriptor instead.
+func (*ListEnabledNodesResponse) Descriptor() ([]byte, []int) {
+	return file_service_node_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ListEnabledNodesResponse) GetNodes() []*Node {
+	if x != nil {
+		return x.Nodes
+	}
+	return nil
 }
 
 var File_service_node_proto protoreflect.FileDescriptor
 
 var file_service_node_proto_rawDesc = []byte{
 	0x0a, 0x12, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x22, 0x27, 0x0a, 0x0d, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x6e, 0x6f, 0x64,
-	0x65, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49,
-	0x64, 0x22, 0x20, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x02, 0x69, 0x64, 0x32, 0x40, 0x0a, 0x0b, 0x4e, 0x6f, 0x64, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69,
-	0x63, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x11, 0x2e, 0x70,
-	0x62, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x12, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x1a, 0x10, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x5f,
+	0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x45, 0x0a, 0x11, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49,
+	0x64, 0x22, 0x2c, 0x0a, 0x12, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49, 0x64, 0x22,
+	0x1d, 0x0a, 0x1b, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c,
+	0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x34,
+	0x0a, 0x1c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65,
+	0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14,
+	0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x22, 0x45, 0x0a, 0x17, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62,
+	0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x22, 0x3a, 0x0a, 0x18, 0x4c,
+	0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x05, 0x6e, 0x6f, 0x64, 0x65, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x08, 0x2e, 0x70, 0x62, 0x2e, 0x4e, 0x6f, 0x64, 0x65,
+	0x52, 0x05, 0x6e, 0x6f, 0x64, 0x65, 0x73, 0x32, 0xf4, 0x01, 0x0a, 0x0b, 0x4e, 0x6f, 0x64, 0x65,
+	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x15, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x70,
+	0x62, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x59, 0x0a, 0x14, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c,
+	0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x12, 0x1f, 0x2e, 0x70,
+	0x62, 0x2e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65,
+	0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e,
+	0x70, 0x62, 0x2e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c,
+	0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x4d, 0x0a, 0x10, 0x6c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f,
+	0x64, 0x65, 0x73, 0x12, 0x1b, 0x2e, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61,
+	0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1c, 0x2e, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65,
+	0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x06,
+	0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -152,19 +378,29 @@ func file_service_node_proto_rawDescGZIP() []byte {
 	return file_service_node_proto_rawDescData
 }
 
-var file_service_node_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_service_node_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_service_node_proto_goTypes = []interface{}{
-	(*ConfigRequest)(nil),  // 0: pb.ConfigRequest
-	(*ConfigResponse)(nil), // 1: pb.ConfigResponse
+	(*CreateNodeRequest)(nil),            // 0: pb.CreateNodeRequest
+	(*CreateNodeResponse)(nil),           // 1: pb.CreateNodeResponse
+	(*CountAllEnabledNodesRequest)(nil),  // 2: pb.CountAllEnabledNodesRequest
+	(*CountAllEnabledNodesResponse)(nil), // 3: pb.CountAllEnabledNodesResponse
+	(*ListEnabledNodesRequest)(nil),      // 4: pb.ListEnabledNodesRequest
+	(*ListEnabledNodesResponse)(nil),     // 5: pb.ListEnabledNodesResponse
+	(*Node)(nil),                         // 6: pb.Node
 }
 var file_service_node_proto_depIdxs = []int32{
-	0, // 0: pb.NodeService.config:input_type -> pb.ConfigRequest
-	1, // 1: pb.NodeService.config:output_type -> pb.ConfigResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: pb.ListEnabledNodesResponse.nodes:type_name -> pb.Node
+	0, // 1: pb.NodeService.createNode:input_type -> pb.CreateNodeRequest
+	2, // 2: pb.NodeService.countAllEnabledNodes:input_type -> pb.CountAllEnabledNodesRequest
+	4, // 3: pb.NodeService.listEnabledNodes:input_type -> pb.ListEnabledNodesRequest
+	1, // 4: pb.NodeService.createNode:output_type -> pb.CreateNodeResponse
+	3, // 5: pb.NodeService.countAllEnabledNodes:output_type -> pb.CountAllEnabledNodesResponse
+	5, // 6: pb.NodeService.listEnabledNodes:output_type -> pb.ListEnabledNodesResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_service_node_proto_init() }
@@ -172,9 +408,10 @@ func file_service_node_proto_init() {
 	if File_service_node_proto != nil {
 		return
 	}
+	file_model_node_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_service_node_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConfigRequest); i {
+			switch v := v.(*CreateNodeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -186,7 +423,55 @@ func file_service_node_proto_init() {
 			}
 		}
 		file_service_node_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConfigResponse); i {
+			switch v := v.(*CreateNodeResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_node_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CountAllEnabledNodesRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_node_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CountAllEnabledNodesResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_node_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListEnabledNodesRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_node_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListEnabledNodesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -204,7 +489,7 @@ func file_service_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_service_node_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -230,7 +515,12 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type NodeServiceClient interface {
-	Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error)
+	// 创建节点
+	CreateNode(ctx context.Context, in *CreateNodeRequest, opts ...grpc.CallOption) (*CreateNodeResponse, error)
+	// 节点数量
+	CountAllEnabledNodes(ctx context.Context, in *CountAllEnabledNodesRequest, opts ...grpc.CallOption) (*CountAllEnabledNodesResponse, error)
+	// 列出单页节点
+	ListEnabledNodes(ctx context.Context, in *ListEnabledNodesRequest, opts ...grpc.CallOption) (*ListEnabledNodesResponse, error)
 }
 
 type nodeServiceClient struct {
@@ -241,9 +531,27 @@ func NewNodeServiceClient(cc grpc.ClientConnInterface) NodeServiceClient {
 	return &nodeServiceClient{cc}
 }
 
-func (c *nodeServiceClient) Config(ctx context.Context, in *ConfigRequest, opts ...grpc.CallOption) (*ConfigResponse, error) {
-	out := new(ConfigResponse)
-	err := c.cc.Invoke(ctx, "/pb.NodeService/config", in, out, opts...)
+func (c *nodeServiceClient) CreateNode(ctx context.Context, in *CreateNodeRequest, opts ...grpc.CallOption) (*CreateNodeResponse, error) {
+	out := new(CreateNodeResponse)
+	err := c.cc.Invoke(ctx, "/pb.NodeService/createNode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) CountAllEnabledNodes(ctx context.Context, in *CountAllEnabledNodesRequest, opts ...grpc.CallOption) (*CountAllEnabledNodesResponse, error) {
+	out := new(CountAllEnabledNodesResponse)
+	err := c.cc.Invoke(ctx, "/pb.NodeService/countAllEnabledNodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) ListEnabledNodes(ctx context.Context, in *ListEnabledNodesRequest, opts ...grpc.CallOption) (*ListEnabledNodesResponse, error) {
+	out := new(ListEnabledNodesResponse)
+	err := c.cc.Invoke(ctx, "/pb.NodeService/listEnabledNodes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -252,35 +560,82 @@ func (c *nodeServiceClient) Config(ctx context.Context, in *ConfigRequest, opts 
 
 // NodeServiceServer is the server API for NodeService service.
 type NodeServiceServer interface {
-	Config(context.Context, *ConfigRequest) (*ConfigResponse, error)
+	// 创建节点
+	CreateNode(context.Context, *CreateNodeRequest) (*CreateNodeResponse, error)
+	// 节点数量
+	CountAllEnabledNodes(context.Context, *CountAllEnabledNodesRequest) (*CountAllEnabledNodesResponse, error)
+	// 列出单页节点
+	ListEnabledNodes(context.Context, *ListEnabledNodesRequest) (*ListEnabledNodesResponse, error)
 }
 
 // UnimplementedNodeServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedNodeServiceServer struct {
 }
 
-func (*UnimplementedNodeServiceServer) Config(context.Context, *ConfigRequest) (*ConfigResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Config not implemented")
+func (*UnimplementedNodeServiceServer) CreateNode(context.Context, *CreateNodeRequest) (*CreateNodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNode not implemented")
+}
+func (*UnimplementedNodeServiceServer) CountAllEnabledNodes(context.Context, *CountAllEnabledNodesRequest) (*CountAllEnabledNodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountAllEnabledNodes not implemented")
+}
+func (*UnimplementedNodeServiceServer) ListEnabledNodes(context.Context, *ListEnabledNodesRequest) (*ListEnabledNodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEnabledNodes not implemented")
 }
 
 func RegisterNodeServiceServer(s *grpc.Server, srv NodeServiceServer) {
 	s.RegisterService(&_NodeService_serviceDesc, srv)
 }
 
-func _NodeService_Config_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfigRequest)
+func _NodeService_CreateNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).Config(ctx, in)
+		return srv.(NodeServiceServer).CreateNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.NodeService/Config",
+		FullMethod: "/pb.NodeService/CreateNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).Config(ctx, req.(*ConfigRequest))
+		return srv.(NodeServiceServer).CreateNode(ctx, req.(*CreateNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_CountAllEnabledNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountAllEnabledNodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).CountAllEnabledNodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.NodeService/CountAllEnabledNodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).CountAllEnabledNodes(ctx, req.(*CountAllEnabledNodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_ListEnabledNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEnabledNodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).ListEnabledNodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.NodeService/ListEnabledNodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).ListEnabledNodes(ctx, req.(*ListEnabledNodesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -290,8 +645,16 @@ var _NodeService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*NodeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "config",
-			Handler:    _NodeService_Config_Handler,
+			MethodName: "createNode",
+			Handler:    _NodeService_CreateNode_Handler,
+		},
+		{
+			MethodName: "countAllEnabledNodes",
+			Handler:    _NodeService_CountAllEnabledNodes_Handler,
+		},
+		{
+			MethodName: "listEnabledNodes",
+			Handler:    _NodeService_ListEnabledNodes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

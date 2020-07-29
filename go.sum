@@ -38,12 +38,8 @@ github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.0 h1:/QaMHBdZ26BB3SSst0Iwl10Epc+xhTquomWX0oZEB6w=
 github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
-github.com/iwind/TeaGo v0.0.0-20200720020412-96dbe21b81d4 h1:893FbgV8PRV/rCqEAtpifgAmsIYTDrZruWHMWIw4+x8=
-github.com/iwind/TeaGo v0.0.0-20200720020412-96dbe21b81d4/go.mod h1:taNzU+Tt7Axz5t1v8pEV7xRuioNJxbMeMAbDVQpxq20=
-github.com/iwind/TeaGo v0.0.0-20200722010955-47dd648dc761 h1:70Iaf6iVF4CiH1P5Au3hqile/2Ea0XIkR4SPpdiaKI0=
-github.com/iwind/TeaGo v0.0.0-20200722010955-47dd648dc761/go.mod h1:zjM7k+b+Jthhf0T0fKwuF0iy4TWb5SsU1gmKR2l+OmE=
-github.com/iwind/TeaGo v0.0.0-20200722034406-6bf13920e40d h1:W//0gTbKQ44b3gHNz1/fMiKEu+mM5t5O3py4kJscSa0=
-github.com/iwind/TeaGo v0.0.0-20200722034406-6bf13920e40d/go.mod h1:zjM7k+b+Jthhf0T0fKwuF0iy4TWb5SsU1gmKR2l+OmE=
+github.com/iwind/TeaGo v0.0.0-20200727075925-7e7e67b44f2d h1:V7HA0wUOdmZbXJTVpiUEvSD4ARKHwMLMmiCccfkqf24=
+github.com/iwind/TeaGo v0.0.0-20200727075925-7e7e67b44f2d/go.mod h1:zjM7k+b+Jthhf0T0fKwuF0iy4TWb5SsU1gmKR2l+OmE=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
@@ -84,6 +80,7 @@ golang.org/x/sys v0.0.0-20190904154756-749cb33beabd/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 h1:DYfZAGf2WMFjMxbgTjaC+2HC7NkNAQs+6Q8b9WEB/F4=
 golang.org/x/sys v0.0.0-20200519105757-fe76b779f299/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

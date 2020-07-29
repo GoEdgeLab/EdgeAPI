@@ -51,14 +51,11 @@ func (this *APINode) listenRPC() error {
 		return errors.New("[API]listen rpc failed: " + err.Error())
 	}
 	rpcServer := grpc.NewServer()
-	pb.RegisterDnsServiceServer(rpcServer, &services.DNSService{})
-	pb.RegisterLogServiceServer(rpcServer, &services.LogService{})
-	pb.RegisterMonitorServiceServer(rpcServer, &services.MonitorService{})
-	pb.RegisterNodeServiceServer(rpcServer, &services.NodeService{})
-	pb.RegisterProviderServiceServer(rpcServer, &services.ProviderService{})
-	pb.RegisterStatServiceServer(rpcServer, &services.StatService{})
-	pb.RegisterUserServiceServer(rpcServer, &services.UserService{})
 	pb.RegisterAdminServiceServer(rpcServer, &services.AdminService{})
+	pb.RegisterNodeGrantServiceServer(rpcServer, &services.NodeGrantService{})
+	pb.RegisterServerServiceServer(rpcServer, &services.ServerService{})
+	pb.RegisterNodeServiceServer(rpcServer, &services.NodeService{})
+	pb.RegisterNodeClusterServiceServer(rpcServer, &services.NodeClusterService{})
 	err = rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())

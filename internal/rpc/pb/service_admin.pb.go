@@ -29,7 +29,7 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type AdminLoginRequest struct {
+type LoginAdminRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -38,8 +38,8 @@ type AdminLoginRequest struct {
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
-func (x *AdminLoginRequest) Reset() {
-	*x = AdminLoginRequest{}
+func (x *LoginAdminRequest) Reset() {
+	*x = LoginAdminRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -47,13 +47,13 @@ func (x *AdminLoginRequest) Reset() {
 	}
 }
 
-func (x *AdminLoginRequest) String() string {
+func (x *LoginAdminRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminLoginRequest) ProtoMessage() {}
+func (*LoginAdminRequest) ProtoMessage() {}
 
-func (x *AdminLoginRequest) ProtoReflect() protoreflect.Message {
+func (x *LoginAdminRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -65,26 +65,26 @@ func (x *AdminLoginRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminLoginRequest.ProtoReflect.Descriptor instead.
-func (*AdminLoginRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoginAdminRequest.ProtoReflect.Descriptor instead.
+func (*LoginAdminRequest) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AdminLoginRequest) GetUsername() string {
+func (x *LoginAdminRequest) GetUsername() string {
 	if x != nil {
 		return x.Username
 	}
 	return ""
 }
 
-func (x *AdminLoginRequest) GetPassword() string {
+func (x *LoginAdminRequest) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-type AdminLoginResponse struct {
+type LoginAdminResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -94,8 +94,8 @@ type AdminLoginResponse struct {
 	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *AdminLoginResponse) Reset() {
-	*x = AdminLoginResponse{}
+func (x *LoginAdminResponse) Reset() {
+	*x = LoginAdminResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -103,13 +103,13 @@ func (x *AdminLoginResponse) Reset() {
 	}
 }
 
-func (x *AdminLoginResponse) String() string {
+func (x *LoginAdminResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminLoginResponse) ProtoMessage() {}
+func (*LoginAdminResponse) ProtoMessage() {}
 
-func (x *AdminLoginResponse) ProtoReflect() protoreflect.Message {
+func (x *LoginAdminResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -121,33 +121,33 @@ func (x *AdminLoginResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminLoginResponse.ProtoReflect.Descriptor instead.
-func (*AdminLoginResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoginAdminResponse.ProtoReflect.Descriptor instead.
+func (*LoginAdminResponse) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *AdminLoginResponse) GetAdminId() int64 {
+func (x *LoginAdminResponse) GetAdminId() int64 {
 	if x != nil {
 		return x.AdminId
 	}
 	return 0
 }
 
-func (x *AdminLoginResponse) GetIsOk() bool {
+func (x *LoginAdminResponse) GetIsOk() bool {
 	if x != nil {
 		return x.IsOk
 	}
 	return false
 }
 
-func (x *AdminLoginResponse) GetMessage() string {
+func (x *LoginAdminResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
 	return ""
 }
 
-type AdminCreateLogRequest struct {
+type CreateAdminLogRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -158,8 +158,8 @@ type AdminCreateLogRequest struct {
 	Ip          string `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
 }
 
-func (x *AdminCreateLogRequest) Reset() {
-	*x = AdminCreateLogRequest{}
+func (x *CreateAdminLogRequest) Reset() {
+	*x = CreateAdminLogRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -167,13 +167,13 @@ func (x *AdminCreateLogRequest) Reset() {
 	}
 }
 
-func (x *AdminCreateLogRequest) String() string {
+func (x *CreateAdminLogRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminCreateLogRequest) ProtoMessage() {}
+func (*CreateAdminLogRequest) ProtoMessage() {}
 
-func (x *AdminCreateLogRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateAdminLogRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -185,40 +185,40 @@ func (x *AdminCreateLogRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminCreateLogRequest.ProtoReflect.Descriptor instead.
-func (*AdminCreateLogRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateAdminLogRequest.ProtoReflect.Descriptor instead.
+func (*CreateAdminLogRequest) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AdminCreateLogRequest) GetLevel() string {
+func (x *CreateAdminLogRequest) GetLevel() string {
 	if x != nil {
 		return x.Level
 	}
 	return ""
 }
 
-func (x *AdminCreateLogRequest) GetDescription() string {
+func (x *CreateAdminLogRequest) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *AdminCreateLogRequest) GetAction() string {
+func (x *CreateAdminLogRequest) GetAction() string {
 	if x != nil {
 		return x.Action
 	}
 	return ""
 }
 
-func (x *AdminCreateLogRequest) GetIp() string {
+func (x *CreateAdminLogRequest) GetIp() string {
 	if x != nil {
 		return x.Ip
 	}
 	return ""
 }
 
-type AdminCreateLogResponse struct {
+type CreateAdminLogResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -226,8 +226,8 @@ type AdminCreateLogResponse struct {
 	IsOk bool `protobuf:"varint,1,opt,name=isOk,proto3" json:"isOk,omitempty"`
 }
 
-func (x *AdminCreateLogResponse) Reset() {
-	*x = AdminCreateLogResponse{}
+func (x *CreateAdminLogResponse) Reset() {
+	*x = CreateAdminLogResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -235,13 +235,13 @@ func (x *AdminCreateLogResponse) Reset() {
 	}
 }
 
-func (x *AdminCreateLogResponse) String() string {
+func (x *CreateAdminLogResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminCreateLogResponse) ProtoMessage() {}
+func (*CreateAdminLogResponse) ProtoMessage() {}
 
-func (x *AdminCreateLogResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateAdminLogResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -253,19 +253,19 @@ func (x *AdminCreateLogResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminCreateLogResponse.ProtoReflect.Descriptor instead.
-func (*AdminCreateLogResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateAdminLogResponse.ProtoReflect.Descriptor instead.
+func (*CreateAdminLogResponse) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *AdminCreateLogResponse) GetIsOk() bool {
+func (x *CreateAdminLogResponse) GetIsOk() bool {
 	if x != nil {
 		return x.IsOk
 	}
 	return false
 }
 
-type AdminCheckAdminExistsRequest struct {
+type CheckAdminExistsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -273,8 +273,8 @@ type AdminCheckAdminExistsRequest struct {
 	AdminId int64 `protobuf:"varint,1,opt,name=adminId,proto3" json:"adminId,omitempty"`
 }
 
-func (x *AdminCheckAdminExistsRequest) Reset() {
-	*x = AdminCheckAdminExistsRequest{}
+func (x *CheckAdminExistsRequest) Reset() {
+	*x = CheckAdminExistsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -282,13 +282,13 @@ func (x *AdminCheckAdminExistsRequest) Reset() {
 	}
 }
 
-func (x *AdminCheckAdminExistsRequest) String() string {
+func (x *CheckAdminExistsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminCheckAdminExistsRequest) ProtoMessage() {}
+func (*CheckAdminExistsRequest) ProtoMessage() {}
 
-func (x *AdminCheckAdminExistsRequest) ProtoReflect() protoreflect.Message {
+func (x *CheckAdminExistsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -300,19 +300,19 @@ func (x *AdminCheckAdminExistsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminCheckAdminExistsRequest.ProtoReflect.Descriptor instead.
-func (*AdminCheckAdminExistsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CheckAdminExistsRequest.ProtoReflect.Descriptor instead.
+func (*CheckAdminExistsRequest) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AdminCheckAdminExistsRequest) GetAdminId() int64 {
+func (x *CheckAdminExistsRequest) GetAdminId() int64 {
 	if x != nil {
 		return x.AdminId
 	}
 	return 0
 }
 
-type AdminCheckAdminExistsResponse struct {
+type CheckAdminExistsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -321,8 +321,8 @@ type AdminCheckAdminExistsResponse struct {
 	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *AdminCheckAdminExistsResponse) Reset() {
-	*x = AdminCheckAdminExistsResponse{}
+func (x *CheckAdminExistsResponse) Reset() {
+	*x = CheckAdminExistsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -330,13 +330,13 @@ func (x *AdminCheckAdminExistsResponse) Reset() {
 	}
 }
 
-func (x *AdminCheckAdminExistsResponse) String() string {
+func (x *CheckAdminExistsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminCheckAdminExistsResponse) ProtoMessage() {}
+func (*CheckAdminExistsResponse) ProtoMessage() {}
 
-func (x *AdminCheckAdminExistsResponse) ProtoReflect() protoreflect.Message {
+func (x *CheckAdminExistsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -348,26 +348,26 @@ func (x *AdminCheckAdminExistsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminCheckAdminExistsResponse.ProtoReflect.Descriptor instead.
-func (*AdminCheckAdminExistsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CheckAdminExistsResponse.ProtoReflect.Descriptor instead.
+func (*CheckAdminExistsResponse) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AdminCheckAdminExistsResponse) GetIsOk() bool {
+func (x *CheckAdminExistsResponse) GetIsOk() bool {
 	if x != nil {
 		return x.IsOk
 	}
 	return false
 }
 
-func (x *AdminCheckAdminExistsResponse) GetMessage() string {
+func (x *CheckAdminExistsResponse) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
 	return ""
 }
 
-type AdminFindAdminNameRequest struct {
+type FindAdminNameRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -375,8 +375,8 @@ type AdminFindAdminNameRequest struct {
 	AdminId int64 `protobuf:"varint,1,opt,name=adminId,proto3" json:"adminId,omitempty"`
 }
 
-func (x *AdminFindAdminNameRequest) Reset() {
-	*x = AdminFindAdminNameRequest{}
+func (x *FindAdminNameRequest) Reset() {
+	*x = FindAdminNameRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -384,13 +384,13 @@ func (x *AdminFindAdminNameRequest) Reset() {
 	}
 }
 
-func (x *AdminFindAdminNameRequest) String() string {
+func (x *FindAdminNameRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminFindAdminNameRequest) ProtoMessage() {}
+func (*FindAdminNameRequest) ProtoMessage() {}
 
-func (x *AdminFindAdminNameRequest) ProtoReflect() protoreflect.Message {
+func (x *FindAdminNameRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -402,19 +402,19 @@ func (x *AdminFindAdminNameRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminFindAdminNameRequest.ProtoReflect.Descriptor instead.
-func (*AdminFindAdminNameRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use FindAdminNameRequest.ProtoReflect.Descriptor instead.
+func (*FindAdminNameRequest) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *AdminFindAdminNameRequest) GetAdminId() int64 {
+func (x *FindAdminNameRequest) GetAdminId() int64 {
 	if x != nil {
 		return x.AdminId
 	}
 	return 0
 }
 
-type AdminFindAdminNameResponse struct {
+type FindAdminNameResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -422,8 +422,8 @@ type AdminFindAdminNameResponse struct {
 	Fullname string `protobuf:"bytes,1,opt,name=fullname,proto3" json:"fullname,omitempty"`
 }
 
-func (x *AdminFindAdminNameResponse) Reset() {
-	*x = AdminFindAdminNameResponse{}
+func (x *FindAdminNameResponse) Reset() {
+	*x = FindAdminNameResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_admin_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -431,13 +431,13 @@ func (x *AdminFindAdminNameResponse) Reset() {
 	}
 }
 
-func (x *AdminFindAdminNameResponse) String() string {
+func (x *FindAdminNameResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminFindAdminNameResponse) ProtoMessage() {}
+func (*FindAdminNameResponse) ProtoMessage() {}
 
-func (x *AdminFindAdminNameResponse) ProtoReflect() protoreflect.Message {
+func (x *FindAdminNameResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_admin_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -449,514 +449,79 @@ func (x *AdminFindAdminNameResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminFindAdminNameResponse.ProtoReflect.Descriptor instead.
-func (*AdminFindAdminNameResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use FindAdminNameResponse.ProtoReflect.Descriptor instead.
+func (*FindAdminNameResponse) Descriptor() ([]byte, []int) {
 	return file_service_admin_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *AdminFindAdminNameResponse) GetFullname() string {
+func (x *FindAdminNameResponse) GetFullname() string {
 	if x != nil {
 		return x.Fullname
 	}
 	return ""
 }
 
-type AdminFindAllEnabledClustersRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *AdminFindAllEnabledClustersRequest) Reset() {
-	*x = AdminFindAllEnabledClustersRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminFindAllEnabledClustersRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminFindAllEnabledClustersRequest) ProtoMessage() {}
-
-func (x *AdminFindAllEnabledClustersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminFindAllEnabledClustersRequest.ProtoReflect.Descriptor instead.
-func (*AdminFindAllEnabledClustersRequest) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{8}
-}
-
-type AdminFindAllEnabledClustersResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Clusters []*Cluster `protobuf:"bytes,1,rep,name=clusters,proto3" json:"clusters,omitempty"`
-}
-
-func (x *AdminFindAllEnabledClustersResponse) Reset() {
-	*x = AdminFindAllEnabledClustersResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminFindAllEnabledClustersResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminFindAllEnabledClustersResponse) ProtoMessage() {}
-
-func (x *AdminFindAllEnabledClustersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminFindAllEnabledClustersResponse.ProtoReflect.Descriptor instead.
-func (*AdminFindAllEnabledClustersResponse) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *AdminFindAllEnabledClustersResponse) GetClusters() []*Cluster {
-	if x != nil {
-		return x.Clusters
-	}
-	return nil
-}
-
-// 创建节点
-type AdminCreateNodeRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name      string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	ClusterId int64  `protobuf:"varint,2,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
-}
-
-func (x *AdminCreateNodeRequest) Reset() {
-	*x = AdminCreateNodeRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminCreateNodeRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminCreateNodeRequest) ProtoMessage() {}
-
-func (x *AdminCreateNodeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminCreateNodeRequest.ProtoReflect.Descriptor instead.
-func (*AdminCreateNodeRequest) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *AdminCreateNodeRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *AdminCreateNodeRequest) GetClusterId() int64 {
-	if x != nil {
-		return x.ClusterId
-	}
-	return 0
-}
-
-type AdminCreateNodeResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	NodeId int64 `protobuf:"varint,1,opt,name=nodeId,proto3" json:"nodeId,omitempty"`
-}
-
-func (x *AdminCreateNodeResponse) Reset() {
-	*x = AdminCreateNodeResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminCreateNodeResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminCreateNodeResponse) ProtoMessage() {}
-
-func (x *AdminCreateNodeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminCreateNodeResponse.ProtoReflect.Descriptor instead.
-func (*AdminCreateNodeResponse) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *AdminCreateNodeResponse) GetNodeId() int64 {
-	if x != nil {
-		return x.NodeId
-	}
-	return 0
-}
-
-// 节点数量
-type AdminCountAllEnabledNodesRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *AdminCountAllEnabledNodesRequest) Reset() {
-	*x = AdminCountAllEnabledNodesRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminCountAllEnabledNodesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminCountAllEnabledNodesRequest) ProtoMessage() {}
-
-func (x *AdminCountAllEnabledNodesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminCountAllEnabledNodesRequest.ProtoReflect.Descriptor instead.
-func (*AdminCountAllEnabledNodesRequest) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{12}
-}
-
-type AdminCountAllEnabledNodesResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
-}
-
-func (x *AdminCountAllEnabledNodesResponse) Reset() {
-	*x = AdminCountAllEnabledNodesResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminCountAllEnabledNodesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminCountAllEnabledNodesResponse) ProtoMessage() {}
-
-func (x *AdminCountAllEnabledNodesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminCountAllEnabledNodesResponse.ProtoReflect.Descriptor instead.
-func (*AdminCountAllEnabledNodesResponse) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *AdminCountAllEnabledNodesResponse) GetCount() int64 {
-	if x != nil {
-		return x.Count
-	}
-	return 0
-}
-
-// 列出单页节点
-type AdminListEnabledNodesRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
-	Size   int64 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
-}
-
-func (x *AdminListEnabledNodesRequest) Reset() {
-	*x = AdminListEnabledNodesRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminListEnabledNodesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminListEnabledNodesRequest) ProtoMessage() {}
-
-func (x *AdminListEnabledNodesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminListEnabledNodesRequest.ProtoReflect.Descriptor instead.
-func (*AdminListEnabledNodesRequest) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *AdminListEnabledNodesRequest) GetOffset() int64 {
-	if x != nil {
-		return x.Offset
-	}
-	return 0
-}
-
-func (x *AdminListEnabledNodesRequest) GetSize() int64 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-type AdminListEnabledNodesResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Nodes []*Node `protobuf:"bytes,1,rep,name=nodes,proto3" json:"nodes,omitempty"`
-}
-
-func (x *AdminListEnabledNodesResponse) Reset() {
-	*x = AdminListEnabledNodesResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_service_admin_proto_msgTypes[15]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *AdminListEnabledNodesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminListEnabledNodesResponse) ProtoMessage() {}
-
-func (x *AdminListEnabledNodesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_admin_proto_msgTypes[15]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminListEnabledNodesResponse.ProtoReflect.Descriptor instead.
-func (*AdminListEnabledNodesResponse) Descriptor() ([]byte, []int) {
-	return file_service_admin_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *AdminListEnabledNodesResponse) GetNodes() []*Node {
-	if x != nil {
-		return x.Nodes
-	}
-	return nil
-}
-
 var File_service_admin_proto protoreflect.FileDescriptor
 
 var file_service_admin_proto_rawDesc = []byte{
 	0x0a, 0x13, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x1a, 0x13, 0x6d, 0x6f, 0x64, 0x65, 0x6c,
-	0x5f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x10,
-	0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x5f, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0x4b, 0x0a, 0x11, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x5c, 0x0a,
-	0x12, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x12, 0x0a,
-	0x04, 0x69, 0x73, 0x4f, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73, 0x4f,
-	0x6b, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x77, 0x0a, 0x15, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65,
-	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06,
-	0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x70, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x02, 0x69, 0x70, 0x22, 0x2c, 0x0a, 0x16, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12,
-	0x0a, 0x04, 0x69, 0x73, 0x4f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73,
-	0x4f, 0x6b, 0x22, 0x38, 0x0a, 0x1c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x68, 0x65, 0x63, 0x6b,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x22, 0x4d, 0x0a, 0x1d,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45,
-	0x78, 0x69, 0x73, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a,
-	0x04, 0x69, 0x73, 0x4f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73, 0x4f,
-	0x6b, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x35, 0x0a, 0x19, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x6d,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x6d, 0x69,
-	0x6e, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x49, 0x64, 0x22, 0x38, 0x0a, 0x1a, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x1a, 0x0a, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x24, 0x0a, 0x22,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62,
-	0x6c, 0x65, 0x64, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x22, 0x4e, 0x0a, 0x23, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41,
-	0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x08, 0x63, 0x6c, 0x75,
-	0x73, 0x74, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x70, 0x62,
-	0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x08, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65,
-	0x72, 0x73, 0x22, 0x4a, 0x0a, 0x16, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x22, 0x31,
-	0x0a, 0x17, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x6e, 0x6f, 0x64,
-	0x65, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x6e, 0x6f, 0x64, 0x65, 0x49,
-	0x64, 0x22, 0x22, 0x0a, 0x20, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41,
-	0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x39, 0x0a, 0x21, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x6f,
-	0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64,
-	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x22, 0x4a, 0x0a, 0x1c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61,
-	0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x7a, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x22, 0x3f, 0x0a, 0x1d,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64,
-	0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a,
-	0x05, 0x6e, 0x6f, 0x64, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x08, 0x2e, 0x70,
-	0x62, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x05, 0x6e, 0x6f, 0x64, 0x65, 0x73, 0x32, 0xb7, 0x05,
-	0x0a, 0x0c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x38,
-	0x0a, 0x05, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x15, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
-	0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x44, 0x0a, 0x09, 0x63, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x4c, 0x6f, 0x67, 0x12, 0x19, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x1a, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x59,
-	0x0a, 0x10, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69, 0x73,
-	0x74, 0x73, 0x12, 0x20, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62, 0x22, 0x4b, 0x0a, 0x11, 0x4c, 0x6f, 0x67,
+	0x69, 0x6e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a,
+	0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61,
+	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61,
+	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x5c, 0x0a, 0x12, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x41,
+	0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x73, 0x4f, 0x6b, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73, 0x4f, 0x6b, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x22, 0x77, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x64,
+	0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6c, 0x65,
+	0x76, 0x65, 0x6c, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x70, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x70, 0x22, 0x2c, 0x0a,
+	0x16, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x73, 0x4f, 0x6b, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73, 0x4f, 0x6b, 0x22, 0x33, 0x0a, 0x17, 0x43,
 	0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x54, 0x0a, 0x11, 0x66, 0x69, 0x6e,
-	0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x75, 0x6c, 0x6c, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1d,
-	0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1e, 0x2e,
-	0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69,
-	0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x6b, 0x0a, 0x16, 0x66, 0x69, 0x6e, 0x64, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65,
-	0x64, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x73, 0x12, 0x26, 0x2e, 0x70, 0x62, 0x2e, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c,
-	0x65, 0x64, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x27, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x69, 0x6e, 0x64,
-	0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65,
-	0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x47, 0x0a, 0x0a,
-	0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x2e,
-	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69,
-	0x6e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x65, 0x0a, 0x14, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c,
-	0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x12, 0x24, 0x2e,
-	0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c,
-	0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x43, 0x6f,
-	0x75, 0x6e, 0x74, 0x41, 0x6c, 0x6c, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64,
-	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x59, 0x0a, 0x10,
-	0x6c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73,
-	0x12, 0x20, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x21, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x69, 0x73,
-	0x74, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64,
+	0x22, 0x48, 0x0a, 0x18, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78,
+	0x69, 0x73, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04,
+	0x69, 0x73, 0x4f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x69, 0x73, 0x4f, 0x6b,
+	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x30, 0x0a, 0x14, 0x46, 0x69,
+	0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x07, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x49, 0x64, 0x22, 0x33, 0x0a, 0x15,
+	0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x6e, 0x61, 0x6d,
+	0x65, 0x32, 0xb5, 0x02, 0x0a, 0x0c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x12, 0x3d, 0x0a, 0x0a, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x15, 0x2e, 0x70, 0x62, 0x2e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x70, 0x62, 0x2e, 0x4c, 0x6f, 0x67,
+	0x69, 0x6e, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x49, 0x0a, 0x0e, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x4c, 0x6f, 0x67, 0x12, 0x19, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41,
+	0x64, 0x6d, 0x69, 0x6e, 0x4c, 0x6f, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a,
+	0x2e, 0x70, 0x62, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4c,
+	0x6f, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x4f, 0x0a, 0x10,
+	0x63, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73,
+	0x12, 0x1b, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e,
+	0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e,
+	0x70, 0x62, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x69,
+	0x73, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x4a, 0x0a,
+	0x11, 0x66, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x46, 0x75, 0x6c, 0x6c, 0x6e, 0x61,
+	0x6d, 0x65, 0x12, 0x18, 0x2e, 0x70, 0x62, 0x2e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69,
+	0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x70,
+	0x62, 0x2e, 0x46, 0x69, 0x6e, 0x64, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x2f, 0x70,
+	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -971,51 +536,31 @@ func file_service_admin_proto_rawDescGZIP() []byte {
 	return file_service_admin_proto_rawDescData
 }
 
-var file_service_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_service_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_service_admin_proto_goTypes = []interface{}{
-	(*AdminLoginRequest)(nil),                   // 0: pb.AdminLoginRequest
-	(*AdminLoginResponse)(nil),                  // 1: pb.AdminLoginResponse
-	(*AdminCreateLogRequest)(nil),               // 2: pb.AdminCreateLogRequest
-	(*AdminCreateLogResponse)(nil),              // 3: pb.AdminCreateLogResponse
-	(*AdminCheckAdminExistsRequest)(nil),        // 4: pb.AdminCheckAdminExistsRequest
-	(*AdminCheckAdminExistsResponse)(nil),       // 5: pb.AdminCheckAdminExistsResponse
-	(*AdminFindAdminNameRequest)(nil),           // 6: pb.AdminFindAdminNameRequest
-	(*AdminFindAdminNameResponse)(nil),          // 7: pb.AdminFindAdminNameResponse
-	(*AdminFindAllEnabledClustersRequest)(nil),  // 8: pb.AdminFindAllEnabledClustersRequest
-	(*AdminFindAllEnabledClustersResponse)(nil), // 9: pb.AdminFindAllEnabledClustersResponse
-	(*AdminCreateNodeRequest)(nil),              // 10: pb.AdminCreateNodeRequest
-	(*AdminCreateNodeResponse)(nil),             // 11: pb.AdminCreateNodeResponse
-	(*AdminCountAllEnabledNodesRequest)(nil),    // 12: pb.AdminCountAllEnabledNodesRequest
-	(*AdminCountAllEnabledNodesResponse)(nil),   // 13: pb.AdminCountAllEnabledNodesResponse
-	(*AdminListEnabledNodesRequest)(nil),        // 14: pb.AdminListEnabledNodesRequest
-	(*AdminListEnabledNodesResponse)(nil),       // 15: pb.AdminListEnabledNodesResponse
-	(*Cluster)(nil),                             // 16: pb.Cluster
-	(*Node)(nil),                                // 17: pb.Node
+	(*LoginAdminRequest)(nil),        // 0: pb.LoginAdminRequest
+	(*LoginAdminResponse)(nil),       // 1: pb.LoginAdminResponse
+	(*CreateAdminLogRequest)(nil),    // 2: pb.CreateAdminLogRequest
+	(*CreateAdminLogResponse)(nil),   // 3: pb.CreateAdminLogResponse
+	(*CheckAdminExistsRequest)(nil),  // 4: pb.CheckAdminExistsRequest
+	(*CheckAdminExistsResponse)(nil), // 5: pb.CheckAdminExistsResponse
+	(*FindAdminNameRequest)(nil),     // 6: pb.FindAdminNameRequest
+	(*FindAdminNameResponse)(nil),    // 7: pb.FindAdminNameResponse
 }
 var file_service_admin_proto_depIdxs = []int32{
-	16, // 0: pb.AdminFindAllEnabledClustersResponse.clusters:type_name -> pb.Cluster
-	17, // 1: pb.AdminListEnabledNodesResponse.nodes:type_name -> pb.Node
-	0,  // 2: pb.AdminService.login:input_type -> pb.AdminLoginRequest
-	2,  // 3: pb.AdminService.createLog:input_type -> pb.AdminCreateLogRequest
-	4,  // 4: pb.AdminService.checkAdminExists:input_type -> pb.AdminCheckAdminExistsRequest
-	6,  // 5: pb.AdminService.findAdminFullname:input_type -> pb.AdminFindAdminNameRequest
-	8,  // 6: pb.AdminService.findAllEnabledClusters:input_type -> pb.AdminFindAllEnabledClustersRequest
-	10, // 7: pb.AdminService.createNode:input_type -> pb.AdminCreateNodeRequest
-	12, // 8: pb.AdminService.countAllEnabledNodes:input_type -> pb.AdminCountAllEnabledNodesRequest
-	14, // 9: pb.AdminService.listEnabledNodes:input_type -> pb.AdminListEnabledNodesRequest
-	1,  // 10: pb.AdminService.login:output_type -> pb.AdminLoginResponse
-	3,  // 11: pb.AdminService.createLog:output_type -> pb.AdminCreateLogResponse
-	5,  // 12: pb.AdminService.checkAdminExists:output_type -> pb.AdminCheckAdminExistsResponse
-	7,  // 13: pb.AdminService.findAdminFullname:output_type -> pb.AdminFindAdminNameResponse
-	9,  // 14: pb.AdminService.findAllEnabledClusters:output_type -> pb.AdminFindAllEnabledClustersResponse
-	11, // 15: pb.AdminService.createNode:output_type -> pb.AdminCreateNodeResponse
-	13, // 16: pb.AdminService.countAllEnabledNodes:output_type -> pb.AdminCountAllEnabledNodesResponse
-	15, // 17: pb.AdminService.listEnabledNodes:output_type -> pb.AdminListEnabledNodesResponse
-	10, // [10:18] is the sub-list for method output_type
-	2,  // [2:10] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	0, // 0: pb.AdminService.loginAdmin:input_type -> pb.LoginAdminRequest
+	2, // 1: pb.AdminService.createAdminLog:input_type -> pb.CreateAdminLogRequest
+	4, // 2: pb.AdminService.checkAdminExists:input_type -> pb.CheckAdminExistsRequest
+	6, // 3: pb.AdminService.findAdminFullname:input_type -> pb.FindAdminNameRequest
+	1, // 4: pb.AdminService.loginAdmin:output_type -> pb.LoginAdminResponse
+	3, // 5: pb.AdminService.createAdminLog:output_type -> pb.CreateAdminLogResponse
+	5, // 6: pb.AdminService.checkAdminExists:output_type -> pb.CheckAdminExistsResponse
+	7, // 7: pb.AdminService.findAdminFullname:output_type -> pb.FindAdminNameResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_service_admin_proto_init() }
@@ -1023,11 +568,9 @@ func file_service_admin_proto_init() {
 	if File_service_admin_proto != nil {
 		return
 	}
-	file_model_cluster_proto_init()
-	file_model_node_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_service_admin_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminLoginRequest); i {
+			switch v := v.(*LoginAdminRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1039,7 +582,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminLoginResponse); i {
+			switch v := v.(*LoginAdminResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1051,7 +594,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCreateLogRequest); i {
+			switch v := v.(*CreateAdminLogRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1063,7 +606,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCreateLogResponse); i {
+			switch v := v.(*CreateAdminLogResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1075,7 +618,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCheckAdminExistsRequest); i {
+			switch v := v.(*CheckAdminExistsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1087,7 +630,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCheckAdminExistsResponse); i {
+			switch v := v.(*CheckAdminExistsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1099,7 +642,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminFindAdminNameRequest); i {
+			switch v := v.(*FindAdminNameRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1111,103 +654,7 @@ func file_service_admin_proto_init() {
 			}
 		}
 		file_service_admin_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminFindAdminNameResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminFindAllEnabledClustersRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminFindAllEnabledClustersResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCreateNodeRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCreateNodeResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCountAllEnabledNodesRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminCountAllEnabledNodesResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminListEnabledNodesRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_service_admin_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AdminListEnabledNodesResponse); i {
+			switch v := v.(*FindAdminNameResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1225,7 +672,7 @@ func file_service_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_service_admin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -1252,21 +699,13 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AdminServiceClient interface {
 	// 登录
-	Login(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminLoginResponse, error)
+	LoginAdmin(ctx context.Context, in *LoginAdminRequest, opts ...grpc.CallOption) (*LoginAdminResponse, error)
 	// 创建操作日志
-	CreateLog(ctx context.Context, in *AdminCreateLogRequest, opts ...grpc.CallOption) (*AdminCreateLogResponse, error)
+	CreateAdminLog(ctx context.Context, in *CreateAdminLogRequest, opts ...grpc.CallOption) (*CreateAdminLogResponse, error)
 	// 检查管理员是否存在
-	CheckAdminExists(ctx context.Context, in *AdminCheckAdminExistsRequest, opts ...grpc.CallOption) (*AdminCheckAdminExistsResponse, error)
+	CheckAdminExists(ctx context.Context, in *CheckAdminExistsRequest, opts ...grpc.CallOption) (*CheckAdminExistsResponse, error)
 	// 获取管理员名称
-	FindAdminFullname(ctx context.Context, in *AdminFindAdminNameRequest, opts ...grpc.CallOption) (*AdminFindAdminNameResponse, error)
-	// 获取所有集群的信息
-	FindAllEnabledClusters(ctx context.Context, in *AdminFindAllEnabledClustersRequest, opts ...grpc.CallOption) (*AdminFindAllEnabledClustersResponse, error)
-	// 创建节点
-	CreateNode(ctx context.Context, in *AdminCreateNodeRequest, opts ...grpc.CallOption) (*AdminCreateNodeResponse, error)
-	// 节点数量
-	CountAllEnabledNodes(ctx context.Context, in *AdminCountAllEnabledNodesRequest, opts ...grpc.CallOption) (*AdminCountAllEnabledNodesResponse, error)
-	// 列出单页节点
-	ListEnabledNodes(ctx context.Context, in *AdminListEnabledNodesRequest, opts ...grpc.CallOption) (*AdminListEnabledNodesResponse, error)
+	FindAdminFullname(ctx context.Context, in *FindAdminNameRequest, opts ...grpc.CallOption) (*FindAdminNameResponse, error)
 }
 
 type adminServiceClient struct {
@@ -1277,26 +716,26 @@ func NewAdminServiceClient(cc grpc.ClientConnInterface) AdminServiceClient {
 	return &adminServiceClient{cc}
 }
 
-func (c *adminServiceClient) Login(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminLoginResponse, error) {
-	out := new(AdminLoginResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/login", in, out, opts...)
+func (c *adminServiceClient) LoginAdmin(ctx context.Context, in *LoginAdminRequest, opts ...grpc.CallOption) (*LoginAdminResponse, error) {
+	out := new(LoginAdminResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminService/loginAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminServiceClient) CreateLog(ctx context.Context, in *AdminCreateLogRequest, opts ...grpc.CallOption) (*AdminCreateLogResponse, error) {
-	out := new(AdminCreateLogResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/createLog", in, out, opts...)
+func (c *adminServiceClient) CreateAdminLog(ctx context.Context, in *CreateAdminLogRequest, opts ...grpc.CallOption) (*CreateAdminLogResponse, error) {
+	out := new(CreateAdminLogResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminService/createAdminLog", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminServiceClient) CheckAdminExists(ctx context.Context, in *AdminCheckAdminExistsRequest, opts ...grpc.CallOption) (*AdminCheckAdminExistsResponse, error) {
-	out := new(AdminCheckAdminExistsResponse)
+func (c *adminServiceClient) CheckAdminExists(ctx context.Context, in *CheckAdminExistsRequest, opts ...grpc.CallOption) (*CheckAdminExistsResponse, error) {
+	out := new(CheckAdminExistsResponse)
 	err := c.cc.Invoke(ctx, "/pb.AdminService/checkAdminExists", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1304,45 +743,9 @@ func (c *adminServiceClient) CheckAdminExists(ctx context.Context, in *AdminChec
 	return out, nil
 }
 
-func (c *adminServiceClient) FindAdminFullname(ctx context.Context, in *AdminFindAdminNameRequest, opts ...grpc.CallOption) (*AdminFindAdminNameResponse, error) {
-	out := new(AdminFindAdminNameResponse)
+func (c *adminServiceClient) FindAdminFullname(ctx context.Context, in *FindAdminNameRequest, opts ...grpc.CallOption) (*FindAdminNameResponse, error) {
+	out := new(FindAdminNameResponse)
 	err := c.cc.Invoke(ctx, "/pb.AdminService/findAdminFullname", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) FindAllEnabledClusters(ctx context.Context, in *AdminFindAllEnabledClustersRequest, opts ...grpc.CallOption) (*AdminFindAllEnabledClustersResponse, error) {
-	out := new(AdminFindAllEnabledClustersResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/findAllEnabledClusters", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) CreateNode(ctx context.Context, in *AdminCreateNodeRequest, opts ...grpc.CallOption) (*AdminCreateNodeResponse, error) {
-	out := new(AdminCreateNodeResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/createNode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) CountAllEnabledNodes(ctx context.Context, in *AdminCountAllEnabledNodesRequest, opts ...grpc.CallOption) (*AdminCountAllEnabledNodesResponse, error) {
-	out := new(AdminCountAllEnabledNodesResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/countAllEnabledNodes", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) ListEnabledNodes(ctx context.Context, in *AdminListEnabledNodesRequest, opts ...grpc.CallOption) (*AdminListEnabledNodesResponse, error) {
-	out := new(AdminListEnabledNodesResponse)
-	err := c.cc.Invoke(ctx, "/pb.AdminService/listEnabledNodes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1352,94 +755,74 @@ func (c *adminServiceClient) ListEnabledNodes(ctx context.Context, in *AdminList
 // AdminServiceServer is the server API for AdminService service.
 type AdminServiceServer interface {
 	// 登录
-	Login(context.Context, *AdminLoginRequest) (*AdminLoginResponse, error)
+	LoginAdmin(context.Context, *LoginAdminRequest) (*LoginAdminResponse, error)
 	// 创建操作日志
-	CreateLog(context.Context, *AdminCreateLogRequest) (*AdminCreateLogResponse, error)
+	CreateAdminLog(context.Context, *CreateAdminLogRequest) (*CreateAdminLogResponse, error)
 	// 检查管理员是否存在
-	CheckAdminExists(context.Context, *AdminCheckAdminExistsRequest) (*AdminCheckAdminExistsResponse, error)
+	CheckAdminExists(context.Context, *CheckAdminExistsRequest) (*CheckAdminExistsResponse, error)
 	// 获取管理员名称
-	FindAdminFullname(context.Context, *AdminFindAdminNameRequest) (*AdminFindAdminNameResponse, error)
-	// 获取所有集群的信息
-	FindAllEnabledClusters(context.Context, *AdminFindAllEnabledClustersRequest) (*AdminFindAllEnabledClustersResponse, error)
-	// 创建节点
-	CreateNode(context.Context, *AdminCreateNodeRequest) (*AdminCreateNodeResponse, error)
-	// 节点数量
-	CountAllEnabledNodes(context.Context, *AdminCountAllEnabledNodesRequest) (*AdminCountAllEnabledNodesResponse, error)
-	// 列出单页节点
-	ListEnabledNodes(context.Context, *AdminListEnabledNodesRequest) (*AdminListEnabledNodesResponse, error)
+	FindAdminFullname(context.Context, *FindAdminNameRequest) (*FindAdminNameResponse, error)
 }
 
 // UnimplementedAdminServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedAdminServiceServer struct {
 }
 
-func (*UnimplementedAdminServiceServer) Login(context.Context, *AdminLoginRequest) (*AdminLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+func (*UnimplementedAdminServiceServer) LoginAdmin(context.Context, *LoginAdminRequest) (*LoginAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoginAdmin not implemented")
 }
-func (*UnimplementedAdminServiceServer) CreateLog(context.Context, *AdminCreateLogRequest) (*AdminCreateLogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateLog not implemented")
+func (*UnimplementedAdminServiceServer) CreateAdminLog(context.Context, *CreateAdminLogRequest) (*CreateAdminLogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAdminLog not implemented")
 }
-func (*UnimplementedAdminServiceServer) CheckAdminExists(context.Context, *AdminCheckAdminExistsRequest) (*AdminCheckAdminExistsResponse, error) {
+func (*UnimplementedAdminServiceServer) CheckAdminExists(context.Context, *CheckAdminExistsRequest) (*CheckAdminExistsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAdminExists not implemented")
 }
-func (*UnimplementedAdminServiceServer) FindAdminFullname(context.Context, *AdminFindAdminNameRequest) (*AdminFindAdminNameResponse, error) {
+func (*UnimplementedAdminServiceServer) FindAdminFullname(context.Context, *FindAdminNameRequest) (*FindAdminNameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAdminFullname not implemented")
-}
-func (*UnimplementedAdminServiceServer) FindAllEnabledClusters(context.Context, *AdminFindAllEnabledClustersRequest) (*AdminFindAllEnabledClustersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindAllEnabledClusters not implemented")
-}
-func (*UnimplementedAdminServiceServer) CreateNode(context.Context, *AdminCreateNodeRequest) (*AdminCreateNodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateNode not implemented")
-}
-func (*UnimplementedAdminServiceServer) CountAllEnabledNodes(context.Context, *AdminCountAllEnabledNodesRequest) (*AdminCountAllEnabledNodesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CountAllEnabledNodes not implemented")
-}
-func (*UnimplementedAdminServiceServer) ListEnabledNodes(context.Context, *AdminListEnabledNodesRequest) (*AdminListEnabledNodesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListEnabledNodes not implemented")
 }
 
 func RegisterAdminServiceServer(s *grpc.Server, srv AdminServiceServer) {
 	s.RegisterService(&_AdminService_serviceDesc, srv)
 }
 
-func _AdminService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminLoginRequest)
+func _AdminService_LoginAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginAdminRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminServiceServer).Login(ctx, in)
+		return srv.(AdminServiceServer).LoginAdmin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AdminService/Login",
+		FullMethod: "/pb.AdminService/LoginAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).Login(ctx, req.(*AdminLoginRequest))
+		return srv.(AdminServiceServer).LoginAdmin(ctx, req.(*LoginAdminRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminService_CreateLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminCreateLogRequest)
+func _AdminService_CreateAdminLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAdminLogRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminServiceServer).CreateLog(ctx, in)
+		return srv.(AdminServiceServer).CreateAdminLog(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AdminService/CreateLog",
+		FullMethod: "/pb.AdminService/CreateAdminLog",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).CreateLog(ctx, req.(*AdminCreateLogRequest))
+		return srv.(AdminServiceServer).CreateAdminLog(ctx, req.(*CreateAdminLogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AdminService_CheckAdminExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminCheckAdminExistsRequest)
+	in := new(CheckAdminExistsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1451,13 +834,13 @@ func _AdminService_CheckAdminExists_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/pb.AdminService/CheckAdminExists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).CheckAdminExists(ctx, req.(*AdminCheckAdminExistsRequest))
+		return srv.(AdminServiceServer).CheckAdminExists(ctx, req.(*CheckAdminExistsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AdminService_FindAdminFullname_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminFindAdminNameRequest)
+	in := new(FindAdminNameRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1469,79 +852,7 @@ func _AdminService_FindAdminFullname_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/pb.AdminService/FindAdminFullname",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).FindAdminFullname(ctx, req.(*AdminFindAdminNameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_FindAllEnabledClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminFindAllEnabledClustersRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).FindAllEnabledClusters(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AdminService/FindAllEnabledClusters",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).FindAllEnabledClusters(ctx, req.(*AdminFindAllEnabledClustersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_CreateNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminCreateNodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).CreateNode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AdminService/CreateNode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).CreateNode(ctx, req.(*AdminCreateNodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_CountAllEnabledNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminCountAllEnabledNodesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).CountAllEnabledNodes(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AdminService/CountAllEnabledNodes",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).CountAllEnabledNodes(ctx, req.(*AdminCountAllEnabledNodesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_ListEnabledNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminListEnabledNodesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).ListEnabledNodes(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AdminService/ListEnabledNodes",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).ListEnabledNodes(ctx, req.(*AdminListEnabledNodesRequest))
+		return srv.(AdminServiceServer).FindAdminFullname(ctx, req.(*FindAdminNameRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1551,12 +862,12 @@ var _AdminService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*AdminServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "login",
-			Handler:    _AdminService_Login_Handler,
+			MethodName: "loginAdmin",
+			Handler:    _AdminService_LoginAdmin_Handler,
 		},
 		{
-			MethodName: "createLog",
-			Handler:    _AdminService_CreateLog_Handler,
+			MethodName: "createAdminLog",
+			Handler:    _AdminService_CreateAdminLog_Handler,
 		},
 		{
 			MethodName: "checkAdminExists",
@@ -1565,22 +876,6 @@ var _AdminService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "findAdminFullname",
 			Handler:    _AdminService_FindAdminFullname_Handler,
-		},
-		{
-			MethodName: "findAllEnabledClusters",
-			Handler:    _AdminService_FindAllEnabledClusters_Handler,
-		},
-		{
-			MethodName: "createNode",
-			Handler:    _AdminService_CreateNode_Handler,
-		},
-		{
-			MethodName: "countAllEnabledNodes",
-			Handler:    _AdminService_CountAllEnabledNodes_Handler,
-		},
-		{
-			MethodName: "listEnabledNodes",
-			Handler:    _AdminService_ListEnabledNodes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

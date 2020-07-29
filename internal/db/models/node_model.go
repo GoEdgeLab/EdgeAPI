@@ -3,6 +3,7 @@ package models
 // 节点
 type Node struct {
 	Id        uint32 `field:"id"`        // ID
+	IsOn      uint8  `field:"isOn"`      // 是否启用
 	NodeId    string `field:"nodeId"`    // 节点ID
 	Secret    string `field:"secret"`    // 密钥
 	Name      string `field:"name"`      // 节点名
@@ -17,6 +18,7 @@ type Node struct {
 
 type NodeOperator struct {
 	Id        interface{} // ID
+	IsOn      interface{} // 是否启用
 	NodeId    interface{} // 节点ID
 	Secret    interface{} // 密钥
 	Name      interface{} // 节点名

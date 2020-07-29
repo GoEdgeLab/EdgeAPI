@@ -22,7 +22,7 @@ func NewLogDAO() *LogDAO {
 var SharedLogDAO = NewLogDAO()
 
 // 创建管理员日志
-func (this *LogDAO) CreateAdminLog(adminId int, level string, description string, action string, ip string) error {
+func (this *LogDAO) CreateAdminLog(adminId int64, level string, description string, action string, ip string) error {
 	op := NewLogOperator()
 	op.AdminId, op.Level, op.Description, op.Action, op.Ip = adminId, level, description, action, ip
 	op.Type = LogTypeAdmin

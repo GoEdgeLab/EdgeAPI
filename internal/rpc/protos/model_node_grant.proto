@@ -1,0 +1,15 @@
+syntax = "proto3";
+option go_package = "./pb";
+
+package pb;
+
+message NodeGrant {
+	int64 id = 1;
+	string name = 2;
+	string method = 3;
+	string password = 4;
+	bool su = 5;
+	string privateKey = 6;
+	string description = 7;
+	int64 nodeId = 8;
+}

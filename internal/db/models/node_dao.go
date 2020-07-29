@@ -72,6 +72,7 @@ func (this *NodeDAO) CreateNode(name string, clusterId int) (nodeId int, err err
 	op.NodeId = rands.HexString(32)
 	op.Secret = rands.String(32)
 	op.ClusterId = clusterId
+	op.IsOn = 1
 	op.State = NodeStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
@@ -102,8 +103,8 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 func (this *NodeDAO) ListEnabledNodes(offset int64, size int64) (result []*Node, err error) {
 	_, err = this.Query().
 		State(NodeStateEnabled).
-		Offset(int(offset)).
-		Limit(int(size)).
+		Offset(offset).
+		Limit(size).
 		DescPk().
 		Slice(&result).
 		FindAll()

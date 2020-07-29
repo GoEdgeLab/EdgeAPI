@@ -1,9 +1,11 @@
 package models
 
 import (
+	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -35,15 +37,16 @@ func (this *NodeGrantDAO) EnableNodeGrant(id uint32) (rowsAffected int64, err er
 }
 
 // 禁用条目
-func (this *NodeGrantDAO) DisableNodeGrant(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *NodeGrantDAO) DisableNodeGrant(id int64) (err error) {
+	_, err = this.Query().
 		Pk(id).
 		Set("state", NodeGrantStateDisabled).
 		Update()
+	return err
 }
 
 // 查找启用中的条目
-func (this *NodeGrantDAO) FindEnabledNodeGrant(id uint32) (*NodeGrant, error) {
+func (this *NodeGrantDAO) FindEnabledNodeGrant(id int64) (*NodeGrant, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", NodeGrantStateEnabled).
@@ -61,4 +64,79 @@ func (this *NodeGrantDAO) FindNodeGrantName(id uint32) (string, error) {
 		Result("name").
 		FindCol("")
 	return name.(string), err
+}
+
+// 创建认证信息
+func (this *NodeGrantDAO) CreateGrant(name string, method string, username string, password string, privateKey string, description string, nodeId int64) (grantId int64, err error) {
+	op := NewNodeGrantOperator()
+	op.Name = name
+	op.Method = method
+
+	switch method {
+	case "user":
+		op.Username = username
+		op.Password = password
+		op.Su = false // TODO 需要做到前端可以配置
+	case "privateKey":
+		op.PrivateKey = privateKey
+	}
+	op.Description = description
+	op.NodeId = nodeId
+	op.State = NodeGrantStateEnabled
+	_, err = this.Save(op)
+	return types.Int64(op.Id), err
+}
+
+// 修改认证信息
+func (this *NodeGrantDAO) UpdateGrant(grantId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) error {
+	if grantId <= 0 {
+		return errors.New("invalid grantId")
+	}
+
+	op := NewNodeGrantOperator()
+	op.Id = grantId
+	op.Name = name
+	op.Method = method
+
+	switch method {
+	case "user":
+		op.Username = username
+		op.Password = password
+		op.Su = false // TODO 需要做到前端可以配置
+	case "privateKey":
+		op.PrivateKey = privateKey
+	}
+	op.Description = description
+	op.NodeId = nodeId
+	_, err := this.Save(op)
+	return err
+}
+
+// 计算所有认证信息数量
+func (this *NodeGrantDAO) CountAllEnabledGrants() (int64, error) {
+	return this.Query().
+		State(NodeGrantStateEnabled).
+		Count()
+}
+
+// 列出单页的认证信息
+func (this *NodeGrantDAO) ListEnabledGrants(offset int64, size int64) (result []*NodeGrant, err error) {
+	_, err = this.Query().
+		State(NodeGrantStateEnabled).
+		Offset(offset).
+		Size(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 列出所有的认证信息
+func (this *NodeGrantDAO) FindAllEnabledGrants() (result []*NodeGrant, err error) {
+	_, err = this.Query().
+		State(NodeGrantStateEnabled).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
 }
