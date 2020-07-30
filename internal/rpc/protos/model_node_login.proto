@@ -1,0 +1,11 @@
+syntax = "proto3";
+option go_package = "./pb";
+
+package pb;
+
+message NodeLogin {
+	int64 id = 1;
+	string name = 2;
+	string type = 3;
+	bytes params = 4;
+}

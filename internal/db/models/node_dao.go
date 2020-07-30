@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -37,15 +38,16 @@ func (this *NodeDAO) EnableNode(id uint32) (rowsAffected int64, err error) {
 }
 
 // 禁用条目
-func (this *NodeDAO) DisableNode(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *NodeDAO) DisableNode(id int64) (err error) {
+	_, err = this.Query().
 		Pk(id).
 		Set("state", NodeStateDisabled).
 		Update()
+	return err
 }
 
 // 查找启用中的条目
-func (this *NodeDAO) FindEnabledNode(id uint32) (*Node, error) {
+func (this *NodeDAO) FindEnabledNode(id int64) (*Node, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", NodeStateEnabled).
@@ -66,7 +68,7 @@ func (this *NodeDAO) FindNodeName(id uint32) (string, error) {
 }
 
 // 创建节点
-func (this *NodeDAO) CreateNode(name string, clusterId int) (nodeId int, err error) {
+func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err error) {
 	op := NewNodeOperator()
 	op.Name = name
 	op.NodeId = rands.HexString(32)
@@ -79,11 +81,14 @@ func (this *NodeDAO) CreateNode(name string, clusterId int) (nodeId int, err err
 		return 0, err
 	}
 
-	return types.Int(op.Id), nil
+	return types.Int64(op.Id), nil
 }
 
 // 修改节点
-func (this *NodeDAO) UpdateNode(nodeId int, name string, clusterId int) error {
+func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
 	op := NewNodeOperator()
 	op.Id = nodeId
 	op.Name = name
