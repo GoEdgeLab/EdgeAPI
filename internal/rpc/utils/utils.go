@@ -41,14 +41,31 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 	nodeId := nodeIds[0]
 
-	// 获取Node信息
+	// 获取角色Node信息
 	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNode(nodeId)
 	if err != nil {
 		utils.PrintError(err)
 		return UserTypeNone, 0, err
 	}
+	nodeUserId := int64(0)
 	if apiToken == nil {
-		return UserTypeNone, 0, errors.New("can not find token from node id: " + err.Error())
+		// 我们从节点中获取
+		node, err := models.SharedNodeDAO.FindEnabledNodeWithUniqueId(nodeId)
+		if err != nil {
+			return UserTypeNone, 0, err
+		}
+		if node == nil {
+			return UserTypeNone, 0, err
+		}
+
+		nodeUserId = int64(node.Id)
+		apiToken = &models.ApiToken{
+			Id:     0,
+			NodeId: nodeId,
+			Secret: node.Secret,
+			Role:   "node",
+			State:  1,
+		}
 	}
 
 	tokens := md.Get("token")
@@ -92,5 +109,9 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		return UserTypeNone, 0, errors.New("not supported user type: '" + userType + "'")
 	}
 
-	return t, m.GetInt64("userId"), nil
+	if nodeUserId > 0 {
+		return t, nodeUserId, nil
+	} else {
+		return t, m.GetInt64("userId"), nil
+	}
 }

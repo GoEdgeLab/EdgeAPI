@@ -2,9 +2,13 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
 )
 
 type NodeService struct {
@@ -66,8 +70,9 @@ func (this *NodeService) ListEnabledNodes(ctx context.Context, req *pb.ListEnabl
 		}
 
 		result = append(result, &pb.Node{
-			Id:   int64(node.Id),
-			Name: node.Name,
+			Id:     int64(node.Id),
+			Name:   node.Name,
+			Status: node.Status,
 			Cluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -166,12 +171,123 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	}
 
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
-		Id:   int64(node.Id),
-		Name: node.Name,
+		Id:     int64(node.Id),
+		Name:   node.Name,
+		Status: node.Status,
 		Cluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
 		},
 		Login: respLogin,
 	}}, nil
+}
+
+// 组合节点配置
+func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeNodeConfigRequest) (*pb.ComposeNodeConfigResponse, error) {
+	// 校验节点
+	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, errors.New("node validate failed, please check 'nodeId' or 'secret'")
+	}
+
+	nodeMap := maps.Map{
+		"id":      node.UniqueId,
+		"isOn":    node.IsOn == 1,
+		"servers": []maps.Map{},
+		"version": node.Version,
+	}
+
+	// 获取所有的服务
+	servers, err := models.SharedServerDAO.FindAllEnabledServersWithNode(int64(node.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	serverMaps := []maps.Map{}
+	for _, server := range servers {
+		if len(server.Config) == 0 {
+			continue
+		}
+		configMap := maps.Map{}
+		err = json.Unmarshal([]byte(server.Config), &configMap)
+		if err != nil {
+			return nil, err
+		}
+		configMap["id"] = server.UniqueId
+		configMap["version"] = server.Version
+		serverMaps = append(serverMaps, configMap)
+	}
+	nodeMap["servers"] = serverMaps
+
+	data, err := json.Marshal(nodeMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ComposeNodeConfigResponse{ConfigJSON: data}, nil
+}
+
+// 节点stream
+func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
+	// 校验节点
+	_, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
+	if err != nil {
+		return err
+	}
+	logs.Println("nodeId:", nodeId)
+
+	for {
+		req, err := server.Recv()
+		if err != nil {
+			return err
+		}
+		logs.Println("received:", req)
+	}
+}
+
+// 更新节点状态
+func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.UpdateNodeStatusResponse, error) {
+	// 校验节点
+	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.NodeId > 0 {
+		nodeId = req.NodeId
+	}
+
+	if nodeId <= 0 {
+		return nil, errors.New("'nodeId' should be greater than 0")
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeStatus(nodeId, req.StatusJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateNodeStatusResponse{}, nil
+}
+
+// 同步集群中的节点版本
+func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *pb.SyncNodesVersionWithClusterRequest) (*pb.SyncNodesVersionWithClusterResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeDAO.SyncNodeVersionsWithCluster(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.SyncNodesVersionWithClusterResponse{}, nil
 }

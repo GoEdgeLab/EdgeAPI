@@ -43,7 +43,7 @@ func (this *NodeClusterDAO) DisableNodeCluster(id uint32) (rowsAffected int64, e
 }
 
 // 查找启用中的条目
-func (this *NodeClusterDAO) FindEnabledNodeCluster(id uint32) (*NodeCluster, error) {
+func (this *NodeClusterDAO) FindEnabledNodeCluster(id int64) (*NodeCluster, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", NodeClusterStateEnabled).

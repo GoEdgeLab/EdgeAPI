@@ -9,6 +9,7 @@ import "model_node_login.proto";
 message Node {
 	int64 id = 1;
 	string name = 2;
+	string status = 3;
 
 	NodeCluster cluster = 32;
 	NodeLogin login = 33;

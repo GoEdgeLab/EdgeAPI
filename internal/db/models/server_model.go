@@ -3,6 +3,7 @@ package models
 // 服务
 type Server struct {
 	Id           uint32 `field:"id"`           // ID
+	UniqueId     string `field:"uniqueId"`     // 唯一ID
 	IsOn         uint8  `field:"isOn"`         // 是否启用
 	UserId       uint32 `field:"userId"`       // 用户ID
 	AdminId      uint32 `field:"adminId"`      // 管理员ID
@@ -18,6 +19,7 @@ type Server struct {
 
 type ServerOperator struct {
 	Id           interface{} // ID
+	UniqueId     interface{} // 唯一ID
 	IsOn         interface{} // 是否启用
 	UserId       interface{} // 用户ID
 	AdminId      interface{} // 管理员ID
