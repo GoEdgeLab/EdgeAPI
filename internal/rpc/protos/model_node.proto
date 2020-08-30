@@ -10,6 +10,11 @@ message Node {
 	int64 id = 1;
 	string name = 2;
 	string status = 3;
+	string installDir = 4;
+	bool isInstalled = 5;
+	string code = 6;
+	string uniqueId = 7;
+	string secret = 8;
 
 	NodeCluster cluster = 32;
 	NodeLogin login = 33;

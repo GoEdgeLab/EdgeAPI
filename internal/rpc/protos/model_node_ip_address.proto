@@ -1,0 +1,14 @@
+syntax = "proto3";
+option go_package = "./pb";
+
+package pb;
+
+message NodeIPAddress {
+	int64 id = 1;
+	int64 nodeId = 2;
+	string name = 3;
+	string ip = 4;
+	string description = 5;
+	int64 state = 6;
+	int64 order = 7;
+}

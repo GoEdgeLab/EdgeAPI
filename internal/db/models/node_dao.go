@@ -169,14 +169,19 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 }
 
 // 列出单页节点
-func (this *NodeDAO) ListEnabledNodes(offset int64, size int64) (result []*Node, err error) {
-	_, err = this.Query().
+func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64) (result []*Node, err error) {
+	query := this.Query().
 		State(NodeStateEnabled).
 		Offset(offset).
 		Limit(size).
 		DescPk().
-		Slice(&result).
-		FindAll()
+		Slice(&result)
+
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+
+	_, err = query.FindAll()
 	return
 }
 
@@ -234,6 +239,16 @@ func (this *NodeDAO) FindAllNodeIdsMatch(clusterId int64) (result []int64, err e
 		result = append(result, one.GetInt64("id"))
 	}
 	return
+}
+
+// 计算节点数量
+func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64) (int64, error) {
+	query := this.Query()
+	query.State(NodeStateEnabled)
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+	return query.Count()
 }
 
 // 更改节点状态

@@ -16,6 +16,7 @@ pub ${ADMIN_PROJECT} admin
 pub ${ADMIN_PROJECT} node
 pub ${ADMIN_PROJECT} node_cluster
 pub ${ADMIN_PROJECT} node_grant
+pub ${ADMIN_PROJECT} node_ip_address
 pub ${ADMIN_PROJECT} server
 
 cp ../internal/rpc/pb/model_*.go ${ADMIN_PROJECT}/internal/rpc/pb/

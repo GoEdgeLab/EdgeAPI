@@ -52,12 +52,25 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 	return &pb.CountAllEnabledNodesResponse{Count: count}, nil
 }
 
-func (this *NodeService) ListEnabledNodes(ctx context.Context, req *pb.ListEnabledNodesRequest) (*pb.ListEnabledNodesResponse, error) {
+// 计算匹配的节点数量
+func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.CountAllEnabledNodesMatchRequest) (*pb.CountAllEnabledNodesMatchResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := models.SharedNodeDAO.ListEnabledNodes(req.Offset, req.Size)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledNodesMatchResponse{Count: count}, nil
+}
+
+func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.ListEnabledNodesMatchRequest) (*pb.ListEnabledNodesMatchResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +93,7 @@ func (this *NodeService) ListEnabledNodes(ctx context.Context, req *pb.ListEnabl
 		})
 	}
 
-	return &pb.ListEnabledNodesResponse{
+	return &pb.ListEnabledNodesMatchResponse{
 		Nodes: result,
 	}, nil
 }
@@ -171,9 +184,13 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	}
 
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
-		Id:     int64(node.Id),
-		Name:   node.Name,
-		Status: node.Status,
+		Id:          int64(node.Id),
+		Name:        node.Name,
+		Status:      node.Status,
+		UniqueId:    node.UniqueId,
+		Secret:      node.Secret,
+		InstallDir:  node.InstallDir,
+		IsInstalled: node.IsInstalled == 1,
 		Cluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
