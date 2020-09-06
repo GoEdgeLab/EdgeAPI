@@ -308,3 +308,18 @@ func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *p
 
 	return &pb.SyncNodesVersionWithClusterResponse{}, nil
 }
+
+// 修改节点安装状态
+func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.UpdateNodeIsInstalledResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeIsInstalled(req.NodeId, req.IsInstalled)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateNodeIsInstalledResponse{}, nil
+}

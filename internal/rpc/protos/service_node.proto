@@ -38,6 +38,9 @@ service NodeService {
 
 	// 同步集群中的节点版本
 	rpc syncNodesVersionWithCluster (SyncNodesVersionWithClusterRequest) returns (SyncNodesVersionWithClusterResponse);
+
+	// 修改节点安装状态
+	rpc updateNodeIsInstalled (UpdateNodeIsInstalledRequest) returns (UpdateNodeIsInstalledResponse);
 }
 
 // 创建节点
@@ -144,4 +147,14 @@ message CountAllEnabledNodesMatchRequest {
 
 message CountAllEnabledNodesMatchResponse {
 	int64 count = 1;
+}
+
+// 修改节点安装状态
+message UpdateNodeIsInstalledRequest {
+	int64 nodeId = 1;
+	bool isInstalled = 2;
+}
+
+message UpdateNodeIsInstalledResponse {
+
 }

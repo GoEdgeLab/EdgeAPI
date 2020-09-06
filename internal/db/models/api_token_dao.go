@@ -66,3 +66,14 @@ func (this *ApiTokenDAO) FindEnabledTokenWithNode(nodeId string) (*ApiToken, err
 	}
 	return nil, err
 }
+
+// 保存API Token
+func (this *ApiTokenDAO) CreateAPIToken(nodeId string, secret string, role NodeRole) error {
+	op := NewApiTokenOperator()
+	op.NodeId = nodeId
+	op.Secret = secret
+	op.Role = role
+	op.State = ApiTokenStateEnabled
+	_, err := this.Save(op)
+	return err
+}

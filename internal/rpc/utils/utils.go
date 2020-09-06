@@ -42,6 +42,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	nodeId := nodeIds[0]
 
 	// 获取角色Node信息
+	// TODO 缓存节点ID相关信息
 	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNode(nodeId)
 	if err != nil {
 		utils.PrintError(err)

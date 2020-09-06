@@ -74,10 +74,18 @@ func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err
 		return 0, err
 	}
 
+	secret := rands.String(32)
+
+	// 保存API Token
+	err = SharedApiTokenDAO.CreateAPIToken(uniqueId, secret, NodeRoleNode)
+	if err != nil {
+		return
+	}
+
 	op := NewNodeOperator()
 	op.Name = name
 	op.UniqueId = uniqueId
-	op.Secret = rands.String(32)
+	op.Secret = secret
 	op.ClusterId = clusterId
 	op.IsOn = 1
 	op.State = NodeStateEnabled
@@ -256,6 +264,15 @@ func (this *NodeDAO) UpdateNodeStatus(nodeId int64, statusJSON []byte) error {
 	_, err := this.Query().
 		Pk(nodeId).
 		Set("status", string(statusJSON)).
+		Update()
+	return err
+}
+
+// 设置节点安装状态
+func (this *NodeDAO) UpdateNodeIsInstalled(nodeId int64, isInstalled bool) error {
+	_, err := this.Query().
+		Pk(nodeId).
+		Set("isInstalled", isInstalled).
 		Update()
 	return err
 }

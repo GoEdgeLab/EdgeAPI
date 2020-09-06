@@ -18,6 +18,7 @@ pub ${ADMIN_PROJECT} node_cluster
 pub ${ADMIN_PROJECT} node_grant
 pub ${ADMIN_PROJECT} node_ip_address
 pub ${ADMIN_PROJECT} server
+pub ${ADMIN_PROJECT} api_node
 
 cp ../internal/rpc/pb/model_*.go ${ADMIN_PROJECT}/internal/rpc/pb/
 

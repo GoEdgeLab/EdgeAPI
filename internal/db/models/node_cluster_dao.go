@@ -83,6 +83,8 @@ func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
+	op.UseAllAPINodes = 1
+	op.ApiNodes = "[]"
 	op.State = NodeClusterStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
