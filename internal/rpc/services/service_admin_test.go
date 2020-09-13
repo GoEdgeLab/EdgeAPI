@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/assert"
 	"github.com/iwind/TeaGo/maps"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -19,7 +19,7 @@ func TestAdminService_Login(t *testing.T) {
 	service := &AdminService{
 		debug: true,
 	}
-	resp, err := service.Login(testCtx(t), &pb.AdminLoginRequest{
+	resp, err := service.LoginAdmin(testCtx(t), &pb.LoginAdminRequest{
 		Username: "admin",
 		Password: stringutil.Md5("123456"),
 	})
@@ -32,7 +32,7 @@ func TestAdminService_Login(t *testing.T) {
 func TestAdminService_CreateLog(t *testing.T) {
 	service := &AdminService{debug: true}
 
-	resp, err := service.CreateLog(testCtx(t), &pb.AdminCreateLogRequest{
+	resp, err := service.CreateAdminLog(testCtx(t), &pb.CreateAdminLogRequest{
 		Level:       "info",
 		Description: "这是一个测试日志",
 		Action:      "/login",
@@ -44,11 +44,11 @@ func TestAdminService_CreateLog(t *testing.T) {
 	t.Log(resp)
 }
 
-func TestAdminService_FindAllEnabledClusters(t *testing.T) {
+func TestAdminService_FindAdminFullname(t *testing.T) {
 	service := &AdminService{
 		debug: true,
 	}
-	resp, err := service.FindAllEnabledClusters(testCtx(t), &pb.AdminFindAllEnabledClustersRequest{})
+	resp, err := service.FindAdminFullname(testCtx(t), &pb.FindAdminFullnameRequest{AdminId: 1})
 	if err != nil {
 		t.Fatal(err)
 	}

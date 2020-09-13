@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
 type APINodeService struct {
@@ -79,6 +79,7 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 			Description: node.Description,
 			Host:        node.Host,
 			Port:        int32(node.Port),
+			Address:     node.Address(),
 		})
 	}
 
@@ -124,6 +125,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 			Description: node.Description,
 			Host:        node.Host,
 			Port:        int32(node.Port),
+			Address:     node.Address(),
 		})
 	}
 
@@ -156,6 +158,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		Description: node.Description,
 		Host:        node.Host,
 		Port:        int32(node.Port),
+		Address:     node.Address(),
 	}
 	return &pb.FindEnabledAPINodeResponse{Node: result}, nil
 }

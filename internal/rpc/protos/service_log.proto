@@ -1,5 +1,0 @@
-syntax = "proto3";
-option go_package = "./pb";
-
-package pb;
-

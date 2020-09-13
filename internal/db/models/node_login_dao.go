@@ -11,6 +11,8 @@ import (
 const (
 	NodeLoginStateEnabled  = 1 // 已启用
 	NodeLoginStateDisabled = 0 // 已禁用
+
+	NodeLoginTypeSSH = "ssh"
 )
 
 type NodeLoginDAO dbs.DAO

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -12,6 +13,10 @@ import (
 const (
 	NodeStateEnabled  = 1 // 已启用
 	NodeStateDisabled = 0 // 已禁用
+
+	NodeInstallStateAll          = 0 // 全部
+	NodeInstallStateInstalled    = 1 // 已安装
+	NodeInstallStateNotInstalled = 2 // 未安装
 )
 
 type NodeDAO dbs.DAO
@@ -177,7 +182,7 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 }
 
 // 列出单页节点
-func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64) (result []*Node, err error) {
+func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState int8) (result []*Node, err error) {
 	query := this.Query().
 		State(NodeStateEnabled).
 		Offset(offset).
@@ -185,8 +190,19 @@ func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId i
 		DescPk().
 		Slice(&result)
 
+	// 集群
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+	}
+
+	// 安装状态
+	switch installState {
+	case NodeInstallStateAll:
+		// 不做任何事情
+	case NodeInstallStateInstalled:
+		query.Attr("isInstalled", 1)
+	case NodeInstallStateNotInstalled:
+		query.Attr("isInstalled", 0)
 	}
 
 	_, err = query.FindAll()
@@ -250,12 +266,25 @@ func (this *NodeDAO) FindAllNodeIdsMatch(clusterId int64) (result []int64, err e
 }
 
 // 计算节点数量
-func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64) (int64, error) {
+func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState int8) (int64, error) {
 	query := this.Query()
 	query.State(NodeStateEnabled)
+
+	// 集群
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	}
+
+	// 安装状态
+	switch installState {
+	case NodeInstallStateAll:
+		// 不做任何事情
+	case NodeInstallStateInstalled:
+		query.Attr("isInstalled", 1)
+	case NodeInstallStateNotInstalled:
+		query.Attr("isInstalled", 0)
+	}
+
 	return query.Count()
 }
 
@@ -273,6 +302,47 @@ func (this *NodeDAO) UpdateNodeIsInstalled(nodeId int64, isInstalled bool) error
 	_, err := this.Query().
 		Pk(nodeId).
 		Set("isInstalled", isInstalled).
+		Set("installStatus", "null"). // 重置安装状态
+		Update()
+	return err
+}
+
+// 查询节点的安装状态
+func (this *NodeDAO) FindNodeInstallStatus(nodeId int64) (*NodeInstallStatus, error) {
+	installStatus, err := this.Query().
+		Pk(nodeId).
+		Result("installStatus").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(installStatus) == 0 {
+		return NewNodeInstallStatus(), nil
+	}
+
+	status := &NodeInstallStatus{}
+	err = json.Unmarshal([]byte(installStatus), status)
+	return status, err
+}
+
+// 修改节点的安装状态
+func (this *NodeDAO) UpdateNodeInstallStatus(nodeId int64, status *NodeInstallStatus) error {
+	if status == nil {
+		_, err := this.Query().
+			Pk(nodeId).
+			Set("installStatus", "null").
+			Update()
+		return err
+	}
+
+	data, err := json.Marshal(status)
+	if err != nil {
+		return err
+	}
+	_, err = this.Query().
+		Pk(nodeId).
+		Set("installStatus", string(data)).
 		Update()
 	return err
 }

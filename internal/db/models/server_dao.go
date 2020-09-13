@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -59,7 +60,7 @@ func (this *ServerDAO) FindEnabledServer(id int64) (*Server, error) {
 }
 
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64, userId int64, clusterId int64, configJSON string, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
+func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, clusterId int64, configJSON string, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -69,6 +70,9 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, clusterId int64
 	op.UniqueId = uniqueId
 	op.UserId = userId
 	op.AdminId = adminId
+	op.Name = name
+	op.Type = serverType
+	op.Description = description
 	op.ClusterId = clusterId
 	if len(configJSON) > 0 {
 		op.Config = configJSON
@@ -87,25 +91,30 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, clusterId int64
 	return types.Int64(op.Id), err
 }
 
-// 修改服务
-func (this *ServerDAO) UpdateServer(serverId int64, clusterId int64, configJSON string, includeNodesJSON string, excludeNodesJSON string) error {
+// 修改服务基本信息
+func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	op := NewServerOperator()
 	op.Id = serverId
+	op.Name = name
+	op.Description = description
 	op.ClusterId = clusterId
-	if len(configJSON) > 0 {
-		op.Config = configJSON
-	}
-	if len(includeNodesJSON) > 0 {
-		op.IncludeNodes = includeNodesJSON
-	}
-	if len(excludeNodesJSON) > 0 {
-		op.ExcludeNodes = excludeNodesJSON
-	}
 	op.Version = dbs.SQL("version=version+1")
 	_, err := this.Save(op)
+	return err
+}
+
+// 修改服务配置
+func (this *ServerDAO) UpdateServerConfig(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("config", string(config)).
+		Update()
 	return err
 }
 
@@ -147,6 +156,7 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Se
 		FindAll()
 	return
 }
+
 
 // 生成唯一ID
 func (this *ServerDAO) genUniqueId() (string, error) {

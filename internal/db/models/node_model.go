@@ -17,6 +17,7 @@ type Node struct {
 	LatestVersion uint32 `field:"latestVersion"` // 最后版本号
 	InstallDir    string `field:"installDir"`    // 安装目录
 	IsInstalled   uint8  `field:"isInstalled"`   // 是否已安装
+	InstallStatus string `field:"installStatus"` // 安装状态
 	State         uint8  `field:"state"`         // 状态
 }
 
@@ -36,6 +37,7 @@ type NodeOperator struct {
 	LatestVersion interface{} // 最后版本号
 	InstallDir    interface{} // 安装目录
 	IsInstalled   interface{} // 是否已安装
+	InstallStatus interface{} // 安装状态
 	State         interface{} // 状态
 }
 

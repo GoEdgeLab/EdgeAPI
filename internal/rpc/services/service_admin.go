@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
 type AdminService struct {
@@ -79,7 +79,7 @@ func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdm
 	}, nil
 }
 
-func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdminNameRequest) (*pb.FindAdminNameResponse, error) {
+func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdminFullnameRequest) (*pb.FindAdminFullnameResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 		return nil, err
 	}
 
-	return &pb.FindAdminNameResponse{
+	return &pb.FindAdminFullnameResponse{
 		Fullname: fullname,
 	}, nil
 }

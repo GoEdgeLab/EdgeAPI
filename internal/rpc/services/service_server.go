@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
 type ServerService struct {
@@ -17,7 +17,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	if err != nil {
 		return nil, err
 	}
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.ClusterId, string(req.Config), string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, req.ClusterId, string(req.Config), string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 }
 
 // 修改服务
-func (this *ServerService) UpdateServer(ctx context.Context, req *pb.UpdateServerRequest) (*pb.UpdateServerResponse, error) {
+func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.UpdateServerBasicResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (this *ServerService) UpdateServer(ctx context.Context, req *pb.UpdateServe
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServer(req.ServerId, req.ClusterId, string(req.Config), string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
+	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,42 @@ func (this *ServerService) UpdateServer(ctx context.Context, req *pb.UpdateServe
 		return nil, err
 	}
 
-	return &pb.UpdateServerResponse{}, nil
+	return &pb.UpdateServerBasicResponse{}, nil
+}
+
+// 修改服务配置
+func (this *ServerService) UpdateServerConfig(ctx context.Context, req *pb.UpdateServerConfigRequest) (*pb.UpdateServerConfigResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查找Server
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return &pb.UpdateServerConfigResponse{}, nil
+	}
+
+	// 修改
+	err = models.SharedServerDAO.UpdateServerConfig(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerConfigResponse{}, nil
 }
 
 // 计算服务数量
@@ -106,6 +141,9 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		}
 		result = append(result, &pb.Server{
 			Id:           int64(server.Id),
+			Type:         server.Type,
+			Name:         server.Name,
+			Description:  server.Description,
 			Config:       []byte(server.Config),
 			IncludeNodes: []byte(server.IncludeNodes),
 			ExcludeNodes: []byte(server.ExcludeNodes),
@@ -174,6 +212,9 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
 		Id:           int64(server.Id),
+		Type:         server.Type,
+		Name:         server.Name,
+		Description:  server.Description,
 		Config:       []byte(server.Config),
 		IncludeNodes: []byte(server.IncludeNodes),
 		ExcludeNodes: []byte(server.ExcludeNodes),

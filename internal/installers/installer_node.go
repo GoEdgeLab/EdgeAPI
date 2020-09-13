@@ -62,7 +62,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 			return err
 		}
 
-		data = bytes.ReplaceAll(data, []byte("${endpoint}"), []byte(nodeParams.Endpoint))
+		data = bytes.ReplaceAll(data, []byte("${endpoints}"), []byte(nodeParams.QuoteEndpoints()))
 		data = bytes.ReplaceAll(data, []byte("${nodeId}"), []byte(nodeParams.NodeId))
 		data = bytes.ReplaceAll(data, []byte("${nodeSecret}"), []byte(nodeParams.Secret))
 

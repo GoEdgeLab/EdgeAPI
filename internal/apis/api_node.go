@@ -3,9 +3,9 @@ package apis
 import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	"google.golang.org/grpc"
 	"net"
@@ -58,6 +58,7 @@ func (this *APINode) listenRPC() error {
 	pb.RegisterNodeClusterServiceServer(rpcServer, &services.NodeClusterService{})
 	pb.RegisterNodeIPAddressServiceServer(rpcServer, &services.NodeIPAddressService{})
 	pb.RegisterAPINodeServiceServer(rpcServer, &services.APINodeService{})
+	pb.RegisterOriginServerServiceServer(rpcServer, &services.OriginServerService{})
 	err = rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())

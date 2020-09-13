@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/pb"
+	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 type NodeService struct {
 }
 
+// 创建节点
 func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeRequest) (*pb.CreateNodeResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -38,6 +41,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 	}, nil
 }
 
+// 计算节点数量
 func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.CountAllEnabledNodesResponse, error) {
 	_ = req
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -58,19 +62,20 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, types.Int8(req.InstallState))
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CountAllEnabledNodesMatchResponse{Count: count}, nil
 }
 
+// 列出单页的节点
 func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.ListEnabledNodesMatchRequest) (*pb.ListEnabledNodesMatchResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId)
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, types.Int8(req.InstallState))
 	if err != nil {
 		return nil, err
 	}
@@ -82,14 +87,32 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			return nil, err
 		}
 
+		// 安装信息
+		installStatus, err := node.DecodeInstallStatus()
+		if err != nil {
+			return nil, err
+		}
+		installStatusResult := &pb.NodeInstallStatus{}
+		if installStatus != nil {
+			installStatusResult = &pb.NodeInstallStatus{
+				IsRunning:  installStatus.IsRunning,
+				IsFinished: installStatus.IsFinished,
+				IsOk:       installStatus.IsOk,
+				Error:      installStatus.Error,
+				UpdatedAt:  installStatus.UpdatedAt,
+			}
+		}
+
 		result = append(result, &pb.Node{
-			Id:     int64(node.Id),
-			Name:   node.Name,
-			Status: node.Status,
+			Id:          int64(node.Id),
+			Name:        node.Name,
+			IsInstalled: node.IsInstalled == 1,
+			Status:      node.Status,
 			Cluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
 			},
+			InstallStatus: installStatusResult,
 		})
 	}
 
@@ -183,6 +206,22 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 安装信息
+	installStatus, err := node.DecodeInstallStatus()
+	if err != nil {
+		return nil, err
+	}
+	installStatusResult := &pb.NodeInstallStatus{}
+	if installStatus != nil {
+		installStatusResult = &pb.NodeInstallStatus{
+			IsRunning:  installStatus.IsRunning,
+			IsFinished: installStatus.IsFinished,
+			IsOk:       installStatus.IsOk,
+			Error:      installStatus.Error,
+			UpdatedAt:  installStatus.UpdatedAt,
+		}
+	}
+
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:          int64(node.Id),
 		Name:        node.Name,
@@ -195,7 +234,8 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
 		},
-		Login: respLogin,
+		Login:         respLogin,
+		InstallStatus: installStatusResult,
 	}}, nil
 }
 
@@ -322,4 +362,21 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 	}
 
 	return &pb.UpdateNodeIsInstalledResponse{}, nil
+}
+
+// 安装节点
+func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeRequest) (*pb.InstallNodeResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		err = installers.SharedQueue().InstallNodeProcess(req.NodeId)
+		if err != nil {
+			logs.Println("[RPC]install node:" + err.Error())
+		}
+	}()
+
+	return &pb.InstallNodeResponse{}, nil
 }

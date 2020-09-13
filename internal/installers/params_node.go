@@ -1,15 +1,18 @@
 package installers
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type NodeParams struct {
-	Endpoint string
-	NodeId   string
-	Secret   string
+	Endpoints []string
+	NodeId    string
+	Secret    string
 }
 
 func (this *NodeParams) Validate() error {
-	if len(this.Endpoint) == 0 {
+	if len(this.Endpoints) == 0 {
 		return errors.New("'endpoint' should not be empty")
 	}
 	if len(this.NodeId) == 0 {
@@ -19,4 +22,11 @@ func (this *NodeParams) Validate() error {
 		return errors.New("'secret' should not be empty")
 	}
 	return nil
+}
+
+func (this *NodeParams) QuoteEndpoints() string {
+	if len(this.Endpoints) == 0 {
+		return ""
+	}
+	return "\"" + strings.Join(this.Endpoints, "\", \"") + "\""
 }
