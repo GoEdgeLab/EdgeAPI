@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -59,8 +60,16 @@ func (this *ServerDAO) FindEnabledServer(id int64) (*Server, error) {
 	return result.(*Server), err
 }
 
+// 查找服务类型
+func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
+	return this.Query().
+		Pk(serverId).
+		Result("type").
+		FindStringCol("")
+}
+
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, clusterId int64, configJSON string, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
+func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyId int64, clusterId int64, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -73,10 +82,32 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	op.Name = name
 	op.Type = serverType
 	op.Description = description
-	op.ClusterId = clusterId
-	if len(configJSON) > 0 {
-		op.Config = configJSON
+
+	if len(serverNamesJSON) > 0 {
+		op.ServerNames = serverNamesJSON
 	}
+	if len(httpJSON) > 0 {
+		op.Http = httpJSON
+	}
+	if len(httpsJSON) > 0 {
+		op.Https = httpsJSON
+	}
+	if len(tcpJSON) > 0 {
+		op.Tcp = tcpJSON
+	}
+	if len(tlsJSON) > 0 {
+		op.Tls = tlsJSON
+	}
+	if len(unixJSON) > 0 {
+		op.Unix = unixJSON
+	}
+	if len(udpJSON) > 0 {
+		op.Udp = udpJSON
+	}
+	op.WebId = webId
+	op.ReverseProxyId = reverseProxyId
+
+	op.ClusterId = clusterId
 	if len(includeNodesJSON) > 0 {
 		op.IncludeNodes = includeNodesJSON
 	}
@@ -88,7 +119,14 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	op.IsOn = 1
 	op.State = ServerStateEnabled
 	_, err = this.Save(op)
-	return types.Int64(op.Id), err
+
+	if err != nil {
+		return 0, err
+	}
+
+	serverId = types.Int64(op.Id)
+	err = this.RenewServerConfig(serverId)
+	return serverId, err
 }
 
 // 修改服务基本信息
@@ -111,11 +149,171 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
 	_, err := this.Query().
 		Pk(serverId).
 		Set("config", string(config)).
+		Set("version", dbs.SQL("version+1")).
 		Update()
 	return err
+}
+
+// 修改HTTP配置
+func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("http", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改HTTPS配置
+func (this *ServerDAO) UpdateServerHTTPS(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("https", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改TCP配置
+func (this *ServerDAO) UpdateServerTCP(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("tcp", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改TLS配置
+func (this *ServerDAO) UpdateServerTLS(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("tls", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改Unix配置
+func (this *ServerDAO) UpdateServerUnix(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("unix", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改UDP配置
+func (this *ServerDAO) UpdateServerUDP(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("udp", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改Web配置
+func (this *ServerDAO) UpdateServerWeb(serverId int64, webId int64) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("webId", webId).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改ServerNames配置
+func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	if len(config) == 0 {
+		config = []byte("null")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("serverNames", string(config)).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
+}
+
+// 修改反向代理配置
+func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, reverseProxyId int64) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	_, err := this.Query().
+		Pk(serverId).
+		Set("reverseProxyId", reverseProxyId).
+		Update()
+	if err != nil {
+		return err
+	}
+	return this.RenewServerConfig(serverId)
 }
 
 // 计算所有可用服务数量
@@ -157,6 +355,153 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Se
 	return
 }
 
+// 构造服务的Config
+func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.ServerConfig, error) {
+	server, err := this.FindEnabledServer(serverId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("server not found")
+	}
+
+	config := &serverconfigs.ServerConfig{}
+	config.Id = serverId
+	config.Type = server.Type
+	config.IsOn = server.IsOn == 1
+	config.Name = server.Name
+	config.Description = server.Description
+
+	// Components
+	// TODO
+
+	// Filters
+	// TODO
+
+	// ServerNames
+	if len(server.ServerNames) > 0 && server.ServerNames != "null" {
+		serverNames := []*serverconfigs.ServerNameConfig{}
+		err = json.Unmarshal([]byte(server.ServerNames), &serverNames)
+		if err != nil {
+			return nil, err
+		}
+		config.ServerNames = serverNames
+	}
+
+	// HTTP
+	if len(server.Http) > 0 && server.Http != "null" {
+		httpConfig := &serverconfigs.HTTPProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Http), httpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.HTTP = httpConfig
+	}
+
+	// HTTPS
+	if len(server.Https) > 0 && server.Https != "null" {
+		httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Https), httpsConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.HTTPS = httpsConfig
+	}
+
+	// TCP
+	if len(server.Tcp) > 0 && server.Tcp != "null" {
+		tcpConfig := &serverconfigs.TCPProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Tcp), tcpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.TCP = tcpConfig
+	}
+
+	// TLS
+	if len(server.Tls) > 0 && server.Tls != "null" {
+		tlsConfig := &serverconfigs.TLSProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Tls), tlsConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.TLS = tlsConfig
+	}
+
+	// Unix
+	if len(server.Unix) > 0 && server.Unix != "null" {
+		unixConfig := &serverconfigs.UnixProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Unix), unixConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Unix = unixConfig
+	}
+
+	// UDP
+	if len(server.Udp) > 0 && server.Udp != "null" {
+		udpConfig := &serverconfigs.UDPProtocolConfig{}
+		err = json.Unmarshal([]byte(server.Udp), udpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.UDP = udpConfig
+	}
+
+	// Web
+	if server.WebId > 0 {
+		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(int64(server.WebId))
+		if err != nil {
+			return nil, err
+		}
+		if webConfig != nil {
+			config.Web = webConfig
+		}
+	}
+
+	// ReverseProxy
+	if server.ReverseProxyId > 0 {
+		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(int64(server.ReverseProxyId))
+		if err != nil {
+			return nil, err
+		}
+		if reverseProxyConfig != nil {
+			config.ReverseProxy = reverseProxyConfig
+		}
+	}
+
+	return config, nil
+}
+
+// 更新服务的Config配置
+func (this *ServerDAO) RenewServerConfig(serverId int64) error {
+	serverConfig, err := this.ComposeServerConfig(serverId)
+	if err != nil {
+		return err
+	}
+	data, err := serverConfig.AsJSON()
+	if err != nil {
+		return err
+	}
+	return this.UpdateServerConfig(serverId, data)
+}
+
+// 根据条件获取反向代理配置
+func (this *ServerDAO) FindReverseProxyConfig(serverId int64) (*serverconfigs.ReverseProxyConfig, error) {
+	reverseProxy, err := this.Query().
+		Pk(serverId).
+		Result("reverseProxy").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(reverseProxy) == 0 || reverseProxy == "null" {
+		return nil, nil
+	}
+	config := &serverconfigs.ReverseProxyConfig{}
+	err = json.Unmarshal([]byte(reverseProxy), config)
+	return config, err
+}
 
 // 生成唯一ID
 func (this *ServerDAO) genUniqueId() (string, error) {

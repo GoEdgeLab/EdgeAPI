@@ -3,6 +3,8 @@ package models
 // 源站
 type OriginServer struct {
 	Id                  uint32 `field:"id"`                  // ID
+	AdminId             uint32 `field:"adminId"`             // 管理员ID
+	UserId              uint32 `field:"userId"`              // 用户ID
 	IsOn                uint8  `field:"isOn"`                // 是否启用
 	Name                string `field:"name"`                // 名称
 	Version             uint32 `field:"version"`             // 版本
@@ -21,7 +23,6 @@ type OriginServer struct {
 	HttpResponseHeaders string `field:"httpResponseHeaders"` // 响应Headers配置
 	Host                string `field:"host"`                // 自定义主机名
 	HealthCheck         string `field:"healthCheck"`         // 健康检查设置
-	IsDown              uint8  `field:"isDown"`              // 是否处于健康检查失败状态
 	Cert                string `field:"cert"`                // 证书设置
 	Ftp                 string `field:"ftp"`                 // FTP相关设置
 	CreatedAt           uint32 `field:"createdAt"`           // 创建时间
@@ -30,6 +31,8 @@ type OriginServer struct {
 
 type OriginServerOperator struct {
 	Id                  interface{} // ID
+	AdminId             interface{} // 管理员ID
+	UserId              interface{} // 用户ID
 	IsOn                interface{} // 是否启用
 	Name                interface{} // 名称
 	Version             interface{} // 版本
@@ -48,7 +51,6 @@ type OriginServerOperator struct {
 	HttpResponseHeaders interface{} // 响应Headers配置
 	Host                interface{} // 自定义主机名
 	HealthCheck         interface{} // 健康检查设置
-	IsDown              interface{} // 是否处于健康检查失败状态
 	Cert                interface{} // 证书设置
 	Ftp                 interface{} // FTP相关设置
 	CreatedAt           interface{} // 创建时间

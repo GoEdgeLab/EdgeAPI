@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -85,11 +86,31 @@ func (this *OriginServerService) FindEnabledOriginServer(ctx context.Context, re
 		IsOn: origin.IsOn == 1,
 		Name: origin.Name,
 		Addr: &pb.NetworkAddress{
-			Protocol:  addr.Protocol,
+			Protocol:  addr.Protocol.String(),
 			Host:      addr.Host,
 			PortRange: addr.PortRange,
 		},
 		Description: origin.Description,
 	}
 	return &pb.FindEnabledOriginServerResponse{Origin: result}, nil
+}
+
+// 查找源站配置
+func (this *OriginServerService) FindEnabledOriginServerConfig(ctx context.Context, req *pb.FindEnabledOriginServerConfigRequest) (*pb.FindEnabledOriginServerConfigResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := models.SharedOriginServerDAO.ComposeOriginConfig(req.OriginId)
+	if err != nil {
+		return nil, err
+	}
+
+	configData, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindEnabledOriginServerConfigResponse{Config: configData}, nil
 }

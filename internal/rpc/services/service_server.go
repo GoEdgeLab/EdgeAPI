@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -17,7 +18,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	if err != nil {
 		return nil, err
 	}
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, req.ClusterId, string(req.Config), string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyId, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +74,8 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	return &pb.UpdateServerBasicResponse{}, nil
 }
 
-// 修改服务配置
-func (this *ServerService) UpdateServerConfig(ctx context.Context, req *pb.UpdateServerConfigRequest) (*pb.UpdateServerConfigResponse, error) {
+// 修改HTTP服务
+func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.UpdateServerHTTPResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -84,17 +85,17 @@ func (this *ServerService) UpdateServerConfig(ctx context.Context, req *pb.Updat
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查找Server
+	// 查询老的节点信息
 	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
 	if err != nil {
 		return nil, err
 	}
 	if server == nil {
-		return &pb.UpdateServerConfigResponse{}, nil
+		return nil, errors.New("can not find server")
 	}
 
-	// 修改
-	err = models.SharedServerDAO.UpdateServerConfig(req.ServerId, req.Config)
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerHTTP(req.ServerId, req.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,287 @@ func (this *ServerService) UpdateServerConfig(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return &pb.UpdateServerConfigResponse{}, nil
+	return &pb.UpdateServerHTTPResponse{}, nil
+}
+
+// 修改HTTPS服务
+func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.UpdateServerHTTPSResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerHTTPS(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerHTTPSResponse{}, nil
+}
+
+// 修改TCP服务
+func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.UpdateServerTCPResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerTCP(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerTCPResponse{}, nil
+}
+
+// 修改TLS服务
+func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.UpdateServerTLSResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerTLS(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerTLSResponse{}, nil
+}
+
+// 修改Unix服务
+func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.UpdateServerUnixResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerUnix(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerUnixResponse{}, nil
+}
+
+// 修改UDP服务
+func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.UpdateServerUDPResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerUDP(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerUDPResponse{}, nil
+}
+
+// 修改Web服务
+func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.UpdateServerWebResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerWeb(req.ServerId, req.WebId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerWebResponse{}, nil
+}
+
+// 修改反向代理服务
+func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.UpdateServerReverseProxyResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerReverseProxy(req.ServerId, req.ReverseProxyId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerReverseProxyResponse{}, nil
+}
+
+// 修改域名服务
+func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.UpdateServerNamesResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	// 查询老的节点信息
+	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, errors.New("can not find server")
+	}
+
+	// 修改配置
+	err = models.SharedServerDAO.UpdateServerNames(req.ServerId, req.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新新的节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateServerNamesResponse{}, nil
 }
 
 // 计算服务数量
@@ -142,9 +423,9 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		result = append(result, &pb.Server{
 			Id:           int64(server.Id),
 			Type:         server.Type,
+			Config:       []byte(server.Config),
 			Name:         server.Name,
 			Description:  server.Description,
-			Config:       []byte(server.Config),
 			IncludeNodes: []byte(server.IncludeNodes),
 			ExcludeNodes: []byte(server.ExcludeNodes),
 			CreatedAt:    int64(server.CreatedAt),
@@ -211,11 +492,20 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
-		Id:           int64(server.Id),
-		Type:         server.Type,
-		Name:         server.Name,
-		Description:  server.Description,
-		Config:       []byte(server.Config),
+		Id:             int64(server.Id),
+		Type:           server.Type,
+		Name:           server.Name,
+		Description:    server.Description,
+		Config:         []byte(server.Config),
+		HttpJSON:       []byte(server.Http),
+		HttpsJSON:      []byte(server.Https),
+		TcpJSON:        []byte(server.Tcp),
+		TlsJSON:        []byte(server.Tls),
+		UnixJSON:       []byte(server.Unix),
+		UdpJSON:        []byte(server.Udp),
+		WebId:          int64(server.WebId),
+		ReverseProxyId: int64(server.ReverseProxyId),
+
 		IncludeNodes: []byte(server.IncludeNodes),
 		ExcludeNodes: []byte(server.ExcludeNodes),
 		CreatedAt:    int64(server.CreatedAt),
@@ -224,4 +514,42 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 			Name: clusterName,
 		},
 	}}, nil
+}
+
+//
+func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	serverType, err := models.SharedServerDAO.FindEnabledServerType(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindEnabledServerTypeResponse{Type: serverType}, nil
+}
+
+// 查找反向代理设置
+func (this *ServerService) FindServerReverseProxy(ctx context.Context, req *pb.FindServerReverseProxyRequest) (*pb.FindServerReverseProxyResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	reverseProxy, err := models.SharedServerDAO.FindReverseProxyConfig(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	if reverseProxy == nil {
+		return &pb.FindServerReverseProxyResponse{Config: nil}, nil
+	}
+
+	configData, err := json.Marshal(reverseProxy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindServerReverseProxyResponse{Config: configData}, nil
 }

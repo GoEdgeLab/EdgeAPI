@@ -3,6 +3,8 @@ package models
 // 节点
 type Node struct {
 	Id            uint32 `field:"id"`            // ID
+	AdminId       uint32 `field:"adminId"`       // 管理员ID
+	UserId        uint32 `field:"userId"`        // 用户ID
 	IsOn          uint8  `field:"isOn"`          // 是否启用
 	UniqueId      string `field:"uniqueId"`      // 节点ID
 	Secret        string `field:"secret"`        // 密钥
@@ -23,6 +25,8 @@ type Node struct {
 
 type NodeOperator struct {
 	Id            interface{} // ID
+	AdminId       interface{} // 管理员ID
+	UserId        interface{} // 用户ID
 	IsOn          interface{} // 是否启用
 	UniqueId      interface{} // 节点ID
 	Secret        interface{} // 密钥
