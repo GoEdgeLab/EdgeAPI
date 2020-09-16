@@ -426,6 +426,12 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 			Config:       []byte(server.Config),
 			Name:         server.Name,
 			Description:  server.Description,
+			HttpJSON:     []byte(server.Http),
+			HttpsJSON:    []byte(server.Https),
+			TcpJSON:      []byte(server.Tcp),
+			TlsJSON:      []byte(server.Tls),
+			UnixJSON:     []byte(server.Unix),
+			UdpJSON:      []byte(server.Udp),
 			IncludeNodes: []byte(server.IncludeNodes),
 			ExcludeNodes: []byte(server.ExcludeNodes),
 			CreatedAt:    int64(server.CreatedAt),
@@ -497,6 +503,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		Name:           server.Name,
 		Description:    server.Description,
 		Config:         []byte(server.Config),
+		ServerNamesJON: []byte(server.ServerNames),
 		HttpJSON:       []byte(server.Http),
 		HttpsJSON:      []byte(server.Https),
 		TcpJSON:        []byte(server.Tcp),
@@ -532,7 +539,7 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 }
 
 // 查找反向代理设置
-func (this *ServerService) FindServerReverseProxy(ctx context.Context, req *pb.FindServerReverseProxyRequest) (*pb.FindServerReverseProxyResponse, error) {
+func (this *ServerService) FindServerReverseProxyConfig(ctx context.Context, req *pb.FindServerReverseProxyConfigRequest) (*pb.FindServerReverseProxyConfigResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -544,12 +551,27 @@ func (this *ServerService) FindServerReverseProxy(ctx context.Context, req *pb.F
 	}
 
 	if reverseProxy == nil {
-		return &pb.FindServerReverseProxyResponse{Config: nil}, nil
+		return &pb.FindServerReverseProxyConfigResponse{Config: nil}, nil
 	}
 
 	configData, err := json.Marshal(reverseProxy)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindServerReverseProxyResponse{Config: configData}, nil
+	return &pb.FindServerReverseProxyConfigResponse{Config: configData}, nil
+}
+
+// 初始化Web设置
+func (this *ServerService) InitServerWeb(ctx context.Context, req *pb.InitServerWebRequest) (*pb.InitServerWebResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	webId, err := models.SharedServerDAO.InitServerWeb(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.InitServerWebResponse{WebId: webId}, nil
 }

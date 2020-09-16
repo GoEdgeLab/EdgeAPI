@@ -45,7 +45,9 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 
 	result := &pb.HTTPWeb{}
 	result.Id = int64(web.Id)
+	result.IsOn = web.IsOn == 1
 	result.Root = web.Root
+	result.GzipId = int64(web.GzipId)
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
 }
 
@@ -63,4 +65,20 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 	}
 
 	return &pb.UpdateHTTPWebResponse{}, nil
+}
+
+// 修改Gzip配置
+func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.UpdateHTTPWebGzipRequest) (*pb.UpdateHTTPWebGzipResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebGzip(req.WebId, req.GzipId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateHTTPWebGzipResponse{}, nil
 }

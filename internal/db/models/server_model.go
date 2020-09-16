@@ -26,6 +26,7 @@ type Server struct {
 	ExcludeNodes   string `field:"excludeNodes"`   // 节点排除条件
 	Version        uint32 `field:"version"`        // 版本号
 	CreatedAt      uint32 `field:"createdAt"`      // 创建时间
+	IsUpdating     uint8  `field:"isUpdating"`     // 是否正在更新
 	State          uint8  `field:"state"`          // 状态
 }
 
@@ -54,6 +55,7 @@ type ServerOperator struct {
 	ExcludeNodes   interface{} // 节点排除条件
 	Version        interface{} // 版本号
 	CreatedAt      interface{} // 创建时间
+	IsUpdating     interface{} // 是否正在更新
 	State          interface{} // 状态
 }
 

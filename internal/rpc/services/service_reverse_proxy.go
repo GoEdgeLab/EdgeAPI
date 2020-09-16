@@ -120,3 +120,19 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 
 	return &pb.UpdateReverseProxyBackupOriginsResponse{}, nil
 }
+
+// 修改是否启用
+func (this *ReverseProxyService) UpdateReverseProxyIsOn(ctx context.Context, req *pb.UpdateReverseProxyIsOnRequest) (*pb.UpdateReverseProxyIsOnResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxyIsOn(req.ReverseProxyId, req.IsOn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateReverseProxyIsOnResponse{}, nil
+}

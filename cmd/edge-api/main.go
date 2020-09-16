@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/apis"
 	"github.com/TeaOSLab/EdgeAPI/internal/apps"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	_ "github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	_ "github.com/iwind/TeaGo/bootstrap"
 )
 

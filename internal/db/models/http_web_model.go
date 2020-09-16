@@ -10,6 +10,7 @@ type HTTPWeb struct {
 	State      uint8  `field:"state"`      // 状态
 	CreatedAt  uint32 `field:"createdAt"`  // 创建时间
 	Root       string `field:"root"`       // 资源根目录
+	GzipId     uint32 `field:"gzipId"`     // Gzip配置
 }
 
 type HTTPWebOperator struct {
@@ -21,6 +22,7 @@ type HTTPWebOperator struct {
 	State      interface{} // 状态
 	CreatedAt  interface{} // 创建时间
 	Root       interface{} // 资源根目录
+	GzipId     interface{} // Gzip配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

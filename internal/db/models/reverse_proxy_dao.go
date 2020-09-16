@@ -88,7 +88,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 			return nil, err
 		}
 		for _, originConfig := range originConfigs {
-			newOriginConfig, err := SharedOriginServerDAO.ComposeOriginConfig(int64(originConfig.Id))
+			newOriginConfig, err := SharedOriginServerDAO.ComposeOriginConfig(originConfig.Id)
 			if err != nil {
 				return nil, err
 			}
@@ -99,7 +99,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 	}
 
 	if len(reverseProxy.BackupOrigins) > 0 && reverseProxy.BackupOrigins != "null" {
-		originConfigs := []*OriginServer{}
+		originConfigs := []*serverconfigs.OriginServerConfig{}
 		err = json.Unmarshal([]byte(reverseProxy.BackupOrigins), &originConfigs)
 		if err != nil {
 			return nil, err
@@ -193,5 +193,14 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int6
 
 	// TODO 更新所有使用此反向代理的服务
 
+	return err
+}
+
+// 修改是否启用
+func (this *ReverseProxyDAO) UpdateReverseProxyIsOn(reverseProxyId int64, isOn bool) error {
+	_, err := this.Query().
+		Pk(reverseProxyId).
+		Set("isOn", isOn).
+		Update()
 	return err
 }

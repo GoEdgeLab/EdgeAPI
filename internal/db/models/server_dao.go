@@ -283,6 +283,28 @@ func (this *ServerDAO) UpdateServerWeb(serverId int64, webId int64) error {
 	return this.RenewServerConfig(serverId)
 }
 
+// 初始化Web配置
+func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
+	if serverId <= 0 {
+		return 0, errors.New("serverId should not be smaller than 0")
+	}
+
+	webId, err := SharedHTTPWebDAO.CreateWeb("")
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = this.Query().
+		Pk(serverId).
+		Set("webId", webId).
+		Update()
+	if err != nil {
+		return 0, err
+	}
+
+	return webId, nil
+}
+
 // 修改ServerNames配置
 func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
 	if serverId <= 0 {
@@ -501,6 +523,40 @@ func (this *ServerDAO) FindReverseProxyConfig(serverId int64) (*serverconfigs.Re
 	config := &serverconfigs.ReverseProxyConfig{}
 	err = json.Unmarshal([]byte(reverseProxy), config)
 	return config, err
+}
+
+// 查找需要更新的Server
+func (this *ServerDAO) FindUpdatingServerIds() (serverIds []int64, err error) {
+	ones, err := this.Query().
+		State(ServerStateEnabled).
+		Attr("isUpdating", true).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		serverIds = append(serverIds, int64(one.(*Server).Id))
+	}
+	return
+}
+
+// 修改服务是否需要更新
+func (this *ServerDAO) UpdateServerIsUpdating(serverId int64, isUpdating bool) error {
+	_, err := this.Query().
+		Pk(serverId).
+		Set("isUpdating", isUpdating).
+		Update()
+	return err
+}
+
+// 更新所有Web相关的处于更新状态
+func (this *ServerDAO) UpdateServerIsUpdatingWithWebId(webId int64) error {
+	_, err := this.Query().
+		Attr("webId", webId).
+		Set("isUpdating", true).
+		Update()
+	return err
 }
 
 // 生成唯一ID

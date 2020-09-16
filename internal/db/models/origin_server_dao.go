@@ -118,7 +118,7 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 		}
 	}
 
-	connTimeout := shared.TimeDuration{}
+	connTimeout := &shared.TimeDuration{}
 	if len(origin.ConnTimeout) > 0 && origin.ConnTimeout != "null" {
 		err = json.Unmarshal([]byte(origin.ConnTimeout), &connTimeout)
 		if err != nil {
@@ -126,7 +126,7 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 		}
 	}
 
-	readTimeout := shared.TimeDuration{}
+	readTimeout := &shared.TimeDuration{}
 	if len(origin.ReadTimeout) > 0 && origin.ReadTimeout != "null" {
 		err = json.Unmarshal([]byte(origin.ReadTimeout), &readTimeout)
 		if err != nil {
@@ -134,7 +134,7 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 		}
 	}
 
-	idleTimeout := shared.TimeDuration{}
+	idleTimeout := &shared.TimeDuration{}
 	if len(origin.IdleTimeout) > 0 && origin.IdleTimeout != "null" {
 		err = json.Unmarshal([]byte(origin.IdleTimeout), &idleTimeout)
 		if err != nil {

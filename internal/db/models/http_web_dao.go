@@ -60,7 +60,7 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(id int64) (*HTTPWeb, error) {
 }
 
 // 组合配置
-func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.WebConfig, error) {
+func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebConfig, error) {
 	web, err := SharedHTTPWebDAO.FindEnabledHTTPWeb(webId)
 	if err != nil {
 		return nil, err
@@ -68,9 +68,24 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.WebConfig,
 	if web == nil {
 		return nil, nil
 	}
-	config := &serverconfigs.WebConfig{}
+	config := &serverconfigs.HTTPWebConfig{}
+	config.Id = webId
 	config.IsOn = web.IsOn == 1
 	config.Root = web.Root
+
+	// gzip
+	if web.GzipId > 0 {
+		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(int64(web.GzipId))
+		if err != nil {
+			return nil, err
+		}
+		config.Gzip = gzipConfig
+	}
+
+	// TODO charset
+
+	// TODO 更多配置
+
 	return config, nil
 }
 
@@ -95,8 +110,37 @@ func (this *HTTPWebDAO) UpdateWeb(webId int64, root string) error {
 	op.Id = webId
 	op.Root = root
 	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
 
-	// TODO 更新所有使用此Web配置的服务
+	return this.NotifyUpdating(webId)
+}
 
-	return err
+// 修改Gzip配置
+func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipId int64) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.GzipId = gzipId
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 通知更新
+func (this *HTTPWebDAO) NotifyUpdating(webId int64) error {
+	err := SharedServerDAO.UpdateServerIsUpdatingWithWebId(webId)
+	if err != nil {
+		return err
+	}
+
+	// TODO 更新所有使用此Web配置的Location所在服务
+
+	return nil
 }
