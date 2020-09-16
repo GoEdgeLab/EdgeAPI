@@ -82,7 +82,29 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.Gzip = gzipConfig
 	}
 
-	// TODO charset
+	// charset
+	config.Charset = web.Charset
+
+	// headers
+	if web.RequestHeaderPolicyId > 0 {
+		headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(web.RequestHeaderPolicyId))
+		if err != nil {
+			return nil, err
+		}
+		if headerPolicy != nil {
+			config.RequestHeaders = headerPolicy
+		}
+	}
+
+	if web.ResponseHeaderPolicyId > 0 {
+		headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(web.ResponseHeaderPolicyId))
+		if err != nil {
+			return nil, err
+		}
+		if headerPolicy != nil {
+			config.ResponseHeaders = headerPolicy
+		}
+	}
 
 	// TODO 更多配置
 
@@ -125,6 +147,54 @@ func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipId int64) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.GzipId = gzipId
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 修改字符编码
+func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charset string) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Charset = charset
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改请求Header策略
+func (this *HTTPWebDAO) UpdateHTTPWebRequestHeaderPolicy(webId int64, headerPolicyId int64) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.RequestHeaderPolicyId = headerPolicyId
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改响应Header策略
+func (this *HTTPWebDAO) UpdateHTTPWebResponseHeaderPolicy(webId int64, headerPolicyId int64) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.ResponseHeaderPolicyId = headerPolicyId
 	_, err := this.Save(op)
 	if err != nil {
 		return err

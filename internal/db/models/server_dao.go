@@ -550,6 +550,18 @@ func (this *ServerDAO) UpdateServerIsUpdating(serverId int64, isUpdating bool) e
 	return err
 }
 
+// 查找WebId
+func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
+	webId, err := this.Query().
+		Pk(serverId).
+		Result("webId").
+		FindIntCol(0)
+	if err != nil {
+		return 0, err
+	}
+	return int64(webId), nil
+}
+
 // 更新所有Web相关的处于更新状态
 func (this *ServerDAO) UpdateServerIsUpdatingWithWebId(webId int64) error {
 	_, err := this.Query().

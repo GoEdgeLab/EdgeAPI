@@ -110,99 +110,103 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 		return nil, errors.New("not found")
 	}
 
-	addr := &serverconfigs.NetworkAddressConfig{}
+	config := &serverconfigs.OriginServerConfig{
+		Id:           int64(origin.Id),
+		IsOn:         origin.IsOn == 1,
+		Version:      int(origin.Version),
+		Name:         origin.Name,
+		Description:  origin.Description,
+		Code:         origin.Code,
+		Weight:       uint(origin.Weight),
+		MaxFails:     int(origin.MaxFails),
+		MaxConns:     int(origin.MaxConns),
+		MaxIdleConns: int(origin.MaxIdleConns),
+		RequestURI:   origin.HttpRequestURI,
+		Host:         origin.Host,
+	}
+
 	if len(origin.Addr) > 0 && origin.Addr != "null" {
+		addr := &serverconfigs.NetworkAddressConfig{}
 		err = json.Unmarshal([]byte(origin.Addr), addr)
 		if err != nil {
 			return nil, err
 		}
+		config.Addr = addr
 	}
 
-	connTimeout := &shared.TimeDuration{}
 	if len(origin.ConnTimeout) > 0 && origin.ConnTimeout != "null" {
+		connTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.ConnTimeout), &connTimeout)
 		if err != nil {
 			return nil, err
 		}
+		config.ConnTimeout = connTimeout
 	}
 
-	readTimeout := &shared.TimeDuration{}
 	if len(origin.ReadTimeout) > 0 && origin.ReadTimeout != "null" {
+		readTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.ReadTimeout), &readTimeout)
 		if err != nil {
 			return nil, err
 		}
+		config.ReadTimeout = readTimeout
 	}
 
-	idleTimeout := &shared.TimeDuration{}
 	if len(origin.IdleTimeout) > 0 && origin.IdleTimeout != "null" {
+		idleTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.IdleTimeout), &idleTimeout)
 		if err != nil {
 			return nil, err
 		}
+		config.IdleTimeout = idleTimeout
 	}
 
-	requestHeaders := &shared.HTTPHeadersConfig{}
-	if len(origin.HttpRequestHeaders) > 0 && origin.HttpRequestHeaders != "null" {
-		err = json.Unmarshal([]byte(origin.HttpRequestHeaders), requestHeaders)
+	if origin.RequestHeaderPolicyId > 0 {
+		policyConfig, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(origin.RequestHeaderPolicyId))
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	responseHeaders := &shared.HTTPHeadersConfig{}
-	if len(origin.HttpResponseHeaders) > 0 && origin.HttpResponseHeaders != "null" {
-		err = json.Unmarshal([]byte(origin.HttpResponseHeaders), responseHeaders)
-		if err != nil {
-			return nil, err
+		if policyConfig != nil {
+			config.RequestHeaders = policyConfig
 		}
 	}
 
-	healthCheck := &serverconfigs.HealthCheckConfig{}
+	if origin.ResponseHeaderPolicyId > 0 {
+		policyConfig, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(origin.ResponseHeaderPolicyId))
+		if err != nil {
+			return nil, err
+		}
+		if policyConfig != nil {
+			config.ResponseHeaders = policyConfig
+		}
+	}
+
 	if len(origin.HealthCheck) > 0 && origin.HealthCheck != "null" {
+		healthCheck := &serverconfigs.HealthCheckConfig{}
 		err = json.Unmarshal([]byte(origin.HealthCheck), healthCheck)
 		if err != nil {
 			return nil, err
 		}
+		config.HealthCheck = healthCheck
 	}
 
-	cert := &sslconfigs.SSLCertConfig{}
 	if len(origin.Cert) > 0 && origin.Cert != "null" {
+		cert := &sslconfigs.SSLCertConfig{}
 		err = json.Unmarshal([]byte(origin.Cert), cert)
 		if err != nil {
 			return nil, err
 		}
+		config.Cert = cert
 	}
 
-	ftp := &serverconfigs.OriginServerFTPConfig{}
 	if len(origin.Ftp) > 0 && origin.Ftp != "null" {
+		ftp := &serverconfigs.OriginServerFTPConfig{}
 		err = json.Unmarshal([]byte(origin.Ftp), ftp)
 		if err != nil {
 			return nil, err
 		}
+		config.FTP = ftp
 	}
 
-	return &serverconfigs.OriginServerConfig{
-		Id:              int64(origin.Id),
-		IsOn:            origin.IsOn == 1,
-		Version:         int(origin.Version),
-		Name:            origin.Name,
-		Addr:            addr,
-		Description:     origin.Description,
-		Code:            origin.Code,
-		Weight:          uint(origin.Weight),
-		ConnTimeout:     connTimeout,
-		ReadTimeout:     readTimeout,
-		IdleTimeout:     idleTimeout,
-		MaxFails:        int(origin.MaxFails),
-		MaxConns:        int(origin.MaxConns),
-		MaxIdleConns:    int(origin.MaxIdleConns),
-		RequestURI:      origin.HttpRequestURI,
-		Host:            origin.Host,
-		RequestHeaders:  requestHeaders,
-		ResponseHeaders: responseHeaders,
-		HealthCheck:     healthCheck,
-		Cert:            cert,
-		FTP:             ftp,
-	}, nil
+	return config, nil
 }

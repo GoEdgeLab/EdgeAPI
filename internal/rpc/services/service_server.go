@@ -562,16 +562,32 @@ func (this *ServerService) FindServerReverseProxyConfig(ctx context.Context, req
 }
 
 // 初始化Web设置
-func (this *ServerService) InitServerWeb(ctx context.Context, req *pb.InitServerWebRequest) (*pb.InitServerWebResponse, error) {
+func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebRequest) (*pb.FindAndInitServerWebResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	webId, err := models.SharedServerDAO.InitServerWeb(req.ServerId)
+	webId, err := models.SharedServerDAO.FindServerWebId(req.ServerId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.InitServerWebResponse{WebId: webId}, nil
+	if webId == 0 {
+		webId, err = models.SharedServerDAO.InitServerWeb(req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(webId)
+	if err != nil {
+		return nil, err
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindAndInitServerWebResponse{Config: configJSON}, nil
 }

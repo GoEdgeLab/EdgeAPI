@@ -48,6 +48,9 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	result.IsOn = web.IsOn == 1
 	result.Root = web.Root
 	result.GzipId = int64(web.GzipId)
+	result.Charset = web.Charset
+	result.RequestHeaderPolicyId = int64(web.RequestHeaderPolicyId)
+	result.ResponseHeaderPolicyId = int64(web.ResponseHeaderPolicyId)
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
 }
 
@@ -81,4 +84,52 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 	}
 
 	return &pb.UpdateHTTPWebGzipResponse{}, nil
+}
+
+// 修改字符集配置
+func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.UpdateHTTPWebCharsetRequest) (*pb.UpdateHTTPWebCharsetResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebCharset(req.WebId, req.Charset)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.UpdateHTTPWebCharsetResponse{}, nil
+}
+
+// 更改请求Header策略
+func (this *HTTPWebService) UpdateHTTPWebRequestHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderPolicyRequest) (*pb.UpdateHTTPWebRequestHeaderPolicyResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateHTTPWebRequestHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateHTTPWebRequestHeaderPolicyResponse{}, nil
+}
+
+// 更改响应Header策略
+func (this *HTTPWebService) UpdateHTTPWebResponseHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderPolicyRequest) (*pb.UpdateHTTPWebResponseHeaderPolicyResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateHTTPWebResponseHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateHTTPWebResponseHeaderPolicyResponse{}, nil
+
 }
