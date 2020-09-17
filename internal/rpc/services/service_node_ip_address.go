@@ -27,7 +27,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 }
 
 // 修改IP地址
-func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *pb.UpdateNodeIPAddressRequest) (*pb.UpdateNodeIPAddressResponse, error) {
+func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *pb.UpdateNodeIPAddressRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -39,11 +39,11 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	return &pb.UpdateNodeIPAddressResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改IP地址所属节点
-func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context, req *pb.UpdateNodeIPAddressNodeIdRequest) (*pb.UpdateNodeIPAddressNodeIdResponse, error) {
+func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context, req *pb.UpdateNodeIPAddressNodeIdRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -55,7 +55,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context,
 		return nil, err
 	}
 
-	return &pb.UpdateNodeIPAddressNodeIdResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 禁用单个IP地址

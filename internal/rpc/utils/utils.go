@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"google.golang.org/grpc/metadata"
@@ -115,4 +116,9 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	} else {
 		return t, m.GetInt64("userId"), nil
 	}
+}
+
+// 返回Update信息
+func RPCUpdateSuccess() (*pb.RPCUpdateSuccess, error) {
+	return &pb.RPCUpdateSuccess{}, nil
 }

@@ -26,7 +26,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 }
 
 // 修改集群
-func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.UpdateNodeClusterResponse, error) {
+func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return &pb.UpdateNodeClusterResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 禁用集群

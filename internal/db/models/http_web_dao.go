@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -106,6 +107,35 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 	}
 
+	// shutdown
+	if IsNotNull(web.Shutdown) {
+		shutdownConfig := &serverconfigs.HTTPShutdownConfig{}
+		err = json.Unmarshal([]byte(web.Shutdown), shutdownConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Shutdown = shutdownConfig
+	}
+
+	// pages
+	if IsNotNull(web.Pages) {
+		pages := []*serverconfigs.HTTPPageConfig{}
+		err = json.Unmarshal([]byte(web.Pages), &pages)
+		if err != nil {
+			return nil, err
+		}
+		for index, page := range pages {
+			pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(page.Id)
+			if err != nil {
+				return nil, err
+			}
+			pages[index] = pageConfig
+		}
+		if len(pages) > 0 {
+			config.Pages = pages
+		}
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -172,7 +202,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charset string) error {
 }
 
 // 更改请求Header策略
-func (this *HTTPWebDAO) UpdateHTTPWebRequestHeaderPolicy(webId int64, headerPolicyId int64) error {
+func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyId int64) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
@@ -188,13 +218,45 @@ func (this *HTTPWebDAO) UpdateHTTPWebRequestHeaderPolicy(webId int64, headerPoli
 }
 
 // 更改响应Header策略
-func (this *HTTPWebDAO) UpdateHTTPWebResponseHeaderPolicy(webId int64, headerPolicyId int64) error {
+func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyId int64) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.ResponseHeaderPolicyId = headerPolicyId
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改特殊页面配置
+func (this *HTTPWebDAO) UpdateWebPages(webId int64, pagesJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Pages = JSONBytes(pagesJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改Shutdown配置
+func (this *HTTPWebDAO) UpdateWebShutdown(webId int64, shutdownJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Shutdown = JSONBytes(shutdownJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

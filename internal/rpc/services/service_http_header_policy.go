@@ -47,7 +47,7 @@ func (this *HTTPHeaderPolicyService) CreateHTTPHeaderPolicy(ctx context.Context,
 }
 
 // 修改AddHeaders
-func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingHeadersRequest) (*pb.UpdateHTTPHeaderPolicyAddingHeadersResponse, error) {
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingHeadersRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -58,11 +58,11 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx con
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderPolicyAddingHeadersResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改SetHeaders
-func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicySettingHeadersRequest) (*pb.UpdateHTTPHeaderPolicySettingHeadersResponse, error) {
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicySettingHeadersRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -73,11 +73,11 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx co
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderPolicySettingHeadersResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改AddTrailers
-func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingTrailersRequest) (*pb.UpdateHTTPHeaderPolicyAddingTrailersResponse, error) {
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingTrailersRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -88,11 +88,11 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx co
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderPolicyAddingTrailersResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改ReplaceHeaders
-func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyReplacingHeadersRequest) (*pb.UpdateHTTPHeaderPolicyReplacingHeadersResponse, error) {
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyReplacingHeadersRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -103,11 +103,11 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx 
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderPolicyReplacingHeadersResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改删除的Headers
-func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyDeletingHeadersRequest) (*pb.UpdateHTTPHeaderPolicyDeletingHeadersResponse, error) {
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyDeletingHeadersRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -118,5 +118,5 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx c
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderPolicyDeletingHeadersResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }

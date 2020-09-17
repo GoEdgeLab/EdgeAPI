@@ -27,7 +27,7 @@ func (this *HTTPHeaderService) CreateHTTPHeader(ctx context.Context, req *pb.Cre
 }
 
 // 修改Header
-func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.UpdateHTTPHeaderRequest) (*pb.UpdateHTTPHeaderResponse, error) {
+func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.UpdateHTTPHeaderRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPHeaderResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 查找配置

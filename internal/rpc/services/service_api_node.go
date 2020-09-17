@@ -26,7 +26,7 @@ func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPI
 }
 
 // 修改API节点
-func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPINodeRequest) (*pb.UpdateAPINodeResponse, error) {
+func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPINodeRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 		return nil, err
 	}
 
-	return &pb.UpdateAPINodeResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 删除API节点

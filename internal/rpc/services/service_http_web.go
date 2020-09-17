@@ -55,7 +55,7 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 }
 
 // 修改Web配置
-func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTTPWebRequest) (*pb.UpdateHTTPWebResponse, error) {
+func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTTPWebRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -67,11 +67,11 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPWebResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改Gzip配置
-func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.UpdateHTTPWebGzipRequest) (*pb.UpdateHTTPWebGzipResponse, error) {
+func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.UpdateHTTPWebGzipRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -83,11 +83,11 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPWebGzipResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改字符集配置
-func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.UpdateHTTPWebCharsetRequest) (*pb.UpdateHTTPWebCharsetResponse, error) {
+func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.UpdateHTTPWebCharsetRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -98,38 +98,67 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 	if err != nil {
 		return nil, err
 	}
-	return &pb.UpdateHTTPWebCharsetResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 更改请求Header策略
-func (this *HTTPWebService) UpdateHTTPWebRequestHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderPolicyRequest) (*pb.UpdateHTTPWebRequestHeaderPolicyResponse, error) {
+func (this *HTTPWebService) UpdateHTTPWebRequestHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderPolicyRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateHTTPWebRequestHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	err = models.SharedHTTPWebDAO.UpdateWebRequestHeaderPolicy(req.WebId, req.HeaderPolicyId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPWebRequestHeaderPolicyResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 更改响应Header策略
-func (this *HTTPWebService) UpdateHTTPWebResponseHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderPolicyRequest) (*pb.UpdateHTTPWebResponseHeaderPolicyResponse, error) {
+func (this *HTTPWebService) UpdateHTTPWebResponseHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderPolicyRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateHTTPWebResponseHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	err = models.SharedHTTPWebDAO.UpdateWebResponseHeaderPolicy(req.WebId, req.HeaderPolicyId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.UpdateHTTPWebResponseHeaderPolicyResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
+}
 
+// 更改Shutdown
+func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.UpdateHTTPWebShutdownRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebShutdown(req.WebId, req.ShutdownJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}
+
+// 更改Pages
+func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.UpdateHTTPWebPagesRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebPages(req.WebId, req.PagesJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
 }

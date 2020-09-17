@@ -137,7 +137,7 @@ func (this *NodeService) DisableNode(ctx context.Context, req *pb.DisableNodeReq
 }
 
 // 修改节点
-func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.UpdateNodeResponse, error) {
+func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		}
 	}
 
-	return &pb.UpdateNodeResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 列出单个节点
@@ -311,7 +311,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 }
 
 // 更新节点状态
-func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.UpdateNodeStatusResponse, error) {
+func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
@@ -331,7 +331,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 		return nil, err
 	}
 
-	return &pb.UpdateNodeStatusResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 同步集群中的节点版本
@@ -350,7 +350,7 @@ func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *p
 }
 
 // 修改节点安装状态
-func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.UpdateNodeIsInstalledResponse, error) {
+func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -361,7 +361,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
-	return &pb.UpdateNodeIsInstalledResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 安装节点

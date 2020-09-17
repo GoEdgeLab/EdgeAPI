@@ -33,7 +33,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 }
 
 // 修改服务
-func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.UpdateServerBasicResponse, error) {
+func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -71,11 +71,11 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.UpdateServerBasicResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改HTTP服务
-func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.UpdateServerHTTPResponse, error) {
+func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -106,11 +106,11 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	return &pb.UpdateServerHTTPResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改HTTPS服务
-func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.UpdateServerHTTPSResponse, error) {
+func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -141,11 +141,11 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.UpdateServerHTTPSResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改TCP服务
-func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.UpdateServerTCPResponse, error) {
+func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -176,11 +176,11 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.UpdateServerTCPResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改TLS服务
-func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.UpdateServerTLSResponse, error) {
+func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -211,11 +211,11 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.UpdateServerTLSResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改Unix服务
-func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.UpdateServerUnixResponse, error) {
+func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -246,11 +246,11 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	return &pb.UpdateServerUnixResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改UDP服务
-func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.UpdateServerUDPResponse, error) {
+func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -281,11 +281,11 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.UpdateServerUDPResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改Web服务
-func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.UpdateServerWebResponse, error) {
+func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -316,11 +316,11 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.UpdateServerWebResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改反向代理服务
-func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.UpdateServerReverseProxyResponse, error) {
+func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -351,11 +351,11 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.UpdateServerReverseProxyResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 修改域名服务
-func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.UpdateServerNamesResponse, error) {
+func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -386,7 +386,7 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.UpdateServerNamesResponse{}, nil
+	return &pb.RPCUpdateSuccess{}, nil
 }
 
 // 计算服务数量
