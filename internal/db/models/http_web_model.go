@@ -23,6 +23,7 @@ type HTTPWeb struct {
 	RequestHeaderPolicyId  uint32 `field:"requestHeaderPolicyId"`  // Request Header策略ID
 	ResponseHeaderPolicyId uint32 `field:"responseHeaderPolicyId"` // Response Header策略
 	AccessLog              string `field:"accessLog"`              // 访问日志配置
+	Stat                   string `field:"stat"`                   // 统计配置
 }
 
 type HTTPWebOperator struct {
@@ -47,6 +48,7 @@ type HTTPWebOperator struct {
 	RequestHeaderPolicyId  interface{} // Request Header策略ID
 	ResponseHeaderPolicyId interface{} // Response Header策略
 	AccessLog              interface{} // 访问日志配置
+	Stat                   interface{} // 统计配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

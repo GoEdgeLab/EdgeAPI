@@ -177,3 +177,18 @@ func (this *HTTPWebService) UpdateHTTPAccessLog(ctx context.Context, req *pb.Upd
 	}
 	return rpcutils.RPCUpdateSuccess()
 }
+
+// 更改统计配置
+func (this *HTTPWebService) UpdateHTTPStat(ctx context.Context, req *pb.UpdateHTTPStatRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebStat(req.WebId, req.StatJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}

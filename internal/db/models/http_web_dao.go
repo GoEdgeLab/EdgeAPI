@@ -146,6 +146,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.AccessLog = accessLogConfig
 	}
 
+	// 统计配置
+	if IsNotNull(web.Stat) {
+		statConfig := &serverconfigs.HTTPStatConfig{}
+		err = json.Unmarshal([]byte(web.Stat), statConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Stat = statConfig
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -283,6 +293,22 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(webId int64, accessLogJSON []by
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改统计配置
+func (this *HTTPWebDAO) UpdateWebStat(webId int64, statJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Stat = JSONBytes(statJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err
