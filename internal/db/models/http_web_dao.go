@@ -174,6 +174,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.CacheRef = cacheRef
 	}
 
+	// 防火墙配置
+	if IsNotNull(web.Firewall) {
+		firewallRef := &serverconfigs.HTTPFirewallRef{}
+		err = json.Unmarshal([]byte(web.Firewall), firewallRef)
+		if err != nil {
+			return nil, err
+		}
+		config.FirewallRef = firewallRef
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -343,6 +353,22 @@ func (this *HTTPWebDAO) UpdateWebCache(webId int64, cacheJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改防火墙配置
+func (this *HTTPWebDAO) UpdateWebFirewall(webId int64, firewallJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Firewall = JSONBytes(firewallJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

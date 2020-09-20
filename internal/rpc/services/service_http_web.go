@@ -207,3 +207,20 @@ func (this *HTTPWebService) UpdateHTTPCache(ctx context.Context, req *pb.UpdateH
 
 	return rpcutils.RPCUpdateSuccess()
 }
+
+
+// 更改防火墙设置
+func (this *HTTPWebService) UpdateHTTPFirewall(ctx context.Context, req *pb.UpdateHTTPFirewallRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebFirewall(req.WebId, req.FirewallJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpcutils.RPCUpdateSuccess()
+}
