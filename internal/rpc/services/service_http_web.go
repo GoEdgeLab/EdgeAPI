@@ -47,7 +47,6 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	result.Id = int64(web.Id)
 	result.IsOn = web.IsOn == 1
 	result.Root = web.Root
-	result.GzipId = int64(web.GzipId)
 	result.Charset = web.Charset
 	result.RequestHeaderPolicyId = int64(web.RequestHeaderPolicyId)
 	result.ResponseHeaderPolicyId = int64(web.ResponseHeaderPolicyId)
@@ -78,7 +77,7 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebGzip(req.WebId, req.GzipId)
+	err = models.SharedHTTPWebDAO.UpdateWebGzip(req.WebId, req.GzipJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -190,5 +189,21 @@ func (this *HTTPWebService) UpdateHTTPStat(ctx context.Context, req *pb.UpdateHT
 	if err != nil {
 		return nil, err
 	}
+	return rpcutils.RPCUpdateSuccess()
+}
+
+// 更改缓存配置
+func (this *HTTPWebService) UpdateHTTPCache(ctx context.Context, req *pb.UpdateHTTPCacheRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebCache(req.WebId, req.CacheJSON)
+	if err != nil {
+		return nil, err
+	}
+
 	return rpcutils.RPCUpdateSuccess()
 }

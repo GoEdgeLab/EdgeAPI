@@ -69,14 +69,22 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 	if web == nil {
 		return nil, nil
 	}
+
 	config := &serverconfigs.HTTPWebConfig{}
 	config.Id = webId
 	config.IsOn = web.IsOn == 1
 	config.Root = web.Root
 
 	// gzip
-	if web.GzipId > 0 {
-		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(int64(web.GzipId))
+	if IsNotNull(web.Gzip) {
+		gzipRef := &serverconfigs.HTTPGzipRef{}
+		err = json.Unmarshal([]byte(web.Gzip), gzipRef)
+		if err != nil {
+			return nil, err
+		}
+		config.GzipRef = gzipRef
+
+		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(gzipRef.GzipId)
 		if err != nil {
 			return nil, err
 		}
@@ -138,22 +146,32 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 
 	// 访问日志
 	if IsNotNull(web.AccessLog) {
-		accessLogConfig := &serverconfigs.HTTPAccessLogConfig{}
+		accessLogConfig := &serverconfigs.HTTPAccessLogRef{}
 		err = json.Unmarshal([]byte(web.AccessLog), accessLogConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.AccessLog = accessLogConfig
+		config.AccessLogRef = accessLogConfig
 	}
 
 	// 统计配置
 	if IsNotNull(web.Stat) {
-		statConfig := &serverconfigs.HTTPStatConfig{}
-		err = json.Unmarshal([]byte(web.Stat), statConfig)
+		statRef := &serverconfigs.HTTPStatRef{}
+		err = json.Unmarshal([]byte(web.Stat), statRef)
 		if err != nil {
 			return nil, err
 		}
-		config.Stat = statConfig
+		config.StatRef = statRef
+	}
+
+	// 缓存配置
+	if IsNotNull(web.Cache) {
+		cacheRef := &serverconfigs.HTTPCacheRef{}
+		err = json.Unmarshal([]byte(web.Cache), cacheRef)
+		if err != nil {
+			return nil, err
+		}
+		config.CacheRef = cacheRef
 	}
 
 	// TODO 更多配置
@@ -190,13 +208,13 @@ func (this *HTTPWebDAO) UpdateWeb(webId int64, root string) error {
 }
 
 // 修改Gzip配置
-func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipId int64) error {
+func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.GzipId = gzipId
+	op.Gzip = gzipJSON
 	_, err := this.Save(op)
 	if err != nil {
 		return err
@@ -309,6 +327,22 @@ func (this *HTTPWebDAO) UpdateWebStat(webId int64, statJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改缓存配置
+func (this *HTTPWebDAO) UpdateWebCache(webId int64, cacheJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Cache = JSONBytes(cacheJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

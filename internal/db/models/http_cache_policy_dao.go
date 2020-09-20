@@ -63,3 +63,13 @@ func (this *HTTPCachePolicyDAO) FindHTTPCachePolicyName(id int64) (string, error
 		Result("name").
 		FindStringCol("")
 }
+
+// 查找所有可用的缓存策略
+func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies() (result []*HTTPCachePolicy, err error) {
+	_, err = this.Query().
+		State(HTTPCachePolicyStateEnabled).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
