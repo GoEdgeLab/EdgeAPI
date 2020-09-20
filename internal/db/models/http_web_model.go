@@ -16,13 +16,13 @@ type HTTPWeb struct {
 	Pages                  string `field:"pages"`                  // 特殊页面
 	FirewallId             uint32 `field:"firewallId"`             // WAF ID
 	CachePolicyId          uint32 `field:"cachePolicyId"`          // 缓存策略ID
-	AccessLogPolicyId      uint32 `field:"accessLogPolicyId"`      // 访问日志策略ID
 	RedirectToHttps        string `field:"redirectToHttps"`        // 跳转到HTTPS设置
 	Indexes                string `field:"indexes"`                // 首页文件列表
 	MaxRequestBodySize     string `field:"maxRequestBodySize"`     // 最大允许的请求内容尺寸
 	StatPolicyId           uint32 `field:"statPolicyId"`           // 统计策略ID
 	RequestHeaderPolicyId  uint32 `field:"requestHeaderPolicyId"`  // Request Header策略ID
 	ResponseHeaderPolicyId uint32 `field:"responseHeaderPolicyId"` // Response Header策略
+	AccessLog              string `field:"accessLog"`              // 访问日志配置
 }
 
 type HTTPWebOperator struct {
@@ -40,13 +40,13 @@ type HTTPWebOperator struct {
 	Pages                  interface{} // 特殊页面
 	FirewallId             interface{} // WAF ID
 	CachePolicyId          interface{} // 缓存策略ID
-	AccessLogPolicyId      interface{} // 访问日志策略ID
 	RedirectToHttps        interface{} // 跳转到HTTPS设置
 	Indexes                interface{} // 首页文件列表
 	MaxRequestBodySize     interface{} // 最大允许的请求内容尺寸
 	StatPolicyId           interface{} // 统计策略ID
 	RequestHeaderPolicyId  interface{} // Request Header策略ID
 	ResponseHeaderPolicyId interface{} // Response Header策略
+	AccessLog              interface{} // 访问日志配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

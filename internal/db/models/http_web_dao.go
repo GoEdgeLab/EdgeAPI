@@ -136,6 +136,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 	}
 
+	// 访问日志
+	if IsNotNull(web.AccessLog) {
+		accessLogConfig := &serverconfigs.HTTPAccessLogConfig{}
+		err = json.Unmarshal([]byte(web.AccessLog), accessLogConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.AccessLog = accessLogConfig
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -257,6 +267,22 @@ func (this *HTTPWebDAO) UpdateWebShutdown(webId int64, shutdownJSON []byte) erro
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改访问日志策略
+func (this *HTTPWebDAO) UpdateWebAccessLogConfig(webId int64, accessLogJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.AccessLog = JSONBytes(accessLogJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

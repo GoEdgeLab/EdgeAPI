@@ -162,3 +162,18 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	}
 	return rpcutils.RPCUpdateSuccess()
 }
+
+// 更改访问日志配置
+func (this *HTTPWebService) UpdateHTTPAccessLog(ctx context.Context, req *pb.UpdateHTTPAccessLogRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebAccessLogConfig(req.WebId, req.AccessLogJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}
