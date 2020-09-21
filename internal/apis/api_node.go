@@ -58,7 +58,7 @@ func (this *APINode) listenRPC() error {
 	pb.RegisterNodeClusterServiceServer(rpcServer, &services.NodeClusterService{})
 	pb.RegisterNodeIPAddressServiceServer(rpcServer, &services.NodeIPAddressService{})
 	pb.RegisterAPINodeServiceServer(rpcServer, &services.APINodeService{})
-	pb.RegisterOriginServerServiceServer(rpcServer, &services.OriginServerService{})
+	pb.RegisterOriginServiceServer(rpcServer, &services.OriginService{})
 	pb.RegisterHTTPWebServiceServer(rpcServer, &services.HTTPWebService{})
 	pb.RegisterReverseProxyServiceServer(rpcServer, &services.ReverseProxyService{})
 	pb.RegisterHTTPGzipServiceServer(rpcServer, &services.HTTPGzipService{})

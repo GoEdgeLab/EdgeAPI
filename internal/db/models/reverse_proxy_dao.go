@@ -83,35 +83,35 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 		config.Scheduling = schedulingConfig
 	}
 	if len(reverseProxy.PrimaryOrigins) > 0 && reverseProxy.PrimaryOrigins != "null" {
-		originConfigs := []*serverconfigs.OriginServerConfig{}
-		err = json.Unmarshal([]byte(reverseProxy.PrimaryOrigins), &originConfigs)
+		originRefs := []*serverconfigs.OriginRef{}
+		err = json.Unmarshal([]byte(reverseProxy.PrimaryOrigins), &originRefs)
 		if err != nil {
 			return nil, err
 		}
-		for _, originConfig := range originConfigs {
-			newOriginConfig, err := SharedOriginServerDAO.ComposeOriginConfig(originConfig.Id)
+		for _, ref := range originRefs {
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(ref.OriginId)
 			if err != nil {
 				return nil, err
 			}
-			if newOriginConfig != nil {
-				config.AddPrimaryOrigin(newOriginConfig)
+			if originConfig != nil {
+				config.AddPrimaryOrigin(originConfig)
 			}
 		}
 	}
 
 	if len(reverseProxy.BackupOrigins) > 0 && reverseProxy.BackupOrigins != "null" {
-		originConfigs := []*serverconfigs.OriginServerConfig{}
-		err = json.Unmarshal([]byte(reverseProxy.BackupOrigins), &originConfigs)
+		originRefs := []*serverconfigs.OriginRef{}
+		err = json.Unmarshal([]byte(reverseProxy.BackupOrigins), &originRefs)
 		if err != nil {
 			return nil, err
 		}
-		for _, originConfig := range originConfigs {
-			newOriginConfig, err := SharedOriginServerDAO.ComposeOriginConfig(int64(originConfig.Id))
+		for _, originConfig := range originRefs {
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(int64(originConfig.OriginId))
 			if err != nil {
 				return nil, err
 			}
-			if newOriginConfig != nil {
-				config.AddBackupOrigin(newOriginConfig)
+			if originConfig != nil {
+				config.AddBackupOrigin(originConfig)
 			}
 		}
 	}

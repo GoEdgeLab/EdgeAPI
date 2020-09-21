@@ -7,7 +7,7 @@ import (
 )
 
 // 解析地址
-func (this *OriginServer) DecodeAddr() (*serverconfigs.NetworkAddressConfig, error) {
+func (this *Origin) DecodeAddr() (*serverconfigs.NetworkAddressConfig, error) {
 	if len(this.Addr) == 0 || this.Addr == "null" {
 		return nil, errors.New("addr is empty")
 	}

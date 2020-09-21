@@ -13,57 +13,57 @@ import (
 )
 
 const (
-	OriginServerStateEnabled  = 1 // 已启用
-	OriginServerStateDisabled = 0 // 已禁用
+	OriginStateEnabled  = 1 // 已启用
+	OriginStateDisabled = 0 // 已禁用
 )
 
-type OriginServerDAO dbs.DAO
+type OriginDAO dbs.DAO
 
-func NewOriginServerDAO() *OriginServerDAO {
-	return dbs.NewDAO(&OriginServerDAO{
+func NewOriginDAO() *OriginDAO {
+	return dbs.NewDAO(&OriginDAO{
 		DAOObject: dbs.DAOObject{
 			DB:     Tea.Env,
-			Table:  "edgeOriginServers",
-			Model:  new(OriginServer),
+			Table:  "edgeOrigins",
+			Model:  new(Origin),
 			PkName: "id",
 		},
-	}).(*OriginServerDAO)
+	}).(*OriginDAO)
 }
 
-var SharedOriginServerDAO = NewOriginServerDAO()
+var SharedOriginDAO = NewOriginDAO()
 
 // 启用条目
-func (this *OriginServerDAO) EnableOriginServer(id int64) error {
+func (this *OriginDAO) EnableOrigin(id int64) error {
 	_, err := this.Query().
 		Pk(id).
-		Set("state", OriginServerStateEnabled).
+		Set("state", OriginStateEnabled).
 		Update()
 	return err
 }
 
 // 禁用条目
-func (this *OriginServerDAO) DisableOriginServer(id int64) error {
+func (this *OriginDAO) DisableOrigin(id int64) error {
 	_, err := this.Query().
 		Pk(id).
-		Set("state", OriginServerStateDisabled).
+		Set("state", OriginStateDisabled).
 		Update()
 	return err
 }
 
 // 查找启用中的条目
-func (this *OriginServerDAO) FindEnabledOriginServer(id int64) (*OriginServer, error) {
+func (this *OriginDAO) FindEnabledOrigin(id int64) (*Origin, error) {
 	result, err := this.Query().
 		Pk(id).
-		Attr("state", OriginServerStateEnabled).
+		Attr("state", OriginStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
-	return result.(*OriginServer), err
+	return result.(*Origin), err
 }
 
 // 根据主键查找名称
-func (this *OriginServerDAO) FindOriginServerName(id int64) (string, error) {
+func (this *OriginDAO) FindOriginName(id int64) (string, error) {
 	return this.Query().
 		Pk(id).
 		Result("name").
@@ -71,13 +71,13 @@ func (this *OriginServerDAO) FindOriginServerName(id int64) (string, error) {
 }
 
 // 创建源站
-func (this *OriginServerDAO) CreateOriginServer(name string, addrJSON string, description string) (originId int64, err error) {
-	op := NewOriginServerOperator()
+func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description string) (originId int64, err error) {
+	op := NewOriginOperator()
 	op.IsOn = true
 	op.Name = name
 	op.Addr = addrJSON
 	op.Description = description
-	op.State = OriginServerStateEnabled
+	op.State = OriginStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
 		return
@@ -86,11 +86,11 @@ func (this *OriginServerDAO) CreateOriginServer(name string, addrJSON string, de
 }
 
 // 修改源站
-func (this *OriginServerDAO) UpdateOriginServer(originId int64, name string, addrJSON string, description string) error {
+func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string, description string) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
-	op := NewOriginServerOperator()
+	op := NewOriginOperator()
 	op.Id = originId
 	op.Name = name
 	op.Addr = addrJSON
@@ -101,8 +101,8 @@ func (this *OriginServerDAO) UpdateOriginServer(originId int64, name string, add
 }
 
 // 将源站信息转换为配置
-func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs.OriginServerConfig, error) {
-	origin, err := this.FindEnabledOriginServer(originId)
+func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.OriginConfig, error) {
+	origin, err := this.FindEnabledOrigin(originId)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 		return nil, errors.New("not found")
 	}
 
-	config := &serverconfigs.OriginServerConfig{
+	config := &serverconfigs.OriginConfig{
 		Id:           int64(origin.Id),
 		IsOn:         origin.IsOn == 1,
 		Version:      int(origin.Version),
@@ -200,7 +200,7 @@ func (this *OriginServerDAO) ComposeOriginConfig(originId int64) (*serverconfigs
 	}
 
 	if len(origin.Ftp) > 0 && origin.Ftp != "null" {
-		ftp := &serverconfigs.OriginServerFTPConfig{}
+		ftp := &serverconfigs.OriginFTPConfig{}
 		err = json.Unmarshal([]byte(origin.Ftp), ftp)
 		if err != nil {
 			return nil, err

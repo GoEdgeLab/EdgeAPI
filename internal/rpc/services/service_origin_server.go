@@ -11,11 +11,11 @@ import (
 )
 
 // 源站相关管理
-type OriginServerService struct {
+type OriginService struct {
 }
 
 // 创建源站
-func (this *OriginServerService) CreateOriginServer(ctx context.Context, req *pb.CreateOriginServerRequest) (*pb.CreateOriginServerResponse, error) {
+func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOriginRequest) (*pb.CreateOriginResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -29,16 +29,16 @@ func (this *OriginServerService) CreateOriginServer(ctx context.Context, req *pb
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	originId, err := models.SharedOriginServerDAO.CreateOriginServer(req.Name, string(addrMap.AsJSON()), req.Description)
+	originId, err := models.SharedOriginDAO.CreateOrigin(req.Name, string(addrMap.AsJSON()), req.Description)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CreateOriginServerResponse{OriginId: originId}, nil
+	return &pb.CreateOriginResponse{OriginId: originId}, nil
 }
 
 // 修改源站
-func (this *OriginServerService) UpdateOriginServer(ctx context.Context, req *pb.UpdateOriginServerRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOriginRequest) (*pb.RPCUpdateSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (this *OriginServerService) UpdateOriginServer(ctx context.Context, req *pb
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	err = models.SharedOriginServerDAO.UpdateOriginServer(req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description)
+	err = models.SharedOriginDAO.UpdateOrigin(req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -61,19 +61,19 @@ func (this *OriginServerService) UpdateOriginServer(ctx context.Context, req *pb
 }
 
 // 查找单个源站信息
-func (this *OriginServerService) FindEnabledOriginServer(ctx context.Context, req *pb.FindEnabledOriginServerRequest) (*pb.FindEnabledOriginServerResponse, error) {
+func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEnabledOriginRequest) (*pb.FindEnabledOriginResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	origin, err := models.SharedOriginServerDAO.FindEnabledOriginServer(req.OriginId)
+	origin, err := models.SharedOriginDAO.FindEnabledOrigin(req.OriginId)
 	if err != nil {
 		return nil, err
 	}
 
 	if origin == nil {
-		return &pb.FindEnabledOriginServerResponse{Origin: nil}, nil
+		return &pb.FindEnabledOriginResponse{Origin: nil}, nil
 	}
 
 	addr, err := origin.DecodeAddr()
@@ -81,7 +81,7 @@ func (this *OriginServerService) FindEnabledOriginServer(ctx context.Context, re
 		return nil, err
 	}
 
-	result := &pb.OriginServer{
+	result := &pb.Origin{
 		Id:   int64(origin.Id),
 		IsOn: origin.IsOn == 1,
 		Name: origin.Name,
@@ -92,17 +92,17 @@ func (this *OriginServerService) FindEnabledOriginServer(ctx context.Context, re
 		},
 		Description: origin.Description,
 	}
-	return &pb.FindEnabledOriginServerResponse{Origin: result}, nil
+	return &pb.FindEnabledOriginResponse{Origin: result}, nil
 }
 
 // 查找源站配置
-func (this *OriginServerService) FindEnabledOriginServerConfig(ctx context.Context, req *pb.FindEnabledOriginServerConfigRequest) (*pb.FindEnabledOriginServerConfigResponse, error) {
+func (this *OriginService) FindEnabledOriginConfig(ctx context.Context, req *pb.FindEnabledOriginConfigRequest) (*pb.FindEnabledOriginConfigResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := models.SharedOriginServerDAO.ComposeOriginConfig(req.OriginId)
+	config, err := models.SharedOriginDAO.ComposeOriginConfig(req.OriginId)
 	if err != nil {
 		return nil, err
 	}
@@ -112,5 +112,5 @@ func (this *OriginServerService) FindEnabledOriginServerConfig(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.FindEnabledOriginServerConfigResponse{OriginJSON: configData}, nil
+	return &pb.FindEnabledOriginConfigResponse{OriginJSON: configData}, nil
 }

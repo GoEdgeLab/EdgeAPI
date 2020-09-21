@@ -1,7 +1,7 @@
 package models
 
 // 源站
-type OriginServer struct {
+type Origin struct {
 	Id                     uint32 `field:"id"`                     // ID
 	AdminId                uint32 `field:"adminId"`                // 管理员ID
 	UserId                 uint32 `field:"userId"`                 // 用户ID
@@ -29,7 +29,7 @@ type OriginServer struct {
 	State                  uint8  `field:"state"`                  // 状态
 }
 
-type OriginServerOperator struct {
+type OriginOperator struct {
 	Id                     interface{} // ID
 	AdminId                interface{} // 管理员ID
 	UserId                 interface{} // 用户ID
@@ -57,6 +57,6 @@ type OriginServerOperator struct {
 	State                  interface{} // 状态
 }
 
-func NewOriginServerOperator() *OriginServerOperator {
-	return &OriginServerOperator{}
+func NewOriginOperator() *OriginOperator {
+	return &OriginOperator{}
 }
