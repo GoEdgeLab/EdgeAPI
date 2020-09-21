@@ -69,7 +69,7 @@ func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
 }
 
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyId int64, clusterId int64, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
+func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyJSON []byte, clusterId int64, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -83,29 +83,31 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	op.Type = serverType
 	op.Description = description
 
-	if len(serverNamesJSON) > 0 {
+	if IsNotNull(serverNamesJSON) {
 		op.ServerNames = serverNamesJSON
 	}
-	if len(httpJSON) > 0 {
+	if IsNotNull(httpJSON) {
 		op.Http = httpJSON
 	}
-	if len(httpsJSON) > 0 {
+	if IsNotNull(httpsJSON) {
 		op.Https = httpsJSON
 	}
-	if len(tcpJSON) > 0 {
+	if IsNotNull(tcpJSON) {
 		op.Tcp = tcpJSON
 	}
-	if len(tlsJSON) > 0 {
+	if IsNotNull(tlsJSON) {
 		op.Tls = tlsJSON
 	}
-	if len(unixJSON) > 0 {
+	if IsNotNull(unixJSON) {
 		op.Unix = unixJSON
 	}
-	if len(udpJSON) > 0 {
+	if IsNotNull(udpJSON) {
 		op.Udp = udpJSON
 	}
 	op.WebId = webId
-	op.ReverseProxyId = reverseProxyId
+	if len(reverseProxyJSON) > 0 {
+		op.ReverseProxy = reverseProxyJSON
+	}
 
 	op.ClusterId = clusterId
 	if len(includeNodesJSON) > 0 {
@@ -324,14 +326,14 @@ func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
 }
 
 // 修改反向代理配置
-func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, reverseProxyId int64) error {
+func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	_, err := this.Query().
-		Pk(serverId).
-		Set("reverseProxyId", reverseProxyId).
-		Update()
+	op := NewServerOperator()
+	op.Id = serverId
+	op.ReverseProxy = JSONBytes(config)
+	_, err := this.Save(op)
 	if err != nil {
 		return err
 	}
@@ -482,8 +484,15 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 	}
 
 	// ReverseProxy
-	if server.ReverseProxyId > 0 {
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(int64(server.ReverseProxyId))
+	if IsNotNull(server.ReverseProxy) {
+		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
+		err = json.Unmarshal([]byte(server.ReverseProxy), reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		config.ReverseProxyRef = reverseProxyRef
+
+		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(reverseProxyRef.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -509,7 +518,7 @@ func (this *ServerDAO) RenewServerConfig(serverId int64) error {
 }
 
 // 根据条件获取反向代理配置
-func (this *ServerDAO) FindReverseProxyConfig(serverId int64) (*serverconfigs.ReverseProxyConfig, error) {
+func (this *ServerDAO) FindReverseProxyRef(serverId int64) (*serverconfigs.ReverseProxyRef, error) {
 	reverseProxy, err := this.Query().
 		Pk(serverId).
 		Result("reverseProxy").
@@ -520,7 +529,7 @@ func (this *ServerDAO) FindReverseProxyConfig(serverId int64) (*serverconfigs.Re
 	if len(reverseProxy) == 0 || reverseProxy == "null" {
 		return nil, nil
 	}
-	config := &serverconfigs.ReverseProxyConfig{}
+	config := &serverconfigs.ReverseProxyRef{}
 	err = json.Unmarshal([]byte(reverseProxy), config)
 	return config, err
 }

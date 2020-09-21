@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 )
 
 type ServerService struct {
@@ -18,7 +19,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	if err != nil {
 		return nil, err
 	}
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyId, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +341,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 	}
 
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerReverseProxy(req.ServerId, req.ReverseProxyId)
+	err = models.SharedServerDAO.UpdateServerReverseProxy(req.ServerId, req.ReverseProxyJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -498,20 +499,20 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
-		Id:             int64(server.Id),
-		Type:           server.Type,
-		Name:           server.Name,
-		Description:    server.Description,
-		Config:         []byte(server.Config),
-		ServerNamesJON: []byte(server.ServerNames),
-		HttpJSON:       []byte(server.Http),
-		HttpsJSON:      []byte(server.Https),
-		TcpJSON:        []byte(server.Tcp),
-		TlsJSON:        []byte(server.Tls),
-		UnixJSON:       []byte(server.Unix),
-		UdpJSON:        []byte(server.Udp),
-		WebId:          int64(server.WebId),
-		ReverseProxyId: int64(server.ReverseProxyId),
+		Id:               int64(server.Id),
+		Type:             server.Type,
+		Name:             server.Name,
+		Description:      server.Description,
+		Config:           []byte(server.Config),
+		ServerNamesJON:   []byte(server.ServerNames),
+		HttpJSON:         []byte(server.Http),
+		HttpsJSON:        []byte(server.Https),
+		TcpJSON:          []byte(server.Tcp),
+		TlsJSON:          []byte(server.Tls),
+		UnixJSON:         []byte(server.Unix),
+		UdpJSON:          []byte(server.Udp),
+		WebId:            int64(server.WebId),
+		ReverseProxyJSON: []byte(server.ReverseProxy),
 
 		IncludeNodes: []byte(server.IncludeNodes),
 		ExcludeNodes: []byte(server.ExcludeNodes),
@@ -539,26 +540,53 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 }
 
 // 查找反向代理设置
-func (this *ServerService) FindServerReverseProxyConfig(ctx context.Context, req *pb.FindServerReverseProxyConfigRequest) (*pb.FindServerReverseProxyConfigResponse, error) {
+func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerReverseProxyConfigRequest) (*pb.FindAndInitServerReverseProxyConfigResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	reverseProxy, err := models.SharedServerDAO.FindReverseProxyConfig(req.ServerId)
+	reverseProxyRef, err := models.SharedServerDAO.FindReverseProxyRef(req.ServerId)
 	if err != nil {
 		return nil, err
 	}
 
-	if reverseProxy == nil {
-		return &pb.FindServerReverseProxyConfigResponse{Config: nil}, nil
+	if reverseProxyRef == nil {
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		reverseProxyRef = &serverconfigs.ReverseProxyRef{
+			IsOn:           false,
+			ReverseProxyId: reverseProxyId,
+		}
+		refJSON, err := json.Marshal(reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.UpdateServerReverseProxy(req.ServerId, refJSON)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	configData, err := json.Marshal(reverseProxy)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(reverseProxyRef.ReverseProxyId)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindServerReverseProxyConfigResponse{Config: configData}, nil
+
+	configJSON, err := json.Marshal(reverseProxyConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	refJSON, err := json.Marshal(reverseProxyRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindAndInitServerReverseProxyConfigResponse{ReverseProxy: configJSON, ReverseProxyRef: refJSON}, nil
 }
 
 // 初始化Web设置

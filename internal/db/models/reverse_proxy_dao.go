@@ -71,6 +71,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 	}
 
 	config := &serverconfigs.ReverseProxyConfig{}
+	config.Id = int64(reverseProxy.Id)
 	config.IsOn = reverseProxy.IsOn == 1
 
 	schedulingConfig := &serverconfigs.SchedulingConfig{}
@@ -121,6 +122,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 // 创建反向代理
 func (this *ReverseProxyDAO) CreateReverseProxy(schedulingJSON []byte, primaryOriginsJSON []byte, backupOriginsJSON []byte) (int64, error) {
 	op := NewReverseProxyOperator()
+	op.IsOn = false
 	op.State = ReverseProxyStateEnabled
 	if len(schedulingJSON) > 0 {
 		op.Scheduling = string(schedulingJSON)
