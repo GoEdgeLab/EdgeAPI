@@ -289,7 +289,7 @@ func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeN
 		return nil, err
 	}
 
-	return &pb.ComposeNodeConfigResponse{ConfigJSON: data}, nil
+	return &pb.ComposeNodeConfigResponse{NodeJSON: data}, nil
 }
 
 // 节点stream

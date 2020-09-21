@@ -112,5 +112,5 @@ func (this *OriginServerService) FindEnabledOriginServerConfig(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.FindEnabledOriginServerConfigResponse{Config: configData}, nil
+	return &pb.FindEnabledOriginServerConfigResponse{OriginJSON: configData}, nil
 }

@@ -57,5 +57,5 @@ func (this *HTTPHeaderService) FindEnabledHTTPHeaderConfig(ctx context.Context, 
 		return nil, err
 	}
 
-	return &pb.FindEnabledHTTPHeaderConfigResponse{Config: configData}, nil
+	return &pb.FindEnabledHTTPHeaderConfigResponse{HeaderJSON: configData}, nil
 }

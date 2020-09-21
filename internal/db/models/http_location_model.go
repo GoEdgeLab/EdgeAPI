@@ -15,6 +15,8 @@ type HTTPLocation struct {
 	Description  string `field:"description"`  // 描述
 	WebId        uint32 `field:"webId"`        // Web配置ID
 	ReverseProxy string `field:"reverseProxy"` // 反向代理
+	UrlPrefix    string `field:"urlPrefix"`    // URL前缀
+	IsBreak      uint8  `field:"isBreak"`      // 是否终止匹配
 }
 
 type HTTPLocationOperator struct {
@@ -31,6 +33,8 @@ type HTTPLocationOperator struct {
 	Description  interface{} // 描述
 	WebId        interface{} // Web配置ID
 	ReverseProxy interface{} // 反向代理
+	UrlPrefix    interface{} // URL前缀
+	IsBreak      interface{} // 是否终止匹配
 }
 
 func NewHTTPLocationOperator() *HTTPLocationOperator {

@@ -184,6 +184,24 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.FirewallRef = firewallRef
 	}
 
+	// 路径规则
+	if IsNotNull(web.Locations) {
+		refs := []*serverconfigs.HTTPLocationRef{}
+		err = json.Unmarshal([]byte(web.Locations), &refs)
+		if err != nil {
+			return nil, err
+		}
+		if len(refs) > 0 {
+			config.LocationRefs = refs
+
+			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(refs)
+			if err != nil {
+				return nil, err
+			}
+			config.Locations = locations
+		}
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -369,6 +387,22 @@ func (this *HTTPWebDAO) UpdateWebFirewall(webId int64, firewallJSON []byte) erro
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改路径规则配置
+func (this *HTTPWebDAO) UpdateWebLocations(webId int64, locationsJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Locations = JSONBytes(locationsJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

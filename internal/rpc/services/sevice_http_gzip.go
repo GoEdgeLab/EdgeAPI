@@ -67,7 +67,7 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindEnabledGzipConfigResponse{Config: configData}, nil
+	return &pb.FindEnabledGzipConfigResponse{GzipJSON: configData}, nil
 }
 
 // 修改Gzip配置

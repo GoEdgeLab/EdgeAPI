@@ -70,7 +70,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.FindEnabledReverseProxyConfigResponse{Config: configData}, nil
+	return &pb.FindEnabledReverseProxyConfigResponse{ReverseProxyJSON: configData}, nil
 }
 
 // 修改反向代理调度算法

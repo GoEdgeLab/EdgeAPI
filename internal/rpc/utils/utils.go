@@ -118,7 +118,12 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 }
 
-// 返回Update信息
+// 返回Update成功信息
 func RPCUpdateSuccess() (*pb.RPCUpdateSuccess, error) {
 	return &pb.RPCUpdateSuccess{}, nil
+}
+
+// 返回Delete成功信息
+func RPCDeleteSuccess() (*pb.RPCDeleteSuccess, error) {
+	return &pb.RPCDeleteSuccess{}, nil
 }

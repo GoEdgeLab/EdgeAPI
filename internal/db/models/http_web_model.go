@@ -23,6 +23,7 @@ type HTTPWeb struct {
 	Gzip                   string `field:"gzip"`                   // Gzip配置
 	Cache                  string `field:"cache"`                  // 缓存配置
 	Firewall               string `field:"firewall"`               // 防火墙设置
+	Locations              string `field:"locations"`              // 路径规则配置
 }
 
 type HTTPWebOperator struct {
@@ -47,6 +48,7 @@ type HTTPWebOperator struct {
 	Gzip                   interface{} // Gzip配置
 	Cache                  interface{} // 缓存配置
 	Firewall               interface{} // 防火墙设置
+	Locations              interface{} // 路径规则配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

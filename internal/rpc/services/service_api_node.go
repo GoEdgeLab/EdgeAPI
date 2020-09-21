@@ -41,7 +41,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 }
 
 // 删除API节点
-func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPINodeRequest) (*pb.DeleteAPINodeResponse, error) {
+func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPINodeRequest) (*pb.RPCDeleteSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 		return nil, err
 	}
 
-	return &pb.DeleteAPINodeResponse{}, nil
+	return &pb.RPCDeleteSuccess{}, nil
 }
 
 // 列出所有可用API节点

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -51,6 +52,26 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	result.RequestHeaderPolicyId = int64(web.RequestHeaderPolicyId)
 	result.ResponseHeaderPolicyId = int64(web.ResponseHeaderPolicyId)
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
+}
+
+// 查找Web配置
+func (this *HTTPWebService) FindEnabledHTTPWebConfig(ctx context.Context, req *pb.FindEnabledHTTPWebConfigRequest) (*pb.FindEnabledHTTPWebConfigResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(req.WebId)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledHTTPWebConfigResponse{WebJSON: configJSON}, nil
 }
 
 // 修改Web配置
@@ -163,7 +184,7 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 }
 
 // 更改访问日志配置
-func (this *HTTPWebService) UpdateHTTPAccessLog(ctx context.Context, req *pb.UpdateHTTPAccessLogRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.UpdateHTTPWebAccessLogRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -178,7 +199,7 @@ func (this *HTTPWebService) UpdateHTTPAccessLog(ctx context.Context, req *pb.Upd
 }
 
 // 更改统计配置
-func (this *HTTPWebService) UpdateHTTPStat(ctx context.Context, req *pb.UpdateHTTPStatRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.UpdateHTTPWebStatRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -193,7 +214,7 @@ func (this *HTTPWebService) UpdateHTTPStat(ctx context.Context, req *pb.UpdateHT
 }
 
 // 更改缓存配置
-func (this *HTTPWebService) UpdateHTTPCache(ctx context.Context, req *pb.UpdateHTTPCacheRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.UpdateHTTPWebCacheRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -208,9 +229,8 @@ func (this *HTTPWebService) UpdateHTTPCache(ctx context.Context, req *pb.UpdateH
 	return rpcutils.RPCUpdateSuccess()
 }
 
-
 // 更改防火墙设置
-func (this *HTTPWebService) UpdateHTTPFirewall(ctx context.Context, req *pb.UpdateHTTPFirewallRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.UpdateHTTPWebFirewallRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -218,6 +238,22 @@ func (this *HTTPWebService) UpdateHTTPFirewall(ctx context.Context, req *pb.Upda
 	}
 
 	err = models.SharedHTTPWebDAO.UpdateWebFirewall(req.WebId, req.FirewallJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpcutils.RPCUpdateSuccess()
+}
+
+// 更改路径规则设置
+func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.UpdateHTTPWebLocationsRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebLocations(req.WebId, req.LocationsJSON)
 	if err != nil {
 		return nil, err
 	}

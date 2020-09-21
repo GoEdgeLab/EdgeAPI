@@ -62,6 +62,6 @@ func (this *HTTPPageService) FindEnabledHTTPPageConfig(ctx context.Context, req 
 	}
 
 	return &pb.FindEnabledHTTPPageConfigResponse{
-		Config: configJSON,
+		PageJSON: configJSON,
 	}, nil
 }

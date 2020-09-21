@@ -586,11 +586,11 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.FindAndInitServerReverseProxyConfigResponse{ReverseProxy: configJSON, ReverseProxyRef: refJSON}, nil
+	return &pb.FindAndInitServerReverseProxyConfigResponse{ReverseProxyJSON: configJSON, ReverseProxyRefJSON: refJSON}, nil
 }
 
 // 初始化Web设置
-func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebRequest) (*pb.FindAndInitServerWebResponse, error) {
+func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebConfigRequest) (*pb.FindAndInitServerWebConfigResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -617,5 +617,5 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 		return nil, err
 	}
 
-	return &pb.FindAndInitServerWebResponse{Config: configJSON}, nil
+	return &pb.FindAndInitServerWebConfigResponse{WebJSON: configJSON}, nil
 }

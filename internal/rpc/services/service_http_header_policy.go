@@ -28,7 +28,7 @@ func (this *HTTPHeaderPolicyService) FindEnabledHTTPHeaderPolicyConfig(ctx conte
 		return nil, err
 	}
 
-	return &pb.FindEnabledHTTPHeaderPolicyConfigResponse{Config: configData}, nil
+	return &pb.FindEnabledHTTPHeaderPolicyConfigResponse{HeaderPolicyJSON: configData}, nil
 }
 
 // 创建策略
