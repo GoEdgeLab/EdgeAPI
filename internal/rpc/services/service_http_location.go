@@ -99,6 +99,14 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationReverseProxyConfig(ctx c
 			IsOn:           false,
 			ReverseProxyId: reverseProxyId,
 		}
+		reverseProxyJSON, err := json.Marshal(reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(req.LocationId, reverseProxyJSON)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(reverseProxyRef.ReverseProxyId)
@@ -139,6 +147,10 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 		if err != nil {
 			return nil, err
 		}
+		err = models.SharedHTTPLocationDAO.UpdateLocationWeb(req.LocationId, webId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(webId)
@@ -152,4 +164,19 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 	return &pb.FindAndInitHTTPLocationWebConfigResponse{
 		WebJSON: configJSON,
 	}, nil
+}
+
+// 修改反向代理设置
+func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Context, req *pb.UpdateHTTPLocationReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(req.LocationId, req.ReverseProxyJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
 }

@@ -118,6 +118,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(locationId int64) (*servercon
 	config.Name = location.Name
 	config.Pattern = location.Pattern
 	config.URLPrefix = location.UrlPrefix
+	config.IsBreak = location.IsBreak == 1
 
 	// web
 	if location.WebId > 0 {
