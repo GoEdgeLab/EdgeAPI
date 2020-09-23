@@ -7,7 +7,7 @@ type ServerGroup struct {
 	UserId    uint32 `field:"userId"`    // 用户ID
 	Name      string `field:"name"`      // 名称
 	Order     uint32 `field:"order"`     // 排序
-	CreatedAt uint32 `field:"createdAt"` // 创建时间
+	CreatedAt uint64 `field:"createdAt"` // 创建时间
 	State     uint8  `field:"state"`     // 状态
 }
 

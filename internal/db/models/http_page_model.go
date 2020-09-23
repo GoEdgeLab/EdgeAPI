@@ -10,7 +10,7 @@ type HTTPPage struct {
 	Url        string `field:"url"`        // 页面URL
 	NewStatus  int32  `field:"newStatus"`  // 新状态码
 	State      uint8  `field:"state"`      // 状态
-	CreatedAt  uint32 `field:"createdAt"`  // 创建时间
+	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
 }
 
 type HTTPPageOperator struct {

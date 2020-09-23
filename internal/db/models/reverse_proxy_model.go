@@ -11,7 +11,7 @@ type ReverseProxy struct {
 	PrimaryOrigins string `field:"primaryOrigins"` // 主要源站
 	BackupOrigins  string `field:"backupOrigins"`  // 备用源站
 	State          uint8  `field:"state"`          // 状态
-	CreatedAt      uint32 `field:"createdAt"`      // 创建时间
+	CreatedAt      uint64 `field:"createdAt"`      // 创建时间
 }
 
 type ReverseProxyOperator struct {

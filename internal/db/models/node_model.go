@@ -13,7 +13,7 @@ type Node struct {
 	ClusterId     uint32 `field:"clusterId"`     // 集群ID
 	RegionId      uint32 `field:"regionId"`      // 区域ID
 	GroupId       uint32 `field:"groupId"`       // 分组ID
-	CreatedAt     uint32 `field:"createdAt"`     // 创建时间
+	CreatedAt     uint64 `field:"createdAt"`     // 创建时间
 	Status        string `field:"status"`        // 最新的状态
 	Version       uint32 `field:"version"`       // 当前版本号
 	LatestVersion uint32 `field:"latestVersion"` // 最后版本号

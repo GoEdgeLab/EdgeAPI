@@ -10,7 +10,7 @@ type NodeCluster struct {
 	ApiNodes       string `field:"apiNodes"`       // 使用的API节点
 	InstallDir     string `field:"installDir"`     // 安装目录
 	Order          uint32 `field:"order"`          // 排序
-	CreatedAt      uint32 `field:"createdAt"`      // 创建时间
+	CreatedAt      uint64 `field:"createdAt"`      // 创建时间
 	GrantId        uint32 `field:"grantId"`        // 默认认证方式
 	State          uint8  `field:"state"`          // 状态
 }

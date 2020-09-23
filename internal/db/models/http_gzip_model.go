@@ -10,7 +10,8 @@ type HTTPGzip struct {
 	MinLength string `field:"minLength"` // 可压缩最小值
 	MaxLength string `field:"maxLength"` // 可压缩最大值
 	State     uint8  `field:"state"`     // 状态
-	CreatedAt uint32 `field:"createdAt"` // 创建时间
+	CreatedAt uint64 `field:"createdAt"` // 创建时间
+	Conds     string `field:"conds"`     // 条件
 }
 
 type HTTPGzipOperator struct {
@@ -23,6 +24,7 @@ type HTTPGzipOperator struct {
 	MaxLength interface{} // 可压缩最大值
 	State     interface{} // 状态
 	CreatedAt interface{} // 创建时间
+	Conds     interface{} // 条件
 }
 
 func NewHTTPGzipOperator() *HTTPGzipOperator {

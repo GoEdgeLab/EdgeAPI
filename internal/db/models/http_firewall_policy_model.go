@@ -10,6 +10,9 @@ type HTTPFirewallPolicy struct {
 	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
 	IsOn       uint8  `field:"isOn"`       // 是否启用
 	Name       string `field:"name"`       // 名称
+	Inbound    string `field:"inbound"`    // 入站规则
+	Outbound   string `field:"outbound"`   // 出站规则
+	Conds      string `field:"conds"`      // 条件
 }
 
 type HTTPFirewallPolicyOperator struct {
@@ -21,6 +24,9 @@ type HTTPFirewallPolicyOperator struct {
 	CreatedAt  interface{} // 创建时间
 	IsOn       interface{} // 是否启用
 	Name       interface{} // 名称
+	Inbound    interface{} // 入站规则
+	Outbound   interface{} // 出站规则
+	Conds      interface{} // 条件
 }
 
 func NewHTTPFirewallPolicyOperator() *HTTPFirewallPolicyOperator {

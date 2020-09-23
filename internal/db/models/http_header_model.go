@@ -1,6 +1,6 @@
 package models
 
-//
+// HTTP Header
 type HTTPHeader struct {
 	Id         uint32 `field:"id"`         // ID
 	AdminId    uint32 `field:"adminId"`    // 管理员ID
@@ -12,7 +12,7 @@ type HTTPHeader struct {
 	Order      uint32 `field:"order"`      // 排序
 	Status     string `field:"status"`     // 状态码设置
 	State      uint8  `field:"state"`      // 状态
-	CreatedAt  uint32 `field:"createdAt"`  // 创建时间
+	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
 }
 
 type HTTPHeaderOperator struct {

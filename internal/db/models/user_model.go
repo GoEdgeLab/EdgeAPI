@@ -1,13 +1,13 @@
 package models
 
-//
+// 用户
 type User struct {
 	Id        uint32 `field:"id"`        // ID
 	Username  string `field:"username"`  // 用户名
 	Password  string `field:"password"`  // 密码
 	Fullname  string `field:"fullname"`  // 真实姓名
-	CreatedAt uint32 `field:"createdAt"` // 创建时间
-	UpdatedAt uint32 `field:"updatedAt"` // 修改时间
+	CreatedAt uint64 `field:"createdAt"` // 创建时间
+	UpdatedAt uint64 `field:"updatedAt"` // 修改时间
 	State     uint8  `field:"state"`     // 状态
 }
 

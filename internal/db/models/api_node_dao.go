@@ -20,7 +20,7 @@ func NewAPINodeDAO() *APINodeDAO {
 	return dbs.NewDAO(&APINodeDAO{
 		DAOObject: dbs.DAOObject{
 			DB:     Tea.Env,
-			Table:  "edgeApiNodes",
+			Table:  "edgeAPINodes",
 			Model:  new(APINode),
 			PkName: "id",
 		},

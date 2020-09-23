@@ -25,7 +25,7 @@ type Server struct {
 	IncludeNodes string `field:"includeNodes"` // 部署条件
 	ExcludeNodes string `field:"excludeNodes"` // 节点排除条件
 	Version      uint32 `field:"version"`      // 版本号
-	CreatedAt    uint32 `field:"createdAt"`    // 创建时间
+	CreatedAt    uint64 `field:"createdAt"`    // 创建时间
 	IsUpdating   uint8  `field:"isUpdating"`   // 是否正在更新
 	State        uint8  `field:"state"`        // 状态
 }

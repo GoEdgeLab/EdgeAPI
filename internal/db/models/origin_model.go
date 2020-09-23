@@ -25,7 +25,7 @@ type Origin struct {
 	HealthCheck            string `field:"healthCheck"`            // 健康检查设置
 	Cert                   string `field:"cert"`                   // 证书设置
 	Ftp                    string `field:"ftp"`                    // FTP相关设置
-	CreatedAt              uint32 `field:"createdAt"`              // 创建时间
+	CreatedAt              uint64 `field:"createdAt"`              // 创建时间
 	State                  uint8  `field:"state"`                  // 状态
 }
 

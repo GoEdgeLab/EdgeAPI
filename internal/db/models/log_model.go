@@ -5,7 +5,7 @@ type Log struct {
 	Id          uint32 `field:"id"`          // ID
 	Level       string `field:"level"`       // 级别
 	Description string `field:"description"` // 描述
-	CreatedAt   uint32 `field:"createdAt"`   // 创建时间
+	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
 	Action      string `field:"action"`      // 动作
 	UserId      uint32 `field:"userId"`      // 用户ID
 	AdminId     uint32 `field:"adminId"`     // 管理员ID
