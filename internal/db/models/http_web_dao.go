@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -92,26 +93,51 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 	}
 
 	// charset
-	config.Charset = web.Charset
-
-	// headers
-	if web.RequestHeaderPolicyId > 0 {
-		headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(web.RequestHeaderPolicyId))
+	if IsNotNull(web.Charset) {
+		charsetConfig := &serverconfigs.HTTPCharsetConfig{}
+		err = json.Unmarshal([]byte(web.Charset), charsetConfig)
 		if err != nil {
 			return nil, err
 		}
-		if headerPolicy != nil {
-			config.RequestHeaders = headerPolicy
+		config.Charset = charsetConfig
+	}
+
+	// headers
+	if IsNotNull(web.RequestHeader) {
+		ref := &shared.HTTPHeaderPolicyRef{}
+		err = json.Unmarshal([]byte(web.RequestHeader), ref)
+		if err != nil {
+			return nil, err
+		}
+		config.RequestHeaderPolicyRef = ref
+
+		if ref.HeaderPolicyId > 0 {
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if headerPolicy != nil {
+				config.RequestHeaderPolicy = headerPolicy
+			}
 		}
 	}
 
-	if web.ResponseHeaderPolicyId > 0 {
-		headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(web.ResponseHeaderPolicyId))
+	if IsNotNull(web.ResponseHeader) {
+		ref := &shared.HTTPHeaderPolicyRef{}
+		err = json.Unmarshal([]byte(web.ResponseHeader), ref)
 		if err != nil {
 			return nil, err
 		}
-		if headerPolicy != nil {
-			config.ResponseHeaders = headerPolicy
+		config.ResponseHeaderPolicyRef = ref
+
+		if ref.HeaderPolicyId > 0 {
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if headerPolicy != nil {
+				config.ResponseHeaderPolicy = headerPolicy
+			}
 		}
 	}
 
@@ -202,6 +228,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 	}
 
+	// 跳转
+	if IsNotNull(web.RedirectToHttps) {
+		redirectToHTTPSConfig := &serverconfigs.HTTPRedirectToHTTPSConfig{}
+		err = json.Unmarshal([]byte(web.RedirectToHttps), redirectToHTTPSConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.RedirectToHttps = redirectToHTTPSConfig
+	}
+
 	// TODO 更多配置
 
 	return config, nil
@@ -252,13 +288,13 @@ func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
 }
 
 // 修改字符编码
-func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charset string) error {
+func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charsetJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Charset = charset
+	op.Charset = charsetJSON
 	_, err := this.Save(op)
 	if err != nil {
 		return err
@@ -268,13 +304,13 @@ func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charset string) error {
 }
 
 // 更改请求Header策略
-func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyId int64) error {
+func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.RequestHeaderPolicyId = headerPolicyId
+	op.RequestHeader = JSONBytes(headerPolicyJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err
@@ -284,13 +320,13 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyId
 }
 
 // 更改响应Header策略
-func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyId int64) error {
+func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.ResponseHeaderPolicyId = headerPolicyId
+	op.ResponseHeader = JSONBytes(headerPolicyJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err
@@ -403,6 +439,22 @@ func (this *HTTPWebDAO) UpdateWebLocations(webId int64, locationsJSON []byte) er
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdating(webId)
+}
+
+// 更改跳转到HTTPS设置
+func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(webId int64, redirectToHTTPSJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return err

@@ -48,9 +48,6 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	result.Id = int64(web.Id)
 	result.IsOn = web.IsOn == 1
 	result.Root = web.Root
-	result.Charset = web.Charset
-	result.RequestHeaderPolicyId = int64(web.RequestHeaderPolicyId)
-	result.ResponseHeaderPolicyId = int64(web.ResponseHeaderPolicyId)
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
 }
 
@@ -114,7 +111,7 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebCharset(req.WebId, req.Charset)
+	err = models.SharedHTTPWebDAO.UpdateWebCharset(req.WebId, req.CharsetJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -122,14 +119,14 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 }
 
 // 更改请求Header策略
-func (this *HTTPWebService) UpdateHTTPWebRequestHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderPolicyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebRequestHeader(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebRequestHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	err = models.SharedHTTPWebDAO.UpdateWebRequestHeaderPolicy(req.WebId, req.HeaderJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -138,14 +135,14 @@ func (this *HTTPWebService) UpdateHTTPWebRequestHeaderPolicy(ctx context.Context
 }
 
 // 更改响应Header策略
-func (this *HTTPWebService) UpdateHTTPWebResponseHeaderPolicy(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderPolicyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebService) UpdateHTTPWebResponseHeader(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebResponseHeaderPolicy(req.WebId, req.HeaderPolicyId)
+	err = models.SharedHTTPWebDAO.UpdateWebResponseHeaderPolicy(req.WebId, req.HeaderJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -258,5 +255,20 @@ func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.
 		return nil, err
 	}
 
+	return rpcutils.RPCUpdateSuccess()
+}
+
+// 跳转到HTTPS
+func (this *HTTPWebService) UpdateHTTPWebRedirectToHTTPS(ctx context.Context, req *pb.UpdateHTTPWebRedirectToHTTPSRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebRedirectToHTTPS(req.WebId, req.RedirectToHTTPSJSON)
+	if err != nil {
+		return nil, err
+	}
 	return rpcutils.RPCUpdateSuccess()
 }
