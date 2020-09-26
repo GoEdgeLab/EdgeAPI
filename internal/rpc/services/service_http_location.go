@@ -143,7 +143,7 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 	}
 
 	if webId <= 0 {
-		webId, err = models.SharedHTTPWebDAO.CreateWeb("")
+		webId, err = models.SharedHTTPWebDAO.CreateWeb(nil)
 		if err != nil {
 			return nil, err
 		}

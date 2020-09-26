@@ -19,7 +19,7 @@ func (this *HTTPWebService) CreateHTTPWeb(ctx context.Context, req *pb.CreateHTT
 		return nil, err
 	}
 
-	webId, err := models.SharedHTTPWebDAO.CreateWeb(req.Root)
+	webId, err := models.SharedHTTPWebDAO.CreateWeb(req.RootJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,6 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	result := &pb.HTTPWeb{}
 	result.Id = int64(web.Id)
 	result.IsOn = web.IsOn == 1
-	result.Root = web.Root
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
 }
 
@@ -79,7 +78,7 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 		return nil, err
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWeb(req.WebId, req.Root)
+	err = models.SharedHTTPWebDAO.UpdateWeb(req.WebId, req.RootJSON)
 	if err != nil {
 		return nil, err
 	}

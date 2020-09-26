@@ -129,6 +129,12 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	}
 
 	serverId = types.Int64(op.Id)
+
+	_, err = this.RenewServerConfig(serverId)
+	if err != nil {
+		return serverId, err
+	}
+
 	return serverId, nil
 }
 
@@ -320,7 +326,7 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 		return 0, errors.New("serverId should not be smaller than 0")
 	}
 
-	webId, err := SharedHTTPWebDAO.CreateWeb("")
+	webId, err := SharedHTTPWebDAO.CreateWeb(nil)
 	if err != nil {
 		return 0, err
 	}

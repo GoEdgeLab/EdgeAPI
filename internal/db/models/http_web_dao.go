@@ -87,7 +87,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 	config := &serverconfigs.HTTPWebConfig{}
 	config.Id = webId
 	config.IsOn = web.IsOn == 1
-	config.Root = web.Root
+
+	// root
+	if IsNotNull(web.Root) {
+		rootConfig := &serverconfigs.HTTPRootConfig{}
+		err = json.Unmarshal([]byte(web.Root), rootConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Root = rootConfig
+	}
 
 	// gzip
 	if IsNotNull(web.Gzip) {
@@ -255,10 +264,10 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 }
 
 // 创建Web配置
-func (this *HTTPWebDAO) CreateWeb(root string) (int64, error) {
+func (this *HTTPWebDAO) CreateWeb(rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
-	op.Root = root
+	op.Root = rootJSON
 	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
@@ -267,13 +276,13 @@ func (this *HTTPWebDAO) CreateWeb(root string) (int64, error) {
 }
 
 // 修改Web配置
-func (this *HTTPWebDAO) UpdateWeb(webId int64, root string) error {
+func (this *HTTPWebDAO) UpdateWeb(webId int64, rootJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Root = root
+	op.Root = rootJSON
 	_, err := this.Save(op)
 	return err
 }
