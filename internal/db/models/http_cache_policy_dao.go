@@ -26,6 +26,20 @@ func NewHTTPCachePolicyDAO() *HTTPCachePolicyDAO {
 
 var SharedHTTPCachePolicyDAO = NewHTTPCachePolicyDAO()
 
+// 初始化
+func (this *HTTPCachePolicyDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPCachePolicyDAO) EnableHTTPCachePolicy(id int64) error {
 	_, err := this.Query().

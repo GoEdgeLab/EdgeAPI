@@ -17,6 +17,7 @@ type HTTPLocation struct {
 	ReverseProxy string `field:"reverseProxy"` // 反向代理
 	UrlPrefix    string `field:"urlPrefix"`    // URL前缀
 	IsBreak      uint8  `field:"isBreak"`      // 是否终止匹配
+	CondGroups   string `field:"condGroups"`   // 匹配条件
 }
 
 type HTTPLocationOperator struct {
@@ -35,6 +36,7 @@ type HTTPLocationOperator struct {
 	ReverseProxy interface{} // 反向代理
 	UrlPrefix    interface{} // URL前缀
 	IsBreak      interface{} // 是否终止匹配
+	CondGroups   interface{} // 匹配条件
 }
 
 func NewHTTPLocationOperator() *HTTPLocationOperator {

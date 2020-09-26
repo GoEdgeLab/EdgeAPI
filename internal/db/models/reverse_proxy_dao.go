@@ -30,13 +30,30 @@ func NewReverseProxyDAO() *ReverseProxyDAO {
 
 var SharedReverseProxyDAO = NewReverseProxyDAO()
 
+// 初始化
+func (this *ReverseProxyDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *ReverseProxyDAO) EnableReverseProxy(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", ReverseProxyStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.CreateEvent()
 }
 
 // 禁用条目
@@ -45,7 +62,10 @@ func (this *ReverseProxyDAO) DisableReverseProxy(id int64) error {
 		Pk(id).
 		Set("state", ReverseProxyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.CreateEvent()
 }
 
 // 查找启用中的条目
@@ -106,7 +126,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 			return nil, err
 		}
 		for _, originConfig := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(int64(originConfig.OriginId))
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(originConfig.OriginId)
 			if err != nil {
 				return nil, err
 			}
@@ -155,8 +175,6 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(reverseProxyId int64, 
 	}
 	_, err := this.Save(op)
 
-	// TODO 更新所有使用此反向代理的服务
-
 	return err
 }
 
@@ -173,8 +191,6 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(reverseProxyId int
 		op.PrimaryOrigins = "[]"
 	}
 	_, err := this.Save(op)
-
-	// TODO 更新所有使用此反向代理的服务
 
 	return err
 }
@@ -193,8 +209,6 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int6
 	}
 	_, err := this.Save(op)
 
-	// TODO 更新所有使用此反向代理的服务
-
 	return err
 }
 
@@ -205,4 +219,9 @@ func (this *ReverseProxyDAO) UpdateReverseProxyIsOn(reverseProxyId int64, isOn b
 		Set("isOn", isOn).
 		Update()
 	return err
+}
+
+// 通知更新
+func (this *ReverseProxyDAO) CreateEvent() error {
+	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
 }

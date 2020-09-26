@@ -30,6 +30,20 @@ func NewHTTPPageDAO() *HTTPPageDAO {
 
 var SharedHTTPPageDAO = NewHTTPPageDAO()
 
+// 初始化
+func (this *HTTPPageDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPPageDAO) EnableHTTPPage(id int64) error {
 	_, err := this.Query().
@@ -107,7 +121,6 @@ func (this *HTTPPageDAO) UpdatePage(pageId int64, statusList []string, url strin
 	op.NewStatus = newStatus
 	_, err = this.Save(op)
 
-	// TODO 修改相关引用的对象
 
 	return err
 }

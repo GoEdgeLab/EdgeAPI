@@ -30,6 +30,20 @@ func NewHTTPHeaderPolicyDAO() *HTTPHeaderPolicyDAO {
 
 var SharedHTTPHeaderPolicyDAO = NewHTTPHeaderPolicyDAO()
 
+// 初始化
+func (this *HTTPHeaderPolicyDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(id int64) error {
 	_, err := this.Query().
@@ -83,8 +97,6 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(policyId int64, headersJSON
 	op.AddHeaders = headersJSON
 	_, err := this.Save(op)
 
-	// TODO 更新相关配置
-
 	return err
 }
 
@@ -98,8 +110,6 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(policyId int64, headersJSO
 	op.Id = policyId
 	op.SetHeaders = headersJSON
 	_, err := this.Save(op)
-
-	// TODO 更新相关配置
 
 	return err
 }
@@ -115,8 +125,6 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(policyId int64, headersJ
 	op.ReplaceHeaders = headersJSON
 	_, err := this.Save(op)
 
-	// TODO 更新相关配置
-
 	return err
 }
 
@@ -130,8 +138,6 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(policyId int64, headersJSO
 	op.Id = policyId
 	op.AddTrailers = headersJSON
 	_, err := this.Save(op)
-
-	// TODO 更新相关配置
 
 	return err
 }
@@ -152,8 +158,6 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(policyId int64, headerNam
 	op.DeleteHeaders = string(namesJSON)
 	_, err = this.Save(op)
 
-	// TODO 更新相关配置
-
 	return err
 }
 
@@ -173,78 +177,91 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 
 	// AddHeaders
 	if len(policy.AddHeaders) > 0 {
-		headers := []*shared.HTTPHeaderConfig{}
-		err = json.Unmarshal([]byte(policy.AddHeaders), &headers)
+		refs := []*shared.HTTPHeaderRef{}
+		err = json.Unmarshal([]byte(policy.AddHeaders), &refs)
 		if err != nil {
 			return nil, err
 		}
-		if len(headers) > 0 {
-			for k, header := range headers {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(header.Id)
+		if len(refs) > 0 {
+			for _, ref := range refs {
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
-				headers[k] = headerConfig
+				config.AddHeaders = append(config.AddHeaders, headerConfig)
 			}
-
-			config.AddHeaders = headers
 		}
 	}
 
 	// AddTrailers
 	if len(policy.AddTrailers) > 0 {
-		headers := []*shared.HTTPHeaderConfig{}
-		err = json.Unmarshal([]byte(policy.AddTrailers), &headers)
+		refs := []*shared.HTTPHeaderRef{}
+		err = json.Unmarshal([]byte(policy.AddTrailers), &refs)
 		if err != nil {
 			return nil, err
 		}
-		if len(headers) > 0 {
-			for k, header := range headers {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(header.Id)
+		if len(refs) > 0 {
+			resultRefs := []*shared.HTTPHeaderRef{}
+			for _, ref := range refs {
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
-				headers[k] = headerConfig
+				if headerConfig == nil {
+					continue
+				}
+				resultRefs = append(resultRefs, ref)
+				config.AddTrailers = append(config.AddTrailers, headerConfig)
 			}
-			config.AddTrailers = headers
+			config.AddHeaderRefs = resultRefs
 		}
 	}
 
 	// SetHeaders
 	if len(policy.SetHeaders) > 0 {
-		headers := []*shared.HTTPHeaderConfig{}
-		err = json.Unmarshal([]byte(policy.SetHeaders), &headers)
+		refs := []*shared.HTTPHeaderRef{}
+		err = json.Unmarshal([]byte(policy.SetHeaders), &refs)
 		if err != nil {
 			return nil, err
 		}
-		if len(headers) > 0 {
-			for k, header := range headers {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(header.Id)
+		if len(refs) > 0 {
+			resultRefs := []*shared.HTTPHeaderRef{}
+			for _, ref := range refs {
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
-				headers[k] = headerConfig
+				if headerConfig == nil {
+					continue
+				}
+				resultRefs = append(resultRefs, ref)
+				config.SetHeaders = append(config.SetHeaders, headerConfig)
 			}
-			config.SetHeaders = headers
+			config.SetHeaderRefs = resultRefs
 		}
 	}
 
 	// ReplaceHeaders
 	if len(policy.ReplaceHeaders) > 0 {
-		headers := []*shared.HTTPHeaderConfig{}
-		err = json.Unmarshal([]byte(policy.ReplaceHeaders), &headers)
+		refs := []*shared.HTTPHeaderRef{}
+		err = json.Unmarshal([]byte(policy.ReplaceHeaders), &refs)
 		if err != nil {
 			return nil, err
 		}
-		if len(headers) > 0 {
-			for k, header := range headers {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(header.Id)
+		if len(refs) > 0 {
+			resultRefs := []*shared.HTTPHeaderRef{}
+			for _, ref := range refs {
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
-				headers[k] = headerConfig
+				if headerConfig == nil {
+					continue
+				}
+				resultRefs = append(resultRefs, ref)
+				config.ReplaceHeaders = append(config.ReplaceHeaders, headerConfig)
 			}
-			config.ReplaceHeaders = headers
+			config.ReplaceHeaderRefs = resultRefs
 		}
 	}
 
@@ -255,7 +272,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 		if err != nil {
 			return nil, err
 		}
-		config.DeletedHeaders = headers
+		config.DeleteHeaders = headers
 	}
 
 	// Expires

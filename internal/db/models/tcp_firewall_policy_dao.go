@@ -20,3 +20,17 @@ func NewTCPFirewallPolicyDAO() *TCPFirewallPolicyDAO {
 }
 
 var SharedTCPFirewallPolicyDAO = NewTCPFirewallPolicyDAO()
+
+// 初始化
+func (this *TCPFirewallPolicyDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}

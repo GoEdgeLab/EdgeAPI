@@ -30,6 +30,20 @@ func NewHTTPHeaderDAO() *HTTPHeaderDAO {
 
 var SharedHTTPHeaderDAO = NewHTTPHeaderDAO()
 
+// 初始化
+func (this *HTTPHeaderDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPHeaderDAO) EnableHTTPHeader(id int64) error {
 	_, err := this.Query().
@@ -75,7 +89,17 @@ func (this *HTTPHeaderDAO) CreateHeader(name string, value string) (int64, error
 	op.IsOn = true
 	op.Name = name
 	op.Value = value
-	_, err := this.Save(op)
+
+	statusConfig := &shared.HTTPStatusConfig{
+		Always: true,
+	}
+	statusJSON, err := json.Marshal(statusConfig)
+	if err != nil {
+		return 0, err
+	}
+	op.Status = statusJSON
+
+	_, err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}

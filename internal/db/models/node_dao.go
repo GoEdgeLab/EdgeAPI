@@ -3,20 +3,20 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
 	NodeStateEnabled  = 1 // 已启用
 	NodeStateDisabled = 0 // 已禁用
-
-	NodeInstallStateAll          = 0 // 全部
-	NodeInstallStateInstalled    = 1 // 已安装
-	NodeInstallStateNotInstalled = 2 // 未安装
 )
 
 type NodeDAO dbs.DAO
@@ -182,7 +182,7 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 }
 
 // 列出单页节点
-func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState int8) (result []*Node, err error) {
+func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (result []*Node, err error) {
 	query := this.Query().
 		State(NodeStateEnabled).
 		Offset(offset).
@@ -197,12 +197,22 @@ func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId i
 
 	// 安装状态
 	switch installState {
-	case NodeInstallStateAll:
-		// 不做任何事情
-	case NodeInstallStateInstalled:
+	case configutils.BoolStateAll:
+		// 所有
+	case configutils.BoolStateYes:
 		query.Attr("isInstalled", 1)
-	case NodeInstallStateNotInstalled:
+	case configutils.BoolStateNo:
 		query.Attr("isInstalled", 0)
+	}
+
+	// 在线状态
+	switch activeState {
+	case configutils.BoolStateAll:
+		// 所有
+	case configutils.BoolStateYes:
+		query.Where("JSON_EXTRACT(status, '$.isActive') AND JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()<=60")
+	case configutils.BoolStateNo:
+		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()>60)")
 	}
 
 	_, err = query.FindAll()
@@ -266,7 +276,7 @@ func (this *NodeDAO) FindAllNodeIdsMatch(clusterId int64) (result []int64, err e
 }
 
 // 计算节点数量
-func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState int8) (int64, error) {
+func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (int64, error) {
 	query := this.Query()
 	query.State(NodeStateEnabled)
 
@@ -277,12 +287,22 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState int
 
 	// 安装状态
 	switch installState {
-	case NodeInstallStateAll:
-		// 不做任何事情
-	case NodeInstallStateInstalled:
+	case configutils.BoolStateAll:
+		// 所有
+	case configutils.BoolStateYes:
 		query.Attr("isInstalled", 1)
-	case NodeInstallStateNotInstalled:
+	case configutils.BoolStateNo:
 		query.Attr("isInstalled", 0)
+	}
+
+	// 在线状态
+	switch activeState {
+	case configutils.BoolStateAll:
+		// 所有
+	case configutils.BoolStateYes:
+		query.Where("JSON_EXTRACT(status, '$.isActive') AND JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()<=60")
+	case configutils.BoolStateNo:
+		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()>60)")
 	}
 
 	return query.Count()
@@ -345,6 +365,61 @@ func (this *NodeDAO) UpdateNodeInstallStatus(nodeId int64, status *NodeInstallSt
 		Set("installStatus", string(data)).
 		Update()
 	return err
+}
+
+// 组合配置
+func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, error) {
+	node, err := this.FindEnabledNode(nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, errors.New("node not found '" + strconv.FormatInt(nodeId, 10) + "'")
+	}
+
+	config := &nodeconfigs.NodeConfig{
+		Id:      node.UniqueId,
+		IsOn:    node.IsOn == 1,
+		Servers: nil,
+		Version: int64(node.Version),
+		Name:    node.Name,
+	}
+
+	// 获取所有的服务
+	servers, err := SharedServerDAO.FindAllEnabledServersWithNode(int64(node.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, server := range servers {
+		if len(server.Config) == 0 {
+			continue
+		}
+
+		serverConfig := &serverconfigs.ServerConfig{}
+		err = json.Unmarshal([]byte(server.Config), serverConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Servers = append(config.Servers, serverConfig)
+	}
+
+	// 全局设置
+	// TODO 根据用户的不同读取不同的全局设置
+	settingJSON, err := SharedSysSettingDAO.ReadSetting(SettingCodeGlobalConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(settingJSON) > 0 {
+		globalConfig := &serverconfigs.GlobalConfig{}
+		err = json.Unmarshal(settingJSON, globalConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.GlobalConfig = globalConfig
+	}
+
+	return config, nil
 }
 
 // 生成唯一ID

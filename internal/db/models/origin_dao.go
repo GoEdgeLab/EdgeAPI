@@ -32,6 +32,20 @@ func NewOriginDAO() *OriginDAO {
 
 var SharedOriginDAO = NewOriginDAO()
 
+// 初始化
+func (this *OriginDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *OriginDAO) EnableOrigin(id int64) error {
 	_, err := this.Query().
@@ -167,7 +181,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 			return nil, err
 		}
 		if policyConfig != nil {
-			config.RequestHeaders = policyConfig
+			config.RequestHeaderPolicy = policyConfig
 		}
 	}
 
@@ -177,7 +191,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 			return nil, err
 		}
 		if policyConfig != nil {
-			config.ResponseHeaders = policyConfig
+			config.ResponseHeaderPolicy = policyConfig
 		}
 	}
 

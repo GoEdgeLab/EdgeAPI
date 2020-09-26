@@ -7,10 +7,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
-	"github.com/iwind/TeaGo/maps"
-	"github.com/iwind/TeaGo/types"
 )
 
 type NodeService struct {
@@ -62,7 +61,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, types.Int8(req.InstallState))
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState))
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +74,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, types.Int8(req.InstallState))
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState))
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +105,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		result = append(result, &pb.Node{
 			Id:          int64(node.Id),
 			Name:        node.Name,
+			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
 			Status:      node.Status,
 			Cluster: &pb.NodeCluster{
@@ -223,13 +223,15 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	}
 
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
-		Id:          int64(node.Id),
-		Name:        node.Name,
-		Status:      node.Status,
-		UniqueId:    node.UniqueId,
-		Secret:      node.Secret,
-		InstallDir:  node.InstallDir,
-		IsInstalled: node.IsInstalled == 1,
+		Id:            int64(node.Id),
+		Name:          node.Name,
+		Status:        node.Status,
+		UniqueId:      node.UniqueId,
+		Version:       int64(node.Version),
+		LatestVersion: int64(node.LatestVersion),
+		Secret:        node.Secret,
+		InstallDir:    node.InstallDir,
+		IsInstalled:   node.IsInstalled == 1,
 		Cluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
@@ -241,50 +243,19 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 
 // 组合节点配置
 func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeNodeConfigRequest) (*pb.ComposeNodeConfigResponse, error) {
+	_ = req
+
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
-
-	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
-	if err != nil {
-		return nil, err
-	}
-	if node == nil {
-		return nil, errors.New("node validate failed, please check 'nodeId' or 'secret'")
-	}
-
-	nodeMap := maps.Map{
-		"id":      node.UniqueId,
-		"isOn":    node.IsOn == 1,
-		"servers": []maps.Map{},
-		"version": node.Version,
-	}
-
-	// 获取所有的服务
-	servers, err := models.SharedServerDAO.FindAllEnabledServersWithNode(int64(node.Id))
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(nodeId)
 	if err != nil {
 		return nil, err
 	}
 
-	serverMaps := []maps.Map{}
-	for _, server := range servers {
-		if len(server.Config) == 0 {
-			continue
-		}
-		configMap := maps.Map{}
-		err = json.Unmarshal([]byte(server.Config), &configMap)
-		if err != nil {
-			return nil, err
-		}
-		configMap["id"] = server.UniqueId
-		configMap["version"] = server.Version
-		serverMaps = append(serverMaps, configMap)
-	}
-	nodeMap["servers"] = serverMaps
-
-	data, err := json.Marshal(nodeMap)
+	data, err := json.Marshal(nodeConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -294,12 +265,15 @@ func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeN
 
 // 节点stream
 func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
+	// TODO 使用此stream快速通知边缘节点更新
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
 	if err != nil {
 		return err
 	}
 	logs.Println("nodeId:", nodeId)
+
+	_ = server.Send(&pb.NodeStreamResponse{})
 
 	for {
 		req, err := server.Recv()

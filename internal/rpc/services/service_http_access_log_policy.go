@@ -31,7 +31,7 @@ func (this *HTTPAccessLogPolicyService) FindAllEnabledHTTPAccessLogPolicies(ctx 
 			IsOn:        policy.IsOn == 1,
 			Type:        policy.Name,
 			OptionsJSON: []byte(policy.Options),
-			CondsJSON:   []byte(policy.Conds),
+			CondsJSON:   []byte(policy.CondGroups),
 		})
 	}
 

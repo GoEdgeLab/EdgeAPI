@@ -6,7 +6,7 @@ import (
 )
 
 func TestOriginServerDAO_ComposeOriginConfig(t *testing.T) {
-	config, err := SharedOriginServerDAO.ComposeOriginConfig(1)
+	config, err := SharedOriginDAO.ComposeOriginConfig(1)
 	if err != nil {
 		t.Fatal(err)
 	}

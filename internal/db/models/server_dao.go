@@ -1,13 +1,14 @@
 package models
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -30,6 +31,13 @@ func NewServerDAO() *ServerDAO {
 }
 
 var SharedServerDAO = NewServerDAO()
+
+// 初始化
+func (this *ServerDAO) Init() {
+	this.DAOObject.Init()
+
+	// 这里不处理增删改事件，是为了避免Server修改本身的时候，也要触发别的Server变更
+}
 
 // 启用条目
 func (this *ServerDAO) EnableServer(id uint32) (rowsAffected int64, err error) {
@@ -70,13 +78,7 @@ func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
 
 // 创建服务
 func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyJSON []byte, clusterId int64, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
-	uniqueId, err := this.genUniqueId()
-	if err != nil {
-		return 0, err
-	}
-
 	op := NewServerOperator()
-	op.UniqueId = uniqueId
 	op.UserId = userId
 	op.AdminId = adminId
 	op.Name = name
@@ -127,8 +129,7 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	}
 
 	serverId = types.Int64(op.Id)
-	err = this.RenewServerConfig(serverId)
-	return serverId, err
+	return serverId, nil
 }
 
 // 修改服务基本信息
@@ -141,25 +142,47 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 	op.Name = name
 	op.Description = description
 	op.ClusterId = clusterId
-	op.Version = dbs.SQL("version=version+1")
 	_, err := this.Save(op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.createEvent()
 }
 
 // 修改服务配置
-func (this *ServerDAO) UpdateServerConfig(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte) (isChanged bool, err error) {
 	if serverId <= 0 {
-		return errors.New("serverId should not be smaller than 0")
+		return false, errors.New("serverId should not be smaller than 0")
 	}
-	if len(config) == 0 {
-		config = []byte("null")
-	}
-	_, err := this.Query().
+
+	// 查询以前的md5
+	oldConfigMd5, err := this.Query().
 		Pk(serverId).
-		Set("config", string(config)).
-		Set("version", dbs.SQL("version+1")).
-		Update()
-	return err
+		Result("configMd5").
+		FindStringCol("")
+	if err != nil {
+		return false, err
+	}
+
+	m := md5.New()
+	_, _ = m.Write(configJSON)
+	h := m.Sum(nil)
+	newConfigMd5 := fmt.Sprintf("%x", h)
+
+	// 如果配置相同则不更改
+	if oldConfigMd5 == newConfigMd5 {
+		return false, nil
+	}
+
+	op := NewServerOperator()
+	op.Id = serverId
+	op.Config = JSONBytes(configJSON)
+	op.Version = dbs.SQL("version+1")
+
+	op.ConfigMd5 = newConfigMd5
+	_, err = this.Save(op)
+	return true, err
 }
 
 // 修改HTTP配置
@@ -177,7 +200,8 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改HTTPS配置
@@ -195,7 +219,8 @@ func (this *ServerDAO) UpdateServerHTTPS(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改TCP配置
@@ -213,7 +238,8 @@ func (this *ServerDAO) UpdateServerTCP(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改TLS配置
@@ -231,7 +257,8 @@ func (this *ServerDAO) UpdateServerTLS(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改Unix配置
@@ -249,7 +276,8 @@ func (this *ServerDAO) UpdateServerUnix(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改UDP配置
@@ -267,7 +295,8 @@ func (this *ServerDAO) UpdateServerUDP(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改Web配置
@@ -282,7 +311,7 @@ func (this *ServerDAO) UpdateServerWeb(serverId int64, webId int64) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+	return this.createEvent()
 }
 
 // 初始化Web配置
@@ -304,6 +333,11 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 		return 0, err
 	}
 
+	err = this.createEvent()
+	if err != nil {
+		return webId, err
+	}
+
 	return webId, nil
 }
 
@@ -322,7 +356,8 @@ func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 修改反向代理配置
@@ -337,7 +372,8 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 	if err != nil {
 		return err
 	}
-	return this.RenewServerConfig(serverId)
+
+	return this.createEvent()
 }
 
 // 计算所有可用服务数量
@@ -379,6 +415,36 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Se
 	return
 }
 
+// 获取所有的服务ID
+func (this *ServerDAO) FindAllEnabledServerIds() (serverIds []int64, err error) {
+	ones, err := this.Query().
+		State(ServerStateEnabled).
+		AscPk().
+		ResultPk().
+		FindAll()
+	for _, one := range ones {
+		serverIds = append(serverIds, int64(one.(*Server).Id))
+	}
+	return
+}
+
+// 查找服务的搜索条件
+func (this *ServerDAO) FindServerNodeFilters(serverId int64) (isOk bool, clusterId int64, err error) {
+	one, err := this.Query().
+		Pk(serverId).
+		Result("clusterId").
+		Find()
+	if err != nil {
+		return false, 0, err
+	}
+	if one == nil {
+		isOk = false
+		return
+	}
+	server := one.(*Server)
+	return true, int64(server.ClusterId), nil
+}
+
 // 构造服务的Config
 func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.ServerConfig, error) {
 	server, err := this.FindEnabledServer(serverId)
@@ -395,12 +461,6 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 	config.IsOn = server.IsOn == 1
 	config.Name = server.Name
 	config.Description = server.Description
-
-	// Components
-	// TODO
-
-	// Filters
-	// TODO
 
 	// ServerNames
 	if len(server.ServerNames) > 0 && server.ServerNames != "null" {
@@ -505,14 +565,14 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 }
 
 // 更新服务的Config配置
-func (this *ServerDAO) RenewServerConfig(serverId int64) error {
+func (this *ServerDAO) RenewServerConfig(serverId int64) (isChanged bool, err error) {
 	serverConfig, err := this.ComposeServerConfig(serverId)
 	if err != nil {
-		return err
+		return false, err
 	}
-	data, err := serverConfig.AsJSON()
+	data, err := json.Marshal(serverConfig)
 	if err != nil {
-		return err
+		return false, err
 	}
 	return this.UpdateServerConfig(serverId, data)
 }
@@ -534,32 +594,6 @@ func (this *ServerDAO) FindReverseProxyRef(serverId int64) (*serverconfigs.Rever
 	return config, err
 }
 
-// 查找需要更新的Server
-func (this *ServerDAO) FindUpdatingServerIds() (serverIds []int64, err error) {
-	ones, err := this.Query().
-		State(ServerStateEnabled).
-		Attr("isUpdating", true).
-		ResultPk().
-		FindAll()
-	if err != nil {
-		return nil, err
-	}
-	for _, one := range ones {
-		serverIds = append(serverIds, int64(one.(*Server).Id))
-	}
-	return
-}
-
-// 修改服务是否需要更新
-func (this *ServerDAO) UpdateServerIsUpdating(serverId int64, isUpdating bool) error {
-	_, err := this.Query().
-		Pk(serverId).
-		Set("isUpdating", isUpdating).
-		Update()
-	return err
-}
-
-// 查找WebId
 func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 	webId, err := this.Query().
 		Pk(serverId).
@@ -571,28 +605,7 @@ func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 	return int64(webId), nil
 }
 
-// 更新所有Web相关的处于更新状态
-func (this *ServerDAO) UpdateServerIsUpdatingWithWebId(webId int64) error {
-	_, err := this.Query().
-		Attr("webId", webId).
-		Set("isUpdating", true).
-		Update()
-	return err
-}
-
-// 生成唯一ID
-func (this *ServerDAO) genUniqueId() (string, error) {
-	for {
-		uniqueId := rands.HexString(32)
-		ok, err := this.Query().
-			Attr("uniqueId", uniqueId).
-			Exist()
-		if err != nil {
-			return "", err
-		}
-		if ok {
-			continue
-		}
-		return uniqueId, nil
-	}
+// 创建事件
+func (this *ServerDAO) createEvent() error {
+	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
 }

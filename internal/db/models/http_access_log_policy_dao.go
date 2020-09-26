@@ -29,6 +29,20 @@ func NewHTTPAccessLogPolicyDAO() *HTTPAccessLogPolicyDAO {
 
 var SharedHTTPAccessLogPolicyDAO = NewHTTPAccessLogPolicyDAO()
 
+// 初始化
+func (this *HTTPAccessLogPolicyDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(id int64) error {
 	_, err := this.Query().
@@ -104,14 +118,13 @@ func (this *HTTPAccessLogPolicyDAO) ComposeAccessLogPolicyConfig(policyId int64)
 	}
 
 	// 条件
-	if IsNotNull(policy.Conds) {
-		// TODO 需要用更全面的条件管理器来代替RequestCond
-		conds := []*shared.RequestCond{}
-		err = json.Unmarshal([]byte(policy.Conds), &conds)
+	if IsNotNull(policy.CondGroups) {
+		condGroups := []*shared.HTTPRequestCondGroup{}
+		err = json.Unmarshal([]byte(policy.CondGroups), &condGroups)
 		if err != nil {
 			return nil, err
 		}
-		config.Conds = conds
+		config.CondGroups = condGroups
 	}
 
 	return config, nil

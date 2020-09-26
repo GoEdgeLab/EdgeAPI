@@ -31,6 +31,19 @@ func NewHTTPWebDAO() *HTTPWebDAO {
 
 var SharedHTTPWebDAO = NewHTTPWebDAO()
 
+func (this *HTTPWebDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPWebDAO) EnableHTTPWeb(id int64) error {
 	_, err := this.Query().
@@ -238,8 +251,6 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.RedirectToHttps = redirectToHTTPSConfig
 	}
 
-	// TODO 更多配置
-
 	return config, nil
 }
 
@@ -264,11 +275,7 @@ func (this *HTTPWebDAO) UpdateWeb(webId int64, root string) error {
 	op.Id = webId
 	op.Root = root
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 修改Gzip配置
@@ -280,11 +287,7 @@ func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
 	op.Id = webId
 	op.Gzip = gzipJSON
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 修改字符编码
@@ -296,11 +299,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charsetJSON []byte) error 
 	op.Id = webId
 	op.Charset = charsetJSON
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改请求Header策略
@@ -312,11 +311,7 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyJS
 	op.Id = webId
 	op.RequestHeader = JSONBytes(headerPolicyJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改响应Header策略
@@ -328,11 +323,7 @@ func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyJ
 	op.Id = webId
 	op.ResponseHeader = JSONBytes(headerPolicyJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改特殊页面配置
@@ -344,11 +335,7 @@ func (this *HTTPWebDAO) UpdateWebPages(webId int64, pagesJSON []byte) error {
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改Shutdown配置
@@ -360,11 +347,7 @@ func (this *HTTPWebDAO) UpdateWebShutdown(webId int64, shutdownJSON []byte) erro
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改访问日志策略
@@ -376,11 +359,7 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(webId int64, accessLogJSON []by
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改统计配置
@@ -392,11 +371,7 @@ func (this *HTTPWebDAO) UpdateWebStat(webId int64, statJSON []byte) error {
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改缓存配置
@@ -408,11 +383,7 @@ func (this *HTTPWebDAO) UpdateWebCache(webId int64, cacheJSON []byte) error {
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改防火墙配置
@@ -424,11 +395,7 @@ func (this *HTTPWebDAO) UpdateWebFirewall(webId int64, firewallJSON []byte) erro
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改路径规则配置
@@ -440,11 +407,7 @@ func (this *HTTPWebDAO) UpdateWebLocations(webId int64, locationsJSON []byte) er
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
+	return err
 }
 
 // 更改跳转到HTTPS设置
@@ -456,21 +419,5 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(webId int64, redirectToHTTPSJSO
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
 	_, err := this.Save(op)
-	if err != nil {
-		return err
-	}
-
-	return this.NotifyUpdating(webId)
-}
-
-// 通知更新
-func (this *HTTPWebDAO) NotifyUpdating(webId int64) error {
-	err := SharedServerDAO.UpdateServerIsUpdatingWithWebId(webId)
-	if err != nil {
-		return err
-	}
-
-	// TODO 更新所有使用此Web配置的Location所在服务
-
-	return nil
+	return err
 }

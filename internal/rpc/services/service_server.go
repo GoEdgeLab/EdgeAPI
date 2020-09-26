@@ -101,12 +101,6 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.RPCUpdateSuccess{}, nil
 }
 
@@ -132,12 +126,6 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerHTTPS(req.ServerId, req.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -171,12 +159,6 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.RPCUpdateSuccess{}, nil
 }
 
@@ -202,12 +184,6 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerTLS(req.ServerId, req.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -241,12 +217,6 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.RPCUpdateSuccess{}, nil
 }
 
@@ -272,12 +242,6 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerUDP(req.ServerId, req.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -311,12 +275,6 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.RPCUpdateSuccess{}, nil
 }
 
@@ -346,12 +304,6 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.RPCUpdateSuccess{}, nil
 }
 
@@ -377,12 +329,6 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerNames(req.ServerId, req.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
