@@ -175,23 +175,42 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.IdleTimeout = idleTimeout
 	}
 
-	if origin.RequestHeaderPolicyId > 0 {
-		policyConfig, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(origin.RequestHeaderPolicyId))
+	// headers
+	if IsNotNull(origin.HttpRequestHeader) {
+		ref := &shared.HTTPHeaderPolicyRef{}
+		err = json.Unmarshal([]byte(origin.HttpRequestHeader), ref)
 		if err != nil {
 			return nil, err
 		}
-		if policyConfig != nil {
-			config.RequestHeaderPolicy = policyConfig
+		config.RequestHeaderPolicyRef = ref
+
+		if ref.HeaderPolicyId > 0 {
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if headerPolicy != nil {
+				config.RequestHeaderPolicy = headerPolicy
+			}
 		}
 	}
 
-	if origin.ResponseHeaderPolicyId > 0 {
-		policyConfig, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(int64(origin.ResponseHeaderPolicyId))
+	if IsNotNull(origin.HttpResponseHeader) {
+		ref := &shared.HTTPHeaderPolicyRef{}
+		err = json.Unmarshal([]byte(origin.HttpResponseHeader), ref)
 		if err != nil {
 			return nil, err
 		}
-		if policyConfig != nil {
-			config.ResponseHeaderPolicy = policyConfig
+		config.ResponseHeaderPolicyRef = ref
+
+		if ref.HeaderPolicyId > 0 {
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if headerPolicy != nil {
+				config.ResponseHeaderPolicy = headerPolicy
+			}
 		}
 	}
 

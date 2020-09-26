@@ -134,32 +134,32 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
-		return nil, err
+		return nil, rpcutils.Wrap("ValidateRequest()", err)
 	}
 
 	webId, err := models.SharedHTTPLocationDAO.FindLocationWebId(req.LocationId)
 	if err != nil {
-		return nil, err
+		return nil, rpcutils.Wrap("FindLocationWebId()", err)
 	}
 
 	if webId <= 0 {
 		webId, err = models.SharedHTTPWebDAO.CreateWeb(nil)
 		if err != nil {
-			return nil, err
+			return nil, rpcutils.Wrap("CreateWeb()", err)
 		}
 		err = models.SharedHTTPLocationDAO.UpdateLocationWeb(req.LocationId, webId)
 		if err != nil {
-			return nil, err
+			return nil, rpcutils.Wrap("UpdateLocationWeb()", err)
 		}
 	}
 
 	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(webId)
 	if err != nil {
-		return nil, err
+		return nil, rpcutils.Wrap("ComposeWebConfig()", err)
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
-		return nil, err
+		return nil, rpcutils.Wrap("json.Marshal()", err)
 	}
 	return &pb.FindAndInitHTTPLocationWebConfigResponse{
 		WebJSON: configJSON,

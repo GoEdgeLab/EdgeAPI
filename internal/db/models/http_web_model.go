@@ -9,7 +9,7 @@ type HTTPWeb struct {
 	UserId             uint32 `field:"userId"`             // 用户ID
 	State              uint8  `field:"state"`              // 状态
 	CreatedAt          uint64 `field:"createdAt"`          // 创建时间
-	Root               string `field:"root"`               // 资源根目录
+	Root               string `field:"root"`               // 根目录
 	Charset            string `field:"charset"`            // 字符集
 	Shutdown           string `field:"shutdown"`           // 临时关闭页面配置
 	Pages              string `field:"pages"`              // 特殊页面
@@ -24,6 +24,7 @@ type HTTPWeb struct {
 	Cache              string `field:"cache"`              // 缓存配置
 	Firewall           string `field:"firewall"`           // 防火墙设置
 	Locations          string `field:"locations"`          // 路径规则配置
+	Websocket          string `field:"websocket"`          // Websocket设置
 }
 
 type HTTPWebOperator struct {
@@ -34,7 +35,7 @@ type HTTPWebOperator struct {
 	UserId             interface{} // 用户ID
 	State              interface{} // 状态
 	CreatedAt          interface{} // 创建时间
-	Root               interface{} // 资源根目录
+	Root               interface{} // 根目录
 	Charset            interface{} // 字符集
 	Shutdown           interface{} // 临时关闭页面配置
 	Pages              interface{} // 特殊页面
@@ -49,6 +50,7 @@ type HTTPWebOperator struct {
 	Cache              interface{} // 缓存配置
 	Firewall           interface{} // 防火墙设置
 	Locations          interface{} // 路径规则配置
+	Websocket          interface{} // Websocket设置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

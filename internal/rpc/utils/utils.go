@@ -127,3 +127,11 @@ func RPCUpdateSuccess() (*pb.RPCUpdateSuccess, error) {
 func RPCDeleteSuccess() (*pb.RPCDeleteSuccess, error) {
 	return &pb.RPCDeleteSuccess{}, nil
 }
+
+// 包装错误
+func Wrap(description string, err error) error {
+	if err == nil {
+		return errors.New(description)
+	}
+	return errors.New(description + ": " + err.Error())
+}

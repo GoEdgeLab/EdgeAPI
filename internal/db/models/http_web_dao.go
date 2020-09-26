@@ -260,6 +260,25 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.RedirectToHttps = redirectToHTTPSConfig
 	}
 
+	// Websocket
+	if IsNotNull(web.Websocket) {
+		ref := &serverconfigs.HTTPWebsocketRef{}
+		err = json.Unmarshal([]byte(web.Websocket), ref)
+		if err != nil {
+			return nil, err
+		}
+		config.WebsocketRef = ref
+		if ref.WebsocketId > 0 {
+			websocketConfig, err := SharedHTTPWebsocketDAO.ComposeWebsocketConfig(ref.WebsocketId)
+			if err != nil {
+				return nil, err
+			}
+			if websocketConfig != nil {
+				config.Websocket = websocketConfig
+			}
+		}
+	}
+
 	return config, nil
 }
 
@@ -267,7 +286,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 func (this *HTTPWebDAO) CreateWeb(rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
-	op.Root = rootJSON
+	op.Root = JSONBytes(rootJSON)
 	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
@@ -282,7 +301,7 @@ func (this *HTTPWebDAO) UpdateWeb(webId int64, rootJSON []byte) error {
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Root = rootJSON
+	op.Root = JSONBytes(rootJSON)
 	_, err := this.Save(op)
 	return err
 }
@@ -294,7 +313,7 @@ func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Gzip = gzipJSON
+	op.Gzip = JSONBytes(gzipJSON)
 	_, err := this.Save(op)
 	return err
 }
@@ -306,7 +325,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charsetJSON []byte) error 
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Charset = charsetJSON
+	op.Charset = JSONBytes(charsetJSON)
 	_, err := this.Save(op)
 	return err
 }
@@ -427,6 +446,18 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(webId int64, redirectToHTTPSJSO
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
+	_, err := this.Save(op)
+	return err
+}
+
+// 修改Websocket设置
+func (this *HTTPWebDAO) UpdateWebsocket(webId int64, websocketJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Websocket = JSONBytes(websocketJSON)
 	_, err := this.Save(op)
 	return err
 }
