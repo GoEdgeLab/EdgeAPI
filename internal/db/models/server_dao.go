@@ -118,6 +118,7 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	if len(excludeNodesJSON) > 0 {
 		op.ExcludeNodes = excludeNodesJSON
 	}
+
 	op.GroupIds = "[]"
 	op.Version = 1
 	op.IsOn = 1

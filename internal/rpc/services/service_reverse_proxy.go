@@ -129,7 +129,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, req.RequestHost, req.RequestURI, req.StripPrefix)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
 	if err != nil {
 		return nil, err
 	}
