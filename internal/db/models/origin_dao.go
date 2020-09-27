@@ -136,7 +136,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		MaxConns:     int(origin.MaxConns),
 		MaxIdleConns: int(origin.MaxIdleConns),
 		RequestURI:   origin.HttpRequestURI,
-		Host:         origin.Host,
+		RequestHost:  origin.Host,
 	}
 
 	if len(origin.Addr) > 0 && origin.Addr != "null" {
