@@ -10,6 +10,9 @@ type ReverseProxy struct {
 	Scheduling     string `field:"scheduling"`     // 调度算法
 	PrimaryOrigins string `field:"primaryOrigins"` // 主要源站
 	BackupOrigins  string `field:"backupOrigins"`  // 备用源站
+	StripPrefix    string `field:"stripPrefix"`    // 去除URL前缀
+	RequestHost    string `field:"requestHost"`    // 请求Host
+	RequestURI     string `field:"requestURI"`     // 请求URI
 	State          uint8  `field:"state"`          // 状态
 	CreatedAt      uint64 `field:"createdAt"`      // 创建时间
 }
@@ -23,6 +26,9 @@ type ReverseProxyOperator struct {
 	Scheduling     interface{} // 调度算法
 	PrimaryOrigins interface{} // 主要源站
 	BackupOrigins  interface{} // 备用源站
+	StripPrefix    interface{} // 去除URL前缀
+	RequestHost    interface{} // 请求Host
+	RequestURI     interface{} // 请求URI
 	State          interface{} // 状态
 	CreatedAt      interface{} // 创建时间
 }

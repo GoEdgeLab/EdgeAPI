@@ -122,14 +122,14 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 }
 
 // 修改是否启用
-func (this *ReverseProxyService) UpdateReverseProxyIsOn(ctx context.Context, req *pb.UpdateReverseProxyIsOnRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb.UpdateReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxyIsOn(req.ReverseProxyId, req.IsOn)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, req.RequestHost, req.RequestURI, req.StripPrefix)
 	if err != nil {
 		return nil, err
 	}

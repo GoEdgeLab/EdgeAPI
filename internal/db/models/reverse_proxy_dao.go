@@ -93,6 +93,9 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 	config := &serverconfigs.ReverseProxyConfig{}
 	config.Id = int64(reverseProxy.Id)
 	config.IsOn = reverseProxy.IsOn == 1
+	config.RequestHost = reverseProxy.RequestHost
+	config.RequestURI = reverseProxy.RequestURI
+	config.StripPrefix = reverseProxy.StripPrefix
 
 	schedulingConfig := &serverconfigs.SchedulingConfig{}
 	if len(reverseProxy.Scheduling) > 0 && reverseProxy.Scheduling != "null" {
@@ -213,11 +216,17 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int6
 }
 
 // 修改是否启用
-func (this *ReverseProxyDAO) UpdateReverseProxyIsOn(reverseProxyId int64, isOn bool) error {
-	_, err := this.Query().
-		Pk(reverseProxyId).
-		Set("isOn", isOn).
-		Update()
+func (this *ReverseProxyDAO) UpdateReverseProxy(reverseProxyId int64, requestHost string, requestURI string, stripPrefix string) error {
+	if reverseProxyId <= 0 {
+		return errors.New("invalid reverseProxyId")
+	}
+
+	op := NewReverseProxyOperator()
+	op.Id = reverseProxyId
+	op.RequestHost = requestHost
+	op.RequestURI = requestURI
+	op.StripPrefix = stripPrefix
+	_, err := this.Save(op)
 	return err
 }
 
