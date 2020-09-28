@@ -15,6 +15,7 @@ type HTTPRewriteRule struct {
 	RedirectStatus uint32 `field:"redirectStatus"` // 跳转的状态码
 	ProxyHost      string `field:"proxyHost"`      // 代理的主机名
 	IsBreak        uint8  `field:"isBreak"`        // 是否终止解析
+	WithQuery      uint8  `field:"withQuery"`      // 是否保留URI参数
 }
 
 type HTTPRewriteRuleOperator struct {
@@ -31,6 +32,7 @@ type HTTPRewriteRuleOperator struct {
 	RedirectStatus interface{} // 跳转的状态码
 	ProxyHost      interface{} // 代理的主机名
 	IsBreak        interface{} // 是否终止解析
+	WithQuery      interface{} // 是否保留URI参数
 }
 
 func NewHTTPRewriteRuleOperator() *HTTPRewriteRuleOperator {

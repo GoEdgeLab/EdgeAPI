@@ -29,6 +29,20 @@ func NewHTTPRewriteRuleDAO() *HTTPRewriteRuleDAO {
 
 var SharedHTTPRewriteRuleDAO = NewHTTPRewriteRuleDAO()
 
+// 初始化
+func (this *HTTPRewriteRuleDAO) Init() {
+	this.DAOObject.Init()
+	this.DAOObject.OnUpdate(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnInsert(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+	this.DAOObject.OnDelete(func() error {
+		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	})
+}
+
 // 启用条目
 func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(id int64) error {
 	_, err := this.Query().
@@ -78,11 +92,12 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(rewriteRuleId int64) (*server
 	config.RedirectStatus = types.Int(rule.RedirectStatus)
 	config.ProxyHost = rule.ProxyHost
 	config.IsBreak = rule.IsBreak == 1
+	config.WithQuery = rule.WithQuery == 1
 	return config, nil
 }
 
 // 创建规则
-func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, isOn bool) (int64, error) {
+func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) (int64, error) {
 	op := NewHTTPRewriteRuleOperator()
 	op.State = HTTPRewriteRuleStateEnabled
 	op.IsOn = isOn
@@ -92,13 +107,14 @@ func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string
 	op.Mode = mode
 	op.RedirectStatus = redirectStatus
 	op.IsBreak = isBreak
+	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
 	_, err := this.Save(op)
 	return types.Int64(op.Id), err
 }
 
 // 修改规则
-func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, isOn bool) error {
+func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) error {
 	if rewriteRuleId <= 0 {
 		return errors.New("invalid rewriteRuleId")
 	}
@@ -110,6 +126,7 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern s
 	op.Mode = mode
 	op.RedirectStatus = redirectStatus
 	op.IsBreak = isBreak
+	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
 	_, err := this.Save(op)
 	return err
