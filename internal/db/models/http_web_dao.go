@@ -279,6 +279,25 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 	}
 
+	// 重写规则
+	if IsNotNull(web.RewriteRules) {
+		refs := []*serverconfigs.HTTPRewriteRef{}
+		err = json.Unmarshal([]byte(web.RewriteRules), &refs)
+		if err != nil {
+			return nil, err
+		}
+		for _, ref := range refs {
+			rewriteRule, err := SharedHTTPRewriteRuleDAO.ComposeRewriteRule(ref.RewriteRuleId)
+			if err != nil {
+				return nil, err
+			}
+			if rewriteRule != nil {
+				config.RewriteRefs = append(config.RewriteRefs, ref)
+				config.RewriteRules = append(config.RewriteRules, rewriteRule)
+			}
+		}
+	}
+
 	return config, nil
 }
 
@@ -458,6 +477,18 @@ func (this *HTTPWebDAO) UpdateWebsocket(webId int64, websocketJSON []byte) error
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Websocket = JSONBytes(websocketJSON)
+	_, err := this.Save(op)
+	return err
+}
+
+// 修改重写规则设置
+func (this *HTTPWebDAO) UpdateWebRewriteRules(webId int64, rewriteRulesJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.RewriteRules = JSONBytes(rewriteRulesJSON)
 	_, err := this.Save(op)
 	return err
 }

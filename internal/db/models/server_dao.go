@@ -140,7 +140,7 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 }
 
 // 修改服务基本信息
-func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64) error {
+func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64, isOn bool) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -149,7 +149,13 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 	op.Name = name
 	op.Description = description
 	op.ClusterId = clusterId
+	op.IsOn = isOn
 	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.RenewServerConfig(serverId)
 	if err != nil {
 		return err
 	}
@@ -208,6 +214,11 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 		return err
 	}
 
+	_, err = this.RenewServerConfig(serverId)
+	if err != nil {
+		return err
+	}
+
 	return this.createEvent()
 }
 
@@ -223,6 +234,11 @@ func (this *ServerDAO) UpdateServerHTTPS(serverId int64, config []byte) error {
 		Pk(serverId).
 		Set("https", string(config)).
 		Update()
+	if err != nil {
+		return err
+	}
+
+	_, err = this.RenewServerConfig(serverId)
 	if err != nil {
 		return err
 	}

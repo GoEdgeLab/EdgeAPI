@@ -210,9 +210,9 @@ func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId i
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()<=60")
+		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
-		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()>60)")
+		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
 
 	_, err = query.FindAll()
@@ -300,9 +300,9 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState con
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()<=60")
+		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
-		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR JSON_EXTRACT(status, '$.updatedAt')-UNIX_TIMESTAMP()>60)")
+		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
 
 	return query.Count()

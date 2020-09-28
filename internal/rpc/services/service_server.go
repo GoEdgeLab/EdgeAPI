@@ -53,7 +53,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId)
+	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -446,6 +446,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
 		Id:               int64(server.Id),
+		IsOn:             server.IsOn == 1,
 		Type:             server.Type,
 		Name:             server.Name,
 		Description:      server.Description,

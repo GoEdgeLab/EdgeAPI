@@ -286,3 +286,18 @@ func (this *HTTPWebService) UpdateHTTPWebWebsocket(ctx context.Context, req *pb.
 	}
 	return rpcutils.RPCUpdateSuccess()
 }
+
+// 更改重写规则设置
+func (this *HTTPWebService) UpdateHTTPWebRewriteRules(ctx context.Context, req *pb.UpdateHTTPWebRewriteRulesRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebRewriteRules(req.WebId, req.RewriteRulesJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}

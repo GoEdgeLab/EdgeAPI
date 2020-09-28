@@ -16,8 +16,8 @@ type HTTPWeb struct {
 	RedirectToHttps    string `field:"redirectToHttps"`    // 跳转到HTTPS设置
 	Indexes            string `field:"indexes"`            // 首页文件列表
 	MaxRequestBodySize string `field:"maxRequestBodySize"` // 最大允许的请求内容尺寸
-	RequestHeader      string `field:"requestHeader"`      // Request Header策略ID
-	ResponseHeader     string `field:"responseHeader"`     // Response Header策略
+	RequestHeader      string `field:"requestHeader"`      // 请求Header配置
+	ResponseHeader     string `field:"responseHeader"`     // 响应Header配置
 	AccessLog          string `field:"accessLog"`          // 访问日志配置
 	Stat               string `field:"stat"`               // 统计配置
 	Gzip               string `field:"gzip"`               // Gzip配置
@@ -25,6 +25,7 @@ type HTTPWeb struct {
 	Firewall           string `field:"firewall"`           // 防火墙设置
 	Locations          string `field:"locations"`          // 路径规则配置
 	Websocket          string `field:"websocket"`          // Websocket设置
+	RewriteRules       string `field:"rewriteRules"`       // 重写规则配置
 }
 
 type HTTPWebOperator struct {
@@ -42,8 +43,8 @@ type HTTPWebOperator struct {
 	RedirectToHttps    interface{} // 跳转到HTTPS设置
 	Indexes            interface{} // 首页文件列表
 	MaxRequestBodySize interface{} // 最大允许的请求内容尺寸
-	RequestHeader      interface{} // Request Header策略ID
-	ResponseHeader     interface{} // Response Header策略
+	RequestHeader      interface{} // 请求Header配置
+	ResponseHeader     interface{} // 响应Header配置
 	AccessLog          interface{} // 访问日志配置
 	Stat               interface{} // 统计配置
 	Gzip               interface{} // Gzip配置
@@ -51,6 +52,7 @@ type HTTPWebOperator struct {
 	Firewall           interface{} // 防火墙设置
 	Locations          interface{} // 路径规则配置
 	Websocket          interface{} // Websocket设置
+	RewriteRules       interface{} // 重写规则配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {
