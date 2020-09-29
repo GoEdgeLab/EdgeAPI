@@ -107,20 +107,20 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzi
 	}
 	config.Level = types.Int8(gzip.Level)
 
-	if IsNotNull(gzip.CondGroups) {
-		groups := []*shared.HTTPRequestCondGroup{}
-		err = json.Unmarshal([]byte(gzip.CondGroups), &groups)
+	if IsNotNull(gzip.Conds) {
+		condsConfig := &shared.HTTPRequestCondsConfig{}
+		err = json.Unmarshal([]byte(gzip.Conds), condsConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.CondGroups = groups
+		config.Conds = condsConfig
 	}
 
 	return config, nil
 }
 
 // 创建Gzip
-func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJSON []byte, condGroupsJSON []byte) (int64, error) {
+func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
 	op := NewHTTPGzipOperator()
 	op.State = HTTPGzipStateEnabled
 	op.IsOn = true
@@ -131,8 +131,8 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 	if len(maxLengthJSON) > 0 {
 		op.MaxLength = JSONBytes(maxLengthJSON)
 	}
-	if len(condGroupsJSON) > 0 {
-		op.CondGroups = JSONBytes(condGroupsJSON)
+	if len(condsJSON) > 0 {
+		op.Conds = JSONBytes(condsJSON)
 	}
 	_, err := this.Save(op)
 	if err != nil {
@@ -142,7 +142,7 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 }
 
 // 修改Gzip
-func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte, condGroupsJSON []byte) error {
+func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) error {
 	if gzipId <= 0 {
 		return errors.New("invalid gzipId")
 	}
@@ -155,8 +155,8 @@ func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byt
 	if len(maxLengthJSON) > 0 {
 		op.MaxLength = JSONBytes(maxLengthJSON)
 	}
-	if len(condGroupsJSON) > 0 {
-		op.CondGroups = JSONBytes(condGroupsJSON)
+	if len(condsJSON) > 0 {
+		op.Conds = JSONBytes(condsJSON)
 	}
 	_, err := this.Save(op)
 	return err

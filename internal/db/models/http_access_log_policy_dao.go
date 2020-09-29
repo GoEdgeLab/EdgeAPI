@@ -118,13 +118,13 @@ func (this *HTTPAccessLogPolicyDAO) ComposeAccessLogPolicyConfig(policyId int64)
 	}
 
 	// 条件
-	if IsNotNull(policy.CondGroups) {
-		condGroups := []*shared.HTTPRequestCondGroup{}
-		err = json.Unmarshal([]byte(policy.CondGroups), &condGroups)
+	if IsNotNull(policy.Conds) {
+		condsConfig := &shared.HTTPRequestCondsConfig{}
+		err = json.Unmarshal([]byte(policy.Conds), condsConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.CondGroups = condGroups
+		config.Conds = condsConfig
 	}
 
 	return config, nil

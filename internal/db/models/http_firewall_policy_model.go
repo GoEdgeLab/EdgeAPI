@@ -12,7 +12,7 @@ type HTTPFirewallPolicy struct {
 	Name       string `field:"name"`       // 名称
 	Inbound    string `field:"inbound"`    // 入站规则
 	Outbound   string `field:"outbound"`   // 出站规则
-	CondGroups string `field:"condGroups"` // 条件
+	Conds      string `field:"conds"`      // 条件
 }
 
 type HTTPFirewallPolicyOperator struct {
@@ -26,7 +26,7 @@ type HTTPFirewallPolicyOperator struct {
 	Name       interface{} // 名称
 	Inbound    interface{} // 入站规则
 	Outbound   interface{} // 出站规则
-	CondGroups interface{} // 条件
+	Conds      interface{} // 条件
 }
 
 func NewHTTPFirewallPolicyOperator() *HTTPFirewallPolicyOperator {

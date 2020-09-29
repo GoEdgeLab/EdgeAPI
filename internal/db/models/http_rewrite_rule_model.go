@@ -16,6 +16,7 @@ type HTTPRewriteRule struct {
 	ProxyHost      string `field:"proxyHost"`      // 代理的主机名
 	IsBreak        uint8  `field:"isBreak"`        // 是否终止解析
 	WithQuery      uint8  `field:"withQuery"`      // 是否保留URI参数
+	Conds          string `field:"conds"`          // 匹配条件
 }
 
 type HTTPRewriteRuleOperator struct {
@@ -33,6 +34,7 @@ type HTTPRewriteRuleOperator struct {
 	ProxyHost      interface{} // 代理的主机名
 	IsBreak        interface{} // 是否终止解析
 	WithQuery      interface{} // 是否保留URI参数
+	Conds          interface{} // 匹配条件
 }
 
 func NewHTTPRewriteRuleOperator() *HTTPRewriteRuleOperator {

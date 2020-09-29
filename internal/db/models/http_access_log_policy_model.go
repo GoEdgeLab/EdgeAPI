@@ -12,7 +12,7 @@ type HTTPAccessLogPolicy struct {
 	IsOn       uint8  `field:"isOn"`       // 是否启用
 	Type       string `field:"type"`       // 存储类型
 	Options    string `field:"options"`    // 存储选项
-	CondGroups string `field:"condGroups"` // 请求条件
+	Conds      string `field:"conds"`      // 请求条件
 }
 
 type HTTPAccessLogPolicyOperator struct {
@@ -26,7 +26,7 @@ type HTTPAccessLogPolicyOperator struct {
 	IsOn       interface{} // 是否启用
 	Type       interface{} // 存储类型
 	Options    interface{} // 存储选项
-	CondGroups interface{} // 请求条件
+	Conds      interface{} // 请求条件
 }
 
 func NewHTTPAccessLogPolicyOperator() *HTTPAccessLogPolicyOperator {
