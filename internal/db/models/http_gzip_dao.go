@@ -89,7 +89,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzi
 	config := &serverconfigs.HTTPGzipConfig{}
 	config.Id = int64(gzip.Id)
 	config.IsOn = gzip.IsOn == 1
-	if len(gzip.MinLength) > 0 && gzip.MinLength != "null" {
+	if IsNotNull(gzip.MinLength) {
 		minLengthConfig := &shared.SizeCapacity{}
 		err = json.Unmarshal([]byte(gzip.MinLength), minLengthConfig)
 		if err != nil {
@@ -97,7 +97,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzi
 		}
 		config.MinLength = minLengthConfig
 	}
-	if len(gzip.MaxLength) > 0 && gzip.MaxLength != "null" {
+	if IsNotNull(gzip.MaxLength) {
 		maxLengthConfig := &shared.SizeCapacity{}
 		err = json.Unmarshal([]byte(gzip.MaxLength), maxLengthConfig)
 		if err != nil {
@@ -106,20 +106,33 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzi
 		config.MaxLength = maxLengthConfig
 	}
 	config.Level = types.Int8(gzip.Level)
+
+	if IsNotNull(gzip.CondGroups) {
+		groups := []*shared.HTTPRequestCondGroup{}
+		err = json.Unmarshal([]byte(gzip.CondGroups), &groups)
+		if err != nil {
+			return nil, err
+		}
+		config.CondGroups = groups
+	}
+
 	return config, nil
 }
 
 // 创建Gzip
-func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJSON []byte) (int64, error) {
+func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJSON []byte, condGroupsJSON []byte) (int64, error) {
 	op := NewHTTPGzipOperator()
 	op.State = HTTPGzipStateEnabled
 	op.IsOn = true
 	op.Level = level
 	if len(minLengthJSON) > 0 {
-		op.MinLength = string(minLengthJSON)
+		op.MinLength = JSONBytes(minLengthJSON)
 	}
 	if len(maxLengthJSON) > 0 {
-		op.MaxLength = string(maxLengthJSON)
+		op.MaxLength = JSONBytes(maxLengthJSON)
+	}
+	if len(condGroupsJSON) > 0 {
+		op.CondGroups = JSONBytes(condGroupsJSON)
 	}
 	_, err := this.Save(op)
 	if err != nil {
@@ -129,7 +142,7 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 }
 
 // 修改Gzip
-func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte) error {
+func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte, condGroupsJSON []byte) error {
 	if gzipId <= 0 {
 		return errors.New("invalid gzipId")
 	}
@@ -137,10 +150,13 @@ func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byt
 	op.Id = gzipId
 	op.Level = level
 	if len(minLengthJSON) > 0 {
-		op.MinLength = string(minLengthJSON)
+		op.MinLength = JSONBytes(minLengthJSON)
 	}
 	if len(maxLengthJSON) > 0 {
-		op.MaxLength = string(maxLengthJSON)
+		op.MaxLength = JSONBytes(maxLengthJSON)
+	}
+	if len(condGroupsJSON) > 0 {
+		op.CondGroups = JSONBytes(condGroupsJSON)
 	}
 	_, err := this.Save(op)
 	return err
