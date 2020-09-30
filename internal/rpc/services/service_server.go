@@ -15,6 +15,7 @@ type ServerService struct {
 
 // 创建服务
 func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -35,6 +36,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 
 // 修改服务
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -77,6 +79,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 
 // 修改HTTP服务
 func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -106,6 +109,7 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 
 // 修改HTTPS服务
 func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -135,6 +139,7 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 
 // 修改TCP服务
 func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -164,6 +169,7 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 
 // 修改TLS服务
 func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -193,6 +199,7 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 
 // 修改Unix服务
 func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -222,6 +229,7 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 
 // 修改UDP服务
 func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -251,6 +259,7 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 
 // 修改Web服务
 func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -280,6 +289,7 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 
 // 修改反向代理服务
 func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -309,6 +319,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 
 // 修改域名服务
 func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -338,8 +349,8 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 
 // 计算服务数量
 func (this *ServerService) CountAllEnabledServers(ctx context.Context, req *pb.CountAllEnabledServersRequest) (*pb.CountAllEnabledServersResponse, error) {
-	_ = req
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +364,7 @@ func (this *ServerService) CountAllEnabledServers(ctx context.Context, req *pb.C
 
 // 列出单页服务
 func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListEnabledServersRequest) (*pb.ListEnabledServersResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -394,6 +406,7 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 
 // 禁用某服务
 func (this *ServerService) DisableServer(ctx context.Context, req *pb.DisableServerRequest) (*pb.DisableServerResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -425,6 +438,7 @@ func (this *ServerService) DisableServer(ctx context.Context, req *pb.DisableSer
 
 // 查找单个服务
 func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEnabledServerRequest) (*pb.FindEnabledServerResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -473,6 +487,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 
 //
 func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -488,6 +503,7 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 
 // 查找反向代理设置
 func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerReverseProxyConfigRequest) (*pb.FindAndInitServerReverseProxyConfigResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -538,6 +554,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 
 // 初始化Web设置
 func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebConfigRequest) (*pb.FindAndInitServerWebConfigResponse, error) {
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -565,4 +582,61 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 	}
 
 	return &pb.FindAndInitServerWebConfigResponse{WebJSON: configJSON}, nil
+}
+
+// 计算使用某个SSL证书的服务数量
+func (this *ServerService) CountServersWithSSLCertId(ctx context.Context, req *pb.CountServersWithSSLCertIdRequest) (*pb.CountServersWithSSLCertIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.CertId)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(policyIds) == 0 {
+		return &pb.CountServersWithSSLCertIdResponse{Count: 0}, nil
+	}
+
+	count, err := models.SharedServerDAO.CountServersWithSSLPolicyIds(policyIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CountServersWithSSLCertIdResponse{Count: count}, nil
+}
+
+// 查找使用某个SSL证书的所有服务
+func (this *ServerService) FindAllServersWithSSLCertId(ctx context.Context, req *pb.FindAllServersWithSSLCertIdRequest) (*pb.FindAllServersWithSSLCertIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.CertId)
+	if err != nil {
+		return nil, err
+	}
+	if len(policyIds) == 0 {
+		return &pb.FindAllServersWithSSLCertIdResponse{Servers: nil}, nil
+	}
+
+	servers, err := models.SharedServerDAO.FindAllServersWithSSLPolicyIds(policyIds)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.Server{}
+	for _, server := range servers {
+		result = append(result, &pb.Server{
+			Id:   int64(server.Id),
+			Name: server.Name,
+			IsOn: server.IsOn == 1,
+			Type: server.Type,
+		})
+	}
+	return &pb.FindAllServersWithSSLCertIdResponse{Servers: result}, nil
 }

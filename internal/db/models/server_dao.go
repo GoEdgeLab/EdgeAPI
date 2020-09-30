@@ -10,6 +10,8 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -512,6 +514,18 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 		if err != nil {
 			return nil, err
 		}
+
+		// SSL
+		if httpsConfig.SSLPolicyRef != nil {
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(httpsConfig.SSLPolicyRef.SSLPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if sslPolicyConfig != nil {
+				httpsConfig.SSLPolicy = sslPolicyConfig
+			}
+		}
+
 		config.HTTPS = httpsConfig
 	}
 
@@ -532,6 +546,18 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 		if err != nil {
 			return nil, err
 		}
+
+		// SSL
+		if tlsConfig.SSLPolicyRef != nil {
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tlsConfig.SSLPolicyRef.SSLPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if sslPolicyConfig != nil {
+				tlsConfig.SSLPolicy = sslPolicyConfig
+			}
+		}
+
 		config.TLS = tlsConfig
 	}
 
@@ -617,6 +643,7 @@ func (this *ServerDAO) FindReverseProxyRef(serverId int64) (*serverconfigs.Rever
 	return config, err
 }
 
+// 查找Server对应的WebId
 func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 	webId, err := this.Query().
 		Pk(serverId).
@@ -626,6 +653,42 @@ func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 		return 0, err
 	}
 	return int64(webId), nil
+}
+
+// 计算使用SSL策略的所有服务数量
+func (this *ServerDAO) CountServersWithSSLPolicyIds(sslPolicyIds []int64) (count int64, err error) {
+	if len(sslPolicyIds) == 0 {
+		return
+	}
+	policyStringIds := []string{}
+	for _, policyId := range sslPolicyIds {
+		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
+	}
+	return this.Query().
+		State(ServerStateEnabled).
+		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds) OR FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds))").
+		Param("policyIds", strings.Join(policyStringIds, ",")).
+		Count()
+}
+
+// 查找使用SSL策略的所有服务
+func (this *ServerDAO) FindAllServersWithSSLPolicyIds(sslPolicyIds []int64) (result []*Server, err error) {
+	if len(sslPolicyIds) == 0 {
+		return
+	}
+	policyStringIds := []string{}
+	for _, policyId := range sslPolicyIds {
+		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
+	}
+	_, err = this.Query().
+		State(ServerStateEnabled).
+		Result("id", "name", "https", "tls", "isOn", "type").
+		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds) OR FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds))").
+		Param("policyIds", strings.Join(policyStringIds, ",")).
+		Slice(&result).
+		AscPk().
+		FindAll()
+	return
 }
 
 // 创建事件
