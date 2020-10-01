@@ -121,7 +121,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		return nil, err
 	}
 	if origin == nil {
-		return nil, errors.New("not found")
+		return nil, nil
 	}
 
 	config := &serverconfigs.OriginConfig{
@@ -139,7 +139,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		RequestHost:  origin.Host,
 	}
 
-	if len(origin.Addr) > 0 && origin.Addr != "null" {
+	if IsNotNull(origin.Addr) {
 		addr := &serverconfigs.NetworkAddressConfig{}
 		err = json.Unmarshal([]byte(origin.Addr), addr)
 		if err != nil {
@@ -148,7 +148,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.Addr = addr
 	}
 
-	if len(origin.ConnTimeout) > 0 && origin.ConnTimeout != "null" {
+	if IsNotNull(origin.ConnTimeout) {
 		connTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.ConnTimeout), &connTimeout)
 		if err != nil {
@@ -157,7 +157,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.ConnTimeout = connTimeout
 	}
 
-	if len(origin.ReadTimeout) > 0 && origin.ReadTimeout != "null" {
+	if IsNotNull(origin.ReadTimeout) {
 		readTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.ReadTimeout), &readTimeout)
 		if err != nil {
@@ -166,7 +166,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.ReadTimeout = readTimeout
 	}
 
-	if len(origin.IdleTimeout) > 0 && origin.IdleTimeout != "null" {
+	if IsNotNull(origin.IdleTimeout) {
 		idleTimeout := &shared.TimeDuration{}
 		err = json.Unmarshal([]byte(origin.IdleTimeout), &idleTimeout)
 		if err != nil {
@@ -214,7 +214,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		}
 	}
 
-	if len(origin.HealthCheck) > 0 && origin.HealthCheck != "null" {
+	if IsNotNull(origin.HealthCheck) {
 		healthCheck := &serverconfigs.HealthCheckConfig{}
 		err = json.Unmarshal([]byte(origin.HealthCheck), healthCheck)
 		if err != nil {
@@ -223,22 +223,24 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.HealthCheck = healthCheck
 	}
 
-	if len(origin.Cert) > 0 && origin.Cert != "null" {
-		cert := &sslconfigs.SSLCertConfig{}
-		err = json.Unmarshal([]byte(origin.Cert), cert)
+	if IsNotNull(origin.Cert) {
+		ref := &sslconfigs.SSLCertRef{}
+		err = json.Unmarshal([]byte(origin.Cert), ref)
 		if err != nil {
 			return nil, err
 		}
-		config.Cert = cert
+		config.CertRef = ref
+		if ref.CertId > 0 {
+			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(ref.CertId)
+			if err != nil {
+				return nil, err
+			}
+			config.Cert = certConfig
+		}
 	}
 
-	if len(origin.Ftp) > 0 && origin.Ftp != "null" {
-		ftp := &serverconfigs.OriginFTPConfig{}
-		err = json.Unmarshal([]byte(origin.Ftp), ftp)
-		if err != nil {
-			return nil, err
-		}
-		config.FTP = ftp
+	if IsNotNull(origin.Ftp) {
+		// TODO
 	}
 
 	return config, nil
