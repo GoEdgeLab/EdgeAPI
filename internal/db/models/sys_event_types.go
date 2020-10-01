@@ -38,7 +38,7 @@ func (this *ServerChangeEvent) Run() error {
 		return err
 	}
 	for _, serverId := range serverIds {
-		isChanged, err := SharedServerDAO.RenewServerConfig(serverId)
+		isChanged, err := SharedServerDAO.RenewServerConfig(serverId, true)
 		if err != nil {
 			return err
 		}

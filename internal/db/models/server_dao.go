@@ -133,7 +133,12 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 
 	serverId = types.Int64(op.Id)
 
-	_, err = this.RenewServerConfig(serverId)
+	_, err = this.RenewServerConfig(serverId, false)
+	if err != nil {
+		return serverId, err
+	}
+
+	err = this.createEvent()
 	if err != nil {
 		return serverId, err
 	}
@@ -157,7 +162,7 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId)
+	_, err = this.RenewServerConfig(serverId, false)
 	if err != nil {
 		return err
 	}
@@ -166,7 +171,7 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 }
 
 // 修改服务配置
-func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte) (isChanged bool, err error) {
+func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, updateMd5 bool) (isChanged bool, err error) {
 	if serverId <= 0 {
 		return false, errors.New("serverId should not be smaller than 0")
 	}
@@ -195,7 +200,9 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte) (is
 	op.Config = JSONBytes(configJSON)
 	op.Version = dbs.SQL("version+1")
 
-	op.ConfigMd5 = newConfigMd5
+	if updateMd5 {
+		op.ConfigMd5 = newConfigMd5
+	}
 	_, err = this.Save(op)
 	return true, err
 }
@@ -216,7 +223,7 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId)
+	_, err = this.RenewServerConfig(serverId, false)
 	if err != nil {
 		return err
 	}
@@ -225,22 +232,22 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 }
 
 // 修改HTTPS配置
-func (this *ServerDAO) UpdateServerHTTPS(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerHTTPS(serverId int64, httpsJSON []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	if len(config) == 0 {
-		config = []byte("null")
+	if len(httpsJSON) == 0 {
+		httpsJSON = []byte("null")
 	}
 	_, err := this.Query().
 		Pk(serverId).
-		Set("https", string(config)).
+		Set("https", string(httpsJSON)).
 		Update()
 	if err != nil {
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId)
+	_, err = this.RenewServerConfig(serverId, false)
 	if err != nil {
 		return err
 	}
@@ -516,7 +523,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 		}
 
 		// SSL
-		if httpsConfig.SSLPolicyRef != nil {
+		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
 			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(httpsConfig.SSLPolicyRef.SSLPolicyId)
 			if err != nil {
 				return nil, err
@@ -614,7 +621,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 }
 
 // 更新服务的Config配置
-func (this *ServerDAO) RenewServerConfig(serverId int64) (isChanged bool, err error) {
+func (this *ServerDAO) RenewServerConfig(serverId int64, updateMd5 bool) (isChanged bool, err error) {
 	serverConfig, err := this.ComposeServerConfig(serverId)
 	if err != nil {
 		return false, err
@@ -623,7 +630,7 @@ func (this *ServerDAO) RenewServerConfig(serverId int64) (isChanged bool, err er
 	if err != nil {
 		return false, err
 	}
-	return this.UpdateServerConfig(serverId, data)
+	return this.UpdateServerConfig(serverId, data, updateMd5)
 }
 
 // 根据条件获取反向代理配置
