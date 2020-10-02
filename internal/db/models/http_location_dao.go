@@ -233,3 +233,14 @@ func (this *HTTPLocationDAO) ConvertLocationRefs(refs []*serverconfigs.HTTPLocat
 
 	return
 }
+
+// 根据WebId查找LocationId
+func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(webId int64) (locationId int64, err error) {
+	if webId <= 0 {
+		return
+	}
+	return this.Query().
+		Attr("webId", webId).
+		ResultPk().
+		FindInt64Col(0)
+}

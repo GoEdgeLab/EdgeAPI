@@ -128,8 +128,15 @@ func (this *SSLCertDAO) UpdateCert(certId int64, isOn bool, name string, descrip
 	op.Description = description
 	op.ServerName = serverName
 	op.IsCA = isCA
-	op.CertData = certData
-	op.KeyData = keyData
+
+	// cert和key均为有重新上传才会修改
+	if len(certData) > 0 {
+		op.CertData = certData
+	}
+	if len(keyData) > 0 {
+		op.KeyData = keyData
+	}
+
 	op.TimeBeginAt = timeBeginAt
 	op.TimeEndAt = timeEndAt
 

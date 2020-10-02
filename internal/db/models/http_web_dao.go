@@ -9,6 +9,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
@@ -214,12 +215,23 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 
 	// 缓存配置
 	if IsNotNull(web.Cache) {
-		cacheRef := &serverconfigs.HTTPCacheRef{}
-		err = json.Unmarshal([]byte(web.Cache), cacheRef)
+		cacheRefs := []*serverconfigs.HTTPCacheRef{}
+		err = json.Unmarshal([]byte(web.Cache), &cacheRefs)
 		if err != nil {
 			return nil, err
 		}
-		config.CacheRef = cacheRef
+		for _, cacheRef := range cacheRefs {
+			if cacheRef.CachePolicyId > 0 {
+				cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(cacheRef.CachePolicyId)
+				if err != nil {
+					return nil, err
+				}
+				if cachePolicy != nil {
+					config.CacheRefs = append(config.CacheRefs, cacheRef)
+					config.CachePolicies = append(config.CachePolicies, cachePolicy)
+				}
+			}
+		}
 	}
 
 	// 防火墙配置
@@ -491,4 +503,68 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(webId int64, rewriteRulesJSON []by
 	op.RewriteRules = JSONBytes(rewriteRulesJSON)
 	_, err := this.Save(op)
 	return err
+}
+
+// 根据缓存策略ID查找所有的WebId
+func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]int64, error) {
+	ones, err := this.Query().
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where(`JSON_CONTAINS(cache, '{"cachePolicyId": ` + strconv.FormatInt(cachePolicyId, 10) + ` }')`).
+		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		webId := int64(one.(*HTTPWeb).Id)
+
+		// 判断是否为Location
+		for {
+			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(webId)
+			if err != nil {
+				return nil, err
+			}
+
+			// 如果非Location
+			if locationId == 0 {
+				if !this.containsInt64(result, webId) {
+					result = append(result, webId)
+				}
+				break
+			}
+
+			// 查找包含此Location的Web
+			// TODO 需要支持嵌套的Location查询
+			webId, err = this.FindEnabledWebIdWithLocationId(locationId)
+			if err != nil {
+				return nil, err
+			}
+			if webId == 0 {
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+// 查找包含某个Location的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(locationId int64) (webId int64, err error) {
+	return this.Query().
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where(`JSON_CONTAINS(locations, '{"locationId": ` + strconv.FormatInt(locationId, 10) + ` }')`).
+		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		FindInt64Col(0)
+}
+
+// 判断slice是否包含某个int64值
+func (this *HTTPWebDAO) containsInt64(values []int64, value int64) bool {
+	for _, v := range values {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }

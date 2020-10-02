@@ -585,7 +585,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 }
 
 // 计算使用某个SSL证书的服务数量
-func (this *ServerService) CountServersWithSSLCertId(ctx context.Context, req *pb.CountServersWithSSLCertIdRequest) (*pb.CountServersWithSSLCertIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.CountAllEnabledServersWithSSLCertIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -598,19 +598,19 @@ func (this *ServerService) CountServersWithSSLCertId(ctx context.Context, req *p
 	}
 
 	if len(policyIds) == 0 {
-		return &pb.CountServersWithSSLCertIdResponse{Count: 0}, nil
+		return &pb.CountAllEnabledServersWithSSLCertIdResponse{Count: 0}, nil
 	}
 
-	count, err := models.SharedServerDAO.CountServersWithSSLPolicyIds(policyIds)
+	count, err := models.SharedServerDAO.CountAllEnabledServersWithSSLPolicyIds(policyIds)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CountServersWithSSLCertIdResponse{Count: count}, nil
+	return &pb.CountAllEnabledServersWithSSLCertIdResponse{Count: count}, nil
 }
 
 // 查找使用某个SSL证书的所有服务
-func (this *ServerService) FindAllServersWithSSLCertId(ctx context.Context, req *pb.FindAllServersWithSSLCertIdRequest) (*pb.FindAllServersWithSSLCertIdResponse, error) {
+func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.FindAllEnabledServersWithSSLCertIdRequest) (*pb.FindAllEnabledServersWithSSLCertIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -622,10 +622,10 @@ func (this *ServerService) FindAllServersWithSSLCertId(ctx context.Context, req 
 		return nil, err
 	}
 	if len(policyIds) == 0 {
-		return &pb.FindAllServersWithSSLCertIdResponse{Servers: nil}, nil
+		return &pb.FindAllEnabledServersWithSSLCertIdResponse{Servers: nil}, nil
 	}
 
-	servers, err := models.SharedServerDAO.FindAllServersWithSSLPolicyIds(policyIds)
+	servers, err := models.SharedServerDAO.FindAllEnabledServersWithSSLPolicyIds(policyIds)
 	if err != nil {
 		return nil, err
 	}
@@ -638,5 +638,58 @@ func (this *ServerService) FindAllServersWithSSLCertId(ctx context.Context, req 
 			Type: server.Type,
 		})
 	}
-	return &pb.FindAllServersWithSSLCertIdResponse{Servers: result}, nil
+	return &pb.FindAllEnabledServersWithSSLCertIdResponse{Servers: result}, nil
+}
+
+// 计算使用某个缓存策略的服务数量
+func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithCachePolicyIdRequest) (*pb.CountAllEnabledServersWithCachePolicyIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.CachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+	if len(webIds) == 0 {
+		return &pb.CountAllEnabledServersWithCachePolicyIdResponse{Count: 0}, nil
+	}
+
+	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledServersWithCachePolicyIdResponse{Count: countServers}, nil
+}
+
+// 查找使用某个缓存策略的所有服务
+func (this *ServerService) FindAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.FindAllEnabledServersWithCachePolicyIdRequest) (*pb.FindAllEnabledServersWithCachePolicyIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.CachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(webIds) == 0 {
+		return &pb.FindAllEnabledServersWithCachePolicyIdResponse{Servers: nil}, nil
+	}
+
+	servers, err := models.SharedServerDAO.FindAllEnabledServersWithWebIds(webIds)
+	result := []*pb.Server{}
+	for _, server := range servers {
+		result = append(result, &pb.Server{
+			Id:   int64(server.Id),
+			Name: server.Name,
+			IsOn: server.IsOn == 1,
+			Type: server.Type,
+		})
+	}
+	return &pb.FindAllEnabledServersWithCachePolicyIdResponse{Servers: result}, nil
 }

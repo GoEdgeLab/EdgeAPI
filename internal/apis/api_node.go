@@ -73,6 +73,7 @@ func (this *APINode) listenRPC() error {
 	pb.RegisterHTTPRewriteRuleServiceServer(rpcServer, &services.HTTPRewriteRuleService{})
 	pb.RegisterSSLCertServiceServer(rpcServer, &services.SSLCertService{})
 	pb.RegisterSSLPolicyServiceServer(rpcServer, &services.SSLPolicyService{})
+	pb.RegisterSysSettingServiceServer(rpcServer, &services.SysSettingService{})
 	err = rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())

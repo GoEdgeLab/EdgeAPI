@@ -663,7 +663,7 @@ func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 }
 
 // 计算使用SSL策略的所有服务数量
-func (this *ServerDAO) CountServersWithSSLPolicyIds(sslPolicyIds []int64) (count int64, err error) {
+func (this *ServerDAO) CountAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int64) (count int64, err error) {
 	if len(sslPolicyIds) == 0 {
 		return
 	}
@@ -678,8 +678,8 @@ func (this *ServerDAO) CountServersWithSSLPolicyIds(sslPolicyIds []int64) (count
 		Count()
 }
 
-// 查找使用SSL策略的所有服务
-func (this *ServerDAO) FindAllServersWithSSLPolicyIds(sslPolicyIds []int64) (result []*Server, err error) {
+// 查找使用某个SSL策略的所有服务
+func (this *ServerDAO) FindAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int64) (result []*Server, err error) {
 	if len(sslPolicyIds) == 0 {
 		return
 	}
@@ -694,6 +694,31 @@ func (this *ServerDAO) FindAllServersWithSSLPolicyIds(sslPolicyIds []int64) (res
 		Param("policyIds", strings.Join(policyStringIds, ",")).
 		Slice(&result).
 		AscPk().
+		FindAll()
+	return
+}
+
+// 计算使用某个缓存策略的所有服务数量
+func (this *ServerDAO) CountEnabledServersWithWebIds(webIds []int64) (count int64, err error) {
+	if len(webIds) == 0 {
+		return
+	}
+	return this.Query().
+		State(ServerStateEnabled).
+		Attr("webId", webIds).
+		Count()
+}
+
+// 查找使用某个缓存策略的所有服务
+func (this *ServerDAO) FindAllEnabledServersWithWebIds(webIds []int64) (result []*Server, err error) {
+	if len(webIds) == 0 {
+		return
+	}
+	_, err = this.Query().
+		State(ServerStateEnabled).
+		Attr("webId", webIds).
+		AscPk().
+		Slice(&result).
 		FindAll()
 	return
 }

@@ -29,16 +29,16 @@ func NewSysSettingDAO() *SysSettingDAO {
 var SharedSysSettingDAO = NewSysSettingDAO()
 
 // 设置配置
-func (this *SysSettingDAO) UpdateSetting(code string, valueJSON []byte, args ...interface{}) error {
-	if len(args) > 0 {
-		code = fmt.Sprintf(code, args...)
+func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, codeFormatArgs ...interface{}) error {
+	if len(codeFormatArgs) > 0 {
+		codeFormat = fmt.Sprintf(codeFormat, codeFormatArgs...)
 	}
 
 	countRetries := 3
 	var lastErr error
 	for i := 0; i < countRetries; i++ {
 		settingId, err := this.Query().
-			Attr("code", code).
+			Attr("code", codeFormat).
 			ResultPk().
 			FindInt64Col(0)
 		if err != nil {
@@ -48,7 +48,7 @@ func (this *SysSettingDAO) UpdateSetting(code string, valueJSON []byte, args ...
 		if settingId == 0 {
 			// 新建
 			op := NewSysSettingOperator()
-			op.Code = code
+			op.Code = codeFormat
 			op.Value = valueJSON
 			_, err = this.Save(op)
 			if err != nil {
