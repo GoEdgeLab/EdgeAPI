@@ -215,23 +215,23 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 
 	// 缓存配置
 	if IsNotNull(web.Cache) {
-		cacheRefs := []*serverconfigs.HTTPCacheRef{}
-		err = json.Unmarshal([]byte(web.Cache), &cacheRefs)
+		cacheConfig := &serverconfigs.HTTPCacheConfig{}
+		err = json.Unmarshal([]byte(web.Cache), &cacheConfig)
 		if err != nil {
 			return nil, err
 		}
-		for _, cacheRef := range cacheRefs {
+		for _, cacheRef := range cacheConfig.CacheRefs {
 			if cacheRef.CachePolicyId > 0 {
 				cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(cacheRef.CachePolicyId)
 				if err != nil {
 					return nil, err
 				}
 				if cachePolicy != nil {
-					config.CacheRefs = append(config.CacheRefs, cacheRef)
-					config.CachePolicies = append(config.CachePolicies, cachePolicy)
+					cacheRef.CachePolicy = cachePolicy
 				}
 			}
 		}
+		config.Cache = cacheConfig
 	}
 
 	// 防火墙配置
