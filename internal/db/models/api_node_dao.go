@@ -59,6 +59,19 @@ func (this *APINodeDAO) FindEnabledAPINode(id int64) (*APINode, error) {
 	return result.(*APINode), err
 }
 
+// 根据ID和Secret查找节点
+func (this *APINodeDAO) FindEnabledAPINodeWithUniqueIdAndSecret(uniqueId string, secret string) (*APINode, error) {
+	one, err := this.Query().
+		State(APINodeStateEnabled).
+		Attr("uniqueId", uniqueId).
+		Attr("secret", secret).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*APINode), nil
+}
+
 // 根据主键查找名称
 func (this *APINodeDAO) FindAPINodeName(id int64) (string, error) {
 	return this.Query().
@@ -68,7 +81,7 @@ func (this *APINodeDAO) FindAPINodeName(id int64) (string, error) {
 }
 
 // 创建API节点
-func (this *APINodeDAO) CreateAPINode(name string, description string, host string, port int) (nodeId int64, err error) {
+func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -80,13 +93,22 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, host stri
 	}
 
 	op := NewAPINodeOperator()
-	op.IsOn = true
+	op.IsOn = isOn
 	op.UniqueId = uniqueId
 	op.Secret = secret
 	op.Name = name
 	op.Description = description
-	op.Host = host
-	op.Port = port
+
+	if len(httpJSON) > 0 {
+		op.Http = httpJSON
+	}
+	if len(httpsJSON) > 0 {
+		op.Https = httpsJSON
+	}
+	if len(accessAddrsJSON) > 0 {
+		op.AccessAddrs = accessAddrsJSON
+	}
+
 	op.State = NodeStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
@@ -97,7 +119,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, host stri
 }
 
 // 修改API节点
-func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description string, host string, port int) error {
+func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -106,8 +128,24 @@ func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description str
 	op.Id = nodeId
 	op.Name = name
 	op.Description = description
-	op.Host = host
-	op.Port = port
+	op.IsOn = isOn
+
+	if len(httpJSON) > 0 {
+		op.Http = httpJSON
+	} else {
+		op.Http = "null"
+	}
+	if len(httpsJSON) > 0 {
+		op.Https = httpsJSON
+	} else {
+		op.Https = "null"
+	}
+	if len(accessAddrsJSON) > 0 {
+		op.AccessAddrs = accessAddrsJSON
+	} else {
+		op.AccessAddrs = "null"
+	}
+
 	_, err := this.Save(op)
 	return err
 }

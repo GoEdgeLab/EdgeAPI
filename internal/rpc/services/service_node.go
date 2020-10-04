@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 )
 
+// 边缘节点相关服务
 type NodeService struct {
 }
 
@@ -119,6 +120,38 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	return &pb.ListEnabledNodesMatchResponse{
 		Nodes: result,
 	}, nil
+}
+
+// 查找一个集群下的所有节点
+func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodesWithClusterIdRequest) (*pb.FindAllEnabledNodesWithClusterIdResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.Node{}
+	for _, node := range nodes {
+		apiNodeIds := []int64{}
+		if models.IsNotNull(node.ConnectedAPINodes) {
+			err = json.Unmarshal([]byte(node.ConnectedAPINodes), &apiNodeIds)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		result = append(result, &pb.Node{
+			Id:                  int64(node.Id),
+			Name:                node.Name,
+			UniqueId:            node.UniqueId,
+			Secret:              node.Secret,
+			ConnectedAPINodeIds: apiNodeIds,
+		})
+	}
+	return &pb.FindAllEnabledNodesWithClusterIdResponse{Nodes: result}, nil
 }
 
 // 禁用节点
@@ -263,27 +296,6 @@ func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeN
 	return &pb.ComposeNodeConfigResponse{NodeJSON: data}, nil
 }
 
-// 节点stream
-func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
-	// TODO 使用此stream快速通知边缘节点更新
-	// 校验节点
-	_, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
-	if err != nil {
-		return err
-	}
-	logs.Println("nodeId:", nodeId)
-
-	_ = server.Send(&pb.NodeStreamResponse{})
-
-	for {
-		req, err := server.Recv()
-		if err != nil {
-			return err
-		}
-		logs.Println("received:", req)
-	}
-}
-
 // 更新节点状态
 func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCUpdateSuccess, error) {
 	// 校验节点
@@ -353,4 +365,20 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	}()
 
 	return &pb.InstallNodeResponse{}, nil
+}
+
+// 更改节点连接的API节点信息
+func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNodeConnectedAPINodesRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验节点
+	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeConnectedAPINodes(nodeId, req.ApiNodeIds)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return rpcutils.RPCUpdateSuccess()
 }

@@ -8,12 +8,15 @@ import (
 
 var sharedAPIConfig *APIConfig = nil
 
+// API节点配置
 type APIConfig struct {
-	RPC struct {
-		Listen string `yaml:"listen"`
-	} `yaml:"rpc"`
+	NodeId string `yaml:"nodeId" json:"nodeId"`
+	Secret string `yaml:"secret" json:"secret"`
+
+	numberId int64 // 数字ID
 }
 
+// 获取共享配置
 func SharedAPIConfig() (*APIConfig, error) {
 	sharedLocker.Lock()
 	defer sharedLocker.Unlock()
@@ -35,4 +38,14 @@ func SharedAPIConfig() (*APIConfig, error) {
 
 	sharedAPIConfig = config
 	return config, nil
+}
+
+// 设置数字ID
+func (this *APIConfig) SetNumberId(numberId int64) {
+	this.numberId = numberId
+}
+
+// 获取数字ID
+func (this *APIConfig) NumberId() int64 {
+	return this.numberId
 }

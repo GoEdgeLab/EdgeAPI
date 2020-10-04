@@ -9,8 +9,9 @@ type APINode struct {
 	Secret      string `field:"secret"`      // 密钥
 	Name        string `field:"name"`        // 名称
 	Description string `field:"description"` // 描述
-	Host        string `field:"host"`        // 主机
-	Port        uint32 `field:"port"`        // 端口
+	Http        string `field:"http"`        // 监听的HTTP配置
+	Https       string `field:"https"`       // 监听的HTTPS配置
+	AccessAddrs string `field:"accessAddrs"` // 外部访问地址
 	Order       uint32 `field:"order"`       // 排序
 	State       uint8  `field:"state"`       // 状态
 	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
@@ -26,8 +27,9 @@ type APINodeOperator struct {
 	Secret      interface{} // 密钥
 	Name        interface{} // 名称
 	Description interface{} // 描述
-	Host        interface{} // 主机
-	Port        interface{} // 端口
+	Http        interface{} // 监听的HTTP配置
+	Https       interface{} // 监听的HTTPS配置
+	AccessAddrs interface{} // 外部访问地址
 	Order       interface{} // 排序
 	State       interface{} // 状态
 	CreatedAt   interface{} // 创建时间

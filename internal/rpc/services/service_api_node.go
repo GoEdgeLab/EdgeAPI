@@ -17,7 +17,7 @@ func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPI
 		return nil, err
 	}
 
-	nodeId, err := models.SharedAPINodeDAO.CreateAPINode(req.Name, req.Description, req.Host, int(req.Port))
+	nodeId, err := models.SharedAPINodeDAO.CreateAPINode(req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 		return nil, err
 	}
 
-	err = models.SharedAPINodeDAO.UpdateAPINode(req.NodeId, req.Name, req.Description, req.Host, int(req.Port))
+	err = models.SharedAPINodeDAO.UpdateAPINode(req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -69,17 +69,23 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 
 	result := []*pb.APINode{}
 	for _, node := range nodes {
+		accessAddrs, err := node.DecodeAccessAddrStrings()
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.APINode{
-			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
-			ClusterId:   int64(node.ClusterId),
-			UniqueId:    node.UniqueId,
-			Secret:      node.Secret,
-			Name:        node.Name,
-			Description: node.Description,
-			Host:        node.Host,
-			Port:        int32(node.Port),
-			Address:     node.Address(),
+			Id:              int64(node.Id),
+			IsOn:            node.IsOn == 1,
+			ClusterId:       int64(node.ClusterId),
+			UniqueId:        node.UniqueId,
+			Secret:          node.Secret,
+			Name:            node.Name,
+			Description:     node.Description,
+			HttpJSON:        []byte(node.Http),
+			HttpsJSON:       []byte(node.Https),
+			AccessAddrsJSON: []byte(node.AccessAddrs),
+			AccessAddrs:     accessAddrs,
 		})
 	}
 
@@ -115,17 +121,23 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 
 	result := []*pb.APINode{}
 	for _, node := range nodes {
+		accessAddrs, err := node.DecodeAccessAddrStrings()
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.APINode{
-			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
-			ClusterId:   int64(node.ClusterId),
-			UniqueId:    node.UniqueId,
-			Secret:      node.Secret,
-			Name:        node.Name,
-			Description: node.Description,
-			Host:        node.Host,
-			Port:        int32(node.Port),
-			Address:     node.Address(),
+			Id:              int64(node.Id),
+			IsOn:            node.IsOn == 1,
+			ClusterId:       int64(node.ClusterId),
+			UniqueId:        node.UniqueId,
+			Secret:          node.Secret,
+			Name:            node.Name,
+			Description:     node.Description,
+			HttpJSON:        []byte(node.Http),
+			HttpsJSON:       []byte(node.Https),
+			AccessAddrsJSON: []byte(node.AccessAddrs),
+			AccessAddrs:     accessAddrs,
 		})
 	}
 
@@ -148,17 +160,23 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		return &pb.FindEnabledAPINodeResponse{Node: nil}, nil
 	}
 
+	accessAddrs, err := node.DecodeAccessAddrStrings()
+	if err != nil {
+		return nil, err
+	}
+
 	result := &pb.APINode{
-		Id:          int64(node.Id),
-		IsOn:        node.IsOn == 1,
-		ClusterId:   int64(node.ClusterId),
-		UniqueId:    node.UniqueId,
-		Secret:      node.Secret,
-		Name:        node.Name,
-		Description: node.Description,
-		Host:        node.Host,
-		Port:        int32(node.Port),
-		Address:     node.Address(),
+		Id:              int64(node.Id),
+		IsOn:            node.IsOn == 1,
+		ClusterId:       int64(node.ClusterId),
+		UniqueId:        node.UniqueId,
+		Secret:          node.Secret,
+		Name:            node.Name,
+		Description:     node.Description,
+		HttpJSON:        []byte(node.Http),
+		HttpsJSON:       []byte(node.Https),
+		AccessAddrsJSON: []byte(node.AccessAddrs),
+		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindEnabledAPINodeResponse{Node: result}, nil
 }

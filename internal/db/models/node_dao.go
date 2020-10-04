@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -275,6 +275,17 @@ func (this *NodeDAO) FindAllNodeIdsMatch(clusterId int64) (result []int64, err e
 	return
 }
 
+// 获取一个集群的所有节点
+func (this *NodeDAO) FindAllEnabledNodesWithClusterId(clusterId int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 计算节点数量
 func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (int64, error) {
 	query := this.Query()
@@ -420,6 +431,28 @@ func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, e
 	}
 
 	return config, nil
+}
+
+// 修改当前连接的API节点
+func (this *NodeDAO) UpdateNodeConnectedAPINodes(nodeId int64, apiNodeIds []int64) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+
+	op := NewNodeOperator()
+	op.Id = nodeId
+
+	if len(apiNodeIds) > 0 {
+		apiNodeIdsJSON, err := json.Marshal(apiNodeIds)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		op.ConnectedAPINodes = apiNodeIdsJSON
+	} else {
+		op.ConnectedAPINodes = "[]"
+	}
+	_, err := this.Save(op)
+	return err
 }
 
 // 生成唯一ID

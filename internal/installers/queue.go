@@ -136,7 +136,13 @@ func (this *Queue) InstallNode(nodeId int64) error {
 
 	apiEndpoints := []string{}
 	for _, apiNode := range apiNodes {
-		apiEndpoints = append(apiEndpoints, apiNode.Host+":"+strconv.Itoa(int(apiNode.Port)))
+		addrConfigs, err := apiNode.DecodeAccessAddrs()
+		if err != nil {
+			return errors.New("decode api node access addresses failed: " + err.Error())
+		}
+		for _, addrConfig := range addrConfigs {
+			apiEndpoints = append(apiEndpoints, addrConfig.FullAddresses()...)
+		}
 	}
 
 	params := &NodeParams{
