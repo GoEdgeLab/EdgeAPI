@@ -4,6 +4,7 @@ package models
 type HTTPFirewallRule struct {
 	Id                uint32 `field:"id"`                // ID
 	IsOn              uint8  `field:"isOn"`              // 是否启用
+	Description       string `field:"description"`       // 说明
 	Param             string `field:"param"`             // 参数
 	Operator          string `field:"operator"`          // 操作符
 	Value             string `field:"value"`             // 对比值
@@ -18,6 +19,7 @@ type HTTPFirewallRule struct {
 type HTTPFirewallRuleOperator struct {
 	Id                interface{} // ID
 	IsOn              interface{} // 是否启用
+	Description       interface{} // 说明
 	Param             interface{} // 参数
 	Operator          interface{} // 操作符
 	Value             interface{} // 对比值

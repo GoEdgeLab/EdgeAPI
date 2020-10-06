@@ -693,3 +693,27 @@ func (this *ServerService) FindAllEnabledServersWithCachePolicyId(ctx context.Co
 	}
 	return &pb.FindAllEnabledServersWithCachePolicyIdResponse{Servers: result}, nil
 }
+
+// 计算使用某个WAF策略的服务数量
+func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithHTTPFirewallPolicyIdRequest) (*pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.FirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(webIds) == 0 {
+		return &pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse{Count: 0}, nil
+	}
+
+	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse{Count: countServers}, nil
+}

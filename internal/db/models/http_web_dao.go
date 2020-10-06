@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -236,7 +237,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 
 	// 防火墙配置
 	if IsNotNull(web.Firewall) {
-		firewallRef := &serverconfigs.HTTPFirewallRef{}
+		firewallRef := &firewallconfigs.HTTPFirewallRef{}
 		err = json.Unmarshal([]byte(web.Firewall), firewallRef)
 		if err != nil {
 			return nil, err
@@ -510,7 +511,51 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]i
 	ones, err := this.Query().
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(cache, '{"cachePolicyId": ` + strconv.FormatInt(cachePolicyId, 10) + ` }')`).
+		Where(`JSON_CONTAINS(cache, '{"cachePolicyId": ` + strconv.FormatInt(cachePolicyId, 10) + ` }', '$.cacheRefs')`).
+		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		webId := int64(one.(*HTTPWeb).Id)
+
+		// 判断是否为Location
+		for {
+			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(webId)
+			if err != nil {
+				return nil, err
+			}
+
+			// 如果非Location
+			if locationId == 0 {
+				if !this.containsInt64(result, webId) {
+					result = append(result, webId)
+				}
+				break
+			}
+
+			// 查找包含此Location的Web
+			// TODO 需要支持嵌套的Location查询
+			webId, err = this.FindEnabledWebIdWithLocationId(locationId)
+			if err != nil {
+				return nil, err
+			}
+			if webId == 0 {
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+// 根据防火墙策略ID查找所有的WebId
+func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId int64) ([]int64, error) {
+	ones, err := this.Query().
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where(`JSON_CONTAINS(firewall, '{"firewallPolicyId": ` + strconv.FormatInt(firewallPolicyId, 10) + ` }')`).
 		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
 		FindAll()
 	if err != nil {

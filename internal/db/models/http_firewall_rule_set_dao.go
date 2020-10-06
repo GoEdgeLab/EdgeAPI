@@ -1,9 +1,13 @@
 package models
 
 import (
+	"encoding/json"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -41,7 +45,7 @@ func (this *HTTPFirewallRuleSetDAO) Init() {
 }
 
 // 启用条目
-func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(id uint32) error {
+func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", HTTPFirewallRuleSetStateEnabled).
@@ -50,7 +54,7 @@ func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(id uint32) error {
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(id uint32) error {
+func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", HTTPFirewallRuleSetStateDisabled).
@@ -59,7 +63,7 @@ func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(id uint32) error 
 }
 
 // 查找启用中的条目
-func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(id uint32) (*HTTPFirewallRuleSet, error) {
+func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(id int64) (*HTTPFirewallRuleSet, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", HTTPFirewallRuleSetStateEnabled).
@@ -71,9 +75,100 @@ func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(id uint32) (*
 }
 
 // 根据主键查找名称
-func (this *HTTPFirewallRuleSetDAO) FindHTTPFirewallRuleSetName(id uint32) (string, error) {
+func (this *HTTPFirewallRuleSetDAO) FindHTTPFirewallRuleSetName(id int64) (string, error) {
 	return this.Query().
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+}
+
+// 组合配置
+func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(setId int64) (*firewallconfigs.HTTPFirewallRuleSet, error) {
+	set, err := this.FindEnabledHTTPFirewallRuleSet(setId)
+	if err != nil {
+		return nil, err
+	}
+	if set == nil {
+		return nil, nil
+	}
+	config := &firewallconfigs.HTTPFirewallRuleSet{}
+	config.Id = int64(set.Id)
+	config.IsOn = set.IsOn == 1
+	config.Name = set.Name
+	config.Description = set.Description
+	config.Code = set.Code
+	config.Connector = set.Connector
+
+	if IsNotNull(set.Rules) {
+		ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
+		err = json.Unmarshal([]byte(set.Rules), &ruleRefs)
+		if err != nil {
+			return nil, err
+		}
+		for _, ruleRef := range ruleRefs {
+			ruleConfig, err := SharedHTTPFirewallRuleDAO.ComposeFirewallRule(ruleRef.RuleId)
+			if err != nil {
+				return nil, err
+			}
+			if ruleConfig != nil {
+				config.RuleRefs = append(config.RuleRefs, ruleRef)
+				config.Rules = append(config.Rules, ruleConfig)
+			}
+		}
+	}
+
+	config.Action = set.Action
+	if IsNotNull(set.ActionOptions) {
+		options := maps.Map{}
+		err = json.Unmarshal([]byte(set.ActionOptions), &options)
+		if err != nil {
+			return nil, err
+		}
+		config.ActionOptions = options
+	}
+
+	return config, nil
+}
+
+// 从配置中创建规则集
+func (this *HTTPFirewallRuleSetDAO) CreateSetFromConfig(setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
+	op := NewHTTPFirewallRuleSetOperator()
+	op.State = HTTPFirewallRuleSetStateEnabled
+	op.IsOn = setConfig.IsOn
+	op.Name = setConfig.Name
+	op.Description = setConfig.Description
+	op.Connector = setConfig.Connector
+	op.Action = setConfig.Action
+	op.Code = setConfig.Code
+
+	if setConfig.ActionOptions != nil {
+		actionOptionsJSON, err := json.Marshal(setConfig.ActionOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.ActionOptions = actionOptionsJSON
+	}
+
+	// rules
+	ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
+	for _, ruleConfig := range setConfig.Rules {
+		ruleId, err := SharedHTTPFirewallRuleDAO.CreateRuleFromConfig(ruleConfig)
+		if err != nil {
+			return 0, err
+		}
+		ruleRefs = append(ruleRefs, &firewallconfigs.HTTPFirewallRuleRef{
+			IsOn:   true,
+			RuleId: ruleId,
+		})
+	}
+	ruleRefsJSON, err := json.Marshal(ruleRefs)
+	if err != nil {
+		return 0, err
+	}
+	op.Rules = ruleRefsJSON
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
 }

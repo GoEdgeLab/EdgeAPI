@@ -1,9 +1,12 @@
 package models
 
 import (
+	"encoding/json"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -41,7 +44,7 @@ func (this *HTTPFirewallRuleDAO) Init() {
 }
 
 // 启用条目
-func (this *HTTPFirewallRuleDAO) EnableHTTPFirewallRule(id uint32) error {
+func (this *HTTPFirewallRuleDAO) EnableHTTPFirewallRule(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", HTTPFirewallRuleStateEnabled).
@@ -50,7 +53,7 @@ func (this *HTTPFirewallRuleDAO) EnableHTTPFirewallRule(id uint32) error {
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleDAO) DisableHTTPFirewallRule(id uint32) error {
+func (this *HTTPFirewallRuleDAO) DisableHTTPFirewallRule(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", HTTPFirewallRuleStateDisabled).
@@ -59,7 +62,7 @@ func (this *HTTPFirewallRuleDAO) DisableHTTPFirewallRule(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPFirewallRuleDAO) FindEnabledHTTPFirewallRule(id uint32) (*HTTPFirewallRule, error) {
+func (this *HTTPFirewallRuleDAO) FindEnabledHTTPFirewallRule(id int64) (*HTTPFirewallRule, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", HTTPFirewallRuleStateEnabled).
@@ -68,4 +71,60 @@ func (this *HTTPFirewallRuleDAO) FindEnabledHTTPFirewallRule(id uint32) (*HTTPFi
 		return nil, err
 	}
 	return result.(*HTTPFirewallRule), err
+}
+
+// 组合配置
+func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(ruleId int64) (*firewallconfigs.HTTPFirewallRule, error) {
+	rule, err := this.FindEnabledHTTPFirewallRule(ruleId)
+	if err != nil {
+		return nil, err
+	}
+	if rule == nil {
+		return nil, nil
+	}
+	config := &firewallconfigs.HTTPFirewallRule{}
+	config.Id = int64(rule.Id)
+	config.IsOn = rule.IsOn == 1
+	config.Param = rule.Param
+	config.Operator = rule.Operator
+	config.Value = rule.Value
+	config.IsCaseInsensitive = rule.IsCaseInsensitive == 1
+
+	if IsNotNull(rule.CheckpointOptions) {
+		checkpointOptions := map[string]interface{}{}
+		err = json.Unmarshal([]byte(rule.CheckpointOptions), &checkpointOptions)
+		if err != nil {
+			return nil, err
+		}
+		config.CheckpointOptions = checkpointOptions
+	}
+
+	config.Description = rule.Description
+
+	return config, nil
+}
+
+// 从配置中配置规则
+func (this *HTTPFirewallRuleDAO) CreateRuleFromConfig(ruleConfig *firewallconfigs.HTTPFirewallRule) (int64, error) {
+	op := NewHTTPFirewallRuleOperator()
+	op.State = HTTPFirewallRuleStateEnabled
+	op.IsOn = ruleConfig.IsOn
+	op.Description = ruleConfig.Description
+	op.Param = ruleConfig.Param
+	op.Value = ruleConfig.Value
+	op.IsCaseInsensitive = ruleConfig.IsCaseInsensitive
+	op.Operator = ruleConfig.Operator
+
+	if ruleConfig.CheckpointOptions != nil {
+		checkpointOptionsJSON, err := json.Marshal(ruleConfig.CheckpointOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.CheckpointOptions = checkpointOptionsJSON
+	}
+	_, err := this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
 }
