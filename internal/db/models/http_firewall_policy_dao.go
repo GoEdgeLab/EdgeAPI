@@ -190,8 +190,8 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(policyId int64) (*firew
 	config.Description = policy.Description
 
 	// Inbound
+	inbound := &firewallconfigs.HTTPFirewallInboundConfig{}
 	if IsNotNull(policy.Inbound) {
-		inbound := &firewallconfigs.HTTPFirewallInboundConfig{}
 		err = json.Unmarshal([]byte(policy.Inbound), inbound)
 		if err != nil {
 			return nil, err
@@ -214,12 +214,12 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(policyId int64) (*firew
 			inbound.GroupRefs = resultGroupRefs
 			inbound.Groups = resultGroups
 		}
-		config.Inbound = inbound
 	}
+	config.Inbound = inbound
 
 	// Outbound
+	outbound := &firewallconfigs.HTTPFirewallOutboundConfig{}
 	if IsNotNull(policy.Outbound) {
-		outbound := &firewallconfigs.HTTPFirewallOutboundConfig{}
 		err = json.Unmarshal([]byte(policy.Outbound), outbound)
 		if err != nil {
 			return nil, err
@@ -242,8 +242,8 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(policyId int64) (*firew
 			outbound.GroupRefs = resultGroupRefs
 			outbound.Groups = resultGroups
 		}
-		config.Outbound = outbound
 	}
+	config.Outbound = outbound
 
 	return config, nil
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -157,5 +158,33 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(groupId int64, isOn bool) 
 		Pk(groupId).
 		Set("isOn", isOn).
 		Update()
+	return err
+}
+
+// 创建分组
+func (this *HTTPFirewallRuleGroupDAO) CreateGroup(isOn bool, name string, description string) (int64, error) {
+	op := NewHTTPFirewallRuleGroupOperator()
+	op.State = HTTPFirewallRuleStateEnabled
+	op.IsOn = isOn
+	op.Name = name
+	op.Description = description
+	_, err := this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
+}
+
+// 修改分组
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(groupId int64, isOn bool, name string, description string) error {
+	if groupId <= 0 {
+		return errors.New("invalid groupId")
+	}
+	op := NewHTTPFirewallRuleGroupOperator()
+	op.Id = groupId
+	op.IsOn = isOn
+	op.Name = name
+	op.Description = description
+	_, err := this.Save(op)
 	return err
 }
