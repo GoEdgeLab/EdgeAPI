@@ -243,6 +243,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 			return nil, err
 		}
 		config.FirewallRef = firewallRef
+
+		if firewallRef.FirewallPolicyId > 0 {
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(firewallRef.FirewallPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if firewallPolicy == nil {
+				config.FirewallRef = nil
+			} else {
+				config.FirewallPolicy = firewallPolicy
+			}
+		}
 	}
 
 	// 路径规则
