@@ -131,7 +131,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewal
 	// sets
 	setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
 	for _, setConfig := range groupConfig.Sets {
-		setId, err := SharedHTTPFirewallRuleSetDAO.CreateSetFromConfig(setConfig)
+		setId, err := SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(setConfig)
 		if err != nil {
 			return 0, err
 		}
@@ -185,6 +185,18 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(groupId int64, isOn bool, name
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
+	_, err := this.Save(op)
+	return err
+}
+
+// 修改分组中的规则集
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(groupId int64, setsJSON []byte) error {
+	if groupId <= 0 {
+		return errors.New("invalid groupId")
+	}
+	op := NewHTTPFirewallRuleGroupOperator()
+	op.Id = groupId
+	op.Sets = setsJSON
 	_, err := this.Save(op)
 	return err
 }

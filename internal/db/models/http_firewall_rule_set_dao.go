@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -131,9 +132,10 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(setId int64) (*firewa
 }
 
 // 从配置中创建规则集
-func (this *HTTPFirewallRuleSetDAO) CreateSetFromConfig(setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
+func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
 	op := NewHTTPFirewallRuleSetOperator()
 	op.State = HTTPFirewallRuleSetStateEnabled
+	op.Id = setConfig.Id
 	op.IsOn = setConfig.IsOn
 	op.Name = setConfig.Name
 	op.Description = setConfig.Description
@@ -147,12 +149,14 @@ func (this *HTTPFirewallRuleSetDAO) CreateSetFromConfig(setConfig *firewallconfi
 			return 0, err
 		}
 		op.ActionOptions = actionOptionsJSON
+	} else {
+		op.ActionOptions = "{}"
 	}
 
 	// rules
 	ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
 	for _, ruleConfig := range setConfig.Rules {
-		ruleId, err := SharedHTTPFirewallRuleDAO.CreateRuleFromConfig(ruleConfig)
+		ruleId, err := SharedHTTPFirewallRuleDAO.CreateOrUpdateRuleFromConfig(ruleConfig)
 		if err != nil {
 			return 0, err
 		}
@@ -171,4 +175,16 @@ func (this *HTTPFirewallRuleSetDAO) CreateSetFromConfig(setConfig *firewallconfi
 		return 0, err
 	}
 	return types.Int64(op.Id), nil
+}
+
+// 设置是否启用
+func (this *HTTPFirewallRuleSetDAO) UpdateRuleSetIsOn(ruleSetId int64, isOn bool) error {
+	if ruleSetId <= 0 {
+		return errors.New("invalid ruleSetId")
+	}
+	_, err := this.Query().
+		Pk(ruleSetId).
+		Set("isOn", isOn).
+		Update()
+	return err
 }

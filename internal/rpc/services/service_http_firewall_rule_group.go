@@ -80,3 +80,18 @@ func (this *HTTPFirewallRuleGroupService) FindHTTPFirewallRuleGroupConfig(ctx co
 	}
 	return &pb.FindHTTPFirewallRuleGroupConfigResponse{FirewallRuleGroupJSON: groupConfigJSON}, nil
 }
+
+// 修改分组的规则集
+func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupSets(ctx context.Context, req *pb.UpdateHTTPFirewallRuleGroupSetsRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(req.GetFirewallRuleGroupId(), req.FirewallRuleSetsJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}
