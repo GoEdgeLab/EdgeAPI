@@ -9,6 +9,7 @@ type DBNode struct {
 	Description string `field:"description"` // 描述
 	Host        string `field:"host"`        // 主机
 	Port        uint32 `field:"port"`        // 端口
+	Database    string `field:"database"`    // 数据库名称
 	Username    string `field:"username"`    // 用户名
 	Password    string `field:"password"`    // 密码
 	Charset     string `field:"charset"`     // 通讯字符集
@@ -28,6 +29,7 @@ type DBNodeOperator struct {
 	Description interface{} // 描述
 	Host        interface{} // 主机
 	Port        interface{} // 端口
+	Database    interface{} // 数据库名称
 	Username    interface{} // 用户名
 	Password    interface{} // 密码
 	Charset     interface{} // 通讯字符集
