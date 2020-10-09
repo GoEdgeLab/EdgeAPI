@@ -381,6 +381,7 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		}
 		result = append(result, &pb.Server{
 			Id:           int64(server.Id),
+			IsOn:         server.IsOn == 1,
 			Type:         server.Type,
 			Config:       []byte(server.Config),
 			Name:         server.Name,

@@ -10,6 +10,7 @@ func init() {
 	go NewNodeLogCleaner().Start()
 }
 
+// 清理节点日志的工具
 type NodeLogCleaner struct {
 	duration time.Duration
 }
