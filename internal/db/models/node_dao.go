@@ -103,7 +103,7 @@ func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err
 }
 
 // 修改节点
-func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64) error {
+func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, maxCPU int32, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -112,6 +112,8 @@ func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64) erro
 	op.Name = name
 	op.ClusterId = clusterId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
+	op.MaxCPU = maxCPU
+	op.IsOn = isOn
 	_, err := this.Save(op)
 	return err
 }
@@ -395,6 +397,7 @@ func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, e
 		Servers: nil,
 		Version: int64(node.Version),
 		Name:    node.Name,
+		MaxCPU:  types.Int32(node.MaxCPU),
 	}
 
 	// 获取所有的服务

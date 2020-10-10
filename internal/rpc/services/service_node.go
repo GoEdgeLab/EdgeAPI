@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/types"
 )
 
 // 边缘节点相关服务
@@ -114,6 +115,8 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 				Name: clusterName,
 			},
 			InstallStatus: installStatusResult,
+			MaxCPU:        types.Int32(node.MaxCPU),
+			IsOn:          node.IsOn == 1,
 		})
 	}
 
@@ -149,6 +152,8 @@ func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, r
 			UniqueId:            node.UniqueId,
 			Secret:              node.Secret,
 			ConnectedAPINodeIds: apiNodeIds,
+			MaxCPU:              types.Int32(node.MaxCPU),
+			IsOn:                node.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodesWithClusterIdResponse{Nodes: result}, nil
@@ -176,7 +181,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
-	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId)
+	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.MaxCPU, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +276,8 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		},
 		Login:         respLogin,
 		InstallStatus: installStatusResult,
+		MaxCPU:        types.Int32(node.MaxCPU),
+		IsOn:          node.IsOn == 1,
 	}}, nil
 }
 
