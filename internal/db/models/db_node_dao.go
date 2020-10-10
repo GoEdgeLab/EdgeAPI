@@ -124,3 +124,14 @@ func (this *DBNodeDAO) UpdateNode(nodeId int64, isOn bool, name string, descript
 	_, err := this.Save(op)
 	return err
 }
+
+// 查找所有可用的数据库节点
+func (this *DBNodeDAO) FindAllEnabledAndOnDBNodes() (result []*DBNode, err error) {
+	_, err = this.Query().
+		State(DBNodeStateEnabled).
+		Attr("isOn", true).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
+}

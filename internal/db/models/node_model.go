@@ -22,6 +22,7 @@ type Node struct {
 	InstallStatus     string `field:"installStatus"`     // 安装状态
 	State             uint8  `field:"state"`             // 状态
 	ConnectedAPINodes string `field:"connectedAPINodes"` // 当前连接的API节点
+	MaxCPU            uint32 `field:"maxCPU"`            // 可以使用的最多CPU
 }
 
 type NodeOperator struct {
@@ -45,6 +46,7 @@ type NodeOperator struct {
 	InstallStatus     interface{} // 安装状态
 	State             interface{} // 状态
 	ConnectedAPINodes interface{} // 当前连接的API节点
+	MaxCPU            interface{} // 可以使用的最多CPU
 }
 
 func NewNodeOperator() *NodeOperator {
