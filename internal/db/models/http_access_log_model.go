@@ -8,7 +8,7 @@ type HTTPAccessLog struct {
 	Status    uint32 `field:"status"`    // 状态码
 	CreatedAt uint64 `field:"createdAt"` // 创建时间
 	Content   string `field:"content"`   // 日志内容
-	Day       string `field:"day"`       // 日期Ymd
+	RequestId string `field:"requestId"` // 请求ID
 }
 
 type HTTPAccessLogOperator struct {
@@ -18,7 +18,7 @@ type HTTPAccessLogOperator struct {
 	Status    interface{} // 状态码
 	CreatedAt interface{} // 创建时间
 	Content   interface{} // 日志内容
-	Day       interface{} // 日期Ymd
+	RequestId interface{} // 请求ID
 }
 
 func NewHTTPAccessLogOperator() *HTTPAccessLogOperator {

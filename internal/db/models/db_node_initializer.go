@@ -13,10 +13,15 @@ import (
 	"time"
 )
 
-var accessLogDBMapping = map[int64]*dbs.DB{}            // dbNodeId => DB
-var accessLogDAOMapping = map[int64]*HTTPAccessLogDAO{} // dbNodeId => DAO
+var accessLogDBMapping = map[int64]*dbs.DB{}                   // dbNodeId => DB
+var accessLogDAOMapping = map[int64]*HTTPAccessLogDAOWrapper{} // dbNodeId => DAO
 var accessLogLocker = &sync.RWMutex{}
 var accessLogTableMapping = map[string]bool{} // tableName_crc(dsn) => true
+
+type HTTPAccessLogDAOWrapper struct {
+	DAO    *HTTPAccessLogDAO
+	NodeId int64
+}
 
 func init() {
 	initializer := NewDBNodeInitializer()
@@ -24,7 +29,7 @@ func init() {
 }
 
 // 获取获取DAO
-func randomAccessLogDAO() (dao *HTTPAccessLogDAO) {
+func randomAccessLogDAO() (dao *HTTPAccessLogDAOWrapper) {
 	accessLogLocker.RLock()
 	if len(accessLogDAOMapping) == 0 {
 		dao = nil
@@ -36,6 +41,31 @@ func randomAccessLogDAO() (dao *HTTPAccessLogDAO) {
 	}
 	accessLogLocker.RUnlock()
 	return
+}
+
+// 检查表格是否存在
+func findAccessLogTableName(db *dbs.DB, day string) (string, bool, error) {
+	config, err := db.Config()
+	if err != nil {
+		return "", false, err
+	}
+
+	tableName := "edgeHTTPAccessLogs_" + day
+	cacheKey := tableName + "_" + fmt.Sprintf("%d", crc32.ChecksumIEEE([]byte(config.Dsn)))
+
+	accessLogLocker.RLock()
+	_, ok := accessLogTableMapping[cacheKey]
+	accessLogLocker.RUnlock()
+	if ok {
+		return tableName, true, nil
+	}
+
+	tableNames, err := db.TableNames()
+	if err != nil {
+		return tableName, false, err
+	}
+
+	return tableName, lists.ContainsString(tableNames, tableName), nil
 }
 
 // 根据日期获取表名
@@ -70,7 +100,7 @@ func findAccessLogTable(db *dbs.DB, day string, force bool) (string, error) {
 	}
 
 	// 创建表格
-	_, err = db.Exec("CREATE TABLE `" + tableName + "` (\n  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',\n  `serverId` int(11) unsigned DEFAULT '0' COMMENT '服务ID',\n  `nodeId` int(11) unsigned DEFAULT '0' COMMENT '节点ID',\n  `status` int(3) unsigned DEFAULT '0' COMMENT '状态码',\n  `createdAt` bigint(11) unsigned DEFAULT '0' COMMENT '创建时间',\n  `content` json DEFAULT NULL COMMENT '日志内容',\n  `day` varchar(8) DEFAULT NULL COMMENT '日期Ymd',\n  PRIMARY KEY (`id`),\n  KEY `serverId` (`serverId`),\n  KEY `nodeId` (`nodeId`),\n  KEY `serverId_status` (`serverId`,`status`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;")
+	_, err = db.Exec("CREATE TABLE `" + tableName + "` (  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',\n  `serverId` int(11) unsigned DEFAULT '0' COMMENT '服务ID',\n  `nodeId` int(11) unsigned DEFAULT '0' COMMENT '节点ID',\n  `status` int(3) unsigned DEFAULT '0' COMMENT '状态码',\n  `createdAt` bigint(11) unsigned DEFAULT '0' COMMENT '创建时间',\n  `content` json DEFAULT NULL COMMENT '日志内容',\n  `requestId` varchar(128) DEFAULT NULL COMMENT '请求ID',\n  PRIMARY KEY (`id`),\n  KEY `serverId` (`serverId`),\n  KEY `nodeId` (`nodeId`),\n  KEY `serverId_status` (`serverId`,`status`),\n  KEY `requestId` (`requestId`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;")
 	if err != nil {
 		return tableName, err
 	}
@@ -208,7 +238,10 @@ func (this *DBNodeInitializer) loop() error {
 			dao := &HTTPAccessLogDAO{
 				DAOObject: daoObject,
 			}
-			accessLogDAOMapping[nodeId] = dao
+			accessLogDAOMapping[nodeId] = &HTTPAccessLogDAOWrapper{
+				DAO:    dao,
+				NodeId: nodeId,
+			}
 			accessLogLocker.Unlock()
 		}
 	}
