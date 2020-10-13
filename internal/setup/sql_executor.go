@@ -5,11 +5,14 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup/sqls"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-yaml/yaml"
+	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"io/ioutil"
 	"sort"
 	"strings"
 	"time"
@@ -23,6 +26,20 @@ func NewSQLExecutor(dbConfig *dbs.DBConfig) *SQLExecutor {
 	return &SQLExecutor{
 		dbConfig: dbConfig,
 	}
+}
+
+func NewSQLExecutorFromCmd() (*SQLExecutor, error) {
+	// 执行SQL
+	config := &dbs.Config{}
+	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(configData, config)
+	if err != nil {
+		return nil, err
+	}
+	return NewSQLExecutor(config.DBs[Tea.Env]), nil
 }
 
 func (this *SQLExecutor) Run() error {

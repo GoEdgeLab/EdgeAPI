@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/apps"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/nodes"
@@ -21,7 +22,7 @@ func main() {
 	app := apps.NewAppCmd()
 	app.Version(teaconst.Version)
 	app.Product(teaconst.ProductName)
-	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup]")
+	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup|upgrade]")
 	app.On("setup", func() {
 		setupCmd := setup.NewSetupFromCmd()
 		err := setupCmd.Run()
@@ -41,6 +42,19 @@ func main() {
 		}
 
 		_, _ = os.Stdout.Write(resultJSON)
+	})
+	app.On("upgrade", func() {
+		executor, err := setup.NewSQLExecutorFromCmd()
+		if err != nil {
+			fmt.Println("ERROR: " + err.Error())
+			return
+		}
+		err = executor.Run()
+		if err != nil {
+			fmt.Println("ERROR: " + err.Error())
+			return
+		}
+		fmt.Println("finished!")
 	})
 	app.Run(func() {
 		nodes.NewAPINode().Start()
