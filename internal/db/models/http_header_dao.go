@@ -28,7 +28,13 @@ func NewHTTPHeaderDAO() *HTTPHeaderDAO {
 	}).(*HTTPHeaderDAO)
 }
 
-var SharedHTTPHeaderDAO = NewHTTPHeaderDAO()
+var SharedHTTPHeaderDAO *HTTPHeaderDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPHeaderDAO = NewHTTPHeaderDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPHeaderDAO) Init() {

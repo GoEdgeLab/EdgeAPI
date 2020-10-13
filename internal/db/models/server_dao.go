@@ -32,7 +32,13 @@ func NewServerDAO() *ServerDAO {
 	}).(*ServerDAO)
 }
 
-var SharedServerDAO = NewServerDAO()
+var SharedServerDAO *ServerDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedServerDAO = NewServerDAO()
+	})
+}
 
 // 初始化
 func (this *ServerDAO) Init() {

@@ -26,7 +26,13 @@ func NewNodeGrantDAO() *NodeGrantDAO {
 	}).(*NodeGrantDAO)
 }
 
-var SharedNodeGrantDAO = NewNodeGrantDAO()
+var SharedNodeGrantDAO *NodeGrantDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeGrantDAO = NewNodeGrantDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeGrantDAO) EnableNodeGrant(id uint32) (rowsAffected int64, err error) {

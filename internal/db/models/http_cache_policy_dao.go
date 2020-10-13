@@ -29,7 +29,13 @@ func NewHTTPCachePolicyDAO() *HTTPCachePolicyDAO {
 	}).(*HTTPCachePolicyDAO)
 }
 
-var SharedHTTPCachePolicyDAO = NewHTTPCachePolicyDAO()
+var SharedHTTPCachePolicyDAO *HTTPCachePolicyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPCachePolicyDAO = NewHTTPCachePolicyDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPCachePolicyDAO) Init() {

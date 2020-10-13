@@ -20,7 +20,13 @@ func NewFileChunkDAO() *FileChunkDAO {
 	}).(*FileChunkDAO)
 }
 
-var SharedFileChunkDAO = NewFileChunkDAO()
+var SharedFileChunkDAO *FileChunkDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedFileChunkDAO = NewFileChunkDAO()
+	})
+}
 
 // 创建文件Chunk
 func (this *FileChunkDAO) CreateFileChunk(fileId int, data []byte) error {

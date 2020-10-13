@@ -24,22 +24,30 @@ func NewServerGroupDAO() *ServerGroupDAO {
 	}).(*ServerGroupDAO)
 }
 
-var SharedServerGroupDAO = NewServerGroupDAO()
+var SharedServerGroupDAO *ServerGroupDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedServerGroupDAO = NewServerGroupDAO()
+	})
+}
 
 // 启用条目
-func (this *ServerGroupDAO) EnableServerGroup(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *ServerGroupDAO) EnableServerGroup(id uint32) error {
+	_, err := this.Query().
 		Pk(id).
 		Set("state", ServerGroupStateEnabled).
 		Update()
+	return err
 }
 
 // 禁用条目
-func (this *ServerGroupDAO) DisableServerGroup(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *ServerGroupDAO) DisableServerGroup(id uint32) error {
+	_, err := this.Query().
 		Pk(id).
 		Set("state", ServerGroupStateDisabled).
 		Update()
+	return err
 }
 
 // 查找启用中的条目
@@ -56,9 +64,8 @@ func (this *ServerGroupDAO) FindEnabledServerGroup(id uint32) (*ServerGroup, err
 
 // 根据主键查找名称
 func (this *ServerGroupDAO) FindServerGroupName(id uint32) (string, error) {
-	name, err := this.Query().
+	return this.Query().
 		Pk(id).
 		Result("name").
-		FindCol("")
-	return name.(string), err
+		FindStringCol("")
 }

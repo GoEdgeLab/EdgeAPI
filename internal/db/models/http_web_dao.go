@@ -31,7 +31,13 @@ func NewHTTPWebDAO() *HTTPWebDAO {
 	}).(*HTTPWebDAO)
 }
 
-var SharedHTTPWebDAO = NewHTTPWebDAO()
+var SharedHTTPWebDAO *HTTPWebDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPWebDAO = NewHTTPWebDAO()
+	})
+}
 
 func (this *HTTPWebDAO) Init() {
 	this.DAOObject.Init()

@@ -52,3 +52,12 @@ func (this *APIConfig) SetNumberId(numberId int64) {
 func (this *APIConfig) NumberId() int64 {
 	return this.numberId
 }
+
+// 保存到文件
+func (this *APIConfig) WriteFile(path string) error {
+	data, err := yaml.Marshal(this)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, data, 0666)
+}

@@ -52,9 +52,10 @@ func (this *AdminService) CreateAdminLog(ctx context.Context, req *pb.CreateAdmi
 		return nil, err
 	}
 	err = models.SharedLogDAO.CreateAdminLog(userId, req.Level, req.Description, req.Action, req.Ip)
-	return &pb.CreateAdminLogResponse{
-		IsOk: err != nil,
-	}, err
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CreateAdminLogResponse{}, nil
 }
 
 func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdminExistsRequest) (*pb.CheckAdminExistsResponse, error) {
@@ -94,4 +95,29 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 	return &pb.FindAdminFullnameResponse{
 		Fullname: fullname,
 	}, nil
+}
+
+// 创建或修改管理员
+func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.CreateOrUpdateAdminRequest) (*pb.CreateOrUpdateAdminResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeAPI)
+	if err != nil {
+		return nil, err
+	}
+
+	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if adminId > 0 {
+		err = models.SharedAdminDAO.UpdateAdminPassword(adminId, req.Password)
+		if err != nil {
+			return nil, err
+		}
+		return &pb.CreateOrUpdateAdminResponse{AdminId: adminId}, nil
+	}
+	adminId, err = models.SharedAdminDAO.CreateAdmin(req.Username, req.Password, "管理员")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CreateOrUpdateAdminResponse{AdminId: adminId}, nil
 }

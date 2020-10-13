@@ -32,7 +32,13 @@ func NewNodeDAO() *NodeDAO {
 	}).(*NodeDAO)
 }
 
-var SharedNodeDAO = NewNodeDAO()
+var SharedNodeDAO *NodeDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeDAO = NewNodeDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeDAO) EnableNode(id uint32) (rowsAffected int64, err error) {

@@ -26,7 +26,13 @@ func NewDBNodeDAO() *DBNodeDAO {
 	}).(*DBNodeDAO)
 }
 
-var SharedDBNodeDAO = NewDBNodeDAO()
+var SharedDBNodeDAO *DBNodeDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedDBNodeDAO = NewDBNodeDAO()
+	})
+}
 
 // 启用条目
 func (this *DBNodeDAO) EnableDBNode(id int64) error {

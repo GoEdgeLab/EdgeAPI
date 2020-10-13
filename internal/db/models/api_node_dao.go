@@ -1,12 +1,15 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
@@ -27,7 +30,13 @@ func NewAPINodeDAO() *APINodeDAO {
 	}).(*APINodeDAO)
 }
 
-var SharedAPINodeDAO = NewAPINodeDAO()
+var SharedAPINodeDAO *APINodeDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedAPINodeDAO = NewAPINodeDAO()
+	})
+}
 
 // 启用条目
 func (this *APINodeDAO) EnableAPINode(id int64) error {
@@ -87,7 +96,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 		return 0, err
 	}
 	secret := rands.String(32)
-	err = SharedApiTokenDAO.CreateAPIToken(uniqueId, secret, NodeRoleAPI)
+	err = NewApiTokenDAO().CreateAPIToken(uniqueId, secret, NodeRoleAPI)
 	if err != nil {
 		return
 	}
@@ -181,6 +190,33 @@ func (this *APINodeDAO) ListEnabledAPINodes(offset int64, size int64) (result []
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// 根据主机名和端口获取ID
+func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(protocol string, host string, port int) (int64, error) {
+	addr := maps.Map{
+		"protocol":  protocol,
+		"host":      host,
+		"portRange": strconv.Itoa(port),
+	}
+	addrJSON, err := json.Marshal(addr)
+	if err != nil {
+		return 0, err
+	}
+
+	one, err := this.Query().
+		State(APINodeStateEnabled).
+		Where("JSON_CONTAINS(accessAddrs, :addr)").
+		Param("addr", string(addrJSON)).
+		ResultPk().
+		Find()
+	if err != nil {
+		return 0, err
+	}
+	if one == nil {
+		return 0, nil
+	}
+	return int64(one.(*APINode).Id), nil
 }
 
 // 生成唯一ID

@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -27,6 +28,9 @@ func NewAPINode() *APINode {
 
 func (this *APINode) Start() {
 	logs.Println("[API]start api node, pid: " + strconv.Itoa(os.Getpid()))
+
+	// 数据库通知启动
+	dbs.NotifyReady()
 
 	// 读取配置
 	config, err := configs.SharedAPIConfig()

@@ -19,7 +19,13 @@ func NewLogDAO() *LogDAO {
 	}).(*LogDAO)
 }
 
-var SharedLogDAO = NewLogDAO()
+var SharedLogDAO *LogDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedLogDAO = NewLogDAO()
+	})
+}
 
 // 创建管理员日志
 func (this *LogDAO) CreateAdminLog(adminId int64, level string, description string, action string, ip string) error {

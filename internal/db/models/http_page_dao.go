@@ -28,7 +28,13 @@ func NewHTTPPageDAO() *HTTPPageDAO {
 	}).(*HTTPPageDAO)
 }
 
-var SharedHTTPPageDAO = NewHTTPPageDAO()
+var SharedHTTPPageDAO *HTTPPageDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPPageDAO = NewHTTPPageDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPPageDAO) Init() {
@@ -120,7 +126,6 @@ func (this *HTTPPageDAO) UpdatePage(pageId int64, statusList []string, url strin
 	op.Url = url
 	op.NewStatus = newStatus
 	_, err = this.Save(op)
-
 
 	return err
 }

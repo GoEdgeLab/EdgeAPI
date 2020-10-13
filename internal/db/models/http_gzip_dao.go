@@ -29,7 +29,13 @@ func NewHTTPGzipDAO() *HTTPGzipDAO {
 	}).(*HTTPGzipDAO)
 }
 
-var SharedHTTPGzipDAO = NewHTTPGzipDAO()
+var SharedHTTPGzipDAO *HTTPGzipDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPGzipDAO = NewHTTPGzipDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPGzipDAO) Init() {

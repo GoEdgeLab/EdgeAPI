@@ -24,7 +24,13 @@ func NewProviderDAO() *ProviderDAO {
 	}).(*ProviderDAO)
 }
 
-var SharedProviderDAO = NewProviderDAO()
+var SharedProviderDAO *ProviderDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedProviderDAO = NewProviderDAO()
+	})
+}
 
 // 启用条目
 func (this *ProviderDAO) EnableProvider(id uint32) (rowsAffected int64, err error) {

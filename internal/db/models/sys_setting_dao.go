@@ -26,7 +26,13 @@ func NewSysSettingDAO() *SysSettingDAO {
 	}).(*SysSettingDAO)
 }
 
-var SharedSysSettingDAO = NewSysSettingDAO()
+var SharedSysSettingDAO *SysSettingDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSysSettingDAO = NewSysSettingDAO()
+	})
+}
 
 // 设置配置
 func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, codeFormatArgs ...interface{}) error {

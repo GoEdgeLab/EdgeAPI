@@ -30,7 +30,13 @@ func NewOriginDAO() *OriginDAO {
 	}).(*OriginDAO)
 }
 
-var SharedOriginDAO = NewOriginDAO()
+var SharedOriginDAO *OriginDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedOriginDAO = NewOriginDAO()
+	})
+}
 
 // 初始化
 func (this *OriginDAO) Init() {

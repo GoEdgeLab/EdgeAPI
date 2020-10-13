@@ -28,7 +28,13 @@ func NewHTTPLocationDAO() *HTTPLocationDAO {
 	}).(*HTTPLocationDAO)
 }
 
-var SharedHTTPLocationDAO = NewHTTPLocationDAO()
+var SharedHTTPLocationDAO *HTTPLocationDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPLocationDAO = NewHTTPLocationDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPLocationDAO) Init() {

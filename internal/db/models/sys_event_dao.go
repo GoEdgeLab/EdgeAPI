@@ -21,7 +21,13 @@ func NewSysEventDAO() *SysEventDAO {
 	}).(*SysEventDAO)
 }
 
-var SharedSysEventDAO = NewSysEventDAO()
+var SharedSysEventDAO *SysEventDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSysEventDAO = NewSysEventDAO()
+	})
+}
 
 // 创建事件
 func (this *SysEventDAO) CreateEvent(event EventInterface) error {

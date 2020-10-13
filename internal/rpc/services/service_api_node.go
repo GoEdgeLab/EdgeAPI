@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -179,4 +180,14 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindEnabledAPINodeResponse{Node: result}, nil
+}
+
+// 获取当前API节点的版本
+func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *pb.FindCurrentAPINodeVersionRequest) (*pb.FindCurrentAPINodeVersionResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindCurrentAPINodeVersionResponse{Version: teaconst.Version}, nil
 }

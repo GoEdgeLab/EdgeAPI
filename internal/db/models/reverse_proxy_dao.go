@@ -28,7 +28,13 @@ func NewReverseProxyDAO() *ReverseProxyDAO {
 	}).(*ReverseProxyDAO)
 }
 
-var SharedReverseProxyDAO = NewReverseProxyDAO()
+var SharedReverseProxyDAO *ReverseProxyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedReverseProxyDAO = NewReverseProxyDAO()
+	})
+}
 
 // 初始化
 func (this *ReverseProxyDAO) Init() {

@@ -26,7 +26,13 @@ func NewNodeClusterDAO() *NodeClusterDAO {
 	}).(*NodeClusterDAO)
 }
 
-var SharedNodeClusterDAO = NewNodeClusterDAO()
+var SharedNodeClusterDAO *NodeClusterDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeClusterDAO = NewNodeClusterDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeClusterDAO) EnableNodeCluster(id int64) error {

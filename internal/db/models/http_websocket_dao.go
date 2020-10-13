@@ -29,7 +29,13 @@ func NewHTTPWebsocketDAO() *HTTPWebsocketDAO {
 	}).(*HTTPWebsocketDAO)
 }
 
-var SharedHTTPWebsocketDAO = NewHTTPWebsocketDAO()
+var SharedHTTPWebsocketDAO *HTTPWebsocketDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPWebsocketDAO = NewHTTPWebsocketDAO()
+	})
+}
 
 // 启用条目
 func (this *HTTPWebsocketDAO) EnableHTTPWebsocket(id int64) error {

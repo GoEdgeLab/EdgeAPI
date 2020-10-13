@@ -25,7 +25,13 @@ func NewNodeLogDAO() *NodeLogDAO {
 	}).(*NodeLogDAO)
 }
 
-var SharedNodeLogDAO = NewNodeLogDAO()
+var SharedNodeLogDAO *NodeLogDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeLogDAO = NewNodeLogDAO()
+	})
+}
 
 // 创建日志
 func (this *NodeLogDAO) CreateLog(nodeRole NodeRole, nodeId int64, level string, tag string, description string, createdAt int64) error {

@@ -28,7 +28,13 @@ func NewNodeLoginDAO() *NodeLoginDAO {
 	}).(*NodeLoginDAO)
 }
 
-var SharedNodeLoginDAO = NewNodeLoginDAO()
+var SharedNodeLoginDAO *NodeLoginDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeLoginDAO = NewNodeLoginDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeLoginDAO) EnableNodeLogin(id uint32) (rowsAffected int64, err error) {

@@ -26,7 +26,13 @@ func NewNodeIPAddressDAO() *NodeIPAddressDAO {
 	}).(*NodeIPAddressDAO)
 }
 
-var SharedNodeIPAddressDAO = NewNodeIPAddressDAO()
+var SharedNodeIPAddressDAO *NodeIPAddressDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeIPAddressDAO = NewNodeIPAddressDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeIPAddressDAO) EnableAddress(id int64) (err error) {

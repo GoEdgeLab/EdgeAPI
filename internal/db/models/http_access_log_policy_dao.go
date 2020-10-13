@@ -27,7 +27,13 @@ func NewHTTPAccessLogPolicyDAO() *HTTPAccessLogPolicyDAO {
 	}).(*HTTPAccessLogPolicyDAO)
 }
 
-var SharedHTTPAccessLogPolicyDAO = NewHTTPAccessLogPolicyDAO()
+var SharedHTTPAccessLogPolicyDAO *HTTPAccessLogPolicyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPAccessLogPolicyDAO = NewHTTPAccessLogPolicyDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPAccessLogPolicyDAO) Init() {

@@ -19,7 +19,13 @@ func NewTCPFirewallPolicyDAO() *TCPFirewallPolicyDAO {
 	}).(*TCPFirewallPolicyDAO)
 }
 
-var SharedTCPFirewallPolicyDAO = NewTCPFirewallPolicyDAO()
+var SharedTCPFirewallPolicyDAO *TCPFirewallPolicyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedTCPFirewallPolicyDAO = NewTCPFirewallPolicyDAO()
+	})
+}
 
 // 初始化
 func (this *TCPFirewallPolicyDAO) Init() {

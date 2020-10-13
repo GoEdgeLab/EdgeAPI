@@ -27,7 +27,13 @@ func NewHTTPRewriteRuleDAO() *HTTPRewriteRuleDAO {
 	}).(*HTTPRewriteRuleDAO)
 }
 
-var SharedHTTPRewriteRuleDAO = NewHTTPRewriteRuleDAO()
+var SharedHTTPRewriteRuleDAO *HTTPRewriteRuleDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPRewriteRuleDAO = NewHTTPRewriteRuleDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPRewriteRuleDAO) Init() {

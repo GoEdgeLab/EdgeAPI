@@ -25,7 +25,9 @@ type HTTPAccessLogDAOWrapper struct {
 
 func init() {
 	initializer := NewDBNodeInitializer()
-	go initializer.Start()
+	dbs.OnReady(func() {
+		go initializer.Start()
+	})
 }
 
 // 获取获取DAO

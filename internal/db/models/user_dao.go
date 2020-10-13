@@ -24,7 +24,13 @@ func NewUserDAO() *UserDAO {
 	}).(*UserDAO)
 }
 
-var SharedUserDAO = NewUserDAO()
+var SharedUserDAO *UserDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedUserDAO = NewUserDAO()
+	})
+}
 
 // 启用条目
 func (this *UserDAO) EnableUser(id uint32) (rowsAffected int64, err error) {

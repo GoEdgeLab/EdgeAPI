@@ -24,7 +24,13 @@ func NewApiTokenDAO() *ApiTokenDAO {
 	}).(*ApiTokenDAO)
 }
 
-var SharedApiTokenDAO = NewApiTokenDAO()
+var SharedApiTokenDAO *ApiTokenDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedApiTokenDAO = NewApiTokenDAO()
+	})
+}
 
 // 启用条目
 func (this *ApiTokenDAO) EnableApiToken(id uint32) (rowsAffected int64, err error) {
@@ -59,6 +65,18 @@ func (this *ApiTokenDAO) FindEnabledApiToken(id uint32) (*ApiToken, error) {
 func (this *ApiTokenDAO) FindEnabledTokenWithNode(nodeId string) (*ApiToken, error) {
 	one, err := this.Query().
 		Attr("nodeId", nodeId).
+		State(ApiTokenStateEnabled).
+		Find()
+	if one != nil {
+		return one.(*ApiToken), nil
+	}
+	return nil, err
+}
+
+// 根据角色获取节点
+func (this *ApiTokenDAO) FindEnabledTokenWithRole(role string) (*ApiToken, error) {
+	one, err := this.Query().
+		Attr("role", role).
 		State(ApiTokenStateEnabled).
 		Find()
 	if one != nil {

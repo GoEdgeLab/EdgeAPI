@@ -27,7 +27,13 @@ func NewHTTPFirewallRuleDAO() *HTTPFirewallRuleDAO {
 	}).(*HTTPFirewallRuleDAO)
 }
 
-var SharedHTTPFirewallRuleDAO = NewHTTPFirewallRuleDAO()
+var SharedHTTPFirewallRuleDAO *HTTPFirewallRuleDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPFirewallRuleDAO = NewHTTPFirewallRuleDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPFirewallRuleDAO) Init() {

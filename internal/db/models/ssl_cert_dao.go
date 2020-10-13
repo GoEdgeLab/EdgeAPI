@@ -29,7 +29,13 @@ func NewSSLCertDAO() *SSLCertDAO {
 	}).(*SSLCertDAO)
 }
 
-var SharedSSLCertDAO = NewSSLCertDAO()
+var SharedSSLCertDAO *SSLCertDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSSLCertDAO = NewSSLCertDAO()
+	})
+}
 
 // 初始化
 func (this *SSLCertDAO) Init() {

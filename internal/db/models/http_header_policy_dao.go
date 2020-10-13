@@ -28,7 +28,13 @@ func NewHTTPHeaderPolicyDAO() *HTTPHeaderPolicyDAO {
 	}).(*HTTPHeaderPolicyDAO)
 }
 
-var SharedHTTPHeaderPolicyDAO = NewHTTPHeaderPolicyDAO()
+var SharedHTTPHeaderPolicyDAO *HTTPHeaderPolicyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPHeaderPolicyDAO = NewHTTPHeaderPolicyDAO()
+	})
+}
 
 // 初始化
 func (this *HTTPHeaderPolicyDAO) Init() {

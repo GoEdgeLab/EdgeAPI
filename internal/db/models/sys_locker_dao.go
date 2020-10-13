@@ -21,7 +21,13 @@ func NewSysLockerDAO() *SysLockerDAO {
 	}).(*SysLockerDAO)
 }
 
-var SharedSysLockerDAO = NewSysLockerDAO()
+var SharedSysLockerDAO *SysLockerDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSysLockerDAO = NewSysLockerDAO()
+	})
+}
 
 // 开锁
 func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {

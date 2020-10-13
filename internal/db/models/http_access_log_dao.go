@@ -20,7 +20,13 @@ import (
 
 type HTTPAccessLogDAO dbs.DAO
 
-var SharedHTTPAccessLogDAO = NewHTTPAccessLogDAO()
+var SharedHTTPAccessLogDAO *HTTPAccessLogDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedHTTPAccessLogDAO = NewHTTPAccessLogDAO()
+	})
+}
 
 func NewHTTPAccessLogDAO() *HTTPAccessLogDAO {
 	return dbs.NewDAO(&HTTPAccessLogDAO{

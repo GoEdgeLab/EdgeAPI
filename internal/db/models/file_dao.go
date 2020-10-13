@@ -27,7 +27,13 @@ func NewFileDAO() *FileDAO {
 	}).(*FileDAO)
 }
 
-var SharedFileDAO = NewFileDAO()
+var SharedFileDAO *FileDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedFileDAO = NewFileDAO()
+	})
+}
 
 // 启用条目
 func (this *FileDAO) EnableFile(id int64) error {

@@ -29,7 +29,13 @@ func NewSSLPolicyDAO() *SSLPolicyDAO {
 	}).(*SSLPolicyDAO)
 }
 
-var SharedSSLPolicyDAO = NewSSLPolicyDAO()
+var SharedSSLPolicyDAO *SSLPolicyDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSSLPolicyDAO = NewSSLPolicyDAO()
+	})
+}
 
 // 初始化
 func (this *SSLPolicyDAO) Init() {

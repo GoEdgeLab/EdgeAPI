@@ -24,7 +24,13 @@ func NewNodeGroupDAO() *NodeGroupDAO {
 	}).(*NodeGroupDAO)
 }
 
-var SharedNodeGroupDAO = NewNodeGroupDAO()
+var SharedNodeGroupDAO *NodeGroupDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedNodeGroupDAO = NewNodeGroupDAO()
+	})
+}
 
 // 启用条目
 func (this *NodeGroupDAO) EnableNodeGroup(id uint32) (rowsAffected int64, err error) {

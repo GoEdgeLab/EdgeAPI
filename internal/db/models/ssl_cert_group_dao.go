@@ -24,7 +24,13 @@ func NewSSLCertGroupDAO() *SSLCertGroupDAO {
 	}).(*SSLCertGroupDAO)
 }
 
-var SharedSSLCertGroupDAO = NewSSLCertGroupDAO()
+var SharedSSLCertGroupDAO *SSLCertGroupDAO
+
+func init() {
+	dbs.OnReady(func() {
+		SharedSSLCertGroupDAO = NewSSLCertGroupDAO()
+	})
+}
 
 // 启用条目
 func (this *SSLCertGroupDAO) EnableSSLCertGroup(id uint32) error {

@@ -28,6 +28,7 @@ const (
 	UserTypeStat     = "stat"
 	UserTypeDNS      = "dns"
 	UserTypeLog      = "log"
+	UserTypeAPI      = "api"
 )
 
 // 校验请求
@@ -51,23 +52,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 	nodeUserId := int64(0)
 	if apiToken == nil {
-		// 我们从节点中获取
-		node, err := models.SharedNodeDAO.FindEnabledNodeWithUniqueId(nodeId)
-		if err != nil {
-			return UserTypeNone, 0, err
-		}
-		if node == nil {
-			return UserTypeNone, 0, err
-		}
-
-		nodeUserId = int64(node.Id)
-		apiToken = &models.ApiToken{
-			Id:     0,
-			NodeId: nodeId,
-			Secret: node.Secret,
-			Role:   "node",
-			State:  1,
-		}
+		return UserTypeNode, 0, errors.New("context: invalid api token")
 	}
 
 	tokens := md.Get("token")

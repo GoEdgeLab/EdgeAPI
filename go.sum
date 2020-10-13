@@ -64,6 +64,8 @@ github.com/iwind/TeaGo v0.0.0-20201009121920-5ab994526a80 h1:GFObMYO7mqeE+2n/4AA
 github.com/iwind/TeaGo v0.0.0-20201009121920-5ab994526a80/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/TeaGo v0.0.0-20201010005321-430e836dee8a h1:sO6uDbQOEe6/tIB3o31vn6eD/JmkKGErKgcOA/Cpb+Q=
 github.com/iwind/TeaGo v0.0.0-20201010005321-430e836dee8a/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
+github.com/iwind/TeaGo v0.0.0-20201013075636-119886e49c04 h1:QXRSB5x9pJFZLC7dCxDx9CRXAx9en1Uk3QdfzC8wMC8=
+github.com/iwind/TeaGo v0.0.0-20201013075636-119886e49c04/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/json-iterator/go v1.1.10 h1:Kz6Cvnvv2wGdaG/V8yMvfkmNiXq9Ya2KUv4rouJJr68=
 github.com/json-iterator/go v1.1.10/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/kr/fs v0.1.0 h1:Jskdu9ieNAYnjxsi0LbQp1ulIKZV1LAFgK1tWhpZgl8=
