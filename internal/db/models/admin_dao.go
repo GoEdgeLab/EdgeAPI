@@ -36,7 +36,7 @@ func init() {
 }
 
 // 启用条目
-func (this *AdminDAO) EnableAdmin(id uint32) (rowsAffected int64, err error) {
+func (this *AdminDAO) EnableAdmin(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", AdminStateEnabled).
@@ -44,7 +44,7 @@ func (this *AdminDAO) EnableAdmin(id uint32) (rowsAffected int64, err error) {
 }
 
 // 禁用条目
-func (this *AdminDAO) DisableAdmin(id uint32) (rowsAffected int64, err error) {
+func (this *AdminDAO) DisableAdmin(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", AdminStateDisabled).
@@ -52,7 +52,7 @@ func (this *AdminDAO) DisableAdmin(id uint32) (rowsAffected int64, err error) {
 }
 
 // 查找启用中的条目
-func (this *AdminDAO) FindEnabledAdmin(id uint32) (*Admin, error) {
+func (this *AdminDAO) FindEnabledAdmin(id int64) (*Admin, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", AdminStateEnabled).
@@ -64,7 +64,7 @@ func (this *AdminDAO) FindEnabledAdmin(id uint32) (*Admin, error) {
 }
 
 // 检查管理员是否存在
-func (this *AdminDAO) ExistEnabledAdmin(adminId int) (bool, error) {
+func (this *AdminDAO) ExistEnabledAdmin(adminId int64) (bool, error) {
 	return this.Query().
 		Pk(adminId).
 		State(AdminStateEnabled).
@@ -123,6 +123,8 @@ func (this *AdminDAO) UpdateAdminPassword(adminId int64, password string) error 
 // 创建管理员
 func (this *AdminDAO) CreateAdmin(username string, password string, fullname string) (int64, error) {
 	op := NewAdminOperator()
+	op.IsOn = true
+	op.State = AdminStateEnabled
 	op.Username = username
 	op.Password = stringutil.Md5(password)
 	op.Fullname = fullname
@@ -131,4 +133,42 @@ func (this *AdminDAO) CreateAdmin(username string, password string, fullname str
 		return 0, err
 	}
 	return types.Int64(op.Id), nil
+}
+
+// 修改管理员个人资料
+func (this *AdminDAO) UpdateAdmin(adminId int64, fullname string) error {
+	if adminId <= 0 {
+		return errors.New("invalid adminId")
+	}
+	op := NewAdminOperator()
+	op.Id = adminId
+	op.Fullname = fullname
+	_, err := this.Save(op)
+	return err
+}
+
+// 检查用户名是否存在
+func (this *AdminDAO) CheckAdminUsername(adminId int64, username string) (bool, error) {
+	query := this.Query().
+		State(AdminStateEnabled).
+		Attr("username", username)
+	if adminId > 0 {
+		query.
+			Where("id!=:id").
+			Param("id", adminId)
+	}
+	return query.Exist()
+}
+
+// 修改管理员登录信息
+func (this *AdminDAO) UpdateAdminLogin(adminId int64, username string, password string) error {
+	if adminId <= 0 {
+		return errors.New("invalid adminId")
+	}
+	op := NewAdminOperator()
+	op.Id = adminId
+	op.Username = username
+	op.Password = stringutil.Md5(password)
+	_, err := this.Save(op)
+	return err
 }

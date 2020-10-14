@@ -9,6 +9,7 @@ type Admin struct {
 	IsSuper   uint8  `field:"isSuper"`   // 是否为超级管理员
 	CreatedAt uint64 `field:"createdAt"` // 创建时间
 	UpdatedAt uint64 `field:"updatedAt"` // 修改时间
+	IsOn      uint8  `field:"isOn"`      // 是否启用
 	State     uint8  `field:"state"`     // 状态
 }
 
@@ -20,6 +21,7 @@ type AdminOperator struct {
 	IsSuper   interface{} // 是否为超级管理员
 	CreatedAt interface{} // 创建时间
 	UpdatedAt interface{} // 修改时间
+	IsOn      interface{} // 是否启用
 	State     interface{} // 状态
 }
 
