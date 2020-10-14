@@ -465,6 +465,16 @@ func (this *NodeDAO) UpdateNodeConnectedAPINodes(nodeId int64, apiNodeIds []int6
 	return err
 }
 
+// 根据UniqueId获取ID
+// TODO 增加缓存
+func (this *NodeDAO) FindEnabledNodeIdWithUniqueId(uniqueId string) (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Attr("uniqueId", uniqueId).
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // 生成唯一ID
 func (this *NodeDAO) genUniqueId() (string, error) {
 	for {

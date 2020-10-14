@@ -96,6 +96,18 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		return UserTypeNone, 0, errors.New("not supported user type: '" + userType + "'")
 	}
 
+	switch apiToken.Role {
+	case UserTypeNode:
+		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nodeId)
+		if err != nil {
+			return UserTypeNode, 0, errors.New("context: " + err.Error())
+		}
+		if nodeIntId <= 0 {
+			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+		}
+		nodeUserId = nodeIntId
+	}
+
 	if nodeUserId > 0 {
 		return t, nodeUserId, nil
 	} else {

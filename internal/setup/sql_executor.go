@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// 安装或升级SQL执行器
 type SQLExecutor struct {
 	dbConfig *dbs.DBConfig
 }
@@ -190,6 +191,9 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 		return err
 	}
 
+	// 检查集群配置
+	err = this.checkCluster(db)
+
 	// 更新版本号
 	err = this.updateVersion(db, teaconst.Version)
 	if err != nil {
@@ -243,6 +247,35 @@ func (this *SQLExecutor) checkAdminNode(db *dbs.DB) error {
 	nodeId := rands.HexString(32)
 	secret := rands.String(32)
 	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role) VALUES (?, ?, ?)", nodeId, secret, "admin")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 检查集群配置
+func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
+	/// 检查是否有集群数字
+	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeNodeClusters")
+	if err != nil {
+		return errors.New("query clusters failed: " + err.Error())
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+
+	col, err := stmt.FindCol(0)
+	if err != nil {
+		return errors.New("query clusters failed: " + err.Error())
+	}
+	count := types.Int(col)
+	if count > 0 {
+		return nil
+	}
+
+	// 创建默认集群
+	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state) VALUES (?, ?, ?)", "默认集群", 1, 1)
 	if err != nil {
 		return err
 	}

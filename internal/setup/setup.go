@@ -134,6 +134,7 @@ func (this *Setup) Run() error {
 			httpConfig.IsOn = true
 			httpConfig.Listen = []*serverconfigs.NetworkAddressConfig{
 				{
+					Protocol:  "https",
 					PortRange: strconv.Itoa(this.config.APINodePort),
 				},
 			}
@@ -148,6 +149,7 @@ func (this *Setup) Run() error {
 			httpsConfig.IsOn = true
 			httpsConfig.Listen = []*serverconfigs.NetworkAddressConfig{
 				{
+					Protocol:  "https",
 					PortRange: strconv.Itoa(this.config.APINodePort),
 				},
 			}
