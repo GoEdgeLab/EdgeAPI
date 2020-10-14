@@ -3,7 +3,7 @@
 function build() {
 	ROOT=$(dirname $0)
 	NAME="edge-api"
-	DIST="../dist/${NAME}"
+	DIST=$ROOT/"../dist/${NAME}"
 	OS=${1}
 	ARCH=${2}
 
@@ -16,16 +16,30 @@ function build() {
 		exit
 	fi
 
-	VERSION_DATA=$(cat ../internal/const/const.go)
-	re="Version[ ]+=[ ]+\"([0-9.]+)\""
-	if [[ $VERSION_DATA =~ $re ]]; then
-		VERSION=${BASH_REMATCH[1]}
-	else
-		echo "could not match version"
+	VERSION=$(lookup-version $ROOT/../internal/const/const.go)
+	ZIP="${NAME}-${OS}-${ARCH}-v${VERSION}.zip"
+
+	# check edge-node
+	NodeVersion=$(lookup-version $ROOT"/../../EdgeNode/internal/const/const.go")
+	echo "building edge-node v${NodeVersion} ..."
+	EDGE_NODE_BUILD_SCRIPT=$ROOT"/../../EdgeNode/build/build.sh"
+	if [ ! -f $EDGE_NODE_BUILD_SCRIPT ]; then
+		echo "unable to find edge-node build script 'EdgeNode/build/build.sh'"
 		exit
 	fi
+	cd $ROOT"/../../EdgeNode/build"
+	echo "=============================="
+	architects=("amd64" "386")
+	for arch in "${architects[@]}"; do
+		./build.sh linux $arch
+	done
+	echo "=============================="
+	cd -
 
-	ZIP="${NAME}-${OS}-${ARCH}-v${VERSION}.zip"
+	rm -f $ROOT/deploy/*.zip
+	for arch in "${architects[@]}"; do
+		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-v${NodeVersion}.zip" $ROOT/deploy/
+	done
 
 	# copy files
 	echo "copying ..."
@@ -35,10 +49,11 @@ function build() {
 		mkdir $DIST/configs
 		mkdir $DIST/logs
 	fi
-	cp configs/api.template.yaml $DIST/configs/
-	cp configs/db.template.yaml $DIST/configs/
-	cp -R deploy $DIST/
-	cp -R installers $DIST/
+	cp $ROOT/configs/api.template.yaml $DIST/configs/
+	cp $ROOT/configs/db.template.yaml $DIST/configs/
+	cp -R $ROOT/deploy $DIST/
+	rm -f $dist/deploy/.gitignore
+	cp -R $ROOT/installers $DIST/
 
 	# building installer
 	echo "building installer ..."
@@ -61,6 +76,19 @@ function build() {
 	cd - || exit
 
 	echo "[done]"
+}
+
+function lookup-version() {
+	FILE=$1
+	VERSION_DATA=$(cat $FILE)
+	re="Version[ ]+=[ ]+\"([0-9.]+)\""
+	if [[ $VERSION_DATA =~ $re ]]; then
+		VERSION=${BASH_REMATCH[1]}
+		echo $VERSION
+	else
+		echo "could not match version"
+		exit
+	fi
 }
 
 build $1 $2
