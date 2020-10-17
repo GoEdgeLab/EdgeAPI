@@ -18,7 +18,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(req.NodeId, req.Name, req.Ip)
+	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(req.NodeId, req.Name, req.Ip, req.CanAccess)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	err = models.SharedNodeIPAddressDAO.UpdateAddress(req.AddressId, req.Name, req.Ip)
+	err = models.SharedNodeIPAddressDAO.UpdateAddress(req.AddressId, req.Name, req.Ip, req.CanAccess)
 	if err != nil {
 		return nil, err
 	}
@@ -109,10 +109,11 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 			Id:          int64(address.Id),
 			NodeId:      int64(address.NodeId),
 			Name:        address.Name,
-			Ip:          address.IP,
+			Ip:          address.Ip,
 			Description: address.Description,
 			State:       int64(address.State),
 			Order:       int64(address.Order),
+			CanAccess:   address.CanAccess == 1,
 		}
 	}
 
@@ -138,10 +139,11 @@ func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx contex
 			Id:          int64(address.Id),
 			NodeId:      int64(address.NodeId),
 			Name:        address.Name,
-			Ip:          address.IP,
+			Ip:          address.Ip,
 			Description: address.Description,
 			State:       int64(address.State),
 			Order:       int64(address.Order),
+			CanAccess:   address.CanAccess == 1,
 		})
 	}
 

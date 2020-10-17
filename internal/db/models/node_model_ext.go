@@ -25,3 +25,4 @@ func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 
 	return status, nil
 }
+

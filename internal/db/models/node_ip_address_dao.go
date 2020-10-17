@@ -85,11 +85,12 @@ func (this *NodeIPAddressDAO) FindAddressName(id int64) (string, error) {
 }
 
 // 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string, canAccess bool) (addressId int64, err error) {
 	op := NewNodeIPAddressOperator()
 	op.NodeId = nodeId
 	op.Name = name
-	op.IP = ip
+	op.Ip = ip
+	op.CanAccess = canAccess
 	op.State = NodeIPAddressStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
@@ -99,7 +100,7 @@ func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string
 }
 
 // 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip string) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip string, canAccess bool) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -107,7 +108,9 @@ func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip str
 	op := NewNodeIPAddressOperator()
 	op.Id = addressId
 	op.Name = name
-	op.IP = ip
+	op.Ip = ip
+	op.CanAccess = canAccess
+	op.State = NodeIPAddressStateEnabled // 恢复状态
 	_, err = this.Save(op)
 	return err
 }

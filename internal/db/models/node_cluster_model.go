@@ -16,6 +16,7 @@ type NodeCluster struct {
 	AutoRegister   uint8  `field:"autoRegister"`   // 是否开启自动注册
 	UniqueId       string `field:"uniqueId"`       // 唯一ID
 	Secret         string `field:"secret"`         // 密钥
+	HealthCheck    string `field:"healthCheck"`    // 健康检查
 }
 
 type NodeClusterOperator struct {
@@ -33,6 +34,7 @@ type NodeClusterOperator struct {
 	AutoRegister   interface{} // 是否开启自动注册
 	UniqueId       interface{} // 唯一ID
 	Secret         interface{} // 密钥
+	HealthCheck    interface{} // 健康检查
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

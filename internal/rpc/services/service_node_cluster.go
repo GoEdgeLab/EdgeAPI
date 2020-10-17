@@ -6,7 +6,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/types"
 	"strconv"
 )
 
@@ -243,4 +245,67 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 	}
 
 	return &pb.ListEnabledNodeClustersResponse{Clusters: result}, nil
+}
+
+// 查找集群的健康检查配置
+func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Context, req *pb.FindNodeClusterHealthCheckConfigRequest) (*pb.FindNodeClusterHealthCheckConfigResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNodeClusterHealthCheckConfigResponse{HealthCheckConfig: configJSON}, nil
+}
+
+// 修改集群健康检查设置
+func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context, req *pb.UpdateNodeClusterHealthCheckRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeClusterDAO.UpdateClusterHealthCheck(req.ClusterId, req.HealthCheckJSON)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.RPCUpdateSuccess()
+}
+
+// 执行健康检查
+func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Context, req *pb.ExecuteNodeClusterHealthCheckRequest) (*pb.ExecuteNodeClusterHealthCheckResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	executor := tasks.NewHealthCheckExecutor(req.ClusterId)
+	results, err := executor.Run()
+	if err != nil {
+		return nil, err
+	}
+	pbResults := []*pb.ExecuteNodeClusterHealthCheckResponse_Result{}
+	for _, result := range results {
+		pbResults = append(pbResults, &pb.ExecuteNodeClusterHealthCheckResponse_Result{
+			Node: &pb.Node{
+				Id:   int64(result.Node.Id),
+				Name: result.Node.Name,
+			},
+			NodeAddr: result.NodeAddr,
+			IsOk:     result.IsOk,
+			Error:    result.Error,
+			CostMs:   types.Float32(result.CostMs),
+		})
+	}
+	return &pb.ExecuteNodeClusterHealthCheckResponse{Results: pbResults}, nil
 }

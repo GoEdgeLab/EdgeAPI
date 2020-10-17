@@ -3,11 +3,13 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
@@ -212,6 +214,39 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(clusterId int64) (res
 		result = append(result, addrs...)
 	}
 	return result, nil
+}
+
+// 查找健康检查设置
+func (this *NodeClusterDAO) FindClusterHealthCheckConfig(clusterId int64) (*serverconfigs.HealthCheckConfig, error) {
+	col, err := this.Query().
+		Pk(clusterId).
+		Result("healthCheck").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(col) == 0 || col == "null" {
+		return nil, nil
+	}
+
+	config := &serverconfigs.HealthCheckConfig{}
+	err = json.Unmarshal([]byte(col), config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// 修改健康检查设置
+func (this *NodeClusterDAO) UpdateClusterHealthCheck(clusterId int64, healthCheckJSON []byte) error {
+	if clusterId <= 0 {
+		return errors.New("invalid clusterId '" + strconv.FormatInt(clusterId, 10) + "'")
+	}
+	op := NewNodeClusterOperator()
+	op.Id = clusterId
+	op.HealthCheck = healthCheckJSON
+	_, err := this.Save(op)
+	return err
 }
 
 // 生成唯一ID
