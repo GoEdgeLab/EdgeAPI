@@ -2,9 +2,12 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"strconv"
 )
 
 type NodeClusterService struct {
@@ -77,13 +80,66 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		CreatedAt:  int64(cluster.CreatedAt),
 		InstallDir: cluster.InstallDir,
 		GrantId:    int64(cluster.GrantId),
+		UniqueId:   cluster.UniqueId,
+		Secret:     cluster.Secret,
 	}}, nil
+}
+
+// 查找集群的API节点信息
+func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context, req *pb.FindAPINodesWithNodeClusterRequest) (*pb.FindAPINodesWithNodeClusterResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
+		return nil, errors.New("can not find cluster with id '" + strconv.FormatInt(req.ClusterId, 10) + "'")
+	}
+
+	result := &pb.FindAPINodesWithNodeClusterResponse{}
+	result.UseAllAPINodes = cluster.UseAllAPINodes == 1
+
+	apiNodeIds := []int64{}
+	if len(cluster.ApiNodes) > 0 && cluster.ApiNodes != "null" {
+		err = json.Unmarshal([]byte(cluster.ApiNodes), &apiNodeIds)
+		if err != nil {
+			return nil, err
+		}
+		if len(apiNodeIds) > 0 {
+			apiNodes := []*pb.APINode{}
+			for _, apiNodeId := range apiNodeIds {
+				apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINode(apiNodeId)
+				if err != nil {
+					return nil, err
+				}
+				apiNodeAddrs, err := apiNode.DecodeAccessAddrStrings()
+				if err != nil {
+					return nil, err
+				}
+				apiNodes = append(apiNodes, &pb.APINode{
+					Id:          int64(apiNode.Id),
+					IsOn:        apiNode.IsOn == 1,
+					ClusterId:   int64(apiNode.ClusterId),
+					Name:        apiNode.Name,
+					Description: apiNode.Description,
+					AccessAddrs: apiNodeAddrs,
+				})
+			}
+			result.ApiNodes = apiNodes
+		}
+	}
+
+	return result, nil
 }
 
 // 查找所有可用的集群
 func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, req *pb.FindAllEnabledNodeClustersRequest) (*pb.FindAllEnabledNodeClustersResponse, error) {
-	_ = req
-
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -100,6 +156,8 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 			Id:        int64(cluster.Id),
 			Name:      cluster.Name,
 			CreatedAt: int64(cluster.CreatedAt),
+			UniqueId:  cluster.UniqueId,
+			Secret:    cluster.Secret,
 		})
 	}
 
@@ -137,6 +195,8 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 			Id:        int64(cluster.Id),
 			Name:      cluster.Name,
 			CreatedAt: int64(cluster.CreatedAt),
+			UniqueId:  cluster.UniqueId,
+			Secret:    cluster.Secret,
 		})
 	}
 	return &pb.FindAllChangedNodeClustersResponse{Clusters: result}, nil
@@ -177,6 +237,8 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			CreatedAt:  int64(cluster.CreatedAt),
 			GrantId:    int64(cluster.GrantId),
 			InstallDir: cluster.InstallDir,
+			UniqueId:   cluster.UniqueId,
+			Secret:     cluster.Secret,
 		})
 	}
 

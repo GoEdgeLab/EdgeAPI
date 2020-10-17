@@ -13,6 +13,9 @@ type NodeCluster struct {
 	CreatedAt      uint64 `field:"createdAt"`      // 创建时间
 	GrantId        uint32 `field:"grantId"`        // 默认认证方式
 	State          uint8  `field:"state"`          // 状态
+	AutoRegister   uint8  `field:"autoRegister"`   // 是否开启自动注册
+	UniqueId       string `field:"uniqueId"`       // 唯一ID
+	Secret         string `field:"secret"`         // 密钥
 }
 
 type NodeClusterOperator struct {
@@ -27,6 +30,9 @@ type NodeClusterOperator struct {
 	CreatedAt      interface{} // 创建时间
 	GrantId        interface{} // 默认认证方式
 	State          interface{} // 状态
+	AutoRegister   interface{} // 是否开启自动注册
+	UniqueId       interface{} // 唯一ID
+	Secret         interface{} // 密钥
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

@@ -24,6 +24,7 @@ const (
 	UserTypeUser     = "user"
 	UserTypeProvider = "provider"
 	UserTypeNode     = "node"
+	UserTypeCluster  = "cluster"
 	UserTypeMonitor  = "monitor"
 	UserTypeStat     = "stat"
 	UserTypeDNS      = "dns"
@@ -52,7 +53,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 	nodeUserId := int64(0)
 	if apiToken == nil {
-		return UserTypeNode, 0, errors.New("context: invalid api token")
+		return UserTypeNode, 0, errors.New("context: can not find api token for node '" + nodeId + "'")
 	}
 
 	tokens := md.Get("token")
@@ -106,6 +107,15 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
 		}
 		nodeUserId = nodeIntId
+	case UserTypeCluster:
+		clusterId, err := models.SharedNodeClusterDAO.FindEnabledClusterIdWithUniqueId(nodeId)
+		if err != nil {
+			return UserTypeCluster, 0, errors.New("context: " + err.Error())
+		}
+		if clusterId <= 0 {
+			return UserTypeCluster, 0, errors.New("context: not found cluster with id '" + nodeId + "'")
+		}
+		nodeUserId = clusterId
 	}
 
 	if nodeUserId > 0 {

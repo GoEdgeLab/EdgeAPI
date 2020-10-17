@@ -12,4 +12,5 @@ const (
 	NodeRoleDNS      NodeRole = "dns"
 	NodeRoleMonitor  NodeRole = "monitor"
 	NodeRoleNode     NodeRole = "node"
+	NodeRoleCluster  NodeRole = "cluster"
 )

@@ -1,10 +1,12 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -52,7 +54,7 @@ func (this *NodeClusterDAO) DisableNodeCluster(id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// 查找集群
 func (this *NodeClusterDAO) FindEnabledNodeCluster(id int64) (*NodeCluster, error) {
 	result, err := this.Query().
 		Pk(id).
@@ -62,6 +64,16 @@ func (this *NodeClusterDAO) FindEnabledNodeCluster(id int64) (*NodeCluster, erro
 		return nil, err
 	}
 	return result.(*NodeCluster), err
+}
+
+// 根据UniqueId获取ID
+// TODO 增加缓存
+func (this *NodeClusterDAO) FindEnabledClusterIdWithUniqueId(uniqueId string) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("uniqueId", uniqueId).
+		ResultPk().
+		FindInt64Col(0)
 }
 
 // 根据主键查找名称
@@ -85,12 +97,25 @@ func (this *NodeClusterDAO) FindAllEnableClusters() (result []*NodeCluster, err 
 
 // 创建集群
 func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir string) (clusterId int64, err error) {
+	uniqueId, err := this.genUniqueId()
+	if err != nil {
+		return 0, err
+	}
+
+	secret := rands.String(32)
+	err = SharedApiTokenDAO.CreateAPIToken(uniqueId, secret, NodeRoleCluster)
+	if err != nil {
+		return 0, err
+	}
+
 	op := NewNodeClusterOperator()
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
+	op.UniqueId = uniqueId
+	op.Secret = secret
 	op.State = NodeClusterStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
@@ -128,6 +153,80 @@ func (this *NodeClusterDAO) ListEnabledClusters(offset, size int64) (result []*N
 		Offset(offset).
 		Limit(size).
 		Slice(&result).
+		DescPk().
 		FindAll()
 	return
+}
+
+// 查找所有API节点地址
+func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(clusterId int64) (result []string, err error) {
+	one, err := this.Query().
+		Pk(clusterId).
+		Result("useAllAPINodes", "apiNodes").
+		Find()
+	if err != nil {
+		return nil, err
+	}
+	if one == nil {
+		return nil, nil
+	}
+	cluster := one.(*NodeCluster)
+	if cluster.UseAllAPINodes == 1 {
+		apiNodes, err := SharedAPINodeDAO.FindAllEnabledAPINodes()
+		if err != nil {
+			return nil, err
+		}
+		for _, apiNode := range apiNodes {
+			if apiNode.IsOn != 1 {
+				continue
+			}
+			addrs, err := apiNode.DecodeAccessAddrStrings()
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, addrs...)
+		}
+		return result, nil
+	}
+
+	apiNodeIds := []int64{}
+	if !IsNotNull(cluster.ApiNodes) {
+		return
+	}
+	err = json.Unmarshal([]byte(cluster.ApiNodes), &apiNodeIds)
+	if err != nil {
+		return nil, err
+	}
+	for _, apiNodeId := range apiNodeIds {
+		apiNode, err := SharedAPINodeDAO.FindEnabledAPINode(apiNodeId)
+		if err != nil {
+			return nil, err
+		}
+		if apiNode == nil || apiNode.IsOn != 1 {
+			continue
+		}
+		addrs, err := apiNode.DecodeAccessAddrStrings()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, addrs...)
+	}
+	return result, nil
+}
+
+// 生成唯一ID
+func (this *NodeClusterDAO) genUniqueId() (string, error) {
+	for {
+		uniqueId := rands.HexString(32)
+		ok, err := this.Query().
+			Attr("uniqueId", uniqueId).
+			Exist()
+		if err != nil {
+			return "", err
+		}
+		if ok {
+			continue
+		}
+		return uniqueId, nil
+	}
 }

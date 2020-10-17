@@ -42,13 +42,52 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 	}, nil
 }
 
+// 注册集群节点
+func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.RegisterClusterNodeRequest) (*pb.RegisterClusterNodeResponse, error) {
+	// 校验请求
+	_, clusterId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeCluster)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedNodeDAO.UpdateNodeIsInstalled(nodeId, true)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, errors.New("can not find node after creating")
+	}
+
+	// 获取集群可以使用的所有API节点
+	apiAddrs, err := models.SharedNodeClusterDAO.FindAllAPINodeAddrsWithCluster(clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.RegisterClusterNodeResponse{
+		UniqueId:  node.UniqueId,
+		Secret:    node.Secret,
+		Endpoints: apiAddrs,
+	}, nil
+}
+
 // 计算节点数量
 func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.CountAllEnabledNodesResponse, error) {
-	_ = req
+	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
+
 	count, err := models.SharedNodeDAO.CountAllEnabledNodes()
 	if err != nil {
 		return nil, err
