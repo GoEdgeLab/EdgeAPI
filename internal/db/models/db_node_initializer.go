@@ -156,7 +156,7 @@ func (this *DBNodeInitializer) loop() error {
 	accessLogLocker.Lock()
 	closingDbs := []*dbs.DB{}
 	for nodeId, db := range accessLogDBMapping {
-		if !this.containsInt64(nodeIds, nodeId) {
+		if !lists.ContainsInt64(nodeIds, nodeId) {
 			closingDbs = append(closingDbs, db)
 			delete(accessLogDBMapping, nodeId)
 			delete(accessLogDAOMapping, nodeId)
@@ -249,14 +249,4 @@ func (this *DBNodeInitializer) loop() error {
 	}
 
 	return nil
-}
-
-// 判断是否包含某数字
-func (this *DBNodeInitializer) containsInt64(values []int64, value int64) bool {
-	for _, v := range values {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }

@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
 )
@@ -548,7 +549,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]i
 
 			// 如果非Location
 			if locationId == 0 {
-				if !this.containsInt64(result, webId) {
+				if !lists.ContainsInt64(result, webId) {
 					result = append(result, webId)
 				}
 				break
@@ -592,7 +593,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId i
 
 			// 如果非Location
 			if locationId == 0 {
-				if !this.containsInt64(result, webId) {
+				if !lists.ContainsInt64(result, webId) {
 					result = append(result, webId)
 				}
 				break
@@ -620,14 +621,4 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(locationId int64) (webId 
 		Where(`JSON_CONTAINS(locations, '{"locationId": ` + strconv.FormatInt(locationId, 10) + ` }')`).
 		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
 		FindInt64Col(0)
-}
-
-// 判断slice是否包含某个int64值
-func (this *HTTPWebDAO) containsInt64(values []int64, value int64) bool {
-	for _, v := range values {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -90,6 +91,58 @@ func (this *MessageDAO) DeleteMessagesBeforeDay(dayTime time.Time) error {
 		Where("day<:day").
 		Param("day", day).
 		Delete()
+	return err
+}
+
+// 计算未读消息数量
+func (this *MessageDAO) CountUnreadMessages() (int64, error) {
+	return this.Query().
+		Attr("isRead", false).
+		Count()
+}
+
+// 列出单页未读消息
+func (this *MessageDAO) ListUnreadMessages(offset int64, size int64) (result []*Message, err error) {
+	_, err = this.Query().
+		Attr("isRead", false).
+		Offset(offset).
+		Limit(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 设置消息已读状态
+func (this *MessageDAO) UpdateMessageRead(messageId int64, b bool) error {
+	if messageId <= 0 {
+		return errors.New("invalid messageId")
+	}
+	op := NewMessageOperator()
+	op.Id = messageId
+	op.IsRead = b
+	_, err := this.Save(op)
+	return err
+}
+
+// 设置一组消息为已读状态
+func (this *MessageDAO) UpdateMessagesRead(messageIds []int64, b bool) error {
+	// 这里我们一个一个更改，因为In语句不容易Prepare，且效率不高
+	for _, messageId := range messageIds {
+		err := this.UpdateMessageRead(messageId, b)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// 设置所有消息为已读
+func (this *MessageDAO) UpdateAllMessagesRead() error {
+	_, err := this.Query().
+		Attr("isRead", false).
+		Set("isRead", true).
+		Update()
 	return err
 }
 
