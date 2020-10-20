@@ -3,7 +3,7 @@ package tasks
 import "testing"
 
 func TestNodeLogCleaner_loop(t *testing.T) {
-	cleaner := &NodeLogCleaner{}
+	cleaner := &NodeLogCleanerTask{}
 	err := cleaner.loop()
 	if err != nil {
 		t.Fatal(err)

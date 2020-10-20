@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 type SysSettingDAO dbs.DAO
@@ -80,13 +81,29 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 }
 
 // 读取配置
-func (this *SysSettingDAO) ReadSetting(code string, args ...interface{}) (valueJSON []byte, err error) {
-	if len(args) > 0 {
-		code = fmt.Sprintf(code, args...)
+func (this *SysSettingDAO) ReadSetting(code string, codeFormatArgs ...interface{}) (valueJSON []byte, err error) {
+	if len(codeFormatArgs) > 0 {
+		code = fmt.Sprintf(code, codeFormatArgs...)
 	}
 	col, err := this.Query().
 		Attr("code", code).
 		Result("value").
 		FindStringCol("")
 	return []byte(col), err
+}
+
+// 对比配置中的数字大小
+func (this *SysSettingDAO) CompareInt64Setting(code string, anotherValue int64) (int8, error) {
+	valueJSON, err := this.ReadSetting(code)
+	if err != nil {
+		return 0, err
+	}
+	value := types.Int64(string(valueJSON))
+	if value > anotherValue {
+		return 1, nil
+	}
+	if value < anotherValue {
+		return -1, nil
+	}
+	return 0, nil
 }

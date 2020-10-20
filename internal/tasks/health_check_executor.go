@@ -24,7 +24,7 @@ func NewHealthCheckExecutor(clusterId int64) *HealthCheckExecutor {
 }
 
 func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
-	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(this.clusterId)
+	cluster, err := models.NewNodeClusterDAO().FindEnabledNodeCluster(this.clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	}
 
 	results := []*HealthCheckResult{}
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(this.clusterId)
+	nodes, err := models.NewNodeDAO().FindAllEnabledNodesWithClusterId(this.clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			Node: node,
 		}
 
-		addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(int64(node.Id))
+		addresses, err := models.NewNodeIPAddressDAO().FindAllEnabledAddressesWithNode(int64(node.Id))
 		if err != nil {
 			return nil, err
 		}

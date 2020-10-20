@@ -2,26 +2,29 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
-	go NewNodeLogCleaner().Start()
+	dbs.OnReady(func() {
+		go NewNodeLogCleanerTask().Start()
+	})
 }
 
 // 清理节点日志的工具
-type NodeLogCleaner struct {
+type NodeLogCleanerTask struct {
 	duration time.Duration
 }
 
-func NewNodeLogCleaner() *NodeLogCleaner {
-	return &NodeLogCleaner{
+func NewNodeLogCleanerTask() *NodeLogCleanerTask {
+	return &NodeLogCleanerTask{
 		duration: 24 * time.Hour,
 	}
 }
 
-func (this *NodeLogCleaner) Start() {
+func (this *NodeLogCleanerTask) Start() {
 	ticker := time.NewTicker(this.duration)
 	for range ticker.C {
 		err := this.loop()
@@ -31,7 +34,7 @@ func (this *NodeLogCleaner) Start() {
 	}
 }
 
-func (this *NodeLogCleaner) loop() error {
+func (this *NodeLogCleanerTask) loop() error {
 	// TODO 30天这个数值改成可以设置
 	return models.SharedNodeLogDAO.DeleteExpiredLogs(30)
 }

@@ -2,13 +2,16 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
-	looper := NewEventLooper()
-	go looper.Start()
+	dbs.OnReady(func() {
+		looper := NewEventLooper()
+		go looper.Start()
+	})
 }
 
 type EventLooper struct {
