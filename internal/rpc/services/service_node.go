@@ -428,3 +428,56 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 
 	return rpcutils.RPCUpdateSuccess()
 }
+
+// 计算使用某个认证的节点数量
+func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodesWithGrantIdRequest) (*pb.CountAllEnabledNodesWithGrantIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGrantId(req.GrantId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledNodesWithGrantIdResponse{Count: count}, nil
+}
+
+// 查找使用某个认证的所有节点
+func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req *pb.FindAllEnabledNodesWithGrantIdRequest) (*pb.FindAllEnabledNodesWithGrantIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithGrantId(req.GrantId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.Node{}
+	for _, node := range nodes {
+		// 集群信息
+		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(node.ClusterId))
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, &pb.Node{
+			Id:          int64(node.Id),
+			Name:        node.Name,
+			Version:     int64(node.Version),
+			IsInstalled: node.IsInstalled == 1,
+			Status:      node.Status,
+			Cluster: &pb.NodeCluster{
+				Id:   int64(node.ClusterId),
+				Name: clusterName,
+			},
+			IsOn: node.IsOn == 1,
+		})
+	}
+
+	return &pb.FindAllEnabledNodesWithGrantIdResponse{Nodes: result}, nil
+}

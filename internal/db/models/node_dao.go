@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
@@ -300,6 +301,7 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(clusterId int64) (result 
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
 		Attr("isOn", true). // 只监控启用的节点
+		Attr("isInstalled", true). // 只监控已经安装的节点
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
 		Slice(&result).
 		FindAll()
@@ -499,6 +501,27 @@ func (this *NodeDAO) FindEnabledNodeIdWithUniqueId(uniqueId string) (int64, erro
 		Attr("uniqueId", uniqueId).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// 计算使用某个认证的节点数量
+func (this *NodeDAO) CountAllEnabledNodesWithGrantId(grantId int64) (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Where("id IN (SELECT nodeId FROM edgeNodeLogins WHERE type='ssh' AND JSON_CONTAINS(params, :grantParam))").
+		Param("grantParam", string(maps.Map{"grantId": grantId}.AsJSON())).
+		Count()
+}
+
+// 查找使用某个认证的所有节点
+func (this *NodeDAO) FindAllEnabledNodesWithGrantId(grantId int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Where("id IN (SELECT nodeId FROM edgeNodeLogins WHERE type='ssh' AND JSON_CONTAINS(params, :grantParam))").
+		Param("grantParam", string(maps.Map{"grantId": grantId}.AsJSON())).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
 }
 
 // 生成唯一ID

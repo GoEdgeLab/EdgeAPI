@@ -309,3 +309,44 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 	}
 	return &pb.ExecuteNodeClusterHealthCheckResponse{Results: pbResults}, nil
 }
+
+// 计算使用某个认证的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithGrantIdRequest) (*pb.CountAllEnabledNodeClustersWithGrantIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithGrantId(req.GrantId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledNodeClustersWithGrantIdResponse{Count: count}, nil
+}
+
+// 查找使用某个认证的所有集群
+func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithGrantIdRequest) (*pb.FindAllEnabledNodeClustersWithGrantIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithGrantId(req.GrantId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.NodeCluster{}
+	for _, cluster := range clusters {
+		result = append(result, &pb.NodeCluster{
+			Id:        int64(cluster.Id),
+			Name:      cluster.Name,
+			CreatedAt: int64(cluster.CreatedAt),
+			UniqueId:  cluster.UniqueId,
+			Secret:    cluster.Secret,
+		})
+	}
+	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{Clusters: result}, nil
+}

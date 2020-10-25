@@ -85,6 +85,8 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 		}
 	}
 
+	// TODO 检查恢复连接
+
 	// 检查CPU、内存、磁盘不足节点，而且离线的节点不再重复提示
 	// TODO 需要实现
 

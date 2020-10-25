@@ -249,6 +249,25 @@ func (this *NodeClusterDAO) UpdateClusterHealthCheck(clusterId int64, healthChec
 	return err
 }
 
+// 计算使用某个认证的集群数量
+func (this *NodeClusterDAO) CountAllEnabledClustersWithGrantId(grantId int64) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("grantId", grantId).
+		Count()
+}
+
+// 获取使用某个认证的所有集群
+func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(grantId int64) (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("grantId", grantId).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
+}
+
 // 生成唯一ID
 func (this *NodeClusterDAO) genUniqueId() (string, error) {
 	for {
