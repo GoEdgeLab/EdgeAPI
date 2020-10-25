@@ -46,7 +46,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 }
 
 // 禁用集群
-func (this *NodeClusterService) DisableNodeCluster(ctx context.Context, req *pb.DisableNodeClusterRequest) (*pb.DisableNodeClusterResponse, error) {
+func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.DeleteNodeClusterRequest) (*pb.RPCDeleteSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (this *NodeClusterService) DisableNodeCluster(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	return &pb.DisableNodeClusterResponse{}, nil
+	return rpcutils.RPCDeleteSuccess()
 }
 
 // 查找单个集群

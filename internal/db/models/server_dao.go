@@ -729,6 +729,14 @@ func (this *ServerDAO) FindAllEnabledServersWithWebIds(webIds []int64) (result [
 	return
 }
 
+// 计算使用某个集群的所有服务数量
+func (this *ServerDAO) CountAllEnabledServersWithNodeClusterId(clusterId int64) (int64, error) {
+	return this.Query().
+		State(ServerStateEnabled).
+		Attr("clusterId", clusterId).
+		Count()
+}
+
 // 创建事件
 func (this *ServerDAO) createEvent() error {
 	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())

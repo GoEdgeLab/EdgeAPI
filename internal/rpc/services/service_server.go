@@ -718,3 +718,18 @@ func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx co
 	}
 	return &pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse{Count: countServers}, nil
 }
+
+// 计算运行在某个集群上的所有服务数量
+func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.CountAllEnabledServersWithNodeClusterIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedServerDAO.CountAllEnabledServersWithNodeClusterId(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledServersWithNodeClusterIdResponse{Count: count}, nil
+}
