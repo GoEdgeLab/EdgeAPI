@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"time"
 )
 
@@ -26,3 +27,15 @@ func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 	return status, nil
 }
 
+// 节点状态
+func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
+	if len(this.Status) == 0 || this.Status == "null" {
+		return nil, nil
+	}
+	status := &nodeconfigs.NodeStatus{}
+	err := json.Unmarshal([]byte(this.Status), status)
+	if err != nil {
+		return nil, err
+	}
+	return status, nil
+}

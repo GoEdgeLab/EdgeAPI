@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
@@ -135,6 +136,12 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	for {
 		req, err := server.Recv()
 		if err != nil {
+			// 修改节点状态
+			err1 := models.SharedNodeDAO.UpdateNodeIsActive(nodeId, false)
+			if err1 != nil {
+				logs.Println(err1.Error())
+			}
+
 			return err
 		}
 

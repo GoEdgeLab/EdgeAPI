@@ -25,6 +25,7 @@ type MessageType = string
 
 const (
 	MessageTypeHealthCheckFail MessageType = "HealthCheckFail"
+	MessageTypeNodeInactive    MessageType = "NodeInactive"
 )
 
 type MessageDAO dbs.DAO
@@ -81,6 +82,12 @@ func (this *MessageDAO) FindEnabledMessage(id int64) (*Message, error) {
 // 创建集群消息
 func (this *MessageDAO) CreateClusterMessage(clusterId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
 	_, err := this.createMessage(clusterId, 0, messageType, level, body, paramsJSON)
+	return err
+}
+
+// 创建节点消息
+func (this *MessageDAO) CreateNodeMessage(clusterId int64, nodeId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
+	_, err := this.createMessage(clusterId, nodeId, messageType, level, body, paramsJSON)
 	return err
 }
 

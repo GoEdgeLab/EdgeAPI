@@ -19,6 +19,7 @@ func init() {
 	})
 }
 
+// 节点健康检查任务
 type HealthCheckTask struct {
 	tasksMap map[int64]*HealthCheckClusterTask // taskId => task
 }

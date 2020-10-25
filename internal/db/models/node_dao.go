@@ -294,6 +294,18 @@ func (this *NodeDAO) FindAllEnabledNodesWithClusterId(clusterId int64) (result [
 	return
 }
 
+// 取得一个集群离线的节点
+func (this *NodeDAO) FindAllInactiveNodesWithClusterId(clusterId int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isOn", true). // 只监控启用的节点
+		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 计算节点数量
 func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (int64, error) {
 	query := this.Query()
@@ -332,6 +344,20 @@ func (this *NodeDAO) UpdateNodeStatus(nodeId int64, statusJSON []byte) error {
 	_, err := this.Query().
 		Pk(nodeId).
 		Set("status", string(statusJSON)).
+		Update()
+	return err
+}
+
+// 更改节点在线状态
+func (this *NodeDAO) UpdateNodeIsActive(nodeId int64, isActive bool) error {
+	b := "true"
+	if !isActive {
+		b = "false"
+	}
+	_, err := this.Query().
+		Pk(nodeId).
+		Where("status IS NOT NULL").
+		Set("status", dbs.SQL("JSON_SET(status, '$.isActive', "+b+")")).
 		Update()
 	return err
 }
