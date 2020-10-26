@@ -376,21 +376,33 @@ func (this *NodeDAO) UpdateNodeIsInstalled(nodeId int64, isInstalled bool) error
 
 // 查询节点的安装状态
 func (this *NodeDAO) FindNodeInstallStatus(nodeId int64) (*NodeInstallStatus, error) {
-	installStatus, err := this.Query().
+	node, err := this.Query().
 		Pk(nodeId).
-		Result("installStatus").
-		FindStringCol("")
+		Result("installStatus", "isInstalled").
+		Find()
 	if err != nil {
 		return nil, err
 	}
+	if node == nil {
+		return nil, errors.New("not found")
+	}
 
+	installStatus := node.(*Node).InstallStatus
+	isInstalled := node.(*Node).IsInstalled == 1
 	if len(installStatus) == 0 {
 		return NewNodeInstallStatus(), nil
 	}
 
 	status := &NodeInstallStatus{}
 	err = json.Unmarshal([]byte(installStatus), status)
-	return status, err
+	if err != nil {
+		return nil, err
+	}
+	if isInstalled {
+		status.IsFinished = true
+		status.IsOk = true
+	}
+	return status, nil
 }
 
 // 修改节点的安装状态
@@ -520,6 +532,18 @@ func (this *NodeDAO) FindAllEnabledNodesWithGrantId(grantId int64) (result []*No
 		Param("grantParam", string(maps.Map{"grantId": grantId}.AsJSON())).
 		Slice(&result).
 		DescPk().
+		FindAll()
+	return
+}
+
+// 查找所有未安装的节点
+func (this *NodeDAO) FindAllNotInstalledNodesWithClusterId(clusterId int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isInstalled", false).
+		DescPk().
+		Slice(&result).
 		FindAll()
 	return
 }

@@ -139,6 +139,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 				IsFinished: installStatus.IsFinished,
 				IsOk:       installStatus.IsOk,
 				Error:      installStatus.Error,
+				ErrorCode:  installStatus.ErrorCode,
 				UpdatedAt:  installStatus.UpdatedAt,
 			}
 		}
@@ -295,6 +296,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			IsFinished: installStatus.IsFinished,
 			IsOk:       installStatus.IsOk,
 			Error:      installStatus.Error,
+			ErrorCode:  installStatus.ErrorCode,
 			UpdatedAt:  installStatus.UpdatedAt,
 		}
 	}
@@ -480,4 +482,132 @@ func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req
 	}
 
 	return &pb.FindAllEnabledNodesWithGrantIdResponse{Nodes: result}, nil
+}
+
+// 列出所有未安装的节点
+func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Context, req *pb.FindAllNotInstalledNodesWithClusterIdRequest) (*pb.FindAllNotInstalledNodesWithClusterIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes, err := models.SharedNodeDAO.FindAllNotInstalledNodesWithClusterId(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.Node{}
+	for _, node := range nodes {
+		// 认证信息
+		login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(int64(node.Id))
+		if err != nil {
+			return nil, err
+		}
+		var pbLogin *pb.NodeLogin = nil
+		if login != nil {
+			pbLogin = &pb.NodeLogin{
+				Id:     int64(login.Id),
+				Name:   login.Name,
+				Type:   login.Type,
+				Params: []byte(login.Params),
+			}
+		}
+
+		// IP信息
+		addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(int64(node.Id))
+		if err != nil {
+			return nil, err
+		}
+
+		pbAddresses := []*pb.NodeIPAddress{}
+		for _, address := range addresses {
+			pbAddresses = append(pbAddresses, &pb.NodeIPAddress{
+				Id:          int64(address.Id),
+				NodeId:      int64(address.NodeId),
+				Name:        address.Name,
+				Ip:          address.Ip,
+				Description: address.Description,
+				State:       int64(address.State),
+				Order:       int64(address.Order),
+				CanAccess:   address.CanAccess == 1,
+			})
+		}
+
+		// 安装信息
+		installStatus, err := node.DecodeInstallStatus()
+		if err != nil {
+			return nil, err
+		}
+		pbInstallStatus := &pb.NodeInstallStatus{}
+		if installStatus != nil {
+			pbInstallStatus = &pb.NodeInstallStatus{
+				IsRunning:  installStatus.IsRunning,
+				IsFinished: installStatus.IsFinished,
+				IsOk:       installStatus.IsOk,
+				Error:      installStatus.Error,
+				ErrorCode:  installStatus.ErrorCode,
+				UpdatedAt:  installStatus.UpdatedAt,
+			}
+		}
+
+		result = append(result, &pb.Node{
+			Id:            int64(node.Id),
+			Name:          node.Name,
+			Version:       int64(node.Version),
+			IsInstalled:   node.IsInstalled == 1,
+			Status:        node.Status,
+			IsOn:          node.IsOn == 1,
+			Login:         pbLogin,
+			IpAddresses:   pbAddresses,
+			InstallStatus: pbInstallStatus,
+		})
+	}
+	return &pb.FindAllNotInstalledNodesWithClusterIdResponse{Nodes: result}, nil
+}
+
+// 读取节点安装状态
+func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.FindNodeInstallStatusRequest) (*pb.FindNodeInstallStatusResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	installStatus, err := models.SharedNodeDAO.FindNodeInstallStatus(req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if installStatus == nil {
+		return &pb.FindNodeInstallStatusResponse{InstallStatus: nil}, nil
+	}
+
+	pbInstallStatus := &pb.NodeInstallStatus{
+		IsRunning:  installStatus.IsRunning,
+		IsFinished: installStatus.IsFinished,
+		IsOk:       installStatus.IsOk,
+		Error:      installStatus.Error,
+		ErrorCode:  installStatus.ErrorCode,
+		UpdatedAt:  installStatus.UpdatedAt,
+	}
+	return &pb.FindNodeInstallStatusResponse{InstallStatus: pbInstallStatus}, nil
+}
+
+// 修改节点登录信息
+func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNodeLoginRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Login.Id <= 0 {
+		_, err := models.SharedNodeLoginDAO.CreateNodeLogin(req.NodeId, req.Login.Name, req.Login.Type, req.Login.Params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedNodeLoginDAO.UpdateNodeLogin(req.Login.Id, req.Login.Name, req.Login.Type, req.Login.Params)
+
+	return rpcutils.RPCUpdateSuccess()
 }

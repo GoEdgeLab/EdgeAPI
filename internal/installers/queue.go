@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/logs"
-	"strconv"
 	"time"
 )
 
@@ -51,7 +51,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64) error {
 	}()
 
 	// 开始安装
-	err = this.InstallNode(nodeId)
+	err = this.InstallNode(nodeId, installStatus)
 
 	// 安装结束
 	installStatus.IsRunning = false
@@ -78,13 +78,13 @@ func (this *Queue) InstallNodeProcess(nodeId int64) error {
 }
 
 // 安装边缘节点
-func (this *Queue) InstallNode(nodeId int64) error {
+func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus) error {
 	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
 	if err != nil {
 		return err
 	}
 	if node == nil {
-		return errors.New("can not find node, ID：'" + strconv.FormatInt(nodeId, 10) + "'")
+		return errors.New("can not find node, ID：'" + numberutils.FormatInt64(nodeId) + "'")
 	}
 
 	// 登录信息
@@ -93,6 +93,7 @@ func (this *Queue) InstallNode(nodeId int64) error {
 		return err
 	}
 	if login == nil {
+		installStatus.ErrorCode = "EMPTY_LOGIN"
 		return errors.New("can not find node login information")
 	}
 	loginParams, err := login.DecodeSSHParams()
@@ -100,12 +101,35 @@ func (this *Queue) InstallNode(nodeId int64) error {
 		return err
 	}
 
+	if len(loginParams.Host) == 0 {
+		installStatus.ErrorCode = "EMPTY_SSH_HOST"
+		return errors.New("ssh host should not be empty")
+	}
+
+	if loginParams.Port <= 0 {
+		installStatus.ErrorCode = "EMPTY_SSH_PORT"
+		return errors.New("ssh port is invalid")
+	}
+
+	if loginParams.GrantId == 0 {
+		// 从集群中读取
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if grantId == 0 {
+			installStatus.ErrorCode = "EMPTY_GRANT"
+			return errors.New("can not find node grant")
+		}
+		loginParams.GrantId = grantId
+	}
 	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
 	if err != nil {
 		return err
 	}
 	if grant == nil {
-		return errors.New("can not find user grant with id '" + strconv.FormatInt(loginParams.GrantId, 10) + "'")
+		installStatus.ErrorCode = "EMPTY_GRANT"
+		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
 	// 安装目录
@@ -121,12 +145,13 @@ func (this *Queue) InstallNode(nodeId int64) error {
 		}
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
-			return errors.New("unable to find installation dir")
+			// 默认是 $登录用户/edge-node
+			installDir = "/" + grant.Username + "/edge-node"
 		}
 	}
 
 	// API终端
-	apiNodes, err := models.SharedAPINodeDAO.FindAllEnabledAPINodes()
+	apiNodes, err := models.SharedAPINodeDAO.FindAllEnabledAndOnAPINodes()
 	if err != nil {
 		return err
 	}

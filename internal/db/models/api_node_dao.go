@@ -171,6 +171,19 @@ func (this *APINodeDAO) FindAllEnabledAPINodes() (result []*APINode, err error) 
 	return
 }
 
+// 列出所有可用而且启用的API节点
+func (this *APINodeDAO) FindAllEnabledAndOnAPINodes() (result []*APINode, err error) {
+	_, err = this.Query().
+		Attr("clusterId", 0). // 非集群专用
+		Attr("isOn", true).
+		State(APINodeStateEnabled).
+		Desc("order").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 计算API节点数量
 func (this *APINodeDAO) CountAllEnabledAPINodes() (int64, error) {
 	return this.Query().

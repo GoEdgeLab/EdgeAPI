@@ -151,12 +151,12 @@ func (this *BaseInstaller) InstallHelper(targetDir string) (env *Env, err error)
 		archName = "386"
 	}
 
-	exeName := "installer-helper-" + osName + "-" + archName
+	exeName := "edge-installer-helper-" + osName + "-" + archName
 	exePath := Tea.Root + "/installers/" + exeName
 
 	err = this.client.Copy(exePath, targetDir+"/"+exeName, 0777)
 	if err != nil {
-		return env, err
+		return env, errors.New("copy '" + exeName + "' to '" + targetDir + "' failed: " + err.Error())
 	}
 
 	env = &Env{

@@ -23,6 +23,15 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 		return errors.New("params validation: " + err.Error())
 	}
 
+	// 检查目标目录是否存在
+	_, err = this.client.Stat(dir)
+	if err != nil {
+		err = this.client.MkdirAll(dir)
+		if err != nil {
+			return errors.New("create directory  '" + dir + "' failed: " + err.Error())
+		}
+	}
+
 	// 安装助手
 	env, err := this.InstallHelper(dir)
 	if err != nil {

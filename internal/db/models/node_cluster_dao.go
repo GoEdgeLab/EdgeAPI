@@ -268,6 +268,14 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(grantId int64) (re
 	return
 }
 
+// 查找集群的认证ID
+func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
+	return this.Query().
+		Pk(clusterId).
+		Result("grantId").
+		FindInt64Col(0)
+}
+
 // 生成唯一ID
 func (this *NodeClusterDAO) genUniqueId() (string, error) {
 	for {
