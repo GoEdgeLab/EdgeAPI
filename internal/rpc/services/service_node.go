@@ -149,7 +149,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			Name:        node.Name,
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
-			Status:      node.Status,
+			StatusJSON:  []byte(node.Status),
 			Cluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -304,7 +304,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
-		Status:        node.Status,
+		StatusJSON:    []byte(node.Status),
 		UniqueId:      node.UniqueId,
 		Version:       int64(node.Version),
 		LatestVersion: int64(node.LatestVersion),
@@ -400,6 +400,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 
 // 安装节点
 func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeRequest) (*pb.InstallNodeResponse, error) {
+	// 校验节点
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -413,6 +414,42 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	}()
 
 	return &pb.InstallNodeResponse{}, nil
+}
+
+// 启动节点
+func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest) (*pb.StartNodeResponse, error) {
+	// 校验节点
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = installers.SharedQueue().StartNode(req.NodeId)
+	if err != nil {
+		return &pb.StartNodeResponse{
+			IsOk:  false,
+			Error: err.Error(),
+		}, nil
+	}
+	return &pb.StartNodeResponse{IsOk: true}, nil
+}
+
+// 停止节点
+func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) (*pb.StopNodeResponse, error) {
+	// 校验节点
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = installers.SharedQueue().StopNode(req.NodeId)
+	if err != nil {
+		return &pb.StopNodeResponse{
+			IsOk:  false,
+			Error: err.Error(),
+		}, nil
+	}
+	return &pb.StopNodeResponse{IsOk: true}, nil
 }
 
 // 更改节点连接的API节点信息
@@ -472,7 +509,7 @@ func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req
 			Name:        node.Name,
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
-			Status:      node.Status,
+			StatusJSON:  []byte(node.Status),
 			Cluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -555,7 +592,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Conte
 			Name:          node.Name,
 			Version:       int64(node.Version),
 			IsInstalled:   node.IsInstalled == 1,
-			Status:        node.Status,
+			StatusJSON:    []byte(node.Status),
 			IsOn:          node.IsOn == 1,
 			Login:         pbLogin,
 			IpAddresses:   pbAddresses,

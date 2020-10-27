@@ -188,6 +188,202 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		return err
 	}
 
-	err = installer.Install(installDir, params)
+	err = installer.Install(installDir, params, installStatus)
 	return err
+}
+
+// 启动边缘节点
+func (this *Queue) StartNode(nodeId int64) error {
+	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	if err != nil {
+		return err
+	}
+	if node == nil {
+		return errors.New("can not find node, ID：'" + numberutils.FormatInt64(nodeId) + "'")
+	}
+
+	// 登录信息
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nodeId)
+	if err != nil {
+		return err
+	}
+	if login == nil {
+		return errors.New("can not find node login information")
+	}
+	loginParams, err := login.DecodeSSHParams()
+	if err != nil {
+		return err
+	}
+
+	if len(loginParams.Host) == 0 {
+		return errors.New("ssh host should not be empty")
+	}
+
+	if loginParams.Port <= 0 {
+		return errors.New("ssh port is invalid")
+	}
+
+	if loginParams.GrantId == 0 {
+		// 从集群中读取
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if grantId == 0 {
+			return errors.New("can not find node grant")
+		}
+		loginParams.GrantId = grantId
+	}
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
+	if err != nil {
+		return err
+	}
+	if grant == nil {
+		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
+	}
+
+	// 安装目录
+	installDir := node.InstallDir
+	if len(installDir) == 0 {
+		clusterId := node.ClusterId
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(clusterId))
+		if err != nil {
+			return err
+		}
+		if cluster == nil {
+			return errors.New("can not find cluster, ID：'" + fmt.Sprintf("%d", clusterId) + "'")
+		}
+		installDir = cluster.InstallDir
+		if len(installDir) == 0 {
+			// 默认是 $登录用户/edge-node
+			installDir = "/" + grant.Username + "/edge-node"
+		}
+	}
+
+	installer := &NodeInstaller{}
+	err = installer.Login(&Credentials{
+		Host:       loginParams.Host,
+		Port:       loginParams.Port,
+		Username:   grant.Username,
+		Password:   grant.Password,
+		PrivateKey: grant.PrivateKey,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 检查命令是否存在
+	exeFile := installDir + "/edge-node/bin/edge-node"
+	_, err = installer.client.Stat(exeFile)
+	if err != nil {
+		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
+	}
+
+	_, stderr, err := installer.client.Exec(exeFile + " start")
+	if err != nil {
+		return errors.New("start failed: " + err.Error())
+	}
+	if len(stderr) > 0 {
+		return errors.New("start failed: " + stderr)
+	}
+
+	return nil
+}
+
+// 停止节点
+func (this *Queue) StopNode(nodeId int64) error {
+	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	if err != nil {
+		return err
+	}
+	if node == nil {
+		return errors.New("can not find node, ID：'" + numberutils.FormatInt64(nodeId) + "'")
+	}
+
+	// 登录信息
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nodeId)
+	if err != nil {
+		return err
+	}
+	if login == nil {
+		return errors.New("can not find node login information")
+	}
+	loginParams, err := login.DecodeSSHParams()
+	if err != nil {
+		return err
+	}
+
+	if len(loginParams.Host) == 0 {
+		return errors.New("ssh host should not be empty")
+	}
+
+	if loginParams.Port <= 0 {
+		return errors.New("ssh port is invalid")
+	}
+
+	if loginParams.GrantId == 0 {
+		// 从集群中读取
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if grantId == 0 {
+			return errors.New("can not find node grant")
+		}
+		loginParams.GrantId = grantId
+	}
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
+	if err != nil {
+		return err
+	}
+	if grant == nil {
+		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
+	}
+
+	// 安装目录
+	installDir := node.InstallDir
+	if len(installDir) == 0 {
+		clusterId := node.ClusterId
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(clusterId))
+		if err != nil {
+			return err
+		}
+		if cluster == nil {
+			return errors.New("can not find cluster, ID：'" + fmt.Sprintf("%d", clusterId) + "'")
+		}
+		installDir = cluster.InstallDir
+		if len(installDir) == 0 {
+			// 默认是 $登录用户/edge-node
+			installDir = "/" + grant.Username + "/edge-node"
+		}
+	}
+
+	installer := &NodeInstaller{}
+	err = installer.Login(&Credentials{
+		Host:       loginParams.Host,
+		Port:       loginParams.Port,
+		Username:   grant.Username,
+		Password:   grant.Password,
+		PrivateKey: grant.PrivateKey,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 检查命令是否存在
+	exeFile := installDir + "/edge-node/bin/edge-node"
+	_, err = installer.client.Stat(exeFile)
+	if err != nil {
+		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
+	}
+
+	_, stderr, err := installer.client.Exec(exeFile + " stop")
+	if err != nil {
+		return errors.New("start failed: " + err.Error())
+	}
+	if len(stderr) > 0 {
+		return errors.New("start failed: " + stderr)
+	}
+
+	return nil
 }

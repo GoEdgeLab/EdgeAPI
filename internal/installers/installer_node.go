@@ -3,14 +3,16 @@ package installers
 import (
 	"bytes"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"path/filepath"
+	"regexp"
 )
 
 type NodeInstaller struct {
 	BaseInstaller
 }
 
-func (this *NodeInstaller) Install(dir string, params interface{}) error {
+func (this *NodeInstaller) Install(dir string, params interface{}, installStatus *models.NodeInstallStatus) error {
 	if params == nil {
 		return errors.New("'params' required for node installation")
 	}
@@ -28,6 +30,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 	if err != nil {
 		err = this.client.MkdirAll(dir)
 		if err != nil {
+			installStatus.ErrorCode = "CREATE_ROOT_DIRECTORY_FAILED"
 			return errors.New("create directory  '" + dir + "' failed: " + err.Error())
 		}
 	}
@@ -35,7 +38,17 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 	// 安装助手
 	env, err := this.InstallHelper(dir)
 	if err != nil {
+		installStatus.ErrorCode = "INSTALL_HELPER_FAILED"
 		return err
+	}
+
+	// 测试环境
+	_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=test")
+	if err != nil {
+		return errors.New("test failed: " + err.Error())
+	}
+	if len(stderr) > 0 {
+		return errors.New("test failed: " + stderr)
 	}
 
 	// 上传安装文件
@@ -54,7 +67,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 	}
 
 	// 解压
-	_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
+	_, stderr, err = this.client.Exec(dir + "/" + env.HelperName + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
 	if err != nil {
 		return err
 	}
@@ -79,6 +92,20 @@ func (this *NodeInstaller) Install(dir string, params interface{}) error {
 		if err != nil {
 			return errors.New("write 'configs/api.yaml': " + err.Error())
 		}
+	}
+
+	// 测试
+	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node test")
+	if err != nil {
+		installStatus.ErrorCode = "TEST_FAILED"
+		return errors.New("test edge node failed: " + err.Error())
+	}
+	if len(stderr) > 0 {
+		if regexp.MustCompile(`(?i)rpc`).MatchString(stderr) {
+			installStatus.ErrorCode = "RPC_TEST_FAILED"
+		}
+
+		return errors.New("test edge node failed: " + stderr)
 	}
 
 	// 启动

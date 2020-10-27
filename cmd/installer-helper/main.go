@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"net"
 	"os"
 )
 
@@ -21,6 +22,14 @@ func main() {
 
 	if len(cmd) == 0 {
 		stderr("need '-cmd=COMMAND' argument")
+	} else if cmd == "test" {
+		// 检查是否正在运行
+		path := os.TempDir() + "/edge-node.sock"
+		conn, err := net.Dial("unix", path)
+		if err == nil {
+			_ = conn.Close()
+			stderr("test node status: edge node is running now, can not install again")
+		}
 	} else if cmd == "unzip" { // 解压
 		if len(zipPath) == 0 {
 			stderr("ERROR: need '-zip=PATH' argument")

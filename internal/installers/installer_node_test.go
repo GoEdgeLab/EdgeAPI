@@ -1,6 +1,9 @@
 package installers
 
-import "testing"
+import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"testing"
+)
 
 func TestNodeInstaller_Install(t *testing.T) {
 	var installer InstallerInterface = &NodeInstaller{}
@@ -28,7 +31,7 @@ func TestNodeInstaller_Install(t *testing.T) {
 		Endpoints: []string{"192.168.2.40:8003"},
 		NodeId:    "313fdb1b90d0a63c736f307b4d1ca358",
 		Secret:    "Pl3u5kYqBDZddp7raw6QfHiuGPRCWF54",
-	})
+	}, &models.NodeInstallStatus{})
 	if err != nil {
 		t.Fatal(err)
 	}
