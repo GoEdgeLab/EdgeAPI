@@ -42,15 +42,6 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 		return err
 	}
 
-	// 测试环境
-	_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=test")
-	if err != nil {
-		return errors.New("test failed: " + err.Error())
-	}
-	if len(stderr) > 0 {
-		return errors.New("test failed: " + stderr)
-	}
-
 	// 上传安装文件
 	filePrefix := "edge-node-" + env.OS + "-" + env.Arch
 	zipFile, err := this.LookupLatestInstaller(filePrefix)
@@ -66,8 +57,35 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 		return err
 	}
 
+	// 测试运行环境
+	// 升级的节点暂时不列入测试
+	if !nodeParams.IsUpgrading {
+		_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=test")
+		if err != nil {
+			return errors.New("test failed: " + err.Error())
+		}
+		if len(stderr) > 0 {
+			return errors.New("test failed: " + stderr)
+		}
+	}
+
+	// 如果是升级则优雅停止先前的进程
+	exePath := dir + "/edge-node/bin/edge-node"
+	if nodeParams.IsUpgrading {
+		_, err = this.client.Stat(exePath)
+		if err == nil {
+			_, _, _ = this.client.Exec(exePath + " quit")
+		}
+
+		// 删除可执行文件防止冲突
+		err = this.client.Remove(exePath)
+		if err != nil {
+			return errors.New("remove old file failed: " + err.Error())
+		}
+	}
+
 	// 解压
-	_, stderr, err = this.client.Exec(dir + "/" + env.HelperName + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
+	_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
 	if err != nil {
 		return err
 	}

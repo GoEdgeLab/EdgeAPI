@@ -6,9 +6,10 @@ import (
 )
 
 type NodeParams struct {
-	Endpoints []string
-	NodeId    string
-	Secret    string
+	Endpoints   []string
+	NodeId      string
+	Secret      string
+	IsUpgrading bool // 是否为升级
 }
 
 func (this *NodeParams) Validate() error {

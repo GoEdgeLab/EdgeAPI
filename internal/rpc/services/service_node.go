@@ -407,13 +407,51 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	}
 
 	go func() {
-		err = installers.SharedQueue().InstallNodeProcess(req.NodeId)
+		err = installers.SharedQueue().InstallNodeProcess(req.NodeId, false)
 		if err != nil {
 			logs.Println("[RPC]install node:" + err.Error())
 		}
 	}()
 
 	return &pb.InstallNodeResponse{}, nil
+}
+
+// 升级节点
+func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeRequest) (*pb.UpgradeNodeResponse, error) {
+	// 校验节点
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeIsInstalled(req.NodeId, false)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查状态
+	installStatus, err := models.SharedNodeDAO.FindNodeInstallStatus(req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if installStatus == nil {
+		installStatus = &models.NodeInstallStatus{}
+	}
+	installStatus.IsOk = false
+	installStatus.IsFinished = false
+	err = models.SharedNodeDAO.UpdateNodeInstallStatus(req.NodeId, installStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		err = installers.SharedQueue().InstallNodeProcess(req.NodeId, true)
+		if err != nil {
+			logs.Println("[RPC]install node:" + err.Error())
+		}
+	}()
+
+	return &pb.UpgradeNodeResponse{}, nil
 }
 
 // 启动节点
@@ -600,6 +638,110 @@ func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Conte
 		})
 	}
 	return &pb.FindAllNotInstalledNodesWithClusterIdResponse{Nodes: result}, nil
+}
+
+// 列出所有需要升级的节点
+func (this *NodeService) FindAllUpgradeNodesWithClusterId(ctx context.Context, req *pb.FindAllUpgradeNodesWithClusterIdRequest) (*pb.FindAllUpgradeNodesWithClusterIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取当前能升级到的最新版本
+	deployFiles := installers.SharedDeployManager.LoadFiles()
+	result := []*pb.FindAllUpgradeNodesWithClusterIdResponse_NodeUpgrade{}
+	for _, deployFile := range deployFiles {
+		nodes, err := models.SharedNodeDAO.FindAllLowerVersionNodesWithClusterId(req.ClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			// 认证信息
+			login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(int64(node.Id))
+			if err != nil {
+				return nil, err
+			}
+			var pbLogin *pb.NodeLogin = nil
+			if login != nil {
+				pbLogin = &pb.NodeLogin{
+					Id:     int64(login.Id),
+					Name:   login.Name,
+					Type:   login.Type,
+					Params: []byte(login.Params),
+				}
+			}
+
+			// IP信息
+			addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(int64(node.Id))
+			if err != nil {
+				return nil, err
+			}
+
+			pbAddresses := []*pb.NodeIPAddress{}
+			for _, address := range addresses {
+				pbAddresses = append(pbAddresses, &pb.NodeIPAddress{
+					Id:          int64(address.Id),
+					NodeId:      int64(address.NodeId),
+					Name:        address.Name,
+					Ip:          address.Ip,
+					Description: address.Description,
+					State:       int64(address.State),
+					Order:       int64(address.Order),
+					CanAccess:   address.CanAccess == 1,
+				})
+			}
+
+			// 状态
+			status, err := node.DecodeStatus()
+			if err != nil {
+				return nil, err
+			}
+			if status == nil {
+				continue
+			}
+
+			// 安装信息
+			installStatus, err := node.DecodeInstallStatus()
+			if err != nil {
+				return nil, err
+			}
+			pbInstallStatus := &pb.NodeInstallStatus{}
+			if installStatus != nil {
+				pbInstallStatus = &pb.NodeInstallStatus{
+					IsRunning:  installStatus.IsRunning,
+					IsFinished: installStatus.IsFinished,
+					IsOk:       installStatus.IsOk,
+					Error:      installStatus.Error,
+					ErrorCode:  installStatus.ErrorCode,
+					UpdatedAt:  installStatus.UpdatedAt,
+				}
+			}
+
+			pbNode := &pb.Node{
+				Id:            int64(node.Id),
+				Name:          node.Name,
+				Version:       int64(node.Version),
+				IsInstalled:   node.IsInstalled == 1,
+				StatusJSON:    []byte(node.Status),
+				IsOn:          node.IsOn == 1,
+				IpAddresses:   pbAddresses,
+				Login:         pbLogin,
+				InstallStatus: pbInstallStatus,
+			}
+
+			result = append(result, &pb.FindAllUpgradeNodesWithClusterIdResponse_NodeUpgrade{
+				Os:         deployFile.OS,
+				Arch:       deployFile.Arch,
+				OldVersion: status.BuildVersion,
+				NewVersion: deployFile.Version,
+				Node:       pbNode,
+			})
+		}
+	}
+	return &pb.FindAllUpgradeNodesWithClusterIdResponse{
+		Nodes: result,
+	}, nil
 }
 
 // 读取节点安装状态

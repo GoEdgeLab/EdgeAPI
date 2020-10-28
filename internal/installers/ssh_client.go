@@ -147,3 +147,8 @@ func (this *SSHClient) WriteFile(path string, data []byte) (n int, err error) {
 	n, err = fp.Write(data)
 	return
 }
+
+// 删除文件
+func (this *SSHClient) Remove(path string) error {
+	return this.sftp.Remove(path)
+}

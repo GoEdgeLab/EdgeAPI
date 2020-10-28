@@ -24,7 +24,7 @@ func SharedQueue() *Queue {
 }
 
 // 安装边缘节点流程控制
-func (this *Queue) InstallNodeProcess(nodeId int64) error {
+func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	installStatus := models.NewNodeInstallStatus()
 	installStatus.IsRunning = true
 	installStatus.UpdatedAt = time.Now().Unix()
@@ -51,7 +51,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64) error {
 	}()
 
 	// 开始安装
-	err = this.InstallNode(nodeId, installStatus)
+	err = this.InstallNode(nodeId, installStatus, isUpgrading)
 
 	// 安装结束
 	installStatus.IsRunning = false
@@ -78,7 +78,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64) error {
 }
 
 // 安装边缘节点
-func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus) error {
+func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus, isUpgrading bool) error {
 	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
 	if err != nil {
 		return err
@@ -171,9 +171,10 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	}
 
 	params := &NodeParams{
-		Endpoints: apiEndpoints,
-		NodeId:    node.UniqueId,
-		Secret:    node.Secret,
+		Endpoints:   apiEndpoints,
+		NodeId:      node.UniqueId,
+		Secret:      node.Secret,
+		IsUpgrading: isUpgrading,
 	}
 
 	installer := &NodeInstaller{}
@@ -187,6 +188,9 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = installer.Close()
+	}()
 
 	err = installer.Install(installDir, params, installStatus)
 	return err
@@ -271,6 +275,9 @@ func (this *Queue) StartNode(nodeId int64) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = installer.Close()
+	}()
 
 	// 检查命令是否存在
 	exeFile := installDir + "/edge-node/bin/edge-node"
@@ -369,6 +376,9 @@ func (this *Queue) StopNode(nodeId int64) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = installer.Close()
+	}()
 
 	// 检查命令是否存在
 	exeFile := installDir + "/edge-node/bin/edge-node"
