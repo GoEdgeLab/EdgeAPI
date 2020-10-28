@@ -191,7 +191,7 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 }
 
 // 列出单页节点
-func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (result []*Node, err error) {
+func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64) (result []*Node, err error) {
 	query := this.Query().
 		State(NodeStateEnabled).
 		Offset(offset).
@@ -222,6 +222,17 @@ func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId i
 		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
 		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
+	}
+
+	// 关键词
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR JSON_EXTRACT(status,'$.hostname') LIKE :keyword OR id IN (SELECT nodeId FROM "+SharedNodeIPAddressDAO.Table+" WHERE ip LIKE :keyword))").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	// 分组
+	if groupId > 0 {
+		query.Attr("groupId", groupId)
 	}
 
 	_, err = query.FindAll()
@@ -309,7 +320,7 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(clusterId int64) (result 
 }
 
 // 计算节点数量
-func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState) (int64, error) {
+func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64) (int64, error) {
 	query := this.Query()
 	query.State(NodeStateEnabled)
 
@@ -336,6 +347,17 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState con
 		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
 		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
+	}
+
+	// 关键词
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR JSON_EXTRACT(status,'$.hostname') LIKE :keyword OR id IN (SELECT nodeId FROM "+SharedNodeIPAddressDAO.Table+" WHERE ip LIKE :keyword))").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	// 分组
+	if groupId > 0 {
+		query.Attr("groupId", groupId)
 	}
 
 	return query.Count()
@@ -564,6 +586,14 @@ func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(clusterId int64, os s
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// 查找某个节点分组下的所有节点数量
+func (this *NodeDAO) CountAllEnabledNodesWithGroupId(groupId int64) (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Attr("groupId", groupId).
+		Count()
 }
 
 // 生成唯一ID

@@ -102,7 +102,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState))
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState))
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -789,4 +789,19 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 	err = models.SharedNodeLoginDAO.UpdateNodeLogin(req.Login.Id, req.Login.Name, req.Login.Type, req.Login.Params)
 
 	return rpcutils.RPCUpdateSuccess()
+}
+
+// 计算某个节点分组内的节点数量
+func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithGroupIdRequest) (*pb.CountAllEnabledNodesWithGroupIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGroupId(req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledNodesWithGroupIdResponse{Count: count}, nil
 }
