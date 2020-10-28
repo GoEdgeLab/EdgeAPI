@@ -80,7 +80,7 @@ func (this *NodeDAO) FindNodeName(id uint32) (string, error) {
 }
 
 // 创建节点
-func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err error) {
+func (this *NodeDAO) CreateNode(name string, clusterId int64, groupId int64) (nodeId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -99,6 +99,7 @@ func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err
 	op.UniqueId = uniqueId
 	op.Secret = secret
 	op.ClusterId = clusterId
+	op.GroupId = groupId
 	op.IsOn = 1
 	op.State = NodeStateEnabled
 	_, err = this.Save(op)
@@ -110,7 +111,7 @@ func (this *NodeDAO) CreateNode(name string, clusterId int64) (nodeId int64, err
 }
 
 // 修改节点
-func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, maxCPU int32, isOn bool) error {
+func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, groupId int64, maxCPU int32, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -118,6 +119,7 @@ func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, maxC
 	op.Id = nodeId
 	op.Name = name
 	op.ClusterId = clusterId
+	op.GroupId = groupId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
 	op.MaxCPU = maxCPU
 	op.IsOn = isOn

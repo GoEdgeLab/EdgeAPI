@@ -24,7 +24,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, req.ClusterId)
+	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, req.ClusterId, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, clusterId)
+	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, clusterId, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +144,21 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			}
 		}
 
+		// 分组信息
+		var pbGroup *pb.NodeGroup = nil
+		if node.GroupId > 0 {
+			group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(int64(node.GroupId))
+			if err != nil {
+				return nil, err
+			}
+			if group != nil {
+				pbGroup = &pb.NodeGroup{
+					Id:   int64(group.Id),
+					Name: group.Name,
+				}
+			}
+		}
+
 		result = append(result, &pb.Node{
 			Id:          int64(node.Id),
 			Name:        node.Name,
@@ -157,6 +172,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			InstallStatus: installStatusResult,
 			MaxCPU:        types.Int32(node.MaxCPU),
 			IsOn:          node.IsOn == 1,
+			Group:         pbGroup,
 		})
 	}
 
@@ -221,7 +237,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
-	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.MaxCPU, req.IsOn)
+	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.GroupId, req.MaxCPU, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -301,6 +317,21 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 分组信息
+	var pbGroup *pb.NodeGroup = nil
+	if node.GroupId > 0 {
+		group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(int64(node.GroupId))
+		if err != nil {
+			return nil, err
+		}
+		if group != nil {
+			pbGroup = &pb.NodeGroup{
+				Id:   int64(group.Id),
+				Name: group.Name,
+			}
+		}
+	}
+
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
@@ -319,6 +350,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		InstallStatus: installStatusResult,
 		MaxCPU:        types.Int32(node.MaxCPU),
 		IsOn:          node.IsOn == 1,
+		Group:         pbGroup,
 	}}, nil
 }
 
