@@ -85,7 +85,7 @@ func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
 }
 
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyJSON []byte, clusterId int64, includeNodesJSON string, excludeNodesJSON string) (serverId int64, err error) {
+func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyJSON []byte, clusterId int64, includeNodesJSON string, excludeNodesJSON string, groupIds []int64) (serverId int64, err error) {
 	op := NewServerOperator()
 	op.UserId = userId
 	op.AdminId = adminId
@@ -127,7 +127,16 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 		op.ExcludeNodes = excludeNodesJSON
 	}
 
-	op.GroupIds = "[]"
+	if len(groupIds) == 0 {
+		op.GroupIds = "[]"
+	} else {
+		groupIdsJSON, err := json.Marshal(groupIds)
+		if err != nil {
+			return 0, err
+		}
+		op.GroupIds = groupIdsJSON
+	}
+
 	op.Version = 1
 	op.IsOn = 1
 	op.State = ServerStateEnabled
@@ -153,7 +162,7 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 }
 
 // 修改服务基本信息
-func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64, isOn bool) error {
+func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64, isOn bool, groupIds []int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -163,6 +172,17 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 	op.Description = description
 	op.ClusterId = clusterId
 	op.IsOn = isOn
+
+	if len(groupIds) == 0 {
+		op.GroupIds = "[]"
+	} else {
+		groupIdsJSON, err := json.Marshal(groupIds)
+		if err != nil {
+			return err
+		}
+		op.GroupIds = groupIdsJSON
+	}
+
 	_, err := this.Save(op)
 	if err != nil {
 		return err

@@ -20,7 +20,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	if err != nil {
 		return nil, err
 	}
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON))
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId, req.IsOn)
+	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId, req.IsOn, req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -379,6 +379,30 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		if err != nil {
 			return nil, err
 		}
+
+		// 分组信息
+		pbGroups := []*pb.ServerGroup{}
+		if len(server.GroupIds) > 0 {
+			groupIds := []int64{}
+			err = json.Unmarshal([]byte(server.GroupIds), &groupIds)
+			if err != nil {
+				return nil, err
+			}
+			for _, groupId := range groupIds {
+				group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(groupId)
+				if err != nil {
+					return nil, err
+				}
+				if group == nil {
+					continue
+				}
+				pbGroups = append(pbGroups, &pb.ServerGroup{
+					Id:   int64(group.Id),
+					Name: group.Name,
+				})
+			}
+		}
+
 		result = append(result, &pb.Server{
 			Id:           int64(server.Id),
 			IsOn:         server.IsOn == 1,
@@ -399,6 +423,7 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
+			Groups: pbGroups,
 		})
 	}
 
@@ -454,9 +479,33 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		return &pb.FindEnabledServerResponse{}, nil
 	}
 
+	// 集群信息
 	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
+	}
+
+	// 分组信息
+	pbGroups := []*pb.ServerGroup{}
+	if len(server.GroupIds) > 0 {
+		groupIds := []int64{}
+		err = json.Unmarshal([]byte(server.GroupIds), &groupIds)
+		if err != nil {
+			return nil, err
+		}
+		for _, groupId := range groupIds {
+			group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(groupId)
+			if err != nil {
+				return nil, err
+			}
+			if group == nil {
+				continue
+			}
+			pbGroups = append(pbGroups, &pb.ServerGroup{
+				Id:   int64(group.Id),
+				Name: group.Name,
+			})
+		}
 	}
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
@@ -483,6 +532,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 			Id:   int64(server.ClusterId),
 			Name: clusterName,
 		},
+		Groups: pbGroups,
 	}}, nil
 }
 
