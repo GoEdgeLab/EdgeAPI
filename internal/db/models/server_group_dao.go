@@ -1,9 +1,11 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -33,7 +35,7 @@ func init() {
 }
 
 // 启用条目
-func (this *ServerGroupDAO) EnableServerGroup(id uint32) error {
+func (this *ServerGroupDAO) EnableServerGroup(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", ServerGroupStateEnabled).
@@ -42,7 +44,7 @@ func (this *ServerGroupDAO) EnableServerGroup(id uint32) error {
 }
 
 // 禁用条目
-func (this *ServerGroupDAO) DisableServerGroup(id uint32) error {
+func (this *ServerGroupDAO) DisableServerGroup(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", ServerGroupStateDisabled).
@@ -51,7 +53,7 @@ func (this *ServerGroupDAO) DisableServerGroup(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *ServerGroupDAO) FindEnabledServerGroup(id uint32) (*ServerGroup, error) {
+func (this *ServerGroupDAO) FindEnabledServerGroup(id int64) (*ServerGroup, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", ServerGroupStateEnabled).
@@ -63,9 +65,58 @@ func (this *ServerGroupDAO) FindEnabledServerGroup(id uint32) (*ServerGroup, err
 }
 
 // 根据主键查找名称
-func (this *ServerGroupDAO) FindServerGroupName(id uint32) (string, error) {
+func (this *ServerGroupDAO) FindServerGroupName(id int64) (string, error) {
 	return this.Query().
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+}
+
+// 创建分组
+func (this *ServerGroupDAO) CreateGroup(name string) (groupId int64, err error) {
+	op := NewServerGroupOperator()
+	op.State = ServerGroupStateEnabled
+	op.Name = name
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
+}
+
+// 修改分组
+func (this *ServerGroupDAO) UpdateGroup(groupId int64, name string) error {
+	if groupId <= 0 {
+		return errors.New("invalid groupId")
+	}
+	op := NewServerGroupOperator()
+	op.Id = groupId
+	op.Name = name
+	_, err := this.Save(op)
+	return err
+}
+
+// 查找所有分组
+func (this *ServerGroupDAO) FindAllEnabledGroups() (result []*ServerGroup, err error) {
+	_, err = this.Query().
+		State(ServerGroupStateEnabled).
+		Desc("order").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 修改分组排序
+func (this *ServerGroupDAO) UpdateGroupOrders(groupIds []int64) error {
+	for index, groupId := range groupIds {
+		_, err := this.Query().
+			Pk(groupId).
+			Set("order", len(groupIds)-index).
+			Update()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

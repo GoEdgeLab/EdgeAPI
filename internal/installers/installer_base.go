@@ -135,19 +135,26 @@ func (this *BaseInstaller) InstallHelper(targetDir string) (env *Env, err error)
 
 	osName := ""
 	archName := ""
-	if strings.Index(uname, "Darwin") > 0 {
+	if strings.Contains(uname, "Darwin") {
 		osName = "darwin"
-	} else if strings.Index(uname, "Linux") >= 0 {
+	} else if strings.Contains(uname, "Linux") {
 		osName = "linux"
 	} else {
 		// TODO 支持freebsd, aix ...
 		return env, errors.New("installer not supported os '" + uname + "'")
 	}
 
-	if strings.Index(uname, "x86_64") > 0 {
+	if strings.Contains(uname, "aarch64") || strings.Contains(uname, "armv8") {
+		archName = "arm64"
+	} else if strings.Contains(uname, "aarch64_be") {
+		archName = "arm64be"
+	} else if strings.Contains(uname, "mips64el") {
+		archName = "mips64le"
+	} else if strings.Contains(uname, "mips64") {
+		archName = "mips64"
+	} else if strings.Contains(uname, "x86_64") {
 		archName = "amd64"
 	} else {
-		// TODO 支持ARM和MIPS等架构
 		archName = "386"
 	}
 

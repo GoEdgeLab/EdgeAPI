@@ -733,3 +733,20 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 	}
 	return &pb.CountAllEnabledServersWithNodeClusterIdResponse{Count: count}, nil
 }
+
+// 计算使用某个分组的服务数量
+func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithGroupIdRequest) (*pb.CountAllEnabledServersWithGroupIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledServersWithGroupIdResponse{
+		Count: count,
+	}, nil
+}
