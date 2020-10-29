@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -762,7 +763,7 @@ func (this *ServerDAO) CountAllEnabledServersWithGroupId(groupId int64) (int64, 
 	return this.Query().
 		State(ServerStateEnabled).
 		Where("JSON_CONTAINS(groupIds, :groupId)").
-		Param("groupId", groupId).
+		Param("groupId", numberutils.FormatInt64(groupId)).
 		Count()
 }
 
