@@ -13,7 +13,9 @@ type SysSettingDAO dbs.DAO
 type SettingCode = string
 
 const (
-	SettingCodeGlobalConfig SettingCode = "globalConfig"
+	SettingCodeServerGlobalConfig SettingCode = "serverGlobalConfig" // 服务相关全局设置
+	SettingCodeNodeMonitor        SettingCode = "nodeMonitor"        // 监控节点状态
+	SettingCodeClusterHealthCheck SettingCode = "clusterHealthCheck" // 集群健康检查
 )
 
 func NewSysSettingDAO() *SysSettingDAO {

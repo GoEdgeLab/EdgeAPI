@@ -491,7 +491,7 @@ func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, e
 
 	// 全局设置
 	// TODO 根据用户的不同读取不同的全局设置
-	settingJSON, err := SharedSysSettingDAO.ReadSetting(SettingCodeGlobalConfig)
+	settingJSON, err := SharedSysSettingDAO.ReadSetting(SettingCodeServerGlobalConfig)
 	if err != nil {
 		return nil, err
 	}

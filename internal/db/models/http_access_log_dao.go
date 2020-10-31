@@ -110,7 +110,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(daoWrapper *HTTPAccess
 }
 
 // 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *HTTPAccessLogDAO) ListAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -120,18 +120,18 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(lastRequestId string, size int64, d
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(lastRequestId, size, day, serverId, reverse)
+	result, nextLastRequestId, err = this.listAccessLogs(lastRequestId, size, day, serverId, reverse, hasError)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(nextLastRequestId, 1, day, serverId, reverse)
+	moreResult, _, _ := this.listAccessLogs(nextLastRequestId, 1, day, serverId, reverse, hasError)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -176,6 +176,9 @@ func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, d
 			// 条件
 			if serverId > 0 {
 				query.Attr("serverId", serverId)
+			}
+			if hasError {
+				query.Where("status>400")
 			}
 
 			// offset
