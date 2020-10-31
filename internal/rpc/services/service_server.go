@@ -348,28 +348,28 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 }
 
 // 计算服务数量
-func (this *ServerService) CountAllEnabledServers(ctx context.Context, req *pb.CountAllEnabledServersRequest) (*pb.CountAllEnabledServersResponse, error) {
+func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.CountAllEnabledServersMatchResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedServerDAO.CountAllEnabledServers()
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledServersResponse{Count: count}, nil
+	return &pb.CountAllEnabledServersMatchResponse{Count: count}, nil
 }
 
 // 列出单页服务
-func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListEnabledServersRequest) (*pb.ListEnabledServersResponse, error) {
+func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.ListEnabledServersMatchRequest) (*pb.ListEnabledServersMatchResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
-	servers, err := models.SharedServerDAO.ListEnabledServers(req.Offset, req.Size)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(req.Offset, req.Size, req.GroupId, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -404,21 +404,22 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		}
 
 		result = append(result, &pb.Server{
-			Id:           int64(server.Id),
-			IsOn:         server.IsOn == 1,
-			Type:         server.Type,
-			Config:       []byte(server.Config),
-			Name:         server.Name,
-			Description:  server.Description,
-			HttpJSON:     []byte(server.Http),
-			HttpsJSON:    []byte(server.Https),
-			TcpJSON:      []byte(server.Tcp),
-			TlsJSON:      []byte(server.Tls),
-			UnixJSON:     []byte(server.Unix),
-			UdpJSON:      []byte(server.Udp),
-			IncludeNodes: []byte(server.IncludeNodes),
-			ExcludeNodes: []byte(server.ExcludeNodes),
-			CreatedAt:    int64(server.CreatedAt),
+			Id:             int64(server.Id),
+			IsOn:           server.IsOn == 1,
+			Type:           server.Type,
+			Config:         []byte(server.Config),
+			Name:           server.Name,
+			Description:    server.Description,
+			HttpJSON:       []byte(server.Http),
+			HttpsJSON:      []byte(server.Https),
+			TcpJSON:        []byte(server.Tcp),
+			TlsJSON:        []byte(server.Tls),
+			UnixJSON:       []byte(server.Unix),
+			UdpJSON:        []byte(server.Udp),
+			IncludeNodes:   []byte(server.IncludeNodes),
+			ExcludeNodes:   []byte(server.ExcludeNodes),
+			ServerNamesJON: []byte(server.ServerNames),
+			CreatedAt:      int64(server.CreatedAt),
 			Cluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
@@ -427,7 +428,7 @@ func (this *ServerService) ListEnabledServers(ctx context.Context, req *pb.ListE
 		})
 	}
 
-	return &pb.ListEnabledServersResponse{Servers: result}, nil
+	return &pb.ListEnabledServersMatchResponse{Servers: result}, nil
 }
 
 // 禁用某服务

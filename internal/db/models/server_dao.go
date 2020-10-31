@@ -436,21 +436,39 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServers() (int64, error) {
-	return this.Query().
-		State(ServerStateEnabled).
-		Count()
+func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string) (int64, error) {
+	query := this.Query().
+		State(ServerStateEnabled)
+	if groupId > 0 {
+		query.Where("JSON_CONTAINS(groupIds, :groupId)").
+			Param("groupId", numberutils.FormatInt64(groupId))
+	}
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
 }
 
 // 列出单页的服务
-func (this *ServerDAO) ListEnabledServers(offset int64, size int64) (result []*Server, err error) {
-	_, err = this.Query().
+func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string) (result []*Server, err error) {
+	query := this.Query().
 		State(ServerStateEnabled).
 		Offset(offset).
 		Limit(size).
 		DescPk().
-		Slice(&result).
-		FindAll()
+		Slice(&result)
+
+	if groupId > 0 {
+		query.Where("JSON_CONTAINS(groupIds, :groupId)").
+			Param("groupId", numberutils.FormatInt64(groupId))
+	}
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	_, err = query.FindAll()
 	return
 }
 
