@@ -212,8 +212,14 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, upd
 		return false, err
 	}
 
+	globalConfig, err := SharedSysSettingDAO.ReadSetting(SettingCodeServerGlobalConfig)
+	if err != nil {
+		return false, err
+	}
+
 	m := md5.New()
-	_, _ = m.Write(configJSON)
+	_, _ = m.Write(configJSON)   // 当前服务配置
+	_, _ = m.Write(globalConfig) // 全局配置
 	h := m.Sum(nil)
 	newConfigMd5 := fmt.Sprintf("%x", h)
 

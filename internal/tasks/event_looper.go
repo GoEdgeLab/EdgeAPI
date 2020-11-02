@@ -14,6 +14,7 @@ func init() {
 	})
 }
 
+// 事件相关处理程序
 type EventLooper struct {
 }
 

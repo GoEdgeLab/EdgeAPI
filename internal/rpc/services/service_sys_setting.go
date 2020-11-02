@@ -22,7 +22,7 @@ func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.Upd
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return rpcutils.RPCUpdateSuccess()
 }
 

@@ -801,3 +801,19 @@ func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context
 		Count: count,
 	}, nil
 }
+
+// 通知更新
+func (this *ServerService) NotifyServersChange(ctx context.Context, req *pb.NotifyServersChangeRequest) (*pb.NotifyServersChangeResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedSysEventDAO.CreateEvent(models.NewServerChangeEvent())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NotifyServersChangeResponse{}, nil
+}
