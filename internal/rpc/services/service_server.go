@@ -754,7 +754,7 @@ func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx co
 		return nil, err
 	}
 
-	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.FirewallPolicyId)
+	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(req.FirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
