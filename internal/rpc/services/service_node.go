@@ -355,7 +355,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 }
 
 // 组合节点配置
-func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeNodeConfigRequest) (*pb.ComposeNodeConfigResponse, error) {
+func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.FindCurrentNodeConfigRequest) (*pb.FindCurrentNodeConfigResponse, error) {
 	_ = req
 
 	// 校验节点
@@ -373,7 +373,7 @@ func (this *NodeService) ComposeNodeConfig(ctx context.Context, req *pb.ComposeN
 		return nil, err
 	}
 
-	return &pb.ComposeNodeConfigResponse{NodeJSON: data}, nil
+	return &pb.FindCurrentNodeConfigResponse{NodeJSON: data}, nil
 }
 
 // 更新节点状态
