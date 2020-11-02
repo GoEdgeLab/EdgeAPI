@@ -10,7 +10,9 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -257,4 +259,61 @@ func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, d
 	} else {
 		return result, requestId, nil
 	}
+}
+
+// 根据请求ID获取访问日志
+func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(requestId string) (*HTTPAccessLog, error) {
+	if !regexp.MustCompile(`^\d{30,}`).MatchString(requestId) {
+		return nil, errors.New("invalid requestId")
+	}
+
+	accessLogLocker.RLock()
+	daoList := []*HTTPAccessLogDAOWrapper{}
+	for _, daoWrapper := range accessLogDAOMapping {
+		daoList = append(daoList, daoWrapper)
+	}
+	accessLogLocker.RUnlock()
+
+	if len(daoList) == 0 {
+		daoList = []*HTTPAccessLogDAOWrapper{{
+			DAO:    SharedHTTPAccessLogDAO,
+			NodeId: 0,
+		}}
+	}
+
+	count := len(daoList)
+	wg := &sync.WaitGroup{}
+	wg.Add(count)
+	var result *HTTPAccessLog = nil
+	day := timeutil.FormatTime("Ymd", types.Int64(requestId[:10]))
+	for _, daoWrapper := range daoList {
+		go func(daoWrapper *HTTPAccessLogDAOWrapper) {
+			defer wg.Done()
+
+			dao := daoWrapper.DAO
+
+			tableName, exists, err := findAccessLogTableName(dao.Instance, day)
+			if err != nil {
+				logs.Println("[DB_NODE]" + err.Error())
+				return
+			}
+			if !exists {
+				return
+			}
+
+			one, err := dao.Query().
+				Table(tableName).
+				Attr("requestId", requestId).
+				Find()
+			if err != nil {
+				logs.Println("[DB_NODE]" + err.Error())
+				return
+			}
+			if one != nil {
+				result = one.(*HTTPAccessLog)
+			}
+		}(daoWrapper)
+	}
+	wg.Wait()
+	return result, nil
 }

@@ -60,7 +60,7 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx contex
 }
 
 // 获取分组配置
-func (this *HTTPFirewallRuleGroupService) FindHTTPFirewallRuleGroupConfig(ctx context.Context, req *pb.FindHTTPFirewallRuleGroupConfigRequest) (*pb.FindHTTPFirewallRuleGroupConfigResponse, error) {
+func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroupConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleGroupConfigRequest) (*pb.FindEnabledHTTPFirewallRuleGroupConfigResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -72,13 +72,42 @@ func (this *HTTPFirewallRuleGroupService) FindHTTPFirewallRuleGroupConfig(ctx co
 		return nil, err
 	}
 	if groupConfig == nil {
-		return &pb.FindHTTPFirewallRuleGroupConfigResponse{FirewallRuleGroupJSON: nil}, nil
+		return &pb.FindEnabledHTTPFirewallRuleGroupConfigResponse{FirewallRuleGroupJSON: nil}, nil
 	}
 	groupConfigJSON, err := json.Marshal(groupConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindHTTPFirewallRuleGroupConfigResponse{FirewallRuleGroupJSON: groupConfigJSON}, nil
+	return &pb.FindEnabledHTTPFirewallRuleGroupConfigResponse{FirewallRuleGroupJSON: groupConfigJSON}, nil
+}
+
+// 获取分组信息
+func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroup(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleGroupRequest) (*pb.FindEnabledHTTPFirewallRuleGroupResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	group, err := models.SharedHTTPFirewallRuleGroupDAO.FindEnabledHTTPFirewallRuleGroup(req.FirewallRuleGroupId)
+	if err != nil {
+		return nil, err
+	}
+	if group == nil {
+		return &pb.FindEnabledHTTPFirewallRuleGroupResponse{
+			FirewallRuleGroup: nil,
+		}, nil
+	}
+
+	return &pb.FindEnabledHTTPFirewallRuleGroupResponse{
+		FirewallRuleGroup: &pb.HTTPFirewallRuleGroup{
+			Id:          int64(group.Id),
+			Name:        group.Name,
+			IsOn:        group.IsOn == 1,
+			Description: group.Description,
+			Code:        group.Code,
+		},
+	}, nil
 }
 
 // 修改分组的规则集

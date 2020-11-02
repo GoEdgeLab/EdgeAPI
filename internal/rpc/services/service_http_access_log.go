@@ -59,3 +59,25 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 		RequestId:  requestId,
 	}, nil
 }
+
+// 查找单个日志
+func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb.FindHTTPAccessLogRequest) (*pb.FindHTTPAccessLogResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	accessLog, err := models.SharedHTTPAccessLogDAO.FindAccessLogWithRequestId(req.RequestId)
+	if err != nil {
+		return nil, err
+	}
+	if accessLog == nil {
+		return &pb.FindHTTPAccessLogResponse{AccessLog: nil}, nil
+	}
+	a, err := accessLog.ToPB()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindHTTPAccessLogResponse{AccessLog: a}, nil
+}

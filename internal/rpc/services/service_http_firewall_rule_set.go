@@ -52,7 +52,7 @@ func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx contex
 }
 
 // 查找规则集配置
-func (this *HTTPFirewallRuleSetService) FindHTTPFirewallRuleSetConfig(ctx context.Context, req *pb.FindHTTPFirewallRuleSetConfigRequest) (*pb.FindHTTPFirewallRuleSetConfigResponse, error) {
+func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSetConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleSetConfigRequest) (*pb.FindEnabledHTTPFirewallRuleSetConfigResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -64,11 +64,40 @@ func (this *HTTPFirewallRuleSetService) FindHTTPFirewallRuleSetConfig(ctx contex
 		return nil, err
 	}
 	if config == nil {
-		return &pb.FindHTTPFirewallRuleSetConfigResponse{FirewallRuleSetJSON: nil}, nil
+		return &pb.FindEnabledHTTPFirewallRuleSetConfigResponse{FirewallRuleSetJSON: nil}, nil
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindHTTPFirewallRuleSetConfigResponse{FirewallRuleSetJSON: configJSON}, nil
+	return &pb.FindEnabledHTTPFirewallRuleSetConfigResponse{FirewallRuleSetJSON: configJSON}, nil
+}
+
+// 查找规则集
+func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSet(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleSetRequest) (*pb.FindEnabledHTTPFirewallRuleSetResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	set, err := models.SharedHTTPFirewallRuleSetDAO.FindEnabledHTTPFirewallRuleSet(req.FirewallRuleSetId)
+	if err != nil {
+		return nil, err
+	}
+	if set == nil {
+		return &pb.FindEnabledHTTPFirewallRuleSetResponse{
+			FirewallRuleSet: nil,
+		}, nil
+	}
+
+	return &pb.FindEnabledHTTPFirewallRuleSetResponse{
+		FirewallRuleSet: &pb.HTTPFirewallRuleSet{
+			Id:          int64(set.Id),
+			Name:        set.Name,
+			IsOn:        set.IsOn == 1,
+			Description: set.Description,
+			Code:        set.Code,
+		},
+	}, nil
 }
