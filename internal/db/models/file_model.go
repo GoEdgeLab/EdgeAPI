@@ -12,6 +12,7 @@ type File struct {
 	Order       uint32 `field:"order"`       // 排序
 	Type        string `field:"type"`        // 类型
 	State       uint8  `field:"state"`       // 状态
+	IsFinished  uint8  `field:"isFinished"`  // 是否已完成上传
 }
 
 type FileOperator struct {
@@ -25,6 +26,7 @@ type FileOperator struct {
 	Order       interface{} // 排序
 	Type        interface{} // 类型
 	State       interface{} // 状态
+	IsFinished  interface{} // 是否已完成上传
 }
 
 func NewFileOperator() *FileOperator {

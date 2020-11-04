@@ -5,8 +5,6 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
-	"mime/multipart"
-	"os"
 )
 
 const (
@@ -66,82 +64,26 @@ func (this *FileDAO) FindEnabledFile(id int64) (*File, error) {
 }
 
 // 创建文件
-func (this *FileDAO) CreateFileFromReader(businessType, description string, filename string, body *multipart.FileHeader, order int) (int, error) {
-	file, err := body.Open()
-	if err != nil {
-		return 0, err
-	}
-
+func (this *FileDAO) CreateFile(businessType, description string, filename string, size int64) (int64, error) {
 	op := NewFileOperator()
 	op.Type = businessType
 	op.Description = description
 	op.State = FileStateEnabled
-	op.Size = body.Size
-	op.Order = order
+	op.Size = size
 	op.Filename = filename
-	_, err = this.Save(op)
+	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
 
-	fileId := types.Int(op.Id)
-
-	// 保存chunk
-	buf := make([]byte, 512*1024)
-	for {
-		n, err := file.Read(buf)
-		if n > 0 {
-			err1 := SharedFileChunkDAO.CreateFileChunk(fileId, buf[:n])
-			if err1 != nil {
-				return 0, err1
-			}
-		}
-		if err != nil {
-			break
-		}
-	}
-
-	return fileId, nil
+	return types.Int64(op.Id), nil
 }
 
-// 创建一个空文件
-func (this *FileDAO) UploadLocalFile(businessType string, localFile string, filename string) (fileId int, err error) {
-	reader, err := os.Open(localFile)
-	if err != nil {
-		return 0, err
-	}
-	defer func() {
-		_ = reader.Close()
-	}()
-	stat, err := reader.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	op := NewFileOperator()
-	op.Type = businessType
-	op.Filename = filename
-	op.Size = stat.Size()
-	op.State = FileStateEnabled
-	_, err = this.Save(op)
-	if err != nil {
-		return
-	}
-	fileId = types.Int(op.Id)
-
-	buf := make([]byte, 512*1024)
-	for {
-		n, err := reader.Read(buf)
-		if n > 0 {
-			err1 := SharedFileChunkDAO.CreateFileChunk(fileId, buf[:n])
-			if err1 != nil {
-				return 0, err1
-			}
-		}
-		if err != nil {
-			break
-		}
-	}
-
-	return fileId, nil
+// 将文件置为已完成
+func (this *FileDAO) UpdateFileIsFinished(fileId int64) error {
+	_, err := this.Query().
+		Pk(fileId).
+		Set("isFinished", true).
+		Update()
+	return err
 }

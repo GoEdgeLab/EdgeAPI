@@ -173,6 +173,9 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterMessageServiceServer(rpcServer, &services.MessageService{})
 	pb.RegisterNodeGroupServiceServer(rpcServer, &services.NodeGroupService{})
 	pb.RegisterServerGroupServiceServer(rpcServer, &services.ServerGroupService{})
+	pb.RegisterIPLibraryServiceServer(rpcServer, &services.IPLibraryService{})
+	pb.RegisterFileChunkServiceServer(rpcServer, &services.FileChunkService{})
+	pb.RegisterFileServiceServer(rpcServer, &services.FileService{})
 	err := rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API]start rpc failed: " + err.Error())
