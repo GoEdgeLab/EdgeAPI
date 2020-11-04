@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -108,4 +110,21 @@ func (this *SysSettingDAO) CompareInt64Setting(code string, anotherValue int64) 
 		return -1, nil
 	}
 	return 0, nil
+}
+
+// 读取全局配置
+func (this *SysSettingDAO) ReadGlobalConfig() (*serverconfigs.GlobalConfig, error) {
+	globalConfigData, err := this.ReadSetting(SettingCodeServerGlobalConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(globalConfigData) == 0 {
+		return &serverconfigs.GlobalConfig{}, nil
+	}
+	config := &serverconfigs.GlobalConfig{}
+	err = json.Unmarshal(globalConfigData, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }

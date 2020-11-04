@@ -10,6 +10,7 @@ require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.4.2
 	github.com/iwind/TeaGo v0.0.0-20201020081413-7cf62d6f420f
+	github.com/lionsoul2014/ip2region v2.2.0-release+incompatible
 	github.com/pkg/sftp v1.12.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	google.golang.org/grpc v1.32.0

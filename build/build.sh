@@ -54,6 +54,7 @@ function build() {
 	cp -R $ROOT/deploy $DIST/
 	rm -f $dist/deploy/.gitignore
 	cp -R $ROOT/installers $DIST/
+	cp -R $ROOT/resources $DIST/
 
 	# building installer
 	echo "building installer ..."
