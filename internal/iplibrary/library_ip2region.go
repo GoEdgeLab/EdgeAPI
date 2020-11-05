@@ -39,6 +39,22 @@ func (this *IP2RegionLibrary) Lookup(ip string) (*Result, error) {
 		return nil, err
 	}
 
+	if info.Country == "0" {
+		info.Country = ""
+	}
+	if info.Region == "0" {
+		info.Region = ""
+	}
+	if info.Province == "0" {
+		info.Province = ""
+	}
+	if info.City == "0" {
+		info.City = ""
+	}
+	if info.ISP == "0" {
+		info.ISP = ""
+	}
+
 	return &Result{
 		CityId:   info.CityId,
 		Country:  info.Country,

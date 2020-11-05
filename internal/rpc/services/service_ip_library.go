@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/iplibrary"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -160,4 +161,28 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 	return rpcutils.RPCDeleteSuccess()
+}
+
+// 查询某个IP信息
+func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.LookupIPRegionRequest) (*pb.LookupIPRegionResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := iplibrary.SharedLibrary.Lookup(req.Ip)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return &pb.LookupIPRegionResponse{Region: nil}, nil
+	}
+	return &pb.LookupIPRegionResponse{Region: &pb.IPRegion{
+		Country:  result.Country,
+		Region:   result.Region,
+		Province: result.Province,
+		City:     result.City,
+		Isp:      result.ISP,
+	}}, nil
 }
