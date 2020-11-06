@@ -106,7 +106,7 @@ func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(countryId in
 	_, err = this.Query().
 		State(RegionProvinceStateEnabled).
 		Attr("countryId", countryId).
-		Asc("name").
+		Asc().
 		Slice(&result).
 		FindAll()
 	return
