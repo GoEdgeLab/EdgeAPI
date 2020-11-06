@@ -251,6 +251,22 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 	return rpcutils.RPCUpdateSuccess()
 }
 
+// 修改inbound信息
+func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx context.Context, req *pb.UpdateHTTPFirewallInboundConfigRequest) (*pb.RPCUpdateSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInbound(req.FirewallPolicyId, req.InboundJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpcutils.RPCUpdateSuccess()
+}
+
 // 计算可用的防火墙策略数量
 func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledFirewallPoliciesRequest) (*pb.CountAllEnabledFirewallPoliciesResponse, error) {
 	// 校验请求

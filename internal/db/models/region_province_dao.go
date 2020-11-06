@@ -1,9 +1,11 @@
 package models
 
 import (
+	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -68,4 +70,44 @@ func (this *RegionProvinceDAO) FindRegionProvinceName(id uint32) (string, error)
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+}
+
+// 根据数据ID查找省份
+func (this *RegionProvinceDAO) FindProvinceIdWithDataId(dataId string) (int64, error) {
+	return this.Query().
+		Attr("dataId", dataId).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// 创建省份
+func (this *RegionProvinceDAO) CreateProvince(countryId int64, name string, dataId string) (int64, error) {
+	op := NewRegionProvinceOperator()
+	op.CountryId = countryId
+	op.Name = name
+	op.DataId = dataId
+	op.State = RegionProvinceStateEnabled
+
+	codes := []string{name}
+	codesJSON, err := json.Marshal(codes)
+	if err != nil {
+		return 0, err
+	}
+	op.Codes = codesJSON
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
+}
+
+// 查找所有省份
+func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(countryId int64) (result []*RegionProvince, err error) {
+	_, err = this.Query().
+		State(RegionProvinceStateEnabled).
+		Attr("countryId", countryId).
+		Asc("name").
+		Slice(&result).
+		FindAll()
+	return
 }

@@ -136,6 +136,22 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(policy
 	return err
 }
 
+// 修改策略的Inbound
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(policyId int64, inboundJSON []byte) error {
+	if policyId <= 0 {
+		return errors.New("invalid policyId")
+	}
+	op := NewHTTPFirewallPolicyOperator()
+	op.Id = policyId
+	if len(inboundJSON) > 0 {
+		op.Inbound = inboundJSON
+	} else {
+		op.Inbound = "null"
+	}
+	_, err := this.Save(op)
+	return err
+}
+
 // 修改策略
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) error {
 	if policyId <= 0 {

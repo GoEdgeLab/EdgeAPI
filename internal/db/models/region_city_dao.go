@@ -1,9 +1,11 @@
 package models
 
 import (
+	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -68,4 +70,33 @@ func (this *RegionCityDAO) FindRegionCityName(id uint32) (string, error) {
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+}
+
+// 根据数据ID查找城市
+func (this *RegionCityDAO) FindCityWithDataId(dataId string) (int64, error) {
+	return this.Query().
+		Attr("dataId", dataId).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// 创建城市
+func (this *RegionCityDAO) CreateCity(provinceId int64, name string, dataId string) (int64, error) {
+	op := NewRegionCityOperator()
+	op.ProvinceId = provinceId
+	op.Name = name
+	op.DataId = dataId
+	op.State = RegionCityStateEnabled
+
+	codes := []string{name}
+	codesJSON, err := json.Marshal(codes)
+	if err != nil {
+		return 0, err
+	}
+	op.Codes = codesJSON
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
 }
