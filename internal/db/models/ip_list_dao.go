@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -110,20 +111,20 @@ func (this *IPListDAO) UpdateIPList(listId int64, name string, code string, time
 }
 
 // 增加版本
-func (this *IPListDAO) IncreaseVersion(listId int64) (int64, error) {
-	if listId <= 0 {
-		return 0, errors.New("invalid listId")
-	}
-	op := NewIPListOperator()
-	op.Id = listId
-	op.Version = dbs.SQL("version+1")
-	_, err := this.Save(op)
+func (this *IPListDAO) IncreaseVersion() (int64, error) {
+	valueJSON, err := SharedSysSettingDAO.ReadSetting(SettingCodeIPListVersion)
 	if err != nil {
 		return 0, err
 	}
+	if len(valueJSON) == 0 {
+		err = SharedSysSettingDAO.UpdateSetting(SettingCodeIPListVersion, []byte("1"))
+		if err != nil {
+			return 0, err
+		}
+		return 1, nil
+	}
 
-	return this.Query().
-		Pk(listId).
-		Result("version").
-		FindInt64Col(0)
+	value := types.Int64(string(valueJSON)) + 1
+	err = SharedSysSettingDAO.UpdateSetting(SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
+	return value, nil
 }

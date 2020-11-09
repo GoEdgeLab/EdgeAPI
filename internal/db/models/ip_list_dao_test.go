@@ -2,13 +2,16 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
 	"runtime"
 	"testing"
 )
 
 func TestIPListDAO_IncreaseVersion(t *testing.T) {
+	dbs.NotifyReady()
+
 	dao := NewIPListDAO()
-	version, err := dao.IncreaseVersion(1)
+	version, err := dao.IncreaseVersion()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,8 +21,10 @@ func TestIPListDAO_IncreaseVersion(t *testing.T) {
 func BenchmarkIPListDAO_IncreaseVersion(b *testing.B) {
 	runtime.GOMAXPROCS(1)
 
+	dbs.NotifyReady()
+
 	dao := NewIPListDAO()
 	for i := 0; i < b.N; i++ {
-		_, _ = dao.IncreaseVersion(1)
+		_, _ = dao.IncreaseVersion()
 	}
 }

@@ -82,6 +82,15 @@ func (this *RegionCountryDAO) FindCountryIdWithDataId(dataId string) (int64, err
 		FindInt64Col(0)
 }
 
+// 根据国家名查找国家ID
+func (this *RegionCountryDAO) FindCountryIdWithCountryName(countryName string) (int64, error) {
+	return this.Query().
+		Where("JSON_CONTAINS(codes, :countryName)").
+		Param("countryName", "\""+countryName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // 根据数据ID创建国家
 func (this *RegionCountryDAO) CreateCountry(name string, dataId string) (int64, error) {
 	op := NewRegionCountryOperator()

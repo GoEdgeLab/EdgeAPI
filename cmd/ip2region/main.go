@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 )
 
 func main() {
@@ -104,6 +105,65 @@ func main() {
 						logs.Println("[ERROR]" + err.Error())
 						return
 					}
+				}
+			}
+		}
+
+		logs.Println("done")
+	}
+
+	// 检查数据
+	if lists.ContainsString(os.Args, "check") {
+		dbs.NotifyReady()
+
+		data, err := ioutil.ReadFile(Tea.Root + "/resources/ipdata/ip2region/ip.merge.txt")
+		if err != nil {
+			logs.Println("[ERROR]" + err.Error())
+			return
+		}
+		if len(data) == 0 {
+			logs.Println("[ERROR]file should not be empty")
+			return
+		}
+		lines := bytes.Split(data, []byte("\n"))
+		for index, line := range lines {
+			s := string(bytes.TrimSpace(line))
+			if len(s) == 0 {
+				continue
+			}
+			pieces := strings.Split(s, "|")
+			countryName := pieces[2]
+			provinceName := pieces[4]
+
+			if lists.ContainsString([]string{"0", "欧洲", "北美地区", "法国南部领地", "非洲地区", "亚太地区"}, countryName) {
+				continue
+			}
+
+			// 检查国家
+			countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(countryName)
+			if err != nil {
+				logs.Println("[ERROR]" + err.Error())
+				return
+			}
+			if countryId == 0 {
+				logs.Println("[ERROR]can not find country '"+countryName+"', index: ", index, "data: "+s)
+				return
+			}
+
+			// 检查省份
+			if countryName == "中国" {
+				if lists.ContainsString([]string{"0"}, provinceName) {
+					continue
+				}
+
+				provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(provinceName)
+				if err != nil {
+					logs.Println("[ERROR]" + err.Error())
+					return
+				}
+				if provinceId == 0 {
+					logs.Println("[ERROR]can not find province '"+provinceName+"', index: ", index, "data: "+s)
+					return
 				}
 			}
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 const (
@@ -66,7 +67,7 @@ func (this *IPItemDAO) FindEnabledIPItem(id int64) (*IPItem, error) {
 
 // 创建IP
 func (this *IPItemDAO) CreateIPItem(listId int64, ipFrom string, ipTo string, expiredAt int64, reason string) (int64, error) {
-	version, err := SharedIPListDAO.IncreaseVersion(listId)
+	version, err := SharedIPListDAO.IncreaseVersion()
 	if err != nil {
 		return 0, err
 	}
@@ -106,7 +107,7 @@ func (this *IPItemDAO) UpdateIPItem(itemId int64, ipFrom string, ipTo string, ex
 		return errors.New("not found")
 	}
 
-	version, err := SharedIPListDAO.IncreaseVersion(listId)
+	version, err := SharedIPListDAO.IncreaseVersion()
 	if err != nil {
 		return err
 	}
@@ -142,6 +143,20 @@ func (this *IPItemDAO) ListIPItemsWithListId(listId int64, offset int64, size in
 		Slice(&result).
 		Offset(offset).
 		Limit(size).
+		FindAll()
+	return
+}
+
+// 根据版本号查找IP列表
+func (this *IPItemDAO) ListIPItemsAfterVersion(version int64, size int64) (result []*IPItem, err error) {
+	_, err = this.Query().
+		// 这里不要设置状态参数，因为我们要知道哪些是删除的
+		Gt("version", version).
+		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
+		Param("expiredAt", time.Now().Unix()).
+		Asc("version").
+		Limit(size).
+		Slice(&result).
 		FindAll()
 	return
 }

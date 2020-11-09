@@ -14,7 +14,7 @@ type RegionProvinceService struct {
 // 查找所有省份
 func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ctx context.Context, req *pb.FindAllEnabledRegionProvincesWithCountryIdRequest) (*pb.FindAllEnabledRegionProvincesWithCountryIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +26,9 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 	result := []*pb.RegionProvince{}
 	for _, province := range provinces {
 		result = append(result, &pb.RegionProvince{
-			Id:   int64(province.Id),
-			Name: province.Name,
+			Id:    int64(province.Id),
+			Name:  province.Name,
+			Codes: province.DecodeCodes(),
 		})
 	}
 

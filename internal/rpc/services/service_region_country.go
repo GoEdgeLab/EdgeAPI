@@ -15,7 +15,7 @@ type RegionCountryService struct {
 // 查找所有的国家列表
 func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Context, req *pb.FindAllEnabledRegionCountriesRequest) (*pb.FindAllEnabledRegionCountriesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +39,7 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		result = append(result, &pb.RegionCountry{
 			Id:     int64(country.Id),
 			Name:   country.Name,
+			Codes:  country.DecodeCodes(),
 			Pinyin: pinyinStrings,
 		})
 	}

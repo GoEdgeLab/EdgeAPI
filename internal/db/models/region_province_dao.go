@@ -80,6 +80,15 @@ func (this *RegionProvinceDAO) FindProvinceIdWithDataId(dataId string) (int64, e
 		FindInt64Col(0)
 }
 
+// 根据省份名查找省份ID
+func (this *RegionProvinceDAO) FindProvinceIdWithProvinceName(provinceName string) (int64, error) {
+	return this.Query().
+		Where("JSON_CONTAINS(codes, :provinceName)").
+		Param("provinceName", "\""+provinceName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // 创建省份
 func (this *RegionProvinceDAO) CreateProvince(countryId int64, name string, dataId string) (int64, error) {
 	op := NewRegionProvinceOperator()

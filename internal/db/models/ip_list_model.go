@@ -12,7 +12,6 @@ type IPList struct {
 	State     uint8  `field:"state"`     // 状态
 	CreatedAt uint64 `field:"createdAt"` // 创建时间
 	Timeout   string `field:"timeout"`   // 默认超时时间
-	Version   uint64 `field:"version"`   // 版本
 }
 
 type IPListOperator struct {
@@ -26,7 +25,6 @@ type IPListOperator struct {
 	State     interface{} // 状态
 	CreatedAt interface{} // 创建时间
 	Timeout   interface{} // 默认超时时间
-	Version   interface{} // 版本
 }
 
 func NewIPListOperator() *IPListOperator {

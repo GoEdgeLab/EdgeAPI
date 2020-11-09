@@ -55,6 +55,8 @@ function build() {
 	rm -f $dist/deploy/.gitignore
 	cp -R $ROOT/installers $DIST/
 	cp -R $ROOT/resources $DIST/
+	rm -f $DIST/resources/ipdata/ip2region/global_region.csv
+	rm -f $DIST/resources/ipdata/ip2region/ip.merge.txt
 
 	# building installer
 	echo "building installer ..."

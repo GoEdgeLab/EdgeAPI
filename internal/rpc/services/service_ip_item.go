@@ -122,3 +122,32 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 		Reason:    item.Reason,
 	}}, nil
 }
+
+// 根据版本列出一组IP
+func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.ListIPItemsAfterVersionRequest) (*pb.ListIPItemsAfterVersionResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.IPItem{}
+	items, err := models.SharedIPItemDAO.ListIPItemsAfterVersion(req.Version, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range items {
+		result = append(result, &pb.IPItem{
+			Id:        int64(item.Id),
+			IpFrom:    item.IpFrom,
+			IpTo:      item.IpTo,
+			Version:   int64(item.Version),
+			ExpiredAt: int64(item.ExpiredAt),
+			Reason:    "", // 这里我们不需要这个数据
+			ListId:    int64(item.ListId),
+			IsDeleted: item.State == 0,
+		})
+	}
+
+	return &pb.ListIPItemsAfterVersionResponse{IpItems: result}, nil
+}
