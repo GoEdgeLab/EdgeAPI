@@ -72,7 +72,7 @@ func (this *AdminDAO) ExistEnabledAdmin(adminId int64) (bool, error) {
 }
 
 // 获取管理员名称
-func (this *AdminDAO) FindAdminFullname(adminId int) (string, error) {
+func (this *AdminDAO) FindAdminFullname(adminId int64) (string, error) {
 	return this.Query().
 		Pk(adminId).
 		Result("fullname").

@@ -48,19 +48,6 @@ func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequ
 	}, nil
 }
 
-// 创建操作日志
-func (this *AdminService) CreateAdminLog(ctx context.Context, req *pb.CreateAdminLogRequest) (*pb.CreateAdminLogResponse, error) {
-	_, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-	err = models.SharedLogDAO.CreateAdminLog(userId, req.Level, req.Description, req.Action, req.Ip)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.CreateAdminLogResponse{}, nil
-}
-
 // 检查管理员是否存在
 func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdminExistsRequest) (*pb.CheckAdminExistsResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -108,7 +95,7 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 		return nil, err
 	}
 
-	fullname, err := models.SharedAdminDAO.FindAdminFullname(int(req.AdminId))
+	fullname, err := models.SharedAdminDAO.FindAdminFullname(req.AdminId)
 	if err != nil {
 		utils.PrintError(err)
 		return nil, err

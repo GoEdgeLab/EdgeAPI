@@ -59,3 +59,11 @@ func (this *UserDAO) FindEnabledUser(id uint32) (*User, error) {
 	}
 	return result.(*User), err
 }
+
+// 获取管理员名称
+func (this *UserDAO) FindUserFullname(userId int64) (string, error) {
+	return this.Query().
+		Pk(userId).
+		Result("fullname").
+		FindStringCol("")
+}

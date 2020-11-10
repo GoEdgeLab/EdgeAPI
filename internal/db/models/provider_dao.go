@@ -33,7 +33,7 @@ func init() {
 }
 
 // 启用条目
-func (this *ProviderDAO) EnableProvider(id uint32) (rowsAffected int64, err error) {
+func (this *ProviderDAO) EnableProvider(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", ProviderStateEnabled).
@@ -41,7 +41,7 @@ func (this *ProviderDAO) EnableProvider(id uint32) (rowsAffected int64, err erro
 }
 
 // 禁用条目
-func (this *ProviderDAO) DisableProvider(id uint32) (rowsAffected int64, err error) {
+func (this *ProviderDAO) DisableProvider(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", ProviderStateDisabled).
@@ -49,7 +49,7 @@ func (this *ProviderDAO) DisableProvider(id uint32) (rowsAffected int64, err err
 }
 
 // 查找启用中的条目
-func (this *ProviderDAO) FindEnabledProvider(id uint32) (*Provider, error) {
+func (this *ProviderDAO) FindEnabledProvider(id int64) (*Provider, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", ProviderStateEnabled).
@@ -58,4 +58,12 @@ func (this *ProviderDAO) FindEnabledProvider(id uint32) (*Provider, error) {
 		return nil, err
 	}
 	return result.(*Provider), err
+}
+
+// 查找供应商名称
+func (this *ProviderDAO) FindProviderName(providerId int64) (string, error) {
+	return this.Query().
+		Pk(providerId).
+		Result("name").
+		FindStringCol("")
 }
