@@ -46,9 +46,15 @@ func (this *IPItemDAO) EnableIPItem(id int64) error {
 
 // 禁用条目
 func (this *IPItemDAO) DisableIPItem(id int64) error {
-	_, err := this.Query().
+	version, err := SharedIPListDAO.IncreaseVersion()
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query().
 		Pk(id).
 		Set("state", IPItemStateDisabled).
+		Set("version", version).
 		Update()
 	return err
 }

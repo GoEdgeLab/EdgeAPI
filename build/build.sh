@@ -29,7 +29,7 @@ function build() {
 	fi
 	cd $ROOT"/../../EdgeNode/build"
 	echo "=============================="
-	architects=("amd64" "386" "arm64" "arm64be" "mips64" "mips64le")
+	architects=("amd64" "386" "arm64" "mips64" "mips64le")
 	for arch in "${architects[@]}"; do
 		./build.sh linux $arch
 	done

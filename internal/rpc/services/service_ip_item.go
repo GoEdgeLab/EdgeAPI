@@ -23,6 +23,9 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 	if err != nil {
 		return nil, err
 	}
+
+
+
 	return &pb.CreateIPItemResponse{IpItemId: itemId}, nil
 }
 
