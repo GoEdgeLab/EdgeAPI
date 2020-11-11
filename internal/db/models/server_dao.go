@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
 	"strings"
@@ -137,6 +138,12 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 		}
 		op.GroupIds = groupIdsJSON
 	}
+
+	dnsName, err := this.genDNSName()
+	if err != nil {
+		return 0, err
+	}
+	op.DnsName = dnsName
 
 	op.Version = 1
 	op.IsOn = 1
@@ -794,4 +801,20 @@ func (this *ServerDAO) CountAllEnabledServersWithGroupId(groupId int64) (int64, 
 // 创建事件
 func (this *ServerDAO) createEvent() error {
 	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+}
+
+// 生成DNS Name
+func (this *ServerDAO) genDNSName() (string, error) {
+	for {
+		dnsName := rands.HexString(8)
+		exist, err := this.Query().
+			Attr("dnsName", dnsName).
+			Exist()
+		if err != nil {
+			return "", err
+		}
+		if !exist {
+			return dnsName, nil
+		}
+	}
 }

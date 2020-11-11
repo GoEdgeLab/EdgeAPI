@@ -27,6 +27,7 @@ type Server struct {
 	Version      uint32 `field:"version"`      // 版本号
 	CreatedAt    uint64 `field:"createdAt"`    // 创建时间
 	State        uint8  `field:"state"`        // 状态
+	DnsName      string `field:"dnsName"`      // DNS名称
 }
 
 type ServerOperator struct {
@@ -55,6 +56,7 @@ type ServerOperator struct {
 	Version      interface{} // 版本号
 	CreatedAt    interface{} // 创建时间
 	State        interface{} // 状态
+	DnsName      interface{} // DNS名称
 }
 
 func NewServerOperator() *ServerOperator {

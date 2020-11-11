@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"testing"
 )
@@ -41,4 +42,13 @@ func TestNewServerDAO_md5(t *testing.T) {
 	}
 	h := m.Sum(nil)
 	t.Logf("%x", h)
+}
+
+func TestServerDAO_genDNSName(t *testing.T) {
+	dbs.NotifyReady()
+	dnsName, err := SharedServerDAO.genDNSName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("dnsName:", dnsName)
 }

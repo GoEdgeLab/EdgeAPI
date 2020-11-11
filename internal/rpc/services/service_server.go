@@ -420,6 +420,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			ExcludeNodes:   []byte(server.ExcludeNodes),
 			ServerNamesJON: []byte(server.ServerNames),
 			CreatedAt:      int64(server.CreatedAt),
+			DnsName:        server.DnsName,
 			Cluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
@@ -515,6 +516,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		Type:             server.Type,
 		Name:             server.Name,
 		Description:      server.Description,
+		DnsName:          server.DnsName,
 		Config:           []byte(server.Config),
 		ServerNamesJON:   []byte(server.ServerNames),
 		HttpJSON:         []byte(server.Http),

@@ -17,6 +17,9 @@ type NodeCluster struct {
 	UniqueId       string `field:"uniqueId"`       // 唯一ID
 	Secret         string `field:"secret"`         // 密钥
 	HealthCheck    string `field:"healthCheck"`    // 健康检查
+	DnsProviderId  uint32 `field:"dnsProviderId"`  // 当前使用的DNS供应商
+	DnsName        string `field:"dnsName"`        // DNS名称
+	DnsDomain      string `field:"dnsDomain"`      // DNS域
 }
 
 type NodeClusterOperator struct {
@@ -35,6 +38,9 @@ type NodeClusterOperator struct {
 	UniqueId       interface{} // 唯一ID
 	Secret         interface{} // 密钥
 	HealthCheck    interface{} // 健康检查
+	DnsProviderId  interface{} // 当前使用的DNS供应商
+	DnsName        interface{} // DNS名称
+	DnsDomain      interface{} // DNS域
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

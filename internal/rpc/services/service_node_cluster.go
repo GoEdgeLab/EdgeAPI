@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsproviders"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
@@ -349,4 +350,60 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx contex
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{Clusters: result}, nil
+}
+
+// 查找集群的DNS配置
+func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, req *pb.FindEnabledNodeClusterDNSRequest) (*pb.FindEnabledNodeClusterDNSResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if dnsInfo == nil {
+		return &pb.FindEnabledNodeClusterDNSResponse{
+			Name:     "",
+			Domain:   "",
+			Provider: nil,
+		}, nil
+	}
+
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(dnsInfo.DnsProviderId))
+	if err != nil {
+		return nil, err
+	}
+
+	var pbProvider *pb.DNSProvider = nil
+	if provider != nil {
+		pbProvider = &pb.DNSProvider{
+			Id:       int64(provider.Id),
+			Type:     provider.Type,
+			TypeName: dnsproviders.FindProviderTypeName(provider.Type),
+		}
+	}
+
+	return &pb.FindEnabledNodeClusterDNSResponse{
+		Name:     dnsInfo.DnsName,
+		Domain:   dnsInfo.DnsDomain,
+		Provider: pbProvider,
+	}, nil
+}
+
+// 计算使用某个DNS服务商的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSProviderIdRequest) (*pb.CountAllEnabledNodeClustersWithDNSProviderIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSProviderId(req.DnsProviderId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountAllEnabledNodeClustersWithDNSProviderIdResponse{Count: count}, nil
 }

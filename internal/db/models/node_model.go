@@ -23,6 +23,7 @@ type Node struct {
 	State             uint8  `field:"state"`             // 状态
 	ConnectedAPINodes string `field:"connectedAPINodes"` // 当前连接的API节点
 	MaxCPU            uint32 `field:"maxCPU"`            // 可以使用的最多CPU
+	DnsRoutes         string `field:"dnsRoutes"`         // DNS线路设置
 }
 
 type NodeOperator struct {
@@ -47,6 +48,7 @@ type NodeOperator struct {
 	State             interface{} // 状态
 	ConnectedAPINodes interface{} // 当前连接的API节点
 	MaxCPU            interface{} // 可以使用的最多CPU
+	DnsRoutes         interface{} // DNS线路设置
 }
 
 func NewNodeOperator() *NodeOperator {

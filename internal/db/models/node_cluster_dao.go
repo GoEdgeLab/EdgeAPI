@@ -268,12 +268,46 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(grantId int64) (re
 	return
 }
 
+// 计算使用某个DNS服务商的集群数量
+func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(dnsProviderId int64) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("dnsProviderId", dnsProviderId).
+		Count()
+}
+
+// 获取所有使用某个DNS服务商的集群
+func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSProviderId(dnsProviderId int64) (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("dnsProviderId", dnsProviderId).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
+}
+
 // 查找集群的认证ID
 func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
 	return this.Query().
 		Pk(clusterId).
 		Result("grantId").
 		FindInt64Col(0)
+}
+
+// 查找DNS信息
+func (this *NodeClusterDAO) FindClusterDNSInfo(clusterId int64) (*NodeCluster, error) {
+	one, err := this.Query().
+		Pk(clusterId).
+		Result("dnsName", "dnsDomain", "dnsProviderId").
+		Find()
+	if err != nil {
+		return nil, err
+	}
+	if one == nil {
+		return nil, nil
+	}
+	return one.(*NodeCluster), nil
 }
 
 // 生成唯一ID
