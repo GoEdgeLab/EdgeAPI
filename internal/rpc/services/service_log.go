@@ -27,7 +27,7 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 }
 
 // 计算日志数量
-func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) (*pb.CountLogResponse, error) {
+func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -38,7 +38,7 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountLogResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页日志

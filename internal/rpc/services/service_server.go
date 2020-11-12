@@ -348,7 +348,7 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 }
 
 // 计算服务数量
-func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.CountAllEnabledServersMatchResponse, error) {
+func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -359,7 +359,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledServersMatchResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页服务
@@ -639,7 +639,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 }
 
 // 计算使用某个SSL证书的服务数量
-func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.CountAllEnabledServersWithSSLCertIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -652,7 +652,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 	}
 
 	if len(policyIds) == 0 {
-		return &pb.CountAllEnabledServersWithSSLCertIdResponse{Count: 0}, nil
+		return &pb.RPCCountResponse{Count: 0}, nil
 	}
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersWithSSLPolicyIds(policyIds)
@@ -660,7 +660,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledServersWithSSLCertIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 查找使用某个SSL证书的所有服务
@@ -696,7 +696,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 }
 
 // 计算使用某个缓存策略的服务数量
-func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithCachePolicyIdRequest) (*pb.CountAllEnabledServersWithCachePolicyIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithCachePolicyIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -708,14 +708,14 @@ func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.C
 		return nil, err
 	}
 	if len(webIds) == 0 {
-		return &pb.CountAllEnabledServersWithCachePolicyIdResponse{Count: 0}, nil
+		return &pb.RPCCountResponse{Count: 0}, nil
 	}
 
 	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledServersWithCachePolicyIdResponse{Count: countServers}, nil
+	return &pb.RPCCountResponse{Count: countServers}, nil
 }
 
 // 查找使用某个缓存策略的所有服务
@@ -752,7 +752,7 @@ func (this *ServerService) FindAllEnabledServersWithCachePolicyId(ctx context.Co
 }
 
 // 计算使用某个WAF策略的服务数量
-func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithHTTPFirewallPolicyIdRequest) (*pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithHTTPFirewallPolicyIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -765,14 +765,14 @@ func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx co
 	}
 
 	if len(webIds) == 0 {
-		return &pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse{Count: 0}, nil
+		return &pb.RPCCountResponse{Count: 0}, nil
 	}
 
 	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledServersWithHTTPFirewallPolicyIdResponse{Count: countServers}, nil
+	return &pb.RPCCountResponse{Count: countServers}, nil
 }
 
 // 查找使用某个WAF策略的所有服务
@@ -810,7 +810,7 @@ func (this *ServerService) FindAllEnabledServersWithHTTPFirewallPolicyId(ctx con
 }
 
 // 计算运行在某个集群上的所有服务数量
-func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.CountAllEnabledServersWithNodeClusterIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -821,11 +821,11 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledServersWithNodeClusterIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 计算使用某个分组的服务数量
-func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithGroupIdRequest) (*pb.CountAllEnabledServersWithGroupIdResponse, error) {
+func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -836,7 +836,7 @@ func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledServersWithGroupIdResponse{
+	return &pb.RPCCountResponse{
 		Count: count,
 	}, nil
 }

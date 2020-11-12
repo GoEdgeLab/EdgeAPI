@@ -206,7 +206,7 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 }
 
 // 计算所有集群数量
-func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context, req *pb.CountAllEnabledNodeClustersRequest) (*pb.CountAllEnabledNodeClustersResponse, error) {
+func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context, req *pb.CountAllEnabledNodeClustersRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledNodeClustersResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页集群
@@ -312,7 +312,7 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 }
 
 // 计算使用某个认证的集群数量
-func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithGrantIdRequest) (*pb.CountAllEnabledNodeClustersWithGrantIdResponse, error) {
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -323,7 +323,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodeClustersWithGrantIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 查找使用某个认证的所有集群
@@ -367,12 +367,36 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	if dnsInfo == nil {
 		return &pb.FindEnabledNodeClusterDNSResponse{
 			Name:     "",
-			Domain:   "",
+			Domain:   nil,
+			Provider: nil,
+		}, nil
+	}
+	if dnsInfo.DnsDomainId == 0 {
+		return &pb.FindEnabledNodeClusterDNSResponse{
+			Name:     dnsInfo.DnsName,
+			Domain:   nil,
 			Provider: nil,
 		}, nil
 	}
 
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(dnsInfo.DnsProviderId))
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(int64(dnsInfo.DnsDomainId))
+	if err != nil {
+		return nil, err
+	}
+	if domain == nil {
+		return &pb.FindEnabledNodeClusterDNSResponse{
+			Name:     dnsInfo.DnsName,
+			Domain:   nil,
+			Provider: nil,
+		}, nil
+	}
+	pbDomain := &pb.DNSDomain{
+		Id:   int64(domain.Id),
+		Name: domain.Name,
+		IsOn: domain.IsOn == 1,
+	}
+
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(domain.ProviderId))
 	if err != nil {
 		return nil, err
 	}
@@ -388,13 +412,13 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 
 	return &pb.FindEnabledNodeClusterDNSResponse{
 		Name:     dnsInfo.DnsName,
-		Domain:   dnsInfo.DnsDomain,
+		Domain:   pbDomain,
 		Provider: pbProvider,
 	}, nil
 }
 
 // 计算使用某个DNS服务商的集群数量
-func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSProviderIdRequest) (*pb.CountAllEnabledNodeClustersWithDNSProviderIdResponse, error) {
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -405,5 +429,20 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodeClustersWithDNSProviderIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
+}
+
+// 计算使用某个DNS域名的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.RPCCountResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.RPCCountResponse{Count: count}, nil
 }

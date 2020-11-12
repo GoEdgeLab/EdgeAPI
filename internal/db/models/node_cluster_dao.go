@@ -272,7 +272,8 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(grantId int64) (re
 func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(dnsProviderId int64) (int64, error) {
 	return this.Query().
 		State(NodeClusterStateEnabled).
-		Attr("dnsProviderId", dnsProviderId).
+		Where("dnsDomainId IN (SELECT id FROM "+SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
+		Param("providerId", dnsProviderId).
 		Count()
 }
 
@@ -280,11 +281,20 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(dnsProvider
 func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSProviderId(dnsProviderId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query().
 		State(NodeClusterStateEnabled).
-		Attr("dnsProviderId", dnsProviderId).
+		Where("dnsDomainId IN (SELECT id FROM "+SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
+		Param("providerId", dnsProviderId).
 		Slice(&result).
 		DescPk().
 		FindAll()
 	return
+}
+
+// 计算使用某个DNS域名的集群数量
+func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSDomainId(dnsDomainId int64) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("dnsDomainId", dnsDomainId).
+		Count()
 }
 
 // 查找集群的认证ID

@@ -81,7 +81,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 }
 
 // 计算节点数量
-func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.CountAllEnabledNodesResponse, error) {
+func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -93,11 +93,11 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledNodesResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 计算匹配的节点数量
-func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.CountAllEnabledNodesMatchRequest) (*pb.CountAllEnabledNodesMatchResponse, error) {
+func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.CountAllEnabledNodesMatchRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodesMatchResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页的节点
@@ -539,7 +539,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 }
 
 // 计算使用某个认证的节点数量
-func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodesWithGrantIdRequest) (*pb.CountAllEnabledNodesWithGrantIdResponse, error) {
+func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodesWithGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -550,7 +550,7 @@ func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodesWithGrantIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 查找使用某个认证的所有节点
@@ -824,7 +824,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 }
 
 // 计算某个节点分组内的节点数量
-func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithGroupIdRequest) (*pb.CountAllEnabledNodesWithGroupIdResponse, error) {
+func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -835,5 +835,5 @@ func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodesWithGroupIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }

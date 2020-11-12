@@ -94,7 +94,7 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 }
 
 // 计算API节点数量
-func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb.CountAllEnabledAPINodesRequest) (*pb.CountAllEnabledAPINodesResponse, error) {
+func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb.CountAllEnabledAPINodesRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.CountAllEnabledAPINodesResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页的API节点

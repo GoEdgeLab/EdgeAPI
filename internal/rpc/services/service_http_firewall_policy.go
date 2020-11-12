@@ -268,7 +268,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 }
 
 // 计算可用的防火墙策略数量
-func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledFirewallPoliciesRequest) (*pb.CountAllEnabledFirewallPoliciesResponse, error) {
+func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledFirewallPoliciesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -279,7 +279,7 @@ func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledFirewallPoliciesResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页的防火墙策略

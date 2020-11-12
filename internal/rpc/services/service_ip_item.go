@@ -60,7 +60,7 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 }
 
 // 计算IP数量
-func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.CountIPItemsWithListIdRequest) (*pb.CountIPItemsWithListIdResponse, error) {
+func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.CountIPItemsWithListIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -71,7 +71,7 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountIPItemsWithListIdResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页的IP

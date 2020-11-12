@@ -50,7 +50,7 @@ func (this *NodeGrantService) DisableNodeGrant(ctx context.Context, req *pb.Disa
 	return &pb.DisableNodeGrantResponse{}, err
 }
 
-func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req *pb.CountAllEnabledNodeGrantsRequest) (*pb.CountAllEnabledNodeGrantsResponse, error) {
+func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req *pb.CountAllEnabledNodeGrantsRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledNodeGrantsResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 func (this *NodeGrantService) ListEnabledNodeGrants(ctx context.Context, req *pb.ListEnabledNodeGrantsRequest) (*pb.ListEnabledNodeGrantsResponse, error) {

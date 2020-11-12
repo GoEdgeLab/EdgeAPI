@@ -20,7 +20,7 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(req.Type, req.Name, req.ApiParamsJSON, req.RoutesJSON)
+	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(req.Type, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	err = models.SharedDNSProviderDAO.UpdateDNSProvider(req.DnsProviderId, req.Name, req.ApiParamsJSON, req.RoutesJSON)
+	err = models.SharedDNSProviderDAO.UpdateDNSProvider(req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 }
 
 // 计算服务商数量
-func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context, req *pb.CountAllEnabledDNSProvidersRequest) (*pb.CountAllEnabledDNSProvidersResponse, error) {
+func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context, req *pb.CountAllEnabledDNSProvidersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -55,7 +55,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledDNSProvidersResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页服务商信息
@@ -78,7 +78,6 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 			Type:          provider.Type,
 			TypeName:      dnsproviders.FindProviderTypeName(provider.Type),
 			ApiParamsJSON: []byte(provider.ApiParams),
-			RoutesJSON:    []byte(provider.Routes),
 			DataUpdatedAt: int64(provider.DataUpdatedAt),
 		})
 	}
@@ -122,7 +121,6 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		Type:          provider.Type,
 		TypeName:      dnsproviders.FindProviderTypeName(provider.Type),
 		ApiParamsJSON: []byte(provider.ApiParams),
-		RoutesJSON:    []byte(provider.Routes),
 		DataUpdatedAt: int64(provider.DataUpdatedAt),
 	}}, nil
 }
@@ -143,4 +141,17 @@ func (this *DNSProviderService) FindAllDNSProviderTypes(ctx context.Context, req
 		})
 	}
 	return &pb.FindAllDNSProviderTypesResponse{ProviderTypes: result}, nil
+}
+
+// 更新数据
+func (this *DNSProviderService) UpdateDNSProviderData(ctx context.Context, req *pb.UpdateDNSProviderDataRequest) (*pb.UpdateDNSProviderDataResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 需要实现
+
+	return &pb.UpdateDNSProviderDataResponse{IsOk: true}, nil
 }

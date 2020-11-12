@@ -9,7 +9,6 @@ type DNSProvider struct {
 	ApiParams     string `field:"apiParams"`     // API参数
 	CreatedAt     uint64 `field:"createdAt"`     // 创建时间
 	State         uint8  `field:"state"`         // 状态
-	Routes        string `field:"routes"`        // 可以使用的线路
 	DataUpdatedAt uint64 `field:"dataUpdatedAt"` // 数据同步时间
 }
 
@@ -21,7 +20,6 @@ type DNSProviderOperator struct {
 	ApiParams     interface{} // API参数
 	CreatedAt     interface{} // 创建时间
 	State         interface{} // 状态
-	Routes        interface{} // 可以使用的线路
 	DataUpdatedAt interface{} // 数据同步时间
 }
 

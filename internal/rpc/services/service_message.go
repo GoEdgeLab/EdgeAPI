@@ -12,7 +12,7 @@ type MessageService struct {
 }
 
 // 计算未读消息数
-func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.CountUnreadMessagesRequest) (*pb.CountUnreadMessagesResponse, error) {
+func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.CountUnreadMessagesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -23,7 +23,7 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountUnreadMessagesResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页未读消息

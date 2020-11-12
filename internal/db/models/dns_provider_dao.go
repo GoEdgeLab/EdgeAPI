@@ -6,7 +6,6 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
-	"time"
 )
 
 const (
@@ -66,18 +65,14 @@ func (this *DNSProviderDAO) FindEnabledDNSProvider(id int64) (*DNSProvider, erro
 }
 
 // 创建服务商
-func (this *DNSProviderDAO) CreateDNSProvider(providerType string, name string, apiParamsJSON []byte, routesJSON []byte) (int64, error) {
+func (this *DNSProviderDAO) CreateDNSProvider(providerType string, name string, apiParamsJSON []byte) (int64, error) {
 	op := NewDNSProviderOperator()
 	op.Type = providerType
 	op.Name = name
 	if len(apiParamsJSON) > 0 {
 		op.ApiParams = apiParamsJSON
 	}
-	if len(routesJSON) > 0 {
-		op.Routes = routesJSON
-	}
 	op.State = DNSProviderStateEnabled
-	op.DataUpdatedAt = time.Now().Unix()
 	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
@@ -86,7 +81,7 @@ func (this *DNSProviderDAO) CreateDNSProvider(providerType string, name string, 
 }
 
 // 修改服务商
-func (this *DNSProviderDAO) UpdateDNSProvider(dnsProviderId int64, name string, apiParamsJSON []byte, routesJSON []byte) error {
+func (this *DNSProviderDAO) UpdateDNSProvider(dnsProviderId int64, name string, apiParamsJSON []byte) error {
 	if dnsProviderId <= 0 {
 		return errors.New("invalid dnsProviderId")
 	}
@@ -100,12 +95,6 @@ func (this *DNSProviderDAO) UpdateDNSProvider(dnsProviderId int64, name string, 
 		op.ApiParams = apiParamsJSON
 	}
 
-	// 如果留空则表示不修改
-	if len(routesJSON) > 0 {
-		op.Routes = routesJSON
-	}
-
-	op.DataUpdatedAt = time.Now().Unix()
 	_, err := this.Save(op)
 	if err != nil {
 		return err

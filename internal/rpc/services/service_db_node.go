@@ -55,7 +55,7 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 }
 
 // 计算可用的数据库节点数量
-func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.CountAllEnabledDBNodesRequest) (*pb.CountAllEnabledDBNodesResponse, error) {
+func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.CountAllEnabledDBNodesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -65,7 +65,7 @@ func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.C
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CountAllEnabledDBNodesResponse{Count: count}, nil
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 列出单页的数据库节点

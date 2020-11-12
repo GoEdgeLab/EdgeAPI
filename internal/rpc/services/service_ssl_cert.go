@@ -82,7 +82,7 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 }
 
 // 计算匹配的Cert数量
-func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLCertRequest) (*pb.CountSSLCertResponse, error) {
+func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLCertRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -94,7 +94,7 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 		return nil, err
 	}
 
-	return &pb.CountSSLCertResponse{
+	return &pb.RPCCountResponse{
 		Count: count,
 	}, nil
 }
