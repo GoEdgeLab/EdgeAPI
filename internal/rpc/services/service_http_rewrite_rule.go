@@ -28,7 +28,7 @@ func (this *HTTPRewriteRuleService) CreateHTTPRewriteRule(ctx context.Context, r
 }
 
 // 修改重写规则
-func (this *HTTPRewriteRuleService) UpdateHTTPRewriteRule(ctx context.Context, req *pb.UpdateHTTPRewriteRuleRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPRewriteRuleService) UpdateHTTPRewriteRule(ctx context.Context, req *pb.UpdateHTTPRewriteRuleRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -40,5 +40,5 @@ func (this *HTTPRewriteRuleService) UpdateHTTPRewriteRule(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }

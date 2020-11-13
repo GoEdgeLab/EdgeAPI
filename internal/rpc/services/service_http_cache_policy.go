@@ -50,7 +50,7 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 }
 
 // 修改缓存策略
-func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, req *pb.UpdateHTTPCachePolicyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, req *pb.UpdateHTTPCachePolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -62,11 +62,11 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 删除缓存策略
-func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, req *pb.DeleteHTTPCachePolicyRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, req *pb.DeleteHTTPCachePolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -78,7 +78,7 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 计算缓存策略数量

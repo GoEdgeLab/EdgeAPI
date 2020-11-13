@@ -149,7 +149,7 @@ func (this *IPLibraryService) FindAllEnabledIPLibrariesWithType(ctx context.Cont
 }
 
 // 删除IP库
-func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.DeleteIPLibraryRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.DeleteIPLibraryRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -160,7 +160,7 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查询某个IP信息

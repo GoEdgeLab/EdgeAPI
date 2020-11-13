@@ -38,7 +38,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 }
 
 // 修改源站
-func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOriginRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOriginRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 查找单个源站信息

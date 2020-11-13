@@ -29,21 +29,6 @@ func TestAdminService_Login(t *testing.T) {
 	a.LogJSON(resp)
 }
 
-func TestAdminService_CreateLog(t *testing.T) {
-	service := &AdminService{debug: true}
-
-	resp, err := service.CreateAdminLog(testCtx(t), &pb.CreateAdminLogRequest{
-		Level:       "info",
-		Description: "这是一个测试日志",
-		Action:      "/login",
-		Ip:          "127.0.0.1",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(resp)
-}
-
 func TestAdminService_FindAdminFullname(t *testing.T) {
 	service := &AdminService{
 		debug: true,

@@ -71,7 +71,7 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 }
 
 // 修改Gzip配置
-func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateHTTPGzipRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateHTTPGzipRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -105,5 +105,5 @@ func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateH
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }

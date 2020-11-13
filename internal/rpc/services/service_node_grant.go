@@ -26,7 +26,7 @@ func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.Creat
 	}, err
 }
 
-func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.UpdateNodeGrantRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.UpdateNodeGrantRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 	}
 
 	err = models.SharedNodeGrantDAO.UpdateGrant(req.GrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
-	return &pb.RPCUpdateSuccess{}, err
+	return &pb.RPCSuccess{}, err
 }
 
 func (this *NodeGrantService) DisableNodeGrant(ctx context.Context, req *pb.DisableNodeGrantRequest) (*pb.DisableNodeGrantResponse, error) {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -133,32 +134,20 @@ func (this *DNSDomainDAO) UpdateDomainData(domainId int64, data string) error {
 	return err
 }
 
-// 更新服务相关域名
-func (this *DNSDomainDAO) UpdateServerDomains(domainId int64, serverDomainsJSON []byte) error {
+// 更新域名解析记录
+func (this *DNSDomainDAO) UpdateDomainRecords(domainId int64, recordsJSON []byte) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
 	op := NewDNSDomainOperator()
 	op.Id = domainId
-	op.ServerDomains = serverDomainsJSON
-	_, err := this.Save(op)
-	return err
-}
-
-// 更新集群相关域名
-func (this *DNSDomainDAO) UpdateClusterDomains(domainId int64, clusterDomainJSON []byte) error {
-	if domainId <= 0 {
-		return errors.New("invalid domainId")
-	}
-	op := NewDNSDomainOperator()
-	op.Id = domainId
-	op.ClusterDomains = clusterDomainJSON
+	op.Records = recordsJSON
 	_, err := this.Save(op)
 	return err
 }
 
 // 更新线路
-func (this *DNSDomainDAO) UpdateRoutes(domainId int64, routesJSON []byte) error {
+func (this *DNSDomainDAO) UpdateDomainRoutes(domainId int64, routesJSON []byte) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
@@ -167,4 +156,24 @@ func (this *DNSDomainDAO) UpdateRoutes(domainId int64, routesJSON []byte) error 
 	op.Routes = routesJSON
 	_, err := this.Save(op)
 	return err
+}
+
+// 查找域名线路
+func (this *DNSDomainDAO) FindDomainRoutes(domainId int64) ([]string, error) {
+	routes, err := this.Query().
+		Pk(domainId).
+		Result("routes").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(routes) == 0 || routes == "null" {
+		return nil, nil
+	}
+	result := []string{}
+	err = json.Unmarshal([]byte(routes), &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

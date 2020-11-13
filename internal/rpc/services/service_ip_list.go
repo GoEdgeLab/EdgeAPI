@@ -27,7 +27,7 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 }
 
 // 修改IP列表
-func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPListRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPListRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -38,7 +38,7 @@ func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPLis
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找IP列表

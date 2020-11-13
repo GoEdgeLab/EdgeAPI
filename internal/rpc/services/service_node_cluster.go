@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/dnsproviders"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
@@ -32,7 +32,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 }
 
 // 修改集群
-func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -43,11 +43,11 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 禁用集群
-func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.DeleteNodeClusterRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.DeleteNodeClusterRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个集群
@@ -235,13 +235,15 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 	result := []*pb.NodeCluster{}
 	for _, cluster := range clusters {
 		result = append(result, &pb.NodeCluster{
-			Id:         int64(cluster.Id),
-			Name:       cluster.Name,
-			CreatedAt:  int64(cluster.CreatedAt),
-			GrantId:    int64(cluster.GrantId),
-			InstallDir: cluster.InstallDir,
-			UniqueId:   cluster.UniqueId,
-			Secret:     cluster.Secret,
+			Id:          int64(cluster.Id),
+			Name:        cluster.Name,
+			CreatedAt:   int64(cluster.CreatedAt),
+			GrantId:     int64(cluster.GrantId),
+			InstallDir:  cluster.InstallDir,
+			UniqueId:    cluster.UniqueId,
+			Secret:      cluster.Secret,
+			DnsName:     cluster.DnsName,
+			DnsDomainId: int64(cluster.DnsDomainId),
 		})
 	}
 
@@ -268,7 +270,7 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 }
 
 // 修改集群健康检查设置
-func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context, req *pb.UpdateNodeClusterHealthCheckRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context, req *pb.UpdateNodeClusterHealthCheckRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -279,7 +281,7 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 执行健康检查
@@ -406,7 +408,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		pbProvider = &pb.DNSProvider{
 			Id:       int64(provider.Id),
 			Type:     provider.Type,
-			TypeName: dnsproviders.FindProviderTypeName(provider.Type),
+			TypeName: dnsclients.FindProviderTypeName(provider.Type),
 		}
 	}
 
@@ -445,4 +447,34 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 		return nil, err
 	}
 	return &pb.RPCCountResponse{Count: count}, nil
+}
+
+// 检查集群域名是否已经被使用
+func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req *pb.CheckNodeClusterDNSNameRequest) (*pb.CheckNodeClusterDNSNameResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	exists, err := models.SharedNodeClusterDAO.ExistClusterDNSName(req.DnsName, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckNodeClusterDNSNameResponse{IsUsed: exists}, nil
+}
+
+// 修改集群的域名设置
+func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *pb.UpdateNodeClusterDNSRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(req.NodeClusterId, req.DnsName, req.DnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	return rpcutils.Success()
 }

@@ -110,7 +110,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 }
 
 // 修改防火墙策略
-func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -232,11 +232,11 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 修改分组信息
-func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyGroupsRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyGroupsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -248,11 +248,11 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 修改inbound信息
-func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx context.Context, req *pb.UpdateHTTPFirewallInboundConfigRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx context.Context, req *pb.UpdateHTTPFirewallInboundConfigRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -264,7 +264,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 计算可用的防火墙策略数量
@@ -311,7 +311,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledFirewallPolicies(ctx context.C
 }
 
 // 删除某个防火墙策略
-func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context, req *pb.DeleteFirewallPolicyRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context, req *pb.DeleteFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -323,7 +323,7 @@ func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context,
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个防火墙配置

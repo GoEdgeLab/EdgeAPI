@@ -125,14 +125,14 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 }
 
-// 返回Update成功信息
-func RPCUpdateSuccess() (*pb.RPCUpdateSuccess, error) {
-	return &pb.RPCUpdateSuccess{}, nil
+// 返回操作成功信息
+func Success() (*pb.RPCSuccess, error) {
+	return &pb.RPCSuccess{}, nil
 }
 
-// 返回Delete成功信息
-func RPCDeleteSuccess() (*pb.RPCDeleteSuccess, error) {
-	return &pb.RPCDeleteSuccess{}, nil
+// 返回数量
+func NewCountResponse(count int64) (*pb.RPCCountResponse, error) {
+	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 包装错误

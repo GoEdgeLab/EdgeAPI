@@ -27,7 +27,7 @@ func (this *DBNodeService) CreateDBNode(ctx context.Context, req *pb.CreateDBNod
 }
 
 // 修改数据库节点
-func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNodeRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNodeRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -37,11 +37,11 @@ func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNod
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 删除节点
-func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNodeRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNodeRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -51,7 +51,7 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 计算可用的数据库节点数量

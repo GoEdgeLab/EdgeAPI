@@ -86,7 +86,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 }
 
 // 设置消息已读状态
-func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.UpdateMessageReadRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.UpdateMessageReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -97,11 +97,11 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 设置一组消息已读状态
-func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.UpdateMessagesReadRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.UpdateMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -112,11 +112,11 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 设置所有消息为已读
-func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.UpdateAllMessagesReadRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.UpdateAllMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -127,5 +127,5 @@ func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.U
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }

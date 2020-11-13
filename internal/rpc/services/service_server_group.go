@@ -27,7 +27,7 @@ func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.C
 }
 
 // 修改分组
-func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.UpdateServerGroupRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.UpdateServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -39,11 +39,11 @@ func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 删除分组
-func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.DeleteServerGroupRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.DeleteServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -55,7 +55,7 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查询所有分组
@@ -81,7 +81,7 @@ func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, 
 }
 
 // 修改分组排序
-func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req *pb.UpdateServerGroupOrdersRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req *pb.UpdateServerGroupOrdersRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -92,7 +92,7 @@ func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个分组信息

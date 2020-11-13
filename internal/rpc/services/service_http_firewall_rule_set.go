@@ -36,7 +36,7 @@ func (this *HTTPFirewallRuleSetService) CreateOrUpdateHTTPFirewallRuleSetFromCon
 }
 
 // 修改是否开启
-func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx context.Context, req *pb.UpdateHTTPFirewallRuleSetIsOnRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx context.Context, req *pb.UpdateHTTPFirewallRuleSetIsOnRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -48,7 +48,7 @@ func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx contex
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找规则集配置

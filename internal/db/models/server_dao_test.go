@@ -52,3 +52,13 @@ func TestServerDAO_genDNSName(t *testing.T) {
 	}
 	t.Log("dnsName:", dnsName)
 }
+
+func TestServerDAO_FindAllServerDNSNamesWithDNSDomainId(t *testing.T) {
+	dbs.NotifyReady()
+
+	dnsNames, err := SharedServerDAO.FindAllServerDNSNamesWithDNSDomainId(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("dnsNames:", dnsNames)
+}

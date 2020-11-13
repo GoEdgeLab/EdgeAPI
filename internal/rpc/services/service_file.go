@@ -27,7 +27,7 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 }
 
 // 将文件置为已完成
-func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateFileFinishedRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateFileFinishedRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -38,5 +38,5 @@ func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateF
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }

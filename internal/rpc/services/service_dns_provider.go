@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/dnsproviders"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -29,7 +29,7 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 }
 
 // 修改服务商
-func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.UpdateDNSProviderRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.UpdateDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -40,7 +40,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 计算服务商数量
@@ -76,7 +76,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 			Id:            int64(provider.Id),
 			Name:          provider.Name,
 			Type:          provider.Type,
-			TypeName:      dnsproviders.FindProviderTypeName(provider.Type),
+			TypeName:      dnsclients.FindProviderTypeName(provider.Type),
 			ApiParamsJSON: []byte(provider.ApiParams),
 			DataUpdatedAt: int64(provider.DataUpdatedAt),
 		})
@@ -85,7 +85,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 }
 
 // 删除服务商
-func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -96,7 +96,7 @@ func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.D
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个服务商
@@ -119,7 +119,7 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		Id:            int64(provider.Id),
 		Name:          provider.Name,
 		Type:          provider.Type,
-		TypeName:      dnsproviders.FindProviderTypeName(provider.Type),
+		TypeName:      dnsclients.FindProviderTypeName(provider.Type),
 		ApiParamsJSON: []byte(provider.ApiParams),
 		DataUpdatedAt: int64(provider.DataUpdatedAt),
 	}}, nil
@@ -134,7 +134,7 @@ func (this *DNSProviderService) FindAllDNSProviderTypes(ctx context.Context, req
 	}
 
 	result := []*pb.DNSProviderType{}
-	for _, t := range dnsproviders.AllProviderTypes {
+	for _, t := range dnsclients.AllProviderTypes {
 		result = append(result, &pb.DNSProviderType{
 			Name: t.GetString("name"),
 			Code: t.GetString("code"),
@@ -143,15 +143,26 @@ func (this *DNSProviderService) FindAllDNSProviderTypes(ctx context.Context, req
 	return &pb.FindAllDNSProviderTypesResponse{ProviderTypes: result}, nil
 }
 
-// 更新数据
-func (this *DNSProviderService) UpdateDNSProviderData(ctx context.Context, req *pb.UpdateDNSProviderDataRequest) (*pb.UpdateDNSProviderDataResponse, error) {
+// 取得某个类型的所有服务商
+func (this *DNSProviderService) FindAllEnabledDNSProvidersWithType(ctx context.Context, req *pb.FindAllEnabledDNSProvidersWithTypeRequest) (*pb.FindAllEnabledDNSProvidersWithTypeResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO 需要实现
-
-	return &pb.UpdateDNSProviderDataResponse{IsOk: true}, nil
+	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(req.ProviderTypeCode)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.DNSProvider{}
+	for _, provider := range providers {
+		result = append(result, &pb.DNSProvider{
+			Id:       int64(provider.Id),
+			Name:     provider.Name,
+			Type:     provider.Type,
+			TypeName: dnsclients.FindProviderTypeName(provider.Type),
+		})
+	}
+	return &pb.FindAllEnabledDNSProvidersWithTypeResponse{DnsProviders: result}, nil
 }

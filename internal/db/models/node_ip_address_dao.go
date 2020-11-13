@@ -125,7 +125,7 @@ func (this *NodeIPAddressDAO) UpdateAddressNodeId(addressId int64, nodeId int64)
 	return err
 }
 
-// 查找某个节点所有的IP地址
+// 查找节点的所有的IP地址
 func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(nodeId int64) (result []*NodeIPAddress, err error) {
 	_, err = this.Query().
 		Attr("nodeId", nodeId).
@@ -135,4 +135,16 @@ func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(nodeId int64) (res
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// 查找节点的第一个可访问的IP地址
+func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(nodeId int64) (string, error) {
+	return this.Query().
+		Attr("nodeId", nodeId).
+		State(NodeIPAddressStateEnabled).
+		Attr("canAccess", true).
+		Desc("order").
+		AscPk().
+		Result("ip").
+		FindStringCol("")
 }

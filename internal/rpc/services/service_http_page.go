@@ -29,7 +29,7 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 }
 
 // 修改Page
-func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateHTTPPageRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateHTTPPageRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -41,7 +41,7 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个Page配置

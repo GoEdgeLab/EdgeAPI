@@ -231,7 +231,7 @@ func (this *NodeService) DisableNode(ctx context.Context, req *pb.DisableNodeReq
 }
 
 // 修改节点
-func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		}
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 列出单个节点
@@ -377,7 +377,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 }
 
 // 更新节点状态
-func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
@@ -397,7 +397,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 同步集群中的节点版本
@@ -416,7 +416,7 @@ func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *p
 }
 
 // 修改节点安装状态
-func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -427,7 +427,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 安装节点
@@ -523,7 +523,7 @@ func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) 
 }
 
 // 更改节点连接的API节点信息
-func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNodeConnectedAPINodesRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNodeConnectedAPINodesRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
@@ -535,7 +535,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 		return nil, errors.Wrap(err)
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 计算使用某个认证的节点数量
@@ -804,7 +804,7 @@ func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.Find
 }
 
 // 修改节点登录信息
-func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNodeLoginRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNodeLoginRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -820,7 +820,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 
 	err = models.SharedNodeLoginDAO.UpdateNodeLogin(req.Login.Id, req.Login.Name, req.Login.Type, req.Login.Params)
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 计算某个节点分组内的节点数量

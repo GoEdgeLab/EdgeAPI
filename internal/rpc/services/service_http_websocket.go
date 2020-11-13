@@ -26,7 +26,7 @@ func (this *HTTPWebsocketService) CreateHTTPWebsocket(ctx context.Context, req *
 }
 
 // 修改Websocket配置
-func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *pb.UpdateHTTPWebsocketRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *pb.UpdateHTTPWebsocketRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -37,5 +37,5 @@ func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }

@@ -297,6 +297,34 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSDomainId(dnsDomainId i
 		Count()
 }
 
+// 查询使用某个DNS域名的集群ID列表
+func (this *NodeClusterDAO) FindAllEnabledClusterIdsWithDNSDomainId(dnsDomainId int64) ([]int64, error) {
+	ones, err := this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("dnsDomainId", dnsDomainId).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*NodeCluster).Id))
+	}
+	return result, nil
+}
+
+// 查询使用某个DNS域名的所有集群域名
+func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(dnsDomainId int64) (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("dnsDomainId", dnsDomainId).
+		Result("id", "name", "dnsName").
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 查找集群的认证ID
 func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
 	return this.Query().
@@ -309,7 +337,7 @@ func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
 func (this *NodeClusterDAO) FindClusterDNSInfo(clusterId int64) (*NodeCluster, error) {
 	one, err := this.Query().
 		Pk(clusterId).
-		Result("dnsName", "dnsDomain", "dnsProviderId").
+		Result("dnsName", "dnsDomainId").
 		Find()
 	if err != nil {
 		return nil, err
@@ -318,6 +346,29 @@ func (this *NodeClusterDAO) FindClusterDNSInfo(clusterId int64) (*NodeCluster, e
 		return nil, nil
 	}
 	return one.(*NodeCluster), nil
+}
+
+// 检查某个子域名是否可用
+func (this *NodeClusterDAO) ExistClusterDNSName(dnsName string, excludeClusterId int64) (bool, error) {
+	return this.Query().
+		Attr("dnsName", dnsName).
+		State(NodeClusterStateEnabled).
+		Where("id!=:clusterId").
+		Param("clusterId", excludeClusterId).
+		Exist()
+}
+
+// 修改集群DNS相关信息
+func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dnsDomainId int64) error {
+	if clusterId <= 0 {
+		return errors.New("invalid clusterId")
+	}
+	op := NewNodeClusterOperator()
+	op.Id = clusterId
+	op.DnsName = dnsName
+	op.DnsDomainId = dnsDomainId
+	_, err := this.Save(op)
+	return err
 }
 
 // 生成唯一ID

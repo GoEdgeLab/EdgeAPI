@@ -30,7 +30,7 @@ func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSL
 }
 
 // 修改Cert
-func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSLCertRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSLCertRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -42,7 +42,7 @@ func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSL
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找证书配置
@@ -66,7 +66,7 @@ func (this *SSLCertService) FindEnabledSSLCertConfig(ctx context.Context, req *p
 }
 
 // 删除证书
-func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSLCertRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSLCertRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -78,7 +78,7 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 计算匹配的Cert数量

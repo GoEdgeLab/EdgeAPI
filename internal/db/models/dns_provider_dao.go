@@ -120,3 +120,14 @@ func (this *DNSProviderDAO) ListEnabledDNSProviders(offset int64, size int64) (r
 		FindAll()
 	return
 }
+
+// 查询某个类型下的所有服务商
+func (this *DNSProviderDAO) FindAllEnabledDNSProvidersWithType(providerType string) (result []*DNSProvider, err error) {
+	_, err = this.Query().
+		State(DNSProviderStateEnabled).
+		Attr("type", providerType).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}

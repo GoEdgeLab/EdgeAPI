@@ -74,7 +74,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 }
 
 // 修改反向代理调度算法
-func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Context, req *pb.UpdateReverseProxySchedulingRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Context, req *pb.UpdateReverseProxySchedulingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -86,11 +86,11 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 修改主要源站信息
-func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Context, req *pb.UpdateReverseProxyPrimaryOriginsRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Context, req *pb.UpdateReverseProxyPrimaryOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -102,11 +102,11 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 修改备用源站信息
-func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Context, req *pb.UpdateReverseProxyBackupOriginsRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Context, req *pb.UpdateReverseProxyBackupOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -118,11 +118,11 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }
 
 // 修改是否启用
-func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb.UpdateReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb.UpdateReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -134,5 +134,5 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.RPCUpdateSuccess{}, nil
+	return &pb.RPCSuccess{}, nil
 }

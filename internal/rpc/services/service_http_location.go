@@ -29,7 +29,7 @@ func (this *HTTPLocationService) CreateHTTPLocation(ctx context.Context, req *pb
 }
 
 // 修改路径规则
-func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb.UpdateHTTPLocationRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb.UpdateHTTPLocationRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -41,7 +41,7 @@ func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找路径规则配置
@@ -64,7 +64,7 @@ func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Conte
 }
 
 // 删除路径规则
-func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb.DeleteHTTPLocationRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb.DeleteHTTPLocationRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -75,7 +75,7 @@ func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查找反向代理设置
@@ -167,7 +167,7 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 }
 
 // 修改反向代理设置
-func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Context, req *pb.UpdateHTTPLocationReverseProxyRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Context, req *pb.UpdateHTTPLocationReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -178,5 +178,5 @@ func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }

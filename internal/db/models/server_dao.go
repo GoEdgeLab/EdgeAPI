@@ -798,6 +798,56 @@ func (this *ServerDAO) CountAllEnabledServersWithGroupId(groupId int64) (int64, 
 		Count()
 }
 
+// 查询使用某个DNS域名的所有服务域名
+func (this *ServerDAO) FindAllServerDNSNamesWithDNSDomainId(dnsDomainId int64) ([]string, error) {
+	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledClusterIdsWithDNSDomainId(dnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	if len(clusterIds) == 0 {
+		return nil, nil
+	}
+	ones, err := this.Query().
+		State(ServerStateEnabled).
+		Attr("isOn", true).
+		Attr("clusterId", clusterIds).
+		Result("dnsName").
+		Reuse(false). // 避免因为IN语句造成内存占用过多
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []string{}
+	for _, one := range ones {
+		dnsName := one.(*Server).DnsName
+		if len(dnsName) == 0 {
+			continue
+		}
+		result = append(result, dnsName)
+	}
+	return result, nil
+}
+
+// 查找DNS名称为空的所有服务
+func (this *ServerDAO) FindAllServersToFixWithDNSDomainId(dnsDomainId int64) (result []*Server, err error) {
+	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledClusterIdsWithDNSDomainId(dnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	if len(clusterIds) == 0 {
+		return nil, nil
+	}
+	_, err = this.Query().
+		State(ServerStateEnabled).
+		Attr("isOn", true).
+		Attr("clusterId", clusterIds).
+		Result("dnsName").
+		Reuse(false). // 避免因为IN语句造成内存占用过多
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 创建事件
 func (this *ServerDAO) createEvent() error {
 	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())

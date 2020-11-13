@@ -27,7 +27,7 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 }
 
 // 修改分组
-func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.UpdateNodeGroupRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.UpdateNodeGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -39,11 +39,11 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 删除分组
-func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.DeleteNodeGroupRequest) (*pb.RPCDeleteSuccess, error) {
+func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.DeleteNodeGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -55,7 +55,7 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	return rpcutils.RPCDeleteSuccess()
+	return rpcutils.Success()
 }
 
 // 查询所有分组
@@ -81,7 +81,7 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithClusterId(ctx context.
 }
 
 // 修改分组排序
-func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb.UpdateNodeGroupOrdersRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb.UpdateNodeGroupOrdersRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -92,7 +92,7 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 查找单个分组信息

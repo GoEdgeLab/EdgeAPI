@@ -1,4 +1,4 @@
-package dnsproviders
+package dnsclients
 
 import "github.com/iwind/TeaGo/maps"
 
@@ -27,7 +27,17 @@ var AllProviderTypes = []maps.Map{
 	},
 }
 
-func FindProviderTypeName(providerType string) string {
+// 查找服务商实例
+func FindProvider(providerType ProviderType) ProviderInterface {
+	switch providerType {
+	case ProviderTypeDNSPod:
+		return &DNSPodProvider{}
+	}
+	return nil
+}
+
+// 查找服务商名称
+func FindProviderTypeName(providerType ProviderType) string {
 	for _, t := range AllProviderTypes {
 		if t.GetString("code") == providerType {
 			return t.GetString("name")

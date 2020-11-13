@@ -11,7 +11,7 @@ type SysSettingService struct {
 }
 
 // 更改配置
-func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.UpdateSysSettingRequest) (*pb.RPCUpdateSuccess, error) {
+func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.UpdateSysSettingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -23,7 +23,7 @@ func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 	
-	return rpcutils.RPCUpdateSuccess()
+	return rpcutils.Success()
 }
 
 // 读取配置
