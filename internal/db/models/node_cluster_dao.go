@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -319,7 +321,18 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(dnsDomainId in
 	_, err = this.Query().
 		State(NodeClusterStateEnabled).
 		Attr("dnsDomainId", dnsDomainId).
-		Result("id", "name", "dnsName").
+		Result("id", "name", "dnsName", "dnsDomainId").
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 查询已经设置了域名的集群
+func (this *NodeClusterDAO) FindAllEnabledClustersHaveDNSDomain() (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Gt("dnsDomainId", 0).
+		Result("id", "name", "dnsName", "dnsDomainId").
 		Slice(&result).
 		FindAll()
 	return
@@ -337,7 +350,7 @@ func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
 func (this *NodeClusterDAO) FindClusterDNSInfo(clusterId int64) (*NodeCluster, error) {
 	one, err := this.Query().
 		Pk(clusterId).
-		Result("dnsName", "dnsDomainId").
+		Result("id", "name", "dnsName", "dnsDomainId").
 		Find()
 	if err != nil {
 		return nil, err
@@ -369,6 +382,116 @@ func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dn
 	op.DnsDomainId = dnsDomainId
 	_, err := this.Save(op)
 	return err
+}
+
+// 检查集群的DNS问题
+func (this *NodeClusterDAO) CheckClusterDNS(cluster *NodeCluster) (issues []*pb.DNSIssue, err error) {
+	clusterId := int64(cluster.Id)
+	domainId := int64(cluster.DnsDomainId)
+
+	// 检查域名
+	domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(domainId)
+	if err != nil {
+		return nil, err
+	}
+	if domain == nil {
+		issues = append(issues, &pb.DNSIssue{
+			Target:      cluster.Name,
+			TargetId:    clusterId,
+			Type:        "cluster",
+			Description: "域名选择错误，需要重新选择",
+			Params:      nil,
+		})
+		return
+	}
+
+	// 检查二级域名
+	if len(cluster.DnsName) == 0 {
+		issues = append(issues, &pb.DNSIssue{
+			Target:      cluster.Name,
+			TargetId:    clusterId,
+			Type:        "cluster",
+			Description: "没有设置二级域名",
+			Params:      nil,
+		})
+		return
+	}
+
+	// TODO 检查域名格式
+
+	// TODO 检查域名是否已解析
+
+	// 检查节点
+	nodes, err := SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 检查节点数量不能为0
+
+	for _, node := range nodes {
+		nodeId := int64(node.Id)
+
+		route, err := node.DNSRoute(domainId)
+		if err != nil {
+			return nil, err
+		}
+		if len(route) == 0 {
+			issues = append(issues, &pb.DNSIssue{
+				Target:      node.Name,
+				TargetId:    nodeId,
+				Type:        "node",
+				Description: "没有选择节点所属线路",
+				Params: map[string]string{
+					"clusterName": cluster.Name,
+					"clusterId":   numberutils.FormatInt64(clusterId),
+				},
+			})
+			continue
+		}
+
+		// 检查线路是否在已有线路中
+		routeOk, err := domain.ContainsRoute(route)
+		if err != nil {
+			return nil, err
+		}
+		if !routeOk {
+			issues = append(issues, &pb.DNSIssue{
+				Target:      node.Name,
+				TargetId:    nodeId,
+				Type:        "node",
+				Description: "线路已经失效，请重新选择",
+				Params: map[string]string{
+					"clusterName": cluster.Name,
+					"clusterId":   numberutils.FormatInt64(clusterId),
+				},
+			})
+			continue
+		}
+
+		// 检查IP地址
+		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeIPAddress(nodeId)
+		if err != nil {
+			return nil, err
+		}
+		if len(ipAddr) == 0 {
+			issues = append(issues, &pb.DNSIssue{
+				Target:      node.Name,
+				TargetId:    nodeId,
+				Type:        "node",
+				Description: "没有设置IP地址",
+				Params: map[string]string{
+					"clusterName": cluster.Name,
+					"clusterId":   numberutils.FormatInt64(clusterId),
+				},
+			})
+			continue
+		}
+
+		// TODO 检查是否有解析记录
+	}
+
+	return
 }
 
 // 生成唯一ID

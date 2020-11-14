@@ -909,6 +909,10 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 	}
 
 	dnsDomainId := int64(clusterDNS.DnsDomainId)
+	dnsDomainName, err := models.SharedDNSDomainDAO.FindDNSDomainName(dnsDomainId)
+	if err != nil {
+		return nil, err
+	}
 
 	var route = ""
 	if dnsDomainId > 0 {
@@ -925,12 +929,13 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 
 	return &pb.FindEnabledNodeDNSResponse{
 		Node: &pb.NodeDNSInfo{
-			Id:          int64(node.Id),
-			Name:        node.Name,
-			IpAddr:      ipAddr,
-			Route:       route,
-			ClusterId:   clusterId,
-			DnsDomainId: dnsDomainId,
+			Id:            int64(node.Id),
+			Name:          node.Name,
+			IpAddr:        ipAddr,
+			Route:         route,
+			ClusterId:     clusterId,
+			DnsDomainId:   dnsDomainId,
+			DnsDomainName: dnsDomainName,
 		},
 	}, nil
 }

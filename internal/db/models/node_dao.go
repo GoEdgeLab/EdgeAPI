@@ -604,7 +604,7 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(clusterId int64) (resul
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
 		Attr("isOn", true).
-		Result("id", "name", "dnsRoutes").
+		Result("id", "name", "dnsRoutes", "isOn").
 		DescPk().
 		Slice(&result).
 		FindAll()

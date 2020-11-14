@@ -479,3 +479,41 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 	}
 	return rpcutils.Success()
 }
+
+// 检查集群的DNS是否有变化
+func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, req *pb.CheckNodeClusterDNSChangesRequest) (*pb.CheckNodeClusterDNSChangesResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	if cluster == nil || len(cluster.DnsName) == 0 || cluster.DnsDomainId <= 0 {
+		return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: false}, nil
+	}
+
+	domainId := int64(cluster.DnsDomainId)
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(domainId)
+	if err != nil {
+		return nil, err
+	}
+	if domain == nil {
+		return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: false}, nil
+	}
+	records, err := domain.DecodeRecords()
+	if err != nil {
+		return nil, err
+	}
+
+	service := &DNSDomainService{}
+	changes, _, _, _, _, err := service.findClusterDNSChanges(cluster, records, domain.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: len(changes) > 0}, nil
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 const (
@@ -142,6 +143,7 @@ func (this *DNSDomainDAO) UpdateDomainRecords(domainId int64, recordsJSON []byte
 	op := NewDNSDomainOperator()
 	op.Id = domainId
 	op.Records = recordsJSON
+	op.DataUpdatedAt = time.Now().Unix()
 	_, err := this.Save(op)
 	return err
 }
@@ -154,6 +156,7 @@ func (this *DNSDomainDAO) UpdateDomainRoutes(domainId int64, routesJSON []byte) 
 	op := NewDNSDomainOperator()
 	op.Id = domainId
 	op.Routes = routesJSON
+	op.DataUpdatedAt = time.Now().Unix()
 	_, err := this.Save(op)
 	return err
 }

@@ -828,26 +828,6 @@ func (this *ServerDAO) FindAllServerDNSNamesWithDNSDomainId(dnsDomainId int64) (
 	return result, nil
 }
 
-// 查找DNS名称为空的所有服务
-func (this *ServerDAO) FindAllServersToFixWithDNSDomainId(dnsDomainId int64) (result []*Server, err error) {
-	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledClusterIdsWithDNSDomainId(dnsDomainId)
-	if err != nil {
-		return nil, err
-	}
-	if len(clusterIds) == 0 {
-		return nil, nil
-	}
-	_, err = this.Query().
-		State(ServerStateEnabled).
-		Attr("isOn", true).
-		Attr("clusterId", clusterIds).
-		Result("dnsName").
-		Reuse(false). // 避免因为IN语句造成内存占用过多
-		Slice(&result).
-		FindAll()
-	return
-}
-
 // 获取某个集群下的服务DNS信息
 func (this *ServerDAO) FindAllServersDNSWithClusterId(clusterId int64) (result []*Server, err error) {
 	_, err = this.Query().

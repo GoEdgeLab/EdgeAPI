@@ -202,3 +202,8 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 
 	return m, nil
 }
+
+// 默认线路
+func (this *DNSPodProvider) DefaultRoute() string {
+	return "默认"
+}

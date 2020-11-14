@@ -21,4 +21,7 @@ type ProviderInterface interface {
 
 	// 删除记录
 	DeleteRecord(domain string, record *Record) error
+
+	// 默认线路
+	DefaultRoute() string
 }
