@@ -598,6 +598,52 @@ func (this *NodeDAO) CountAllEnabledNodesWithGroupId(groupId int64) (int64, erro
 		Count()
 }
 
+// 获取一个集群的节点DNS信息
+func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(clusterId int64) (result []*Node, err error) {
+	_, err = this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isOn", true).
+		Result("id", "name", "dnsRoutes").
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 获取单个节点的DNS信息
+func (this *NodeDAO) FindEnabledNodeDNS(nodeId int64) (*Node, error) {
+	one, err := this.Query().
+		State(NodeStateEnabled).
+		Pk(nodeId).
+		Attr("isOn", true).
+		Result("id", "name", "dnsRoutes", "clusterId").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Node), nil
+}
+
+// 修改节点的DNS信息
+func (this *NodeDAO) UpdateNodeDNS(nodeId int64, routes map[int64]string) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	if routes == nil {
+		routes = map[int64]string{}
+	}
+	routesJSON, err := json.Marshal(routes)
+	if err != nil {
+		return err
+	}
+	op := NewNodeOperator()
+	op.Id = nodeId
+	op.DnsRoutes = routesJSON
+	_, err = this.Save(op)
+	return err
+}
+
 // 生成唯一ID
 func (this *NodeDAO) genUniqueId() (string, error) {
 	for {

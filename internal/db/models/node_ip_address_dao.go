@@ -115,6 +115,18 @@ func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip str
 	return err
 }
 
+// 修改IP地址中的IP
+func (this *NodeIPAddressDAO) UpdateAddressIP(addressId int64, ip string) error {
+	if addressId <= 0 {
+		return errors.New("invalid addressId")
+	}
+	op := NewNodeIPAddressOperator()
+	op.Id = addressId
+	op.Ip = ip
+	_, err := this.Save(op)
+	return err
+}
+
 // 修改IP地址所属节点
 func (this *NodeIPAddressDAO) UpdateAddressNodeId(addressId int64, nodeId int64) error {
 	_, err := this.Query().
@@ -147,4 +159,16 @@ func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(nodeId int64) (string, erro
 		AscPk().
 		Result("ip").
 		FindStringCol("")
+}
+
+// 查找节点的第一个可访问的IP地址ID
+func (this *NodeIPAddressDAO) FindFirstNodeIPAddressId(nodeId int64) (int64, error) {
+	return this.Query().
+		Attr("nodeId", nodeId).
+		State(NodeIPAddressStateEnabled).
+		Attr("canAccess", true).
+		Desc("order").
+		AscPk().
+		Result("id").
+		FindInt64Col(0)
 }

@@ -40,6 +40,19 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 	return status, nil
 }
 
+// 所有的DNS线路
+func (this *Node) DNSRoutes() (map[int64]string, error) {
+	routes := map[int64]string{} // domainId => route
+	if len(this.DnsRoutes) == 0 || this.DnsRoutes == "null" {
+		return routes, nil
+	}
+	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
+	if err != nil {
+		return map[int64]string{}, err
+	}
+	return routes, nil
+}
+
 // DNS线路
 func (this *Node) DNSRoute(dnsDomainId int64) (string, error) {
 	routes := map[int64]string{} // domainId => route

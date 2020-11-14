@@ -407,6 +407,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	if provider != nil {
 		pbProvider = &pb.DNSProvider{
 			Id:       int64(provider.Id),
+			Name:     provider.Name,
 			Type:     provider.Type,
 			TypeName: dnsclients.FindProviderTypeName(provider.Type),
 		}

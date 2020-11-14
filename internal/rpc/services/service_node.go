@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
@@ -836,4 +837,152 @@ func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, re
 		return nil, err
 	}
 	return &pb.RPCCountResponse{Count: count}, nil
+}
+
+// 取得某个集群下的所有节点
+func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodesDNSWithClusterIdRequest) (*pb.FindAllEnabledNodesDNSWithClusterIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if clusterDNS == nil {
+		return nil, errors.New("not found clusterId '" + numberutils.FormatInt64(req.NodeClusterId) + "'")
+	}
+	dnsDomainId := int64(clusterDNS.DnsDomainId)
+
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.NodeDNSInfo{}
+	for _, node := range nodes {
+		ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
+		if err != nil {
+			return nil, err
+		}
+
+		route, err := node.DNSRoute(dnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, &pb.NodeDNSInfo{
+			Id:     int64(node.Id),
+			Name:   node.Name,
+			IpAddr: ipAddr,
+			Route:  route,
+		})
+	}
+	return &pb.FindAllEnabledNodesDNSWithClusterIdResponse{Nodes: result}, nil
+}
+
+// 查找单个节点的域名解析信息
+func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEnabledNodeDNSRequest) (*pb.FindEnabledNodeDNSResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := models.SharedNodeDAO.FindEnabledNodeDNS(req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	if node == nil {
+		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
+	}
+
+	clusterId := int64(node.ClusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if clusterDNS == nil {
+		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
+	}
+
+	dnsDomainId := int64(clusterDNS.DnsDomainId)
+
+	var route = ""
+	if dnsDomainId > 0 {
+		route, err = node.DNSRoute(dnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindEnabledNodeDNSResponse{
+		Node: &pb.NodeDNSInfo{
+			Id:          int64(node.Id),
+			Name:        node.Name,
+			IpAddr:      ipAddr,
+			Route:       route,
+			ClusterId:   clusterId,
+			DnsDomainId: dnsDomainId,
+		},
+	}, nil
+}
+
+// 修改节点的DNS解析信息
+func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDNSRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := models.SharedNodeDAO.FindEnabledNodeDNS(req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	if node == nil {
+		return nil, errors.New("node not found")
+	}
+
+	routes, err := node.DNSRoutes()
+	if err != nil {
+		return nil, err
+	}
+	if req.DnsDomainId > 0 && len(req.Route) > 0 {
+		routes[req.DnsDomainId] = req.Route
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeDNS(req.NodeId, routes)
+	if err != nil {
+		return nil, err
+	}
+
+	// 修改IP
+	if len(req.IpAddr) > 0 {
+		ipAddrId, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddressId(req.NodeId)
+		if err != nil {
+			return nil, err
+		}
+		if ipAddrId > 0 {
+			err = models.SharedNodeIPAddressDAO.UpdateAddressIP(ipAddrId, req.IpAddr)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			_, err = models.SharedNodeIPAddressDAO.CreateAddress(req.NodeId, "DNS IP", req.IpAddr, true)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return rpcutils.Success()
 }
