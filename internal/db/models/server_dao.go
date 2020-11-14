@@ -848,6 +848,35 @@ func (this *ServerDAO) FindAllServersToFixWithDNSDomainId(dnsDomainId int64) (re
 	return
 }
 
+// 获取某个集群下的服务DNS信息
+func (this *ServerDAO) FindAllServersDNSWithClusterId(clusterId int64) (result []*Server, err error) {
+	_, err = this.Query().
+		State(ServerStateEnabled).
+		Attr("isOn", true).
+		Attr("clusterId", clusterId).
+		Result("id", "name", "dnsName").
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 重新生成子域名
+func (this *ServerDAO) GenerateServerDNSName(serverId int64) (string, error) {
+	if serverId <= 0 {
+		return "", errors.New("invalid serverId")
+	}
+	dnsName, err := this.genDNSName()
+	if err != nil {
+		return "", err
+	}
+	op := NewServerOperator()
+	op.Id = serverId
+	op.DnsName = dnsName
+	_, err = this.Save(op)
+	return dnsName, err
+}
+
 // 创建事件
 func (this *ServerDAO) createEvent() error {
 	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())

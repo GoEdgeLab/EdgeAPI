@@ -856,3 +856,37 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, req *pb.Noti
 
 	return &pb.NotifyServersChangeResponse{}, nil
 }
+
+// 取得某个集群下的所有服务相关的DNS
+func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Context, req *pb.FindAllEnabledServersDNSWithClusterIdRequest) (*pb.FindAllEnabledServersDNSWithClusterIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.ServerDNSInfo{}
+	for _, server := range servers {
+		// 如果子域名为空
+		if len(server.DnsName) == 0 {
+			// 自动生成子域名
+			dnsName, err := models.SharedServerDAO.GenerateServerDNSName(int64(server.Id))
+			if err != nil {
+				return nil, err
+			}
+			server.DnsName = dnsName
+		}
+
+		result = append(result, &pb.ServerDNSInfo{
+			Id:      int64(server.Id),
+			Name:    server.Name,
+			DnsName: server.DnsName,
+		})
+	}
+
+	return &pb.FindAllEnabledServersDNSWithClusterIdResponse{Servers: result}, nil
+}
