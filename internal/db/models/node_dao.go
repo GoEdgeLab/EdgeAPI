@@ -604,6 +604,7 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(clusterId int64) (resul
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
 		Attr("isOn", true).
+		Attr("isUp", true).
 		Result("id", "name", "dnsRoutes", "isOn").
 		DescPk().
 		Slice(&result).
@@ -642,6 +643,61 @@ func (this *NodeDAO) UpdateNodeDNS(nodeId int64, routes map[int64]string) error 
 	op.DnsRoutes = routesJSON
 	_, err = this.Save(op)
 	return err
+}
+
+// 计算节点上线|下线状态
+func (this *NodeDAO) UpdateNodeUp(nodeId int64, isUp bool, maxUp int, maxDown int) (changed bool, err error) {
+	if nodeId <= 0 {
+		return false, errors.New("invalid nodeId")
+	}
+	one, err := this.Query().
+		Pk(nodeId).
+		Result("isUp", "countUp", "countDown").
+		Find()
+	if err != nil {
+		return false, err
+	}
+	if one == nil {
+		return false, nil
+	}
+	oldIsUp := one.(*Node).IsUp == 1
+
+	// 如果新老状态一致，则不做任何事情
+	if oldIsUp == isUp {
+		return isUp, nil
+	}
+
+	countUp := int(one.(*Node).CountUp)
+	countDown := int(one.(*Node).CountDown)
+
+	op := NewNodeOperator()
+	op.Id = nodeId
+
+	if isUp {
+		countUp++
+		countDown = 0
+
+		if countUp >= maxUp {
+			changed = true
+			op.IsUp = true
+		}
+	} else {
+		countDown++
+		countUp = 0
+
+		if countDown >= maxDown {
+			changed = true
+			op.IsUp = false
+		}
+	}
+
+	op.CountUp = countUp
+	op.CountDown = countDown
+	_, err = this.Save(op)
+	if err != nil {
+		return false, err
+	}
+	return
 }
 
 // 生成唯一ID

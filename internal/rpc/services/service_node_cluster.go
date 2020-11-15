@@ -373,11 +373,19 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			Provider: nil,
 		}, nil
 	}
+
+	dnsConfig, err := dnsInfo.DecodeDNSConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	if dnsInfo.DnsDomainId == 0 {
 		return &pb.FindEnabledNodeClusterDNSResponse{
-			Name:     dnsInfo.DnsName,
-			Domain:   nil,
-			Provider: nil,
+			Name:            dnsInfo.DnsName,
+			Domain:          nil,
+			Provider:        nil,
+			NodesAutoSync:   dnsConfig.NodesAutoSync,
+			ServersAutoSync: dnsConfig.ServersAutoSync,
 		}, nil
 	}
 
@@ -414,9 +422,11 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	}
 
 	return &pb.FindEnabledNodeClusterDNSResponse{
-		Name:     dnsInfo.DnsName,
-		Domain:   pbDomain,
-		Provider: pbProvider,
+		Name:            dnsInfo.DnsName,
+		Domain:          pbDomain,
+		Provider:        pbProvider,
+		NodesAutoSync:   dnsConfig.NodesAutoSync,
+		ServersAutoSync: dnsConfig.ServersAutoSync,
 	}, nil
 }
 
@@ -473,7 +483,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateClusterDNS(req.NodeClusterId, req.DnsName, req.DnsDomainId)
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync)
 	if err != nil {
 		return nil, err
 	}

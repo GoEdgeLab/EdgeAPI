@@ -6,6 +6,9 @@ type Node struct {
 	AdminId           uint32 `field:"adminId"`           // 管理员ID
 	UserId            uint32 `field:"userId"`            // 用户ID
 	IsOn              uint8  `field:"isOn"`              // 是否启用
+	IsUp              uint8  `field:"isUp"`              // 是否在线
+	CountUp           uint32 `field:"countUp"`           // 连续在线次数
+	CountDown         uint32 `field:"countDown"`         // 连续下线次数
 	UniqueId          string `field:"uniqueId"`          // 节点ID
 	Secret            string `field:"secret"`            // 密钥
 	Name              string `field:"name"`              // 节点名
@@ -31,6 +34,9 @@ type NodeOperator struct {
 	AdminId           interface{} // 管理员ID
 	UserId            interface{} // 用户ID
 	IsOn              interface{} // 是否启用
+	IsUp              interface{} // 是否在线
+	CountUp           interface{} // 连续在线次数
+	CountDown         interface{} // 连续下线次数
 	UniqueId          interface{} // 节点ID
 	Secret            interface{} // 密钥
 	Name              interface{} // 节点名

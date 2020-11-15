@@ -19,6 +19,7 @@ type NodeCluster struct {
 	HealthCheck    string `field:"healthCheck"`    // 健康检查
 	DnsName        string `field:"dnsName"`        // DNS名称
 	DnsDomainId    uint32 `field:"dnsDomainId"`    // 域名ID
+	Dns            string `field:"dns"`            // DNS配置
 }
 
 type NodeClusterOperator struct {
@@ -39,6 +40,7 @@ type NodeClusterOperator struct {
 	HealthCheck    interface{} // 健康检查
 	DnsName        interface{} // DNS名称
 	DnsDomainId    interface{} // 域名ID
+	Dns            interface{} // DNS配置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

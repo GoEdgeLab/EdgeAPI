@@ -130,7 +130,8 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 		if err != nil {
 			return err
 		}
-		err = models.NewMessageDAO().CreateClusterMessage(this.clusterId, models.MessageTypeHealthCheckFail, models.MessageLevelError, "有"+numberutils.FormatInt(len(failedResults))+"个节点在健康检查中出现问题", failedResultsJSON)
+		message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
+		err = models.NewMessageDAO().CreateClusterMessage(this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, failedResultsJSON)
 		if err != nil {
 			return err
 		}

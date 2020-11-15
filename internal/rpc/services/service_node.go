@@ -5,14 +5,31 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 )
+
+func init() {
+	dbs.OnReady(func() {
+		go func() {
+			service := &NodeService{}
+			for nodeId := range events.NodeDNSChanges {
+				logs.Println("change dns: ", nodeId)
+				err := service.notifyNodeDNSChanged(nodeId)
+				if err != nil {
+					logs.Println("[ERROR]change node dns: " + err.Error())
+				}
+			}
+		}()
+	})
+}
 
 // 边缘节点相关服务
 type NodeService struct {
@@ -37,6 +54,24 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 			return nil, err
 		}
 	}
+
+	// 保存DNS相关
+	if req.DnsDomainId > 0 && len(req.DnsRoute) > 0 {
+		err = models.SharedNodeDAO.UpdateNodeDNS(nodeId, map[int64]string{
+			req.DnsDomainId: req.DnsRoute,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 同步DNS
+	go func() {
+		err := this.notifyNodeDNSChanged(nodeId)
+		if err != nil {
+			logs.Println("sync node DNS error: " + err.Error())
+		}
+	}()
 
 	return &pb.CreateNodeResponse{
 		NodeId: nodeId,
@@ -173,6 +208,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			InstallStatus: installStatusResult,
 			MaxCPU:        types.Int32(node.MaxCPU),
 			IsOn:          node.IsOn == 1,
+			IsUp:          node.IsUp == 1,
 			Group:         pbGroup,
 		})
 	}
@@ -216,8 +252,8 @@ func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, r
 	return &pb.FindAllEnabledNodesWithClusterIdResponse{Nodes: result}, nil
 }
 
-// 禁用节点
-func (this *NodeService) DisableNode(ctx context.Context, req *pb.DisableNodeRequest) (*pb.DisableNodeResponse, error) {
+// 删除节点
+func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
@@ -228,7 +264,15 @@ func (this *NodeService) DisableNode(ctx context.Context, req *pb.DisableNodeReq
 		return nil, err
 	}
 
-	return &pb.DisableNodeResponse{}, nil
+	// 同步DNS
+	go func() {
+		err := this.notifyNodeDNSChanged(req.NodeId)
+		if err != nil {
+			logs.Println("sync node DNS error: " + err.Error())
+		}
+	}()
+
+	return rpcutils.Success()
 }
 
 // 修改节点
@@ -261,6 +305,15 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 			}
 		}
 	}
+
+	// 同步DNS
+	go func() {
+		// TODO 只有状态变化的时候才需要同步
+		err := this.notifyNodeDNSChanged(req.NodeId)
+		if err != nil {
+			logs.Println("sync node DNS error: " + err.Error())
+		}
+	}()
 
 	return &pb.RPCSuccess{}, nil
 }
@@ -502,6 +555,15 @@ func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest
 			Error: err.Error(),
 		}, nil
 	}
+
+	// 同步DNS
+	go func() {
+		err := this.notifyNodeDNSChanged(req.NodeId)
+		if err != nil {
+			logs.Println("sync node DNS error: " + err.Error())
+		}
+	}()
+
 	return &pb.StartNodeResponse{IsOk: true}, nil
 }
 
@@ -520,6 +582,15 @@ func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) 
 			Error: err.Error(),
 		}, nil
 	}
+
+	// 同步DNS
+	go func() {
+		err := this.notifyNodeDNSChanged(req.NodeId)
+		if err != nil {
+			logs.Println("sync node DNS error: " + err.Error())
+		}
+	}()
+
 	return &pb.StopNodeResponse{IsOk: true}, nil
 }
 
@@ -1014,4 +1085,46 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 	}
 
 	return rpcutils.Success()
+}
+
+// 自动同步DNS状态
+func (this *NodeService) notifyNodeDNSChanged(nodeId int64) error {
+	clusterId, err := models.SharedNodeDAO.FindNodeClusterId(nodeId)
+	if err != nil {
+		return err
+	}
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(clusterId)
+	if err != nil {
+		return err
+	}
+	if dnsInfo == nil {
+		return nil
+	}
+	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId == 0 {
+		return nil
+	}
+	dnsConfig, err := dnsInfo.DecodeDNSConfig()
+	if err != nil {
+		return err
+	}
+	if !dnsConfig.NodesAutoSync {
+		return nil
+	}
+
+	// 执行同步
+	domainService := &DNSDomainService{}
+	resp, err := domainService.syncClusterDNS(&pb.SyncDNSDomainDataRequest{
+		DnsDomainId:   int64(dnsInfo.DnsDomainId),
+		NodeClusterId: clusterId,
+	})
+	if err != nil {
+		return err
+	}
+	if !resp.IsOk {
+		err = models.SharedMessageDAO.CreateClusterMessage(clusterId, models.MessageTypeClusterDNSSyncFailed, models.LevelError, "集群DNS同步失败："+resp.Error, nil)
+		if err != nil {
+			logs.Println("[NODE_SERVICE]" + err.Error())
+		}
+	}
+	return nil
 }

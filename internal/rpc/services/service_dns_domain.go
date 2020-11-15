@@ -232,164 +232,7 @@ func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.Syn
 	if err != nil {
 		return nil, err
 	}
-
-	// 查询集群信息
-	clusters := []*models.NodeCluster{}
-	if req.NodeClusterId > 0 {
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
-		if err != nil {
-			return nil, err
-		}
-		if cluster == nil {
-			return &pb.SyncDNSDomainDataResponse{
-				IsOk:      false,
-				Error:     "找不到要同步的集群",
-				ShouldFix: false,
-			}, nil
-		}
-		if int64(cluster.DnsDomainId) != req.DnsDomainId {
-			return &pb.SyncDNSDomainDataResponse{
-				IsOk:      false,
-				Error:     "集群设置的域名和参数不符",
-				ShouldFix: false,
-			}, nil
-		}
-		clusters = append(clusters, cluster)
-	} else {
-		clusters, err = models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 域名信息
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(req.DnsDomainId)
-	if err != nil {
-		return nil, err
-	}
-	if domain == nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "找不到要操作的域名"}, nil
-	}
-	domainId := int64(domain.Id)
-	domainName := domain.Name
-
-	// 服务商信息
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(domain.ProviderId))
-	if err != nil {
-		return nil, err
-	}
-	if provider == nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "域名没有设置服务商"}, nil
-	}
-	apiParams := maps.Map{}
-	if len(provider.ApiParams) > 0 && provider.ApiParams != "null" {
-		err = json.Unmarshal([]byte(provider.ApiParams), &apiParams)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 开始同步
-	manager := dnsclients.FindProvider(provider.Type)
-	if manager == nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "目前不支持'" + provider.Type + "'"}, nil
-	}
-	err = manager.Auth(apiParams)
-	if err != nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "调用API认证失败：" + err.Error()}, nil
-	}
-
-	// 更新线路
-	routes, err := manager.GetRoutes(domainName)
-	if err != nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "获取线路失败：" + err.Error()}, nil
-	}
-	routesJSON, err := json.Marshal(routes)
-	if err != nil {
-		return nil, err
-	}
-	err = models.SharedDNSDomainDAO.UpdateDomainRoutes(domainId, routesJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	// 检查集群设置
-	for _, cluster := range clusters {
-		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(cluster)
-		if err != nil {
-			return nil, err
-		}
-		if len(issues) > 0 {
-			return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "发现问题需要修复", ShouldFix: true}, nil
-		}
-	}
-
-	// 所有记录
-	records, err := manager.GetRecords(domainName)
-	if err != nil {
-		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "获取域名解析记录失败：" + err.Error()}, nil
-	}
-	recordsJSON, err := json.Marshal(records)
-	if err != nil {
-		return nil, err
-	}
-	err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	// 对比变化
-	allChanges := []maps.Map{}
-	for _, cluster := range clusters {
-		changes, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName)
-		if err != nil {
-			return nil, err
-		}
-		allChanges = append(allChanges, changes...)
-	}
-	for _, change := range allChanges {
-		action := change.GetString("action")
-		record := change.Get("record").(*dnsclients.Record)
-
-		if len(record.Route) == 0 {
-			record.Route = manager.DefaultRoute()
-		}
-
-		switch action {
-		case "create":
-			err = manager.AddRecord(domainName, record)
-			if err != nil {
-				return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "创建域名记录失败：" + err.Error()}, nil
-			}
-		case "delete":
-			err = manager.DeleteRecord(domainName, record)
-			if err != nil {
-				return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "删除域名记录失败：" + err.Error()}, nil
-			}
-		}
-
-		//logs.Println(action, record.Name, record.Type, record.Value, record.Route)
-	}
-
-	// 重新更新记录
-	if len(allChanges) > 0 {
-		records, err := manager.GetRecords(domainName)
-		if err != nil {
-			return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "重新获取域名解析记录失败：" + err.Error()}, nil
-		}
-		recordsJSON, err := json.Marshal(records)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &pb.SyncDNSDomainDataResponse{
-		IsOk: true,
-	}, nil
+	return this.syncClusterDNS(req)
 }
 
 // 查看支持的线路
@@ -630,4 +473,166 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	return
+}
+
+// 执行同步
+func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (*pb.SyncDNSDomainDataResponse, error) {
+	// 查询集群信息
+	var err error
+	clusters := []*models.NodeCluster{}
+	if req.NodeClusterId > 0 {
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			return &pb.SyncDNSDomainDataResponse{
+				IsOk:      false,
+				Error:     "找不到要同步的集群",
+				ShouldFix: false,
+			}, nil
+		}
+		if int64(cluster.DnsDomainId) != req.DnsDomainId {
+			return &pb.SyncDNSDomainDataResponse{
+				IsOk:      false,
+				Error:     "集群设置的域名和参数不符",
+				ShouldFix: false,
+			}, nil
+		}
+		clusters = append(clusters, cluster)
+	} else {
+		clusters, err = models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 域名信息
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(req.DnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	if domain == nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "找不到要操作的域名"}, nil
+	}
+	domainId := int64(domain.Id)
+	domainName := domain.Name
+
+	// 服务商信息
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(domain.ProviderId))
+	if err != nil {
+		return nil, err
+	}
+	if provider == nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "域名没有设置服务商"}, nil
+	}
+	apiParams := maps.Map{}
+	if len(provider.ApiParams) > 0 && provider.ApiParams != "null" {
+		err = json.Unmarshal([]byte(provider.ApiParams), &apiParams)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 开始同步
+	manager := dnsclients.FindProvider(provider.Type)
+	if manager == nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "目前不支持'" + provider.Type + "'"}, nil
+	}
+	err = manager.Auth(apiParams)
+	if err != nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "调用API认证失败：" + err.Error()}, nil
+	}
+
+	// 更新线路
+	routes, err := manager.GetRoutes(domainName)
+	if err != nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "获取线路失败：" + err.Error()}, nil
+	}
+	routesJSON, err := json.Marshal(routes)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedDNSDomainDAO.UpdateDomainRoutes(domainId, routesJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查集群设置
+	for _, cluster := range clusters {
+		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(cluster)
+		if err != nil {
+			return nil, err
+		}
+		if len(issues) > 0 {
+			return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "发现问题需要修复", ShouldFix: true}, nil
+		}
+	}
+
+	// 所有记录
+	records, err := manager.GetRecords(domainName)
+	if err != nil {
+		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "获取域名解析记录失败：" + err.Error()}, nil
+	}
+	recordsJSON, err := json.Marshal(records)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// 对比变化
+	allChanges := []maps.Map{}
+	for _, cluster := range clusters {
+		changes, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName)
+		if err != nil {
+			return nil, err
+		}
+		allChanges = append(allChanges, changes...)
+	}
+	for _, change := range allChanges {
+		action := change.GetString("action")
+		record := change.Get("record").(*dnsclients.Record)
+
+		if len(record.Route) == 0 {
+			record.Route = manager.DefaultRoute()
+		}
+
+		switch action {
+		case "create":
+			err = manager.AddRecord(domainName, record)
+			if err != nil {
+				return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "创建域名记录失败：" + err.Error()}, nil
+			}
+		case "delete":
+			err = manager.DeleteRecord(domainName, record)
+			if err != nil {
+				return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "删除域名记录失败：" + err.Error()}, nil
+			}
+		}
+
+		//logs.Println(action, record.Name, record.Type, record.Value, record.Route)
+	}
+
+	// 重新更新记录
+	if len(allChanges) > 0 {
+		records, err := manager.GetRecords(domainName)
+		if err != nil {
+			return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "重新获取域名解析记录失败：" + err.Error()}, nil
+		}
+		recordsJSON, err := json.Marshal(records)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &pb.SyncDNSDomainDataResponse{
+		IsOk: true,
+	}, nil
 }

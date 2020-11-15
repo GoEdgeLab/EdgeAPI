@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	"net/http"
 	"strconv"
@@ -54,20 +56,14 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			Node: node,
 		}
 
-		addresses, err := models.NewNodeIPAddressDAO().FindAllEnabledAddressesWithNode(int64(node.Id))
+		ipAddr, err := models.NewNodeIPAddressDAO().FindFirstNodeIPAddress(int64(node.Id))
 		if err != nil {
 			return nil, err
 		}
-		accessAddresses := []string{}
-		for _, addr := range addresses {
-			if addr.CanAccess == 1 {
-				accessAddresses = append(accessAddresses, addr.Ip)
-			}
-		}
-		if len(accessAddresses) == 0 {
+		if len(ipAddr) == 0 {
 			result.Error = "no ip address can be used"
 		} else {
-			result.NodeAddr = accessAddresses[0]
+			result.NodeAddr = ipAddr
 		}
 
 		results = append(results, result)
@@ -130,6 +126,22 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 							time.Sleep(tryDelay)
 						}
 					}
+
+					// 修改节点状态
+					if healthCheckConfig.AutoDown {
+						isChanged, err := models.SharedNodeDAO.UpdateNodeUp(int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
+						if err != nil {
+							logs.Println("[HEALTH_CHECK]" + err.Error())
+						} else if isChanged {
+							// 通知更新
+							select {
+							case events.NodeDNSChanges <- int64(result.Node.Id):
+							default:
+
+							}
+						}
+					}
+
 					wg.Done()
 				default:
 					return

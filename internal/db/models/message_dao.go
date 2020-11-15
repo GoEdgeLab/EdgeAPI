@@ -24,8 +24,9 @@ const (
 type MessageType = string
 
 const (
-	MessageTypeHealthCheckFail MessageType = "HealthCheckFail"
-	MessageTypeNodeInactive    MessageType = "NodeInactive"
+	MessageTypeHealthCheckFailed    MessageType = "HealthCheckFailed"
+	MessageTypeNodeInactive         MessageType = "NodeInactive"
+	MessageTypeClusterDNSSyncFailed MessageType = "ClusterDNSSyncFailed"
 )
 
 type MessageDAO dbs.DAO

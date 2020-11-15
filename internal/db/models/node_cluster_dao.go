@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -116,8 +117,20 @@ func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
+
+	// DNS设置
 	op.DnsDomainId = dnsDomainId
 	op.DnsName = dnsName
+	dnsConfig := &dnsconfigs.ClusterDNSConfig{
+		NodesAutoSync:   true,
+		ServersAutoSync: true,
+	}
+	dnsJSON, err := json.Marshal(dnsConfig)
+	if err != nil {
+		return 0, err
+	}
+	op.Dns = dnsJSON
+
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
 	op.UniqueId = uniqueId
@@ -352,7 +365,7 @@ func (this *NodeClusterDAO) FindClusterGrantId(clusterId int64) (int64, error) {
 func (this *NodeClusterDAO) FindClusterDNSInfo(clusterId int64) (*NodeCluster, error) {
 	one, err := this.Query().
 		Pk(clusterId).
-		Result("id", "name", "dnsName", "dnsDomainId").
+		Result("id", "name", "dnsName", "dnsDomainId", "dns").
 		Find()
 	if err != nil {
 		return nil, err
@@ -374,7 +387,7 @@ func (this *NodeClusterDAO) ExistClusterDNSName(dnsName string, excludeClusterId
 }
 
 // 修改集群DNS相关信息
-func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dnsDomainId int64) error {
+func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dnsDomainId int64, nodesAutoSync bool, serversAutoSync bool) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -382,7 +395,18 @@ func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dn
 	op.Id = clusterId
 	op.DnsName = dnsName
 	op.DnsDomainId = dnsDomainId
-	_, err := this.Save(op)
+
+	dnsConfig := &dnsconfigs.ClusterDNSConfig{
+		NodesAutoSync:   nodesAutoSync,
+		ServersAutoSync: serversAutoSync,
+	}
+	dnsJSON, err := json.Marshal(dnsConfig)
+	if err != nil {
+		return err
+	}
+	op.Dns = dnsJSON
+
+	_, err = this.Save(op)
 	return err
 }
 
