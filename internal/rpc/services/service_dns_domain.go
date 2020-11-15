@@ -25,10 +25,64 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
+	// 查询Provider
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(req.DnsProviderId)
+	if err != nil {
+		return nil, err
+	}
+	if provider == nil {
+		return nil, errors.New("can not find provider")
+	}
+	apiParams, err := provider.DecodeAPIParams()
+	if err != nil {
+		return nil, err
+	}
+
 	domainId, err := models.SharedDNSDomainDAO.CreateDomain(req.DnsProviderId, req.Name)
 	if err != nil {
 		return nil, err
 	}
+
+	// 更新数据，且不提示错误
+	go func() {
+		domainName := req.Name
+
+		providerInterface := dnsclients.FindProvider(provider.Type)
+		if providerInterface == nil {
+			return
+		}
+		err = providerInterface.Auth(apiParams)
+		if err != nil {
+			// 这里我们刻意不提示错误
+			return
+		}
+		routes, err := providerInterface.GetRoutes(domainName)
+		if err != nil {
+			return
+		}
+		routesJSON, err := json.Marshal(routes)
+		if err != nil {
+			return
+		}
+		err = models.SharedDNSDomainDAO.UpdateDomainRoutes(domainId, routesJSON)
+		if err != nil {
+			return
+		}
+
+		records, err := providerInterface.GetRecords(domainName)
+		if err != nil {
+			return
+		}
+		recordsJSON, err := json.Marshal(records)
+		if err != nil {
+			return
+		}
+		err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+		if err != nil {
+			return
+		}
+	}()
+
 	return &pb.CreateDNSDomainResponse{DnsDomainId: domainId}, nil
 }
 
