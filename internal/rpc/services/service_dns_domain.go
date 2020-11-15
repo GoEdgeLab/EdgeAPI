@@ -416,6 +416,21 @@ func (this *DNSDomainService) FindAllDNSDomainRoutes(ctx context.Context, req *p
 	return &pb.FindAllDNSDomainRoutesResponse{Routes: pbRoutes}, nil
 }
 
+// 判断是否有域名可选
+func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb.ExistAvailableDomainsRequest) (*pb.ExistAvailableDomainsResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	exist, err := models.SharedDNSDomainDAO.ExistAvailableDomains()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExistAvailableDomainsResponse{Exist: exist}, nil
+}
+
 // 转换域名信息
 func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.DNSDomain, error) {
 	domainId := int64(domain.Id)

@@ -195,3 +195,19 @@ func (this *DNSDomainDAO) FindDomainRouteName(domainId int64, routeCode string) 
 	}
 	return "", nil
 }
+
+// 判断是否有域名可选
+func (this *DNSDomainDAO) ExistAvailableDomains() (bool, error) {
+	subQuery, err := SharedDNSProviderDAO.Query().
+		Where("state=1"). // 这里要使用非变量
+		ResultPk().
+		AsSQL()
+	if err != nil {
+		return false, err
+	}
+	return this.Query().
+		State(DNSDomainStateEnabled).
+		Attr("isOn", true).
+		Where("providerId IN (" + subQuery + ")").
+		Exist()
+}

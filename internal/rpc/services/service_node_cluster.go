@@ -23,7 +23,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(req.Name, req.GrantId, req.InstallDir)
+	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName)
 	if err != nil {
 		return nil, err
 	}

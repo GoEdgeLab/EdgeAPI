@@ -100,7 +100,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters() (result []*NodeCluster, err 
 }
 
 // 创建集群
-func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir string) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir string, dnsDomainId int64, dnsName string) (clusterId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -116,6 +116,8 @@ func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
+	op.DnsDomainId = dnsDomainId
+	op.DnsName = dnsName
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
 	op.UniqueId = uniqueId
