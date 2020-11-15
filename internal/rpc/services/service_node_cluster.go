@@ -515,5 +515,6 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: len(changes) > 0}, nil
 }

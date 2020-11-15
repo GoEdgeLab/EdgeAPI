@@ -856,6 +856,11 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 	}
 	dnsDomainId := int64(clusterDNS.DnsDomainId)
 
+	routes, err := models.SharedDNSDomainDAO.FindDomainRoutes(dnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(req.NodeClusterId)
 	if err != nil {
 		return nil, err
@@ -872,11 +877,21 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 			return nil, err
 		}
 
+		routeName := ""
+		for _, r := range routes {
+			if r.Code == route {
+				routeName = r.Name
+			}
+		}
+
 		result = append(result, &pb.NodeDNSInfo{
 			Id:     int64(node.Id),
 			Name:   node.Name,
 			IpAddr: ipAddr,
-			Route:  route,
+			Route: &pb.DNSRoute{
+				Name: routeName,
+				Code: route,
+			},
 		})
 	}
 	return &pb.FindAllEnabledNodesDNSWithClusterIdResponse{Nodes: result}, nil
@@ -915,8 +930,14 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 	}
 
 	var route = ""
+	var routeName = ""
 	if dnsDomainId > 0 {
 		route, err = node.DNSRoute(dnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+
+		routeName, err = models.SharedDNSDomainDAO.FindDomainRouteName(dnsDomainId, route)
 		if err != nil {
 			return nil, err
 		}
@@ -929,10 +950,13 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 
 	return &pb.FindEnabledNodeDNSResponse{
 		Node: &pb.NodeDNSInfo{
-			Id:            int64(node.Id),
-			Name:          node.Name,
-			IpAddr:        ipAddr,
-			Route:         route,
+			Id:     int64(node.Id),
+			Name:   node.Name,
+			IpAddr: ipAddr,
+			Route: &pb.DNSRoute{
+				Name: routeName,
+				Code: route,
+			},
 			ClusterId:     clusterId,
 			DnsDomainId:   dnsDomainId,
 			DnsDomainName: dnsDomainName,

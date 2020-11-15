@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// DNSPod服务商
 type DNSPodProvider struct {
 	apiId    string
 	apiToken string
@@ -70,7 +71,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err er
 }
 
 // 读取线路数据
-func (this *DNSPodProvider) GetRoutes(domain string) ([]string, error) {
+func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error) {
 	infoResp, err := this.post("/Domain.info", map[string]string{
 		"domain": domain,
 	})
@@ -92,12 +93,15 @@ func (this *DNSPodProvider) GetRoutes(domain string) ([]string, error) {
 	if len(lines) == 0 {
 		return nil, nil
 	}
-	lineStrings := []string{}
 	for _, line := range lines {
-		lineStrings = append(lineStrings, types.String(line))
+		lineString := types.String(line)
+		routes = append(routes, &Route{
+			Name: lineString,
+			Code: lineString,
+		})
 	}
 
-	return lineStrings, nil
+	return routes, nil
 }
 
 // 设置记录

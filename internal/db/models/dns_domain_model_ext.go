@@ -3,15 +3,14 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
-	"github.com/iwind/TeaGo/lists"
 )
 
 // 获取所有的线路
-func (this *DNSDomain) DecodeRoutes() ([]string, error) {
+func (this *DNSDomain) DecodeRoutes() ([]*dnsclients.Route, error) {
 	if len(this.Routes) == 0 || this.Routes == "null" {
 		return nil, nil
 	}
-	result := []string{}
+	result := []*dnsclients.Route{}
 	err := json.Unmarshal([]byte(this.Routes), &result)
 	if err != nil {
 		return nil, err
@@ -25,7 +24,12 @@ func (this *DNSDomain) ContainsRoute(route string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return lists.ContainsString(routes, route), nil
+	for _, r := range routes {
+		if r.Code == route {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // 获取所有的记录

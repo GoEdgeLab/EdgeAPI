@@ -11,7 +11,7 @@ type ProviderInterface interface {
 	GetRecords(domain string) (records []*Record, err error)
 
 	// 读取域名支持的线路数据
-	GetRoutes(domain string) (routes []string, err error)
+	GetRoutes(domain string) (routes []*Route, err error)
 
 	// 设置记录
 	AddRecord(domain string, newRecord *Record) error

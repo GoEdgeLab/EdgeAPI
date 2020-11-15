@@ -5,7 +5,7 @@ type RecordType = string
 const (
 	RecordTypeA     RecordType = "A"
 	RecordTypeCName RecordType = "CNAME"
-	RecordTypeText  RecordType = "TXT"
+	RecordTypeTXT   RecordType = "TXT"
 )
 
 type Record struct {

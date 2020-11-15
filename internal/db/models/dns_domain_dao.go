@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -162,7 +163,7 @@ func (this *DNSDomainDAO) UpdateDomainRoutes(domainId int64, routesJSON []byte) 
 }
 
 // 查找域名线路
-func (this *DNSDomainDAO) FindDomainRoutes(domainId int64) ([]string, error) {
+func (this *DNSDomainDAO) FindDomainRoutes(domainId int64) ([]*dnsclients.Route, error) {
 	routes, err := this.Query().
 		Pk(domainId).
 		Result("routes").
@@ -173,10 +174,24 @@ func (this *DNSDomainDAO) FindDomainRoutes(domainId int64) ([]string, error) {
 	if len(routes) == 0 || routes == "null" {
 		return nil, nil
 	}
-	result := []string{}
+	result := []*dnsclients.Route{}
 	err = json.Unmarshal([]byte(routes), &result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+
+// 查找线路名称
+func (this *DNSDomainDAO) FindDomainRouteName(domainId int64, routeCode string) (string, error) {
+	routes, err := this.FindDomainRoutes(domainId)
+	if err != nil {
+		return "", err
+	}
+	for _, route := range routes {
+		if route.Code == routeCode {
+			return route.Name, nil
+		}
+	}
+	return "", nil
 }

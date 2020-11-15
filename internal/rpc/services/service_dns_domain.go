@@ -10,7 +10,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/lists"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 )
 
@@ -294,7 +293,6 @@ func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.Syn
 		}
 		allChanges = append(allChanges, changes...)
 	}
-	logs.Println("====")
 	for _, change := range allChanges {
 		action := change.GetString("action")
 		record := change.Get("record").(*dnsclients.Record)
@@ -316,7 +314,7 @@ func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.Syn
 			}
 		}
 
-		logs.Println(action, record.Name, record.Type, record.Value, record.Route) // TODO 仅供调试
+		//logs.Println(action, record.Name, record.Type, record.Value, record.Route)
 	}
 
 	// 重新更新记录
@@ -352,7 +350,16 @@ func (this *DNSDomainService) FindAllDNSDomainRoutes(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindAllDNSDomainRoutesResponse{Routes: routes}, nil
+
+	pbRoutes := []*pb.DNSRoute{}
+	for _, route := range routes {
+		pbRoutes = append(pbRoutes, &pb.DNSRoute{
+			Name: route.Name,
+			Code: route.Code,
+		})
+	}
+
+	return &pb.FindAllDNSDomainRoutesResponse{Routes: pbRoutes}, nil
 }
 
 // 转换域名信息
@@ -396,12 +403,16 @@ func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.D
 	}
 
 	// 线路
-	routes := []string{}
-	if len(domain.Routes) > 0 && domain.Routes != "null" {
-		err := json.Unmarshal([]byte(domain.Routes), &routes)
-		if err != nil {
-			return nil, err
-		}
+	routes, err := domain.DecodeRoutes()
+	if err != nil {
+		return nil, err
+	}
+	pbRoutes := []*pb.DNSRoute{}
+	for _, route := range routes {
+		pbRoutes = append(pbRoutes, &pb.DNSRoute{
+			Name: route.Name,
+			Code: route.Code,
+		})
 	}
 
 	return &pb.DNSDomain{
@@ -414,7 +425,7 @@ func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.D
 		NodesChanged:       nodesChanged,
 		CountServerRecords: int64(countServerRecords),
 		ServersChanged:     serversChanged,
-		Routes:             routes,
+		Routes:             pbRoutes,
 	}, nil
 }
 

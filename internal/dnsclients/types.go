@@ -7,24 +7,24 @@ type ProviderType = string
 // 服务商代号
 const (
 	ProviderTypeDNSPod ProviderType = "dnspod"
-	ProviderTypeAliyun ProviderType = "aliyun"
+	ProviderTypeAliDNS ProviderType = "alidns"
 	ProviderTypeDNSCom ProviderType = "dnscom"
 )
 
 // 所有的服务商类型
 var AllProviderTypes = []maps.Map{
 	{
+		"name": "阿里云DNS",
+		"code": ProviderTypeAliDNS,
+	},
+	{
 		"name": "DNSPod",
 		"code": ProviderTypeDNSPod,
 	},
-	{
-		"name": "阿里云",
-		"code": ProviderTypeAliyun,
-	},
-	{
-		"name": "帝恩思",
+	/**{
+		"name": "帝恩思DNS.COM",
 		"code": ProviderTypeDNSCom,
-	},
+	},**/
 }
 
 // 查找服务商实例
@@ -32,6 +32,8 @@ func FindProvider(providerType ProviderType) ProviderInterface {
 	switch providerType {
 	case ProviderTypeDNSPod:
 		return &DNSPodProvider{}
+	case ProviderTypeAliDNS:
+		return &AliDNSProvider{}
 	}
 	return nil
 }
