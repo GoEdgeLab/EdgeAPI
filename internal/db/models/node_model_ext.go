@@ -41,28 +41,28 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 }
 
 // 所有的DNS线路
-func (this *Node) DNSRoutes() (map[int64]string, error) {
-	routes := map[int64]string{} // domainId => route
+func (this *Node) DNSRouteCodes() (map[int64][]string, error) {
+	routes := map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 || this.DnsRoutes == "null" {
 		return routes, nil
 	}
 	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
 	if err != nil {
-		return map[int64]string{}, err
+		return map[int64][]string{}, err
 	}
 	return routes, nil
 }
 
 // DNS线路
-func (this *Node) DNSRoute(dnsDomainId int64) (string, error) {
-	routes := map[int64]string{} // domainId => route
+func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) {
+	routes := map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 || this.DnsRoutes == "null" {
-		return "", nil
+		return nil, nil
 	}
 	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	route, _ := routes[dnsDomainId]
-	return route, nil
+	domainRoutes, _ := routes[dnsDomainId]
+	return domainRoutes, nil
 }

@@ -19,7 +19,7 @@ func (this *DNSDomain) DecodeRoutes() ([]*dnsclients.Route, error) {
 }
 
 // 检查是否包含某个线路
-func (this *DNSDomain) ContainsRoute(route string) (bool, error) {
+func (this *DNSDomain) ContainsRouteCode(route string) (bool, error) {
 	routes, err := this.DecodeRoutes()
 	if err != nil {
 		return false, err

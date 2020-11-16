@@ -629,12 +629,12 @@ func (this *NodeDAO) FindEnabledNodeDNS(nodeId int64) (*Node, error) {
 }
 
 // 修改节点的DNS信息
-func (this *NodeDAO) UpdateNodeDNS(nodeId int64, routes map[int64]string) error {
+func (this *NodeDAO) UpdateNodeDNS(nodeId int64, routes map[int64][]string) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
 	if routes == nil {
-		routes = map[int64]string{}
+		routes = map[int64][]string{}
 	}
 	routesJSON, err := json.Marshal(routes)
 	if err != nil {

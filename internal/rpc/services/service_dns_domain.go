@@ -382,30 +382,32 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		if len(ipAddr) == 0 {
 			continue
 		}
-		route, err := node.DNSRoute(int64(cluster.DnsDomainId))
+		routeCodes, err := node.DNSRouteCodesForDomainId(int64(cluster.DnsDomainId))
 		if err != nil {
 			return nil, nil, nil, false, false, err
 		}
-		if len(route) == 0 {
+		if len(routeCodes) == 0 {
 			continue
 		}
-		key := ipAddr + "_" + route
-		nodeKeys = append(nodeKeys, key)
-		record, ok := nodeRecordMapping[key]
-		if !ok {
-			result = append(result, maps.Map{
-				"action": "create",
-				"record": &dnsclients.Record{
-					Id:    "",
-					Name:  clusterDnsName,
-					Type:  dnsclients.RecordTypeA,
-					Value: ipAddr,
-					Route: route,
-				},
-			})
-			nodesChanged = true
-		} else {
-			doneNodeRecords = append(doneNodeRecords, record)
+		for _, route := range routeCodes {
+			key := ipAddr + "_" + route
+			nodeKeys = append(nodeKeys, key)
+			record, ok := nodeRecordMapping[key]
+			if !ok {
+				result = append(result, maps.Map{
+					"action": "create",
+					"record": &dnsclients.Record{
+						Id:    "",
+						Name:  clusterDnsName,
+						Type:  dnsclients.RecordTypeA,
+						Value: ipAddr,
+						Route: route,
+					},
+				})
+				nodesChanged = true
+			} else {
+				doneNodeRecords = append(doneNodeRecords, record)
+			}
 		}
 	}
 

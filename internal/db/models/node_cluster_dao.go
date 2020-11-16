@@ -458,11 +458,11 @@ func (this *NodeClusterDAO) CheckClusterDNS(cluster *NodeCluster) (issues []*pb.
 	for _, node := range nodes {
 		nodeId := int64(node.Id)
 
-		route, err := node.DNSRoute(domainId)
+		routeCodes, err := node.DNSRouteCodesForDomainId(domainId)
 		if err != nil {
 			return nil, err
 		}
-		if len(route) == 0 {
+		if len(routeCodes) == 0 {
 			issues = append(issues, &pb.DNSIssue{
 				Target:      node.Name,
 				TargetId:    nodeId,
@@ -477,22 +477,24 @@ func (this *NodeClusterDAO) CheckClusterDNS(cluster *NodeCluster) (issues []*pb.
 		}
 
 		// 检查线路是否在已有线路中
-		routeOk, err := domain.ContainsRoute(route)
-		if err != nil {
-			return nil, err
-		}
-		if !routeOk {
-			issues = append(issues, &pb.DNSIssue{
-				Target:      node.Name,
-				TargetId:    nodeId,
-				Type:        "node",
-				Description: "线路已经失效，请重新选择",
-				Params: map[string]string{
-					"clusterName": cluster.Name,
-					"clusterId":   numberutils.FormatInt64(clusterId),
-				},
-			})
-			continue
+		for _, routeCode := range routeCodes {
+			routeOk, err := domain.ContainsRouteCode(routeCode)
+			if err != nil {
+				return nil, err
+			}
+			if !routeOk {
+				issues = append(issues, &pb.DNSIssue{
+					Target:      node.Name,
+					TargetId:    nodeId,
+					Type:        "node",
+					Description: "线路已经失效，请重新选择",
+					Params: map[string]string{
+						"clusterName": cluster.Name,
+						"clusterId":   numberutils.FormatInt64(clusterId),
+					},
+				})
+				continue
+			}
 		}
 
 		// 检查IP地址

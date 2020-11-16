@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
@@ -55,9 +56,9 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 	}
 
 	// 保存DNS相关
-	if req.DnsDomainId > 0 && len(req.DnsRoute) > 0 {
-		err = models.SharedNodeDAO.UpdateNodeDNS(nodeId, map[int64]string{
-			req.DnsDomainId: req.DnsRoute,
+	if req.DnsDomainId > 0 && len(req.DnsRoutes) > 0 {
+		err = models.SharedNodeDAO.UpdateNodeDNS(nodeId, map[int64][]string{
+			req.DnsDomainId: req.DnsRoutes,
 		})
 		if err != nil {
 			return nil, err
@@ -150,6 +151,20 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	if err != nil {
 		return nil, err
 	}
+
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	dnsDomainId := int64(clusterDNS.DnsDomainId)
+	domainRoutes := []*dnsclients.Route{}
+	if clusterDNS.DnsDomainId > 0 {
+		domainRoutes, err = models.SharedDNSDomainDAO.FindDomainRoutes(dnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId)
 	if err != nil {
 		return nil, err
@@ -194,6 +209,24 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			}
 		}
 
+		// DNS线路
+		routeCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
+		if err != nil {
+			return nil, err
+		}
+		pbRoutes := []*pb.DNSRoute{}
+		for _, routeCode := range routeCodes {
+			for _, route := range domainRoutes {
+				if route.Code == routeCode {
+					pbRoutes = append(pbRoutes, &pb.DNSRoute{
+						Name: route.Name,
+						Code: route.Code,
+					})
+					break
+				}
+			}
+		}
+
 		result = append(result, &pb.Node{
 			Id:          int64(node.Id),
 			Name:        node.Name,
@@ -209,6 +242,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			IsOn:          node.IsOn == 1,
 			IsUp:          node.IsUp == 1,
 			Group:         pbGroup,
+			DnsRoutes:     pbRoutes,
 		})
 	}
 
@@ -302,6 +336,16 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 			if err != nil {
 				return nil, err
 			}
+		}
+	}
+
+	// 保存DNS相关
+	if req.DnsDomainId > 0 && len(req.DnsRoutes) > 0 {
+		err = models.SharedNodeDAO.UpdateNodeDNS(req.NodeId, map[int64][]string{
+			req.DnsDomainId: req.DnsRoutes,
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -941,15 +985,21 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 			return nil, err
 		}
 
-		route, err := node.DNSRoute(dnsDomainId)
+		domainRouteCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
 		if err != nil {
 			return nil, err
 		}
 
-		routeName := ""
-		for _, r := range routes {
-			if r.Code == route {
-				routeName = r.Name
+		pbRoutes := []*pb.DNSRoute{}
+		for _, routeCode := range domainRouteCodes {
+			for _, r := range routes {
+				if r.Code == routeCode {
+					pbRoutes = append(pbRoutes, &pb.DNSRoute{
+						Name: r.Name,
+						Code: r.Code,
+					})
+					break
+				}
 			}
 		}
 
@@ -957,10 +1007,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 			Id:     int64(node.Id),
 			Name:   node.Name,
 			IpAddr: ipAddr,
-			Route: &pb.DNSRoute{
-				Name: routeName,
-				Code: route,
-			},
+			Routes: pbRoutes,
 		})
 	}
 	return &pb.FindAllEnabledNodesDNSWithClusterIdResponse{Nodes: result}, nil
@@ -998,17 +1045,22 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return nil, err
 	}
 
-	var route = ""
-	var routeName = ""
+	pbRoutes := []*pb.DNSRoute{}
 	if dnsDomainId > 0 {
-		route, err = node.DNSRoute(dnsDomainId)
+		routeCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
 		if err != nil {
 			return nil, err
 		}
 
-		routeName, err = models.SharedDNSDomainDAO.FindDomainRouteName(dnsDomainId, route)
-		if err != nil {
-			return nil, err
+		for _, routeCode := range routeCodes {
+			routeName, err := models.SharedDNSDomainDAO.FindDomainRouteName(dnsDomainId, routeCode)
+			if err != nil {
+				return nil, err
+			}
+			pbRoutes = append(pbRoutes, &pb.DNSRoute{
+				Name: routeName,
+				Code: routeCode,
+			})
 		}
 	}
 
@@ -1019,13 +1071,10 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 
 	return &pb.FindEnabledNodeDNSResponse{
 		Node: &pb.NodeDNSInfo{
-			Id:     int64(node.Id),
-			Name:   node.Name,
-			IpAddr: ipAddr,
-			Route: &pb.DNSRoute{
-				Name: routeName,
-				Code: route,
-			},
+			Id:            int64(node.Id),
+			Name:          node.Name,
+			IpAddr:        ipAddr,
+			Routes:        pbRoutes,
 			ClusterId:     clusterId,
 			DnsDomainId:   dnsDomainId,
 			DnsDomainName: dnsDomainName,
@@ -1050,15 +1099,15 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 		return nil, errors.New("node not found")
 	}
 
-	routes, err := node.DNSRoutes()
+	routeCodeMap, err := node.DNSRouteCodes()
 	if err != nil {
 		return nil, err
 	}
-	if req.DnsDomainId > 0 && len(req.Route) > 0 {
-		routes[req.DnsDomainId] = req.Route
+	if req.DnsDomainId > 0 && len(req.Routes) > 0 {
+		routeCodeMap[req.DnsDomainId] = req.Routes
 	}
 
-	err = models.SharedNodeDAO.UpdateNodeDNS(req.NodeId, routes)
+	err = models.SharedNodeDAO.UpdateNodeDNS(req.NodeId, routeCodeMap)
 	if err != nil {
 		return nil, err
 	}
