@@ -9,6 +9,7 @@ type Node struct {
 	IsUp              uint8  `field:"isUp"`              // 是否在线
 	CountUp           uint32 `field:"countUp"`           // 连续在线次数
 	CountDown         uint32 `field:"countDown"`         // 连续下线次数
+	IsActive          uint8  `field:"isActive"`          // 是否活跃
 	UniqueId          string `field:"uniqueId"`          // 节点ID
 	Secret            string `field:"secret"`            // 密钥
 	Name              string `field:"name"`              // 节点名
@@ -37,6 +38,7 @@ type NodeOperator struct {
 	IsUp              interface{} // 是否在线
 	CountUp           interface{} // 连续在线次数
 	CountDown         interface{} // 连续下线次数
+	IsActive          interface{} // 是否活跃
 	UniqueId          interface{} // 节点ID
 	Secret            interface{} // 密钥
 	Name              interface{} // 节点名

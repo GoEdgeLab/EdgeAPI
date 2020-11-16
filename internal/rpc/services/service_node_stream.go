@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
@@ -93,7 +94,29 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		}
 	}
 
-	logs.Println("[RPC]accepted node '" + strconv.FormatInt(nodeId, 10) + "' connection")
+	logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
+
+	// 标记为活跃状态
+	oldIsActive, err := models.SharedNodeDAO.FindNodeActive(nodeId)
+	if err != nil {
+		return err
+	}
+	if !oldIsActive {
+		err = models.SharedNodeDAO.UpdateNodeActive(nodeId, true)
+		if err != nil {
+			return err
+		}
+
+		// 发送恢复消息
+		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(nodeId)
+		if err != nil {
+			return err
+		}
+		err = models.SharedMessageDAO.CreateNodeMessage(clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, "节点已经恢复在线", nil)
+		if err != nil {
+			return err
+		}
+	}
 
 	nodeLocker.Lock()
 	requestChan, ok := requestChanMap[nodeId]

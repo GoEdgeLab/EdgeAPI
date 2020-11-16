@@ -139,6 +139,13 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 							default:
 
 							}
+
+							// 通知恢复或下线
+							if result.IsOk {
+								err = models.NewMessageDAO().CreateNodeMessage(this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, "健康检查成功，节点\""+result.Node.Name+"\"已恢复上线", nil)
+							} else {
+								err = models.NewMessageDAO().CreateNodeMessage(this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, "健康检查失败，节点\""+result.Node.Name+"\"已自动下线", nil)
+							}
 						}
 					}
 

@@ -315,7 +315,9 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(clusterId int64) (result 
 		Attr("clusterId", clusterId).
 		Attr("isOn", true). // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
+		Attr("isActive", true). // 当前已经在线的
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
+		Result("id").
 		Slice(&result).
 		FindAll()
 	return
@@ -664,7 +666,7 @@ func (this *NodeDAO) UpdateNodeUp(nodeId int64, isUp bool, maxUp int, maxDown in
 
 	// 如果新老状态一致，则不做任何事情
 	if oldIsUp == isUp {
-		return isUp, nil
+		return false, nil
 	}
 
 	countUp := int(one.(*Node).CountUp)
@@ -698,6 +700,30 @@ func (this *NodeDAO) UpdateNodeUp(nodeId int64, isUp bool, maxUp int, maxDown in
 		return false, err
 	}
 	return
+}
+
+// 修改节点活跃状态
+func (this *NodeDAO) UpdateNodeActive(nodeId int64, isActive bool) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	_, err := this.Query().
+		Pk(nodeId).
+		Set("isActive", isActive).
+		Update()
+	return err
+}
+
+// 检查节点活跃状态
+func (this *NodeDAO) FindNodeActive(nodeId int64) (bool, error) {
+	isActive, err := this.Query().
+		Pk(nodeId).
+		Result("isActive").
+		FindIntCol(0)
+	if err != nil {
+		return false, err
+	}
+	return isActive == 1, nil
 }
 
 // 生成唯一ID

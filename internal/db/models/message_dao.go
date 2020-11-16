@@ -19,13 +19,17 @@ const (
 	MessageLevelInfo    = "info"
 	MessageLevelWarning = "warning"
 	MessageLevelError   = "error"
+	MessageLevelSuccess = "success"
 )
 
 type MessageType = string
 
 const (
 	MessageTypeHealthCheckFailed    MessageType = "HealthCheckFailed"
+	MessageTypeHealthCheckNodeUp    MessageType = "HealthCheckNodeUp"
+	MessageTypeHealthCheckNodeDown  MessageType = "HealthCheckNodeDown"
 	MessageTypeNodeInactive         MessageType = "NodeInactive"
+	MessageTypeNodeActive           MessageType = "NodeActive"
 	MessageTypeClusterDNSSyncFailed MessageType = "ClusterDNSSyncFailed"
 )
 

@@ -83,6 +83,12 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 		if err != nil {
 			return err
 		}
+
+		// 修改在线状态
+		err = models.SharedNodeDAO.UpdateNodeActive(int64(node.Id), false)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO 检查恢复连接

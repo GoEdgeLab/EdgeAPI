@@ -21,7 +21,6 @@ func init() {
 		go func() {
 			service := &NodeService{}
 			for nodeId := range events.NodeDNSChanges {
-				logs.Println("change dns: ", nodeId)
 				err := service.notifyNodeDNSChanged(nodeId)
 				if err != nil {
 					logs.Println("[ERROR]change node dns: " + err.Error())
@@ -450,7 +449,6 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 	if err != nil {
 		return nil, err
 	}
-
 	return &pb.RPCSuccess{}, nil
 }
 
