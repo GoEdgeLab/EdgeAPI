@@ -862,12 +862,20 @@ func (this *ServerDAO) createEvent() error {
 	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
 }
 
-// 查询当前服务的ClusterId
+// 查询当前服务的集群ID
 func (this *ServerDAO) FindServerClusterId(serverId int64) (int64, error) {
 	return this.Query().
 		Pk(serverId).
 		Result("clusterId").
 		FindInt64Col(0)
+}
+
+// 查询服务的DNS名称
+func (this *ServerDAO) FindServerDNSName(serverId int64) (string, error) {
+	return this.Query().
+		Pk(serverId).
+		Result("dnsName").
+		FindStringCol("")
 }
 
 // 生成DNS Name

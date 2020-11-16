@@ -903,6 +903,52 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 	return &pb.FindAllEnabledServersDNSWithClusterIdResponse{Servers: result}, nil
 }
 
+// 查找单个服务的DNS信息
+func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.FindEnabledServerDNSRequest) (*pb.FindEnabledServerDNSResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	dnsName, err := models.SharedServerDAO.FindServerDNSName(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	var pbDomain *pb.DNSDomain = nil
+	if clusterId > 0 {
+		clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(clusterId)
+		if err != nil {
+			return nil, err
+		}
+		if clusterDNS != nil {
+			domainId := int64(clusterDNS.DnsDomainId)
+			if domainId > 0 {
+				domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(domainId)
+				if err != nil {
+					return nil, err
+				}
+				if domain != nil {
+					pbDomain = &pb.DNSDomain{
+						Id:   domainId,
+						Name: domain.Name,
+					}
+				}
+			}
+		}
+	}
+
+	return &pb.FindEnabledServerDNSResponse{
+		DnsName: dnsName,
+		Domain:  pbDomain,
+	}, nil
+}
+
 // 自动同步DNS状态
 func (this *ServerService) notifyServerDNSChanged(serverId int64) error {
 	clusterId, err := models.SharedServerDAO.FindServerClusterId(serverId)

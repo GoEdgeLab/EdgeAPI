@@ -41,6 +41,10 @@ function build() {
 		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-v${NodeVersion}.zip" $ROOT/deploy/
 	done
 
+	# build sql
+	echo "building sql ..."
+	${ROOT}/sql.sh
+
 	# copy files
 	echo "copying ..."
 	if [ ! -d $DIST ]; then
