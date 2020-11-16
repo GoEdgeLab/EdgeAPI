@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"go/format"
 	"io/ioutil"
 	"os"
@@ -16,17 +16,17 @@ import (
 func main() {
 	db, err := dbs.Default()
 	if err != nil {
-		logs.Println("[ERROR]" + err.Error())
+		fmt.Println("[ERROR]" + err.Error())
 		return
 	}
 	results, err := setup.NewSQLDump().Dump(db)
 	if err != nil {
-		logs.Println("[ERROR]" + err.Error())
+		fmt.Println("[ERROR]" + err.Error())
 		return
 	}
 	resultsJSON, err := json.Marshal(results)
 	if err != nil {
-		logs.Println("[ERROR]" + err.Error())
+		fmt.Println("[ERROR]" + err.Error())
 		return
 	}
 	dir, _ := os.Getwd()
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	if len(sqlFile) == 0 {
-		logs.Println("[ERROR]can not find sql.go")
+		fmt.Println("[ERROR]can not find sql.go")
 		return
 	}
 	content := []byte(`package setup
@@ -64,14 +64,14 @@ func init() {
 `)
 	dst, err := format.Source(content)
 	if err != nil {
-		logs.Println("[ERROR]format code failed: " + err.Error())
+		fmt.Println("[ERROR]format code failed: " + err.Error())
 		return
 	}
 
 	err = ioutil.WriteFile(sqlFile, dst, 0666)
 	if err != nil {
-		logs.Println("[ERROR]write file failed: " + err.Error())
+		fmt.Println("[ERROR]write file failed: " + err.Error())
 		return
 	}
-	logs.Println("ok")
+	fmt.Println("ok")
 }
