@@ -8,6 +8,7 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/logs"
 )
 
 type ServerService struct {
@@ -58,6 +59,17 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId, req.IsOn, req.GroupIds)
 	if err != nil {
 		return nil, err
+	}
+
+	// 检查服务变化
+	oldIsOn := server.IsOn == 1
+	if oldIsOn != req.IsOn {
+		go func() {
+			err := this.notifyServerDNSChanged(req.ServerId)
+			if err != nil {
+				logs.Println("[DNS]notify server changed: " + err.Error())
+			}
+		}()
 	}
 
 	// 更新老的节点版本
@@ -889,4 +901,46 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 	}
 
 	return &pb.FindAllEnabledServersDNSWithClusterIdResponse{Servers: result}, nil
+}
+
+// 自动同步DNS状态
+func (this *ServerService) notifyServerDNSChanged(serverId int64) error {
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(serverId)
+	if err != nil {
+		return err
+	}
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(clusterId)
+	if err != nil {
+		return err
+	}
+	if dnsInfo == nil {
+		return nil
+	}
+	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId == 0 {
+		return nil
+	}
+	dnsConfig, err := dnsInfo.DecodeDNSConfig()
+	if err != nil {
+		return err
+	}
+	if !dnsConfig.ServersAutoSync {
+		return nil
+	}
+
+	// 执行同步
+	domainService := &DNSDomainService{}
+	resp, err := domainService.syncClusterDNS(&pb.SyncDNSDomainDataRequest{
+		DnsDomainId:   int64(dnsInfo.DnsDomainId),
+		NodeClusterId: clusterId,
+	})
+	if err != nil {
+		return err
+	}
+	if !resp.IsOk {
+		err = models.SharedMessageDAO.CreateClusterMessage(clusterId, models.MessageTypeClusterDNSSyncFailed, models.LevelError, "集群DNS同步失败："+resp.Error, nil)
+		if err != nil {
+			logs.Println("[NODE_SERVICE]" + err.Error())
+		}
+	}
+	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 const (
@@ -130,4 +131,13 @@ func (this *DNSProviderDAO) FindAllEnabledDNSProvidersWithType(providerType stri
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// 更新数据更新时间
+func (this *DNSProviderDAO) UpdateProviderDataUpdatedTime(providerId int64) error {
+	_, err := this.Query().
+		Pk(providerId).
+		Set("dataUpdatedAt", time.Now().Unix()).
+		Update()
+	return err
 }
