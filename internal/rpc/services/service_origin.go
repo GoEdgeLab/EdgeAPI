@@ -29,7 +29,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	originId, err := models.SharedOriginDAO.CreateOrigin(req.Name, string(addrMap.AsJSON()), req.Description)
+	originId, err := models.SharedOriginDAO.CreateOrigin(req.Name, string(addrMap.AsJSON()), req.Description, req.Weight)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	err = models.SharedOriginDAO.UpdateOrigin(req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description)
+	err = models.SharedOriginDAO.UpdateOrigin(req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight)
 	if err != nil {
 		return nil, err
 	}

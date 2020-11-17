@@ -91,12 +91,16 @@ func (this *OriginDAO) FindOriginName(id int64) (string, error) {
 }
 
 // 创建源站
-func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description string) (originId int64, err error) {
+func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description string, weight int32) (originId int64, err error) {
 	op := NewOriginOperator()
 	op.IsOn = true
 	op.Name = name
 	op.Addr = addrJSON
 	op.Description = description
+	if weight < 0 {
+		weight = 0
+	}
+	op.Weight = weight
 	op.State = OriginStateEnabled
 	_, err = this.Save(op)
 	if err != nil {
@@ -106,7 +110,7 @@ func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description st
 }
 
 // 修改源站
-func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string, description string) error {
+func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string, description string, weight int32) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
@@ -115,6 +119,10 @@ func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string
 	op.Name = name
 	op.Addr = addrJSON
 	op.Description = description
+	if weight < 0 {
+		weight = 0
+	}
+	op.Weight = weight
 	op.Version = dbs.SQL("version+1")
 	_, err := this.Save(op)
 	return err
