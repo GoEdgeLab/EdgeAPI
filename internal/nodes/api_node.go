@@ -10,11 +10,14 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/go-yaml/yaml"
+	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
@@ -204,9 +207,24 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 
 // 自动升级
 func (this *APINode) autoUpgrade() error {
-	db, err := dbs.Default()
+	if Tea.IsTesting() {
+		return nil
+	}
+
+	// 执行SQL
+	config := &dbs.Config{}
+	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
-		return errors.New("load database config failed: " + err.Error())
+		return errors.New("read database config file failed: " + err.Error())
+	}
+	err = yaml.Unmarshal(configData, config)
+	if err != nil {
+		return errors.New("decode database config failed: " + err.Error())
+	}
+	dbConfig := config.DBs[Tea.Env]
+	db, err := dbs.NewInstanceFromConfig(dbConfig)
+	if err != nil {
+		return errors.New("load database failed: " + err.Error())
 	}
 	one, err := db.FindOne("SELECT version FROM edgeVersions LIMIT 1")
 	if err != nil {
@@ -218,11 +236,6 @@ func (this *APINode) autoUpgrade() error {
 		if stringutil.VersionCompare(version, teaconst.Version) >= 0 {
 			return nil
 		}
-	}
-
-	dbConfig, err := db.Config()
-	if err != nil {
-		return errors.New("read db config failed: " + err.Error())
 	}
 	logs.Println("[API_NODE]upgrade database starting ...")
 	err = setup.NewSQLExecutor(dbConfig).Run()
