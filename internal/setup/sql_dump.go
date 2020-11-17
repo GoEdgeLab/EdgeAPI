@@ -208,9 +208,7 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				args := []string{}
 				values := []interface{}{}
 				for k, v := range record.Values {
-					if k == "id" {
-						continue
-					}
+					// ID需要保留，因为各个表格之间需要有对应关系
 					params = append(params, "`"+k+"`")
 					args = append(args, "?")
 					values = append(values, v)
@@ -231,7 +229,7 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 					values = append(values, v)
 				}
 				values = append(values, one.GetInt("id"))
-				_, err = db.Exec("UPDATE " + newTable.Name + " SET " + strings.Join(args, ", ") + " WHERE id=?", values...)
+				_, err = db.Exec("UPDATE "+newTable.Name+" SET "+strings.Join(args, ", ")+" WHERE id=?", values...)
 				if err != nil {
 					return nil, err
 				}
