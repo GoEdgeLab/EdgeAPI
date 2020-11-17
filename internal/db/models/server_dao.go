@@ -562,6 +562,24 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 		config.ServerNames = serverNames
 	}
 
+	// CNAME
+	if server.ClusterId > 0 && len(server.DnsName) > 0 {
+		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(int64(server.ClusterId))
+		if err != nil {
+			return nil, err
+		}
+		if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
+			domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(int64(clusterDNS.DnsDomainId))
+			if err != nil {
+				return nil, err
+			}
+			if domain != nil {
+				cname := server.DnsName + "." + domain.Name
+				config.AliasServerNames = append(config.AliasServerNames, cname)
+			}
+		}
+	}
+
 	// HTTP
 	if len(server.Http) > 0 && server.Http != "null" {
 		httpConfig := &serverconfigs.HTTPProtocolConfig{}

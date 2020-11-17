@@ -10,6 +10,7 @@ import (
 )
 
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
+	dbs.NotifyReady()
 	config, err := SharedServerDAO.ComposeServerConfig(1)
 	if err != nil {
 		t.Fatal(err)
@@ -17,7 +18,18 @@ func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	logs.PrintAsJSON(config, t)
 }
 
+func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
+	dbs.NotifyReady()
+	config, err := SharedServerDAO.ComposeServerConfig(14)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(config.AliasServerNames, t)
+}
+
 func TestServerDAO_UpdateServerConfig(t *testing.T) {
+	dbs.NotifyReady()
+
 	config, err := SharedServerDAO.ComposeServerConfig(1)
 	if err != nil {
 		t.Fatal(err)
