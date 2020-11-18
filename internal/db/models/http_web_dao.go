@@ -574,7 +574,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId i
 	ones, err := this.Query().
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(firewall, '{"firewallPolicyId": ` + strconv.FormatInt(firewallPolicyId, 10) + ` }')`).
+		Where(`JSON_CONTAINS(firewall, '{"isOn": true, "firewallPolicyId": ` + strconv.FormatInt(firewallPolicyId, 10) + ` }')`).
 		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
 		FindAll()
 	if err != nil {

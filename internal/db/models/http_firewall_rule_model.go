@@ -6,6 +6,7 @@ type HTTPFirewallRule struct {
 	IsOn              uint8  `field:"isOn"`              // 是否启用
 	Description       string `field:"description"`       // 说明
 	Param             string `field:"param"`             // 参数
+	Filters           string `field:"filters"`           // 处理器
 	Operator          string `field:"operator"`          // 操作符
 	Value             string `field:"value"`             // 对比值
 	IsCaseInsensitive uint8  `field:"isCaseInsensitive"` // 是否大小写不敏感
@@ -21,6 +22,7 @@ type HTTPFirewallRuleOperator struct {
 	IsOn              interface{} // 是否启用
 	Description       interface{} // 说明
 	Param             interface{} // 参数
+	Filters           interface{} // 处理器
 	Operator          interface{} // 操作符
 	Value             interface{} // 对比值
 	IsCaseInsensitive interface{} // 是否大小写不敏感
