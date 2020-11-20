@@ -178,11 +178,24 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 	if result == nil {
 		return &pb.LookupIPRegionResponse{Region: nil}, nil
 	}
+
+	countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(result.Country)
+	if err != nil {
+		return nil, err
+	}
+
+	provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(result.Province)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.LookupIPRegionResponse{Region: &pb.IPRegion{
-		Country:  result.Country,
-		Region:   result.Region,
-		Province: result.Province,
-		City:     result.City,
-		Isp:      result.ISP,
+		Country:    result.Country,
+		Region:     result.Region,
+		Province:   result.Province,
+		City:       result.City,
+		Isp:        result.ISP,
+		CountryId:  countryId,
+		ProvinceId: provinceId,
 	}}, nil
 }

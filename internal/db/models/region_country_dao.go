@@ -83,6 +83,7 @@ func (this *RegionCountryDAO) FindCountryIdWithDataId(dataId string) (int64, err
 }
 
 // 根据国家名查找国家ID
+// TODO 加入缓存
 func (this *RegionCountryDAO) FindCountryIdWithCountryName(countryName string) (int64, error) {
 	return this.Query().
 		Where("JSON_CONTAINS(codes, :countryName)").

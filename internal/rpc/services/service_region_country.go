@@ -47,3 +47,26 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		Countries: result,
 	}, nil
 }
+
+// 查找单个国家信息
+func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, req *pb.FindEnabledRegionCountryRequest) (*pb.FindEnabledRegionCountryResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	if err != nil {
+		return nil, err
+	}
+
+	country, err := models.SharedRegionCountryDAO.FindEnabledRegionCountry(req.CountryId)
+	if err != nil {
+		return nil, err
+	}
+	if country == nil {
+		return &pb.FindEnabledRegionCountryResponse{Country: nil}, nil
+	}
+
+	return &pb.FindEnabledRegionCountryResponse{Country: &pb.RegionCountry{
+		Id:    int64(country.Id),
+		Name:  country.Name,
+		Codes: country.DecodeCodes(),
+	}}, nil
+}

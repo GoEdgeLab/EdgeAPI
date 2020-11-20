@@ -35,7 +35,7 @@ func init() {
 }
 
 // 启用条目
-func (this *RegionProvinceDAO) EnableRegionProvince(id uint32) error {
+func (this *RegionProvinceDAO) EnableRegionProvince(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", RegionProvinceStateEnabled).
@@ -44,7 +44,7 @@ func (this *RegionProvinceDAO) EnableRegionProvince(id uint32) error {
 }
 
 // 禁用条目
-func (this *RegionProvinceDAO) DisableRegionProvince(id uint32) error {
+func (this *RegionProvinceDAO) DisableRegionProvince(id int64) error {
 	_, err := this.Query().
 		Pk(id).
 		Set("state", RegionProvinceStateDisabled).
@@ -53,7 +53,7 @@ func (this *RegionProvinceDAO) DisableRegionProvince(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *RegionProvinceDAO) FindEnabledRegionProvince(id uint32) (*RegionProvince, error) {
+func (this *RegionProvinceDAO) FindEnabledRegionProvince(id int64) (*RegionProvince, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", RegionProvinceStateEnabled).
@@ -65,7 +65,7 @@ func (this *RegionProvinceDAO) FindEnabledRegionProvince(id uint32) (*RegionProv
 }
 
 // 根据主键查找名称
-func (this *RegionProvinceDAO) FindRegionProvinceName(id uint32) (string, error) {
+func (this *RegionProvinceDAO) FindRegionProvinceName(id int64) (string, error) {
 	return this.Query().
 		Pk(id).
 		Result("name").
@@ -81,6 +81,7 @@ func (this *RegionProvinceDAO) FindProvinceIdWithDataId(dataId string) (int64, e
 }
 
 // 根据省份名查找省份ID
+// TODO 加入缓存
 func (this *RegionProvinceDAO) FindProvinceIdWithProvinceName(provinceName string) (int64, error) {
 	return this.Query().
 		Where("JSON_CONTAINS(codes, :provinceName)").
