@@ -92,6 +92,16 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(ruleId int64) (*firewallcon
 	config.Id = int64(rule.Id)
 	config.IsOn = rule.IsOn == 1
 	config.Param = rule.Param
+
+	paramFilters := []*firewallconfigs.ParamFilter{}
+	if IsNotNull(rule.ParamFilters) {
+		err = json.Unmarshal([]byte(rule.ParamFilters), &paramFilters)
+		if err != nil {
+			return nil, err
+		}
+	}
+	config.ParamFilters = paramFilters
+
 	config.Operator = rule.Operator
 	config.Value = rule.Value
 	config.IsCaseInsensitive = rule.IsCaseInsensitive == 1
@@ -118,6 +128,17 @@ func (this *HTTPFirewallRuleDAO) CreateOrUpdateRuleFromConfig(ruleConfig *firewa
 	op.IsOn = ruleConfig.IsOn
 	op.Description = ruleConfig.Description
 	op.Param = ruleConfig.Param
+
+	if len(ruleConfig.ParamFilters) == 0 {
+		op.ParamFilters = "[]"
+	} else {
+		paramFilters, err := json.Marshal(ruleConfig.ParamFilters)
+		if err != nil {
+			return 0, err
+		}
+		op.ParamFilters = paramFilters
+	}
+
 	op.Value = ruleConfig.Value
 	op.IsCaseInsensitive = ruleConfig.IsCaseInsensitive
 	op.Operator = ruleConfig.Operator
