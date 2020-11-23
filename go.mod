@@ -7,6 +7,7 @@ replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 require (
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.641
+	github.com/go-acme/lego/v4 v4.1.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.4.2
