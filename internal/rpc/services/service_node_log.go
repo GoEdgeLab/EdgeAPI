@@ -9,6 +9,7 @@ import (
 
 // 节点日志相关服务
 type NodeLogService struct {
+	BaseService
 }
 
 // 创建日志
@@ -38,7 +39,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页日志

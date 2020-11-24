@@ -9,6 +9,7 @@ import (
 )
 
 type HTTPHeaderService struct {
+	BaseService
 }
 
 // 创建Header
@@ -38,7 +39,7 @@ func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 查找配置

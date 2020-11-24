@@ -9,7 +9,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
-	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"google.golang.org/grpc/metadata"
@@ -123,16 +122,6 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	} else {
 		return t, m.GetInt64("userId"), nil
 	}
-}
-
-// 返回操作成功信息
-func Success() (*pb.RPCSuccess, error) {
-	return &pb.RPCSuccess{}, nil
-}
-
-// 返回数量
-func NewCountResponse(count int64) (*pb.RPCCountResponse, error) {
-	return &pb.RPCCountResponse{Count: count}, nil
 }
 
 // 包装错误

@@ -90,8 +90,10 @@ func (this *SSLCertDAO) FindSSLCertName(id int64) (string, error) {
 }
 
 // 创建证书
-func (this *SSLCertDAO) CreateCert(isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) (int64, error) {
+func (this *SSLCertDAO) CreateCert(adminId int64, userId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) (int64, error) {
 	op := NewSSLCertOperator()
+	op.AdminId = adminId
+	op.UserId = userId
 	op.State = SSLCertStateEnabled
 	op.IsOn = isOn
 	op.Name = name
@@ -266,4 +268,50 @@ func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool,
 		result = append(result, int64(one.(*SSLCert).Id))
 	}
 	return result, nil
+}
+
+// 计算所有某个管理员/用户下所有的ACME用户生成的证书数量
+func (this *SSLCertDAO) CountAllSSLCertsWithACME(adminId int64, userId int64) (int64, error) {
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	return query.
+		State(SSLCertStateEnabled).
+		Where("acmeUserId>0").
+		Count()
+}
+
+// 列出某个管理员/用户下所有的ACME用户生成的证书Ids
+func (this *SSLCertDAO) ListSSLCertIdsWithACME(adminId int64, userId int64, offset int64, size int64) (certIds []int64, err error) {
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	ones, err := query.
+		ResultPk().
+		State(SSLCertStateEnabled).
+		Where("acmeUserId>0").
+		Offset(offset).
+		Limit(size).
+		DescPk().
+		FindAll()
+	for _, one := range ones {
+		certIds = append(certIds, int64(one.(*SSLCert).Id))
+	}
+	return
+}
+
+// 计算某个ACME用户生成的证书数量
+func (this *SSLCertDAO) CountSSLCertsWithACMEUserId(acmeUserId int64) (int64, error) {
+	return this.Query().
+		State(SSLCertStateEnabled).
+		Attr("acmeUserId", acmeUserId).
+		Count()
 }

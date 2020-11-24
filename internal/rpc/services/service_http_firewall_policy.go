@@ -280,7 +280,7 @@ func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页的防火墙策略

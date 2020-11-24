@@ -8,6 +8,7 @@ import (
 )
 
 type NodeIPAddressService struct {
+	BaseService
 }
 
 // 创建IP地址
@@ -39,7 +40,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改IP地址所属节点
@@ -55,7 +56,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context,
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 禁用单个IP地址

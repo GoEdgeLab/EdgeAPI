@@ -9,6 +9,7 @@ import (
 )
 
 type APINodeService struct {
+	BaseService
 }
 
 // 创建API节点
@@ -38,7 +39,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 删除API节点
@@ -53,7 +54,7 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 列出所有可用API节点
@@ -105,7 +106,7 @@ func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页的API节点

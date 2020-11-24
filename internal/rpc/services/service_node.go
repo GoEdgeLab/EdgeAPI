@@ -130,7 +130,7 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 计算匹配的节点数量
@@ -143,7 +143,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页的节点
@@ -359,7 +359,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		}
 	}()
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 列出单个节点
@@ -494,7 +494,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 同步集群中的节点版本
@@ -524,7 +524,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 安装节点
@@ -665,7 +665,7 @@ func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 查找使用某个认证的所有节点
@@ -950,7 +950,7 @@ func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 取得某个集群下的所有节点

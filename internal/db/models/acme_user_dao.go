@@ -159,5 +159,7 @@ func (this *ACMEUserDAO) CheckACMEUser(acmeUserId int64, adminId int64, userId i
 		return false, nil
 	}
 
-	return query.Exist()
+	return query.
+		State(ACMEUserStateEnabled).
+		Exist()
 }

@@ -94,7 +94,7 @@ func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页的缓存策略

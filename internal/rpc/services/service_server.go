@@ -12,6 +12,7 @@ import (
 )
 
 type ServerService struct {
+	BaseService
 }
 
 // 创建服务
@@ -86,7 +87,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改HTTP服务
@@ -116,7 +117,7 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改HTTPS服务
@@ -146,7 +147,7 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改TCP服务
@@ -176,7 +177,7 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改TLS服务
@@ -206,7 +207,7 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改Unix服务
@@ -236,7 +237,7 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改UDP服务
@@ -266,7 +267,7 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改Web服务
@@ -296,7 +297,7 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改反向代理服务
@@ -326,7 +327,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改域名服务
@@ -356,7 +357,7 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 计算服务数量
@@ -371,7 +372,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页服务
@@ -664,7 +665,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 	}
 
 	if len(policyIds) == 0 {
-		return &pb.RPCCountResponse{Count: 0}, nil
+		return this.SuccessCount(0)
 	}
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersWithSSLPolicyIds(policyIds)
@@ -672,7 +673,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 查找使用某个SSL证书的所有服务
@@ -720,14 +721,14 @@ func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.C
 		return nil, err
 	}
 	if len(webIds) == 0 {
-		return &pb.RPCCountResponse{Count: 0}, nil
+		return this.SuccessCount(0)
 	}
 
 	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: countServers}, nil
+	return this.SuccessCount(countServers)
 }
 
 // 查找使用某个缓存策略的所有服务
@@ -777,14 +778,14 @@ func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx co
 	}
 
 	if len(webIds) == 0 {
-		return &pb.RPCCountResponse{Count: 0}, nil
+		return this.SuccessCount(0)
 	}
 
 	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: countServers}, nil
+	return this.SuccessCount(countServers)
 }
 
 // 查找使用某个WAF策略的所有服务
@@ -833,7 +834,7 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 计算使用某个分组的服务数量
@@ -848,9 +849,7 @@ func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{
-		Count: count,
-	}, nil
+	return this.SuccessCount(count)
 }
 
 // 通知更新

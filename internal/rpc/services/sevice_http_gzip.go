@@ -10,6 +10,7 @@ import (
 )
 
 type HTTPGzipService struct {
+	BaseService
 }
 
 // 创建Gzip配置
@@ -105,5 +106,5 @@ func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateH
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }

@@ -86,7 +86,7 @@ func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAc
 	if err != nil {
 		return nil, err
 	}
-	return this.ResponseCount(count)
+	return this.SuccessCount(count)
 }
 
 // 列出单页用户

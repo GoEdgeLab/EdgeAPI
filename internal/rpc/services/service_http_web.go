@@ -84,7 +84,7 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改Gzip配置
@@ -100,7 +100,7 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改字符集配置
@@ -115,7 +115,7 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 更改请求Header策略
@@ -131,7 +131,7 @@ func (this *HTTPWebService) UpdateHTTPWebRequestHeader(ctx context.Context, req 
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 更改响应Header策略
@@ -147,7 +147,7 @@ func (this *HTTPWebService) UpdateHTTPWebResponseHeader(ctx context.Context, req
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 更改Shutdown

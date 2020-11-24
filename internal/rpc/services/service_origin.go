@@ -12,6 +12,7 @@ import (
 
 // 源站相关管理
 type OriginService struct {
+	BaseService
 }
 
 // 创建源站
@@ -57,7 +58,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 查找单个源站信息

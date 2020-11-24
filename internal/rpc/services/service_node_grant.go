@@ -9,6 +9,7 @@ import (
 )
 
 type NodeGrantService struct {
+	BaseService
 }
 
 func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.CreateNodeGrantRequest) (*pb.CreateNodeGrantResponse, error) {
@@ -37,7 +38,7 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 	}
 
 	err = models.SharedNodeGrantDAO.UpdateGrant(req.GrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
-	return &pb.RPCSuccess{}, err
+	return this.Success()
 }
 
 func (this *NodeGrantService) DisableNodeGrant(ctx context.Context, req *pb.DisableNodeGrantRequest) (*pb.DisableNodeGrantResponse, error) {
@@ -59,7 +60,7 @@ func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 func (this *NodeGrantService) ListEnabledNodeGrants(ctx context.Context, req *pb.ListEnabledNodeGrantsRequest) (*pb.ListEnabledNodeGrantsResponse, error) {

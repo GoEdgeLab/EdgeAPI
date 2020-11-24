@@ -9,6 +9,7 @@ import (
 )
 
 type HTTPHeaderPolicyService struct {
+	BaseService
 }
 
 // 查找策略配置
@@ -58,7 +59,7 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx con
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改SetHeaders
@@ -73,7 +74,7 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx co
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改AddTrailers
@@ -88,7 +89,7 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx co
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改ReplaceHeaders
@@ -103,7 +104,7 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx 
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改删除的Headers
@@ -118,5 +119,5 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx c
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }

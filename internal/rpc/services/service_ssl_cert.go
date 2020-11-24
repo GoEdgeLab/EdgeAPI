@@ -17,12 +17,12 @@ type SSLCertService struct {
 // 创建Cert
 func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSLCertRequest) (*pb.CreateSSLCertResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	certId, err := models.SharedSSLCertDAO.CreateCert(req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
+	certId, err := models.SharedSSLCertDAO.CreateCert(adminId, userId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +95,7 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{
-		Count: count,
-	}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页匹配的Cert
@@ -131,4 +129,73 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 		return nil, err
 	}
 	return &pb.ListSSLCertsResponse{CertsJSON: certConfigsJSON}, nil
+}
+
+// 计算某个ACME用户生成的证书数量
+func (this *SSLCertService) CountSSLCertsWithACMEUserId(ctx context.Context, req *pb.CountSSLCertsWithACMEUserIdRequest) (*pb.RPCCountResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 检查用户权限
+
+	count, err := models.SharedSSLCertDAO.CountSSLCertsWithACMEUserId(req.AcmeUserId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// 计算所有某个管理员/用户下所有的ACME用户生成的证书
+func (this *SSLCertService) CountAllSSLCertsWithACME(ctx context.Context, req *pb.CountAllSSLCertsWithACMERequest) (*pb.RPCCountResponse, error) {
+	// 校验请求
+	_, _, err := this.ValidateAdminAndUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 校验用户
+
+	count, err := models.SharedSSLCertDAO.CountAllSSLCertsWithACME(req.AdminId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// 列出单个管理员/用户下所有的ACME用户生成的证书
+func (this *SSLCertService) ListSSLCertsWithACME(ctx context.Context, req *pb.ListSSLCertsWithACMERequest) (*pb.ListSSLCertsWithACMEResponse, error) {
+	// 校验请求
+	_, _, err := this.ValidateAdminAndUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 校验用户
+
+	certIds, err := models.SharedSSLCertDAO.ListSSLCertIdsWithACME(req.AdminId, req.UserId, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	certConfigs := []*sslconfigs.SSLCertConfig{}
+	for _, certId := range certIds {
+		certConfig, err := models.SharedSSLCertDAO.ComposeCertConfig(certId)
+		if err != nil {
+			return nil, err
+		}
+
+		// 这里不需要数据内容
+		certConfig.CertData = nil
+		certConfig.KeyData = nil
+
+		certConfigs = append(certConfigs, certConfig)
+	}
+	certConfigsJSON, err := json.Marshal(certConfigs)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ListSSLCertsWithACMEResponse{CertsJSON: certConfigsJSON}, nil
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type ReverseProxyService struct {
+	BaseService
 }
 
 // 创建反向代理
@@ -86,7 +87,7 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改主要源站信息
@@ -102,7 +103,7 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改备用源站信息
@@ -118,7 +119,7 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 修改是否启用
@@ -134,5 +135,5 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }

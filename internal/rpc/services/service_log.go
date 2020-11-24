@@ -9,6 +9,7 @@ import (
 
 // 管理员、用户或者其他系统用户日志
 type LogService struct {
+	BaseService
 }
 
 // 创建日志
@@ -38,7 +39,7 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页日志

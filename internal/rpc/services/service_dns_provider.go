@@ -56,7 +56,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页服务商信息

@@ -30,11 +30,11 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int6
 
 // 返回成功
 func (this *BaseService) Success() (*pb.RPCSuccess, error) {
-	return rpcutils.Success()
+	return &pb.RPCSuccess{}, nil
 }
 
 // 返回数字
-func (this *BaseService) ResponseCount(count int64) (*pb.RPCCountResponse, error) {
+func (this *BaseService) SuccessCount(count int64) (*pb.RPCCountResponse, error) {
 	return &pb.RPCCountResponse{Count: count}, nil
 }
 

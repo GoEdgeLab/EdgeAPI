@@ -44,7 +44,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return &pb.RPCSuccess{}, nil
+	return this.Success()
 }
 
 // 禁用集群
@@ -218,7 +218,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 		return nil, err
 	}
 
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页集群
@@ -326,7 +326,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 查找使用某个认证的所有集群
@@ -443,7 +443,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 计算使用某个DNS域名的集群数量
@@ -458,7 +458,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 检查集群域名是否已经被使用

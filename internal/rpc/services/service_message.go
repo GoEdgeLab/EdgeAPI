@@ -24,7 +24,7 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页未读消息

@@ -173,7 +173,7 @@ func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx con
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出服务商下的所有域名

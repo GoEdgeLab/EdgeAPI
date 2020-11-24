@@ -66,7 +66,7 @@ func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.C
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RPCCountResponse{Count: count}, nil
+	return this.SuccessCount(count)
 }
 
 // 列出单页的数据库节点
