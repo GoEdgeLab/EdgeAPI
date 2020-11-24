@@ -9,6 +9,7 @@ import (
 
 // IP名单相关服务
 type IPListService struct {
+	BaseService
 }
 
 // 创建IP列表
@@ -38,7 +39,7 @@ func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPLis
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找IP列表

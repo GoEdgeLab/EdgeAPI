@@ -9,6 +9,7 @@ import (
 )
 
 type HTTPWebService struct {
+	BaseService
 }
 
 // 创建Web配置
@@ -161,7 +162,7 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改Pages
@@ -176,7 +177,7 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改访问日志配置
@@ -191,7 +192,7 @@ func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改统计配置
@@ -206,7 +207,7 @@ func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.Updat
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改缓存配置
@@ -222,7 +223,7 @@ func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改防火墙设置
@@ -238,7 +239,7 @@ func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改路径规则设置
@@ -254,7 +255,7 @@ func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改跳转到HTTPS设置
@@ -269,7 +270,7 @@ func (this *HTTPWebService) UpdateHTTPWebRedirectToHTTPS(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改Websocket设置
@@ -284,7 +285,7 @@ func (this *HTTPWebService) UpdateHTTPWebWebsocket(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 更改重写规则设置
@@ -299,5 +300,5 @@ func (this *HTTPWebService) UpdateHTTPWebRewriteRules(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

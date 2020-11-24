@@ -10,6 +10,8 @@ import (
 )
 
 type AdminService struct {
+	BaseService
+
 	debug bool
 }
 
@@ -168,7 +170,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 修改管理员登录信息
@@ -191,5 +193,5 @@ func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAd
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

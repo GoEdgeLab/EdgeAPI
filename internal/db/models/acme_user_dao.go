@@ -1,9 +1,16 @@
 package models
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/base64"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -60,4 +67,97 @@ func (this *ACMEUserDAO) FindEnabledACMEUser(id int64) (*ACMEUser, error) {
 		return nil, err
 	}
 	return result.(*ACMEUser), err
+}
+
+// 创建用户
+func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email string, description string) (int64, error) {
+	// 生成私钥
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return 0, err
+	}
+
+	privateKeyData, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		return 0, err
+	}
+	privateKeyText := base64.StdEncoding.EncodeToString(privateKeyData)
+
+	op := NewACMEUserOperator()
+	op.AdminId = adminId
+	op.UserId = userId
+	op.Email = email
+	op.Description = description
+	op.PrivateKey = privateKeyText
+	op.State = ACMEUserStateEnabled
+	_, err = this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
+}
+
+// 查找用户列表
+func (this *ACMEUserDAO) UpdateACMEUser(acmeUserId int64, description string) error {
+	if acmeUserId <= 0 {
+		return errors.New("invalid acmeUserId")
+	}
+	op := NewACMEUserOperator()
+	op.Id = acmeUserId
+	op.Description = description
+	_, err := this.Save(op)
+	return err
+}
+
+// 计算用户数量
+func (this *ACMEUserDAO) CountACMEUsersWithAdminId(adminId int64, userId int64) (int64, error) {
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	return query.
+		State(ACMEUserStateEnabled).
+		Count()
+}
+
+// 列出当前管理员的用户
+func (this *ACMEUserDAO) ListACMEUsers(adminId int64, userId int64, offset int64, size int64) (result []*ACMEUser, err error) {
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	_, err = query.
+		State(ACMEUserStateEnabled).
+		Offset(offset).
+		Limit(size).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
+}
+
+// 检查用户权限
+func (this *ACMEUserDAO) CheckACMEUser(acmeUserId int64, adminId int64, userId int64) (bool, error) {
+	if acmeUserId <= 0 {
+		return false, nil
+	}
+
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		return false, nil
+	}
+
+	return query.Exist()
 }

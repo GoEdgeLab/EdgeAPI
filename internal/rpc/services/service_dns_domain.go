@@ -15,6 +15,7 @@ import (
 
 // DNS域名相关服务
 type DNSDomainService struct {
+	BaseService
 }
 
 // 创建域名
@@ -98,7 +99,7 @@ func (this *DNSDomainService) UpdateDNSDomain(ctx context.Context, req *pb.Updat
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除域名
@@ -113,7 +114,7 @@ func (this *DNSDomainService) DeleteDNSDomain(ctx context.Context, req *pb.Delet
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查询单个域名完整信息

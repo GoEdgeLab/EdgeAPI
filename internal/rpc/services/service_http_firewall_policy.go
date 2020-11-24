@@ -13,6 +13,7 @@ import (
 
 // HTTP防火墙（WAF）相关服务
 type HTTPFirewallPolicyService struct {
+	BaseService
 }
 
 // 获取所有可用策略
@@ -232,7 +233,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 修改分组信息
@@ -248,7 +249,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 修改inbound信息
@@ -264,7 +265,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算可用的防火墙策略数量
@@ -323,7 +324,7 @@ func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context,
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个防火墙配置

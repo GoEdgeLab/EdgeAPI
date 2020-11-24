@@ -9,6 +9,7 @@ import (
 )
 
 type HTTPCachePolicyService struct {
+	BaseService
 }
 
 // 获取所有可用策略
@@ -62,7 +63,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除缓存策略
@@ -78,7 +79,7 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算缓存策略数量

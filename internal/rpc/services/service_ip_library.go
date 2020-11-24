@@ -10,6 +10,7 @@ import (
 
 // IP库服务
 type IPLibraryService struct {
+	BaseService
 }
 
 // 创建IP库
@@ -160,7 +161,7 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查询某个IP信息

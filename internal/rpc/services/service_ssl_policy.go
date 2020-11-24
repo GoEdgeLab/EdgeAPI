@@ -9,6 +9,7 @@ import (
 )
 
 type SSLPolicyService struct {
+	BaseService
 }
 
 // 创建Policy
@@ -40,7 +41,7 @@ func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找Policy

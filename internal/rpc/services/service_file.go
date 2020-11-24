@@ -9,6 +9,7 @@ import (
 
 // 文件相关服务
 type FileService struct {
+	BaseService
 }
 
 // 创建文件
@@ -38,5 +39,5 @@ func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateF
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

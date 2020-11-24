@@ -9,6 +9,7 @@ import (
 
 // 服务分组相关服务
 type ServerGroupService struct {
+	BaseService
 }
 
 // 创建分组
@@ -39,7 +40,7 @@ func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除分组
@@ -55,7 +56,7 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查询所有分组
@@ -92,7 +93,7 @@ func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个分组信息

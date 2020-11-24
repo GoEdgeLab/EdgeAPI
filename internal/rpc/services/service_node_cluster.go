@@ -14,6 +14,7 @@ import (
 )
 
 type NodeClusterService struct {
+	BaseService
 }
 
 // 创建集群
@@ -58,7 +59,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个集群
@@ -281,7 +282,7 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 执行健康检查
@@ -487,7 +488,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 检查集群的DNS是否有变化

@@ -10,6 +10,7 @@ import (
 
 // WAF规则分组相关服务
 type HTTPFirewallRuleGroupService struct {
+	BaseService
 }
 
 // 设置是否启用分组
@@ -25,7 +26,7 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupIsOn(ctx co
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 创建分组
@@ -56,7 +57,7 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx contex
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 获取分组配置
@@ -122,5 +123,5 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupSets(ctx co
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

@@ -10,6 +10,7 @@ import (
 )
 
 type HTTPLocationService struct {
+	BaseService
 }
 
 // 创建路径规则
@@ -41,7 +42,7 @@ func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找路径规则配置
@@ -75,7 +76,7 @@ func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找反向代理设置
@@ -178,5 +179,5 @@ func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

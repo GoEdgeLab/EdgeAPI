@@ -8,6 +8,7 @@ import (
 )
 
 type HTTPWebsocketService struct {
+	BaseService
 }
 
 // 创建Websocket配置
@@ -37,5 +38,5 @@ func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type HTTPRewriteRuleService struct {
+	BaseService
 }
 
 // 创建重写规则
@@ -40,5 +41,5 @@ func (this *HTTPRewriteRuleService) UpdateHTTPRewriteRule(ctx context.Context, r
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }

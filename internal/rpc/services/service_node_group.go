@@ -9,6 +9,7 @@ import (
 
 // 节点分组相关服务
 type NodeGroupService struct {
+	BaseService
 }
 
 // 创建分组
@@ -39,7 +40,7 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除分组
@@ -55,7 +56,7 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查询所有分组
@@ -92,7 +93,7 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个分组信息

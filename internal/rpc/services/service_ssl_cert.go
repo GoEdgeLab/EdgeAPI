@@ -11,6 +11,7 @@ import (
 
 // SSL证书相关服务
 type SSLCertService struct {
+	BaseService
 }
 
 // 创建Cert
@@ -42,7 +43,7 @@ func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSL
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找证书配置
@@ -78,7 +79,7 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算匹配的Cert数量

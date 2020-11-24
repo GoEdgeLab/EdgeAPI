@@ -9,6 +9,7 @@ import (
 
 // IP条目相关服务
 type IPItemService struct {
+	BaseService
 }
 
 // 创建IP
@@ -41,7 +42,7 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除IP
@@ -56,7 +57,7 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算IP数量

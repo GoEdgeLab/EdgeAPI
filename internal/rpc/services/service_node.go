@@ -33,6 +33,7 @@ func init() {
 
 // 边缘节点相关服务
 type NodeService struct {
+	BaseService
 }
 
 // 创建节点
@@ -305,7 +306,7 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 		}
 	}()
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 修改节点
@@ -649,7 +650,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 		return nil, errors.Wrap(err)
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算使用某个认证的节点数量
@@ -934,7 +935,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 
 	err = models.SharedNodeLoginDAO.UpdateNodeLogin(req.Login.Id, req.Login.Name, req.Login.Type, req.Login.Params)
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算某个节点分组内的节点数量
@@ -1131,7 +1132,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 		}
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 自动同步DNS状态

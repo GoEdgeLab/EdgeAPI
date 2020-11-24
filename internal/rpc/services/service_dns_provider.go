@@ -10,6 +10,7 @@ import (
 
 // DNS服务商相关服务
 type DNSProviderService struct {
+	BaseService
 }
 
 // 创建服务商
@@ -40,7 +41,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算服务商数量
@@ -96,7 +97,7 @@ func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.D
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个服务商

@@ -11,6 +11,7 @@ import (
 
 // 规则集相关服务
 type HTTPFirewallRuleSetService struct {
+	BaseService
 }
 
 // 根据配置创建规则集
@@ -48,7 +49,7 @@ func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx contex
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找规则集配置

@@ -10,6 +10,7 @@ import (
 )
 
 type HTTPPageService struct {
+	BaseService
 }
 
 // 创建Page
@@ -41,7 +42,7 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 		return nil, err
 	}
 
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 查找单个Page配置

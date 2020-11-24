@@ -10,6 +10,7 @@ import (
 
 // 数据库节点相关服务
 type DBNodeService struct {
+	BaseService
 }
 
 // 创建数据库节点
@@ -37,7 +38,7 @@ func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNod
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 删除节点
@@ -51,7 +52,7 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 计算可用的数据库节点数量

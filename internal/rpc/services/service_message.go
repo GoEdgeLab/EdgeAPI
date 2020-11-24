@@ -9,6 +9,7 @@ import (
 
 // 消息相关服务
 type MessageService struct {
+	BaseService
 }
 
 // 计算未读消息数
@@ -97,7 +98,7 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 设置一组消息已读状态
@@ -112,7 +113,7 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
 
 // 设置所有消息为已读
@@ -127,5 +128,5 @@ func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.U
 	if err != nil {
 		return nil, err
 	}
-	return rpcutils.Success()
+	return this.Success()
 }
