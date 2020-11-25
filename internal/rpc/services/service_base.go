@@ -11,7 +11,7 @@ type BaseService struct {
 }
 
 // 校验管理员和用户
-func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int64, userId int64, err error) {
+func (this *BaseService) ValidateAdminAndUser(ctx context.Context, reqUserId int64) (adminId int64, userId int64, err error) {
 	reqUserType, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return
@@ -22,9 +22,26 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int6
 	switch reqUserType {
 	case rpcutils.UserTypeAdmin:
 		adminId = reqUserId
+		if adminId <= 0 {
+			err = errors.New("invalid 'adminId'")
+			return
+		}
 	case rpcutils.UserTypeUser:
 		userId = reqUserId
+		if userId <= 0 {
+			err = errors.New("invalid 'userId'")
+			return
+		}
+
+		// 校验权限
+		if reqUserId > 0 && reqUserId != userId {
+			err = this.PermissionError()
+			return
+		}
+	default:
+		err = errors.New("invalid user type")
 	}
+
 	return
 }
 

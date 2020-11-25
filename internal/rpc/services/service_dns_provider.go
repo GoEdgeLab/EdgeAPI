@@ -16,12 +16,12 @@ type DNSProviderService struct {
 // 创建服务商
 func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.CreateDNSProviderRequest) (*pb.CreateDNSProviderResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(req.Type, req.Name, req.ApiParamsJSON)
+	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -32,10 +32,12 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 // 修改服务商
 func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.UpdateDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 校验权限
 
 	err = models.SharedDNSProviderDAO.UpdateDNSProvider(req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
@@ -47,12 +49,12 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 // 计算服务商数量
 func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context, req *pb.CountAllEnabledDNSProvidersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := models.SharedDNSProviderDAO.CountAllEnabledDNSProviders()
+	count, err := models.SharedDNSProviderDAO.CountAllEnabledDNSProviders(req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +64,14 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 // 列出单页服务商信息
 func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req *pb.ListEnabledDNSProvidersRequest) (*pb.ListEnabledDNSProvidersResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	providers, err := models.SharedDNSProviderDAO.ListEnabledDNSProviders(req.Offset, req.Size)
+	// TODO 校验权限
+
+	providers, err := models.SharedDNSProviderDAO.ListEnabledDNSProviders(req.AdminId, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +89,43 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 	return &pb.ListEnabledDNSProvidersResponse{DnsProviders: result}, nil
 }
 
-// 删除服务商
-func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCSuccess, error) {
+// 查找所有的DNS服务商
+func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, req *pb.FindAllEnabledDNSProvidersRequest) (*pb.FindAllEnabledDNSProvidersResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 校验权限
+
+	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProviders(req.AdminId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.DNSProvider{}
+	for _, provider := range providers {
+		result = append(result, &pb.DNSProvider{
+			Id:            int64(provider.Id),
+			Name:          provider.Name,
+			Type:          provider.Type,
+			TypeName:      dnsclients.FindProviderTypeName(provider.Type),
+			ApiParamsJSON: []byte(provider.ApiParams),
+			DataUpdatedAt: int64(provider.DataUpdatedAt),
+		})
+	}
+	return &pb.FindAllEnabledDNSProvidersResponse{DnsProviders: result}, nil
+}
+
+// 删除服务商
+func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, _, err := this.ValidateAdminAndUser(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 校验权限
 
 	err = models.SharedDNSProviderDAO.DisableDNSProvider(req.DnsProviderId)
 	if err != nil {

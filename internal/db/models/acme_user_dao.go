@@ -144,6 +144,28 @@ func (this *ACMEUserDAO) ListACMEUsers(adminId int64, userId int64, offset int64
 	return
 }
 
+// 查找所有用户
+func (this *ACMEUserDAO) FindAllACMEUsers(adminId int64, userId int64) (result []*ACMEUser, err error) {
+	// 防止没有传入条件导致返回的数据过多
+	if adminId <= 0 && userId <= 0 {
+		return nil, errors.New("'adminId' or 'userId' should not be empty")
+	}
+
+	query := this.Query()
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	_, err = query.
+		State(ACMEUserStateEnabled).
+		Slice(&result).
+		DescPk().
+		FindAll()
+	return
+}
+
 // 检查用户权限
 func (this *ACMEUserDAO) CheckACMEUser(acmeUserId int64, adminId int64, userId int64) (bool, error) {
 	if acmeUserId <= 0 {

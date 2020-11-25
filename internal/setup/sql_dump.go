@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	"regexp"
@@ -239,6 +240,12 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 
 	// 减少表格
 	// 由于我们不删除任何表格，所以这里什么都不做
+
+	// 升级数据
+	err = UpgradeSQLData(db)
+	if err != nil {
+		return nil, errors.New("upgrade data failed: " + err.Error())
+	}
 
 	return
 }

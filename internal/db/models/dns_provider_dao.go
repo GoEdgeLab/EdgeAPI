@@ -66,8 +66,10 @@ func (this *DNSProviderDAO) FindEnabledDNSProvider(id int64) (*DNSProvider, erro
 }
 
 // 创建服务商
-func (this *DNSProviderDAO) CreateDNSProvider(providerType string, name string, apiParamsJSON []byte) (int64, error) {
+func (this *DNSProviderDAO) CreateDNSProvider(adminId int64, userId int64, providerType string, name string, apiParamsJSON []byte) (int64, error) {
 	op := NewDNSProviderOperator()
+	op.AdminId = adminId
+	op.UserId = userId
 	op.Type = providerType
 	op.Name = name
 	if len(apiParamsJSON) > 0 {
@@ -104,18 +106,28 @@ func (this *DNSProviderDAO) UpdateDNSProvider(dnsProviderId int64, name string, 
 }
 
 // 计算服务商数量
-func (this *DNSProviderDAO) CountAllEnabledDNSProviders() (int64, error) {
-	return this.Query().
+func (this *DNSProviderDAO) CountAllEnabledDNSProviders(adminId int64, userId int64) (int64, error) {
+	return NewQuery(this, adminId, userId).
 		State(DNSProviderStateEnabled).
 		Count()
 }
 
 // 列出单页服务商
-func (this *DNSProviderDAO) ListEnabledDNSProviders(offset int64, size int64) (result []*DNSProvider, err error) {
-	_, err = this.Query().
+func (this *DNSProviderDAO) ListEnabledDNSProviders(adminId int64, userId int64, offset int64, size int64) (result []*DNSProvider, err error) {
+	_, err = NewQuery(this, adminId, userId).
 		State(DNSProviderStateEnabled).
 		Offset(offset).
 		Limit(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 列出所有服务商
+func (this *DNSProviderDAO) FindAllEnabledDNSProviders(adminId int64, userId int64) (result []*DNSProvider, err error) {
+	_, err = NewQuery(this, adminId, userId).
+		State(DNSProviderStateEnabled).
 		DescPk().
 		Slice(&result).
 		FindAll()
