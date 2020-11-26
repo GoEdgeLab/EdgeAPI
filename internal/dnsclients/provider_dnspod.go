@@ -14,6 +14,8 @@ import (
 
 // DNSPod服务商
 type DNSPodProvider struct {
+	BaseProvider
+
 	apiId    string
 	apiToken string
 }
@@ -102,6 +104,20 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error
 	}
 
 	return routes, nil
+}
+
+// 查询单个记录
+func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+	records, err := this.GetRecords(domain)
+	if err != nil {
+		return nil, err
+	}
+	for _, record := range records {
+		if record.Name == name && record.Type == recordType {
+			return record, nil
+		}
+	}
+	return nil, err
 }
 
 // 设置记录

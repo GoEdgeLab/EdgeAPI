@@ -2,10 +2,15 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/acme"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
+	"github.com/go-acme/lego/v4/registration"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -131,7 +136,6 @@ func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, acmeUserId 
 	op.AutoRenew = autoRenew
 	op.IsOn = true
 	op.State = ACMETaskStateEnabled
-	op.IsOk = false
 	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
@@ -172,4 +176,180 @@ func (this *ACMETaskDAO) CheckACMETask(adminId int64, userId int64, acmeTaskId i
 		State(ACMETaskStateEnabled).
 		Pk(acmeTaskId).
 		Exist()
+}
+
+// 设置任务关联的证书
+func (this *ACMETaskDAO) UpdateACMETaskCert(taskId int64, certId int64) error {
+	if taskId <= 0 {
+		return errors.New("invalid taskId")
+	}
+
+	op := NewACMETaskOperator()
+	op.Id = taskId
+	op.CertId = certId
+	_, err := this.Save(op)
+	return err
+}
+
+// 执行任务并记录日志
+func (this *ACMETaskDAO) RunTask(taskId int64) (isOk bool, errMsg string, resultCertId int64) {
+	isOk, errMsg, resultCertId = this.runTaskWithoutLog(taskId)
+
+	// 记录日志
+	err := SharedACMETaskLogDAO.CreateACMELog(taskId, isOk, errMsg)
+	if err != nil {
+		logs.Error(err)
+	}
+
+	return
+}
+
+// 执行任务但并不记录日志
+func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg string, resultCertId int64) {
+	task, err := this.FindEnabledACMETask(taskId)
+	if err != nil {
+		errMsg = "查询任务信息时出错：" + err.Error()
+		return
+	}
+	if task == nil {
+		errMsg = "找不到要执行的任务"
+		return
+	}
+	if task.IsOn != 1 {
+		errMsg = "任务没有启用"
+		return
+	}
+
+	// ACME用户
+	user, err := SharedACMEUserDAO.FindEnabledACMEUser(int64(task.AcmeUserId))
+	if err != nil {
+		errMsg = "查询ACME用户时出错：" + err.Error()
+		return
+	}
+	if user == nil {
+		errMsg = "找不到ACME用户"
+		return
+	}
+
+	privateKey, err := acme.ParsePrivateKeyFromBase64(user.PrivateKey)
+	if err != nil {
+		errMsg = "解析私钥时出错：" + err.Error()
+		return
+	}
+
+	remoteUser := acme.NewUser(user.Email, privateKey, func(resource *registration.Resource) error {
+		resourceJSON, err := json.Marshal(resource)
+		if err != nil {
+			return err
+		}
+
+		err = SharedACMEUserDAO.UpdateACMEUserRegistration(int64(user.Id), resourceJSON)
+		return err
+	})
+
+	if len(user.Registration) > 0 {
+		err = remoteUser.SetRegistration([]byte(user.Registration))
+		if err != nil {
+			errMsg = "设置注册信息时出错：" + err.Error()
+			return
+		}
+	}
+
+	// DNS服务商
+	dnsProvider, err := SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+	if err != nil {
+		errMsg = "查找DNS服务商账号信息时出错：" + err.Error()
+		return
+	}
+	if dnsProvider == nil {
+		errMsg = "找不到DNS服务商账号"
+		return
+	}
+	providerInterface := dnsclients.FindProvider(dnsProvider.Type)
+	if providerInterface == nil {
+		errMsg = "暂不支持此类型的DNS服务商 '" + dnsProvider.Type + "'"
+		return
+	}
+	apiParams, err := dnsProvider.DecodeAPIParams()
+	if err != nil {
+		errMsg = "解析DNS服务商API参数时出错：" + err.Error()
+		return
+	}
+	err = providerInterface.Auth(apiParams)
+	if err != nil {
+		errMsg = "校验DNS服务商API参数时出错：" + err.Error()
+		return
+	}
+
+	acmeRequest := acme.NewRequest(&acme.Task{
+		User:        remoteUser,
+		DNSProvider: providerInterface,
+		DNSDomain:   task.DnsDomain,
+		Domains:     task.DecodeDomains(),
+	})
+	certData, keyData, err := acmeRequest.Run()
+	if err != nil {
+		errMsg = "证书生成失败：" + err.Error()
+		return
+	}
+
+	// 分析证书
+	sslConfig := &sslconfigs.SSLCertConfig{
+		CertData: certData,
+		KeyData:  keyData,
+	}
+	err = sslConfig.Init()
+	if err != nil {
+		errMsg = "证书生成成功，但是分析证书信息时发生错误：" + err.Error()
+		return
+	}
+
+	// 保存证书
+	resultCertId = int64(task.CertId)
+	if resultCertId > 0 {
+		cert, err := SharedSSLCertDAO.FindEnabledSSLCert(resultCertId)
+		if err != nil {
+			errMsg = "证书生成成功，但查询已绑定的证书时出错：" + err.Error()
+			return
+		}
+		if cert == nil {
+			errMsg = "证书已被管理员或用户删除"
+
+			// 禁用
+			err = SharedACMETaskDAO.DisableACMETask(taskId)
+			if err != nil {
+				errMsg = "禁用失效的ACME任务出错：" + err.Error()
+			}
+
+			return
+		}
+
+		err = SharedSSLCertDAO.UpdateCert(resultCertId, cert.IsOn == 1, cert.Name, cert.Description, cert.ServerName, cert.IsCA == 1, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
+		if err != nil {
+			errMsg = "证书生成成功，但是修改数据库中的证书信息时出错：" + err.Error()
+			return
+		}
+	} else {
+		resultCertId, err = SharedSSLCertDAO.CreateCert(int64(task.AdminId), int64(task.UserId), true, task.DnsDomain+"免费证书", "免费申请的证书", "", false, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
+		if err != nil {
+			errMsg = "证书生成成功，但是保存到数据库失败：" + err.Error()
+			return
+		}
+
+		err = SharedSSLCertDAO.UpdateCertACME(resultCertId, int64(task.Id))
+		if err != nil {
+			errMsg = "证书生成成功，修改证书ACME信息时出错：" + err.Error()
+			return
+		}
+
+		// 设置成功
+		err = SharedACMETaskDAO.UpdateACMETaskCert(taskId, resultCertId)
+		if err != nil {
+			errMsg = "证书生成成功，设置任务关联的证书时出错：" + err.Error()
+			return
+		}
+	}
+
+	isOk = true
+	return
 }

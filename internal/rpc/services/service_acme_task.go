@@ -113,9 +113,11 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 				continue
 			}
 			pbCert = &pb.SSLCert{
-				Id:   int64(cert.Id),
-				IsOn: cert.IsOn == 1,
-				Name: cert.Name,
+				Id:          int64(cert.Id),
+				IsOn:        cert.IsOn == 1,
+				Name:        cert.Name,
+				TimeBeginAt: int64(cert.TimeBeginAt),
+				TimeEndAt:   int64(cert.TimeEndAt),
 			}
 		}
 
@@ -125,7 +127,6 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			DnsDomain:   task.DnsDomain,
 			Domains:     task.DecodeDomains(),
 			CreatedAt:   int64(task.CreatedAt),
-			IsOk:        task.IsOk == 1,
 			AutoRenew:   task.AutoRenew == 1,
 			AcmeUser:    pbACMEUser,
 			DnsProvider: pbProvider,
@@ -208,9 +209,13 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 		return nil, this.PermissionError()
 	}
 
-	// TODO
+	isOk, msg, certId := models.SharedACMETaskDAO.RunTask(req.AcmeTaskId)
 
-	return &pb.RunACMETaskResponse{}, nil
+	return &pb.RunACMETaskResponse{
+		IsOk:      isOk,
+		Error:     msg,
+		SslCertId: certId,
+	}, nil
 }
 
 // 查找单个任务信息

@@ -12,7 +12,6 @@ type ACMETask struct {
 	Domains       string `field:"domains"`       // 证书域名
 	CreatedAt     uint64 `field:"createdAt"`     // 创建时间
 	State         uint8  `field:"state"`         // 状态
-	IsOk          uint8  `field:"isOk"`          // 最后运行是否正常
 	CertId        uint64 `field:"certId"`        // 生成的证书ID
 	AutoRenew     uint8  `field:"autoRenew"`     // 是否自动更新
 }
@@ -28,7 +27,6 @@ type ACMETaskOperator struct {
 	Domains       interface{} // 证书域名
 	CreatedAt     interface{} // 创建时间
 	State         interface{} // 状态
-	IsOk          interface{} // 最后运行是否正常
 	CertId        interface{} // 生成的证书ID
 	AutoRenew     interface{} // 是否自动更新
 }

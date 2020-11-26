@@ -97,7 +97,7 @@ func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email strin
 	return types.Int64(op.Id), nil
 }
 
-// 查找用户列表
+// 修改用户信息
 func (this *ACMEUserDAO) UpdateACMEUser(acmeUserId int64, description string) error {
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
@@ -105,6 +105,18 @@ func (this *ACMEUserDAO) UpdateACMEUser(acmeUserId int64, description string) er
 	op := NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Description = description
+	_, err := this.Save(op)
+	return err
+}
+
+// 修改用户ACME注册信息
+func (this *ACMEUserDAO) UpdateACMEUserRegistration(acmeUserId int64, registrationJSON []byte) error {
+	if acmeUserId <= 0 {
+		return errors.New("invalid acmeUserId")
+	}
+	op := NewACMEUserOperator()
+	op.Id = acmeUserId
+	op.Registration = registrationJSON
 	_, err := this.Save(op)
 	return err
 }

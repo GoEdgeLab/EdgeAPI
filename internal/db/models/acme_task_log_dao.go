@@ -26,3 +26,13 @@ func init() {
 		SharedACMETaskLogDAO = NewACMETaskLogDAO()
 	})
 }
+
+// 生成日志
+func (this *ACMETaskLogDAO) CreateACMELog(taskId int64, isOk bool, errMsg string) error {
+	op := NewACMETaskLogOperator()
+	op.TaskId = taskId
+	op.Error = errMsg
+	op.IsOk = isOk
+	_, err := this.Save(op)
+	return err
+}

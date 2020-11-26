@@ -7,11 +7,14 @@ type ProviderInterface interface {
 	// 认证
 	Auth(params maps.Map) error
 
-	// 获取域名列表
+	// 获取域名解析记录列表
 	GetRecords(domain string) (records []*Record, err error)
 
 	// 读取域名支持的线路数据
 	GetRoutes(domain string) (routes []*Route, err error)
+
+	// 查询单个记录
+	QueryRecord(domain string, name string, recordType RecordType) (*Record, error)
 
 	// 设置记录
 	AddRecord(domain string, newRecord *Record) error

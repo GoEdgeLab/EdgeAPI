@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+	"github.com/iwind/TeaGo/Tea"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -15,6 +16,11 @@ type errorObj struct {
 }
 
 func (this *errorObj) Error() string {
+	// 在非测试环境下，我们不提示详细的行数等信息
+	if !Tea.IsTesting() {
+		return this.err.Error()
+	}
+
 	s := this.err.Error() + "\n  " + this.file
 	if len(this.funcName) > 0 {
 		s += ":" + this.funcName + "()"

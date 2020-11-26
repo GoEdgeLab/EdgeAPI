@@ -11,6 +11,8 @@ import (
 
 // 阿里云服务商
 type AliDNSProvider struct {
+	BaseProvider
+
 	accessKeyId     string
 	accessKeySecret string
 }
@@ -85,6 +87,20 @@ func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error
 		})
 	}
 	return
+}
+
+// 查询单个记录
+func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+	records, err := this.GetRecords(domain)
+	if err != nil {
+		return nil, err
+	}
+	for _, record := range records {
+		if record.Name == name && record.Type == recordType {
+			return record, nil
+		}
+	}
+	return nil, err
 }
 
 // 设置记录

@@ -178,6 +178,7 @@ func (this *SSLCertDAO) ComposeCertConfig(certId int64) (*sslconfigs.SSLCertConf
 	config.Id = int64(cert.Id)
 	config.IsOn = cert.IsOn == 1
 	config.IsCA = cert.IsCA == 1
+	config.IsACME = cert.IsACME == 1
 	config.Name = cert.Name
 	config.Description = cert.Description
 	config.CertData = []byte(cert.CertData)
@@ -268,4 +269,17 @@ func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool,
 		result = append(result, int64(one.(*SSLCert).Id))
 	}
 	return result, nil
+}
+
+// 设置证书的ACME信息
+func (this *SSLCertDAO) UpdateCertACME(certId int64, acmeTaskId int64) error {
+	if certId <= 0 {
+		return errors.New("invalid certId")
+	}
+	op := NewSSLCertOperator()
+	op.Id = certId
+	op.AcmeTaskId = acmeTaskId
+	op.IsACME = true
+	_, err := this.Save(op)
+	return err
 }
