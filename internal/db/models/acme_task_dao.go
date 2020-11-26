@@ -196,7 +196,7 @@ func (this *ACMETaskDAO) RunTask(taskId int64) (isOk bool, errMsg string, result
 	isOk, errMsg, resultCertId = this.runTaskWithoutLog(taskId)
 
 	// 记录日志
-	err := SharedACMETaskLogDAO.CreateACMELog(taskId, isOk, errMsg)
+	err := SharedACMETaskLogDAO.CreateACMETaskLog(taskId, isOk, errMsg)
 	if err != nil {
 		logs.Error(err)
 	}

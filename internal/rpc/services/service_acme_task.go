@@ -121,16 +121,32 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			}
 		}
 
+		// 最近一条日志
+		var pbTaskLog *pb.ACMETaskLog = nil
+		taskLog, err := models.SharedACMETaskLogDAO.FindLatestACMETasKLog(int64(task.Id))
+		if err != nil {
+			return nil, err
+		}
+		if taskLog != nil {
+			pbTaskLog = &pb.ACMETaskLog{
+				Id:        int64(taskLog.Id),
+				IsOk:      taskLog.IsOk == 1,
+				Error:     taskLog.Error,
+				CreatedAt: int64(taskLog.CreatedAt),
+			}
+		}
+
 		result = append(result, &pb.ACMETask{
-			Id:          int64(task.Id),
-			IsOn:        task.IsOn == 1,
-			DnsDomain:   task.DnsDomain,
-			Domains:     task.DecodeDomains(),
-			CreatedAt:   int64(task.CreatedAt),
-			AutoRenew:   task.AutoRenew == 1,
-			AcmeUser:    pbACMEUser,
-			DnsProvider: pbProvider,
-			SslCert:     pbCert,
+			Id:                int64(task.Id),
+			IsOn:              task.IsOn == 1,
+			DnsDomain:         task.DnsDomain,
+			Domains:           task.DecodeDomains(),
+			CreatedAt:         int64(task.CreatedAt),
+			AutoRenew:         task.AutoRenew == 1,
+			AcmeUser:          pbACMEUser,
+			DnsProvider:       pbProvider,
+			SslCert:           pbCert,
+			LatestACMETaskLog: pbTaskLog,
 		})
 	}
 
