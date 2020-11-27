@@ -548,6 +548,7 @@ func (this *NodeDAO) CountAllEnabledNodesWithGrantId(grantId int64) (int64, erro
 		State(NodeStateEnabled).
 		Where("id IN (SELECT nodeId FROM edgeNodeLogins WHERE type='ssh' AND JSON_CONTAINS(params, :grantParam))").
 		Param("grantParam", string(maps.Map{"grantId": grantId}.AsJSON())).
+		Where("clusterId IN (SELECT id FROM edgeNodeClusters WHERE state=1)").
 		Count()
 }
 
@@ -557,6 +558,7 @@ func (this *NodeDAO) FindAllEnabledNodesWithGrantId(grantId int64) (result []*No
 		State(NodeStateEnabled).
 		Where("id IN (SELECT nodeId FROM edgeNodeLogins WHERE type='ssh' AND JSON_CONTAINS(params, :grantParam))").
 		Param("grantParam", string(maps.Map{"grantId": grantId}.AsJSON())).
+		Where("clusterId IN (SELECT id FROM edgeNodeClusters WHERE state=1)").
 		Slice(&result).
 		DescPk().
 		FindAll()
