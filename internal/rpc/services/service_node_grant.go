@@ -13,12 +13,12 @@ type NodeGrantService struct {
 }
 
 func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.CreateNodeGrantRequest) (*pb.CreateNodeGrantResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	grantId, err := models.SharedNodeGrantDAO.CreateGrant(req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
+	grantId, err := models.SharedNodeGrantDAO.CreateGrant(adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
 	if err != nil {
 		return nil, err
 	}

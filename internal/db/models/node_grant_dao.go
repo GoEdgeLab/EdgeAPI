@@ -73,8 +73,9 @@ func (this *NodeGrantDAO) FindNodeGrantName(id uint32) (string, error) {
 }
 
 // 创建认证信息
-func (this *NodeGrantDAO) CreateGrant(name string, method string, username string, password string, privateKey string, description string, nodeId int64) (grantId int64, err error) {
+func (this *NodeGrantDAO) CreateGrant(adminId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) (grantId int64, err error) {
 	op := NewNodeGrantOperator()
+	op.AdminId = adminId
 	op.Name = name
 	op.Method = method
 

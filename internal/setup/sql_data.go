@@ -81,5 +81,11 @@ func upgradeV0_0_3(db *dbs.DB) error {
 		return err
 	}
 
+	// 升级edgeNodeGrants
+	_, err = db.Exec("UPDATE edgeNodeGrants SET adminId=? WHERE adminId=0", adminId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
