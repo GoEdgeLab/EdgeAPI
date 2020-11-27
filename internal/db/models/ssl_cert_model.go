@@ -22,6 +22,7 @@ type SSLCert struct {
 	CommonNames string `field:"commonNames"` // 发行单位列表
 	IsACME      uint8  `field:"isACME"`      // 是否为ACME自动生成的
 	AcmeTaskId  uint64 `field:"acmeTaskId"`  // ACME任务ID
+	NotifiedAt  uint64 `field:"notifiedAt"`  // 最后通知时间
 }
 
 type SSLCertOperator struct {
@@ -45,6 +46,7 @@ type SSLCertOperator struct {
 	CommonNames interface{} // 发行单位列表
 	IsACME      interface{} // 是否为ACME自动生成的
 	AcmeTaskId  interface{} // ACME任务ID
+	NotifiedAt  interface{} // 最后通知时间
 }
 
 func NewSSLCertOperator() *SSLCertOperator {

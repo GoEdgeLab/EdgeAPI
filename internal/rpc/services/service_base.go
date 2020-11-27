@@ -10,6 +10,18 @@ import (
 type BaseService struct {
 }
 
+// 校验管理员
+func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (adminId int64, err error) {
+	_, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return
+	}
+	if reqAdminId > 0 && reqUserId != reqAdminId {
+		return 0, this.PermissionError()
+	}
+	return reqUserId, nil
+}
+
 // 校验管理员和用户
 func (this *BaseService) ValidateAdminAndUser(ctx context.Context, reqUserId int64) (adminId int64, userId int64, err error) {
 	reqUserType, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)

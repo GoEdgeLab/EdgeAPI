@@ -25,12 +25,15 @@ const (
 type MessageType = string
 
 const (
-	MessageTypeHealthCheckFailed    MessageType = "HealthCheckFailed"
-	MessageTypeHealthCheckNodeUp    MessageType = "HealthCheckNodeUp"
-	MessageTypeHealthCheckNodeDown  MessageType = "HealthCheckNodeDown"
-	MessageTypeNodeInactive         MessageType = "NodeInactive"
-	MessageTypeNodeActive           MessageType = "NodeActive"
-	MessageTypeClusterDNSSyncFailed MessageType = "ClusterDNSSyncFailed"
+	MessageTypeHealthCheckFailed      MessageType = "HealthCheckFailed"
+	MessageTypeHealthCheckNodeUp      MessageType = "HealthCheckNodeUp"
+	MessageTypeHealthCheckNodeDown    MessageType = "HealthCheckNodeDown"
+	MessageTypeNodeInactive           MessageType = "NodeInactive"
+	MessageTypeNodeActive             MessageType = "NodeActive"
+	MessageTypeClusterDNSSyncFailed   MessageType = "ClusterDNSSyncFailed"
+	MessageTypeSSLCertExpiring        MessageType = "SSLCertExpiring"        // SSL证书即将过期
+	MessageTypeSSLCertACMETaskFailed  MessageType = "SSLCertACMETaskFailed"  // SSL证书任务执行失败
+	MessageTypeSSLCertACMETaskSuccess MessageType = "SSLCertACMETaskSuccess" // SSL证书任务执行成功
 )
 
 type MessageDAO dbs.DAO
@@ -93,6 +96,30 @@ func (this *MessageDAO) CreateClusterMessage(clusterId int64, messageType Messag
 // 创建节点消息
 func (this *MessageDAO) CreateNodeMessage(clusterId int64, nodeId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
 	_, err := this.createMessage(clusterId, nodeId, messageType, level, body, paramsJSON)
+	return err
+}
+
+// 创建普通消息
+func (this *MessageDAO) CreateMessage(adminId int64, userId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
+	h := md5.New()
+	h.Write([]byte(body))
+	h.Write(paramsJSON)
+	hash := fmt.Sprintf("%x", h.Sum(nil))
+
+	op := NewMessageOperator()
+	op.AdminId = adminId
+	op.UserId = userId
+	op.Type = messageType
+	op.Level = level
+	op.Body = body
+	if len(paramsJSON) > 0 {
+		op.Params = paramsJSON
+	}
+	op.State = MessageStateEnabled
+	op.IsRead = false
+	op.Day = timeutil.Format("Ymd")
+	op.Hash = hash
+	_, err := this.Save(op)
 	return err
 }
 

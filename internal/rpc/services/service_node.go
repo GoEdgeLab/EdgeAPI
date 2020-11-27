@@ -38,12 +38,12 @@ type NodeService struct {
 
 // 创建节点
 func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeRequest) (*pb.CreateNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, req.ClusterId, req.GroupId)
+	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, req.ClusterId, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,12 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(req.Name, clusterId, 0)
+	adminId, err := models.SharedNodeClusterDAO.FindClusterAdminId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, clusterId, 0)
 	if err != nil {
 		return nil, err
 	}

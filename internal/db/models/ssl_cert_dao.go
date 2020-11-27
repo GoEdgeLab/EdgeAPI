@@ -8,6 +8,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
 
@@ -281,5 +282,34 @@ func (this *SSLCertDAO) UpdateCertACME(certId int64, acmeTaskId int64) error {
 	op.AcmeTaskId = acmeTaskId
 	op.IsACME = true
 	_, err := this.Save(op)
+	return err
+}
+
+// 查找需要自动更新的任务
+// 这里我们只返回有限的字段以节省内存
+func (this *SSLCertDAO) FindAllExpiringCerts(days int) (result []*SSLCert, err error) {
+	if days < 0 {
+		days = 0
+	}
+
+	deltaSeconds := int64(days * 86400)
+	_, err = this.Query().
+		State(SSLCertStateEnabled).
+		Where("FROM_UNIXTIME(timeEndAt, '%Y-%m-%d')=:day AND FROM_UNIXTIME(notifiedAt, '%Y-%m-%d')!=:today").
+		Param("day", timeutil.FormatTime("Y-m-d", time.Now().Unix()+deltaSeconds)).
+		Param("today", timeutil.Format("Y-m-d")).
+		Result("id", "adminId", "userId", "timeEndAt", "name", "dnsNames", "notifiedAt", "acmeTaskId").
+		Slice(&result).
+		AscPk().
+		FindAll()
+	return
+}
+
+// 设置当前证书事件通知时间
+func (this *SSLCertDAO) UpdateCertNotifiedAt(certId int64) error {
+	_, err := this.Query().
+		Pk(certId).
+		Set("notifiedAt", time.Now().Unix()).
+		Update()
 	return err
 }

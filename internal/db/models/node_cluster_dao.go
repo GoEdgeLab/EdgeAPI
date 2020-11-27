@@ -101,7 +101,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters() (result []*NodeCluster, err 
 }
 
 // 创建集群
-func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir string, dnsDomainId int64, dnsName string) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string) (clusterId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -114,6 +114,7 @@ func (this *NodeClusterDAO) CreateCluster(name string, grantId int64, installDir
 	}
 
 	op := NewNodeClusterOperator()
+	op.AdminId = adminId
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
@@ -520,6 +521,14 @@ func (this *NodeClusterDAO) CheckClusterDNS(cluster *NodeCluster) (issues []*pb.
 	}
 
 	return
+}
+
+// 查找集群所属管理员
+func (this *NodeClusterDAO) FindClusterAdminId(clusterId int64) (int64, error) {
+	return this.Query().
+		Pk(clusterId).
+		Result("adminId").
+		FindInt64Col(0)
 }
 
 // 生成唯一ID

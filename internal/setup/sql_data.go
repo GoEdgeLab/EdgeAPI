@@ -57,8 +57,26 @@ func upgradeV0_0_3(db *dbs.DB) error {
 		return err
 	}
 
+	// 升级edgeDNSDomains
+	_, err = db.Exec("UPDATE edgeDNSDomains SET adminId=? WHERE adminId=0 AND userId=0", adminId)
+	if err != nil {
+		return err
+	}
+
 	// 升级edgeSSLCerts
 	_, err = db.Exec("UPDATE edgeSSLCerts SET adminId=? WHERE adminId=0 AND userId=0", adminId)
+	if err != nil {
+		return err
+	}
+
+	// 升级edgeNodeClusters
+	_, err = db.Exec("UPDATE edgeNodeClusters SET adminId=? WHERE adminId=0 AND userId=0", adminId)
+	if err != nil {
+		return err
+	}
+
+	// 升级edgeNodes
+	_, err = db.Exec("UPDATE edgeNodes SET adminId=? WHERE adminId=0 AND userId=0", adminId)
 	if err != nil {
 		return err
 	}

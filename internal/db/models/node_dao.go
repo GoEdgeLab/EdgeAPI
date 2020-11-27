@@ -80,7 +80,7 @@ func (this *NodeDAO) FindNodeName(id uint32) (string, error) {
 }
 
 // 创建节点
-func (this *NodeDAO) CreateNode(name string, clusterId int64, groupId int64) (nodeId int64, err error) {
+func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, groupId int64) (nodeId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -95,6 +95,7 @@ func (this *NodeDAO) CreateNode(name string, clusterId int64, groupId int64) (no
 	}
 
 	op := NewNodeOperator()
+	op.AdminId = adminId
 	op.Name = name
 	op.UniqueId = uniqueId
 	op.Secret = secret

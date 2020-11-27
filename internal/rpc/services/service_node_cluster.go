@@ -19,12 +19,12 @@ type NodeClusterService struct {
 
 // 创建集群
 func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.CreateNodeClusterRequest) (*pb.CreateNodeClusterResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName)
+	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName)
 	if err != nil {
 		return nil, err
 	}

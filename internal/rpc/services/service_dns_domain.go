@@ -21,7 +21,7 @@ type DNSDomainService struct {
 // 创建域名
 func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.CreateDNSDomainRequest) (*pb.CreateDNSDomainResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	domainId, err := models.SharedDNSDomainDAO.CreateDomain(req.DnsProviderId, req.Name)
+	domainId, err := models.SharedDNSDomainDAO.CreateDomain(adminId, userId, req.DnsProviderId, req.Name)
 	if err != nil {
 		return nil, err
 	}

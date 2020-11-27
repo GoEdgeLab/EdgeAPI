@@ -76,9 +76,11 @@ func (this *DNSDomainDAO) FindDNSDomainName(id int64) (string, error) {
 }
 
 // 创建域名
-func (this *DNSDomainDAO) CreateDomain(providerId int64, name string) (int64, error) {
+func (this *DNSDomainDAO) CreateDomain(adminId int64, userId int64, providerId int64, name string) (int64, error) {
 	op := NewDNSDomainOperator()
 	op.ProviderId = providerId
+	op.AdminId = adminId
+	op.UserId = userId
 	op.Name = name
 	op.State = DNSDomainStateEnabled
 	op.IsOn = true
