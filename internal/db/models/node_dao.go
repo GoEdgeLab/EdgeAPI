@@ -575,6 +575,21 @@ func (this *NodeDAO) FindAllNotInstalledNodesWithClusterId(clusterId int64) (res
 	return
 }
 
+// 计算所有低于某个版本的节点数量
+func (this *NodeDAO) CountAllLowerVersionNodesWithClusterId(clusterId int64, os string, arch string, version string) (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Where("status IS NOT NULL").
+		Where("JSON_EXTRACT(status, '$.os')=:os").
+		Where("JSON_EXTRACT(status, '$.arch')=:arch").
+		Where("INET_ATON(JSON_UNQUOTE(JSON_EXTRACT(status, '$.buildVersion')))<INET_ATON(:version)").
+		Param("os", os).
+		Param("arch", arch).
+		Param("version", version).
+		Count()
+}
+
 // 查找所有低于某个版本的节点
 func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(clusterId int64, os string, arch string, version string) (result []*Node, err error) {
 	_, err = this.Query().

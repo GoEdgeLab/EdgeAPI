@@ -792,10 +792,31 @@ func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Conte
 	return &pb.FindAllNotInstalledNodesWithClusterIdResponse{Nodes: result}, nil
 }
 
+// 计算需要升级的节点数量
+func (this *NodeService) CountAllUpgradeNodesWithClusterId(ctx context.Context, req *pb.CountAllUpgradeNodesWithClusterIdRequest) (*pb.RPCCountResponse, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	deployFiles := installers.SharedDeployManager.LoadFiles()
+	total := int64(0)
+	for _, deployFile := range deployFiles {
+		count, err := models.SharedNodeDAO.CountAllLowerVersionNodesWithClusterId(req.ClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
+		if err != nil {
+			return nil, err
+		}
+		total += count
+	}
+
+	return this.SuccessCount(total)
+}
+
 // 列出所有需要升级的节点
 func (this *NodeService) FindAllUpgradeNodesWithClusterId(ctx context.Context, req *pb.FindAllUpgradeNodesWithClusterIdRequest) (*pb.FindAllUpgradeNodesWithClusterIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
