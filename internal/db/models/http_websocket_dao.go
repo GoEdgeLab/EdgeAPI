@@ -144,6 +144,8 @@ func (this *HTTPWebsocketDAO) UpdateWebsocket(websocketId int64, handshakeTimeou
 			return err
 		}
 		op.AllowedOrigins = originsJSON
+	} else {
+		op.AllowedOrigins = "[]"
 	}
 	op.RequestSameOrigin = requestSameOrigin
 	op.RequestOrigin = requestOrigin
