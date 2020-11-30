@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/types"
 )
 
 type ReverseProxyService struct {
@@ -130,7 +131,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
 	if err != nil {
 		return nil, err
 	}
