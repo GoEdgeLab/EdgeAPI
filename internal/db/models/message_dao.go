@@ -34,6 +34,7 @@ const (
 	MessageTypeSSLCertExpiring        MessageType = "SSLCertExpiring"        // SSL证书即将过期
 	MessageTypeSSLCertACMETaskFailed  MessageType = "SSLCertACMETaskFailed"  // SSL证书任务执行失败
 	MessageTypeSSLCertACMETaskSuccess MessageType = "SSLCertACMETaskSuccess" // SSL证书任务执行成功
+	MessageTypeLogCapacityOverflow    MessageType = "LogCapacityOverflow"    // 日志超出最大限制
 )
 
 type MessageDAO dbs.DAO

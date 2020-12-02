@@ -87,7 +87,7 @@ func (this *HealthCheckClusterTask) Stop() {
 // 单个循环任务
 func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := models.SettingCodeClusterHealthCheck + numberutils.FormatInt64(this.clusterId)
+	settingKey := models.SettingCodeClusterHealthCheck + "Loop" + numberutils.FormatInt64(this.clusterId)
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
 	if err != nil {

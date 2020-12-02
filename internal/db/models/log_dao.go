@@ -1,12 +1,15 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type LogDAO dbs.DAO
@@ -86,6 +89,43 @@ func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo str
 		DescPk().
 		FindAll()
 	return
+}
+
+// 物理删除日志
+func (this *LogDAO) DeleteLogPermanently(logId int64) error {
+	if logId <= 0 {
+		return errors.New("invalid logId")
+	}
+	_, err := this.Delete(logId)
+	return err
+}
+
+// 物理删除所有日志
+func (this *LogDAO) DeleteAllLogsPermanently() error {
+	_, err := this.Query().
+		Delete()
+	return err
+}
+
+// 物理删除某些天之前的日志
+func (this *LogDAO) DeleteLogsPermanentlyBeforeDays(days int) error {
+	if days <= 0 {
+		days = 0
+	}
+	untilDay := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))
+	_, err := this.Query().
+		Lte("day", untilDay).
+		Delete()
+	return err
+}
+
+// 计算当前日志容量大小
+func (this *LogDAO) SumLogsSize() (int64, error) {
+	col, err := this.Instance.FindCol(0, "SELECT DATA_LENGTH FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=? LIMIT 1", this.Instance.Name(), this.Table)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(col), nil
 }
 
 // 格式化日期

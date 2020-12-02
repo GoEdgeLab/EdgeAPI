@@ -40,7 +40,7 @@ func (this *NodeMonitorTask) Run() {
 
 func (this *NodeMonitorTask) loop() error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := models.SettingCodeNodeMonitor
+	settingKey := models.SettingCodeNodeMonitor + "Loop"
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-int64(this.intervalSeconds))
 	if err != nil {

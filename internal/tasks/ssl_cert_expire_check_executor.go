@@ -40,7 +40,7 @@ func (this *SSLCertExpireCheckExecutor) Start() {
 // 单次执行
 func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := "sslCertExpiringCheck"
+	settingKey := "sslCertExpiringCheckLoop"
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
 	if err != nil {
