@@ -142,15 +142,8 @@ func (this *NodeDAO) UpdateNodeLatestVersion(nodeId int64) error {
 
 // 批量更新节点版本
 func (this *NodeDAO) UpdateAllNodesLatestVersionMatch(clusterId int64) error {
-	nodeIds, err := this.FindAllNodeIdsMatch(clusterId)
-	if err != nil {
-		return err
-	}
-	if len(nodeIds) == 0 {
-		return nil
-	}
-	_, err = this.Query().
-		Pk(nodeIds).
+	_, err := this.Query().
+		Attr("clusterId", clusterId).
 		Set("latestVersion", dbs.SQL("latestVersion+1")).
 		Update()
 	return err
@@ -507,6 +500,13 @@ func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, e
 		config.GlobalConfig = globalConfig
 	}
 
+	// TOA
+	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(int64(node.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+	config.TOA = toaConfig
+
 	return config, nil
 }
 
@@ -742,6 +742,14 @@ func (this *NodeDAO) FindNodeActive(nodeId int64) (bool, error) {
 		return false, err
 	}
 	return isActive == 1, nil
+}
+
+// 查找节点的版本号
+func (this *NodeDAO) FindNodeVersion(nodeId int64) (int64, error) {
+	return this.Query().
+		Pk(nodeId).
+		Result("version").
+		FindInt64Col(0)
 }
 
 // 生成唯一ID

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -529,6 +530,39 @@ func (this *NodeClusterDAO) FindClusterAdminId(clusterId int64) (int64, error) {
 		Pk(clusterId).
 		Result("adminId").
 		FindInt64Col(0)
+}
+
+// 查找集群的TOA设置
+func (this *NodeClusterDAO) FindClusterTOAConfig(clusterId int64) (*nodeconfigs.TOAConfig, error) {
+	toa, err := this.Query().
+		Pk(clusterId).
+		Result("toa").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if !IsNotNull(toa) {
+		return nodeconfigs.DefaultTOAConfig(), nil
+	}
+
+	config := &nodeconfigs.TOAConfig{}
+	err = json.Unmarshal([]byte(toa), config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// 修改集群的TOA设置
+func (this *NodeClusterDAO) UpdateClusterTOA(clusterId int64, toaJSON []byte) error {
+	if clusterId <= 0 {
+		return errors.New("invalid clusterId")
+	}
+	op := NewNodeClusterOperator()
+	op.Id = clusterId
+	op.Toa = toaJSON
+	_, err := this.Save(op)
+	return err
 }
 
 // 生成唯一ID

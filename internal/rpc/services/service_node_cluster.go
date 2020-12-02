@@ -267,7 +267,7 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindNodeClusterHealthCheckConfigResponse{HealthCheckConfig: configJSON}, nil
+	return &pb.FindNodeClusterHealthCheckConfigResponse{HealthCheckJSON: configJSON}, nil
 }
 
 // 修改集群健康检查设置
@@ -528,4 +528,47 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	}
 
 	return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: len(changes) > 0}, nil
+}
+
+// 查找集群的TOA配置
+func (this *NodeClusterService) FindEnabledNodeClusterTOA(ctx context.Context, req *pb.FindEnabledNodeClusterTOARequest) (*pb.FindEnabledNodeClusterTOAResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 检查权限
+
+	config, err := models.SharedNodeClusterDAO.FindClusterTOAConfig(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledNodeClusterTOAResponse{ToaJSON: configJSON}, nil
+}
+
+// 修改集群的TOA设置
+func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *pb.UpdateNodeClusterTOARequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO 检查权限
+
+	err = models.SharedNodeClusterDAO.UpdateClusterTOA(req.NodeClusterId, req.ToaJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新节点版本
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

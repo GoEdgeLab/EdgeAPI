@@ -20,6 +20,7 @@ type NodeCluster struct {
 	DnsName        string `field:"dnsName"`        // DNS名称
 	DnsDomainId    uint32 `field:"dnsDomainId"`    // 域名ID
 	Dns            string `field:"dns"`            // DNS配置
+	Toa            string `field:"toa"`            // TOA配置
 }
 
 type NodeClusterOperator struct {
@@ -41,6 +42,7 @@ type NodeClusterOperator struct {
 	DnsName        interface{} // DNS名称
 	DnsDomainId    interface{} // 域名ID
 	Dns            interface{} // DNS配置
+	Toa            interface{} // TOA配置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

@@ -466,6 +466,16 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 	if err != nil {
 		return nil, err
 	}
+
+	// 检查版本号
+	currentVersion, err := models.SharedNodeDAO.FindNodeVersion(nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if currentVersion == req.Version {
+		return &pb.FindCurrentNodeConfigResponse{IsChanged: false}, nil
+	}
+
 	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(nodeId)
 	if err != nil {
 		return nil, err
@@ -476,7 +486,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	return &pb.FindCurrentNodeConfigResponse{NodeJSON: data}, nil
+	return &pb.FindCurrentNodeConfigResponse{IsChanged: true, NodeJSON: data}, nil
 }
 
 // 更新节点状态

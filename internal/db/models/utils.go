@@ -10,7 +10,7 @@ func JSONBytes(data []byte) []byte {
 	return data
 }
 
-// 判断JSON是否为空
+// 判断JSON是否不为空
 func IsNotNull(data string) bool {
 	return len(data) > 0 && data != "null"
 }
