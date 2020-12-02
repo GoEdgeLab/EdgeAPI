@@ -121,13 +121,19 @@ func (this *AdminDAO) UpdateAdminPassword(adminId int64, password string) error 
 }
 
 // 创建管理员
-func (this *AdminDAO) CreateAdmin(username string, password string, fullname string) (int64, error) {
+func (this *AdminDAO) CreateAdmin(username string, password string, fullname string, isSuper bool, modulesJSON []byte) (int64, error) {
 	op := NewAdminOperator()
 	op.IsOn = true
 	op.State = AdminStateEnabled
 	op.Username = username
 	op.Password = stringutil.Md5(password)
 	op.Fullname = fullname
+	op.IsSuper = isSuper
+	if len(modulesJSON) > 0 {
+		op.Modules = modulesJSON
+	} else {
+		op.Modules = "[]"
+	}
 	_, err := this.Save(op)
 	if err != nil {
 		return 0, err
@@ -136,13 +142,35 @@ func (this *AdminDAO) CreateAdmin(username string, password string, fullname str
 }
 
 // 修改管理员个人资料
-func (this *AdminDAO) UpdateAdmin(adminId int64, fullname string) error {
+func (this *AdminDAO) UpdateAdminInfo(adminId int64, fullname string) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
 	op := NewAdminOperator()
 	op.Id = adminId
 	op.Fullname = fullname
+	_, err := this.Save(op)
+	return err
+}
+
+// 修改管理员详细信息
+func (this *AdminDAO) UpdateAdmin(adminId int64, username string, password string, fullname string, isSuper bool, modulesJSON []byte) error {
+	if adminId <= 0 {
+		return errors.New("invalid adminId")
+	}
+	op := NewAdminOperator()
+	op.Id = adminId
+	op.Fullname = fullname
+	op.Username = username
+	if len(password) > 0 {
+		op.Password = stringutil.Md5(password)
+	}
+	op.IsSuper = isSuper
+	if len(modulesJSON) > 0 {
+		op.Modules = modulesJSON
+	} else {
+		op.Modules = "[]"
+	}
 	_, err := this.Save(op)
 	return err
 }
@@ -171,4 +199,50 @@ func (this *AdminDAO) UpdateAdminLogin(adminId int64, username string, password 
 	op.Password = stringutil.Md5(password)
 	_, err := this.Save(op)
 	return err
+}
+
+// 修改管理员可以管理的模块
+func (this *AdminDAO) UpdateAdminModules(adminId int64, allowModulesJSON []byte) error {
+	if adminId <= 0 {
+		return errors.New("invalid adminId")
+	}
+	op := NewAdminOperator()
+	op.Id = adminId
+	op.Modules = allowModulesJSON
+	_, err := this.Save(op)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 查询所有管理的权限
+func (this *AdminDAO) FindAllAdminModules() (result []*Admin, err error) {
+	_, err = this.Query().
+		State(AdminStateEnabled).
+		Attr("isOn", true).
+		Result("id", "modules", "isSuper").
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 计算所有管理员数量
+func (this *AdminDAO) CountAllEnabledAdmins() (int64, error) {
+	return this.Query().
+		State(AdminStateEnabled).
+		Count()
+}
+
+// 列出单页的管理员
+func (this *AdminDAO) ListEnabledAdmins(offset int64, size int64) (result []*Admin, err error) {
+	_, err = this.Query().
+		State(AdminStateEnabled).
+		Result("id", "isOn", "username", "fullname", "isSuper", "createdAt").
+		Offset(offset).
+		Limit(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
 }
