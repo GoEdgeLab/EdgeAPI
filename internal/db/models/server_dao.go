@@ -413,6 +413,21 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 	return webId, nil
 }
 
+// 查找ServerNames配置
+func (this *ServerDAO) FindServerNames(serverId int64) (serverNamesJSON []byte, err error) {
+	col, err := this.Query().
+		Pk(serverId).
+		Result("serverNames").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(col) == 0 || col == "null" {
+		return []byte("[]"), nil
+	}
+	return []byte(col), nil
+}
+
 // 修改ServerNames配置
 func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
 	if serverId <= 0 {

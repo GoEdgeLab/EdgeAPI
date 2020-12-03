@@ -330,6 +330,20 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 	return this.Success()
 }
 
+// 查找服务的域名设置
+func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServerNamesRequest) (*pb.FindServerNamesResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	serverNamesJSON, err := models.SharedServerDAO.FindServerNames(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindServerNamesResponse{ServerNamesJSON: serverNamesJSON}, nil
+}
+
 // 修改域名服务
 func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
@@ -417,23 +431,23 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		result = append(result, &pb.Server{
-			Id:             int64(server.Id),
-			IsOn:           server.IsOn == 1,
-			Type:           server.Type,
-			Config:         []byte(server.Config),
-			Name:           server.Name,
-			Description:    server.Description,
-			HttpJSON:       []byte(server.Http),
-			HttpsJSON:      []byte(server.Https),
-			TcpJSON:        []byte(server.Tcp),
-			TlsJSON:        []byte(server.Tls),
-			UnixJSON:       []byte(server.Unix),
-			UdpJSON:        []byte(server.Udp),
-			IncludeNodes:   []byte(server.IncludeNodes),
-			ExcludeNodes:   []byte(server.ExcludeNodes),
-			ServerNamesJON: []byte(server.ServerNames),
-			CreatedAt:      int64(server.CreatedAt),
-			DnsName:        server.DnsName,
+			Id:              int64(server.Id),
+			IsOn:            server.IsOn == 1,
+			Type:            server.Type,
+			Config:          []byte(server.Config),
+			Name:            server.Name,
+			Description:     server.Description,
+			HttpJSON:        []byte(server.Http),
+			HttpsJSON:       []byte(server.Https),
+			TcpJSON:         []byte(server.Tcp),
+			TlsJSON:         []byte(server.Tls),
+			UnixJSON:        []byte(server.Unix),
+			UdpJSON:         []byte(server.Udp),
+			IncludeNodes:    []byte(server.IncludeNodes),
+			ExcludeNodes:    []byte(server.ExcludeNodes),
+			ServerNamesJSON: []byte(server.ServerNames),
+			CreatedAt:       int64(server.CreatedAt),
+			DnsName:         server.DnsName,
 			Cluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
@@ -531,7 +545,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		Description:      server.Description,
 		DnsName:          server.DnsName,
 		Config:           []byte(server.Config),
-		ServerNamesJON:   []byte(server.ServerNames),
+		ServerNamesJSON:  []byte(server.ServerNames),
 		HttpJSON:         []byte(server.Http),
 		HttpsJSON:        []byte(server.Https),
 		TcpJSON:          []byte(server.Tcp),
