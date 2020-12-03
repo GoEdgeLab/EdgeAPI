@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -87,19 +88,22 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			CreatedAt:   int64(acmeUser.CreatedAt),
 		}
 
-		// DNS
-		provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
-		if err != nil {
-			return nil, err
-		}
-		if provider == nil {
-			continue
-		}
-		pbProvider := &pb.DNSProvider{
-			Id:       int64(provider.Id),
-			Name:     provider.Name,
-			Type:     provider.Type,
-			TypeName: dnsclients.FindProviderTypeName(provider.Type),
+		var pbProvider *pb.DNSProvider
+		if task.AuthType == acme.AuthTypeDNS {
+			// DNS
+			provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+			if err != nil {
+				return nil, err
+			}
+			if provider == nil {
+				continue
+			}
+			pbProvider = &pb.DNSProvider{
+				Id:       int64(provider.Id),
+				Name:     provider.Name,
+				Type:     provider.Type,
+				TypeName: dnsclients.FindProviderTypeName(provider.Type),
+			}
 		}
 
 		// 证书
@@ -147,6 +151,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			DnsProvider:       pbProvider,
 			SslCert:           pbCert,
 			LatestACMETaskLog: pbTaskLog,
+			AuthType:          task.AuthType,
 		})
 	}
 
@@ -159,7 +164,12 @@ func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateA
 	if err != nil {
 		return nil, err
 	}
-	taskId, err := models.SharedACMETaskDAO.CreateACMETask(adminId, userId, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
+
+	if len(req.AuthType) == 0 {
+		req.AuthType = acme.AuthTypeDNS
+	}
+
+	taskId, err := models.SharedACMETaskDAO.CreateACMETask(adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
 	if err != nil {
 		return nil, err
 	}
@@ -298,5 +308,6 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		AutoRenew:   task.AutoRenew == 1,
 		DnsProvider: pbProvider,
 		AcmeUser:    pbACMEUser,
+		AuthType:    task.AuthType,
 	}}, nil
 }

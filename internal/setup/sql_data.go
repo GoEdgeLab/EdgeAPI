@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
@@ -15,6 +16,9 @@ type upgradeVersion struct {
 var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.0.3", upgradeV0_0_3,
+	},
+	{
+		"0.0.5", upgradeV0_0_5,
 	},
 }
 
@@ -83,6 +87,17 @@ func upgradeV0_0_3(db *dbs.DB) error {
 
 	// 升级edgeNodeGrants
 	_, err = db.Exec("UPDATE edgeNodeGrants SET adminId=? WHERE adminId=0", adminId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// v0.0.4
+func upgradeV0_0_5(db *dbs.DB) error {
+	// 升级edgeACMETasks
+	_, err := db.Exec("UPDATE edgeACMETasks SET authType=? WHERE authType IS NULL OR LENGTH(authType)=0", acme.AuthTypeDNS)
 	if err != nil {
 		return err
 	}

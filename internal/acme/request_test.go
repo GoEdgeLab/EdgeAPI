@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestNewRequest(t *testing.T) {
+func TestRequest_Run_DNS(t *testing.T) {
 	privateKey, err := ParsePrivateKeyFromBase64("MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgD3xxDXP4YVqHCfub21Yi3QL1Kvgow23J8CKJ7vU3L4+hRANCAARRl5ZKAlgGRc5RETSMYFCTXvjnePDgjALWgtgfClQGLB2rGyRecJvlesAM6Q7LQrDxVxvxdSQQmPGRqJGiBtjd")
 	if err != nil {
 		t.Fatal(err)
@@ -39,6 +39,7 @@ func TestNewRequest(t *testing.T) {
 
 	req := NewRequest(&Task{
 		User:        user,
+		Type:        TaskTypeDNS,
 		DNSProvider: dnsProvider,
 		DNSDomain:   "yun4s.cn",
 		Domains:     []string{"yun4s.cn"},
@@ -49,6 +50,40 @@ func TestNewRequest(t *testing.T) {
 	}
 	t.Log("cert:", string(certData))
 	t.Log("key:", string(keyData))
+}
+
+func TestRequest_Run_HTTP(t *testing.T) {
+	privateKey, err := ParsePrivateKeyFromBase64("MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgD3xxDXP4YVqHCfub21Yi3QL1Kvgow23J8CKJ7vU3L4+hRANCAARRl5ZKAlgGRc5RETSMYFCTXvjnePDgjALWgtgfClQGLB2rGyRecJvlesAM6Q7LQrDxVxvxdSQQmPGRqJGiBtjd")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user := NewUser("19644627@qq.com", privateKey, func(resource *registration.Resource) error {
+		resourceJSON, err := json.Marshal(resource)
+		if err != nil {
+			return err
+		}
+		t.Log(string(resourceJSON))
+		return nil
+	})
+
+	regResource := []byte(`{"body":{"status":"valid","contact":["mailto:19644627@qq.com"]},"uri":"https://acme-v02.api.letsencrypt.org/acme/acct/103672877"}`)
+	err = user.SetRegistration(regResource)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := NewRequest(&Task{
+		User:    user,
+		Type:    TaskTypeHTTP,
+		Domains: []string{"teaos.cn", "www.teaos.cn", "meloy.cn"},
+	})
+	certData, keyData, err := req.runHTTP()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(certData))
+	t.Log(string(keyData))
 }
 
 func testDNSPodProvider() (dnsclients.ProviderInterface, error) {

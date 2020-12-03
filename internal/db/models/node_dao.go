@@ -637,8 +637,7 @@ func (this *NodeDAO) FindEnabledNodeDNS(nodeId int64) (*Node, error) {
 	one, err := this.Query().
 		State(NodeStateEnabled).
 		Pk(nodeId).
-		Attr("isOn", true).
-		Result("id", "name", "dnsRoutes", "clusterId").
+		Result("id", "name", "dnsRoutes", "clusterId", "isOn").
 		Find()
 	if err != nil || one == nil {
 		return nil, err

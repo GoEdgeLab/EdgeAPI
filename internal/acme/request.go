@@ -14,7 +14,8 @@ import (
 type Request struct {
 	debug bool
 
-	task *Task
+	task   *Task
+	onAuth AuthCallback
 }
 
 func NewRequest(task *Task) *Request {
@@ -27,7 +28,23 @@ func (this *Request) Debug() {
 	this.debug = true
 }
 
+func (this *Request) OnAuth(onAuth AuthCallback) {
+	this.onAuth = onAuth
+}
+
 func (this *Request) Run() (certData []byte, keyData []byte, err error) {
+	switch this.task.AuthType {
+	case AuthTypeDNS:
+		return this.runDNS()
+	case AuthTypeHTTP:
+		return this.runHTTP()
+	default:
+		err = errors.New("invalid task type '" + this.task.AuthType + "'")
+		return
+	}
+}
+
+func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 	if !this.debug {
 		acmelog.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
 	}
@@ -76,6 +93,60 @@ func (this *Request) Run() (certData []byte, keyData []byte, err error) {
 	}
 
 	err = client.Challenge.SetDNS01Provider(NewDNSProvider(this.task.DNSProvider))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 申请证书
+	request := certificate.ObtainRequest{
+		Domains: this.task.Domains,
+		Bundle:  true,
+	}
+	certResource, err := client.Certificate.Obtain(request)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return certResource.Certificate, certResource.PrivateKey, nil
+}
+
+func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
+	if !this.debug {
+		acmelog.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	}
+
+	if this.task.User == nil {
+		err = errors.New("'user' must not be nil")
+		return
+	}
+
+	config := lego.NewConfig(this.task.User)
+	config.Certificate.KeyType = certcrypto.RSA2048
+
+	client, err := lego.NewClient(config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 注册用户
+	resource := this.task.User.GetRegistration()
+	if resource != nil {
+		resource, err = client.Registration.QueryRegistration()
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+		if err != nil {
+			return nil, nil, err
+		}
+		err = this.task.User.Register(resource)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	err = client.Challenge.SetHTTP01Provider(NewHTTPProvider(this.onAuth))
 	if err != nil {
 		return nil, nil, err
 	}

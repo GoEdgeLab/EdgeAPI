@@ -1067,6 +1067,11 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
 	}
 
+	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
+	if err != nil {
+		return nil, err
+	}
+
 	clusterId := int64(node.ClusterId)
 	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(clusterId)
 	if err != nil {
@@ -1099,11 +1104,6 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 				Code: routeCode,
 			})
 		}
-	}
-
-	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
-	if err != nil {
-		return nil, err
 	}
 
 	return &pb.FindEnabledNodeDNSResponse{

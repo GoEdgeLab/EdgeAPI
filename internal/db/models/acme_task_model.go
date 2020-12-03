@@ -14,6 +14,7 @@ type ACMETask struct {
 	State         uint8  `field:"state"`         // 状态
 	CertId        uint64 `field:"certId"`        // 生成的证书ID
 	AutoRenew     uint8  `field:"autoRenew"`     // 是否自动更新
+	AuthType      string `field:"authType"`      // 认证类型
 }
 
 type ACMETaskOperator struct {
@@ -29,6 +30,7 @@ type ACMETaskOperator struct {
 	State         interface{} // 状态
 	CertId        interface{} // 生成的证书ID
 	AutoRenew     interface{} // 是否自动更新
+	AuthType      interface{} // 认证类型
 }
 
 func NewACMETaskOperator() *ACMETaskOperator {

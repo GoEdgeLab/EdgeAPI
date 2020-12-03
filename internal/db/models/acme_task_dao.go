@@ -115,10 +115,11 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(adminId int64, userId int64, offse
 }
 
 // 创建任务
-func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) (int64, error) {
+func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) (int64, error) {
 	op := NewACMETaskOperator()
 	op.AdminId = adminId
 	op.UserId = userId
+	op.AuthType = authType
 	op.AcmeUserId = acmeUserId
 	op.DnsProviderId = dnsProviderId
 	op.DnsDomain = dnsDomain
@@ -255,37 +256,55 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 		}
 	}
 
-	// DNS服务商
-	dnsProvider, err := SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
-	if err != nil {
-		errMsg = "查找DNS服务商账号信息时出错：" + err.Error()
-		return
-	}
-	if dnsProvider == nil {
-		errMsg = "找不到DNS服务商账号"
-		return
-	}
-	providerInterface := dnsclients.FindProvider(dnsProvider.Type)
-	if providerInterface == nil {
-		errMsg = "暂不支持此类型的DNS服务商 '" + dnsProvider.Type + "'"
-		return
-	}
-	apiParams, err := dnsProvider.DecodeAPIParams()
-	if err != nil {
-		errMsg = "解析DNS服务商API参数时出错：" + err.Error()
-		return
-	}
-	err = providerInterface.Auth(apiParams)
-	if err != nil {
-		errMsg = "校验DNS服务商API参数时出错：" + err.Error()
-		return
+	var acmeTask *acme.Task = nil
+	if task.AuthType == acme.AuthTypeDNS {
+		// DNS服务商
+		dnsProvider, err := SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+		if err != nil {
+			errMsg = "查找DNS服务商账号信息时出错：" + err.Error()
+			return
+		}
+		if dnsProvider == nil {
+			errMsg = "找不到DNS服务商账号"
+			return
+		}
+		providerInterface := dnsclients.FindProvider(dnsProvider.Type)
+		if providerInterface == nil {
+			errMsg = "暂不支持此类型的DNS服务商 '" + dnsProvider.Type + "'"
+			return
+		}
+		apiParams, err := dnsProvider.DecodeAPIParams()
+		if err != nil {
+			errMsg = "解析DNS服务商API参数时出错：" + err.Error()
+			return
+		}
+		err = providerInterface.Auth(apiParams)
+		if err != nil {
+			errMsg = "校验DNS服务商API参数时出错：" + err.Error()
+			return
+		}
+
+		acmeTask = &acme.Task{
+			User:        remoteUser,
+			AuthType:    acme.AuthTypeDNS,
+			DNSProvider: providerInterface,
+			DNSDomain:   task.DnsDomain,
+			Domains:     task.DecodeDomains(),
+		}
+	} else if task.AuthType == acme.AuthTypeHTTP {
+		acmeTask = &acme.Task{
+			User:     remoteUser,
+			AuthType: acme.AuthTypeHTTP,
+			Domains:  task.DecodeDomains(),
+		}
 	}
 
-	acmeRequest := acme.NewRequest(&acme.Task{
-		User:        remoteUser,
-		DNSProvider: providerInterface,
-		DNSDomain:   task.DnsDomain,
-		Domains:     task.DecodeDomains(),
+	acmeRequest := acme.NewRequest(acmeTask)
+	acmeRequest.OnAuth(func(domain, token, keyAuth string) {
+		err := SharedACMEAuthenticationDAO.CreateAuth(taskId, domain, token, keyAuth)
+		if err != nil {
+			logs.Println("[ACME]write authentication to database error: " + err.Error())
+		}
 	})
 	certData, keyData, err := acmeRequest.Run()
 	if err != nil {
