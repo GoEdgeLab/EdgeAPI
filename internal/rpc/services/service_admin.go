@@ -286,7 +286,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 
 	// TODO 检查权限
 
-	err = models.SharedAdminDAO.UpdateAdmin(req.AdminId, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
+	err = models.SharedAdminDAO.UpdateAdmin(req.AdminId, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}

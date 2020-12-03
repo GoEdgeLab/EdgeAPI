@@ -88,6 +88,7 @@ func (this *AdminDAO) CheckAdminPassword(username string, encryptedPassword stri
 		Attr("username", username).
 		Attr("password", encryptedPassword).
 		Attr("state", AdminStateEnabled).
+		Attr("isOn", true).
 		ResultPk().
 		FindInt64Col(0)
 }
@@ -154,7 +155,7 @@ func (this *AdminDAO) UpdateAdminInfo(adminId int64, fullname string) error {
 }
 
 // 修改管理员详细信息
-func (this *AdminDAO) UpdateAdmin(adminId int64, username string, password string, fullname string, isSuper bool, modulesJSON []byte) error {
+func (this *AdminDAO) UpdateAdmin(adminId int64, username string, password string, fullname string, isSuper bool, modulesJSON []byte, isOn bool) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
@@ -171,6 +172,7 @@ func (this *AdminDAO) UpdateAdmin(adminId int64, username string, password strin
 	} else {
 		op.Modules = "[]"
 	}
+	op.IsOn = isOn
 	_, err := this.Save(op)
 	return err
 }
