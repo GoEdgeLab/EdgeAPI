@@ -1,9 +1,12 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 )
 
 const (
@@ -33,7 +36,7 @@ func init() {
 }
 
 // 启用条目
-func (this *UserDAO) EnableUser(id uint32) (rowsAffected int64, err error) {
+func (this *UserDAO) EnableUser(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", UserStateEnabled).
@@ -41,7 +44,7 @@ func (this *UserDAO) EnableUser(id uint32) (rowsAffected int64, err error) {
 }
 
 // 禁用条目
-func (this *UserDAO) DisableUser(id uint32) (rowsAffected int64, err error) {
+func (this *UserDAO) DisableUser(id int64) (rowsAffected int64, err error) {
 	return this.Query().
 		Pk(id).
 		Set("state", UserStateDisabled).
@@ -49,7 +52,7 @@ func (this *UserDAO) DisableUser(id uint32) (rowsAffected int64, err error) {
 }
 
 // 查找启用中的条目
-func (this *UserDAO) FindEnabledUser(id uint32) (*User, error) {
+func (this *UserDAO) FindEnabledUser(id int64) (*User, error) {
 	result, err := this.Query().
 		Pk(id).
 		Attr("state", UserStateEnabled).
@@ -66,4 +69,81 @@ func (this *UserDAO) FindUserFullname(userId int64) (string, error) {
 		Pk(userId).
 		Result("fullname").
 		FindStringCol("")
+}
+
+// 创建用户
+func (this *UserDAO) CreateUser(username string, password string, fullname string, mobile string, tel string, email string, remark string, source string) (int64, error) {
+	op := NewUserOperator()
+	op.Username = username
+	op.Password = stringutil.Md5(password)
+	op.Fullname = fullname
+	op.Mobile = mobile
+	op.Tel = tel
+	op.Email = email
+	op.Remark = remark
+	op.Source = source
+
+	op.IsOn = true
+	op.State = UserStateEnabled
+	_, err := this.Save(op)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int64(op.Id), nil
+}
+
+// 修改用户
+func (this *UserDAO) UpdateUser(userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	op := NewUserOperator()
+	op.Id = userId
+	op.Username = username
+	if len(password) > 0 {
+		op.Password = stringutil.Md5(password)
+	}
+	op.Fullname = fullname
+	op.Mobile = mobile
+	op.Tel = tel
+	op.Email = email
+	op.Remark = remark
+	op.IsOn = isOn
+	_, err := this.Save(op)
+	return err
+}
+
+// 计算用户数量
+func (this *UserDAO) CountAllEnabledUsers(keyword string) (int64, error) {
+	query := this.Query()
+	query.State(UserStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
+}
+
+// 列出单页用户
+func (this *UserDAO) ListEnabledUsers(keyword string) (result []*User, err error) {
+	query := this.Query()
+	query.State(UserStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 检查用户名是否存在
+func (this *UserDAO) ExistUser(userId int64, username string) (bool, error) {
+	return this.Query().
+		State(UserStateEnabled).
+		Attr("username", username).
+		Neq("id", userId).
+		Exist()
 }

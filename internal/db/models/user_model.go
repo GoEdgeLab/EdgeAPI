@@ -15,6 +15,7 @@ type User struct {
 	CreatedAt    uint64 `field:"createdAt"`    // 创建时间
 	UpdatedAt    uint64 `field:"updatedAt"`    // 修改时间
 	State        uint8  `field:"state"`        // 状态
+	Source       string `field:"source"`       // 来源
 }
 
 type UserOperator struct {
@@ -31,6 +32,7 @@ type UserOperator struct {
 	CreatedAt    interface{} // 创建时间
 	UpdatedAt    interface{} // 修改时间
 	State        interface{} // 状态
+	Source       interface{} // 来源
 }
 
 func NewUserOperator() *UserOperator {
