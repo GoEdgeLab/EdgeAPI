@@ -63,6 +63,19 @@ func (this *UserDAO) FindEnabledUser(id int64) (*User, error) {
 	return result.(*User), err
 }
 
+// 查找用户基本信息
+func (this *UserDAO) FindEnabledBasicUser(id int64) (*User, error) {
+	result, err := this.Query().
+		Pk(id).
+		Attr("state", UserStateEnabled).
+		Result("id", "fullname", "username").
+		Find()
+	if result == nil {
+		return nil, err
+	}
+	return result.(*User), err
+}
+
 // 获取管理员名称
 func (this *UserDAO) FindUserFullname(userId int64) (string, error) {
 	return this.Query().

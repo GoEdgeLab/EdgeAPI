@@ -251,9 +251,10 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 		}
 
 		list := &pb.AdminModuleList{
-			AdminId: int64(admin.Id),
-			IsSuper: admin.IsSuper == 1,
-			Modules: pbModules,
+			AdminId:  int64(admin.Id),
+			IsSuper:  admin.IsSuper == 1,
+			Fullname: admin.Fullname,
+			Modules:  pbModules,
 		}
 		result = append(result, list)
 	}

@@ -430,6 +430,19 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			}
 		}
 
+		// 用户
+		user, err := models.SharedUserDAO.FindEnabledBasicUser(int64(server.UserId))
+		if err != nil {
+			return nil, err
+		}
+		var pbUser *pb.User = nil
+		if user != nil {
+			pbUser = &pb.User{
+				Id:       int64(user.Id),
+				Fullname: user.Fullname,
+			}
+		}
+
 		result = append(result, &pb.Server{
 			Id:              int64(server.Id),
 			IsOn:            server.IsOn == 1,
@@ -453,6 +466,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 				Name: clusterName,
 			},
 			Groups: pbGroups,
+			User:   pbUser,
 		})
 	}
 
