@@ -34,7 +34,7 @@ func (this *FileChunkDAO) CreateFileChunk(fileId int64, data []byte) (int64, err
 	op := NewFileChunkOperator()
 	op.FileId = fileId
 	op.Data = data
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}

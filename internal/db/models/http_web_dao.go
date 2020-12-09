@@ -338,7 +338,7 @@ func (this *HTTPWebDAO) CreateWeb(rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
 	op.Root = JSONBytes(rootJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -353,7 +353,7 @@ func (this *HTTPWebDAO) UpdateWeb(webId int64, rootJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Root = JSONBytes(rootJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -365,7 +365,7 @@ func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Gzip = JSONBytes(gzipJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -377,7 +377,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charsetJSON []byte) error 
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Charset = JSONBytes(charsetJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -389,7 +389,7 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyJS
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RequestHeader = JSONBytes(headerPolicyJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -401,7 +401,7 @@ func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyJ
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.ResponseHeader = JSONBytes(headerPolicyJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -413,7 +413,7 @@ func (this *HTTPWebDAO) UpdateWebPages(webId int64, pagesJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -425,7 +425,7 @@ func (this *HTTPWebDAO) UpdateWebShutdown(webId int64, shutdownJSON []byte) erro
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -437,7 +437,7 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(webId int64, accessLogJSON []by
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -449,7 +449,7 @@ func (this *HTTPWebDAO) UpdateWebStat(webId int64, statJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -461,7 +461,7 @@ func (this *HTTPWebDAO) UpdateWebCache(webId int64, cacheJSON []byte) error {
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -473,7 +473,7 @@ func (this *HTTPWebDAO) UpdateWebFirewall(webId int64, firewallJSON []byte) erro
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -485,7 +485,7 @@ func (this *HTTPWebDAO) UpdateWebLocations(webId int64, locationsJSON []byte) er
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -497,7 +497,7 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(webId int64, redirectToHTTPSJSO
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -509,7 +509,7 @@ func (this *HTTPWebDAO) UpdateWebsocket(webId int64, websocketJSON []byte) error
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Websocket = JSONBytes(websocketJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -521,7 +521,7 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(webId int64, rewriteRulesJSON []by
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RewriteRules = JSONBytes(rewriteRulesJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

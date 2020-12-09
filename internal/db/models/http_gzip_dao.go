@@ -140,7 +140,7 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 	if len(condsJSON) > 0 {
 		op.Conds = JSONBytes(condsJSON)
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -164,6 +164,6 @@ func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byt
 	if len(condsJSON) > 0 {
 		op.Conds = JSONBytes(condsJSON)
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

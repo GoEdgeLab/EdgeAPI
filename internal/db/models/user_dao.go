@@ -98,7 +98,7 @@ func (this *UserDAO) CreateUser(username string, password string, fullname strin
 
 	op.IsOn = true
 	op.State = UserStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -122,7 +122,7 @@ func (this *UserDAO) UpdateUser(userId int64, username string, password string, 
 	op.Email = email
 	op.Remark = remark
 	op.IsOn = isOn
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

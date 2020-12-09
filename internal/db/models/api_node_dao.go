@@ -119,7 +119,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 	}
 
 	op.State = NodeStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return
 	}
@@ -155,7 +155,7 @@ func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description str
 		op.AccessAddrs = "null"
 	}
 
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

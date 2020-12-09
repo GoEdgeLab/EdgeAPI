@@ -117,7 +117,7 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(isOn bool, name string, descri
 	if len(storageOptionsJSON) > 0 {
 		op.Options = storageOptionsJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -146,7 +146,7 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(policyId int64, isOn bool, nam
 	if len(storageOptionsJSON) > 0 {
 		op.Options = storageOptionsJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return errors.Wrap(err)
 }
 

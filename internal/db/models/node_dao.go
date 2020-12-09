@@ -103,7 +103,7 @@ func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, gro
 	op.GroupId = groupId
 	op.IsOn = 1
 	op.State = NodeStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -124,7 +124,7 @@ func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, grou
 	op.LatestVersion = dbs.SQL("latestVersion+1")
 	op.MaxCPU = maxCPU
 	op.IsOn = isOn
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -136,7 +136,7 @@ func (this *NodeDAO) UpdateNodeLatestVersion(nodeId int64) error {
 	op := NewNodeOperator()
 	op.Id = nodeId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -528,7 +528,7 @@ func (this *NodeDAO) UpdateNodeConnectedAPINodes(nodeId int64, apiNodeIds []int6
 	} else {
 		op.ConnectedAPINodes = "[]"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -660,7 +660,7 @@ func (this *NodeDAO) UpdateNodeDNS(nodeId int64, routes map[int64][]string) erro
 	op := NewNodeOperator()
 	op.Id = nodeId
 	op.DnsRoutes = routesJSON
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 
@@ -712,7 +712,7 @@ func (this *NodeDAO) UpdateNodeUp(nodeId int64, isUp bool, maxUp int, maxDown in
 
 	op.CountUp = countUp
 	op.CountDown = countDown
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return false, err
 	}

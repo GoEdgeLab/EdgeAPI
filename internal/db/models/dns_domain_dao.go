@@ -84,7 +84,7 @@ func (this *DNSDomainDAO) CreateDomain(adminId int64, userId int64, providerId i
 	op.Name = name
 	op.State = DNSDomainStateEnabled
 	op.IsOn = true
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -100,7 +100,7 @@ func (this *DNSDomainDAO) UpdateDomain(domainId int64, name string, isOn bool) e
 	op.Id = domainId
 	op.Name = name
 	op.IsOn = isOn
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (this *DNSDomainDAO) UpdateDomainData(domainId int64, data string) error {
 	op := NewDNSDomainOperator()
 	op.Id = domainId
 	op.Data = data
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -147,7 +147,7 @@ func (this *DNSDomainDAO) UpdateDomainRecords(domainId int64, recordsJSON []byte
 	op.Id = domainId
 	op.Records = recordsJSON
 	op.DataUpdatedAt = time.Now().Unix()
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -160,7 +160,7 @@ func (this *DNSDomainDAO) UpdateDomainRoutes(domainId int64, routesJSON []byte) 
 	op.Id = domainId
 	op.Routes = routesJSON
 	op.DataUpdatedAt = time.Now().Unix()
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

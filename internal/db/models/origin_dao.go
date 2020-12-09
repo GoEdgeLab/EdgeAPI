@@ -102,7 +102,7 @@ func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description st
 	}
 	op.Weight = weight
 	op.State = OriginStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return
 	}
@@ -125,7 +125,7 @@ func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string
 	op.Weight = weight
 	op.IsOn = isOn
 	op.Version = dbs.SQL("version+1")
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

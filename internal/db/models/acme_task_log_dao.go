@@ -33,7 +33,7 @@ func (this *ACMETaskLogDAO) CreateACMETaskLog(taskId int64, isOk bool, errMsg st
 	op.TaskId = taskId
 	op.Error = errMsg
 	op.IsOk = isOk
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

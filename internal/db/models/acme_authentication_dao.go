@@ -34,7 +34,7 @@ func (this *ACMEAuthenticationDAO) CreateAuth(taskId int64, domain string, token
 	op.Domain = domain
 	op.Token = token
 	op.Key = key
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

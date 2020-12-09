@@ -77,7 +77,7 @@ func (this *ServerGroupDAO) CreateGroup(name string) (groupId int64, err error) 
 	op := NewServerGroupOperator()
 	op.State = ServerGroupStateEnabled
 	op.Name = name
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -92,7 +92,7 @@ func (this *ServerGroupDAO) UpdateGroup(groupId int64, name string) error {
 	op := NewServerGroupOperator()
 	op.Id = groupId
 	op.Name = name
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

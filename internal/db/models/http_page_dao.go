@@ -95,7 +95,7 @@ func (this *HTTPPageDAO) CreatePage(statusList []string, url string, newStatus i
 	}
 	op.Url = url
 	op.NewStatus = newStatus
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -125,7 +125,7 @@ func (this *HTTPPageDAO) UpdatePage(pageId int64, statusList []string, url strin
 
 	op.Url = url
 	op.NewStatus = newStatus
-	_, err = this.Save(op)
+	err = this.Save(op)
 
 	return err
 }

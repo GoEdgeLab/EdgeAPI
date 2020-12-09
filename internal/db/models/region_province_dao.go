@@ -104,7 +104,7 @@ func (this *RegionProvinceDAO) CreateProvince(countryId int64, name string, data
 		return 0, err
 	}
 	op.Codes = codesJSON
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}

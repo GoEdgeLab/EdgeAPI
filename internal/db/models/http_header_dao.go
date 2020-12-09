@@ -105,7 +105,7 @@ func (this *HTTPHeaderDAO) CreateHeader(name string, value string) (int64, error
 	}
 	op.Status = statusJSON
 
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -122,7 +122,7 @@ func (this *HTTPHeaderDAO) UpdateHeader(headerId int64, name string, value strin
 	op.Id = headerId
 	op.Name = name
 	op.Value = value
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	// TODO 更新相关配置
 

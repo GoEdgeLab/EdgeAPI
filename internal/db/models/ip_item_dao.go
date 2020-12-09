@@ -89,7 +89,7 @@ func (this *IPItemDAO) CreateIPItem(listId int64, ipFrom string, ipTo string, ex
 	}
 	op.ExpiredAt = expiredAt
 	op.State = IPItemStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -128,7 +128,7 @@ func (this *IPItemDAO) UpdateIPItem(itemId int64, ipFrom string, ipTo string, ex
 	}
 	op.ExpiredAt = expiredAt
 	op.Version = version
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 

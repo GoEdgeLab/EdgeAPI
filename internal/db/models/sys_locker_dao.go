@@ -50,7 +50,7 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 			op.Key = key
 			op.TimeoutAt = time.Now().Unix() + timeout
 			op.Version = 1
-			_, err := this.Save(op)
+			err := this.Save(op)
 			if err != nil {
 				maxErrors--
 				if maxErrors < 0 {
@@ -73,7 +73,7 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 		op.Id = locker.Id
 		op.Version = locker.Version + 1
 		op.TimeoutAt = time.Now().Unix() + timeout
-		_, err = this.Save(op)
+		err = this.Save(op)
 		if err != nil {
 			maxErrors--
 			if maxErrors < 0 {

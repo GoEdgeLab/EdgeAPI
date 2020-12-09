@@ -96,7 +96,7 @@ func (this *IPLibraryDAO) CreateIPLibrary(libraryType string, fileId int64) (int
 	op.Type = libraryType
 	op.FileId = fileId
 	op.State = IPLibraryStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}

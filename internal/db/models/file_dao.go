@@ -71,7 +71,7 @@ func (this *FileDAO) CreateFile(businessType, description string, filename strin
 	op.State = FileStateEnabled
 	op.Size = size
 	op.Filename = filename
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}

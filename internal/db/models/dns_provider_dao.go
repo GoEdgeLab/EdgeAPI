@@ -76,7 +76,7 @@ func (this *DNSProviderDAO) CreateDNSProvider(adminId int64, userId int64, provi
 		op.ApiParams = apiParamsJSON
 	}
 	op.State = DNSProviderStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -98,7 +98,7 @@ func (this *DNSProviderDAO) UpdateDNSProvider(dnsProviderId int64, name string, 
 		op.ApiParams = apiParamsJSON
 	}
 
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return err
 	}

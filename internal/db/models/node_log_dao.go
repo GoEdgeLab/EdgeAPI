@@ -43,7 +43,7 @@ func (this *NodeLogDAO) CreateLog(nodeRole NodeRole, nodeId int64, level string,
 	op.Description = description
 	op.CreatedAt = createdAt
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

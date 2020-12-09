@@ -176,7 +176,7 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firew
 		return 0, err
 	}
 	op.Rules = ruleRefsJSON
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}

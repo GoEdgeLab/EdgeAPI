@@ -84,7 +84,7 @@ func (this *LogTask) loopClean(seconds int64) error {
 func (this *LogTask) runMonitor() {
 	ticker := utils.NewTicker(1 * time.Minute)
 	for ticker.Wait() {
-		err := this.loopClean(60)
+		err := this.loopMonitor(60)
 		if err != nil {
 			logs.Println("[TASK][LOG]" + err.Error())
 		}

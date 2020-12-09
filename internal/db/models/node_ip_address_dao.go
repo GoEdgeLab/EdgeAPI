@@ -92,7 +92,7 @@ func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.State = NodeIPAddressStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -111,7 +111,7 @@ func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip str
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.State = NodeIPAddressStateEnabled // 恢复状态
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 
@@ -123,7 +123,7 @@ func (this *NodeIPAddressDAO) UpdateAddressIP(addressId int64, ip string) error 
 	op := NewNodeIPAddressOperator()
 	op.Id = addressId
 	op.Ip = ip
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

@@ -79,6 +79,9 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 
 	// 检查集群配置
 	err = this.checkCluster(db)
+	if err != nil {
+		return err
+	}
 
 	// 更新版本号
 	err = this.updateVersion(db, teaconst.Version)

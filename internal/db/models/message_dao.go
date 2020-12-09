@@ -120,7 +120,7 @@ func (this *MessageDAO) CreateMessage(adminId int64, userId int64, messageType M
 	op.IsRead = false
 	op.Day = timeutil.Format("Ymd")
 	op.Hash = hash
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -161,7 +161,7 @@ func (this *MessageDAO) UpdateMessageRead(messageId int64, b bool) error {
 	op := NewMessageOperator()
 	op.Id = messageId
 	op.IsRead = b
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -213,7 +213,7 @@ func (this *MessageDAO) createMessage(clusterId int64, nodeId int64, messageType
 	op.Day = timeutil.Format("Ymd")
 	op.Hash = hash
 
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}

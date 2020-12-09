@@ -214,7 +214,7 @@ func (this *SSLPolicyDAO) CreatePolicy(http2Enabled bool, minVersion string, cer
 		}
 		op.CipherSuites = cipherSuitesJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -255,6 +255,6 @@ func (this *SSLPolicyDAO) UpdatePolicy(policyId int64, http2Enabled bool, minVer
 	} else {
 		op.CipherSuites = "[]"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

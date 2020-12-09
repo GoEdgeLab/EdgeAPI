@@ -137,7 +137,7 @@ func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, authType ac
 	op.AutoRenew = autoRenew
 	op.IsOn = true
 	op.State = ACMETaskStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -167,7 +167,7 @@ func (this *ACMETaskDAO) UpdateACMETask(acmeTaskId int64, acmeUserId int64, dnsP
 	}
 
 	op.AutoRenew = autoRenew
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -188,7 +188,7 @@ func (this *ACMETaskDAO) UpdateACMETaskCert(taskId int64, certId int64) error {
 	op := NewACMETaskOperator()
 	op.Id = taskId
 	op.CertId = certId
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

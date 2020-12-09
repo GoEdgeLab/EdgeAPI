@@ -85,7 +85,7 @@ func (this *IPListDAO) CreateIPList(listType ipconfigs.IPListType, name string, 
 	if len(timeoutJSON) > 0 {
 		op.Timeout = timeoutJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -106,7 +106,7 @@ func (this *IPListDAO) UpdateIPList(listId int64, name string, code string, time
 	} else {
 		op.Timeout = "null"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

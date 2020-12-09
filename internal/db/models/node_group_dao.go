@@ -77,7 +77,7 @@ func (this *NodeGroupDAO) CreateNodeGroup(clusterId int64, name string) (int64, 
 	op.ClusterId = clusterId
 	op.Name = name
 	op.State = NodeGroupStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -92,7 +92,7 @@ func (this *NodeGroupDAO) UpdateNodeGroup(groupId int64, name string) error {
 	op := NewNodeGroupOperator()
 	op.Id = groupId
 	op.Name = name
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

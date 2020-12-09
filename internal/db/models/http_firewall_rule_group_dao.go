@@ -151,7 +151,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewal
 		return 0, err
 	}
 	op.Sets = setRefsJSON
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -174,7 +174,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroup(isOn bool, name string, descri
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -191,7 +191,7 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(groupId int64, isOn bool, name
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -203,6 +203,6 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(groupId int64, setsJSON []
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.Id = groupId
 	op.Sets = setsJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

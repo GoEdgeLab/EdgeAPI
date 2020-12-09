@@ -90,7 +90,7 @@ func (this *NodeGrantDAO) CreateGrant(adminId int64, name string, method string,
 	op.Description = description
 	op.NodeId = nodeId
 	op.State = NodeGrantStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return types.Int64(op.Id), err
 }
 
@@ -115,7 +115,7 @@ func (this *NodeGrantDAO) UpdateGrant(grantId int64, name string, method string,
 	}
 	op.Description = description
 	op.NodeId = nodeId
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

@@ -164,7 +164,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(schedulingJSON []byte, primaryOr
 	if len(backupOriginsJSON) > 0 {
 		op.BackupOrigins = string(backupOriginsJSON)
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -184,7 +184,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(reverseProxyId int64, 
 	} else {
 		op.Scheduling = "null"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -201,7 +201,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(reverseProxyId int
 	} else {
 		op.PrimaryOrigins = "[]"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -218,7 +218,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int6
 	} else {
 		op.BackupOrigins = "[]"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -241,7 +241,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(reverseProxyId int64, requestHos
 	op.RequestURI = requestURI
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

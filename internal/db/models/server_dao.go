@@ -148,7 +148,7 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	op.Version = 1
 	op.IsOn = 1
 	op.State = ServerStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 
 	if err != nil {
 		return 0, err
@@ -191,7 +191,7 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 		op.GroupIds = groupIdsJSON
 	}
 
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, upd
 	if updateMd5 {
 		op.ConfigMd5 = newConfigMd5
 	}
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return true, err
 }
 
@@ -455,7 +455,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 	op := NewServerOperator()
 	op.Id = serverId
 	op.ReverseProxy = JSONBytes(config)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return err
 	}
@@ -886,7 +886,7 @@ func (this *ServerDAO) GenerateServerDNSName(serverId int64) (string, error) {
 	op := NewServerOperator()
 	op.Id = serverId
 	op.DnsName = dnsName
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return dnsName, err
 }
 

@@ -11,11 +11,12 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.4.2
-	github.com/iwind/TeaGo v0.0.0-20201020081413-7cf62d6f420f
+	github.com/iwind/TeaGo v0.0.0-20201209122854-4c8b1780a42b
 	github.com/lionsoul2014/ip2region v2.2.0-release+incompatible
 	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/pkg/sftp v1.12.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

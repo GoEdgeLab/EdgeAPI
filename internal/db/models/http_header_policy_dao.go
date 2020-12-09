@@ -85,7 +85,7 @@ func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy() (int64, error) {
 	op := NewHTTPHeaderPolicyOperator()
 	op.IsOn = true
 	op.State = HTTPHeaderPolicyStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -101,7 +101,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(policyId int64, headersJSON
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddHeaders = headersJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -115,7 +115,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(policyId int64, headersJSO
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.SetHeaders = headersJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -129,7 +129,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(policyId int64, headersJ
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.ReplaceHeaders = headersJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -143,7 +143,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(policyId int64, headersJSO
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddTrailers = headersJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 
 	return err
 }
@@ -162,7 +162,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(policyId int64, headerNam
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.DeleteHeaders = string(namesJSON)
-	_, err = this.Save(op)
+	err = this.Save(op)
 
 	return err
 }

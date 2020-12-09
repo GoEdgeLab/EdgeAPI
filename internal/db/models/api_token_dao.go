@@ -92,6 +92,6 @@ func (this *ApiTokenDAO) CreateAPIToken(nodeId string, secret string, role NodeR
 	op.Secret = secret
 	op.Role = role
 	op.State = ApiTokenStateEnabled
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

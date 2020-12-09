@@ -123,7 +123,7 @@ func (this *HTTPWebsocketDAO) CreateWebsocket(handshakeTimeoutJSON []byte, allow
 	}
 	op.RequestSameOrigin = requestSameOrigin
 	op.RequestOrigin = requestOrigin
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return types.Int64(op.Id), err
 }
 
@@ -149,6 +149,6 @@ func (this *HTTPWebsocketDAO) UpdateWebsocket(websocketId int64, handshakeTimeou
 	}
 	op.RequestSameOrigin = requestSameOrigin
 	op.RequestOrigin = requestOrigin
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

@@ -44,7 +44,7 @@ func (this *SysEventDAO) CreateEvent(event EventInterface) error {
 	}
 	op.Params = eventJSON
 
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 

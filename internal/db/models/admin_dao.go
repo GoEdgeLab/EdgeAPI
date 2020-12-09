@@ -117,7 +117,7 @@ func (this *AdminDAO) UpdateAdminPassword(adminId int64, password string) error 
 	op := NewAdminOperator()
 	op.Id = adminId
 	op.Password = stringutil.Md5(password)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -135,7 +135,7 @@ func (this *AdminDAO) CreateAdmin(username string, password string, fullname str
 	} else {
 		op.Modules = "[]"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -150,7 +150,7 @@ func (this *AdminDAO) UpdateAdminInfo(adminId int64, fullname string) error {
 	op := NewAdminOperator()
 	op.Id = adminId
 	op.Fullname = fullname
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -173,7 +173,7 @@ func (this *AdminDAO) UpdateAdmin(adminId int64, username string, password strin
 		op.Modules = "[]"
 	}
 	op.IsOn = isOn
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -199,7 +199,7 @@ func (this *AdminDAO) UpdateAdminLogin(adminId int64, username string, password 
 	op.Id = adminId
 	op.Username = username
 	op.Password = stringutil.Md5(password)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -211,7 +211,7 @@ func (this *AdminDAO) UpdateAdminModules(adminId int64, allowModulesJSON []byte)
 	op := NewAdminOperator()
 	op.Id = adminId
 	op.Modules = allowModulesJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return err
 	}

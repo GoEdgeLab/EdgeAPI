@@ -104,7 +104,7 @@ func (this *DBNodeDAO) CreateDBNode(isOn bool, name string, description string, 
 	op.Username = username
 	op.Password = password
 	op.Charset = charset
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -127,7 +127,7 @@ func (this *DBNodeDAO) UpdateNode(nodeId int64, isOn bool, name string, descript
 	op.Username = username
 	op.Password = password
 	op.Charset = charset
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

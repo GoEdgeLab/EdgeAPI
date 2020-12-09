@@ -126,13 +126,13 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				oldField := oldTable.FindField(newField.Name)
 				if oldField == nil {
 					ops = append(ops, "+ "+newTable.Name+" "+newField.Name)
-					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newField.Name + " " + newField.Definition)
+					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
 						return nil, err
 					}
-				} else if oldField.Definition != newField.Definition {
+				} else if !newField.EqualDefinition(oldField.Definition) {
 					ops = append(ops, "* "+newTable.Name+" "+newField.Name)
-					_, err = db.Exec("ALTER TABLE " + newTable.Name + " MODIFY " + newField.Name + " " + newField.Definition)
+					_, err = db.Exec("ALTER TABLE " + newTable.Name + " MODIFY `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
 						return nil, err
 					}
@@ -180,7 +180,7 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				newField := newTable.FindField(oldField.Name)
 				if newField == nil {
 					ops = append(ops, "- field "+oldTable.Name+" "+oldField.Name)
-					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP COLUMN " + oldField.Name)
+					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP COLUMN `" + oldField.Name + "`")
 					if err != nil {
 						return nil, err
 					}

@@ -98,7 +98,7 @@ func (this *HTTPLocationDAO) CreateLocation(parentId int64, name string, pattern
 	op.Pattern = pattern
 	op.Description = description
 	op.IsBreak = isBreak
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -117,7 +117,7 @@ func (this *HTTPLocationDAO) UpdateLocation(locationId int64, name string, patte
 	op.Description = description
 	op.IsOn = isOn
 	op.IsBreak = isBreak
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -197,7 +197,7 @@ func (this *HTTPLocationDAO) UpdateLocationReverseProxy(locationId int64, revers
 	op := NewHTTPLocationOperator()
 	op.Id = locationId
 	op.ReverseProxy = JSONBytes(reverseProxyJSON)
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -218,7 +218,7 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(locationId int64, webId int64) er
 	op := NewHTTPLocationOperator()
 	op.Id = locationId
 	op.WebId = webId
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

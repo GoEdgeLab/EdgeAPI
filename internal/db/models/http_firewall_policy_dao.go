@@ -111,7 +111,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(isOn bool, name string, 
 	if len(outboundJSON) > 0 {
 		op.Outbound = outboundJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return types.Int64(op.Id), err
 }
 
@@ -132,7 +132,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(policy
 	} else {
 		op.Outbound = "null"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -148,7 +148,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(policyId int64, i
 	} else {
 		op.Inbound = "null"
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -175,7 +175,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(policyId int64, isOn boo
 	if len(blockOptionsJSON) > 0 {
 		op.BlockOptions = blockOptionsJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

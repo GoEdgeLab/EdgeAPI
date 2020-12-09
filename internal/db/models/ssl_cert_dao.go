@@ -118,7 +118,7 @@ func (this *SSLCertDAO) CreateCert(adminId int64, userId int64, isOn bool, name 
 	}
 	op.CommonNames = commonNamesJSON
 
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -161,7 +161,7 @@ func (this *SSLCertDAO) UpdateCert(certId int64, isOn bool, name string, descrip
 	}
 	op.CommonNames = commonNamesJSON
 
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 
@@ -281,7 +281,7 @@ func (this *SSLCertDAO) UpdateCertACME(certId int64, acmeTaskId int64) error {
 	op.Id = certId
 	op.AcmeTaskId = acmeTaskId
 	op.IsACME = true
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

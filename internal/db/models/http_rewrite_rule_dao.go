@@ -115,7 +115,7 @@ func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return types.Int64(op.Id), err
 }
 
@@ -134,6 +134,6 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern s
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }

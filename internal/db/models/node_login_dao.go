@@ -81,7 +81,7 @@ func (this *NodeLoginDAO) CreateNodeLogin(nodeId int64, name string, loginType s
 	login.Type = loginType
 	login.Params = string(paramsJSON)
 	login.State = NodeLoginStateEnabled
-	_, err = this.Save(login)
+	err = this.Save(login)
 	return types.Int64(login.Id), err
 }
 
@@ -95,7 +95,7 @@ func (this *NodeLoginDAO) UpdateNodeLogin(loginId int64, name string, loginType 
 	login.Name = name
 	login.Type = loginType
 	login.Params = string(paramsJSON)
-	_, err := this.Save(login)
+	err := this.Save(login)
 	return err
 }
 

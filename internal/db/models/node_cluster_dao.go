@@ -138,7 +138,7 @@ func (this *NodeClusterDAO) CreateCluster(adminId int64, name string, grantId in
 	op.UniqueId = uniqueId
 	op.Secret = secret
 	op.State = NodeClusterStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -156,7 +156,7 @@ func (this *NodeClusterDAO) UpdateCluster(clusterId int64, name string, grantId 
 	op.Name = name
 	op.GrantId = grantId
 	op.InstallDir = installDir
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -264,7 +264,7 @@ func (this *NodeClusterDAO) UpdateClusterHealthCheck(clusterId int64, healthChec
 	op := NewNodeClusterOperator()
 	op.Id = clusterId
 	op.HealthCheck = healthCheckJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -408,7 +408,7 @@ func (this *NodeClusterDAO) UpdateClusterDNS(clusterId int64, dnsName string, dn
 	}
 	op.Dns = dnsJSON
 
-	_, err = this.Save(op)
+	err = this.Save(op)
 	return err
 }
 
@@ -561,7 +561,7 @@ func (this *NodeClusterDAO) UpdateClusterTOA(clusterId int64, toaJSON []byte) er
 	op := NewNodeClusterOperator()
 	op.Id = clusterId
 	op.Toa = toaJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

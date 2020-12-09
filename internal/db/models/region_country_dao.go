@@ -114,7 +114,7 @@ func (this *RegionCountryDAO) CreateCountry(name string, dataId string) (int64, 
 
 	op.DataId = dataId
 	op.State = RegionCountryStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}

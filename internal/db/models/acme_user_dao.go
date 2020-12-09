@@ -90,7 +90,7 @@ func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email strin
 	op.Description = description
 	op.PrivateKey = privateKeyText
 	op.State = ACMEUserStateEnabled
-	_, err = this.Save(op)
+	err = this.Save(op)
 	if err != nil {
 		return 0, err
 	}
@@ -105,7 +105,7 @@ func (this *ACMEUserDAO) UpdateACMEUser(acmeUserId int64, description string) er
 	op := NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Description = description
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 
@@ -117,7 +117,7 @@ func (this *ACMEUserDAO) UpdateACMEUserRegistration(acmeUserId int64, registrati
 	op := NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Registration = registrationJSON
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

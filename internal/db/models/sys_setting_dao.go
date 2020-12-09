@@ -63,7 +63,7 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 			op := NewSysSettingOperator()
 			op.Code = codeFormat
 			op.Value = valueJSON
-			_, err = this.Save(op)
+			err = this.Save(op)
 			if err != nil {
 				lastErr = err
 
@@ -77,7 +77,7 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 		op := NewSysSettingOperator()
 		op.Id = settingId
 		op.Value = valueJSON
-		_, err = this.Save(op)
+		err = this.Save(op)
 		if err != nil {
 			return err
 		}

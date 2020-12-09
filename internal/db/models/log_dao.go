@@ -40,7 +40,7 @@ func (this *LogDAO) CreateLog(adminType string, adminId int64, level string, des
 	op.AdminId, op.Level, op.Description, op.Action, op.Ip = adminId, level, description, action, ip
 	op.Day = timeutil.Format("Ymd")
 	op.Type = LogTypeAdmin
-	_, err := this.Save(op)
+	err := this.Save(op)
 	return err
 }
 

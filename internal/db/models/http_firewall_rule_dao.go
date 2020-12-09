@@ -150,7 +150,7 @@ func (this *HTTPFirewallRuleDAO) CreateOrUpdateRuleFromConfig(ruleConfig *firewa
 		}
 		op.CheckpointOptions = checkpointOptionsJSON
 	}
-	_, err := this.Save(op)
+	err := this.Save(op)
 	if err != nil {
 		return 0, err
 	}
