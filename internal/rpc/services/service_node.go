@@ -43,7 +43,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, req.ClusterId, req.GroupId)
+	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, req.ClusterId, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, clusterId, 0)
+	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, clusterId, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		}
 	}
 
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId)
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +233,22 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			}
 		}
 
+		// 区域
+		var pbRegion *pb.NodeRegion = nil
+		if node.RegionId > 0 {
+			region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(int64(node.RegionId))
+			if err != nil {
+				return nil, err
+			}
+			if region != nil {
+				pbRegion = &pb.NodeRegion{
+					Id:   int64(region.Id),
+					IsOn: region.IsOn == 1,
+					Name: region.Name,
+				}
+			}
+		}
+
 		result = append(result, &pb.Node{
 			Id:          int64(node.Id),
 			Name:        node.Name,
@@ -248,6 +264,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			IsOn:          node.IsOn == 1,
 			IsUp:          node.IsUp == 1,
 			Group:         pbGroup,
+			Region:        pbRegion,
 			DnsRoutes:     pbRoutes,
 		})
 	}
@@ -321,7 +338,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
-	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.GroupId, req.MaxCPU, req.IsOn)
+	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.GroupId, req.RegionId, req.MaxCPU, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -435,6 +452,22 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 区域
+	var pbRegion *pb.NodeRegion = nil
+	if node.RegionId > 0 {
+		region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(int64(node.RegionId))
+		if err != nil {
+			return nil, err
+		}
+		if region != nil {
+			pbRegion = &pb.NodeRegion{
+				Id:   int64(region.Id),
+				IsOn: region.IsOn == 1,
+				Name: region.Name,
+			}
+		}
+	}
+
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
@@ -454,6 +487,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		MaxCPU:        types.Int32(node.MaxCPU),
 		IsOn:          node.IsOn == 1,
 		Group:         pbGroup,
+		Region:        pbRegion,
 	}}, nil
 }
 

@@ -80,7 +80,7 @@ func (this *NodeDAO) FindNodeName(id uint32) (string, error) {
 }
 
 // 创建节点
-func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, groupId int64) (nodeId int64, err error) {
+func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, groupId int64, regionId int64) (nodeId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -101,6 +101,7 @@ func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, gro
 	op.Secret = secret
 	op.ClusterId = clusterId
 	op.GroupId = groupId
+	op.RegionId = regionId
 	op.IsOn = 1
 	op.State = NodeStateEnabled
 	err = this.Save(op)
@@ -112,7 +113,7 @@ func (this *NodeDAO) CreateNode(adminId int64, name string, clusterId int64, gro
 }
 
 // 修改节点
-func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, groupId int64, maxCPU int32, isOn bool) error {
+func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, groupId int64, regionId int64, maxCPU int32, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -121,6 +122,7 @@ func (this *NodeDAO) UpdateNode(nodeId int64, name string, clusterId int64, grou
 	op.Name = name
 	op.ClusterId = clusterId
 	op.GroupId = groupId
+	op.RegionId = regionId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
 	op.MaxCPU = maxCPU
 	op.IsOn = isOn
@@ -187,7 +189,7 @@ func (this *NodeDAO) CountAllEnabledNodes() (int64, error) {
 }
 
 // 列出单页节点
-func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64) (result []*Node, err error) {
+func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64, regionId int64) (result []*Node, err error) {
 	query := this.Query().
 		State(NodeStateEnabled).
 		Offset(offset).
@@ -229,6 +231,11 @@ func (this *NodeDAO) ListEnabledNodesMatch(offset int64, size int64, clusterId i
 	// 分组
 	if groupId > 0 {
 		query.Attr("groupId", groupId)
+	}
+
+	// 区域
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
 	}
 
 	_, err = query.FindAll()
@@ -318,7 +325,7 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(clusterId int64) (result 
 }
 
 // 计算节点数量
-func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64) (int64, error) {
+func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64, regionId int64) (int64, error) {
 	query := this.Query()
 	query.State(NodeStateEnabled)
 
@@ -356,6 +363,11 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(clusterId int64, installState con
 	// 分组
 	if groupId > 0 {
 		query.Attr("groupId", groupId)
+	}
+
+	// 区域
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
 	}
 
 	return query.Count()
