@@ -17,7 +17,7 @@ func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.Cre
 	if err != nil {
 		return nil, err
 	}
-	regionId, err := models.SharedNodeRegionDAO.CreateRegion(adminId, req.Name)
+	regionId, err := models.SharedNodeRegionDAO.CreateRegion(adminId, req.Name, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.Upd
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeRegionDAO.UpdateRegion(req.NodeRegionId, req.Name, req.IsOn)
+	err = models.SharedNodeRegionDAO.UpdateRegion(req.NodeRegionId, req.Name, req.Description, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -63,10 +63,11 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 	result := []*pb.NodeRegion{}
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
-			Id:         int64(region.Id),
-			IsOn:       region.IsOn == 1,
-			Name:       region.Name,
-			PricesJSON: []byte(region.Prices),
+			Id:          int64(region.Id),
+			IsOn:        region.IsOn == 1,
+			Name:        region.Name,
+			Description: region.Description,
+			PricesJSON:  []byte(region.Prices),
 		})
 	}
 	return &pb.FindAllEnabledNodeRegionsResponse{NodeRegions: result}, nil
@@ -85,10 +86,11 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 	result := []*pb.NodeRegion{}
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
-			Id:         int64(region.Id),
-			IsOn:       region.IsOn == 1,
-			Name:       region.Name,
-			PricesJSON: []byte(region.Prices),
+			Id:          int64(region.Id),
+			IsOn:        region.IsOn == 1,
+			Name:        region.Name,
+			Description: region.Description,
+			PricesJSON:  []byte(region.Prices),
 		})
 	}
 	return &pb.FindAllEnabledAndOnNodeRegionsResponse{NodeRegions: result}, nil
@@ -121,10 +123,11 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 		return &pb.FindEnabledNodeRegionResponse{NodeRegion: nil}, nil
 	}
 	return &pb.FindEnabledNodeRegionResponse{NodeRegion: &pb.NodeRegion{
-		Id:         int64(region.Id),
-		IsOn:       region.IsOn == 1,
-		Name:       region.Name,
-		PricesJSON: []byte(region.Prices),
+		Id:          int64(region.Id),
+		IsOn:        region.IsOn == 1,
+		Name:        region.Name,
+		Description: region.Description,
+		PricesJSON:  []byte(region.Prices),
 	}}, nil
 }
 

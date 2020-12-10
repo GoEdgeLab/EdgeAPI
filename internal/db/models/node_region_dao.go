@@ -74,23 +74,25 @@ func (this *NodeRegionDAO) FindNodeRegionName(id int64) (string, error) {
 }
 
 // 创建区域
-func (this *NodeRegionDAO) CreateRegion(adminId int64, name string) (int64, error) {
+func (this *NodeRegionDAO) CreateRegion(adminId int64, name string, description string) (int64, error) {
 	op := NewNodeRegionOperator()
 	op.AdminId = adminId
 	op.Name = name
+	op.Description = description
 	op.State = NodeRegionStateEnabled
 	op.IsOn = true
 	return this.SaveInt64(op)
 }
 
 // 修改区域
-func (this *NodeRegionDAO) UpdateRegion(regionId int64, name string, isOn bool) error {
+func (this *NodeRegionDAO) UpdateRegion(regionId int64, name string, description string, isOn bool) error {
 	if regionId <= 0 {
 		return errors.New("invalid regionId")
 	}
 	op := NewNodeRegionOperator()
 	op.Id = regionId
 	op.Name = name
+	op.Description = description
 	op.IsOn = isOn
 	return this.Save(op)
 }
