@@ -63,9 +63,10 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 	result := []*pb.NodeRegion{}
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
-			Id:   int64(region.Id),
-			IsOn: region.IsOn == 1,
-			Name: region.Name,
+			Id:         int64(region.Id),
+			IsOn:       region.IsOn == 1,
+			Name:       region.Name,
+			PricesJSON: []byte(region.Prices),
 		})
 	}
 	return &pb.FindAllEnabledNodeRegionsResponse{NodeRegions: result}, nil
@@ -84,9 +85,10 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 	result := []*pb.NodeRegion{}
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
-			Id:   int64(region.Id),
-			IsOn: region.IsOn == 1,
-			Name: region.Name,
+			Id:         int64(region.Id),
+			IsOn:       region.IsOn == 1,
+			Name:       region.Name,
+			PricesJSON: []byte(region.Prices),
 		})
 	}
 	return &pb.FindAllEnabledAndOnNodeRegionsResponse{NodeRegions: result}, nil
@@ -119,8 +121,22 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 		return &pb.FindEnabledNodeRegionResponse{NodeRegion: nil}, nil
 	}
 	return &pb.FindEnabledNodeRegionResponse{NodeRegion: &pb.NodeRegion{
-		Id:   int64(region.Id),
-		IsOn: region.IsOn == 1,
-		Name: region.Name,
+		Id:         int64(region.Id),
+		IsOn:       region.IsOn == 1,
+		Name:       region.Name,
+		PricesJSON: []byte(region.Prices),
 	}}, nil
+}
+
+// 修改价格项价格
+func (this *NodeRegionService) UpdateNodeRegionPrice(ctx context.Context, req *pb.UpdateNodeRegionPriceRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedNodeRegionDAO.UpdateRegionItemPrice(req.NodeRegionId, req.NodeItemId, req.Price)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

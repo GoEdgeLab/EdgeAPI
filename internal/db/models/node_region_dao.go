@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -130,4 +132,36 @@ func (this *NodeRegionDAO) UpdateRegionOrders(regionIds []int64) error {
 		order--
 	}
 	return nil
+}
+
+// 修改价格项价格
+func (this *NodeRegionDAO) UpdateRegionItemPrice(regionId int64, itemId int64, price float32) error {
+	one, err := this.Query().
+		Pk(regionId).
+		Result("prices").
+		Find()
+	if err != nil {
+		return err
+	}
+	if one == nil {
+		return nil
+	}
+	prices := one.(*NodeRegion).Prices
+	pricesMap := map[string]float32{}
+	if len(prices) > 0 && prices != "null" {
+		err = json.Unmarshal([]byte(prices), &pricesMap)
+		if err != nil {
+			return err
+		}
+	}
+	pricesMap[numberutils.FormatInt64(itemId)] = price
+	pricesJSON, err := json.Marshal(pricesMap)
+	if err != nil {
+		return err
+	}
+	_, err = this.Query().
+		Pk(regionId).
+		Set("prices", pricesJSON).
+		Update()
+	return err
 }

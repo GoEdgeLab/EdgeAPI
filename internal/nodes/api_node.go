@@ -186,6 +186,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterMessageServiceServer(rpcServer, &services.MessageService{})
 	pb.RegisterNodeGroupServiceServer(rpcServer, &services.NodeGroupService{})
 	pb.RegisterNodeRegionServiceServer(rpcServer, &services.NodeRegionService{})
+	pb.RegisterNodePriceItemServiceServer(rpcServer, &services.NodePriceItemService{})
 	pb.RegisterServerGroupServiceServer(rpcServer, &services.ServerGroupService{})
 	pb.RegisterIPLibraryServiceServer(rpcServer, &services.IPLibraryService{})
 	pb.RegisterFileChunkServiceServer(rpcServer, &services.FileChunkService{})

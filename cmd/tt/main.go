@@ -19,7 +19,7 @@ func main() {
 	lastCommand := ""
 
 	for {
-		time.Sleep(400 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		fmt.Print("> ")
 
 		line, _, err := r.ReadLine()
