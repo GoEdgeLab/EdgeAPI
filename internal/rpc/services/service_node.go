@@ -975,14 +975,14 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 }
 
 // 计算某个节点分组内的节点数量
-func (this *NodeService) CountAllEnabledNodesWithGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithGroupIdRequest) (*pb.RPCCountResponse, error) {
+func (this *NodeService) CountAllEnabledNodesWithNodeGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithNodeGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGroupId(req.GroupId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGroupId(req.NodeGroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -1211,4 +1211,17 @@ func (this *NodeService) notifyNodeDNSChanged(nodeId int64) error {
 		}
 	}
 	return nil
+}
+
+// 计算某个区域下的节点数量
+func (this *NodeService) CountAllEnabledNodesWithNodeRegionId(ctx context.Context, req *pb.CountAllEnabledNodesWithNodeRegionIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithRegionId(req.NodeRegionId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
 }

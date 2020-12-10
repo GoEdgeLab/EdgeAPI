@@ -618,6 +618,14 @@ func (this *NodeDAO) CountAllEnabledNodesWithGroupId(groupId int64) (int64, erro
 		Count()
 }
 
+// 查找某个节点区域下的所有节点数量
+func (this *NodeDAO) CountAllEnabledNodesWithRegionId(regionId int64) (int64, error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Attr("regionId", regionId).
+		Count()
+}
+
 // 获取一个集群的节点DNS信息
 func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(clusterId int64) (result []*Node, err error) {
 	_, err = this.Query().
