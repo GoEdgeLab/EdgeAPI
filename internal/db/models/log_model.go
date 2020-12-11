@@ -13,6 +13,7 @@ type Log struct {
 	Ip          string `field:"ip"`          // IP地址
 	Type        string `field:"type"`        // 类型：admin, user
 	Day         string `field:"day"`         // 日期
+	BillId      uint32 `field:"billId"`      // 账单ID
 }
 
 type LogOperator struct {
@@ -27,6 +28,7 @@ type LogOperator struct {
 	Ip          interface{} // IP地址
 	Type        interface{} // 类型：admin, user
 	Day         interface{} // 日期
+	BillId      interface{} // 账单ID
 }
 
 func NewLogOperator() *LogOperator {

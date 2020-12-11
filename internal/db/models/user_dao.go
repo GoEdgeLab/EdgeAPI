@@ -160,3 +160,22 @@ func (this *UserDAO) ExistUser(userId int64, username string) (bool, error) {
 		Neq("id", userId).
 		Exist()
 }
+
+// 列出单页的用户ID
+func (this *UserDAO) ListEnabledUserIds(offset, size int64) ([]int64, error) {
+	ones, _, err := this.Query().
+		ResultPk().
+		State(UserStateEnabled).
+		Offset(offset).
+		Limit(size).
+		AscPk().
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		result = append(result, one.GetInt64("id"))
+	}
+	return result, nil
+}

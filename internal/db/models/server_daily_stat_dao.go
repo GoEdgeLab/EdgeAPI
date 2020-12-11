@@ -55,3 +55,14 @@ func (this *ServerDailyStatDAO) SaveStats(stats []*pb.ServerDailyStat) error {
 	}
 	return nil
 }
+
+// 根据用户计算某月合计
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumUserMonthly(userId int64, regionId int64, month string) (int64, error) {
+	return this.Query().
+		Attr("regionId", regionId).
+		Between("day", month+"01", month+"32").
+		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
+		Param("userId", userId).
+		SumInt64("bytes", 0)
+}

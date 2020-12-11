@@ -10,6 +10,8 @@ import (
 const (
 	NodePriceItemStateEnabled  = 1 // 已启用
 	NodePriceItemStateDisabled = 0 // 已禁用
+
+	NodePriceTypeTraffic = "traffic" // 价格类型之流量
 )
 
 type NodePriceItemDAO dbs.DAO
@@ -117,4 +119,16 @@ func (this *NodePriceItemDAO) FindAllEnabledAndOnRegionPrices(priceType string) 
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// 根据字节查找付费项目
+func (this *NodePriceItemDAO) SearchItemsWithBytes(items []*NodePriceItem, bytes int64) int64 {
+	bytes *= 8
+
+	for _, item := range items {
+		if bytes >= int64(item.BitsFrom) && (bytes < int64(item.BitsTo) || item.BitsTo == 0) {
+			return int64(item.Id)
+		}
+	}
+	return 0
 }

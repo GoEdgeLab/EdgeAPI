@@ -3,6 +3,8 @@ package models
 import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
 )
 
@@ -36,4 +38,13 @@ func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok")
+}
+
+func TestServerDailyStatDAO_SumUserMonthly(t *testing.T) {
+	dbs.NotifyReady()
+	bytes, err := NewServerDailyStatDAO().SumUserMonthly(1, 1, timeutil.Format("Ym"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("bytes:", bytes)
 }

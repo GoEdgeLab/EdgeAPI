@@ -108,6 +108,18 @@ func (this *NodeRegionDAO) FindAllEnabledRegions() (result []*NodeRegion, err er
 	return
 }
 
+// 列出所有价格
+func (this *NodeRegionDAO) FindAllEnabledRegionPrices() (result []*NodeRegion, err error) {
+	_, err = this.Query().
+		State(NodeRegionStateEnabled).
+		Desc("order").
+		AscPk().
+		Result("id", "prices").
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 列出所有启用的区域
 func (this *NodeRegionDAO) FindAllEnabledAndOnRegions() (result []*NodeRegion, err error) {
 	_, err = this.Query().
