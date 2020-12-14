@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 )
@@ -19,6 +20,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.0.5", upgradeV0_0_5,
+	},
+	{
+		"0.0.6", upgradeV0_0_6,
 	},
 }
 
@@ -94,10 +98,38 @@ func upgradeV0_0_3(db *dbs.DB) error {
 	return nil
 }
 
-// v0.0.4
+// v0.0.5
 func upgradeV0_0_5(db *dbs.DB) error {
 	// 升级edgeACMETasks
 	_, err := db.Exec("UPDATE edgeACMETasks SET authType=? WHERE authType IS NULL OR LENGTH(authType)=0", acme.AuthTypeDNS)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// v0.0.6
+func upgradeV0_0_6(db *dbs.DB) error {
+	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeAPITokens WHERE role='user'")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+	col, err := stmt.FindCol(0)
+	if err != nil {
+		return err
+	}
+	count := types.Int(col)
+	if count > 0 {
+		return nil
+	}
+
+	nodeId := rands.HexString(32)
+	secret := rands.String(32)
+	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role) VALUES (?, ?, ?)", nodeId, secret, "user")
 	if err != nil {
 		return err
 	}

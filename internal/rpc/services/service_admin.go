@@ -47,7 +47,7 @@ func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequ
 	}
 
 	return &pb.LoginAdminResponse{
-		AdminId: int64(adminId),
+		AdminId: adminId,
 		IsOk:    true,
 	}, nil
 }

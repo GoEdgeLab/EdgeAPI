@@ -77,6 +77,12 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 		return err
 	}
 
+	// 检查用户平台节点
+	err = this.checkUserNode(db)
+	if err != nil {
+		return err
+	}
+
 	// 检查集群配置
 	err = this.checkCluster(db)
 	if err != nil {
@@ -136,6 +142,34 @@ func (this *SQLExecutor) checkAdminNode(db *dbs.DB) error {
 	nodeId := rands.HexString(32)
 	secret := rands.String(32)
 	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role) VALUES (?, ?, ?)", nodeId, secret, "admin")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 检查用户平台节点
+func (this *SQLExecutor) checkUserNode(db *dbs.DB) error {
+	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeAPITokens WHERE role='user'")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+	col, err := stmt.FindCol(0)
+	if err != nil {
+		return err
+	}
+	count := types.Int(col)
+	if count > 0 {
+		return nil
+	}
+
+	nodeId := rands.HexString(32)
+	secret := rands.String(32)
+	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role) VALUES (?, ?, ?)", nodeId, secret, "user")
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -136,4 +138,39 @@ func (this *UserService) CheckUsername(ctx context.Context, req *pb.CheckUsernam
 		return nil, err
 	}
 	return &pb.CheckUsernameResponse{Exists: b}, nil
+}
+
+// 登录
+func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	_, _, err := rpcutils.ValidateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Username) == 0 || len(req.Password) == 0 {
+		return &pb.LoginUserResponse{
+			UserId:  0,
+			IsOk:    false,
+			Message: "请输入正确的用户名密码",
+		}, nil
+	}
+
+	userId, err := models.SharedUserDAO.CheckUserPassword(req.Username, req.Password)
+	if err != nil {
+		utils.PrintError(err)
+		return nil, err
+	}
+
+	if userId <= 0 {
+		return &pb.LoginUserResponse{
+			UserId:  0,
+			IsOk:    false,
+			Message: "请输入正确的用户名密码",
+		}, nil
+	}
+
+	return &pb.LoginUserResponse{
+		UserId: userId,
+		IsOk:   true,
+	}, nil
 }

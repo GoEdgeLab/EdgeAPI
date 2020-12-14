@@ -57,9 +57,15 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, reqUserId int
 	return
 }
 
-// 校验节点
+// 校验边缘节点
 func (this *BaseService) ValidateNode(ctx context.Context) (nodeId int64, err error) {
 	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	return
+}
+
+// 校验用户节点
+func (this *BaseService) ValidateUser(ctx context.Context) (userId int64, err error) {
+	_, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
 	return
 }
 

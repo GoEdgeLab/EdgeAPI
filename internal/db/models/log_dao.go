@@ -36,8 +36,21 @@ func init() {
 // 创建管理员日志
 func (this *LogDAO) CreateLog(adminType string, adminId int64, level string, description string, action string, ip string) error {
 	op := NewLogOperator()
+	op.Level = level
+	op.Description = description
+	op.Action = action
+	op.Ip = ip
 	op.Type = adminType
-	op.AdminId, op.Level, op.Description, op.Action, op.Ip = adminId, level, description, action, ip
+
+	switch adminType {
+	case "admin":
+		op.AdminId = adminId
+	case "user":
+		op.UserId = adminId
+	case "provider":
+		op.ProviderId = adminId
+	}
+
 	op.Day = timeutil.Format("Ymd")
 	op.Type = LogTypeAdmin
 	err := this.Save(op)

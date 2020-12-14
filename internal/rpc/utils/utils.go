@@ -115,6 +115,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 			return UserTypeCluster, 0, errors.New("context: not found cluster with id '" + nodeId + "'")
 		}
 		nodeUserId = clusterId
+	case UserTypeUser:
 	}
 
 	if nodeUserId > 0 {

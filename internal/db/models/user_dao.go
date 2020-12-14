@@ -179,3 +179,17 @@ func (this *UserDAO) ListEnabledUserIds(offset, size int64) ([]int64, error) {
 	}
 	return result, nil
 }
+
+// 检查用户名、密码
+func (this *UserDAO) CheckUserPassword(username string, encryptedPassword string) (int64, error) {
+	if len(username) == 0 || len(encryptedPassword) == 0 {
+		return 0, nil
+	}
+	return this.Query().
+		Attr("username", username).
+		Attr("password", encryptedPassword).
+		Attr("state", UserStateEnabled).
+		Attr("isOn", true).
+		ResultPk().
+		FindInt64Col(0)
+}
