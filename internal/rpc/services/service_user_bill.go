@@ -39,7 +39,7 @@ func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.G
 
 // 计算所有账单数量
 func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.CountAllUserBillsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.Coun
 
 // 列出单页账单
 func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUserBillsRequest) (*pb.ListUserBillsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

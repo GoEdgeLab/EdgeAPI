@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -15,12 +14,12 @@ type MessageService struct {
 // 计算未读消息数
 func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.CountUnreadMessagesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := models.SharedMessageDAO.CountUnreadMessages()
+	count, err := models.SharedMessageDAO.CountUnreadMessages(adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +29,12 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 // 列出单页未读消息
 func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.ListUnreadMessagesRequest) (*pb.ListUnreadMessagesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	messages, err := models.SharedMessageDAO.ListUnreadMessages(req.Offset, req.Size)
+	messages, err := models.SharedMessageDAO.ListUnreadMessages(adminId, userId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +88,18 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 // 设置消息已读状态
 func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.UpdateMessageReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	// 校验权限
+	exists, err := models.SharedMessageDAO.CheckMessageUser(req.MessageId, adminId, userId)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, this.PermissionError()
 	}
 
 	err = models.SharedMessageDAO.UpdateMessageRead(req.MessageId, req.IsRead)
@@ -104,14 +112,25 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 // 设置一组消息已读状态
 func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.UpdateMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedMessageDAO.UpdateMessagesRead(req.MessageIds, req.IsRead)
-	if err != nil {
-		return nil, err
+	// 校验权限
+	for _, messageId := range req.MessageIds {
+		exists, err := models.SharedMessageDAO.CheckMessageUser(messageId, adminId, userId)
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, this.PermissionError()
+		}
+
+		err = models.SharedMessageDAO.UpdateMessageRead(messageId, req.IsRead)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return this.Success()
 }
@@ -119,12 +138,13 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 // 设置所有消息为已读
 func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.UpdateAllMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	// 校验请求
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedMessageDAO.UpdateAllMessagesRead()
+	err = models.SharedMessageDAO.UpdateAllMessagesRead(adminId, userId)
 	if err != nil {
 		return nil, err
 	}

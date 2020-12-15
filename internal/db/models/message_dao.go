@@ -135,16 +135,29 @@ func (this *MessageDAO) DeleteMessagesBeforeDay(dayTime time.Time) error {
 }
 
 // 计算未读消息数量
-func (this *MessageDAO) CountUnreadMessages() (int64, error) {
-	return this.Query().
-		Attr("isRead", false).
-		Count()
+func (this *MessageDAO) CountUnreadMessages(adminId int64, userId int64) (int64, error) {
+	query := this.Query().
+		Attr("isRead", false)
+	if adminId > 0 {
+		query.Where("(adminId=:adminId OR (adminId=0 AND userId=0))").
+			Param("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	return query.Count()
 }
 
 // 列出单页未读消息
-func (this *MessageDAO) ListUnreadMessages(offset int64, size int64) (result []*Message, err error) {
-	_, err = this.Query().
-		Attr("isRead", false).
+func (this *MessageDAO) ListUnreadMessages(adminId int64, userId int64, offset int64, size int64) (result []*Message, err error) {
+	query := this.Query().
+		Attr("isRead", false)
+	if adminId > 0 {
+		query.Where("(adminId=:adminId OR (adminId=0 AND userId=0))").
+			Param("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	_, err = query.
 		Offset(offset).
 		Limit(size).
 		DescPk().
@@ -178,12 +191,35 @@ func (this *MessageDAO) UpdateMessagesRead(messageIds []int64, b bool) error {
 }
 
 // 设置所有消息为已读
-func (this *MessageDAO) UpdateAllMessagesRead() error {
-	_, err := this.Query().
-		Attr("isRead", false).
+func (this *MessageDAO) UpdateAllMessagesRead(adminId int64, userId int64) error {
+	query := this.Query().
+		Attr("isRead", false)
+	if adminId > 0 {
+		query.Where("(adminId=:adminId OR (adminId=0 AND userId=0))").
+			Param("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	_, err := query.
 		Set("isRead", true).
 		Update()
 	return err
+}
+
+// 检查消息权限
+func (this *MessageDAO) CheckMessageUser(messageId int64, adminId int64, userId int64) (bool, error) {
+	if messageId <= 0 || (adminId <= 0 && userId <= 0) {
+		return false, nil
+	}
+	query := this.Query().
+		Pk(messageId)
+	if adminId > 0 {
+		query.Where("(adminId=:adminId OR (adminId=0 AND userId=0))").
+			Param("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	return query.Exist()
 }
 
 // 创建消息

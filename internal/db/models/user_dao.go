@@ -126,6 +126,32 @@ func (this *UserDAO) UpdateUser(userId int64, username string, password string, 
 	return err
 }
 
+// 修改用户基本信息
+func (this *UserDAO) UpdateUserInfo(userId int64, fullname string) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	op := NewUserOperator()
+	op.Id = userId
+	op.Fullname = fullname
+	return this.Save(op)
+}
+
+// 修改用户登录信息
+func (this *UserDAO) UpdateUserLogin(userId int64, username string, password string) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	op := NewUserOperator()
+	op.Id = userId
+	op.Username = username
+	if len(password) > 0 {
+		op.Password = stringutil.Md5(password)
+	}
+	err := this.Save(op)
+	return err
+}
+
 // 计算用户数量
 func (this *UserDAO) CountAllEnabledUsers(keyword string) (int64, error) {
 	query := this.Query()

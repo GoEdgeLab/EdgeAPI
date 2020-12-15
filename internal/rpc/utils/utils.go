@@ -93,7 +93,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 
 	t := m.GetString("type")
 	if len(userTypes) > 0 && !lists.ContainsString(userTypes, t) {
-		return UserTypeNone, 0, errors.New("not supported user type: '" + userType + "'")
+		return UserTypeNone, 0, errors.New("not supported node type: '" + t + "'")
 	}
 
 	switch apiToken.Role {

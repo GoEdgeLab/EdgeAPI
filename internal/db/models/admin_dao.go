@@ -198,7 +198,9 @@ func (this *AdminDAO) UpdateAdminLogin(adminId int64, username string, password 
 	op := NewAdminOperator()
 	op.Id = adminId
 	op.Username = username
-	op.Password = stringutil.Md5(password)
+	if len(password) > 0 {
+		op.Password = stringutil.Md5(password)
+	}
 	err := this.Save(op)
 	return err
 }

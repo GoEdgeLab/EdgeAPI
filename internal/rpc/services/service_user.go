@@ -101,7 +101,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 // 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -127,17 +127,22 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 }
 
 // 检查用户名是否存在
-func (this *UserService) CheckUsername(ctx context.Context, req *pb.CheckUsernameRequest) (*pb.CheckUsernameResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUserUsernameRequest) (*pb.CheckUserUsernameResponse, error) {
+	userType, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return nil, err
+	}
+
+	// 校验权限
+	if userType == rpcutils.UserTypeUser && userId != req.UserId {
+		return nil, this.PermissionError()
 	}
 
 	b, err := models.SharedUserDAO.ExistUser(req.UserId, req.Username)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CheckUsernameResponse{Exists: b}, nil
+	return &pb.CheckUserUsernameResponse{Exists: b}, nil
 }
 
 // 登录
@@ -173,4 +178,40 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 		UserId: userId,
 		IsOk:   true,
 	}, nil
+}
+
+// 修改用户基本信息
+func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserInfoRequest) (*pb.RPCSuccess, error) {
+	userId, err := this.ValidateUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId != req.UserId {
+		return nil, this.PermissionError()
+	}
+
+	err = models.SharedUserDAO.UpdateUserInfo(req.UserId, req.Fullname)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// 修改用户登录信息
+func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUserLoginRequest) (*pb.RPCSuccess, error) {
+	userId, err := this.ValidateUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId != req.UserId {
+		return nil, this.PermissionError()
+	}
+
+	err = models.SharedUserDAO.UpdateUserLogin(req.UserId, req.Username, req.Password)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }
