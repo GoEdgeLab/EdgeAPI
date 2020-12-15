@@ -6,6 +6,8 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 // 用户相关服务
@@ -214,4 +216,79 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 		return nil, err
 	}
 	return this.Success()
+}
+
+// 取得用户Dashboard数据
+func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
+	userId, err := this.ValidateUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId != req.UserId {
+		return nil, this.PermissionError()
+	}
+
+	// 网站数量
+	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(0, "", req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 本月总流量
+	month := timeutil.Format("Ym")
+	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(req.UserId, 0, month)
+	if err != nil {
+		return nil, err
+	}
+
+	// 本月带宽峰值
+	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(req.UserId, 0, month)
+	if err != nil {
+		return nil, err
+	}
+
+	// 今日总流量
+	day := timeutil.Format("Ymd")
+	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(req.UserId, 0, day)
+	if err != nil {
+		return nil, err
+	}
+
+	// 今日带宽峰值
+	dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(req.UserId, 0, day)
+	if err != nil {
+		return nil, err
+	}
+
+	// 近 15 日流量带宽趋势
+	dailyTrafficStats := []*pb.ComposeUserDashboardResponse_DailyStat{}
+	dailyPeekTrafficStats := []*pb.ComposeUserDashboardResponse_DailyStat{}
+
+	for i := 14; i >= 0; i-- {
+		day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
+
+		dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(req.UserId, 0, day)
+		if err != nil {
+			return nil, err
+		}
+
+		dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(req.UserId, 0, day)
+		if err != nil {
+			return nil, err
+		}
+
+		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyStat{Day: day, Count: dailyTrafficBytes})
+		dailyPeekTrafficStats = append(dailyPeekTrafficStats, &pb.ComposeUserDashboardResponse_DailyStat{Day: day, Count: dailyPeekTrafficBytes})
+	}
+
+	return &pb.ComposeUserDashboardResponse{
+		CountServers:            countServers,
+		MonthlyTrafficBytes:     monthlyTrafficBytes,
+		MonthlyPeekTrafficBytes: monthlyPeekTrafficBytes,
+		DailyTrafficBytes:       dailyTrafficBytes,
+		DailyPeekTrafficBytes:   dailyPeekTrafficBytes,
+		DailyTrafficStats:       dailyTrafficStats,
+		DailyPeekTrafficStats:   dailyPeekTrafficStats,
+	}, nil
 }

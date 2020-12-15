@@ -464,7 +464,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string) (int64, error) {
+func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64) (int64, error) {
 	query := this.Query().
 		State(ServerStateEnabled)
 	if groupId > 0 {
@@ -474,6 +474,9 @@ func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if userId > 0{
+		query.Attr("userId", userId)
 	}
 	return query.Count()
 }

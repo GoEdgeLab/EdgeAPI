@@ -59,10 +59,61 @@ func (this *ServerDailyStatDAO) SaveStats(stats []*pb.ServerDailyStat) error {
 // 根据用户计算某月合计
 // month 格式为YYYYMM
 func (this *ServerDailyStatDAO) SumUserMonthly(userId int64, regionId int64, month string) (int64, error) {
-	return this.Query().
-		Attr("regionId", regionId).
-		Between("day", month+"01", month+"32").
+	query := this.Query()
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	return query.Between("day", month+"01", month+"32").
 		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
 		Param("userId", userId).
 		SumInt64("bytes", 0)
+}
+
+// 获取某月带宽峰值
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumUserMonthlyPeek(userId int64, regionId int64, month string) (int64, error) {
+	query := this.Query()
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	max, err := query.Between("day", month+"01", month+"32").
+		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
+		Param("userId", userId).
+		Max("bytes", 0)
+	if err != nil {
+		return 0, err
+	}
+	return int64(max), nil
+}
+
+// 获取某天流量总和
+// day 格式为YYYYMMDD
+func (this *ServerDailyStatDAO) SumUserDaily(userId int64, regionId int64, day string) (int64, error) {
+	query := this.Query()
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	return query.
+		Attr("day", day).
+		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
+		Param("userId", userId).
+		SumInt64("bytes", 0)
+}
+
+// 获取某天带宽峰值
+// day 格式为YYYYMMDD
+func (this *ServerDailyStatDAO) SumUserDailyPeek(userId int64, regionId int64, day string) (int64, error) {
+	query := this.Query()
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	max, err := query.
+		Attr("day", day).
+		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
+		Param("userId", userId).
+		Max("bytes", 0)
+	if err != nil {
+		return 0, err
+	}
+	return int64(max), nil
 }

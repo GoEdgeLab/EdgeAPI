@@ -381,7 +381,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, 0)
 	if err != nil {
 		return nil, err
 	}
