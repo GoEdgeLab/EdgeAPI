@@ -255,7 +255,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
 			StatusJSON:  []byte(node.Status),
-			Cluster: &pb.NodeCluster{
+			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
 			},
@@ -478,7 +478,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		Secret:        node.Secret,
 		InstallDir:    node.InstallDir,
 		IsInstalled:   node.IsInstalled == 1,
-		Cluster: &pb.NodeCluster{
+		NodeCluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
 		},
@@ -744,7 +744,7 @@ func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
 			StatusJSON:  []byte(node.Status),
-			Cluster: &pb.NodeCluster{
+			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
 			},

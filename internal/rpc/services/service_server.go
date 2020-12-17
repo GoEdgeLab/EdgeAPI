@@ -28,7 +28,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	}
 
 	// 更新节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +75,14 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 
 	// 更新老的节点版本
 	if req.NodeClusterId != int64(server.ClusterId) {
-		err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(int64(server.ClusterId))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			ServerNamesJSON: []byte(server.ServerNames),
 			CreatedAt:       int64(server.CreatedAt),
 			DnsName:         server.DnsName,
-			Cluster: &pb.NodeCluster{
+			NodeCluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
@@ -497,7 +497,7 @@ func (this *ServerService) DisableServer(ctx context.Context, req *pb.DisableSer
 	}
 
 	// 更新节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -572,7 +572,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		IncludeNodes: []byte(server.IncludeNodes),
 		ExcludeNodes: []byte(server.ExcludeNodes),
 		CreatedAt:    int64(server.CreatedAt),
-		Cluster: &pb.NodeCluster{
+		NodeCluster: &pb.NodeCluster{
 			Id:   int64(server.ClusterId),
 			Name: clusterName,
 		},

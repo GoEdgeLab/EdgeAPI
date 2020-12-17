@@ -228,18 +228,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		if err != nil {
 			return nil, err
 		}
-		for _, cacheRef := range cacheConfig.CacheRefs {
-			if cacheRef.CachePolicyId > 0 {
-				cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(cacheRef.CachePolicyId)
-				if err != nil {
-					return nil, err
-				}
-				if cachePolicy != nil {
-					cacheRef.CachePolicy = cachePolicy
-				}
-			}
-		}
 		config.Cache = cacheConfig
+
+		// 暂不支持自定义缓存策略设置，因为同一个集群下的服务需要集中管理
 	}
 
 	// 防火墙配置
@@ -251,17 +242,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 		config.FirewallRef = firewallRef
 
-		if firewallRef.FirewallPolicyId > 0 {
-			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(firewallRef.FirewallPolicyId)
-			if err != nil {
-				return nil, err
-			}
-			if firewallPolicy == nil {
-				config.FirewallRef = nil
-			} else {
-				config.FirewallPolicy = firewallPolicy
-			}
-		}
+		// 暂不支持自定义防火墙策略设置，因为同一个集群下的服务需要集中管理
 	}
 
 	// 路径规则

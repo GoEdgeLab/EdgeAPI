@@ -143,7 +143,7 @@ func (this *NodeDAO) UpdateNodeLatestVersion(nodeId int64) error {
 }
 
 // 批量更新节点版本
-func (this *NodeDAO) UpdateAllNodesLatestVersionMatch(clusterId int64) error {
+func (this *NodeDAO) IncreaseAllNodesLatestVersionMatch(clusterId int64) error {
 	_, err := this.Query().
 		Attr("clusterId", clusterId).
 		Set("latestVersion", dbs.SQL("latestVersion+1")).
@@ -459,6 +459,7 @@ func (this *NodeDAO) UpdateNodeInstallStatus(nodeId int64, status *NodeInstallSt
 }
 
 // 组合配置
+// TODO 提升运行速度
 func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, error) {
 	node, err := this.FindEnabledNode(nodeId)
 	if err != nil {
@@ -513,8 +514,39 @@ func (this *NodeDAO) ComposeNodeConfig(nodeId int64) (*nodeconfigs.NodeConfig, e
 		config.GlobalConfig = globalConfig
 	}
 
+	// WAF
+	clusterId := int64(node.ClusterId)
+	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if httpFirewallPolicyId > 0 {
+		firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(httpFirewallPolicyId)
+		if err != nil {
+			return nil, err
+		}
+		if firewallPolicy != nil {
+			config.HTTPFirewallPolicy = firewallPolicy
+		}
+	}
+
+	// 缓存策略
+	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if httpCachePolicyId > 0 {
+		cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(httpCachePolicyId)
+		if err != nil {
+			return nil, err
+		}
+		if cachePolicy != nil {
+			config.HTTPCachePolicy = cachePolicy
+		}
+	}
+
 	// TOA
-	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(int64(node.ClusterId))
+	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(clusterId)
 	if err != nil {
 		return nil, err
 	}

@@ -78,7 +78,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		return &pb.FindEnabledNodeClusterResponse{}, nil
 	}
 
-	return &pb.FindEnabledNodeClusterResponse{Cluster: &pb.NodeCluster{
+	return &pb.FindEnabledNodeClusterResponse{NodeCluster: &pb.NodeCluster{
 		Id:                   int64(cluster.Id),
 		Name:                 cluster.Name,
 		CreatedAt:            int64(cluster.CreatedAt),
@@ -168,7 +168,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 	}
 
 	return &pb.FindAllEnabledNodeClustersResponse{
-		Clusters: result,
+		NodeClusters: result,
 	}, nil
 }
 
@@ -185,7 +185,7 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 	}
 	if len(clusterIds) == 0 {
 		return &pb.FindAllChangedNodeClustersResponse{
-			Clusters: []*pb.NodeCluster{},
+			NodeClusters: []*pb.NodeCluster{},
 		}, nil
 	}
 	result := []*pb.NodeCluster{}
@@ -205,7 +205,7 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 			Secret:    cluster.Secret,
 		})
 	}
-	return &pb.FindAllChangedNodeClustersResponse{Clusters: result}, nil
+	return &pb.FindAllChangedNodeClustersResponse{NodeClusters: result}, nil
 }
 
 // 计算所有集群数量
@@ -250,7 +250,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 		})
 	}
 
-	return &pb.ListEnabledNodeClustersResponse{Clusters: result}, nil
+	return &pb.ListEnabledNodeClustersResponse{NodeClusters: result}, nil
 }
 
 // 查找集群的健康检查配置
@@ -354,7 +354,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx contex
 			Secret:    cluster.Secret,
 		})
 	}
-	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{Clusters: result}, nil
+	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{NodeClusters: result}, nil
 }
 
 // 查找集群的DNS配置
@@ -566,8 +566,8 @@ func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *p
 		return nil, err
 	}
 
-	// 更新节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
+	// 增加节点版本号
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -655,6 +655,13 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPCachePolicyId(ctx context.C
 	if err != nil {
 		return nil, err
 	}
+
+	// 增加节点版本号
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 
@@ -668,5 +675,12 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx contex
 	if err != nil {
 		return nil, err
 	}
+
+	// 增加节点版本号
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }

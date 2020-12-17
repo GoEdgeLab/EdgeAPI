@@ -99,16 +99,16 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 		}
 
 		result = append(result, &pb.User{
-			Id:        int64(user.Id),
-			Username:  user.Username,
-			Fullname:  user.Fullname,
-			Mobile:    user.Mobile,
-			Tel:       user.Tel,
-			Email:     user.Email,
-			Remark:    user.Remark,
-			IsOn:      user.IsOn == 1,
-			CreatedAt: int64(user.CreatedAt),
-			Cluster:   pbCluster,
+			Id:          int64(user.Id),
+			Username:    user.Username,
+			Fullname:    user.Fullname,
+			Mobile:      user.Mobile,
+			Tel:         user.Tel,
+			Email:       user.Email,
+			Remark:      user.Remark,
+			IsOn:        user.IsOn == 1,
+			CreatedAt:   int64(user.CreatedAt),
+			NodeCluster: pbCluster,
 		})
 	}
 
@@ -144,16 +144,16 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 	}
 
 	return &pb.FindEnabledUserResponse{User: &pb.User{
-		Id:        int64(user.Id),
-		Username:  user.Username,
-		Fullname:  user.Fullname,
-		Mobile:    user.Mobile,
-		Tel:       user.Tel,
-		Email:     user.Email,
-		Remark:    user.Remark,
-		IsOn:      user.IsOn == 1,
-		CreatedAt: int64(user.CreatedAt),
-		Cluster:   pbCluster,
+		Id:          int64(user.Id),
+		Username:    user.Username,
+		Fullname:    user.Fullname,
+		Mobile:      user.Mobile,
+		Tel:         user.Tel,
+		Email:       user.Email,
+		Remark:      user.Remark,
+		IsOn:        user.IsOn == 1,
+		CreatedAt:   int64(user.CreatedAt),
+		NodeCluster: pbCluster,
 	}}, nil
 }
 

@@ -54,7 +54,7 @@ func (this *ServerChangeEvent) Run() error {
 		if !isOk {
 			continue
 		}
-		err = SharedNodeDAO.UpdateAllNodesLatestVersionMatch(clusterId)
+		err = SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(clusterId)
 		if err != nil {
 			return err
 		}

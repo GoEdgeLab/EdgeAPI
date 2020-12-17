@@ -70,15 +70,15 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 		}
 
 		result = append(result, &pb.Message{
-			Id:         int64(message.Id),
-			Type:       message.Type,
-			Body:       message.Body,
-			Level:      message.Level,
-			ParamsJSON: []byte(message.Params),
-			IsRead:     message.IsRead == 1,
-			CreatedAt:  int64(message.CreatedAt),
-			Cluster:    pbCluster,
-			Node:       pbNode,
+			Id:          int64(message.Id),
+			Type:        message.Type,
+			Body:        message.Body,
+			Level:       message.Level,
+			ParamsJSON:  []byte(message.Params),
+			IsRead:      message.IsRead == 1,
+			CreatedAt:   int64(message.CreatedAt),
+			NodeCluster: pbCluster,
+			Node:        pbNode,
 		})
 	}
 
