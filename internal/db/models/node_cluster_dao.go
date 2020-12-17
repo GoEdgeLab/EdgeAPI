@@ -102,7 +102,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters() (result []*NodeCluster, err 
 }
 
 // 创建集群
-func (this *NodeClusterDAO) CreateCluster(adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64) (clusterId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -132,6 +132,12 @@ func (this *NodeClusterDAO) CreateCluster(adminId int64, name string, grantId in
 		return 0, err
 	}
 	op.Dns = dnsJSON
+
+	// 缓存策略
+	op.CachePolicyId = cachePolicyId
+
+	// WAF策略
+	op.HttpFirewallPolicyId = httpFirewallPolicyId
 
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
@@ -562,6 +568,62 @@ func (this *NodeClusterDAO) UpdateClusterTOA(clusterId int64, toaJSON []byte) er
 	op.Id = clusterId
 	op.Toa = toaJSON
 	err := this.Save(op)
+	return err
+}
+
+// 计算使用某个缓存策略的集群数量
+func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPCachePolicyId(httpCachePolicyId int64) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("cachePolicyId", httpCachePolicyId).
+		Count()
+}
+
+// 查找使用缓存策略的所有集群
+func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPCachePolicyId(httpCachePolicyId int64) (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("cachePolicyId", httpCachePolicyId).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 计算使用某个WAF策略的集群数量
+func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(httpFirewallPolicyId int64) (int64, error) {
+	return this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("httpFirewallPolicyId", httpFirewallPolicyId).
+		Count()
+}
+
+// 查找使用WAF策略的所有集群
+func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(httpFirewallPolicyId int64) (result []*NodeCluster, err error) {
+	_, err = this.Query().
+		State(NodeClusterStateEnabled).
+		Attr("httpFirewallPolicyId", httpFirewallPolicyId).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// 设置集群的缓存策略
+func (this *NodeClusterDAO) UpdateNodeClusterHTTPCachePolicyId(clusterId int64, httpCachePolicyId int64) error {
+	_, err := this.Query().
+		Pk(clusterId).
+		Set("cachePolicyId", httpCachePolicyId).
+		Update()
+	return err
+}
+
+// 设置集群的WAF策略
+func (this *NodeClusterDAO) UpdateNodeClusterHTTPFirewallPolicyId(clusterId int64, httpFirewallPolicyId int64) error {
+	_, err := this.Query().
+		Pk(clusterId).
+		Set("httpFirewallPolicyId", httpFirewallPolicyId).
+		Update()
 	return err
 }
 

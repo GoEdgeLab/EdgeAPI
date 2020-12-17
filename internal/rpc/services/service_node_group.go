@@ -20,7 +20,7 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	groupId, err := models.SharedNodeGroupDAO.CreateNodeGroup(req.ClusterId, req.Name)
+	groupId, err := models.SharedNodeGroupDAO.CreateNodeGroup(req.NodeClusterId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithClusterId(ctx context.
 		return nil, err
 	}
 
-	groups, err := models.SharedNodeGroupDAO.FindAllEnabledGroupsWithClusterId(req.ClusterId)
+	groups, err := models.SharedNodeGroupDAO.FindAllEnabledGroupsWithClusterId(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}

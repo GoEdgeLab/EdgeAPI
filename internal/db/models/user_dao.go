@@ -85,7 +85,7 @@ func (this *UserDAO) FindUserFullname(userId int64) (string, error) {
 }
 
 // 创建用户
-func (this *UserDAO) CreateUser(username string, password string, fullname string, mobile string, tel string, email string, remark string, source string) (int64, error) {
+func (this *UserDAO) CreateUser(username string, password string, fullname string, mobile string, tel string, email string, remark string, source string, clusterId int64) (int64, error) {
 	op := NewUserOperator()
 	op.Username = username
 	op.Password = stringutil.Md5(password)
@@ -95,6 +95,7 @@ func (this *UserDAO) CreateUser(username string, password string, fullname strin
 	op.Email = email
 	op.Remark = remark
 	op.Source = source
+	op.ClusterId = clusterId
 
 	op.IsOn = true
 	op.State = UserStateEnabled
@@ -106,7 +107,7 @@ func (this *UserDAO) CreateUser(username string, password string, fullname strin
 }
 
 // 修改用户
-func (this *UserDAO) UpdateUser(userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool) error {
+func (this *UserDAO) UpdateUser(userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, clusterId int64) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
@@ -122,6 +123,7 @@ func (this *UserDAO) UpdateUser(userId int64, username string, password string, 
 	op.Email = email
 	op.Remark = remark
 	op.IsOn = isOn
+	op.ClusterId = clusterId
 	err := this.Save(op)
 	return err
 }

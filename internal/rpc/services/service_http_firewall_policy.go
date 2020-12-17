@@ -63,7 +63,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
 	if templatePolicy.Inbound != nil {
 		for _, group := range templatePolicy.Inbound.Groups {
-			isOn := lists.ContainsString(req.FirewallGroupCodes, group.Code)
+			isOn := lists.ContainsString(req.HttpFirewallGroupCodes, group.Code)
 			group.IsOn = isOn
 
 			groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(group)
@@ -78,7 +78,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 	}
 	if templatePolicy.Outbound != nil {
 		for _, group := range templatePolicy.Outbound.Groups {
-			isOn := lists.ContainsString(req.FirewallGroupCodes, group.Code)
+			isOn := lists.ContainsString(req.HttpFirewallGroupCodes, group.Code)
 			group.IsOn = isOn
 
 			groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(group)
@@ -107,7 +107,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	return &pb.CreateHTTPFirewallPolicyResponse{FirewallPolicyId: policyId}, nil
+	return &pb.CreateHTTPFirewallPolicyResponse{HttpFirewallPolicyId: policyId}, nil
 }
 
 // 修改防火墙策略
@@ -121,7 +121,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
 
 	// 已经有的数据
-	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.FirewallPolicyId)
+	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(req.FirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(req.FirewallPolicyId, req.InboundJSON, req.OutboundJSON)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(req.HttpFirewallPolicyId, req.InboundJSON, req.OutboundJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInbound(req.FirewallPolicyId, req.InboundJSON)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInbound(req.HttpFirewallPolicyId, req.InboundJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +269,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 }
 
 // 计算可用的防火墙策略数量
-func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledFirewallPoliciesRequest) (*pb.RPCCountResponse, error) {
+func (this *HTTPFirewallPolicyService) CountAllEnabledHTTPFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledHTTPFirewallPoliciesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -284,7 +284,7 @@ func (this *HTTPFirewallPolicyService) CountAllEnabledFirewallPolicies(ctx conte
 }
 
 // 列出单页的防火墙策略
-func (this *HTTPFirewallPolicyService) ListEnabledFirewallPolicies(ctx context.Context, req *pb.ListEnabledFirewallPoliciesRequest) (*pb.ListEnabledFirewallPoliciesResponse, error) {
+func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx context.Context, req *pb.ListEnabledHTTPFirewallPoliciesRequest) (*pb.ListEnabledHTTPFirewallPoliciesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -308,18 +308,18 @@ func (this *HTTPFirewallPolicyService) ListEnabledFirewallPolicies(ctx context.C
 		})
 	}
 
-	return &pb.ListEnabledFirewallPoliciesResponse{FirewallPolicies: result}, nil
+	return &pb.ListEnabledHTTPFirewallPoliciesResponse{HttpFirewallPolicies: result}, nil
 }
 
 // 删除某个防火墙策略
-func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context, req *pb.DeleteFirewallPolicyRequest) (*pb.RPCSuccess, error) {
+func (this *HTTPFirewallPolicyService) DeleteHTTPFirewallPolicy(ctx context.Context, req *pb.DeleteHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.DisableHTTPFirewallPolicy(req.FirewallPolicyId)
+	err = models.SharedHTTPFirewallPolicyDAO.DisableHTTPFirewallPolicy(req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -328,19 +328,19 @@ func (this *HTTPFirewallPolicyService) DeleteFirewallPolicy(ctx context.Context,
 }
 
 // 查找单个防火墙配置
-func (this *HTTPFirewallPolicyService) FindEnabledFirewallPolicyConfig(ctx context.Context, req *pb.FindEnabledFirewallPolicyConfigRequest) (*pb.FindEnabledFirewallPolicyConfigResponse, error) {
+func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyConfigRequest) (*pb.FindEnabledHTTPFirewallPolicyConfigResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.FirewallPolicyId)
+	config, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		return &pb.FindEnabledFirewallPolicyConfigResponse{FirewallPolicyJSON: nil}, nil
+		return &pb.FindEnabledHTTPFirewallPolicyConfigResponse{HttpFirewallPolicyJSON: nil}, nil
 	}
 
 	configJSON, err := json.Marshal(config)
@@ -348,25 +348,25 @@ func (this *HTTPFirewallPolicyService) FindEnabledFirewallPolicyConfig(ctx conte
 		return nil, err
 	}
 
-	return &pb.FindEnabledFirewallPolicyConfigResponse{FirewallPolicyJSON: configJSON}, nil
+	return &pb.FindEnabledHTTPFirewallPolicyConfigResponse{HttpFirewallPolicyJSON: configJSON}, nil
 }
 
 // 获取防火墙的基本信息
-func (this *HTTPFirewallPolicyService) FindEnabledFirewallPolicy(ctx context.Context, req *pb.FindEnabledFirewallPolicyRequest) (*pb.FindEnabledFirewallPolicyResponse, error) {
+func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyRequest) (*pb.FindEnabledHTTPFirewallPolicyResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return nil, err
 	}
 
-	policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledHTTPFirewallPolicy(req.FirewallPolicyId)
+	policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledHTTPFirewallPolicy(req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
 	if policy == nil {
-		return &pb.FindEnabledFirewallPolicyResponse{FirewallPolicy: nil}, nil
+		return &pb.FindEnabledHTTPFirewallPolicyResponse{HttpFirewallPolicy: nil}, nil
 	}
-	return &pb.FindEnabledFirewallPolicyResponse{FirewallPolicy: &pb.HTTPFirewallPolicy{
+	return &pb.FindEnabledHTTPFirewallPolicyResponse{HttpFirewallPolicy: &pb.HTTPFirewallPolicy{
 		Id:           int64(policy.Id),
 		Name:         policy.Name,
 		Description:  policy.Description,
@@ -385,7 +385,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 
 	// TODO 检查权限
 
-	oldConfig, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.FirewallPolicyId)
+	oldConfig, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 
 	// 解析数据
 	newConfig := &firewallconfigs.HTTPFirewallPolicy{}
-	err = json.Unmarshal(req.FirewallPolicyJSON, newConfig)
+	err = json.Unmarshal(req.HttpFirewallPolicyJSON, newConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -524,7 +524,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(req.FirewallPolicyId, inboundJSON, outboundJSON)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(req.HttpFirewallPolicyId, inboundJSON, outboundJSON)
 	if err != nil {
 		return nil, err
 	}

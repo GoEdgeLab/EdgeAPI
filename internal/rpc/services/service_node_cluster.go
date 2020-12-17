@@ -24,12 +24,12 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName)
+	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CreateNodeClusterResponse{ClusterId: clusterId}, nil
+	return &pb.CreateNodeClusterResponse{NodeClusterId: clusterId}, nil
 }
 
 // 修改集群
@@ -39,7 +39,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(req.ClusterId, req.Name, req.GrantId, req.InstallDir)
+	err = models.SharedNodeClusterDAO.UpdateCluster(req.NodeClusterId, req.Name, req.GrantId, req.InstallDir)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.DisableNodeCluster(req.ClusterId)
+	err = models.SharedNodeClusterDAO.DisableNodeCluster(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		return nil, err
 	}
 
-	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.ClusterId)
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +79,15 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 	}
 
 	return &pb.FindEnabledNodeClusterResponse{Cluster: &pb.NodeCluster{
-		Id:         int64(cluster.Id),
-		Name:       cluster.Name,
-		CreatedAt:  int64(cluster.CreatedAt),
-		InstallDir: cluster.InstallDir,
-		GrantId:    int64(cluster.GrantId),
-		UniqueId:   cluster.UniqueId,
-		Secret:     cluster.Secret,
+		Id:                   int64(cluster.Id),
+		Name:                 cluster.Name,
+		CreatedAt:            int64(cluster.CreatedAt),
+		InstallDir:           cluster.InstallDir,
+		GrantId:              int64(cluster.GrantId),
+		UniqueId:             cluster.UniqueId,
+		Secret:               cluster.Secret,
+		HttpCachePolicyId:    int64(cluster.CachePolicyId),
+		HttpFirewallPolicyId: int64(cluster.HttpFirewallPolicyId),
 	}}, nil
 }
 
@@ -97,12 +99,12 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 		return nil, err
 	}
 
-	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.ClusterId)
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
 	if cluster == nil {
-		return nil, errors.New("can not find cluster with id '" + strconv.FormatInt(req.ClusterId, 10) + "'")
+		return nil, errors.New("can not find cluster with id '" + strconv.FormatInt(req.NodeClusterId, 10) + "'")
 	}
 
 	result := &pb.FindAPINodesWithNodeClusterResponse{}
@@ -126,12 +128,12 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 					return nil, err
 				}
 				apiNodes = append(apiNodes, &pb.APINode{
-					Id:          int64(apiNode.Id),
-					IsOn:        apiNode.IsOn == 1,
-					ClusterId:   int64(apiNode.ClusterId),
-					Name:        apiNode.Name,
-					Description: apiNode.Description,
-					AccessAddrs: apiNodeAddrs,
+					Id:            int64(apiNode.Id),
+					IsOn:          apiNode.IsOn == 1,
+					NodeClusterId: int64(apiNode.ClusterId),
+					Name:          apiNode.Name,
+					Description:   apiNode.Description,
+					AccessAddrs:   apiNodeAddrs,
 				})
 			}
 			result.ApiNodes = apiNodes
@@ -259,7 +261,7 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 		return nil, err
 	}
 
-	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(req.ClusterId)
+	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +280,7 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateClusterHealthCheck(req.ClusterId, req.HealthCheckJSON)
+	err = models.SharedNodeClusterDAO.UpdateClusterHealthCheck(req.NodeClusterId, req.HealthCheckJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +295,7 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 		return nil, err
 	}
 
-	executor := tasks.NewHealthCheckExecutor(req.ClusterId)
+	executor := tasks.NewHealthCheckExecutor(req.NodeClusterId)
 	results, err := executor.Run()
 	if err != nil {
 		return nil, err
@@ -570,5 +572,101 @@ func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *p
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// 计算使用某个缓存策略的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPCachePolicyId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithHTTPCachePolicyIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPCachePolicyId(req.HttpCachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// 查找使用缓存策略的所有集群
+func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdRequest) (*pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.NodeCluster{}
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPCachePolicyId(req.HttpCachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+	for _, cluster := range clusters {
+		result = append(result, &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			Name: cluster.Name,
+		})
+	}
+	return &pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdResponse{
+		NodeClusters: result,
+	}, nil
+}
+
+// 计算使用某个WAF策略的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithHTTPFirewallPolicyIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(req.HttpFirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// 查找使用WAF策略的所有集群
+func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdRequest) (*pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	result := []*pb.NodeCluster{}
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(req.HttpFirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
+	for _, cluster := range clusters {
+		result = append(result, &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			Name: cluster.Name,
+		})
+	}
+	return &pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdResponse{
+		NodeClusters: result,
+	}, nil
+}
+
+// 修改集群的缓存策略
+func (this *NodeClusterService) UpdateNodeClusterHTTPCachePolicyId(ctx context.Context, req *pb.UpdateNodeClusterHTTPCachePolicyIdRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPCachePolicyId(req.NodeClusterId, req.HttpCachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// 修改集群的WAF策略
+func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx context.Context, req *pb.UpdateNodeClusterHTTPFirewallPolicyIdRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPFirewallPolicyId(req.NodeClusterId, req.HttpFirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }

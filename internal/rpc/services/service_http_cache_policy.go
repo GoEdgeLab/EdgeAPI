@@ -47,7 +47,7 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CreateHTTPCachePolicyResponse{CachePolicyId: policyId}, nil
+	return &pb.CreateHTTPCachePolicyResponse{HttpCachePolicyId: policyId}, nil
 }
 
 // 修改缓存策略
@@ -58,7 +58,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(req.CachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
+	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	err = models.SharedHTTPCachePolicyDAO.DisableHTTPCachePolicy(req.CachePolicyId)
+	err = models.SharedHTTPCachePolicyDAO.DisableHTTPCachePolicy(req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ListEnabledHTTPCachePoliciesResponse{CachePoliciesJSON: cachePoliciesJSON}, nil
+	return &pb.ListEnabledHTTPCachePoliciesResponse{HttpCachePoliciesJSON: cachePoliciesJSON}, nil
 }
 
 // 查找单个缓存策略配置
@@ -124,10 +124,31 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context
 		return nil, err
 	}
 
-	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(req.CachePolicyId)
+	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
 	cachePolicyJSON, err := json.Marshal(cachePolicy)
-	return &pb.FindEnabledHTTPCachePolicyConfigResponse{CachePolicyJSON: cachePolicyJSON}, nil
+	return &pb.FindEnabledHTTPCachePolicyConfigResponse{HttpCachePolicyJSON: cachePolicyJSON}, nil
+}
+
+// 查找单个缓存策略信息
+func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Context, req *pb.FindEnabledHTTPCachePolicyRequest) (*pb.FindEnabledHTTPCachePolicyResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := models.SharedHTTPCachePolicyDAO.FindEnabledHTTPCachePolicy(req.HttpCachePolicyId)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		return &pb.FindEnabledHTTPCachePolicyResponse{HttpCachePolicy: nil}, nil
+	}
+	return &pb.FindEnabledHTTPCachePolicyResponse{HttpCachePolicy: &pb.HTTPCachePolicy{
+		Id:   int64(policy.Id),
+		Name: policy.Name,
+		IsOn: policy.IsOn == 1,
+	}}, nil
 }

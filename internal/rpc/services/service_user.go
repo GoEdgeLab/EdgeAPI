@@ -22,7 +22,7 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 		return nil, err
 	}
 
-	userId, err := models.SharedUserDAO.CreateUser(req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source)
+	userId, err := models.SharedUserDAO.CreateUser(req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
-	err = models.SharedUserDAO.UpdateUser(req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn)
+	err = models.SharedUserDAO.UpdateUser(req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +85,19 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 	result := []*pb.User{}
 	for _, user := range users {
+		// 集群信息
+		var pbCluster *pb.NodeCluster = nil
+		if user.ClusterId > 0 {
+			clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(user.ClusterId))
+			if err != nil {
+				return nil, err
+			}
+			pbCluster = &pb.NodeCluster{
+				Id:   int64(user.ClusterId),
+				Name: clusterName,
+			}
+		}
+
 		result = append(result, &pb.User{
 			Id:        int64(user.Id),
 			Username:  user.Username,
@@ -95,6 +108,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 			Remark:    user.Remark,
 			IsOn:      user.IsOn == 1,
 			CreatedAt: int64(user.CreatedAt),
+			Cluster:   pbCluster,
 		})
 	}
 
@@ -115,6 +129,20 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 	if user == nil {
 		return &pb.FindEnabledUserResponse{User: nil}, nil
 	}
+
+	// 集群信息
+	var pbCluster *pb.NodeCluster = nil
+	if user.ClusterId > 0 {
+		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(user.ClusterId))
+		if err != nil {
+			return nil, err
+		}
+		pbCluster = &pb.NodeCluster{
+			Id:   int64(user.ClusterId),
+			Name: clusterName,
+		}
+	}
+
 	return &pb.FindEnabledUserResponse{User: &pb.User{
 		Id:        int64(user.Id),
 		Username:  user.Username,
@@ -125,6 +153,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		Remark:    user.Remark,
 		IsOn:      user.IsOn == 1,
 		CreatedAt: int64(user.CreatedAt),
+		Cluster:   pbCluster,
 	}}, nil
 }
 

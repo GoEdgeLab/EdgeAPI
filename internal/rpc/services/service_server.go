@@ -22,13 +22,13 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	if err != nil {
 		return nil, err
 	}
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.ClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
 
 	// 更新节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.ClusterId)
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.ClusterId, req.IsOn, req.GroupIds)
+	err = models.SharedServerDAO.UpdateServerBasic(req.ServerId, req.Name, req.Description, req.NodeClusterId, req.IsOn, req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	}
 
 	// 更新老的节点版本
-	if req.ClusterId != int64(server.ClusterId) {
+	if req.NodeClusterId != int64(server.ClusterId) {
 		err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(int64(server.ClusterId))
 		if err != nil {
 			return nil, err
@@ -82,7 +82,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	}
 
 	// 更新新的节点版本
-	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.ClusterId)
+	err = models.SharedNodeDAO.UpdateAllNodesLatestVersionMatch(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -736,120 +736,6 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 	return &pb.FindAllEnabledServersWithSSLCertIdResponse{Servers: result}, nil
 }
 
-// 计算使用某个缓存策略的服务数量
-func (this *ServerService) CountAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithCachePolicyIdRequest) (*pb.RPCCountResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.CachePolicyId)
-	if err != nil {
-		return nil, err
-	}
-	if len(webIds) == 0 {
-		return this.SuccessCount(0)
-	}
-
-	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
-	if err != nil {
-		return nil, err
-	}
-	return this.SuccessCount(countServers)
-}
-
-// 查找使用某个缓存策略的所有服务
-func (this *ServerService) FindAllEnabledServersWithCachePolicyId(ctx context.Context, req *pb.FindAllEnabledServersWithCachePolicyIdRequest) (*pb.FindAllEnabledServersWithCachePolicyIdResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(req.CachePolicyId)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(webIds) == 0 {
-		return &pb.FindAllEnabledServersWithCachePolicyIdResponse{Servers: nil}, nil
-	}
-
-	servers, err := models.SharedServerDAO.FindAllEnabledServersWithWebIds(webIds)
-	result := []*pb.Server{}
-	for _, server := range servers {
-		result = append(result, &pb.Server{
-			Id:   int64(server.Id),
-			Name: server.Name,
-			IsOn: server.IsOn == 1,
-			Type: server.Type,
-			Cluster: &pb.NodeCluster{
-				Id: int64(server.ClusterId),
-			},
-		})
-	}
-	return &pb.FindAllEnabledServersWithCachePolicyIdResponse{Servers: result}, nil
-}
-
-// 计算使用某个WAF策略的服务数量
-func (this *ServerService) CountAllEnabledServersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledServersWithHTTPFirewallPolicyIdRequest) (*pb.RPCCountResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(req.FirewallPolicyId)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(webIds) == 0 {
-		return this.SuccessCount(0)
-	}
-
-	countServers, err := models.SharedServerDAO.CountEnabledServersWithWebIds(webIds)
-	if err != nil {
-		return nil, err
-	}
-	return this.SuccessCount(countServers)
-}
-
-// 查找使用某个WAF策略的所有服务
-func (this *ServerService) FindAllEnabledServersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.FindAllEnabledServersWithHTTPFirewallPolicyIdRequest) (*pb.FindAllEnabledServersWithHTTPFirewallPolicyIdResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	webIds, err := models.SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(req.FirewallPolicyId)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(webIds) == 0 {
-		return &pb.FindAllEnabledServersWithHTTPFirewallPolicyIdResponse{Servers: nil}, nil
-	}
-
-	servers, err := models.SharedServerDAO.FindAllEnabledServersWithWebIds(webIds)
-	result := []*pb.Server{}
-	for _, server := range servers {
-		result = append(result, &pb.Server{
-			Id:   int64(server.Id),
-			Name: server.Name,
-			IsOn: server.IsOn == 1,
-			Type: server.Type,
-			Cluster: &pb.NodeCluster{
-				Id: int64(server.ClusterId),
-			},
-		})
-	}
-
-	return &pb.FindAllEnabledServersWithHTTPFirewallPolicyIdResponse{Servers: result}, nil
-}
-
 // 计算运行在某个集群上的所有服务数量
 func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
@@ -904,7 +790,7 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 		return nil, err
 	}
 
-	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(req.ClusterId)
+	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}

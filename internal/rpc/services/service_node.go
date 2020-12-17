@@ -43,7 +43,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 		return nil, err
 	}
 
-	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, req.ClusterId, req.GroupId, req.RegionId)
+	nodeId, err := models.SharedNodeDAO.CreateNode(adminId, req.Name, req.NodeClusterId, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		return nil, err
 	}
 
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.ClusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		}
 	}
 
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.ClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(req.Offset, req.Size, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.GroupId, req.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, r
 		return nil, err
 	}
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(req.ClusterId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +338,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
-	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.ClusterId, req.GroupId, req.RegionId, req.MaxCPU, req.IsOn)
+	err = models.SharedNodeDAO.UpdateNode(req.NodeId, req.Name, req.NodeClusterId, req.GroupId, req.RegionId, req.MaxCPU, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -553,7 +553,7 @@ func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *p
 		return nil, err
 	}
 
-	err = models.SharedNodeDAO.SyncNodeVersionsWithCluster(req.ClusterId)
+	err = models.SharedNodeDAO.SyncNodeVersionsWithCluster(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +763,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Conte
 		return nil, err
 	}
 
-	nodes, err := models.SharedNodeDAO.FindAllNotInstalledNodesWithClusterId(req.ClusterId)
+	nodes, err := models.SharedNodeDAO.FindAllNotInstalledNodesWithClusterId(req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -847,7 +847,7 @@ func (this *NodeService) CountAllUpgradeNodesWithClusterId(ctx context.Context, 
 	deployFiles := installers.SharedDeployManager.LoadFiles()
 	total := int64(0)
 	for _, deployFile := range deployFiles {
-		count, err := models.SharedNodeDAO.CountAllLowerVersionNodesWithClusterId(req.ClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
+		count, err := models.SharedNodeDAO.CountAllLowerVersionNodesWithClusterId(req.NodeClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -869,7 +869,7 @@ func (this *NodeService) FindAllUpgradeNodesWithClusterId(ctx context.Context, r
 	deployFiles := installers.SharedDeployManager.LoadFiles()
 	result := []*pb.FindAllUpgradeNodesWithClusterIdResponse_NodeUpgrade{}
 	for _, deployFile := range deployFiles {
-		nodes, err := models.SharedNodeDAO.FindAllLowerVersionNodesWithClusterId(req.ClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
+		nodes, err := models.SharedNodeDAO.FindAllLowerVersionNodesWithClusterId(req.NodeClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -1146,7 +1146,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 			Name:          node.Name,
 			IpAddr:        ipAddr,
 			Routes:        pbRoutes,
-			ClusterId:     clusterId,
+			NodeClusterId: clusterId,
 			DnsDomainId:   dnsDomainId,
 			DnsDomainName: dnsDomainName,
 		},

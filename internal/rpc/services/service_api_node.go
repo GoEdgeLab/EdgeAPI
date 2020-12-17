@@ -79,7 +79,7 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 		result = append(result, &pb.APINode{
 			Id:              int64(node.Id),
 			IsOn:            node.IsOn == 1,
-			ClusterId:       int64(node.ClusterId),
+			NodeClusterId:   int64(node.ClusterId),
 			UniqueId:        node.UniqueId,
 			Secret:          node.Secret,
 			Name:            node.Name,
@@ -131,7 +131,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 		result = append(result, &pb.APINode{
 			Id:              int64(node.Id),
 			IsOn:            node.IsOn == 1,
-			ClusterId:       int64(node.ClusterId),
+			NodeClusterId:   int64(node.ClusterId),
 			UniqueId:        node.UniqueId,
 			Secret:          node.Secret,
 			Name:            node.Name,
@@ -170,7 +170,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 	result := &pb.APINode{
 		Id:              int64(node.Id),
 		IsOn:            node.IsOn == 1,
-		ClusterId:       int64(node.ClusterId),
+		NodeClusterId:   int64(node.ClusterId),
 		UniqueId:        node.UniqueId,
 		Secret:          node.Secret,
 		Name:            node.Name,
