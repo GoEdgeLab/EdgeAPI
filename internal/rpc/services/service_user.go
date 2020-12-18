@@ -117,7 +117,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 // 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -320,4 +320,18 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		DailyTrafficStats:       dailyTrafficStats,
 		DailyPeekTrafficStats:   dailyPeekTrafficStats,
 	}, nil
+}
+
+// 获取用户所在的集群ID
+func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.FindUserNodeClusterIdRequest) (*pb.FindUserNodeClusterIdResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterId, err := models.SharedUserDAO.FindUserClusterId(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindUserNodeClusterIdResponse{NodeClusterId: clusterId}, nil
 }

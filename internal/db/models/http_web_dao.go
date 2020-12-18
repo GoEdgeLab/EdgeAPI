@@ -315,10 +315,14 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 }
 
 // 创建Web配置
-func (this *HTTPWebDAO) CreateWeb(rootJSON []byte) (int64, error) {
+func (this *HTTPWebDAO) CreateWeb(adminId int64, userId int64, rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
-	op.Root = JSONBytes(rootJSON)
+	op.AdminId = adminId
+	op.UserId = userId
+	if len(rootJSON) > 0 {
+		op.Root = JSONBytes(rootJSON)
+	}
 	err := this.Save(op)
 	if err != nil {
 		return 0, err

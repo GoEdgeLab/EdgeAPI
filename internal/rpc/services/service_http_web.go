@@ -15,12 +15,12 @@ type HTTPWebService struct {
 // 创建Web配置
 func (this *HTTPWebService) CreateHTTPWeb(ctx context.Context, req *pb.CreateHTTPWebRequest) (*pb.CreateHTTPWebResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	webId, err := models.SharedHTTPWebDAO.CreateWeb(req.RootJSON)
+	webId, err := models.SharedHTTPWebDAO.CreateWeb(adminId, userId, req.RootJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -213,9 +213,13 @@ func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.Updat
 // 更改缓存配置
 func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.UpdateHTTPWebCacheRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	err = models.SharedHTTPWebDAO.UpdateWebCache(req.WebId, req.CacheJSON)

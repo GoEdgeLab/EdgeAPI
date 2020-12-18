@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 )
 
 type SSLPolicyService struct {
@@ -15,12 +16,32 @@ type SSLPolicyService struct {
 // 创建Policy
 func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.CreateSSLPolicyRequest) (*pb.CreateSSLPolicyResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(req.Http2Enabled, req.MinVersion, req.CertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	if userId > 0 {
+		//  检查证书
+		if len(req.SslCertsJSON) > 0 {
+			certRefs := []*sslconfigs.SSLCertRef{}
+			err = json.Unmarshal(req.SslCertsJSON, &certRefs)
+			if err != nil {
+				return nil, err
+			}
+			for _, certRef := range certRefs {
+				err = models.SharedSSLCertDAO.CheckUserCert(certRef.CertId, userId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		// 检查CA证书
+		// TODO
+	}
+
+	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(adminId, userId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -31,12 +52,18 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 // 修改Policy
 func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.UpdateSSLPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
+	if userId > 0 {
+		err := models.SharedSSLPolicyDAO.CheckUserPolicy(req.SslPolicyId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	err = models.SharedSSLPolicyDAO.UpdatePolicy(req.SslPolicyId, req.Http2Enabled, req.MinVersion, req.CertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	err = models.SharedSSLPolicyDAO.UpdatePolicy(req.SslPolicyId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}

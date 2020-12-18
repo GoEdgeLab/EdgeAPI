@@ -91,8 +91,10 @@ func (this *OriginDAO) FindOriginName(id int64) (string, error) {
 }
 
 // 创建源站
-func (this *OriginDAO) CreateOrigin(name string, addrJSON string, description string, weight int32, isOn bool) (originId int64, err error) {
+func (this *OriginDAO) CreateOrigin(adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool) (originId int64, err error) {
 	op := NewOriginOperator()
+	op.AdminId = adminId
+	op.UserId = userId
 	op.IsOn = isOn
 	op.Name = name
 	op.Addr = addrJSON

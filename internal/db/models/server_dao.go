@@ -392,7 +392,12 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 		return 0, errors.New("serverId should not be smaller than 0")
 	}
 
-	webId, err := SharedHTTPWebDAO.CreateWeb(nil)
+	adminId, userId, err := this.FindServerAdminIdAndUserId(serverId)
+	if err != nil {
+		return 0, err
+	}
+
+	webId, err := SharedHTTPWebDAO.CreateWeb(adminId, userId, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -475,14 +480,14 @@ func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string
 		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
 	}
-	if userId > 0{
+	if userId > 0 {
 		query.Attr("userId", userId)
 	}
 	return query.Count()
 }
 
 // 列出单页的服务
-func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string) (result []*Server, err error) {
+func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string, userId int64) (result []*Server, err error) {
 	query := this.Query().
 		State(ServerStateEnabled).
 		Offset(offset).
@@ -497,6 +502,9 @@ func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
 	}
 
 	_, err = query.FindAll()
@@ -912,6 +920,21 @@ func (this *ServerDAO) FindServerDNSName(serverId int64) (string, error) {
 		Pk(serverId).
 		Result("dnsName").
 		FindStringCol("")
+}
+
+// 获取当前服务的管理员ID和用户ID
+func (this *ServerDAO) FindServerAdminIdAndUserId(serverId int64) (adminId int64, userId int64, err error) {
+	one, err := this.Query().
+		Pk(serverId).
+		Result("adminId", "userId").
+		Find()
+	if err != nil {
+		return 0, 0, err
+	}
+	if one == nil {
+		return 0, 0, nil
+	}
+	return int64(one.(*Server).AdminId), int64(one.(*Server).UserId), nil
 }
 
 // 生成DNS Name

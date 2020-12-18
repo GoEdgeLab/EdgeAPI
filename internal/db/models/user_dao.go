@@ -221,3 +221,11 @@ func (this *UserDAO) CheckUserPassword(username string, encryptedPassword string
 		ResultPk().
 		FindInt64Col(0)
 }
+
+// 查找用户所在集群
+func (this *UserDAO) FindUserClusterId(userId int64) (int64, error) {
+	return this.Query().
+		Pk(userId).
+		Result("clusterId").
+		FindInt64Col(0)
+}

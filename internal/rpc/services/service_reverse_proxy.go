@@ -16,12 +16,16 @@ type ReverseProxyService struct {
 // 创建反向代理
 func (this *ReverseProxyService) CreateReverseProxy(ctx context.Context, req *pb.CreateReverseProxyRequest) (*pb.CreateReverseProxyResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(req.SchedulingJSON, req.PrimaryOriginsJSON, req.BackupOriginsJSON)
+	if userId > 0 {
+		// TODO 校验源站
+	}
+
+	reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(adminId, userId, req.SchedulingJSON, req.PrimaryOriginsJSON, req.BackupOriginsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -126,9 +130,13 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 // 修改是否启用
 func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb.UpdateReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)

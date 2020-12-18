@@ -187,10 +187,13 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(certId int64) (polic
 }
 
 // 创建Policy
-func (this *SSLPolicyDAO) CreatePolicy(http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
+func (this *SSLPolicyDAO) CreatePolicy(adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
 	op := NewSSLPolicyOperator()
 	op.State = SSLPolicyStateEnabled
 	op.IsOn = true
+	op.AdminId = adminId
+	op.UserId = userId
+
 	op.Http2Enabled = http2Enabled
 	op.MinVersion = minVersion
 
@@ -257,4 +260,23 @@ func (this *SSLPolicyDAO) UpdatePolicy(policyId int64, http2Enabled bool, minVer
 	}
 	err := this.Save(op)
 	return err
+}
+
+// 检查是否为用户所属策略
+func (this *SSLPolicyDAO) CheckUserPolicy(policyId int64, userId int64) error {
+	if policyId <= 0 || userId <= 0 {
+		return errors.New("not found")
+	}
+	ok, err := this.Query().
+		State(SSLPolicyStateEnabled).
+		Pk(policyId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("not found")
+	}
+	return nil
 }

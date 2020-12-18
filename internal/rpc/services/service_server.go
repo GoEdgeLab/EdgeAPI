@@ -18,10 +18,29 @@ type ServerService struct {
 // 创建服务
 func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
+
+	// 校验用户相关数据
+	if userId > 0 {
+		// HTTPS
+		if len(req.HttpsJSON) > 0 {
+			httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
+			err = json.Unmarshal(req.HttpsJSON, httpsConfig)
+			if err != nil {
+				return nil, err
+			}
+			if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
+				err := models.SharedSSLPolicyDAO.CheckUserPolicy(httpsConfig.SSLPolicyRef.SSLPolicyId, userId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
 	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
 	if err != nil {
 		return nil, err
@@ -273,9 +292,13 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 // 修改Web服务
 func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	if req.ServerId <= 0 {
@@ -377,11 +400,11 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 // 计算服务数量
 func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, 0)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -392,11 +415,11 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 // 列出单页服务
 func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.ListEnabledServersMatchRequest) (*pb.ListEnabledServersMatchResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(req.Offset, req.Size, req.GroupId, req.Keyword)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +622,7 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 // 查找反向代理设置
 func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerReverseProxyConfigRequest) (*pb.FindAndInitServerReverseProxyConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -610,7 +633,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 	}
 
 	if reverseProxyRef == nil {
-		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(nil, nil, nil)
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(adminId, userId, nil, nil, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -682,12 +705,18 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 // 计算使用某个SSL证书的服务数量
 func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
+	if userId > 0 {
+		err = models.SharedSSLCertDAO.CheckUserCert(req.SslCertId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.CertId)
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.SslCertId)
 	if err != nil {
 		return nil, err
 	}
@@ -712,7 +741,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 		return nil, err
 	}
 
-	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.CertId)
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.SslCertId)
 	if err != nil {
 		return nil, err
 	}

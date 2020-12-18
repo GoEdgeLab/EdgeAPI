@@ -210,7 +210,7 @@ func (this *SSLCertDAO) ComposeCertConfig(certId int64) (*sslconfigs.SSLCertConf
 }
 
 // 计算符合条件的证书数量
-func (this *SSLCertDAO) CountCerts(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
+func (this *SSLCertDAO) CountCerts(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64) (int64, error) {
 	query := this.Query().
 		State(SSLCertStateEnabled)
 	if isCA {
@@ -229,12 +229,18 @@ func (this *SSLCertDAO) CountCerts(isCA bool, isAvailable bool, isExpired bool, 
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR description LIKE :keyword OR dnsNames LIKE :keyword OR commonNames LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		// 只查询管理员上传的
+		query.Attr("userId", 0)
 	}
 	return query.Count()
 }
 
 // 列出符合条件的证书
-func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (certIds []int64, err error) {
+func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, offset int64, size int64) (certIds []int64, err error) {
 	query := this.Query().
 		State(SSLCertStateEnabled)
 	if isCA {
@@ -253,6 +259,12 @@ func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool,
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR description LIKE :keyword OR dnsNames LIKE :keyword OR commonNames LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		// 只查询管理员上传的
+		query.Attr("userId", 0)
 	}
 
 	ones, err := query.
@@ -312,4 +324,23 @@ func (this *SSLCertDAO) UpdateCertNotifiedAt(certId int64) error {
 		Set("notifiedAt", time.Now().Unix()).
 		Update()
 	return err
+}
+
+// 检查用户权限
+func (this *SSLCertDAO) CheckUserCert(certId int64, userId int64) error {
+	if certId <= 0 || userId <= 0 {
+		return errors.New("not found")
+	}
+	ok, err := this.Query().
+		Pk(certId).
+		Attr("userId", userId).
+		State(SSLCertStateEnabled).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("not found")
+	}
+	return nil
 }

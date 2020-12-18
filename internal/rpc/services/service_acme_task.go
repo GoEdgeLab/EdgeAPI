@@ -15,7 +15,7 @@ type ACMETaskService struct {
 
 // 计算某个ACME用户相关的任务数量
 func (this *ACMETaskService) CountAllEnabledACMETasksWithACMEUserId(ctx context.Context, req *pb.CountAllEnabledACMETasksWithACMEUserIdRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasksWithACMEUserId(ctx context.
 
 // 计算跟某个DNS服务商相关的任务数量
 func (this *ACMETaskService) CountEnabledACMETasksWithDNSProviderId(ctx context.Context, req *pb.CountEnabledACMETasksWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (this *ACMETaskService) CountEnabledACMETasksWithDNSProviderId(ctx context.
 
 // 计算所有任务数量
 func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *pb.CountAllEnabledACMETasksRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, req.UserId)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *
 
 // 列出单页任务
 func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.ListEnabledACMETasksRequest) (*pb.ListEnabledACMETasksResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, req.UserId)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 
 // 创建任务
 func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateACMETaskRequest) (*pb.CreateACMETaskResponse, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateA
 
 // 修改任务
 func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateACMETaskRequest) (*pb.RPCSuccess, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateA
 
 // 删除任务
 func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteACMETaskRequest) (*pb.RPCSuccess, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteA
 
 // 运行某个任务
 func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETaskRequest) (*pb.RunACMETaskResponse, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 
 // 查找单个任务信息
 func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.FindEnabledACMETaskRequest) (*pb.FindEnabledACMETaskResponse, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
