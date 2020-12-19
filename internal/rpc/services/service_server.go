@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
 )
 
 type ServerService struct {
@@ -41,7 +42,23 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, string(req.ServerNamesJON), string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
+	// 是否需要审核
+	isAuditing := false
+	serverNamesJSON := req.ServerNamesJON
+	auditingServerNamesJSON := []byte("[]")
+	if userId > 0 {
+		globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig()
+		if err != nil {
+			return nil, err
+		}
+		if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
+			isAuditing = true
+			serverNamesJSON = []byte("[]")
+			auditingServerNamesJSON = req.ServerNamesJON
+		}
+	}
+
+	serverId, err := models.SharedServerDAO.CreateServer(req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +72,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	return &pb.CreateServerResponse{ServerId: serverId}, nil
 }
 
-// 修改服务
+// 修改服务基本信息
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -106,6 +123,25 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// 修改服务是否启用
+func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateServerIsOnRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = models.SharedServerDAO.UpdateServerIsOn(req.ServerId, req.IsOn)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }
 
@@ -355,22 +391,46 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 
 // 查找服务的域名设置
 func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServerNamesRequest) (*pb.FindServerNamesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	serverNamesJSON, err := models.SharedServerDAO.FindServerNames(req.ServerId)
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	serverNamesJSON, isAuditing, auditingServerNamesJSON, auditingResultJSON, err := models.SharedServerDAO.FindServerNames(req.ServerId)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindServerNamesResponse{ServerNamesJSON: serverNamesJSON}, nil
+
+	// 审核结果
+	auditingResult := &pb.ServerNameAuditingResult{}
+	if len(auditingResultJSON) > 0 {
+		err = json.Unmarshal(auditingResultJSON, auditingResult)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		auditingResult.IsOk = true
+	}
+
+	return &pb.FindServerNamesResponse{
+		ServerNamesJSON:         serverNamesJSON,
+		IsAuditing:              isAuditing,
+		AuditingServerNamesJSON: auditingServerNamesJSON,
+		AuditingResult:          auditingResult,
+	}, nil
 }
 
 // 修改域名服务
 func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -379,19 +439,65 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
+	// 是否需要审核
+	if userId > 0 {
+		globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig()
+		if err != nil {
+			return nil, err
+		}
+		if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
+			err = models.SharedServerDAO.UpdateAuditingServerNames(req.ServerId, true, req.ServerNamesJSON)
+			if err != nil {
+				return nil, err
+			}
+			return this.Success()
+		}
 	}
 
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerNames(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerNames(req.ServerId, req.ServerNamesJSON)
 	if err != nil {
 		return nil, err
+	}
+
+	return this.Success()
+}
+
+// 审核服务的域名设置
+func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *pb.UpdateServerNamesAuditingRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.AuditingResult == nil {
+		return nil, errors.New("'result' should not be nil")
+	}
+
+	err = models.SharedServerDAO.UpdateServerAuditing(req.ServerId, req.AuditingResult)
+	if err != nil {
+		return nil, err
+	}
+
+	// 发送消息提醒
+	_, userId, err := models.SharedServerDAO.FindServerAdminIdAndUserId(req.ServerId)
+	if userId > 0 {
+		if req.AuditingResult.IsOk {
+			err = models.SharedMessageDAO.CreateMessage(0, userId, models.MessageTypeServerNamesAuditingSuccess, models.LevelInfo, "服务域名审核通过", maps.Map{
+				"serverId": req.ServerId,
+			}.AsJSON())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = models.SharedMessageDAO.CreateMessage(0, userId, models.MessageTypeServerNamesAuditingFailed, models.LevelError, "服务域名审核失败，原因："+req.AuditingResult.Reason, maps.Map{
+				"serverId": req.ServerId,
+			}.AsJSON())
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return this.Success()
@@ -404,7 +510,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, req.UserId)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +525,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -466,24 +572,38 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			}
 		}
 
+		// 审核结果
+		auditingResult := &pb.ServerNameAuditingResult{}
+		if len(server.AuditingResult) > 0 {
+			err = json.Unmarshal([]byte(server.AuditingResult), auditingResult)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			auditingResult.IsOk = true
+		}
+
 		result = append(result, &pb.Server{
-			Id:              int64(server.Id),
-			IsOn:            server.IsOn == 1,
-			Type:            server.Type,
-			Config:          []byte(server.Config),
-			Name:            server.Name,
-			Description:     server.Description,
-			HttpJSON:        []byte(server.Http),
-			HttpsJSON:       []byte(server.Https),
-			TcpJSON:         []byte(server.Tcp),
-			TlsJSON:         []byte(server.Tls),
-			UnixJSON:        []byte(server.Unix),
-			UdpJSON:         []byte(server.Udp),
-			IncludeNodes:    []byte(server.IncludeNodes),
-			ExcludeNodes:    []byte(server.ExcludeNodes),
-			ServerNamesJSON: []byte(server.ServerNames),
-			CreatedAt:       int64(server.CreatedAt),
-			DnsName:         server.DnsName,
+			Id:                      int64(server.Id),
+			IsOn:                    server.IsOn == 1,
+			Type:                    server.Type,
+			Config:                  []byte(server.Config),
+			Name:                    server.Name,
+			Description:             server.Description,
+			HttpJSON:                []byte(server.Http),
+			HttpsJSON:               []byte(server.Https),
+			TcpJSON:                 []byte(server.Tcp),
+			TlsJSON:                 []byte(server.Tls),
+			UnixJSON:                []byte(server.Unix),
+			UdpJSON:                 []byte(server.Udp),
+			IncludeNodes:            []byte(server.IncludeNodes),
+			ExcludeNodes:            []byte(server.ExcludeNodes),
+			ServerNamesJSON:         []byte(server.ServerNames),
+			IsAuditing:              server.IsAuditing == 1,
+			AuditingServerNamesJSON: []byte(server.AuditingServerNames),
+			AuditingResult:          auditingResult,
+			CreatedAt:               int64(server.CreatedAt),
+			DnsName:                 server.DnsName,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
@@ -497,11 +617,18 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 }
 
 // 禁用某服务
-func (this *ServerService) DisableServer(ctx context.Context, req *pb.DisableServerRequest) (*pb.DisableServerResponse, error) {
+func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServerRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 查找服务
@@ -525,7 +652,7 @@ func (this *ServerService) DisableServer(ctx context.Context, req *pb.DisableSer
 		return nil, err
 	}
 
-	return &pb.DisableServerResponse{}, nil
+	return this.Success()
 }
 
 // 查找单个服务
@@ -848,7 +975,7 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 // 查找单个服务的DNS信息
 func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.FindEnabledServerDNSRequest) (*pb.FindEnabledServerDNSResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -931,4 +1058,17 @@ func (this *ServerService) notifyServerDNSChanged(serverId int64) error {
 		}
 	}
 	return nil
+}
+
+// 检查服务是否属于某个用户
+func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUserServerRequest) (*pb.RPCSuccess, error) {
+	userId, err := this.ValidateUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

@@ -5,15 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -87,7 +91,26 @@ func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
 }
 
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serverconfigs.ServerType, name string, description string, serverNamesJSON string, httpJSON string, httpsJSON string, tcpJSON string, tlsJSON string, unixJSON string, udpJSON string, webId int64, reverseProxyJSON []byte, clusterId int64, includeNodesJSON string, excludeNodesJSON string, groupIds []int64) (serverId int64, err error) {
+func (this *ServerDAO) CreateServer(adminId int64,
+	userId int64,
+	serverType serverconfigs.ServerType,
+	name string,
+	description string,
+	serverNamesJSON []byte,
+	isAuditing bool,
+	auditingServerNamesJSON []byte,
+	httpJSON string,
+	httpsJSON string,
+	tcpJSON string,
+	tlsJSON string,
+	unixJSON string,
+	udpJSON string,
+	webId int64,
+	reverseProxyJSON []byte,
+	clusterId int64,
+	includeNodesJSON string,
+	excludeNodesJSON string,
+	groupIds []int64) (serverId int64, err error) {
 	op := NewServerOperator()
 	op.UserId = userId
 	op.AdminId = adminId
@@ -95,8 +118,12 @@ func (this *ServerDAO) CreateServer(adminId int64, userId int64, serverType serv
 	op.Type = serverType
 	op.Description = description
 
-	if IsNotNull(serverNamesJSON) {
+	if len(serverNamesJSON) > 0 {
 		op.ServerNames = serverNamesJSON
+	}
+	op.IsAuditing = isAuditing
+	if len(auditingServerNamesJSON) > 0 {
+		op.AuditingServerNames = auditingServerNamesJSON
 	}
 	if IsNotNull(httpJSON) {
 		op.Http = httpJSON
@@ -202,6 +229,15 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 	}
 
 	return this.createEvent()
+}
+
+// 修复服务是否启用
+func (this *ServerDAO) UpdateServerIsOn(serverId int64, isOn bool) error {
+	_, err := this.Query().
+		Pk(serverId).
+		Set("isOn", isOn).
+		Update()
+	return err
 }
 
 // 修改服务配置
@@ -419,37 +455,81 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 }
 
 // 查找ServerNames配置
-func (this *ServerDAO) FindServerNames(serverId int64) (serverNamesJSON []byte, err error) {
-	col, err := this.Query().
+func (this *ServerDAO) FindServerNames(serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
+	if serverId <= 0 {
+		return
+	}
+	one, err := this.Query().
 		Pk(serverId).
-		Result("serverNames").
-		FindStringCol("")
+		Result("serverNames", "isAuditing", "auditingServerNames", "auditingResult").
+		Find()
 	if err != nil {
-		return nil, err
+		return nil, false, nil, nil, err
 	}
-	if len(col) == 0 || col == "null" {
-		return []byte("[]"), nil
+	if one == nil {
+		return
 	}
-	return []byte(col), nil
+	server := one.(*Server)
+	return []byte(server.ServerNames), server.IsAuditing == 1, []byte(server.AuditingServerNames), []byte(server.AuditingResult), nil
 }
 
 // 修改ServerNames配置
-func (this *ServerDAO) UpdateServerNames(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerNames(serverId int64, serverNames []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	if len(config) == 0 {
-		config = []byte("null")
+
+	op := NewServerOperator()
+	op.Id = serverId
+
+	if len(serverNames) == 0 {
+		serverNames = []byte("[]")
 	}
-	_, err := this.Query().
-		Pk(serverId).
-		Set("serverNames", string(config)).
-		Update()
+	op.ServerNames = serverNames
+	return this.createEvent()
+}
+
+// 修改域名审核
+func (this *ServerDAO) UpdateAuditingServerNames(serverId int64, isAuditing bool, auditingServerNamesJSON []byte) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+
+	op := NewServerOperator()
+	op.Id = serverId
+	op.IsAuditing = isAuditing
+	if len(auditingServerNamesJSON) == 0 {
+		op.AuditingServerNames = "[]"
+	} else {
+		op.AuditingServerNames = auditingServerNamesJSON
+	}
+
+	return this.createEvent()
+}
+
+// 修改域名审核结果
+func (this *ServerDAO) UpdateServerAuditing(serverId int64, result *pb.ServerNameAuditingResult) error {
+	if serverId <= 0 {
+		return errors.New("invalid serverId")
+	}
+
+	resultJSON, err := json.Marshal(maps.Map{
+		"isOk":      result.IsOk,
+		"reason":    result.Reason,
+		"createdAt": time.Now().Unix(),
+	})
 	if err != nil {
 		return err
 	}
 
-	return this.createEvent()
+	op := NewServerOperator()
+	op.Id = serverId
+	op.IsAuditing = false
+	op.AuditingResult = resultJSON
+	if result.IsOk {
+		op.ServerNames = dbs.SQL("auditingServerNames")
+	}
+	return this.Save(op)
 }
 
 // 修改反向代理配置
@@ -469,7 +549,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64) (int64, error) {
+func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64, clusterId int64, auditingFlag rpc.BoolFlag) (int64, error) {
 	query := this.Query().
 		State(ServerStateEnabled)
 	if groupId > 0 {
@@ -483,11 +563,17 @@ func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string
 	if userId > 0 {
 		query.Attr("userId", userId)
 	}
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+	if auditingFlag == rpc.BoolFlagTrue {
+		query.Attr("isAuditing", true)
+	}
 	return query.Count()
 }
 
 // 列出单页的服务
-func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string, userId int64) (result []*Server, err error) {
+func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32) (result []*Server, err error) {
 	query := this.Query().
 		State(ServerStateEnabled).
 		Offset(offset).
@@ -505,6 +591,12 @@ func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+	}
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+	if auditingFlag == 1 {
+		query.Attr("isAuditing", true)
 	}
 
 	_, err = query.FindAll()
@@ -935,6 +1027,24 @@ func (this *ServerDAO) FindServerAdminIdAndUserId(serverId int64) (adminId int64
 		return 0, 0, nil
 	}
 	return int64(one.(*Server).AdminId), int64(one.(*Server).UserId), nil
+}
+
+// 检查用户服务
+func (this *ServerDAO) CheckUserServer(serverId int64, userId int64) error {
+	if serverId <= 0 || userId <= 0 {
+		return ErrNotFound
+	}
+	ok, err := this.Query().
+		Pk(serverId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // 生成DNS Name
