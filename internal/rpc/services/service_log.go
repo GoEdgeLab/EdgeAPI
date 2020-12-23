@@ -35,7 +35,7 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 		return nil, err
 	}
 
-	count, err := models.SharedLogDAO.CountLogs(req.DayFrom, req.DayTo, req.Keyword)
+	count, err := models.SharedLogDAO.CountLogs(req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (
 		return nil, err
 	}
 
-	logs, err := models.SharedLogDAO.ListLogs(req.Offset, req.Size, req.DayFrom, req.DayTo, req.Keyword)
+	logs, err := models.SharedLogDAO.ListLogs(req.Offset, req.Size, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
 		return nil, err
 	}

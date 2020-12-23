@@ -58,7 +58,7 @@ func (this *LogDAO) CreateLog(adminType string, adminId int64, level string, des
 }
 
 // 计算所有日志数量
-func (this *LogDAO) CountLogs(dayFrom string, dayTo string, keyword string) (int64, error) {
+func (this *LogDAO) CountLogs(dayFrom string, dayTo string, keyword string, userType string) (int64, error) {
 	dayFrom = this.formatDay(dayFrom)
 	dayTo = this.formatDay(dayTo)
 
@@ -73,13 +73,21 @@ func (this *LogDAO) CountLogs(dayFrom string, dayTo string, keyword string) (int
 	if len(keyword) > 0 {
 		query.Where("(description LIKE :keyword OR ip LIKE :keyword OR action LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+
+	// 用户类型
+	switch userType {
+	case "admin":
+		query.Where("adminId>0")
+	case "user":
+		query.Where("userId>0")
 	}
 
 	return query.Count()
 }
 
 // 列出单页日志
-func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo string, keyword string) (result []*Log, err error) {
+func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo string, keyword string, userType string) (result []*Log, err error) {
 	dayFrom = this.formatDay(dayFrom)
 	dayTo = this.formatDay(dayTo)
 
@@ -93,6 +101,14 @@ func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo str
 	if len(keyword) > 0 {
 		query.Where("(description LIKE :keyword OR ip LIKE :keyword OR action LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+
+	// 用户类型
+	switch userType {
+	case "admin":
+		query.Where("adminId>0")
+	case "user":
+		query.Where("userId>0")
 	}
 
 	_, err = query.
