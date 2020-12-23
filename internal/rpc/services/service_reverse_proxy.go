@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -36,9 +35,13 @@ func (this *ReverseProxyService) CreateReverseProxy(ctx context.Context, req *pb
 // 查找反向代理
 func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, req *pb.FindEnabledReverseProxyRequest) (*pb.FindEnabledReverseProxyResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	reverseProxy, err := models.SharedReverseProxyDAO.FindEnabledReverseProxy(req.ReverseProxyId)
@@ -61,9 +64,13 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 // 查找反向代理配置
 func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Context, req *pb.FindEnabledReverseProxyConfigRequest) (*pb.FindEnabledReverseProxyConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(req.ReverseProxyId)
@@ -82,9 +89,13 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 // 修改反向代理调度算法
 func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Context, req *pb.UpdateReverseProxySchedulingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	err = models.SharedReverseProxyDAO.UpdateReverseProxyScheduling(req.ReverseProxyId, req.SchedulingJSON)
@@ -98,9 +109,13 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 // 修改主要源站信息
 func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Context, req *pb.UpdateReverseProxyPrimaryOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	err = models.SharedReverseProxyDAO.UpdateReverseProxyPrimaryOrigins(req.ReverseProxyId, req.OriginsJSON)
@@ -114,9 +129,13 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 // 修改备用源站信息
 func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Context, req *pb.UpdateReverseProxyBackupOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 检查权限
 	}
 
 	err = models.SharedReverseProxyDAO.UpdateReverseProxyBackupOrigins(req.ReverseProxyId, req.OriginsJSON)

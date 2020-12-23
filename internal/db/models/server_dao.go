@@ -486,6 +486,10 @@ func (this *ServerDAO) UpdateServerNames(serverId int64, serverNames []byte) err
 		serverNames = []byte("[]")
 	}
 	op.ServerNames = serverNames
+	err := this.Save(op)
+	if err != nil {
+		return err
+	}
 	return this.createEvent()
 }
 
@@ -503,7 +507,11 @@ func (this *ServerDAO) UpdateAuditingServerNames(serverId int64, isAuditing bool
 	} else {
 		op.AuditingServerNames = auditingServerNamesJSON
 	}
-
+	op.AuditingResult = `{"isOk":true}`
+	err := this.Save(op)
+	if err != nil {
+		return err
+	}
 	return this.createEvent()
 }
 

@@ -75,7 +75,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 // 修改服务基本信息
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -148,26 +148,20 @@ func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateS
 // 修改HTTP服务
 func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerHTTP(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerHTTP(req.ServerId, req.HttpJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -178,26 +172,20 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 // 修改HTTPS服务
 func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerHTTPS(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerHTTPS(req.ServerId, req.HttpsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -217,17 +205,8 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
-	}
-
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerTCP(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerTCP(req.ServerId, req.TcpJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -247,17 +226,8 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
-	}
-
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerTLS(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerTLS(req.ServerId, req.TlsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -277,17 +247,8 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
-	}
-
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerUnix(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerUnix(req.ServerId, req.UnixJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -307,17 +268,8 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 		return nil, errors.New("invalid serverId")
 	}
 
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
-	}
-
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerUDP(req.ServerId, req.Config)
+	err = models.SharedServerDAO.UpdateServerUDP(req.ServerId, req.UdpJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -334,20 +286,10 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
-	}
-
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 修改配置
@@ -362,22 +304,16 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 // 修改反向代理服务
 func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
-	// 查询老的节点信息
-	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find server")
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 修改配置
@@ -658,9 +594,17 @@ func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServe
 // 查找单个服务
 func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEnabledServerRequest) (*pb.FindEnabledServerResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	server, err := models.SharedServerDAO.FindEnabledServer(req.ServerId)
@@ -730,12 +674,51 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}}, nil
 }
 
-//
-func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
+// 查找服务配置
+func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.FindEnabledServerConfigRequest) (*pb.FindEnabledServerConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	config, err := models.SharedServerDAO.ComposeServerConfig(req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		return &pb.FindEnabledServerConfigResponse{ServerJSON: nil}, nil
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledServerConfigResponse{ServerJSON: configJSON}, nil
+}
+
+// 查找服务的服务类型
+func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	serverType, err := models.SharedServerDAO.FindEnabledServerType(req.ServerId)
@@ -800,9 +783,16 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 // 初始化Web设置
 func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebConfigRequest) (*pb.FindAndInitServerWebConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	webId, err := models.SharedServerDAO.FindServerWebId(req.ServerId)
@@ -837,10 +827,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 		return nil, err
 	}
 	if userId > 0 {
-		err = models.SharedSSLCertDAO.CheckUserCert(req.SslCertId, userId)
-		if err != nil {
-			return nil, err
-		}
+		// TODO 校验权限
 	}
 
 	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.SslCertId)
@@ -863,9 +850,13 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 // 查找使用某个SSL证书的所有服务
 func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.FindAllEnabledServersWithSSLCertIdRequest) (*pb.FindAllEnabledServersWithSSLCertIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 校验权限
 	}
 
 	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(req.SslCertId)

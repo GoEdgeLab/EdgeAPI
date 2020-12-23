@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/maps"
 )
@@ -40,11 +39,14 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 
 // 修改源站
 func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOriginRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
+	if userId > 0 {
+		// TODO 校验权限
+	}
 	if req.Addr == nil {
 		return nil, errors.New("'addr' can not be nil")
 	}
@@ -63,9 +65,13 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 
 // 查找单个源站信息
 func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEnabledOriginRequest) (*pb.FindEnabledOriginResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 校验权限
 	}
 
 	origin, err := models.SharedOriginDAO.FindEnabledOrigin(req.OriginId)
@@ -98,9 +104,13 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 
 // 查找源站配置
 func (this *OriginService) FindEnabledOriginConfig(ctx context.Context, req *pb.FindEnabledOriginConfigRequest) (*pb.FindEnabledOriginConfigResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// TODO 校验权限
 	}
 
 	config, err := models.SharedOriginDAO.ComposeOriginConfig(req.OriginId)
