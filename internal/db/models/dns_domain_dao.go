@@ -7,7 +7,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"strings"
 	"time"
 )
 
@@ -211,5 +213,36 @@ func (this *DNSDomainDAO) ExistAvailableDomains() (bool, error) {
 		State(DNSDomainStateEnabled).
 		Attr("isOn", true).
 		Where("providerId IN (" + subQuery + ")").
+		Exist()
+}
+
+// 检查域名解析记录是否存在
+func (this *DNSDomainDAO) ExistDomainRecord(domainId int64, recordName string, recordType string, recordRoute string, recordValue string) (bool, error) {
+	query := maps.Map{
+		"name": recordName,
+		"type": recordType,
+	}
+	if len(recordRoute) > 0 {
+		query["route"] = recordRoute
+	}
+	if len(recordValue) > 0 {
+		query["value"] = recordValue
+
+		// CNAME兼容点（.）符号
+		if recordType == "CNAME" && !strings.HasSuffix(recordValue, ".") {
+			b, err := this.ExistDomainRecord(domainId, recordName, recordType, recordRoute, recordValue+".")
+			if err != nil {
+				return false, err
+			}
+			if b {
+				return true, nil
+			}
+		}
+	}
+	recordType = strings.ToUpper(recordType)
+	return this.Query().
+		Pk(domainId).
+		Where("JSON_CONTAINS(records, :query)").
+		Param("query", query.AsJSON()).
 		Exist()
 }

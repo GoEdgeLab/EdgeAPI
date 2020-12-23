@@ -88,6 +88,8 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		Secret:               cluster.Secret,
 		HttpCachePolicyId:    int64(cluster.CachePolicyId),
 		HttpFirewallPolicyId: int64(cluster.HttpFirewallPolicyId),
+		DnsName:              cluster.DnsName,
+		DnsDomainId:          int64(cluster.DnsDomainId),
 	}}, nil
 }
 
@@ -463,6 +465,31 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 	return this.SuccessCount(count)
 }
 
+// 查找使用某个域名的所有集群
+func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.NodeCluster{}
+	for _, cluster := range clusters {
+		result = append(result, &pb.NodeCluster{
+			Id:          int64(cluster.Id),
+			Name:        cluster.Name,
+			DnsName:     cluster.DnsName,
+			DnsDomainId: int64(cluster.DnsDomainId),
+		})
+	}
+	return &pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse{NodeClusters: result}, nil
+}
+
 // 检查集群域名是否已经被使用
 func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req *pb.CheckNodeClusterDNSNameRequest) (*pb.CheckNodeClusterDNSNameResponse, error) {
 	// 校验请求
@@ -524,7 +551,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	}
 
 	service := &DNSDomainService{}
-	changes, _, _, _, _, err := service.findClusterDNSChanges(cluster, records, domain.Name)
+	changes, _, _, _, _, _, _, err := service.findClusterDNSChanges(cluster, records, domain.Name)
 	if err != nil {
 		return nil, err
 	}

@@ -300,13 +300,18 @@ func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.D
 	if err != nil {
 		return nil, err
 	}
+	countClusters := len(clusters)
+	countAllNodes1 := int64(0)
+	countAllServers1 := int64(0)
 	for _, cluster := range clusters {
-		_, nodeRecords, serverRecords, nodesChanged2, serversChanged2, err := this.findClusterDNSChanges(cluster, records, domain.Name)
+		_, nodeRecords, serverRecords, countAllNodes, countAllServers, nodesChanged2, serversChanged2, err := this.findClusterDNSChanges(cluster, records, domain.Name)
 		if err != nil {
 			return nil, err
 		}
 		countNodeRecords += len(nodeRecords)
 		countServerRecords += len(serverRecords)
+		countAllNodes1 += countAllNodes
+		countAllServers1 += countAllServers
 		if nodesChanged2 {
 			nodesChanged = true
 		}
@@ -339,6 +344,9 @@ func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.D
 		CountServerRecords: int64(countServerRecords),
 		ServersChanged:     serversChanged,
 		Routes:             pbRoutes,
+		CountNodeClusters:  int64(countClusters),
+		CountAllNodes:      countAllNodes1,
+		CountAllServers:    countAllServers1,
 	}, nil
 }
 
@@ -354,7 +362,7 @@ func (this *DNSDomainService) convertRecordToPB(record *dnsclients.Record) *pb.D
 }
 
 // 检查集群节点变化
-func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnsclients.Record, domainName string) (result []maps.Map, doneNodeRecords []*dnsclients.Record, doneServerRecords []*dnsclients.Record, nodesChanged bool, serversChanged bool, err error) {
+func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnsclients.Record, domainName string) (result []maps.Map, doneNodeRecords []*dnsclients.Record, doneServerRecords []*dnsclients.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
 	clusterId := int64(cluster.Id)
 	clusterDnsName := cluster.DnsName
 	clusterDomain := clusterDnsName + "." + domainName
@@ -362,8 +370,9 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 节点域名
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(clusterId)
 	if err != nil {
-		return nil, nil, nil, false, false, err
+		return nil, nil, nil, 0, 0, false, false, err
 	}
+	countAllNodes = int64(len(nodes))
 	nodeRecords := []*dnsclients.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
 	nodeRecordMapping := map[string]*dnsclients.Record{} // value_route => *Record
 	for _, record := range records {
@@ -378,14 +387,14 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	for _, node := range nodes {
 		ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
 		if err != nil {
-			return nil, nil, nil, false, false, err
+			return nil, nil, nil, 0, 0, false, false, err
 		}
 		if len(ipAddr) == 0 {
 			continue
 		}
 		routeCodes, err := node.DNSRouteCodesForDomainId(int64(cluster.DnsDomainId))
 		if err != nil {
-			return nil, nil, nil, false, false, err
+			return nil, nil, nil, 0, 0, false, false, err
 		}
 		if len(routeCodes) == 0 {
 			continue
@@ -427,8 +436,9 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 服务域名
 	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(clusterId)
 	if err != nil {
-		return nil, nil, nil, false, false, err
+		return nil, nil, nil, 0, 0, false, false, err
 	}
+	countAllServers = int64(len(servers))
 	serverRecords := []*dnsclients.Record{}             // 之所以用数组再存一遍，是因为dnsName可能会重复
 	serverRecordsMap := map[string]*dnsclients.Record{} // dnsName => *Record
 	for _, record := range records {
@@ -443,7 +453,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	for _, server := range servers {
 		dnsName := server.DnsName
 		if len(dnsName) == 0 {
-			return nil, nil, nil, false, false, errors.New("server '" + numberutils.FormatInt64(int64(server.Id)) + "' 'dnsName' should not empty")
+			return nil, nil, nil, 0, 0, false, false, errors.New("server '" + numberutils.FormatInt64(int64(server.Id)) + "' 'dnsName' should not empty")
 		}
 		serverDNSNames = append(serverDNSNames, dnsName)
 		record, ok := serverRecordsMap[dnsName]
@@ -589,7 +599,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	// 对比变化
 	allChanges := []maps.Map{}
 	for _, cluster := range clusters {
-		changes, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName)
+		changes, _, _, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName)
 		if err != nil {
 			return nil, err
 		}
@@ -638,4 +648,18 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	return &pb.SyncDNSDomainDataResponse{
 		IsOk: true,
 	}, nil
+}
+
+// 检查域名是否在记录中
+func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.ExistDNSDomainRecordRequest) (*pb.ExistDNSDomainRecordResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	isOk, err := models.SharedDNSDomainDAO.ExistDomainRecord(req.DnsDomainId, req.Name, req.Type, req.Route, req.Value)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExistDNSDomainRecordResponse{IsOk: isOk}, nil
 }

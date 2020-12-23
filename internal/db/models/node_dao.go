@@ -685,6 +685,19 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(clusterId int64) (resul
 	return
 }
 
+// 计算一个集群的节点DNS数量
+func (this *NodeDAO) CountAllEnabledNodesDNSWithClusterId(clusterId int64) (result int64, err error) {
+	return this.Query().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isOn", true).
+		Attr("isUp", true).
+		Result("id", "name", "dnsRoutes", "isOn").
+		DescPk().
+		Slice(&result).
+		Count()
+}
+
 // 获取单个节点的DNS信息
 func (this *NodeDAO) FindEnabledNodeDNS(nodeId int64) (*Node, error) {
 	one, err := this.Query().
