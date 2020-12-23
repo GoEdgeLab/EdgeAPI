@@ -37,10 +37,33 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
+	oldClusterId, err := models.SharedUserDAO.FindUserClusterId(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
 	err = models.SharedUserDAO.UpdateUser(req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
+
+	if oldClusterId != req.NodeClusterId {
+		err = models.SharedServerDAO.UpdateUserServersClusterId(req.UserId, req.NodeClusterId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(oldClusterId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return this.Success()
 }
 

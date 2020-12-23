@@ -1055,6 +1055,15 @@ func (this *ServerDAO) CheckUserServer(serverId int64, userId int64) error {
 	return nil
 }
 
+// 设置一个用户下的所有服务的所属集群
+func (this *ServerDAO) UpdateUserServersClusterId(userId int64, clusterId int64) error {
+	_, err := this.Query().
+		Attr("userId", userId).
+		Set("clusterId", clusterId).
+		Update()
+	return err
+}
+
 // 生成DNS Name
 func (this *ServerDAO) genDNSName() (string, error) {
 	for {

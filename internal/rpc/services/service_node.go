@@ -1142,13 +1142,14 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 
 	return &pb.FindEnabledNodeDNSResponse{
 		Node: &pb.NodeDNSInfo{
-			Id:            int64(node.Id),
-			Name:          node.Name,
-			IpAddr:        ipAddr,
-			Routes:        pbRoutes,
-			NodeClusterId: clusterId,
-			DnsDomainId:   dnsDomainId,
-			DnsDomainName: dnsDomainName,
+			Id:                 int64(node.Id),
+			Name:               node.Name,
+			IpAddr:             ipAddr,
+			Routes:             pbRoutes,
+			NodeClusterId:      clusterId,
+			NodeClusterDNSName: clusterDNS.DnsName,
+			DnsDomainId:        dnsDomainId,
+			DnsDomainName:      dnsDomainName,
 		},
 	}, nil
 }

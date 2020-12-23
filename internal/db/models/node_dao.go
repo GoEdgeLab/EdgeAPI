@@ -148,6 +148,7 @@ func (this *NodeDAO) IncreaseAllNodesLatestVersionMatch(clusterId int64) error {
 		Attr("clusterId", clusterId).
 		Set("latestVersion", dbs.SQL("latestVersion+1")).
 		Update()
+
 	return err
 }
 

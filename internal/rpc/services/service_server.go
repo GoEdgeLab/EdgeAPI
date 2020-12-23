@@ -645,6 +645,22 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		}
 	}
 
+	// 用户信息
+	var pbUser *pb.User = nil
+	if server.UserId > 0 {
+		user, err := models.SharedUserDAO.FindEnabledBasicUser(int64(server.UserId))
+		if err != nil {
+			return nil, err
+		}
+		if user != nil {
+			pbUser = &pb.User{
+				Id:       int64(user.Id),
+				Username: user.Username,
+				Fullname: user.Fullname,
+			}
+		}
+	}
+
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
 		Id:               int64(server.Id),
 		IsOn:             server.IsOn == 1,
@@ -671,6 +687,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 			Name: clusterName,
 		},
 		Groups: pbGroups,
+		User:   pbUser,
 	}}, nil
 }
 
