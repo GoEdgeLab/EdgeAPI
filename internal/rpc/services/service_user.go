@@ -296,7 +296,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	}
 
 	// 本月带宽峰值
-	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(req.UserId, 0, month)
+	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthlyPeek(req.UserId, 0, month)
 	if err != nil {
 		return nil, err
 	}
