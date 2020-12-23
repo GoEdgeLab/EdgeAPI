@@ -1080,3 +1080,34 @@ func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUse
 	}
 	return this.Success()
 }
+
+// 查找一个用户下的所有域名列表
+func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Context, req *pb.FindAllEnabledServerNamesWithUserIdRequest) (*pb.FindAllEnabledServerNamesWithUserIdResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	servers, err := models.SharedServerDAO.FindAllEnabledServersWithUserId(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	serverNames := []string{}
+	for _, server := range servers {
+		if len(server.ServerNames) > 0 && server.ServerNames != "null" {
+			serverNameConfigs := []*serverconfigs.ServerNameConfig{}
+			err = json.Unmarshal([]byte(server.ServerNames), &serverNameConfigs)
+			if err != nil {
+				return nil, err
+			}
+			for _, config := range serverNameConfigs {
+				if len(config.SubNames) == 0 {
+					serverNames = append(serverNames, config.Name)
+				} else {
+					serverNames = append(serverNames, config.SubNames...)
+				}
+			}
+		}
+	}
+	return &pb.FindAllEnabledServerNamesWithUserIdResponse{ServerNames: serverNames}, nil
+}

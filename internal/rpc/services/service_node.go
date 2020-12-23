@@ -276,10 +276,15 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 
 // 查找一个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodesWithClusterIdRequest) (*pb.FindAllEnabledNodesWithClusterIdResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
+
+	if userId > 0 {
+		// TODO 检查权限
+	}
+
 
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(req.NodeClusterId)
 	if err != nil {

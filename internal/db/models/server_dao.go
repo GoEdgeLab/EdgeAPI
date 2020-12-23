@@ -1064,6 +1064,17 @@ func (this *ServerDAO) UpdateUserServersClusterId(userId int64, clusterId int64)
 	return err
 }
 
+// 查找用户的所有的服务
+func (this *ServerDAO) FindAllEnabledServersWithUserId(userId int64) (result []*Server, err error) {
+	_, err = this.Query().
+		State(ServerStateEnabled).
+		Attr("userId", userId).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // 生成DNS Name
 func (this *ServerDAO) genDNSName() (string, error) {
 	for {
