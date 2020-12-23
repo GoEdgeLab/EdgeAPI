@@ -32,7 +32,6 @@ func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNS
 		}
 		if len(issues) > 0 {
 			result = append(result, issues...)
-			break
 		}
 	}
 
