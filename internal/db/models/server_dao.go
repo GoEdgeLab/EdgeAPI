@@ -977,6 +977,7 @@ func (this *ServerDAO) FindAllServersDNSWithClusterId(clusterId int64) (result [
 	_, err = this.Query().
 		State(ServerStateEnabled).
 		Attr("isOn", true).
+		Attr("isAuditing", false). // 不在审核中
 		Attr("clusterId", clusterId).
 		Result("id", "name", "dnsName").
 		DescPk().

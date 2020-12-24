@@ -436,6 +436,14 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 		}
 	}
 
+	// 通知服务更新
+	go func() {
+		err := this.notifyServerDNSChanged(req.ServerId)
+		if err != nil {
+			logs.Println("[DNS]notify server changed: " + err.Error())
+		}
+	}()
+
 	return this.Success()
 }
 

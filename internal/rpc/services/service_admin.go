@@ -143,6 +143,23 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		}
 	}
 
+	// OTP认证
+	var pbOtpAuth *pb.Login = nil
+	{
+		adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(int64(admin.Id), models.LoginTypeOTP)
+		if err != nil {
+			return nil, err
+		}
+		if adminAuth != nil {
+			pbOtpAuth = &pb.Login{
+				Id:         int64(adminAuth.Id),
+				Type:       adminAuth.Type,
+				ParamsJSON: []byte(adminAuth.Params),
+				IsOn:       adminAuth.IsOn == 1,
+			}
+		}
+	}
+
 	result := &pb.Admin{
 		Id:       int64(admin.Id),
 		Fullname: admin.Fullname,
@@ -150,6 +167,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		IsOn:     admin.IsOn == 1,
 		IsSuper:  admin.IsSuper == 1,
 		Modules:  pbModules,
+		OtpLogin: pbOtpAuth,
 	}
 	return &pb.FindEnabledAdminResponse{Admin: result}, nil
 }
@@ -275,6 +293,7 @@ func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRe
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.CreateAdminResponse{AdminId: adminId}, nil
 }
 
@@ -291,6 +310,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 	if err != nil {
 		return nil, err
 	}
+
 	return this.Success()
 }
 
@@ -326,6 +346,22 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 
 	result := []*pb.Admin{}
 	for _, admin := range admins {
+		var pbOtpAuth *pb.Login = nil
+		{
+			adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(int64(admin.Id), models.LoginTypeOTP)
+			if err != nil {
+				return nil, err
+			}
+			if adminAuth != nil {
+				pbOtpAuth = &pb.Login{
+					Id:         int64(adminAuth.Id),
+					Type:       adminAuth.Type,
+					ParamsJSON: []byte(adminAuth.Params),
+					IsOn:       adminAuth.IsOn == 1,
+				}
+			}
+		}
+
 		result = append(result, &pb.Admin{
 			Id:        int64(admin.Id),
 			Fullname:  admin.Fullname,
@@ -333,6 +369,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 			IsOn:      admin.IsOn == 1,
 			IsSuper:   admin.IsSuper == 1,
 			CreatedAt: int64(admin.CreatedAt),
+			OtpLogin:  pbOtpAuth,
 		})
 	}
 
@@ -356,4 +393,30 @@ func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRe
 	}
 
 	return this.Success()
+}
+
+// 检查是否需要输入OTP
+func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb.CheckAdminOTPWithUsernameRequest) (*pb.CheckAdminOTPWithUsernameResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Username) == 0 {
+		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
+	}
+
+	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if adminId <= 0 {
+		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
+	}
+
+	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(adminId, "otp")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: otpIsOn}, nil
 }
