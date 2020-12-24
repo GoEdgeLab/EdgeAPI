@@ -221,7 +221,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 		return nil, err
 	}
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClusters()
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 		return nil, err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(req.Offset, req.Size)
+	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

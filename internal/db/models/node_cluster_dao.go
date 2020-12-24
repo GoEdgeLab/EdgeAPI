@@ -167,16 +167,25 @@ func (this *NodeClusterDAO) UpdateCluster(clusterId int64, name string, grantId 
 }
 
 // 计算所有集群数量
-func (this *NodeClusterDAO) CountAllEnabledClusters() (int64, error) {
-	return this.Query().
-		State(NodeClusterStateEnabled).
-		Count()
+func (this *NodeClusterDAO) CountAllEnabledClusters(keyword string) (int64, error) {
+	query := this.Query().
+		State(NodeClusterStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR dnsName like :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
 }
 
 // 列出单页集群
-func (this *NodeClusterDAO) ListEnabledClusters(offset, size int64) (result []*NodeCluster, err error) {
-	_, err = this.Query().
-		State(NodeClusterStateEnabled).
+func (this *NodeClusterDAO) ListEnabledClusters(keyword string, offset, size int64) (result []*NodeCluster, err error) {
+	query := this.Query().
+		State(NodeClusterStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR dnsName like :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
 		Offset(offset).
 		Limit(size).
 		Slice(&result).

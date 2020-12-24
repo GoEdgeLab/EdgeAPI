@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 type ServerService struct {
@@ -454,7 +455,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(req.GroupId, req.Keyword, req.UserId, req.ClusterId, types.Int8(req.AuditingFlag))
 	if err != nil {
 		return nil, err
 	}

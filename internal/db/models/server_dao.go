@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -557,7 +557,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64, clusterId int64, auditingFlag rpc.BoolFlag) (int64, error) {
+func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState) (int64, error) {
 	query := this.Query().
 		State(ServerStateEnabled)
 	if groupId > 0 {
@@ -574,7 +574,7 @@ func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	}
-	if auditingFlag == rpc.BoolFlagTrue {
+	if auditingFlag == configutils.BoolStateYes {
 		query.Attr("isAuditing", true)
 	}
 	return query.Count()

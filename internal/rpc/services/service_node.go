@@ -162,12 +162,16 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	if err != nil {
 		return nil, err
 	}
-	dnsDomainId := int64(clusterDNS.DnsDomainId)
+
+	dnsDomainId := int64(0)
 	domainRoutes := []*dnsclients.Route{}
-	if clusterDNS.DnsDomainId > 0 {
-		domainRoutes, err = models.SharedDNSDomainDAO.FindDomainRoutes(dnsDomainId)
-		if err != nil {
-			return nil, err
+	if clusterDNS != nil {
+		dnsDomainId = int64(clusterDNS.DnsDomainId)
+		if clusterDNS.DnsDomainId > 0 {
+			domainRoutes, err = models.SharedDNSDomainDAO.FindDomainRoutes(dnsDomainId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -284,7 +288,6 @@ func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, r
 	if userId > 0 {
 		// TODO 检查权限
 	}
-
 
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(req.NodeClusterId)
 	if err != nil {

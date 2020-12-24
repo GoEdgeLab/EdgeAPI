@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -283,7 +283,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	}
 
 	// 网站数量
-	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(0, "", req.UserId, 0, rpc.BoolFlagNone)
+	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(0, "", req.UserId, 0, configutils.BoolStateAll)
 	if err != nil {
 		return nil, err
 	}
