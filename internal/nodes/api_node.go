@@ -68,6 +68,9 @@ func (this *APINode) Start() {
 	// 设置rlimit
 	_ = utils.SetRLimit(1024 * 1024)
 
+	// 状态变更计时器
+	go NewNodeStatusExecutor().Listen()
+
 	// 监听RPC服务
 	logs.Println("[API_NODE]starting rpc ...")
 
@@ -135,6 +138,8 @@ func (this *APINode) Start() {
 			}
 		}
 	}
+
+	// HTTP接口
 
 	if !isListening {
 		logs.Println("[API_NODE]the api node does have a listening address")

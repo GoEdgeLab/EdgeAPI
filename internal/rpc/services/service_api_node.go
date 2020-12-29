@@ -140,6 +140,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 			HttpsJSON:       []byte(node.Https),
 			AccessAddrsJSON: []byte(node.AccessAddrs),
 			AccessAddrs:     accessAddrs,
+			StatusJSON:      []byte(node.Status),
 		})
 	}
 

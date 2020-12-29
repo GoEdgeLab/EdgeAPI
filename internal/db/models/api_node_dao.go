@@ -232,6 +232,15 @@ func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(protocol string, host strin
 	return int64(one.(*APINode).Id), nil
 }
 
+// 设置API节点状态
+func (this *APINodeDAO) UpdateAPINodeStatus(apiNodeId int64, statusJSON []byte) error {
+	_, err := this.Query().
+		Pk(apiNodeId).
+		Set("status", statusJSON).
+		Update()
+	return err
+}
+
 // 生成唯一ID
 func (this *APINodeDAO) genUniqueId() (string, error) {
 	for {
