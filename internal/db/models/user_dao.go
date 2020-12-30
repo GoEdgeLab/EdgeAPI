@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -228,4 +229,55 @@ func (this *UserDAO) FindUserClusterId(userId int64) (int64, error) {
 		Pk(userId).
 		Result("clusterId").
 		FindInt64Col(0)
+}
+
+// 更新用户Features
+func (this *UserDAO) UpdateUserFeatures(userId int64, featuresJSON []byte) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	if len(featuresJSON) == 0 {
+		featuresJSON = []byte("[]")
+	}
+	_, err := this.Query().
+		Pk(userId).
+		Set("features", featuresJSON).
+		Update()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 查找用户Features
+func (this *UserDAO) FindUserFeatures(userId int64) ([]*UserFeature, error) {
+	featuresJSON, err := this.Query().
+		Pk(userId).
+		Result("features").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(featuresJSON) == 0 {
+		return nil, nil
+	}
+
+	featureCodes := []string{}
+	err = json.Unmarshal([]byte(featuresJSON), &featureCodes)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查是否还存在以及设置名称
+	result := []*UserFeature{}
+	if len(featureCodes) > 0 {
+		for _, featureCode := range featureCodes {
+			f := FindUserFeature(featureCode)
+			if f != nil {
+				result = append(result, &UserFeature{Name: f.Name, Code: f.Code, Description: f.Description})
+			}
+		}
+	}
+
+	return result, nil
 }

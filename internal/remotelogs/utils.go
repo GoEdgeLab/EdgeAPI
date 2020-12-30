@@ -1,8 +1,9 @@
 package remotelogs
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
-	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	"time"
@@ -15,7 +16,10 @@ func init() {
 	ticker := time.NewTicker(60 * time.Second)
 	go func() {
 		for range ticker.C {
-			// TODO
+			err := uploadLogs()
+			if err != nil {
+				logs.Println("[LOG]" + err.Error())
+			}
 		}
 	}()
 }
@@ -24,7 +28,7 @@ func init() {
 func Println(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
-	nodeConfig, _ := nodeconfigs.SharedNodeConfig()
+	nodeConfig, _ := configs.SharedAPIConfig()
 	if nodeConfig == nil {
 		return
 	}
@@ -35,7 +39,7 @@ func Println(tag string, description string) {
 		Tag:         tag,
 		Description: description,
 		Level:       "info",
-		NodeId:      nodeConfig.Id,
+		NodeId:      nodeConfig.NumberId(),
 		CreatedAt:   time.Now().Unix(),
 	}:
 	default:
@@ -47,7 +51,7 @@ func Println(tag string, description string) {
 func Warn(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
-	nodeConfig, _ := nodeconfigs.SharedNodeConfig()
+	nodeConfig, _ := configs.SharedAPIConfig()
 	if nodeConfig == nil {
 		return
 	}
@@ -58,7 +62,7 @@ func Warn(tag string, description string) {
 		Tag:         tag,
 		Description: description,
 		Level:       "warning",
-		NodeId:      nodeConfig.Id,
+		NodeId:      nodeConfig.NumberId(),
 		CreatedAt:   time.Now().Unix(),
 	}:
 	default:
@@ -70,7 +74,7 @@ func Warn(tag string, description string) {
 func Error(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
-	nodeConfig, _ := nodeconfigs.SharedNodeConfig()
+	nodeConfig, _ := configs.SharedAPIConfig()
 	if nodeConfig == nil {
 		return
 	}
@@ -81,10 +85,28 @@ func Error(tag string, description string) {
 		Tag:         tag,
 		Description: description,
 		Level:       "error",
-		NodeId:      nodeConfig.Id,
+		NodeId:      nodeConfig.NumberId(),
 		CreatedAt:   time.Now().Unix(),
 	}:
 	default:
 
 	}
+}
+
+// 上传日志
+func uploadLogs() error {
+Loop:
+	for {
+		select {
+		case log := <-logChan:
+			err := models.SharedNodeLogDAO.CreateLog(models.NodeRoleAPI, log.NodeId, log.Level, log.Tag, log.Description, log.CreatedAt)
+			if err != nil {
+				return err
+			}
+		default:
+			break Loop
+		}
+	}
+
+	return nil
 }

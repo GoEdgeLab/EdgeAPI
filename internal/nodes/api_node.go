@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -72,12 +73,12 @@ func (this *APINode) Start() {
 	go NewNodeStatusExecutor().Listen()
 
 	// 监听RPC服务
-	logs.Println("[API_NODE]starting rpc ...")
+	remotelogs.Println("API_NODE", "starting RPC server ...")
 
 	// HTTP
 	httpConfig, err := apiNode.DecodeHTTP()
 	if err != nil {
-		logs.Println("[API_NODE]decode http config: " + err.Error())
+		remotelogs.Error("API_NODE", "decode http config: "+err.Error())
 		return
 	}
 	isListening := false
@@ -86,13 +87,13 @@ func (this *APINode) Start() {
 			for _, addr := range listen.Addresses() {
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
-					logs.Println("[API_NODE]listening '" + addr + "' failed: " + err.Error())
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
 					continue
 				}
 				go func() {
 					err := this.listenRPC(listener, nil)
 					if err != nil {
-						logs.Println("[API_NODE]listening '" + addr + "' rpc: " + err.Error())
+						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
 						return
 					}
 				}()
@@ -104,7 +105,7 @@ func (this *APINode) Start() {
 	// HTTPS
 	httpsConfig, err := apiNode.DecodeHTTPS()
 	if err != nil {
-		logs.Println("[API_NODE]decode https config: " + err.Error())
+		remotelogs.Error("API_NODE", "decode https config: "+err.Error())
 		return
 	}
 	if httpsConfig != nil &&
@@ -122,7 +123,7 @@ func (this *APINode) Start() {
 			for _, addr := range listen.Addresses() {
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
-					logs.Println("[API_NODE]listening '" + addr + "' failed: " + err.Error())
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
 					continue
 				}
 				go func() {
@@ -130,7 +131,7 @@ func (this *APINode) Start() {
 						Certificates: certs,
 					})
 					if err != nil {
-						logs.Println("[API_NODE]listening '" + addr + "' rpc: " + err.Error())
+						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
 						return
 					}
 				}()
@@ -142,7 +143,7 @@ func (this *APINode) Start() {
 	// HTTP接口
 
 	if !isListening {
-		logs.Println("[API_NODE]the api node does have a listening address")
+		remotelogs.Error("API_NODE", "the api node require at least one listening address")
 		return
 	}
 
@@ -154,7 +155,7 @@ func (this *APINode) Start() {
 func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) error {
 	var rpcServer *grpc.Server
 	if tlsConfig == nil {
-		logs.Println("[API_NODE]listening http://" + listener.Addr().String() + " ...")
+		remotelogs.Println("API_NODE", "listening http://"+listener.Addr().String()+" ...")
 		rpcServer = grpc.NewServer()
 	} else {
 		logs.Println("[API_NODE]listening https://" + listener.Addr().String() + " ...")
@@ -212,6 +213,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterUserBillServiceServer(rpcServer, &services.UserBillService{})
 	pb.RegisterUserNodeServiceServer(rpcServer, &services.UserNodeService{})
 	pb.RegisterLoginServiceServer(rpcServer, &services.LoginService{})
+	pb.RegisterUserAccessKeyServiceServer(rpcServer, &services.UserAccessKeyService{})
 	err := rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API_NODE]start rpc failed: " + err.Error())
@@ -252,11 +254,13 @@ func (this *APINode) autoUpgrade() error {
 			return nil
 		}
 	}
+	// 不使用remotelogs()，因为此时还没有启动完成
 	logs.Println("[API_NODE]upgrade database starting ...")
 	err = setup.NewSQLExecutor(dbConfig).Run()
 	if err != nil {
 		return errors.New("execute sql failed: " + err.Error())
 	}
+	// 不使用remotelogs
 	logs.Println("[API_NODE]upgrade database done")
 	return nil
 }

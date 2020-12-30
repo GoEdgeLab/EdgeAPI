@@ -17,6 +17,7 @@ type User struct {
 	State        uint8  `field:"state"`        // 状态
 	Source       string `field:"source"`       // 来源
 	ClusterId    uint32 `field:"clusterId"`    // 集群ID
+	Features     string `field:"features"`     // 允许操作的特征
 }
 
 type UserOperator struct {
@@ -35,6 +36,7 @@ type UserOperator struct {
 	State        interface{} // 状态
 	Source       interface{} // 来源
 	ClusterId    interface{} // 集群ID
+	Features     interface{} // 允许操作的特征
 }
 
 func NewUserOperator() *UserOperator {

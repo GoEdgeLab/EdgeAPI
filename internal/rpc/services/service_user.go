@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -358,4 +359,62 @@ func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 	return &pb.FindUserNodeClusterIdResponse{NodeClusterId: clusterId}, nil
+}
+
+// 设置用户能使用的功能
+func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateUserFeaturesRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	featuresJSON, err := json.Marshal(req.FeatureCodes)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedUserDAO.UpdateUserFeatures(req.UserId, featuresJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// 获取用户所有的功能列表
+func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	if userId > 0 {
+		if userId != req.UserId {
+			return nil, this.PermissionError()
+		}
+	}
+
+	features, err := models.SharedUserDAO.FindUserFeatures(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.UserFeature{}
+	for _, feature := range features {
+		result = append(result, feature.ToPB())
+	}
+
+	return &pb.FindUserFeaturesResponse{Features: result}, nil
+}
+
+// 获取所有的功能定义
+func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req *pb.FindAllUserFeatureDefinitionsRequest) (*pb.FindAllUserFeatureDefinitionsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	features := models.FindAllUserFeatures()
+	result := []*pb.UserFeature{}
+	for _, feature := range features {
+		result = append(result, feature.ToPB())
+	}
+	return &pb.FindAllUserFeatureDefinitionsResponse{Features: result}, nil
 }
