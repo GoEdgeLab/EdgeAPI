@@ -42,7 +42,7 @@ func (this *NodeMonitorTask) loop() error {
 	// 检查上次运行时间，防止重复运行
 	settingKey := models.SettingCodeNodeMonitor + "Loop"
 	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-int64(this.intervalSeconds))
+	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-int64(this.intervalSeconds))
 	if err != nil {
 		return err
 	}
@@ -51,12 +51,12 @@ func (this *NodeMonitorTask) loop() error {
 	}
 
 	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(settingKey, []byte(numberutils.FormatInt64(timestamp)))
+	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
 	if err != nil {
 		return err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters()
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters(nil)
 	if err != nil {
 		return err
 	}
@@ -74,18 +74,18 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 	clusterId := int64(cluster.Id)
 
 	// 检查离线节点
-	inactiveNodes, err := models.SharedNodeDAO.FindAllInactiveNodesWithClusterId(clusterId)
+	inactiveNodes, err := models.SharedNodeDAO.FindAllInactiveNodesWithClusterId(nil, clusterId)
 	if err != nil {
 		return err
 	}
 	for _, node := range inactiveNodes {
-		err = models.SharedMessageDAO.CreateNodeMessage(clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, "节点已处于离线状态", nil)
+		err = models.SharedMessageDAO.CreateNodeMessage(nil, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, "节点已处于离线状态", nil)
 		if err != nil {
 			return err
 		}
 
 		// 修改在线状态
-		err = models.SharedNodeDAO.UpdateNodeActive(int64(node.Id), false)
+		err = models.SharedNodeDAO.UpdateNodeActive(nil, int64(node.Id), false)
 		if err != nil {
 			return err
 		}

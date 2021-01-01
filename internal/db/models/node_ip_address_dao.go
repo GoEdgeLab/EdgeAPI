@@ -35,8 +35,8 @@ func init() {
 }
 
 // 启用条目
-func (this *NodeIPAddressDAO) EnableAddress(id int64) (err error) {
-	_, err = this.Query().
+func (this *NodeIPAddressDAO) EnableAddress(tx *dbs.Tx, id int64) (err error) {
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", NodeIPAddressStateEnabled).
 		Update()
@@ -44,8 +44,8 @@ func (this *NodeIPAddressDAO) EnableAddress(id int64) (err error) {
 }
 
 // 禁用IP地址
-func (this *NodeIPAddressDAO) DisableAddress(id int64) (err error) {
-	_, err = this.Query().
+func (this *NodeIPAddressDAO) DisableAddress(tx *dbs.Tx, id int64) (err error) {
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", NodeIPAddressStateDisabled).
 		Update()
@@ -53,11 +53,11 @@ func (this *NodeIPAddressDAO) DisableAddress(id int64) (err error) {
 }
 
 // 禁用节点的所有的IP地址
-func (this *NodeIPAddressDAO) DisableAllAddressesWithNodeId(nodeId int64) error {
+func (this *NodeIPAddressDAO) DisableAllAddressesWithNodeId(tx *dbs.Tx, nodeId int64) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		Set("state", NodeIPAddressStateDisabled).
 		Update()
@@ -65,8 +65,8 @@ func (this *NodeIPAddressDAO) DisableAllAddressesWithNodeId(nodeId int64) error 
 }
 
 // 查找启用中的IP地址
-func (this *NodeIPAddressDAO) FindEnabledAddress(id int64) (*NodeIPAddress, error) {
-	result, err := this.Query().
+func (this *NodeIPAddressDAO) FindEnabledAddress(tx *dbs.Tx, id int64) (*NodeIPAddress, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", NodeIPAddressStateEnabled).
 		Find()
@@ -77,22 +77,22 @@ func (this *NodeIPAddressDAO) FindEnabledAddress(id int64) (*NodeIPAddress, erro
 }
 
 // 根据主键查找名称
-func (this *NodeIPAddressDAO) FindAddressName(id int64) (string, error) {
-	return this.Query().
+func (this *NodeIPAddressDAO) FindAddressName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string, canAccess bool) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, name string, ip string, canAccess bool) (addressId int64, err error) {
 	op := NewNodeIPAddressOperator()
 	op.NodeId = nodeId
 	op.Name = name
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.State = NodeIPAddressStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -100,7 +100,7 @@ func (this *NodeIPAddressDAO) CreateAddress(nodeId int64, name string, ip string
 }
 
 // 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip string, canAccess bool) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name string, ip string, canAccess bool) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -111,25 +111,25 @@ func (this *NodeIPAddressDAO) UpdateAddress(addressId int64, name string, ip str
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.State = NodeIPAddressStateEnabled // 恢复状态
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return err
 }
 
 // 修改IP地址中的IP
-func (this *NodeIPAddressDAO) UpdateAddressIP(addressId int64, ip string) error {
+func (this *NodeIPAddressDAO) UpdateAddressIP(tx *dbs.Tx, addressId int64, ip string) error {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
 	op := NewNodeIPAddressOperator()
 	op.Id = addressId
 	op.Ip = ip
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改IP地址所属节点
-func (this *NodeIPAddressDAO) UpdateAddressNodeId(addressId int64, nodeId int64) error {
-	_, err := this.Query().
+func (this *NodeIPAddressDAO) UpdateAddressNodeId(tx *dbs.Tx, addressId int64, nodeId int64) error {
+	_, err := this.Query(tx).
 		Pk(addressId).
 		Set("nodeId", nodeId).
 		Set("state", NodeIPAddressStateEnabled). // 恢复状态
@@ -138,8 +138,8 @@ func (this *NodeIPAddressDAO) UpdateAddressNodeId(addressId int64, nodeId int64)
 }
 
 // 查找节点的所有的IP地址
-func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(nodeId int64) (result []*NodeIPAddress, err error) {
-	_, err = this.Query().
+func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(tx *dbs.Tx, nodeId int64) (result []*NodeIPAddress, err error) {
+	_, err = this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
 		Desc("order").
@@ -150,8 +150,8 @@ func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(nodeId int64) (res
 }
 
 // 查找节点的第一个可访问的IP地址
-func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(nodeId int64) (string, error) {
-	return this.Query().
+func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(tx *dbs.Tx, nodeId int64) (string, error) {
+	return this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
@@ -162,8 +162,8 @@ func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(nodeId int64) (string, erro
 }
 
 // 查找节点的第一个可访问的IP地址ID
-func (this *NodeIPAddressDAO) FindFirstNodeIPAddressId(nodeId int64) (int64, error) {
-	return this.Query().
+func (this *NodeIPAddressDAO) FindFirstNodeIPAddressId(tx *dbs.Tx, nodeId int64) (int64, error) {
+	return this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).

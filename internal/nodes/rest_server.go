@@ -90,7 +90,7 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		accessToken, err := models.SharedAPIAccessTokenDAO.FindAccessToken(token)
+		accessToken, err := models.SharedAPIAccessTokenDAO.FindAccessToken(nil, token)
 		if err != nil {
 			this.writeJSON(writer, maps.Map{
 				"code":    400,

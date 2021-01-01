@@ -23,7 +23,9 @@ func (this *HTTPHeaderService) CreateHTTPHeader(ctx context.Context, req *pb.Cre
 		// TODO 检查用户权限
 	}
 
-	headerId, err := models.SharedHTTPHeaderDAO.CreateHeader(req.Name, req.Value)
+	tx := this.NullTx()
+
+	headerId, err := models.SharedHTTPHeaderDAO.CreateHeader(tx, req.Name, req.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +45,9 @@ func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.Upd
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPHeaderDAO.UpdateHeader(req.HeaderId, req.Name, req.Value)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderDAO.UpdateHeader(tx, req.HeaderId, req.Name, req.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +67,9 @@ func (this *HTTPHeaderService) FindEnabledHTTPHeaderConfig(ctx context.Context, 
 		// TODO 检查用户权限
 	}
 
-	config, err := models.SharedHTTPHeaderDAO.ComposeHeaderConfig(req.HeaderId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, req.HeaderId)
 	if err != nil {
 		return nil, err
 	}

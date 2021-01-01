@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/dbs"
 )
 
 // 解析HTTP配置
@@ -25,7 +26,7 @@ func (this *APINode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 }
 
 // 解析HTTPS配置
-func (this *APINode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) {
+func (this *APINode) DecodeHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if !IsNotNull(this.Https) {
 		return nil, nil
 	}
@@ -43,7 +44,7 @@ func (this *APINode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) {
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId)
 			if err != nil {
 				return nil, err
 			}
@@ -117,7 +118,7 @@ func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error)
 }
 
 // 解析HTTPS配置
-func (this *APINode) DecodeRestHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) {
+func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if this.RestIsOn != 1 {
 		return nil, nil
 	}
@@ -138,7 +139,7 @@ func (this *APINode) DecodeRestHTTPS() (*serverconfigs.HTTPSProtocolConfig, erro
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId)
 			if err != nil {
 				return nil, err
 			}

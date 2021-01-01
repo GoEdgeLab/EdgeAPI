@@ -42,7 +42,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
 	settingKey := "sslCertExpiringCheckLoop"
 	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
+	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 	}
 
 	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(settingKey, []byte(numberutils.FormatInt64(timestamp)))
+	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 	// 查找需要自动更新的证书
 	// 30, 14 ... 是到期的天数
 	for _, days := range []int{30, 14, 7} {
-		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(days)
+		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(nil, days)
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
-				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(int64(cert.AcmeTaskId))
+				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
 				if err != nil {
 					return err
 				}
@@ -84,7 +84,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 				msg += "请及时更新证书。"
 			}
 
-			err = models.SharedMessageDAO.CreateMessage(int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
+			err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
 				"certId":     cert.Id,
 				"acmeTaskId": cert.AcmeTaskId,
 			}.AsJSON())
@@ -93,7 +93,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 			}
 
 			// 设置最后通知时间
-			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(int64(cert.Id))
+			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
 			if err != nil {
 				return err
 			}
@@ -102,7 +102,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 	// 自动续期
 	for _, days := range []int{3, 2, 1} {
-		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(days)
+		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(nil, days)
 		if err != nil {
 			return err
 		}
@@ -112,36 +112,36 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
-				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(int64(cert.AcmeTaskId))
+				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
 				if err != nil {
 					return err
 				}
 				if task != nil {
 					if task.AutoRenew == 1 {
-						isOk, errMsg, _ := models.SharedACMETaskDAO.RunTask(int64(cert.AcmeTaskId))
+						isOk, errMsg, _ := models.SharedACMETaskDAO.RunTask(nil, int64(cert.AcmeTaskId))
 						if isOk {
 							// 发送成功通知
 							msg = "系统已成功为你自动更新了证书\"" + cert.Name + "\"（" + cert.DnsNames + "）。"
-							err = models.SharedMessageDAO.CreateMessage(int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskSuccess, models.MessageLevelSuccess, msg, maps.Map{
+							err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskSuccess, models.MessageLevelSuccess, msg, maps.Map{
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
 							}.AsJSON())
 
 							// 更新通知时间
-							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(int64(cert.Id))
+							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
 							if err != nil {
 								return err
 							}
 						} else {
 							// 发送失败通知
 							msg = "系统在尝试自动更新证书\"" + cert.Name + "\"（" + cert.DnsNames + "）时发生错误：" + errMsg + "。请检查系统设置并修复错误。"
-							err = models.SharedMessageDAO.CreateMessage(int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskFailed, models.MessageLevelError, msg, maps.Map{
+							err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskFailed, models.MessageLevelError, msg, maps.Map{
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
 							}.AsJSON())
 
 							// 更新通知时间
-							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(int64(cert.Id))
+							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
 							if err != nil {
 								return err
 							}
@@ -158,7 +158,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 				msg += "请及时更新证书。"
 			}
 
-			err = models.SharedMessageDAO.CreateMessage(int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
+			err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
 				"certId":     cert.Id,
 				"acmeTaskId": cert.AcmeTaskId,
 			}.AsJSON())
@@ -167,7 +167,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 			}
 
 			// 设置最后通知时间
-			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(int64(cert.Id))
+			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
 			if err != nil {
 				return err
 			}
@@ -176,7 +176,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 	// 当天过期
 	for _, days := range []int{0} {
-		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(days)
+		certs, err := models.SharedSSLCertDAO.FindAllExpiringCerts(nil, days)
 		if err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 			// 发送消息
 			today := timeutil.Format("Y-m-d")
 			msg := "SSL证书\"" + cert.Name + "\"（" + cert.DnsNames + "）在今天（" + today + "）过期，请及时更新证书，之后将不再重复提醒。"
-			err = models.SharedMessageDAO.CreateMessage(int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
+			err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, msg, maps.Map{
 				"certId":     cert.Id,
 				"acmeTaskId": cert.AcmeTaskId,
 			}.AsJSON())
@@ -193,7 +193,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 			}
 
 			// 设置最后通知时间
-			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(int64(cert.Id))
+			err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
 			if err != nil {
 				return err
 			}

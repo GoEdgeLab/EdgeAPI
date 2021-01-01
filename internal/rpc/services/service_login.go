@@ -20,7 +20,10 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 	if err != nil {
 		return nil, err
 	}
-	login, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(req.AdminId, req.Type)
+
+	tx := this.NullTx()
+
+	login, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, req.AdminId, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +51,8 @@ func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRe
 		return nil, errors.New("'login' should not be nil")
 	}
 
+	tx := this.NullTx()
+
 	if req.Login.IsOn {
 		params := maps.Map{}
 		if len(req.Login.ParamsJSON) > 0 {
@@ -56,12 +61,12 @@ func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRe
 				return nil, err
 			}
 		}
-		err = models.SharedLoginDAO.UpdateLogin(req.Login.AdminId, req.Login.Type, params, req.Login.IsOn)
+		err = models.SharedLoginDAO.UpdateLogin(tx, req.Login.AdminId, req.Login.Type, params, req.Login.IsOn)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = models.SharedLoginDAO.DisableLoginWithAdminId(req.Login.AdminId, req.Login.Type)
+		err = models.SharedLoginDAO.DisableLoginWithAdminId(tx, req.Login.AdminId, req.Login.Type)
 		if err != nil {
 			return nil, err
 		}

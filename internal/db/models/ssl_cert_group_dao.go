@@ -33,8 +33,8 @@ func init() {
 }
 
 // 启用条目
-func (this *SSLCertGroupDAO) EnableSSLCertGroup(id uint32) error {
-	_, err := this.Query().
+func (this *SSLCertGroupDAO) EnableSSLCertGroup(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLCertGroupStateEnabled).
 		Update()
@@ -42,8 +42,8 @@ func (this *SSLCertGroupDAO) EnableSSLCertGroup(id uint32) error {
 }
 
 // 禁用条目
-func (this *SSLCertGroupDAO) DisableSSLCertGroup(id uint32) error {
-	_, err := this.Query().
+func (this *SSLCertGroupDAO) DisableSSLCertGroup(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLCertGroupStateDisabled).
 		Update()
@@ -51,8 +51,8 @@ func (this *SSLCertGroupDAO) DisableSSLCertGroup(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *SSLCertGroupDAO) FindEnabledSSLCertGroup(id uint32) (*SSLCertGroup, error) {
-	result, err := this.Query().
+func (this *SSLCertGroupDAO) FindEnabledSSLCertGroup(tx *dbs.Tx, id uint32) (*SSLCertGroup, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", SSLCertGroupStateEnabled).
 		Find()
@@ -63,8 +63,8 @@ func (this *SSLCertGroupDAO) FindEnabledSSLCertGroup(id uint32) (*SSLCertGroup, 
 }
 
 // 根据主键查找名称
-func (this *SSLCertGroupDAO) FindSSLCertGroupName(id uint32) (string, error) {
-	return this.Query().
+func (this *SSLCertGroupDAO) FindSSLCertGroupName(tx *dbs.Tx, id uint32) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")

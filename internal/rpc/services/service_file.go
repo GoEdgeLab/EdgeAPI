@@ -20,7 +20,9 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 		return nil, err
 	}
 
-	fileId, err := models.SharedFileDAO.CreateFile("ipLibrary", "", req.Filename, req.Size)
+	tx := this.NullTx()
+
+	fileId, err := models.SharedFileDAO.CreateFile(tx, "ipLibrary", "", req.Filename, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateF
 		return nil, err
 	}
 
-	err = models.SharedFileDAO.UpdateFileIsFinished(req.FileId)
+	tx := this.NullTx()
+
+	err = models.SharedFileDAO.UpdateFileIsFinished(tx, req.FileId)
 	if err != nil {
 		return nil, err
 	}

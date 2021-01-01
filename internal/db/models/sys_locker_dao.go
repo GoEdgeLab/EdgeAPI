@@ -30,10 +30,10 @@ func init() {
 }
 
 // 开锁
-func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
+func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (bool, error) {
 	maxErrors := 5
 	for {
-		one, err := this.Query().
+		one, err := this.Query(tx).
 			Attr("key", key).
 			Find()
 		if err != nil {
@@ -50,7 +50,7 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 			op.Key = key
 			op.TimeoutAt = time.Now().Unix() + timeout
 			op.Version = 1
-			err := this.Save(op)
+			err := this.Save(tx, op)
 			if err != nil {
 				maxErrors--
 				if maxErrors < 0 {
@@ -73,7 +73,7 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 		op.Id = locker.Id
 		op.Version = locker.Version + 1
 		op.TimeoutAt = time.Now().Unix() + timeout
-		err = this.Save(op)
+		err = this.Save(tx, op)
 		if err != nil {
 			maxErrors--
 			if maxErrors < 0 {
@@ -83,7 +83,7 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 		}
 
 		// 再次查询版本
-		version, err := this.Query().
+		version, err := this.Query(tx).
 			Attr("key", key).
 			Result("version").
 			FindCol("0")
@@ -103,8 +103,8 @@ func (this *SysLockerDAO) Lock(key string, timeout int64) (bool, error) {
 }
 
 // 解锁
-func (this *SysLockerDAO) Unlock(key string) error {
-	_, err := this.Query().
+func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
+	_, err := this.Query(tx).
 		Attr("key", key).
 		Set("timeoutAt", time.Now().Unix()-86400*365).
 		Update()

@@ -20,7 +20,9 @@ func (this *HTTPRewriteRuleService) CreateHTTPRewriteRule(ctx context.Context, r
 		return nil, err
 	}
 
-	rewriteRuleId, err := models.SharedHTTPRewriteRuleDAO.CreateRewriteRule(req.Pattern, req.Replace, req.Mode, types.Int(req.RedirectStatus), req.IsBreak, req.ProxyHost, req.WithQuery, req.IsOn)
+	tx := this.NullTx()
+
+	rewriteRuleId, err := models.SharedHTTPRewriteRuleDAO.CreateRewriteRule(tx, req.Pattern, req.Replace, req.Mode, types.Int(req.RedirectStatus), req.IsBreak, req.ProxyHost, req.WithQuery, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +38,9 @@ func (this *HTTPRewriteRuleService) UpdateHTTPRewriteRule(ctx context.Context, r
 		return nil, err
 	}
 
-	err = models.SharedHTTPRewriteRuleDAO.UpdateRewriteRule(req.RewriteRuleId, req.Pattern, req.Replace, req.Mode, types.Int(req.RedirectStatus), req.IsBreak, req.ProxyHost, req.WithQuery, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPRewriteRuleDAO.UpdateRewriteRule(tx, req.RewriteRuleId, req.Pattern, req.Replace, req.Mode, types.Int(req.RedirectStatus), req.IsBreak, req.ProxyHost, req.WithQuery, req.IsOn)
 	if err != nil {
 		return nil, err
 	}

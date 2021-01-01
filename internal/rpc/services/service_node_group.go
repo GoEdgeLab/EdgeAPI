@@ -20,7 +20,9 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	groupId, err := models.SharedNodeGroupDAO.CreateNodeGroup(req.NodeClusterId, req.Name)
+	tx := this.NullTx()
+
+	groupId, err := models.SharedNodeGroupDAO.CreateNodeGroup(tx, req.NodeClusterId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	err = models.SharedNodeGroupDAO.UpdateNodeGroup(req.GroupId, req.Name)
+	tx := this.NullTx()
+
+	err = models.SharedNodeGroupDAO.UpdateNodeGroup(tx, req.GroupId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +55,9 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	_, err = models.SharedNodeGroupDAO.DisableNodeGroup(req.GroupId)
+	tx := this.NullTx()
+
+	_, err = models.SharedNodeGroupDAO.DisableNodeGroup(tx, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +73,9 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithClusterId(ctx context.
 		return nil, err
 	}
 
-	groups, err := models.SharedNodeGroupDAO.FindAllEnabledGroupsWithClusterId(req.NodeClusterId)
+	tx := this.NullTx()
+
+	groups, err := models.SharedNodeGroupDAO.FindAllEnabledGroupsWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +97,9 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	err = models.SharedNodeGroupDAO.UpdateGroupOrders(req.GroupIds)
+	tx := this.NullTx()
+
+	err = models.SharedNodeGroupDAO.UpdateGroupOrders(tx, req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +114,9 @@ func (this *NodeGroupService) FindEnabledNodeGroup(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(req.GroupId)
+	tx := this.NullTx()
+
+	group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(tx, req.GroupId)
 	if err != nil {
 		return nil, err
 	}

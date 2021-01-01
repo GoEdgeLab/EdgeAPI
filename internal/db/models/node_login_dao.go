@@ -37,24 +37,24 @@ func init() {
 }
 
 // 启用条目
-func (this *NodeLoginDAO) EnableNodeLogin(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *NodeLoginDAO) EnableNodeLogin(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", NodeLoginStateEnabled).
 		Update()
 }
 
 // 禁用条目
-func (this *NodeLoginDAO) DisableNodeLogin(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *NodeLoginDAO) DisableNodeLogin(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", NodeLoginStateDisabled).
 		Update()
 }
 
 // 查找启用中的条目
-func (this *NodeLoginDAO) FindEnabledNodeLogin(id uint32) (*NodeLogin, error) {
-	result, err := this.Query().
+func (this *NodeLoginDAO) FindEnabledNodeLogin(tx *dbs.Tx, id uint32) (*NodeLogin, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", NodeLoginStateEnabled).
 		Find()
@@ -65,8 +65,8 @@ func (this *NodeLoginDAO) FindEnabledNodeLogin(id uint32) (*NodeLogin, error) {
 }
 
 // 根据主键查找名称
-func (this *NodeLoginDAO) FindNodeLoginName(id uint32) (string, error) {
-	name, err := this.Query().
+func (this *NodeLoginDAO) FindNodeLoginName(tx *dbs.Tx, id uint32) (string, error) {
+	name, err := this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindCol("")
@@ -74,19 +74,19 @@ func (this *NodeLoginDAO) FindNodeLoginName(id uint32) (string, error) {
 }
 
 // 创建认证
-func (this *NodeLoginDAO) CreateNodeLogin(nodeId int64, name string, loginType string, paramsJSON []byte) (loginId int64, err error) {
+func (this *NodeLoginDAO) CreateNodeLogin(tx *dbs.Tx, nodeId int64, name string, loginType string, paramsJSON []byte) (loginId int64, err error) {
 	login := NewNodeLoginOperator()
 	login.NodeId = nodeId
 	login.Name = name
 	login.Type = loginType
 	login.Params = string(paramsJSON)
 	login.State = NodeLoginStateEnabled
-	err = this.Save(login)
+	err = this.Save(tx, login)
 	return types.Int64(login.Id), err
 }
 
 // 修改认证
-func (this *NodeLoginDAO) UpdateNodeLogin(loginId int64, name string, loginType string, paramsJSON []byte) error {
+func (this *NodeLoginDAO) UpdateNodeLogin(tx *dbs.Tx, loginId int64, name string, loginType string, paramsJSON []byte) error {
 	if loginId <= 0 {
 		return errors.New("invalid loginId")
 	}
@@ -95,13 +95,13 @@ func (this *NodeLoginDAO) UpdateNodeLogin(loginId int64, name string, loginType 
 	login.Name = name
 	login.Type = loginType
 	login.Params = string(paramsJSON)
-	err := this.Save(login)
+	err := this.Save(tx, login)
 	return err
 }
 
 // 查找认证
-func (this *NodeLoginDAO) FindEnabledNodeLoginWithNodeId(nodeId int64) (*NodeLogin, error) {
-	one, err := this.Query().
+func (this *NodeLoginDAO) FindEnabledNodeLoginWithNodeId(tx *dbs.Tx, nodeId int64) (*NodeLogin, error) {
+	one, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeLoginStateEnabled).
 		Find()
@@ -115,8 +115,8 @@ func (this *NodeLoginDAO) FindEnabledNodeLoginWithNodeId(nodeId int64) (*NodeLog
 }
 
 // 禁用某个节点的认证
-func (this *NodeLoginDAO) DisableNodeLogins(nodeId int64) error {
-	_, err := this.Query().
+func (this *NodeLoginDAO) DisableNodeLogins(tx *dbs.Tx, nodeId int64) error {
+	_, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		Set("state", NodeLoginStateDisabled).
 		Update()

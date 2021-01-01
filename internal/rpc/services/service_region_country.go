@@ -10,6 +10,7 @@ import (
 
 // 国家相关服务
 type RegionCountryService struct {
+	BaseService
 }
 
 // 查找所有的国家列表
@@ -20,7 +21,9 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		return nil, err
 	}
 
-	countries, err := models.SharedRegionCountryDAO.FindAllEnabledCountriesOrderByPinyin()
+	tx := this.NullTx()
+
+	countries, err := models.SharedRegionCountryDAO.FindAllEnabledCountriesOrderByPinyin(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +59,9 @@ func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, 
 		return nil, err
 	}
 
-	country, err := models.SharedRegionCountryDAO.FindEnabledRegionCountry(req.CountryId)
+	tx := this.NullTx()
+
+	country, err := models.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.CountryId)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,9 @@ func (this *ACMEUserService) CreateACMEUser(ctx context.Context, req *pb.CreateA
 		return nil, err
 	}
 
-	acmeUserId, err := models.SharedACMEUserDAO.CreateACMEUser(adminId, userId, req.Email, req.Description)
+	tx := this.NullTx()
+
+	acmeUserId, err := models.SharedACMEUserDAO.CreateACMEUser(tx, adminId, userId, req.Email, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +36,10 @@ func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateA
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查是否有权限
-	b, err := models.SharedACMEUserDAO.CheckACMEUser(req.AcmeUserId, adminId, userId)
+	b, err := models.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +47,7 @@ func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateA
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedACMEUserDAO.UpdateACMEUser(req.AcmeUserId, req.Description)
+	err = models.SharedACMEUserDAO.UpdateACMEUser(tx, req.AcmeUserId, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +62,10 @@ func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteA
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查是否有权限
-	b, err := models.SharedACMEUserDAO.CheckACMEUser(req.AcmeUserId, adminId, userId)
+	b, err := models.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +73,7 @@ func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteA
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedACMEUserDAO.DisableACMEUser(req.AcmeUserId)
+	err = models.SharedACMEUserDAO.DisableACMEUser(tx, req.AcmeUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +88,9 @@ func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAc
 		return nil, err
 	}
 
-	count, err := models.SharedACMEUserDAO.CountACMEUsersWithAdminId(adminId, userId)
+	tx := this.NullTx()
+
+	count, err := models.SharedACMEUserDAO.CountACMEUsersWithAdminId(tx, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +105,9 @@ func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACME
 		return nil, err
 	}
 
-	acmeUsers, err := models.SharedACMEUserDAO.ListACMEUsers(adminId, userId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	acmeUsers, err := models.SharedACMEUserDAO.ListACMEUsers(tx, adminId, userId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +131,10 @@ func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查是否有权限
-	b, err := models.SharedACMEUserDAO.CheckACMEUser(req.AcmeUserId, adminId, userId)
+	b, err := models.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +142,7 @@ func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.Fi
 		return nil, this.PermissionError()
 	}
 
-	acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(req.AcmeUserId)
+	acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(tx, req.AcmeUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +165,9 @@ func (this *ACMEUserService) FindAllACMEUsers(ctx context.Context, req *pb.FindA
 		return nil, err
 	}
 
-	acmeUsers, err := models.SharedACMEUserDAO.FindAllACMEUsers(adminId, userId)
+	tx := this.NullTx()
+
+	acmeUsers, err := models.SharedACMEUserDAO.FindAllACMEUsers(tx, adminId, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -100,7 +100,7 @@ func (this *Setup) Run() error {
 
 	// Admin节点信息
 	apiTokenDAO := models.NewApiTokenDAO()
-	token, err := apiTokenDAO.FindEnabledTokenWithRole("admin")
+	token, err := apiTokenDAO.FindEnabledTokenWithRole(nil, "admin")
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (this *Setup) Run() error {
 
 	// 检查API节点
 	dao := models.NewAPINodeDAO()
-	apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr(this.config.APINodeProtocol, this.config.APINodeHost, this.config.APINodePort)
+	apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr(nil, this.config.APINodeProtocol, this.config.APINodeHost, this.config.APINodePort)
 	if err != nil {
 		return err
 	}
@@ -160,14 +160,14 @@ func (this *Setup) Run() error {
 		}
 
 		// 创建API节点
-		nodeId, err := dao.CreateAPINode("默认API节点", "这是默认创建的第一个API节点", httpJSON, httpsJSON, false, nil, nil, addrsJSON, true)
+		nodeId, err := dao.CreateAPINode(nil, "默认API节点", "这是默认创建的第一个API节点", httpJSON, httpsJSON, false, nil, nil, addrsJSON, true)
 		if err != nil {
 			return errors.New("create api node in database failed: " + err.Error())
 		}
 		apiNodeId = nodeId
 	}
 
-	apiNode, err := dao.FindEnabledAPINode(apiNodeId)
+	apiNode, err := dao.FindEnabledAPINode(nil, apiNodeId)
 	if err != nil {
 		return err
 	}

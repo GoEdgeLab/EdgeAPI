@@ -34,7 +34,7 @@ func init() {
 }
 
 // 创建管理员日志
-func (this *LogDAO) CreateLog(adminType string, adminId int64, level string, description string, action string, ip string) error {
+func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level string, description string, action string, ip string) error {
 	op := NewLogOperator()
 	op.Level = level
 	op.Description = description
@@ -53,16 +53,16 @@ func (this *LogDAO) CreateLog(adminType string, adminId int64, level string, des
 
 	op.Day = timeutil.Format("Ymd")
 	op.Type = LogTypeAdmin
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 计算所有日志数量
-func (this *LogDAO) CountLogs(dayFrom string, dayTo string, keyword string, userType string) (int64, error) {
+func (this *LogDAO) CountLogs(tx *dbs.Tx, dayFrom string, dayTo string, keyword string, userType string) (int64, error) {
 	dayFrom = this.formatDay(dayFrom)
 	dayTo = this.formatDay(dayTo)
 
-	query := this.Query()
+	query := this.Query(tx)
 
 	if len(dayFrom) > 0 {
 		query.Gte("day", dayFrom)
@@ -87,11 +87,11 @@ func (this *LogDAO) CountLogs(dayFrom string, dayTo string, keyword string, user
 }
 
 // 列出单页日志
-func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo string, keyword string, userType string) (result []*Log, err error) {
+func (this *LogDAO) ListLogs(tx *dbs.Tx, offset int64, size int64, dayFrom string, dayTo string, keyword string, userType string) (result []*Log, err error) {
 	dayFrom = this.formatDay(dayFrom)
 	dayTo = this.formatDay(dayTo)
 
-	query := this.Query()
+	query := this.Query(tx)
 	if len(dayFrom) > 0 {
 		query.Gte("day", dayFrom)
 	}
@@ -121,28 +121,28 @@ func (this *LogDAO) ListLogs(offset int64, size int64, dayFrom string, dayTo str
 }
 
 // 物理删除日志
-func (this *LogDAO) DeleteLogPermanently(logId int64) error {
+func (this *LogDAO) DeleteLogPermanently(tx *dbs.Tx, logId int64) error {
 	if logId <= 0 {
 		return errors.New("invalid logId")
 	}
-	_, err := this.Delete(logId)
+	_, err := this.Delete(tx, logId)
 	return err
 }
 
 // 物理删除所有日志
-func (this *LogDAO) DeleteAllLogsPermanently() error {
-	_, err := this.Query().
+func (this *LogDAO) DeleteAllLogsPermanently(tx *dbs.Tx) error {
+	_, err := this.Query(tx).
 		Delete()
 	return err
 }
 
 // 物理删除某些天之前的日志
-func (this *LogDAO) DeleteLogsPermanentlyBeforeDays(days int) error {
+func (this *LogDAO) DeleteLogsPermanentlyBeforeDays(tx *dbs.Tx, days int) error {
 	if days <= 0 {
 		days = 0
 	}
 	untilDay := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Lte("day", untilDay).
 		Delete()
 	return err

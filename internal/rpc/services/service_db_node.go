@@ -20,7 +20,10 @@ func (this *DBNodeService) CreateDBNode(ctx context.Context, req *pb.CreateDBNod
 	if err != nil {
 		return nil, err
 	}
-	nodeId, err := models.SharedDBNodeDAO.CreateDBNode(req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
+
+	tx := this.NullTx()
+
+	nodeId, err := models.SharedDBNodeDAO.CreateDBNode(tx, req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +37,10 @@ func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNod
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedDBNodeDAO.UpdateNode(req.NodeId, req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
+
+	tx := this.NullTx()
+
+	err = models.SharedDBNodeDAO.UpdateNode(tx, req.NodeId, req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +54,10 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedDBNodeDAO.DisableDBNode(req.NodeId)
+
+	tx := this.NullTx()
+
+	err = models.SharedDBNodeDAO.DisableDBNode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +71,10 @@ func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.C
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedDBNodeDAO.CountAllEnabledNodes()
+
+	tx := this.NullTx()
+
+	count, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +89,9 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 		return nil, err
 	}
 
-	nodes, err := models.SharedDBNodeDAO.ListEnabledNodes(req.Offset, req.Size)
+	tx := this.NullTx()
+
+	nodes, err := models.SharedDBNodeDAO.ListEnabledNodes(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +122,9 @@ func (this *DBNodeService) FindEnabledDBNode(ctx context.Context, req *pb.FindEn
 		return nil, err
 	}
 
-	node, err := models.SharedDBNodeDAO.FindEnabledDBNode(req.NodeId)
+	tx := this.NullTx()
+
+	node, err := models.SharedDBNodeDAO.FindEnabledDBNode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}

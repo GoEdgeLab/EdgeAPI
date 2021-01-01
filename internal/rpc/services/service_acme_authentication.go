@@ -22,7 +22,9 @@ func (this *ACMEAuthenticationService) FindACMEAuthenticationKeyWithToken(ctx co
 		return nil, errors.New("'token' should not be empty")
 	}
 
-	auth, err := models.SharedACMEAuthenticationDAO.FindAuthWithToken(req.Token)
+	tx := this.NullTx()
+
+	auth, err := models.SharedACMEAuthenticationDAO.FindAuthWithToken(tx, req.Token)
 	if err != nil {
 		return nil, err
 	}

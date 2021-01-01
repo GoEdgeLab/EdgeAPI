@@ -31,12 +31,12 @@ func init() {
 func (this *TCPFirewallPolicyDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }

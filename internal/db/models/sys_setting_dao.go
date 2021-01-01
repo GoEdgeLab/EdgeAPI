@@ -42,7 +42,7 @@ func init() {
 }
 
 // 设置配置
-func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, codeFormatArgs ...interface{}) error {
+func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSON []byte, codeFormatArgs ...interface{}) error {
 	if len(codeFormatArgs) > 0 {
 		codeFormat = fmt.Sprintf(codeFormat, codeFormatArgs...)
 	}
@@ -50,7 +50,7 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 	countRetries := 3
 	var lastErr error
 	for i := 0; i < countRetries; i++ {
-		settingId, err := this.Query().
+		settingId, err := this.Query(tx).
 			Attr("code", codeFormat).
 			ResultPk().
 			FindInt64Col(0)
@@ -63,7 +63,7 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 			op := NewSysSettingOperator()
 			op.Code = codeFormat
 			op.Value = valueJSON
-			err = this.Save(op)
+			err = this.Save(tx, op)
 			if err != nil {
 				lastErr = err
 
@@ -77,7 +77,7 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 		op := NewSysSettingOperator()
 		op.Id = settingId
 		op.Value = valueJSON
-		err = this.Save(op)
+		err = this.Save(tx, op)
 		if err != nil {
 			return err
 		}
@@ -87,11 +87,11 @@ func (this *SysSettingDAO) UpdateSetting(codeFormat string, valueJSON []byte, co
 }
 
 // 读取配置
-func (this *SysSettingDAO) ReadSetting(code string, codeFormatArgs ...interface{}) (valueJSON []byte, err error) {
+func (this *SysSettingDAO) ReadSetting(tx *dbs.Tx, code string, codeFormatArgs ...interface{}) (valueJSON []byte, err error) {
 	if len(codeFormatArgs) > 0 {
 		code = fmt.Sprintf(code, codeFormatArgs...)
 	}
-	col, err := this.Query().
+	col, err := this.Query(tx).
 		Attr("code", code).
 		Result("value").
 		FindStringCol("")
@@ -99,8 +99,8 @@ func (this *SysSettingDAO) ReadSetting(code string, codeFormatArgs ...interface{
 }
 
 // 对比配置中的数字大小
-func (this *SysSettingDAO) CompareInt64Setting(code string, anotherValue int64) (int8, error) {
-	valueJSON, err := this.ReadSetting(code)
+func (this *SysSettingDAO) CompareInt64Setting(tx *dbs.Tx, code string, anotherValue int64) (int8, error) {
+	valueJSON, err := this.ReadSetting(tx, code)
 	if err != nil {
 		return 0, err
 	}
@@ -115,8 +115,8 @@ func (this *SysSettingDAO) CompareInt64Setting(code string, anotherValue int64) 
 }
 
 // 读取全局配置
-func (this *SysSettingDAO) ReadGlobalConfig() (*serverconfigs.GlobalConfig, error) {
-	globalConfigData, err := this.ReadSetting(SettingCodeServerGlobalConfig)
+func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalConfig, error) {
+	globalConfigData, err := this.ReadSetting(tx, SettingCodeServerGlobalConfig)
 	if err != nil {
 		return nil, err
 	}

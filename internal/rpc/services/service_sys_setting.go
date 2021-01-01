@@ -19,7 +19,9 @@ func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 
-	err = models.SharedSysSettingDAO.UpdateSetting(req.Code, req.ValueJSON)
+	tx := this.NullTx()
+
+	err = models.SharedSysSettingDAO.UpdateSetting(tx, req.Code, req.ValueJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *SysSettingService) ReadSysSetting(ctx context.Context, req *pb.ReadS
 		return nil, err
 	}
 
-	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(req.Code)
+	tx := this.NullTx()
+
+	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(tx, req.Code)
 	if err != nil {
 		return nil, err
 	}

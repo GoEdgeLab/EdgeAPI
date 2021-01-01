@@ -33,8 +33,8 @@ func init() {
 }
 
 // 启用条目
-func (this *SubUserDAO) EnableSubUser(id uint32) error {
-	_, err := this.Query().
+func (this *SubUserDAO) EnableSubUser(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SubUserStateEnabled).
 		Update()
@@ -42,8 +42,8 @@ func (this *SubUserDAO) EnableSubUser(id uint32) error {
 }
 
 // 禁用条目
-func (this *SubUserDAO) DisableSubUser(id uint32) error {
-	_, err := this.Query().
+func (this *SubUserDAO) DisableSubUser(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SubUserStateDisabled).
 		Update()
@@ -51,8 +51,8 @@ func (this *SubUserDAO) DisableSubUser(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *SubUserDAO) FindEnabledSubUser(id uint32) (*SubUser, error) {
-	result, err := this.Query().
+func (this *SubUserDAO) FindEnabledSubUser(tx *dbs.Tx, id uint32) (*SubUser, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", SubUserStateEnabled).
 		Find()
@@ -63,8 +63,8 @@ func (this *SubUserDAO) FindEnabledSubUser(id uint32) (*SubUser, error) {
 }
 
 // 根据主键查找名称
-func (this *SubUserDAO) FindSubUserName(id uint32) (string, error) {
-	return this.Query().
+func (this *SubUserDAO) FindSubUserName(tx *dbs.Tx, id uint32) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")

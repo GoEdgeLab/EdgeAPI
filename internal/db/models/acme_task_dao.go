@@ -41,8 +41,8 @@ func init() {
 }
 
 // 启用条目
-func (this *ACMETaskDAO) EnableACMETask(id int64) error {
-	_, err := this.Query().
+func (this *ACMETaskDAO) EnableACMETask(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ACMETaskStateEnabled).
 		Update()
@@ -50,8 +50,8 @@ func (this *ACMETaskDAO) EnableACMETask(id int64) error {
 }
 
 // 禁用条目
-func (this *ACMETaskDAO) DisableACMETask(id int64) error {
-	_, err := this.Query().
+func (this *ACMETaskDAO) DisableACMETask(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ACMETaskStateDisabled).
 		Update()
@@ -59,8 +59,8 @@ func (this *ACMETaskDAO) DisableACMETask(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *ACMETaskDAO) FindEnabledACMETask(id int64) (*ACMETask, error) {
-	result, err := this.Query().
+func (this *ACMETaskDAO) FindEnabledACMETask(tx *dbs.Tx, id int64) (*ACMETask, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ACMETaskStateEnabled).
 		Find()
@@ -71,24 +71,24 @@ func (this *ACMETaskDAO) FindEnabledACMETask(id int64) (*ACMETask, error) {
 }
 
 // 计算某个ACME用户相关的任务数量
-func (this *ACMETaskDAO) CountACMETasksWithACMEUserId(acmeUserId int64) (int64, error) {
-	return this.Query().
+func (this *ACMETaskDAO) CountACMETasksWithACMEUserId(tx *dbs.Tx, acmeUserId int64) (int64, error) {
+	return this.Query(tx).
 		State(ACMETaskStateEnabled).
 		Attr("acmeUserId", acmeUserId).
 		Count()
 }
 
 // 计算某个DNS服务商相关的任务数量
-func (this *ACMETaskDAO) CountACMETasksWithDNSProviderId(dnsProviderId int64) (int64, error) {
-	return this.Query().
+func (this *ACMETaskDAO) CountACMETasksWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (int64, error) {
+	return this.Query(tx).
 		State(ACMETaskStateEnabled).
 		Attr("dnsProviderId", dnsProviderId).
 		Count()
 }
 
 // 停止某个证书相关任务
-func (this *ACMETaskDAO) DisableAllTasksWithCertId(certId int64) error {
-	_, err := this.Query().
+func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) error {
+	_, err := this.Query(tx).
 		Attr("certId", certId).
 		Set("state", ACMETaskStateDisabled).
 		Update()
@@ -96,15 +96,15 @@ func (this *ACMETaskDAO) DisableAllTasksWithCertId(certId int64) error {
 }
 
 // 计算所有任务数量
-func (this *ACMETaskDAO) CountAllEnabledACMETasks(adminId int64, userId int64) (int64, error) {
-	return NewQuery(this, adminId, userId).
+func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
+	return NewQuery(tx, this, adminId, userId).
 		State(ACMETaskStateEnabled).
 		Count()
 }
 
 // 列出单页任务
-func (this *ACMETaskDAO) ListEnabledACMETasks(adminId int64, userId int64, offset int64, size int64) (result []*ACMETask, err error) {
-	_, err = NewQuery(this, adminId, userId).
+func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*ACMETask, err error) {
+	_, err = NewQuery(tx, this, adminId, userId).
 		State(ACMETaskStateEnabled).
 		DescPk().
 		Offset(offset).
@@ -115,7 +115,7 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(adminId int64, userId int64, offse
 }
 
 // 创建任务
-func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) (int64, error) {
+func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) (int64, error) {
 	op := NewACMETaskOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -137,7 +137,7 @@ func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, authType ac
 	op.AutoRenew = autoRenew
 	op.IsOn = true
 	op.State = ACMETaskStateEnabled
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -145,7 +145,7 @@ func (this *ACMETaskDAO) CreateACMETask(adminId int64, userId int64, authType ac
 }
 
 // 修改任务
-func (this *ACMETaskDAO) UpdateACMETask(acmeTaskId int64, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) error {
+func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) error {
 	if acmeTaskId <= 0 {
 		return errors.New("invalid acmeTaskId")
 	}
@@ -167,20 +167,20 @@ func (this *ACMETaskDAO) UpdateACMETask(acmeTaskId int64, acmeUserId int64, dnsP
 	}
 
 	op.AutoRenew = autoRenew
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 检查权限
-func (this *ACMETaskDAO) CheckACMETask(adminId int64, userId int64, acmeTaskId int64) (bool, error) {
-	return NewQuery(this, adminId, userId).
+func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, adminId int64, userId int64, acmeTaskId int64) (bool, error) {
+	return NewQuery(tx, this, adminId, userId).
 		State(ACMETaskStateEnabled).
 		Pk(acmeTaskId).
 		Exist()
 }
 
 // 设置任务关联的证书
-func (this *ACMETaskDAO) UpdateACMETaskCert(taskId int64, certId int64) error {
+func (this *ACMETaskDAO) UpdateACMETaskCert(tx *dbs.Tx, taskId int64, certId int64) error {
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
 	}
@@ -188,16 +188,16 @@ func (this *ACMETaskDAO) UpdateACMETaskCert(taskId int64, certId int64) error {
 	op := NewACMETaskOperator()
 	op.Id = taskId
 	op.CertId = certId
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 执行任务并记录日志
-func (this *ACMETaskDAO) RunTask(taskId int64) (isOk bool, errMsg string, resultCertId int64) {
-	isOk, errMsg, resultCertId = this.runTaskWithoutLog(taskId)
+func (this *ACMETaskDAO) RunTask(tx *dbs.Tx, taskId int64) (isOk bool, errMsg string, resultCertId int64) {
+	isOk, errMsg, resultCertId = this.runTaskWithoutLog(tx, taskId)
 
 	// 记录日志
-	err := SharedACMETaskLogDAO.CreateACMETaskLog(taskId, isOk, errMsg)
+	err := SharedACMETaskLogDAO.CreateACMETaskLog(tx, taskId, isOk, errMsg)
 	if err != nil {
 		logs.Error(err)
 	}
@@ -206,8 +206,8 @@ func (this *ACMETaskDAO) RunTask(taskId int64) (isOk bool, errMsg string, result
 }
 
 // 执行任务但并不记录日志
-func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg string, resultCertId int64) {
-	task, err := this.FindEnabledACMETask(taskId)
+func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool, errMsg string, resultCertId int64) {
+	task, err := this.FindEnabledACMETask(tx, taskId)
 	if err != nil {
 		errMsg = "查询任务信息时出错：" + err.Error()
 		return
@@ -222,7 +222,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 	}
 
 	// ACME用户
-	user, err := SharedACMEUserDAO.FindEnabledACMEUser(int64(task.AcmeUserId))
+	user, err := SharedACMEUserDAO.FindEnabledACMEUser(tx, int64(task.AcmeUserId))
 	if err != nil {
 		errMsg = "查询ACME用户时出错：" + err.Error()
 		return
@@ -244,7 +244,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 			return err
 		}
 
-		err = SharedACMEUserDAO.UpdateACMEUserRegistration(int64(user.Id), resourceJSON)
+		err = SharedACMEUserDAO.UpdateACMEUserRegistration(tx, int64(user.Id), resourceJSON)
 		return err
 	})
 
@@ -259,7 +259,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 	var acmeTask *acme.Task = nil
 	if task.AuthType == acme.AuthTypeDNS {
 		// DNS服务商
-		dnsProvider, err := SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+		dnsProvider, err := SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(task.DnsProviderId))
 		if err != nil {
 			errMsg = "查找DNS服务商账号信息时出错：" + err.Error()
 			return
@@ -301,7 +301,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 
 	acmeRequest := acme.NewRequest(acmeTask)
 	acmeRequest.OnAuth(func(domain, token, keyAuth string) {
-		err := SharedACMEAuthenticationDAO.CreateAuth(taskId, domain, token, keyAuth)
+		err := SharedACMEAuthenticationDAO.CreateAuth(tx, taskId, domain, token, keyAuth)
 		if err != nil {
 			logs.Println("[ACME]write authentication to database error: " + err.Error())
 		}
@@ -326,7 +326,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 	// 保存证书
 	resultCertId = int64(task.CertId)
 	if resultCertId > 0 {
-		cert, err := SharedSSLCertDAO.FindEnabledSSLCert(resultCertId)
+		cert, err := SharedSSLCertDAO.FindEnabledSSLCert(tx, resultCertId)
 		if err != nil {
 			errMsg = "证书生成成功，但查询已绑定的证书时出错：" + err.Error()
 			return
@@ -335,7 +335,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 			errMsg = "证书已被管理员或用户删除"
 
 			// 禁用
-			err = SharedACMETaskDAO.DisableACMETask(taskId)
+			err = SharedACMETaskDAO.DisableACMETask(tx, taskId)
 			if err != nil {
 				errMsg = "禁用失效的ACME任务出错：" + err.Error()
 			}
@@ -343,26 +343,26 @@ func (this *ACMETaskDAO) runTaskWithoutLog(taskId int64) (isOk bool, errMsg stri
 			return
 		}
 
-		err = SharedSSLCertDAO.UpdateCert(resultCertId, cert.IsOn == 1, cert.Name, cert.Description, cert.ServerName, cert.IsCA == 1, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
+		err = SharedSSLCertDAO.UpdateCert(tx, resultCertId, cert.IsOn == 1, cert.Name, cert.Description, cert.ServerName, cert.IsCA == 1, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
 		if err != nil {
 			errMsg = "证书生成成功，但是修改数据库中的证书信息时出错：" + err.Error()
 			return
 		}
 	} else {
-		resultCertId, err = SharedSSLCertDAO.CreateCert(int64(task.AdminId), int64(task.UserId), true, task.DnsDomain+"免费证书", "免费申请的证书", "", false, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
+		resultCertId, err = SharedSSLCertDAO.CreateCert(tx, int64(task.AdminId), int64(task.UserId), true, task.DnsDomain+"免费证书", "免费申请的证书", "", false, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
 		if err != nil {
 			errMsg = "证书生成成功，但是保存到数据库失败：" + err.Error()
 			return
 		}
 
-		err = SharedSSLCertDAO.UpdateCertACME(resultCertId, int64(task.Id))
+		err = SharedSSLCertDAO.UpdateCertACME(tx, resultCertId, int64(task.Id))
 		if err != nil {
 			errMsg = "证书生成成功，修改证书ACME信息时出错：" + err.Error()
 			return
 		}
 
 		// 设置成功
-		err = SharedACMETaskDAO.UpdateACMETaskCert(taskId, resultCertId)
+		err = SharedACMETaskDAO.UpdateACMETaskCert(tx, taskId, resultCertId)
 		if err != nil {
 			errMsg = "证书生成成功，设置任务关联的证书时出错：" + err.Error()
 			return

@@ -43,7 +43,9 @@ func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateH
 		}
 	}
 
-	gzipId, err := models.SharedHTTPGzipDAO.CreateGzip(int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
+	tx := this.NullTx()
+
+	gzipId, err := models.SharedHTTPGzipDAO.CreateGzip(tx, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +61,9 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPGzipDAO.ComposeGzipConfig(req.GzipId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPGzipDAO.ComposeGzipConfig(tx, req.GzipId)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +105,9 @@ func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateH
 		}
 	}
 
-	err = models.SharedHTTPGzipDAO.UpdateGzip(req.GzipId, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPGzipDAO.UpdateGzip(tx, req.GzipId, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,9 @@ func (this *HTTPWebsocketService) CreateHTTPWebsocket(ctx context.Context, req *
 		return nil, err
 	}
 
-	websocketId, err := models.SharedHTTPWebsocketDAO.CreateWebsocket(req.HandshakeTimeoutJSON, req.AllowAllOrigins, req.AllowedOrigins, req.RequestSameOrigin, req.RequestOrigin)
+	tx := this.NullTx()
+
+	websocketId, err := models.SharedHTTPWebsocketDAO.CreateWebsocket(tx, req.HandshakeTimeoutJSON, req.AllowAllOrigins, req.AllowedOrigins, req.RequestSameOrigin, req.RequestOrigin)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *
 
 	// TODO 用户不能修改别人的WebSocket设置
 
-	err = models.SharedHTTPWebsocketDAO.UpdateWebsocket(req.WebsocketId, req.HandshakeTimeoutJSON, req.AllowAllOrigins, req.AllowedOrigins, req.RequestSameOrigin, req.RequestOrigin)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebsocketDAO.UpdateWebsocket(tx, req.WebsocketId, req.HandshakeTimeoutJSON, req.AllowAllOrigins, req.AllowedOrigins, req.RequestSameOrigin, req.RequestOrigin)
 	if err != nil {
 		return nil, err
 	}

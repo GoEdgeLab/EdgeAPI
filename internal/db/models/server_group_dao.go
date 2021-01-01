@@ -35,8 +35,8 @@ func init() {
 }
 
 // 启用条目
-func (this *ServerGroupDAO) EnableServerGroup(id int64) error {
-	_, err := this.Query().
+func (this *ServerGroupDAO) EnableServerGroup(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ServerGroupStateEnabled).
 		Update()
@@ -44,8 +44,8 @@ func (this *ServerGroupDAO) EnableServerGroup(id int64) error {
 }
 
 // 禁用条目
-func (this *ServerGroupDAO) DisableServerGroup(id int64) error {
-	_, err := this.Query().
+func (this *ServerGroupDAO) DisableServerGroup(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ServerGroupStateDisabled).
 		Update()
@@ -53,8 +53,8 @@ func (this *ServerGroupDAO) DisableServerGroup(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *ServerGroupDAO) FindEnabledServerGroup(id int64) (*ServerGroup, error) {
-	result, err := this.Query().
+func (this *ServerGroupDAO) FindEnabledServerGroup(tx *dbs.Tx, id int64) (*ServerGroup, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ServerGroupStateEnabled).
 		Find()
@@ -65,19 +65,19 @@ func (this *ServerGroupDAO) FindEnabledServerGroup(id int64) (*ServerGroup, erro
 }
 
 // 根据主键查找名称
-func (this *ServerGroupDAO) FindServerGroupName(id int64) (string, error) {
-	return this.Query().
+func (this *ServerGroupDAO) FindServerGroupName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建分组
-func (this *ServerGroupDAO) CreateGroup(name string) (groupId int64, err error) {
+func (this *ServerGroupDAO) CreateGroup(tx *dbs.Tx, name string) (groupId int64, err error) {
 	op := NewServerGroupOperator()
 	op.State = ServerGroupStateEnabled
 	op.Name = name
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -85,20 +85,20 @@ func (this *ServerGroupDAO) CreateGroup(name string) (groupId int64, err error) 
 }
 
 // 修改分组
-func (this *ServerGroupDAO) UpdateGroup(groupId int64, name string) error {
+func (this *ServerGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, name string) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
 	op := NewServerGroupOperator()
 	op.Id = groupId
 	op.Name = name
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 查找所有分组
-func (this *ServerGroupDAO) FindAllEnabledGroups() (result []*ServerGroup, err error) {
-	_, err = this.Query().
+func (this *ServerGroupDAO) FindAllEnabledGroups(tx *dbs.Tx) (result []*ServerGroup, err error) {
+	_, err = this.Query(tx).
 		State(ServerGroupStateEnabled).
 		Desc("order").
 		AscPk().
@@ -108,9 +108,9 @@ func (this *ServerGroupDAO) FindAllEnabledGroups() (result []*ServerGroup, err e
 }
 
 // 修改分组排序
-func (this *ServerGroupDAO) UpdateGroupOrders(groupIds []int64) error {
+func (this *ServerGroupDAO) UpdateGroupOrders(tx *dbs.Tx, groupIds []int64) error {
 	for index, groupId := range groupIds {
-		_, err := this.Query().
+		_, err := this.Query(tx).
 			Pk(groupId).
 			Set("order", len(groupIds)-index).
 			Update()

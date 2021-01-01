@@ -8,6 +8,7 @@ import (
 )
 
 type HTTPAccessLogPolicyService struct {
+	BaseService
 }
 
 // 获取所有可用策略
@@ -18,7 +19,9 @@ func (this *HTTPAccessLogPolicyService) FindAllEnabledHTTPAccessLogPolicies(ctx 
 		return nil, err
 	}
 
-	policies, err := models.SharedHTTPAccessLogPolicyDAO.FindAllEnabledAccessLogPolicies()
+	tx := this.NullTx()
+
+	policies, err := models.SharedHTTPAccessLogPolicyDAO.FindAllEnabledAccessLogPolicies(tx)
 	if err != nil {
 		return nil, err
 	}

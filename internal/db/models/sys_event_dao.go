@@ -30,7 +30,7 @@ func init() {
 }
 
 // 创建事件
-func (this *SysEventDAO) CreateEvent(event EventInterface) error {
+func (this *SysEventDAO) CreateEvent(tx *dbs.Tx, event EventInterface) error {
 	if event == nil {
 		return errors.New("event should not be nil")
 	}
@@ -44,13 +44,13 @@ func (this *SysEventDAO) CreateEvent(event EventInterface) error {
 	}
 	op.Params = eventJSON
 
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return err
 }
 
 // 查找事件
-func (this *SysEventDAO) FindEvents(size int64) (result []*SysEvent, err error) {
-	_, err = this.Query().
+func (this *SysEventDAO) FindEvents(tx *dbs.Tx, size int64) (result []*SysEvent, err error) {
+	_, err = this.Query(tx).
 		Asc().
 		Limit(size).
 		Slice(&result).
@@ -59,8 +59,8 @@ func (this *SysEventDAO) FindEvents(size int64) (result []*SysEvent, err error) 
 }
 
 // 删除事件
-func (this *SysEventDAO) DeleteEvent(eventId int64) error {
-	_, err := this.Query().
+func (this *SysEventDAO) DeleteEvent(tx *dbs.Tx, eventId int64) error {
+	_, err := this.Query(tx).
 		Pk(eventId).
 		Delete()
 	return err

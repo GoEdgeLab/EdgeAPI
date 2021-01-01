@@ -39,19 +39,19 @@ func init() {
 func (this *HTTPAccessLogPolicyDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(id int64) error {
-	_, err := this.Query().
+func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPAccessLogPolicyStateEnabled).
 		Update()
@@ -59,8 +59,8 @@ func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPAccessLogPolicyDAO) DisableHTTPAccessLogPolicy(id int64) error {
-	_, err := this.Query().
+func (this *HTTPAccessLogPolicyDAO) DisableHTTPAccessLogPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPAccessLogPolicyStateDisabled).
 		Update()
@@ -68,8 +68,8 @@ func (this *HTTPAccessLogPolicyDAO) DisableHTTPAccessLogPolicy(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPAccessLogPolicyDAO) FindEnabledHTTPAccessLogPolicy(id int64) (*HTTPAccessLogPolicy, error) {
-	result, err := this.Query().
+func (this *HTTPAccessLogPolicyDAO) FindEnabledHTTPAccessLogPolicy(tx *dbs.Tx, id int64) (*HTTPAccessLogPolicy, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPAccessLogPolicyStateEnabled).
 		Find()
@@ -80,16 +80,16 @@ func (this *HTTPAccessLogPolicyDAO) FindEnabledHTTPAccessLogPolicy(id int64) (*H
 }
 
 // 根据主键查找名称
-func (this *HTTPAccessLogPolicyDAO) FindHTTPAccessLogPolicyName(id int64) (string, error) {
-	return this.Query().
+func (this *HTTPAccessLogPolicyDAO) FindHTTPAccessLogPolicyName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 查找所有可用策略信息
-func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAccessLogPolicies() (result []*HTTPAccessLogPolicy, err error) {
-	_, err = this.Query().
+func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAccessLogPolicies(tx *dbs.Tx) (result []*HTTPAccessLogPolicy, err error) {
+	_, err = this.Query(tx).
 		State(HTTPAccessLogPolicyStateEnabled).
 		DescPk().
 		Slice(&result).
@@ -98,8 +98,8 @@ func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAccessLogPolicies() (result []
 }
 
 // 组合配置
-func (this *HTTPAccessLogPolicyDAO) ComposeAccessLogPolicyConfig(policyId int64) (*serverconfigs.HTTPAccessLogStoragePolicy, error) {
-	policy, err := this.FindEnabledHTTPAccessLogPolicy(policyId)
+func (this *HTTPAccessLogPolicyDAO) ComposeAccessLogPolicyConfig(tx *dbs.Tx, policyId int64) (*serverconfigs.HTTPAccessLogStoragePolicy, error) {
+	policy, err := this.FindEnabledHTTPAccessLogPolicy(tx, policyId)
 	if err != nil {
 		return nil, err
 	}

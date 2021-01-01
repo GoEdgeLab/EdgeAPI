@@ -32,7 +32,9 @@ func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequ
 		}, nil
 	}
 
-	adminId, err := models.SharedAdminDAO.CheckAdminPassword(req.Username, req.Password)
+	tx := this.NullTx()
+
+	adminId, err := models.SharedAdminDAO.CheckAdminPassword(tx, req.Username, req.Password)
 	if err != nil {
 		utils.PrintError(err)
 		return nil, err
@@ -65,7 +67,9 @@ func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdm
 		}, nil
 	}
 
-	ok, err := models.SharedAdminDAO.ExistEnabledAdmin(req.AdminId)
+	tx := this.NullTx()
+
+	ok, err := models.SharedAdminDAO.ExistEnabledAdmin(tx, req.AdminId)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +87,9 @@ func (this *AdminService) CheckAdminUsername(ctx context.Context, req *pb.CheckA
 		return nil, err
 	}
 
-	exists, err := models.SharedAdminDAO.CheckAdminUsername(req.AdminId, req.Username)
+	tx := this.NullTx()
+
+	exists, err := models.SharedAdminDAO.CheckAdminUsername(tx, req.AdminId, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +105,9 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 		return nil, err
 	}
 
-	fullname, err := models.SharedAdminDAO.FindAdminFullname(req.AdminId)
+	tx := this.NullTx()
+
+	fullname, err := models.SharedAdminDAO.FindAdminFullname(tx, req.AdminId)
 	if err != nil {
 		utils.PrintError(err)
 		return nil, err
@@ -119,7 +127,9 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 
 	// TODO 检查权限
 
-	admin, err := models.SharedAdminDAO.FindEnabledAdmin(req.AdminId)
+	tx := this.NullTx()
+
+	admin, err := models.SharedAdminDAO.FindEnabledAdmin(tx, req.AdminId)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +156,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 	// OTP认证
 	var pbOtpAuth *pb.Login = nil
 	{
-		adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(int64(admin.Id), models.LoginTypeOTP)
+		adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, int64(admin.Id), models.LoginTypeOTP)
 		if err != nil {
 			return nil, err
 		}
@@ -180,18 +190,20 @@ func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(req.Username)
+	tx := this.NullTx()
+
+	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(tx, req.Username)
 	if err != nil {
 		return nil, err
 	}
 	if adminId > 0 {
-		err = models.SharedAdminDAO.UpdateAdminPassword(adminId, req.Password)
+		err = models.SharedAdminDAO.UpdateAdminPassword(tx, adminId, req.Password)
 		if err != nil {
 			return nil, err
 		}
 		return &pb.CreateOrUpdateAdminResponse{AdminId: adminId}, nil
 	}
-	adminId, err = models.SharedAdminDAO.CreateAdmin(req.Username, req.Password, "管理员", true, nil)
+	adminId, err = models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.Password, "管理员", true, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +218,9 @@ func (this *AdminService) UpdateAdminInfo(ctx context.Context, req *pb.UpdateAdm
 		return nil, err
 	}
 
-	err = models.SharedAdminDAO.UpdateAdminInfo(req.AdminId, req.Fullname)
+	tx := this.NullTx()
+
+	err = models.SharedAdminDAO.UpdateAdminInfo(tx, req.AdminId, req.Fullname)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +235,9 @@ func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAd
 		return nil, err
 	}
 
-	exists, err := models.SharedAdminDAO.CheckAdminUsername(req.AdminId, req.Username)
+	tx := this.NullTx()
+
+	exists, err := models.SharedAdminDAO.CheckAdminUsername(tx, req.AdminId, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +245,7 @@ func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAd
 		return nil, errors.New("username already been token")
 	}
 
-	err = models.SharedAdminDAO.UpdateAdminLogin(req.AdminId, req.Username, req.Password)
+	err = models.SharedAdminDAO.UpdateAdminLogin(tx, req.AdminId, req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +261,9 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 
 	// TODO 检查权限
 
-	admins, err := models.SharedAdminDAO.FindAllAdminModules()
+	tx := this.NullTx()
+
+	admins, err := models.SharedAdminDAO.FindAllAdminModules(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +307,9 @@ func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRe
 
 	// TODO 检查权限
 
-	adminId, err := models.SharedAdminDAO.CreateAdmin(req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
+	tx := this.NullTx()
+
+	adminId, err := models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +326,9 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 
 	// TODO 检查权限
 
-	err = models.SharedAdminDAO.UpdateAdmin(req.AdminId, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedAdminDAO.UpdateAdmin(tx, req.AdminId, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +345,9 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 
 	// TODO 检查权限
 
-	count, err := models.SharedAdminDAO.CountAllEnabledAdmins()
+	tx := this.NullTx()
+
+	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +363,9 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 
 	// TODO 检查权限
 
-	admins, err := models.SharedAdminDAO.ListEnabledAdmins(req.Offset, req.Size)
+	tx := this.NullTx()
+
+	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +374,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 	for _, admin := range admins {
 		var pbOtpAuth *pb.Login = nil
 		{
-			adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(int64(admin.Id), models.LoginTypeOTP)
+			adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, int64(admin.Id), models.LoginTypeOTP)
 			if err != nil {
 				return nil, err
 			}
@@ -385,9 +411,11 @@ func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRe
 
 	// TODO 检查权限
 
+	tx := this.NullTx()
+
 	// TODO 超级管理员用户是不能删除的，或者要至少留一个超级管理员用户
 
-	_, err = models.SharedAdminDAO.DisableAdmin(req.AdminId)
+	_, err = models.SharedAdminDAO.DisableAdmin(tx, req.AdminId)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +434,9 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
 	}
 
-	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(req.Username)
+	tx := this.NullTx()
+
+	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(tx, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +444,7 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
 	}
 
-	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(adminId, "otp")
+	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(tx, adminId, "otp")
 	if err != nil {
 		return nil, err
 	}

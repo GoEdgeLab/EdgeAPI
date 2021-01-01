@@ -9,6 +9,7 @@ import (
 
 // 省份相关服务
 type RegionProvinceService struct {
+	BaseService
 }
 
 // 查找所有省份
@@ -19,7 +20,9 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 		return nil, err
 	}
 
-	provinces, err := models.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(req.CountryId)
+	tx := this.NullTx()
+
+	provinces, err := models.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.CountryId)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +47,10 @@ func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	province, err := models.SharedRegionProvinceDAO.FindEnabledRegionProvince(req.ProvinceId)
+
+	tx := this.NullTx()
+
+	province, err := models.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.ProvinceId)
 	if err != nil {
 		return nil, err
 	}

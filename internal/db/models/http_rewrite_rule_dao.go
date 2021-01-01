@@ -39,19 +39,19 @@ func init() {
 func (this *HTTPRewriteRuleDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(id int64) error {
-	_, err := this.Query().
+func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPRewriteRuleStateEnabled).
 		Update()
@@ -59,8 +59,8 @@ func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(id int64) error {
-	_, err := this.Query().
+func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPRewriteRuleStateDisabled).
 		Update()
@@ -68,8 +68,8 @@ func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPRewriteRuleDAO) FindEnabledHTTPRewriteRule(id int64) (*HTTPRewriteRule, error) {
-	result, err := this.Query().
+func (this *HTTPRewriteRuleDAO) FindEnabledHTTPRewriteRule(tx *dbs.Tx, id int64) (*HTTPRewriteRule, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPRewriteRuleStateEnabled).
 		Find()
@@ -80,8 +80,8 @@ func (this *HTTPRewriteRuleDAO) FindEnabledHTTPRewriteRule(id int64) (*HTTPRewri
 }
 
 // 构造配置
-func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(rewriteRuleId int64) (*serverconfigs.HTTPRewriteRule, error) {
-	rule, err := this.FindEnabledHTTPRewriteRule(rewriteRuleId)
+func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int64) (*serverconfigs.HTTPRewriteRule, error) {
+	rule, err := this.FindEnabledHTTPRewriteRule(tx, rewriteRuleId)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(rewriteRuleId int64) (*server
 }
 
 // 创建规则
-func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) (int64, error) {
+func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) (int64, error) {
 	op := NewHTTPRewriteRuleOperator()
 	op.State = HTTPRewriteRuleStateEnabled
 	op.IsOn = isOn
@@ -115,12 +115,12 @@ func (this *HTTPRewriteRuleDAO) CreateRewriteRule(pattern string, replace string
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return types.Int64(op.Id), err
 }
 
 // 修改规则
-func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) error {
+func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) error {
 	if rewriteRuleId <= 0 {
 		return errors.New("invalid rewriteRuleId")
 	}
@@ -134,6 +134,6 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(rewriteRuleId int64, pattern s
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }

@@ -21,7 +21,9 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
+	tx := this.NullTx()
+
+	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(tx, adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,9 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 
 	// TODO 校验权限
 
-	err = models.SharedDNSProviderDAO.UpdateDNSProvider(req.DnsProviderId, req.Name, req.ApiParamsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedDNSProviderDAO.UpdateDNSProvider(tx, req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +58,9 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 		return nil, err
 	}
 
-	count, err := models.SharedDNSProviderDAO.CountAllEnabledDNSProviders(req.AdminId, req.UserId)
+	tx := this.NullTx()
+
+	count, err := models.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +77,9 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 
 	// TODO 校验权限
 
-	providers, err := models.SharedDNSProviderDAO.ListEnabledDNSProviders(req.AdminId, req.UserId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	providers, err := models.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +107,9 @@ func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, 
 
 	// TODO 校验权限
 
-	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProviders(req.AdminId, req.UserId)
+	tx := this.NullTx()
+
+	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +137,9 @@ func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.D
 
 	// TODO 校验权限
 
-	err = models.SharedDNSProviderDAO.DisableDNSProvider(req.DnsProviderId)
+	tx := this.NullTx()
+
+	err = models.SharedDNSProviderDAO.DisableDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +154,9 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		return nil, err
 	}
 
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(req.DnsProviderId)
+	tx := this.NullTx()
+
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +200,9 @@ func (this *DNSProviderService) FindAllEnabledDNSProvidersWithType(ctx context.C
 		return nil, err
 	}
 
-	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(req.ProviderTypeCode)
+	tx := this.NullTx()
+
+	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(tx, req.ProviderTypeCode)
 	if err != nil {
 		return nil, err
 	}

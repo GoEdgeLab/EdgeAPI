@@ -34,8 +34,8 @@ func init() {
 }
 
 // 启用条目
-func (this *IPLibraryDAO) EnableIPLibrary(id int64) error {
-	_, err := this.Query().
+func (this *IPLibraryDAO) EnableIPLibrary(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", IPLibraryStateEnabled).
 		Update()
@@ -43,8 +43,8 @@ func (this *IPLibraryDAO) EnableIPLibrary(id int64) error {
 }
 
 // 禁用条目
-func (this *IPLibraryDAO) DisableIPLibrary(id int64) error {
-	_, err := this.Query().
+func (this *IPLibraryDAO) DisableIPLibrary(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", IPLibraryStateDisabled).
 		Update()
@@ -52,8 +52,8 @@ func (this *IPLibraryDAO) DisableIPLibrary(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *IPLibraryDAO) FindEnabledIPLibrary(id int64) (*IPLibrary, error) {
-	result, err := this.Query().
+func (this *IPLibraryDAO) FindEnabledIPLibrary(tx *dbs.Tx, id int64) (*IPLibrary, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", IPLibraryStateEnabled).
 		Find()
@@ -64,8 +64,8 @@ func (this *IPLibraryDAO) FindEnabledIPLibrary(id int64) (*IPLibrary, error) {
 }
 
 // 查找某个类型的IP库列表
-func (this *IPLibraryDAO) FindAllEnabledIPLibrariesWithType(libraryType string) (result []*IPLibrary, err error) {
-	_, err = this.Query().
+func (this *IPLibraryDAO) FindAllEnabledIPLibrariesWithType(tx *dbs.Tx, libraryType string) (result []*IPLibrary, err error) {
+	_, err = this.Query(tx).
 		State(IPLibraryStateEnabled).
 		Attr("type", libraryType).
 		DescPk().
@@ -75,8 +75,8 @@ func (this *IPLibraryDAO) FindAllEnabledIPLibrariesWithType(libraryType string) 
 }
 
 // 查找某个类型的最新的IP库
-func (this *IPLibraryDAO) FindLatestIPLibraryWithType(libraryType string) (*IPLibrary, error) {
-	one, err := this.Query().
+func (this *IPLibraryDAO) FindLatestIPLibraryWithType(tx *dbs.Tx, libraryType string) (*IPLibrary, error) {
+	one, err := this.Query(tx).
 		State(IPLibraryStateEnabled).
 		Attr("type", libraryType).
 		DescPk().
@@ -91,12 +91,12 @@ func (this *IPLibraryDAO) FindLatestIPLibraryWithType(libraryType string) (*IPLi
 }
 
 // 创建新的IP库
-func (this *IPLibraryDAO) CreateIPLibrary(libraryType string, fileId int64) (int64, error) {
+func (this *IPLibraryDAO) CreateIPLibrary(tx *dbs.Tx, libraryType string, fileId int64) (int64, error) {
 	op := NewIPLibraryOperator()
 	op.Type = libraryType
 	op.FileId = fileId
 	op.State = IPLibraryStateEnabled
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}

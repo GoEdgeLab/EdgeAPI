@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/iwind/TeaGo/dbs"
 	"reflect"
 )
 
@@ -33,12 +34,14 @@ func (this *ServerChangeEvent) Type() string {
 }
 
 func (this *ServerChangeEvent) Run() error {
-	serverIds, err := SharedServerDAO.FindAllEnabledServerIds()
+	var tx *dbs.Tx
+
+	serverIds, err := SharedServerDAO.FindAllEnabledServerIds(tx)
 	if err != nil {
 		return err
 	}
 	for _, serverId := range serverIds {
-		isChanged, err := SharedServerDAO.RenewServerConfig(serverId, true)
+		isChanged, err := SharedServerDAO.RenewServerConfig(tx, serverId, true)
 		if err != nil {
 			return err
 		}
@@ -47,14 +50,14 @@ func (this *ServerChangeEvent) Run() error {
 		}
 
 		// 检查节点是否需要更新
-		isOk, clusterId, err := SharedServerDAO.FindServerNodeFilters(serverId)
+		isOk, clusterId, err := SharedServerDAO.FindServerNodeFilters(tx, serverId)
 		if err != nil {
 			return err
 		}
 		if !isOk {
 			continue
 		}
-		err = SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(clusterId)
+		err = SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, clusterId)
 		if err != nil {
 			return err
 		}

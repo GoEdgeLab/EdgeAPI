@@ -24,7 +24,9 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId)
+	tx := this.NullTx()
+
+	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,9 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(req.NodeClusterId, req.Name, req.GrantId, req.InstallDir)
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.GrantId, req.InstallDir)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +58,9 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.DisableNodeCluster(req.NodeClusterId)
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.DisableNodeCluster(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +79,9 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		// TODO 检查用户是否有权限
 	}
 
-	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
+	tx := this.NullTx()
+
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +113,9 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 		return nil, err
 	}
 
-	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
+	tx := this.NullTx()
+
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +135,7 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 		if len(apiNodeIds) > 0 {
 			apiNodes := []*pb.APINode{}
 			for _, apiNodeId := range apiNodeIds {
-				apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINode(apiNodeId)
+				apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, apiNodeId)
 				if err != nil {
 					return nil, err
 				}
@@ -157,7 +167,9 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 		return nil, err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters()
+	tx := this.NullTx()
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +197,9 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 		return nil, err
 	}
 
-	clusterIds, err := models.SharedNodeDAO.FindChangedClusterIds()
+	tx := this.NullTx()
+
+	clusterIds, err := models.SharedNodeDAO.FindChangedClusterIds(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +210,7 @@ func (this *NodeClusterService) FindAllChangedNodeClusters(ctx context.Context, 
 	}
 	result := []*pb.NodeCluster{}
 	for _, clusterId := range clusterIds {
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(clusterId)
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, clusterId)
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +235,9 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 		return nil, err
 	}
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(req.Keyword)
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(tx, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +252,9 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 		return nil, err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(req.Keyword, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +285,9 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 		return nil, err
 	}
 
-	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(req.NodeClusterId)
+	tx := this.NullTx()
+
+	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +306,9 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateClusterHealthCheck(req.NodeClusterId, req.HealthCheckJSON)
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateClusterHealthCheck(tx, req.NodeClusterId, req.HealthCheckJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +352,9 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx conte
 		return nil, err
 	}
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithGrantId(req.GrantId)
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithGrantId(tx, req.GrantId)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +369,9 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx contex
 		return nil, err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithGrantId(req.GrantId)
+	tx := this.NullTx()
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithGrantId(tx, req.GrantId)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +397,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		return nil, err
 	}
 
-	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
+	tx := this.NullTx()
+
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +426,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		}, nil
 	}
 
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(int64(dnsInfo.DnsDomainId))
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(dnsInfo.DnsDomainId))
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +443,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		IsOn: domain.IsOn == 1,
 	}
 
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(domain.ProviderId))
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +475,9 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 		return nil, err
 	}
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSProviderId(req.DnsProviderId)
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSProviderId(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +492,9 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 		return nil, err
 	}
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSDomainId(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +509,9 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 		return nil, err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+	tx := this.NullTx()
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -502,7 +536,9 @@ func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req
 		return nil, err
 	}
 
-	exists, err := models.SharedNodeClusterDAO.ExistClusterDNSName(req.DnsName, req.NodeClusterId)
+	tx := this.NullTx()
+
+	exists, err := models.SharedNodeClusterDAO.ExistClusterDNSName(tx, req.DnsName, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +553,9 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 		return nil, err
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateClusterDNS(req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync)
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync)
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +570,9 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 		return nil, err
 	}
 
-	cluster, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(req.NodeClusterId)
+	tx := this.NullTx()
+
+	cluster, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +582,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	}
 
 	domainId := int64(cluster.DnsDomainId)
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(domainId)
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
 	if err != nil {
 		return nil, err
 	}
@@ -572,7 +612,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterTOA(ctx context.Context, r
 
 	// TODO 检查权限
 
-	config, err := models.SharedNodeClusterDAO.FindClusterTOAConfig(req.NodeClusterId)
+	tx := this.NullTx()
+
+	config, err := models.SharedNodeClusterDAO.FindClusterTOAConfig(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -592,13 +634,15 @@ func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *p
 
 	// TODO 检查权限
 
-	err = models.SharedNodeClusterDAO.UpdateClusterTOA(req.NodeClusterId, req.ToaJSON)
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateClusterTOA(tx, req.NodeClusterId, req.ToaJSON)
 	if err != nil {
 		return nil, err
 	}
 
 	// 增加节点版本号
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +656,10 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPCachePolicyId
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPCachePolicyId(req.HttpCachePolicyId)
+
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPCachePolicyId(tx, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -625,8 +672,11 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(
 	if err != nil {
 		return nil, err
 	}
+
+	tx := this.NullTx()
+
 	result := []*pb.NodeCluster{}
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPCachePolicyId(req.HttpCachePolicyId)
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPCachePolicyId(tx, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +697,10 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPFirewallPolic
 	if err != nil {
 		return nil, err
 	}
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(req.HttpFirewallPolicyId)
+
+	tx := this.NullTx()
+
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(tx, req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -660,8 +713,11 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicy
 	if err != nil {
 		return nil, err
 	}
+
+	tx := this.NullTx()
+
 	result := []*pb.NodeCluster{}
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(req.HttpFirewallPolicyId)
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(tx, req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -682,13 +738,16 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPCachePolicyId(ctx context.C
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPCachePolicyId(req.NodeClusterId, req.HttpCachePolicyId)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPCachePolicyId(tx, req.NodeClusterId, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
 
 	// 增加节点版本号
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -702,13 +761,16 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx contex
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPFirewallPolicyId(req.NodeClusterId, req.HttpFirewallPolicyId)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeClusterDAO.UpdateNodeClusterHTTPFirewallPolicyId(tx, req.NodeClusterId, req.HttpFirewallPolicyId)
 	if err != nil {
 		return nil, err
 	}
 
 	// 增加节点版本号
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}

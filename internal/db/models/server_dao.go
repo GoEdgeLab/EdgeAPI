@@ -54,16 +54,16 @@ func (this *ServerDAO) Init() {
 }
 
 // 启用条目
-func (this *ServerDAO) EnableServer(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *ServerDAO) EnableServer(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", ServerStateEnabled).
 		Update()
 }
 
 // 禁用条目
-func (this *ServerDAO) DisableServer(id int64) (err error) {
-	_, err = this.Query().
+func (this *ServerDAO) DisableServer(tx *dbs.Tx, id int64) (err error) {
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", ServerStateDisabled).
 		Update()
@@ -71,8 +71,8 @@ func (this *ServerDAO) DisableServer(id int64) (err error) {
 }
 
 // 查找启用中的条目
-func (this *ServerDAO) FindEnabledServer(id int64) (*Server, error) {
-	result, err := this.Query().
+func (this *ServerDAO) FindEnabledServer(tx *dbs.Tx, id int64) (*Server, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ServerStateEnabled).
 		Find()
@@ -83,15 +83,16 @@ func (this *ServerDAO) FindEnabledServer(id int64) (*Server, error) {
 }
 
 // 查找服务类型
-func (this *ServerDAO) FindEnabledServerType(serverId int64) (string, error) {
-	return this.Query().
+func (this *ServerDAO) FindEnabledServerType(tx *dbs.Tx, serverId int64) (string, error) {
+	return this.Query(tx).
 		Pk(serverId).
 		Result("type").
 		FindStringCol("")
 }
 
 // 创建服务
-func (this *ServerDAO) CreateServer(adminId int64,
+func (this *ServerDAO) CreateServer(tx *dbs.Tx,
+	adminId int64,
 	userId int64,
 	serverType serverconfigs.ServerType,
 	name string,
@@ -166,7 +167,7 @@ func (this *ServerDAO) CreateServer(adminId int64,
 		op.GroupIds = groupIdsJSON
 	}
 
-	dnsName, err := this.genDNSName()
+	dnsName, err := this.genDNSName(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -175,7 +176,7 @@ func (this *ServerDAO) CreateServer(adminId int64,
 	op.Version = 1
 	op.IsOn = 1
 	op.State = ServerStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 
 	if err != nil {
 		return 0, err
@@ -183,7 +184,7 @@ func (this *ServerDAO) CreateServer(adminId int64,
 
 	serverId = types.Int64(op.Id)
 
-	_, err = this.RenewServerConfig(serverId, false)
+	_, err = this.RenewServerConfig(tx, serverId, false)
 	if err != nil {
 		return serverId, err
 	}
@@ -197,7 +198,7 @@ func (this *ServerDAO) CreateServer(adminId int64,
 }
 
 // 修改服务基本信息
-func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, description string, clusterId int64, isOn bool, groupIds []int64) error {
+func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string, description string, clusterId int64, isOn bool, groupIds []int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -218,12 +219,12 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 		op.GroupIds = groupIdsJSON
 	}
 
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId, false)
+	_, err = this.RenewServerConfig(tx, serverId, false)
 	if err != nil {
 		return err
 	}
@@ -232,8 +233,8 @@ func (this *ServerDAO) UpdateServerBasic(serverId int64, name string, descriptio
 }
 
 // 修复服务是否启用
-func (this *ServerDAO) UpdateServerIsOn(serverId int64, isOn bool) error {
-	_, err := this.Query().
+func (this *ServerDAO) UpdateServerIsOn(tx *dbs.Tx, serverId int64, isOn bool) error {
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("isOn", isOn).
 		Update()
@@ -241,13 +242,13 @@ func (this *ServerDAO) UpdateServerIsOn(serverId int64, isOn bool) error {
 }
 
 // 修改服务配置
-func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, updateMd5 bool) (isChanged bool, err error) {
+func (this *ServerDAO) UpdateServerConfig(tx *dbs.Tx, serverId int64, configJSON []byte, updateMd5 bool) (isChanged bool, err error) {
 	if serverId <= 0 {
 		return false, errors.New("serverId should not be smaller than 0")
 	}
 
 	// 查询以前的md5
-	oldConfigMd5, err := this.Query().
+	oldConfigMd5, err := this.Query(tx).
 		Pk(serverId).
 		Result("configMd5").
 		FindStringCol("")
@@ -255,7 +256,7 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, upd
 		return false, err
 	}
 
-	globalConfig, err := SharedSysSettingDAO.ReadSetting(SettingCodeServerGlobalConfig)
+	globalConfig, err := SharedSysSettingDAO.ReadSetting(tx, SettingCodeServerGlobalConfig)
 	if err != nil {
 		return false, err
 	}
@@ -279,19 +280,19 @@ func (this *ServerDAO) UpdateServerConfig(serverId int64, configJSON []byte, upd
 	if updateMd5 {
 		op.ConfigMd5 = newConfigMd5
 	}
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return true, err
 }
 
 // 修改HTTP配置
-func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerHTTP(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(config) == 0 {
 		config = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("http", string(config)).
 		Update()
@@ -299,7 +300,7 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId, false)
+	_, err = this.RenewServerConfig(tx, serverId, false)
 	if err != nil {
 		return err
 	}
@@ -308,14 +309,14 @@ func (this *ServerDAO) UpdateServerHTTP(serverId int64, config []byte) error {
 }
 
 // 修改HTTPS配置
-func (this *ServerDAO) UpdateServerHTTPS(serverId int64, httpsJSON []byte) error {
+func (this *ServerDAO) UpdateServerHTTPS(tx *dbs.Tx, serverId int64, httpsJSON []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(httpsJSON) == 0 {
 		httpsJSON = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("https", string(httpsJSON)).
 		Update()
@@ -323,7 +324,7 @@ func (this *ServerDAO) UpdateServerHTTPS(serverId int64, httpsJSON []byte) error
 		return err
 	}
 
-	_, err = this.RenewServerConfig(serverId, false)
+	_, err = this.RenewServerConfig(tx, serverId, false)
 	if err != nil {
 		return err
 	}
@@ -332,14 +333,14 @@ func (this *ServerDAO) UpdateServerHTTPS(serverId int64, httpsJSON []byte) error
 }
 
 // 修改TCP配置
-func (this *ServerDAO) UpdateServerTCP(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerTCP(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(config) == 0 {
 		config = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("tcp", string(config)).
 		Update()
@@ -351,14 +352,14 @@ func (this *ServerDAO) UpdateServerTCP(serverId int64, config []byte) error {
 }
 
 // 修改TLS配置
-func (this *ServerDAO) UpdateServerTLS(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerTLS(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(config) == 0 {
 		config = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("tls", string(config)).
 		Update()
@@ -370,14 +371,14 @@ func (this *ServerDAO) UpdateServerTLS(serverId int64, config []byte) error {
 }
 
 // 修改Unix配置
-func (this *ServerDAO) UpdateServerUnix(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerUnix(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(config) == 0 {
 		config = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("unix", string(config)).
 		Update()
@@ -389,14 +390,14 @@ func (this *ServerDAO) UpdateServerUnix(serverId int64, config []byte) error {
 }
 
 // 修改UDP配置
-func (this *ServerDAO) UpdateServerUDP(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerUDP(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	if len(config) == 0 {
 		config = []byte("null")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("udp", string(config)).
 		Update()
@@ -408,11 +409,11 @@ func (this *ServerDAO) UpdateServerUDP(serverId int64, config []byte) error {
 }
 
 // 修改Web配置
-func (this *ServerDAO) UpdateServerWeb(serverId int64, webId int64) error {
+func (this *ServerDAO) UpdateServerWeb(tx *dbs.Tx, serverId int64, webId int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("webId", webId).
 		Update()
@@ -423,22 +424,22 @@ func (this *ServerDAO) UpdateServerWeb(serverId int64, webId int64) error {
 }
 
 // 初始化Web配置
-func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
+func (this *ServerDAO) InitServerWeb(tx *dbs.Tx, serverId int64) (int64, error) {
 	if serverId <= 0 {
 		return 0, errors.New("serverId should not be smaller than 0")
 	}
 
-	adminId, userId, err := this.FindServerAdminIdAndUserId(serverId)
+	adminId, userId, err := this.FindServerAdminIdAndUserId(tx, serverId)
 	if err != nil {
 		return 0, err
 	}
 
-	webId, err := SharedHTTPWebDAO.CreateWeb(adminId, userId, nil)
+	webId, err := SharedHTTPWebDAO.CreateWeb(tx, adminId, userId, nil)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		Pk(serverId).
 		Set("webId", webId).
 		Update()
@@ -455,11 +456,11 @@ func (this *ServerDAO) InitServerWeb(serverId int64) (int64, error) {
 }
 
 // 查找ServerNames配置
-func (this *ServerDAO) FindServerNames(serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
+func (this *ServerDAO) FindServerNames(tx *dbs.Tx, serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
 	if serverId <= 0 {
 		return
 	}
-	one, err := this.Query().
+	one, err := this.Query(tx).
 		Pk(serverId).
 		Result("serverNames", "isAuditing", "auditingServerNames", "auditingResult").
 		Find()
@@ -474,7 +475,7 @@ func (this *ServerDAO) FindServerNames(serverId int64) (serverNamesJSON []byte, 
 }
 
 // 修改ServerNames配置
-func (this *ServerDAO) UpdateServerNames(serverId int64, serverNames []byte) error {
+func (this *ServerDAO) UpdateServerNames(tx *dbs.Tx, serverId int64, serverNames []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -486,7 +487,7 @@ func (this *ServerDAO) UpdateServerNames(serverId int64, serverNames []byte) err
 		serverNames = []byte("[]")
 	}
 	op.ServerNames = serverNames
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
@@ -494,7 +495,7 @@ func (this *ServerDAO) UpdateServerNames(serverId int64, serverNames []byte) err
 }
 
 // 修改域名审核
-func (this *ServerDAO) UpdateAuditingServerNames(serverId int64, isAuditing bool, auditingServerNamesJSON []byte) error {
+func (this *ServerDAO) UpdateAuditingServerNames(tx *dbs.Tx, serverId int64, isAuditing bool, auditingServerNamesJSON []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -508,7 +509,7 @@ func (this *ServerDAO) UpdateAuditingServerNames(serverId int64, isAuditing bool
 		op.AuditingServerNames = auditingServerNamesJSON
 	}
 	op.AuditingResult = `{"isOk":true}`
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
@@ -516,7 +517,7 @@ func (this *ServerDAO) UpdateAuditingServerNames(serverId int64, isAuditing bool
 }
 
 // 修改域名审核结果
-func (this *ServerDAO) UpdateServerAuditing(serverId int64, result *pb.ServerNameAuditingResult) error {
+func (this *ServerDAO) UpdateServerAuditing(tx *dbs.Tx, serverId int64, result *pb.ServerNameAuditingResult) error {
 	if serverId <= 0 {
 		return errors.New("invalid serverId")
 	}
@@ -537,18 +538,18 @@ func (this *ServerDAO) UpdateServerAuditing(serverId int64, result *pb.ServerNam
 	if result.IsOk {
 		op.ServerNames = dbs.SQL("auditingServerNames")
 	}
-	return this.Save(op)
+	return this.Save(tx, op)
 }
 
 // 修改反向代理配置
-func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) error {
+func (this *ServerDAO) UpdateServerReverseProxy(tx *dbs.Tx, serverId int64, config []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	op := NewServerOperator()
 	op.Id = serverId
 	op.ReverseProxy = JSONBytes(config)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
@@ -557,8 +558,8 @@ func (this *ServerDAO) UpdateServerReverseProxy(serverId int64, config []byte) e
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState) (int64, error) {
-	query := this.Query().
+func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState) (int64, error) {
+	query := this.Query(tx).
 		State(ServerStateEnabled)
 	if groupId > 0 {
 		query.Where("JSON_CONTAINS(groupIds, :groupId)").
@@ -581,8 +582,8 @@ func (this *ServerDAO) CountAllEnabledServersMatch(groupId int64, keyword string
 }
 
 // 列出单页的服务
-func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32) (result []*Server, err error) {
-	query := this.Query().
+func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32) (result []*Server, err error) {
+	query := this.Query(tx).
 		State(ServerStateEnabled).
 		Offset(offset).
 		Limit(size).
@@ -612,9 +613,9 @@ func (this *ServerDAO) ListEnabledServersMatch(offset int64, size int64, groupId
 }
 
 // 获取节点中的所有服务
-func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Server, err error) {
+func (this *ServerDAO) FindAllEnabledServersWithNode(tx *dbs.Tx, nodeId int64) (result []*Server, err error) {
 	// 节点所在集群
-	clusterId, err := SharedNodeDAO.FindNodeClusterId(nodeId)
+	clusterId, err := SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -622,7 +623,7 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Se
 		return nil, nil
 	}
 
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
 		State(ServerStateEnabled).
 		AscPk().
@@ -632,8 +633,8 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(nodeId int64) (result []*Se
 }
 
 // 获取所有的服务ID
-func (this *ServerDAO) FindAllEnabledServerIds() (serverIds []int64, err error) {
-	ones, err := this.Query().
+func (this *ServerDAO) FindAllEnabledServerIds(tx *dbs.Tx) (serverIds []int64, err error) {
+	ones, err := this.Query(tx).
 		State(ServerStateEnabled).
 		AscPk().
 		ResultPk().
@@ -645,8 +646,8 @@ func (this *ServerDAO) FindAllEnabledServerIds() (serverIds []int64, err error) 
 }
 
 // 查找服务的搜索条件
-func (this *ServerDAO) FindServerNodeFilters(serverId int64) (isOk bool, clusterId int64, err error) {
-	one, err := this.Query().
+func (this *ServerDAO) FindServerNodeFilters(tx *dbs.Tx, serverId int64) (isOk bool, clusterId int64, err error) {
+	one, err := this.Query(tx).
 		Pk(serverId).
 		Result("clusterId").
 		Find()
@@ -662,8 +663,8 @@ func (this *ServerDAO) FindServerNodeFilters(serverId int64) (isOk bool, cluster
 }
 
 // 构造服务的Config
-func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.ServerConfig, error) {
-	server, err := this.FindEnabledServer(serverId)
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverconfigs.ServerConfig, error) {
+	server, err := this.FindEnabledServer(tx, serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -690,12 +691,12 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 
 	// CNAME
 	if server.ClusterId > 0 && len(server.DnsName) > 0 {
-		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(int64(server.ClusterId))
+		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId))
 		if err != nil {
 			return nil, err
 		}
 		if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
-			domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(int64(clusterDNS.DnsDomainId))
+			domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId))
 			if err != nil {
 				return nil, err
 			}
@@ -726,7 +727,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 
 		// SSL
 		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(httpsConfig.SSLPolicyRef.SSLPolicyId)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -758,7 +759,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 
 		// SSL
 		if tlsConfig.SSLPolicyRef != nil {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tlsConfig.SSLPolicyRef.SSLPolicyId)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -792,7 +793,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 
 	// Web
 	if server.WebId > 0 {
-		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(int64(server.WebId))
+		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId))
 		if err != nil {
 			return nil, err
 		}
@@ -810,7 +811,7 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 		}
 		config.ReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(reverseProxyRef.ReverseProxyId)
+		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -823,8 +824,8 @@ func (this *ServerDAO) ComposeServerConfig(serverId int64) (*serverconfigs.Serve
 }
 
 // 更新服务的Config配置
-func (this *ServerDAO) RenewServerConfig(serverId int64, updateMd5 bool) (isChanged bool, err error) {
-	serverConfig, err := this.ComposeServerConfig(serverId)
+func (this *ServerDAO) RenewServerConfig(tx *dbs.Tx, serverId int64, updateMd5 bool) (isChanged bool, err error) {
+	serverConfig, err := this.ComposeServerConfig(tx, serverId)
 	if err != nil {
 		return false, err
 	}
@@ -832,12 +833,12 @@ func (this *ServerDAO) RenewServerConfig(serverId int64, updateMd5 bool) (isChan
 	if err != nil {
 		return false, err
 	}
-	return this.UpdateServerConfig(serverId, data, updateMd5)
+	return this.UpdateServerConfig(tx, serverId, data, updateMd5)
 }
 
 // 根据条件获取反向代理配置
-func (this *ServerDAO) FindReverseProxyRef(serverId int64) (*serverconfigs.ReverseProxyRef, error) {
-	reverseProxy, err := this.Query().
+func (this *ServerDAO) FindReverseProxyRef(tx *dbs.Tx, serverId int64) (*serverconfigs.ReverseProxyRef, error) {
+	reverseProxy, err := this.Query(tx).
 		Pk(serverId).
 		Result("reverseProxy").
 		FindStringCol("")
@@ -853,8 +854,8 @@ func (this *ServerDAO) FindReverseProxyRef(serverId int64) (*serverconfigs.Rever
 }
 
 // 查找Server对应的WebId
-func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
-	webId, err := this.Query().
+func (this *ServerDAO) FindServerWebId(tx *dbs.Tx, serverId int64) (int64, error) {
+	webId, err := this.Query(tx).
 		Pk(serverId).
 		Result("webId").
 		FindIntCol(0)
@@ -865,7 +866,7 @@ func (this *ServerDAO) FindServerWebId(serverId int64) (int64, error) {
 }
 
 // 计算使用SSL策略的所有服务数量
-func (this *ServerDAO) CountAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int64) (count int64, err error) {
+func (this *ServerDAO) CountAllEnabledServersWithSSLPolicyIds(tx *dbs.Tx, sslPolicyIds []int64) (count int64, err error) {
 	if len(sslPolicyIds) == 0 {
 		return
 	}
@@ -873,7 +874,7 @@ func (this *ServerDAO) CountAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int
 	for _, policyId := range sslPolicyIds {
 		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
 	}
-	return this.Query().
+	return this.Query(tx).
 		State(ServerStateEnabled).
 		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds) OR FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds))").
 		Param("policyIds", strings.Join(policyStringIds, ",")).
@@ -881,7 +882,7 @@ func (this *ServerDAO) CountAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int
 }
 
 // 查找使用某个SSL策略的所有服务
-func (this *ServerDAO) FindAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int64) (result []*Server, err error) {
+func (this *ServerDAO) FindAllEnabledServersWithSSLPolicyIds(tx *dbs.Tx, sslPolicyIds []int64) (result []*Server, err error) {
 	if len(sslPolicyIds) == 0 {
 		return
 	}
@@ -889,7 +890,7 @@ func (this *ServerDAO) FindAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int6
 	for _, policyId := range sslPolicyIds {
 		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
 	}
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Result("id", "name", "https", "tls", "isOn", "type").
 		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds) OR FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds))").
@@ -901,22 +902,22 @@ func (this *ServerDAO) FindAllEnabledServersWithSSLPolicyIds(sslPolicyIds []int6
 }
 
 // 计算使用某个缓存策略的所有服务数量
-func (this *ServerDAO) CountEnabledServersWithWebIds(webIds []int64) (count int64, err error) {
+func (this *ServerDAO) CountEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64) (count int64, err error) {
 	if len(webIds) == 0 {
 		return
 	}
-	return this.Query().
+	return this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("webId", webIds).
 		Count()
 }
 
 // 查找使用某个缓存策略的所有服务
-func (this *ServerDAO) FindAllEnabledServersWithWebIds(webIds []int64) (result []*Server, err error) {
+func (this *ServerDAO) FindAllEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64) (result []*Server, err error) {
 	if len(webIds) == 0 {
 		return
 	}
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("webId", webIds).
 		AscPk().
@@ -926,16 +927,16 @@ func (this *ServerDAO) FindAllEnabledServersWithWebIds(webIds []int64) (result [
 }
 
 // 计算使用某个集群的所有服务数量
-func (this *ServerDAO) CountAllEnabledServersWithNodeClusterId(clusterId int64) (int64, error) {
-	return this.Query().
+func (this *ServerDAO) CountAllEnabledServersWithNodeClusterId(tx *dbs.Tx, clusterId int64) (int64, error) {
+	return this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("clusterId", clusterId).
 		Count()
 }
 
 // 计算使用某个分组的服务数量
-func (this *ServerDAO) CountAllEnabledServersWithGroupId(groupId int64) (int64, error) {
-	return this.Query().
+func (this *ServerDAO) CountAllEnabledServersWithGroupId(tx *dbs.Tx, groupId int64) (int64, error) {
+	return this.Query(tx).
 		State(ServerStateEnabled).
 		Where("JSON_CONTAINS(groupIds, :groupId)").
 		Param("groupId", numberutils.FormatInt64(groupId)).
@@ -943,15 +944,15 @@ func (this *ServerDAO) CountAllEnabledServersWithGroupId(groupId int64) (int64, 
 }
 
 // 查询使用某个DNS域名的所有服务域名
-func (this *ServerDAO) FindAllServerDNSNamesWithDNSDomainId(dnsDomainId int64) ([]string, error) {
-	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledClusterIdsWithDNSDomainId(dnsDomainId)
+func (this *ServerDAO) FindAllServerDNSNamesWithDNSDomainId(tx *dbs.Tx, dnsDomainId int64) ([]string, error) {
+	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledClusterIdsWithDNSDomainId(tx, dnsDomainId)
 	if err != nil {
 		return nil, err
 	}
 	if len(clusterIds) == 0 {
 		return nil, nil
 	}
-	ones, err := this.Query().
+	ones, err := this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("isOn", true).
 		Attr("clusterId", clusterIds).
@@ -973,8 +974,8 @@ func (this *ServerDAO) FindAllServerDNSNamesWithDNSDomainId(dnsDomainId int64) (
 }
 
 // 获取某个集群下的服务DNS信息
-func (this *ServerDAO) FindAllServersDNSWithClusterId(clusterId int64) (result []*Server, err error) {
-	_, err = this.Query().
+func (this *ServerDAO) FindAllServersDNSWithClusterId(tx *dbs.Tx, clusterId int64) (result []*Server, err error) {
+	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("isOn", true).
 		Attr("isAuditing", false). // 不在审核中
@@ -987,45 +988,45 @@ func (this *ServerDAO) FindAllServersDNSWithClusterId(clusterId int64) (result [
 }
 
 // 重新生成子域名
-func (this *ServerDAO) GenerateServerDNSName(serverId int64) (string, error) {
+func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string, error) {
 	if serverId <= 0 {
 		return "", errors.New("invalid serverId")
 	}
-	dnsName, err := this.genDNSName()
+	dnsName, err := this.genDNSName(tx)
 	if err != nil {
 		return "", err
 	}
 	op := NewServerOperator()
 	op.Id = serverId
 	op.DnsName = dnsName
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return dnsName, err
 }
 
 // 创建事件
 func (this *ServerDAO) createEvent() error {
-	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 }
 
 // 查询当前服务的集群ID
-func (this *ServerDAO) FindServerClusterId(serverId int64) (int64, error) {
-	return this.Query().
+func (this *ServerDAO) FindServerClusterId(tx *dbs.Tx, serverId int64) (int64, error) {
+	return this.Query(tx).
 		Pk(serverId).
 		Result("clusterId").
 		FindInt64Col(0)
 }
 
 // 查询服务的DNS名称
-func (this *ServerDAO) FindServerDNSName(serverId int64) (string, error) {
-	return this.Query().
+func (this *ServerDAO) FindServerDNSName(tx *dbs.Tx, serverId int64) (string, error) {
+	return this.Query(tx).
 		Pk(serverId).
 		Result("dnsName").
 		FindStringCol("")
 }
 
 // 获取当前服务的管理员ID和用户ID
-func (this *ServerDAO) FindServerAdminIdAndUserId(serverId int64) (adminId int64, userId int64, err error) {
-	one, err := this.Query().
+func (this *ServerDAO) FindServerAdminIdAndUserId(tx *dbs.Tx, serverId int64) (adminId int64, userId int64, err error) {
+	one, err := this.Query(tx).
 		Pk(serverId).
 		Result("adminId", "userId").
 		Find()
@@ -1039,11 +1040,11 @@ func (this *ServerDAO) FindServerAdminIdAndUserId(serverId int64) (adminId int64
 }
 
 // 检查用户服务
-func (this *ServerDAO) CheckUserServer(serverId int64, userId int64) error {
+func (this *ServerDAO) CheckUserServer(tx *dbs.Tx, serverId int64, userId int64) error {
 	if serverId <= 0 || userId <= 0 {
 		return ErrNotFound
 	}
-	ok, err := this.Query().
+	ok, err := this.Query(tx).
 		Pk(serverId).
 		Attr("userId", userId).
 		Exist()
@@ -1057,8 +1058,8 @@ func (this *ServerDAO) CheckUserServer(serverId int64, userId int64) error {
 }
 
 // 设置一个用户下的所有服务的所属集群
-func (this *ServerDAO) UpdateUserServersClusterId(userId int64, clusterId int64) error {
-	_, err := this.Query().
+func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, clusterId int64) error {
+	_, err := this.Query(tx).
 		Attr("userId", userId).
 		Set("clusterId", clusterId).
 		Update()
@@ -1066,8 +1067,8 @@ func (this *ServerDAO) UpdateUserServersClusterId(userId int64, clusterId int64)
 }
 
 // 查找用户的所有的服务
-func (this *ServerDAO) FindAllEnabledServersWithUserId(userId int64) (result []*Server, err error) {
-	_, err = this.Query().
+func (this *ServerDAO) FindAllEnabledServersWithUserId(tx *dbs.Tx, userId int64) (result []*Server, err error) {
+	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("userId", userId).
 		DescPk().
@@ -1077,10 +1078,10 @@ func (this *ServerDAO) FindAllEnabledServersWithUserId(userId int64) (result []*
 }
 
 // 生成DNS Name
-func (this *ServerDAO) genDNSName() (string, error) {
+func (this *ServerDAO) genDNSName(tx *dbs.Tx) (string, error) {
 	for {
 		dnsName := rands.HexString(8)
-		exist, err := this.Query().
+		exist, err := this.Query(tx).
 			Attr("dnsName", dnsName).
 			Exist()
 		if err != nil {

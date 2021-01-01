@@ -36,8 +36,8 @@ func init() {
 }
 
 // 计算账单数量
-func (this *UserBillDAO) CountAllUserBills(isPaid int32, userId int64, month string) (int64, error) {
-	query := this.Query()
+func (this *UserBillDAO) CountAllUserBills(tx *dbs.Tx, isPaid int32, userId int64, month string) (int64, error) {
+	query := this.Query(tx)
 	if isPaid == 0 {
 		query.Attr("isPaid", 0)
 	} else if isPaid > 0 {
@@ -53,8 +53,8 @@ func (this *UserBillDAO) CountAllUserBills(isPaid int32, userId int64, month str
 }
 
 // 列出单页账单
-func (this *UserBillDAO) ListUserBills(isPaid int32, userId int64, month string, offset, size int64) (result []*UserBill, err error) {
-	query := this.Query()
+func (this *UserBillDAO) ListUserBills(tx *dbs.Tx, isPaid int32, userId int64, month string, offset, size int64) (result []*UserBill, err error) {
+	query := this.Query(tx)
 	if isPaid == 0 {
 		query.Attr("isPaid", 0)
 	} else if isPaid > 0 {
@@ -76,7 +76,7 @@ func (this *UserBillDAO) ListUserBills(isPaid int32, userId int64, month string,
 }
 
 // 创建账单
-func (this *UserBillDAO) CreateBill(userId int64, billType BillType, description string, amount float32, month string) (int64, error) {
+func (this *UserBillDAO) CreateBill(tx *dbs.Tx, userId int64, billType BillType, description string, amount float32, month string) (int64, error) {
 	op := NewUserBillOperator()
 	op.UserId = userId
 	op.Type = billType
@@ -84,12 +84,12 @@ func (this *UserBillDAO) CreateBill(userId int64, billType BillType, description
 	op.Amount = amount
 	op.Month = month
 	op.IsPaid = false
-	return this.SaveInt64(op)
+	return this.SaveInt64(tx, op)
 }
 
 // 检查是否有当月账单
-func (this *UserBillDAO) ExistBill(userId int64, billType BillType, month string) (bool, error) {
-	return this.Query().
+func (this *UserBillDAO) ExistBill(tx *dbs.Tx, userId int64, billType BillType, month string) (bool, error) {
+	return this.Query(tx).
 		Attr("userId", userId).
 		Attr("month", month).
 		Attr("type", billType).
@@ -98,12 +98,12 @@ func (this *UserBillDAO) ExistBill(userId int64, billType BillType, month string
 
 // 生成账单
 // month 格式YYYYMM
-func (this *UserBillDAO) GenerateBills(month string) error {
+func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 	// 用户
 	offset := int64(0)
 	size := int64(100) // 每次只查询N次，防止由于执行时间过长而锁表
 	for {
-		userIds, err := SharedUserDAO.ListEnabledUserIds(offset, size)
+		userIds, err := SharedUserDAO.ListEnabledUserIds(tx, offset, size)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (this *UserBillDAO) GenerateBills(month string) error {
 
 		for _, userId := range userIds {
 			// CDN流量账单
-			err := this.generateTrafficBill(userId, month)
+			err := this.generateTrafficBill(tx, userId, month)
 			if err != nil {
 				return err
 			}
@@ -126,9 +126,9 @@ func (this *UserBillDAO) GenerateBills(month string) error {
 
 // 生成CDN流量账单
 // month 格式YYYYMM
-func (this *UserBillDAO) generateTrafficBill(userId int64, month string) error {
+func (this *UserBillDAO) generateTrafficBill(tx *dbs.Tx, userId int64, month string) error {
 	// 检查是否已经有账单了
-	b, err := this.ExistBill(userId, BillTypeTraffic, month)
+	b, err := this.ExistBill(tx, userId, BillTypeTraffic, month)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (this *UserBillDAO) generateTrafficBill(userId int64, month string) error {
 	}
 
 	// TODO 优化使用缓存
-	regions, err := SharedNodeRegionDAO.FindAllEnabledRegionPrices()
+	regions, err := SharedNodeRegionDAO.FindAllEnabledRegionPrices(tx)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (this *UserBillDAO) generateTrafficBill(userId int64, month string) error {
 		return nil
 	}
 
-	priceItems, err := SharedNodePriceItemDAO.FindAllEnabledRegionPrices(NodePriceTypeTraffic)
+	priceItems, err := SharedNodePriceItemDAO.FindAllEnabledRegionPrices(tx, NodePriceTypeTraffic)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (this *UserBillDAO) generateTrafficBill(userId int64, month string) error {
 			return err
 		}
 
-		trafficBytes, err := SharedServerDailyStatDAO.SumUserMonthly(userId, int64(region.Id), month)
+		trafficBytes, err := SharedServerDailyStatDAO.SumUserMonthly(tx, userId, int64(region.Id), month)
 		if err != nil {
 			return err
 		}
@@ -192,7 +192,7 @@ func (this *UserBillDAO) generateTrafficBill(userId int64, month string) error {
 	}
 
 	// 创建账单
-	_, err = this.CreateBill(userId, BillTypeTraffic, "按流量计费", cost, month)
+	_, err = this.CreateBill(tx, userId, BillTypeTraffic, "按流量计费", cost, month)
 	return err
 }
 

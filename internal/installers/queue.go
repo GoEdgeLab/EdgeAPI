@@ -29,7 +29,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	installStatus.IsRunning = true
 	installStatus.UpdatedAt = time.Now().Unix()
 
-	err := models.SharedNodeDAO.UpdateNodeInstallStatus(nodeId, installStatus)
+	err := models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	go func() {
 		for ticker.Wait() {
 			installStatus.UpdatedAt = time.Now().Unix()
-			err := models.SharedNodeDAO.UpdateNodeInstallStatus(nodeId, installStatus)
+			err := models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 			if err != nil {
 				logs.Println("[INSTALL]" + err.Error())
 				continue
@@ -61,14 +61,14 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	} else {
 		installStatus.IsOk = true
 	}
-	err = models.SharedNodeDAO.UpdateNodeInstallStatus(nodeId, installStatus)
+	err = models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 	if err != nil {
 		return err
 	}
 
 	// 修改为已安装
 	if installStatus.IsOk {
-		err = models.SharedNodeDAO.UpdateNodeIsInstalled(nodeId, true)
+		err = models.SharedNodeDAO.UpdateNodeIsInstalled(nil, nodeId, true)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 
 // 安装边缘节点
 func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus, isUpgrading bool) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -123,7 +123,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		}
 		loginParams.GrantId = grantId
 	}
-	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(nil, loginParams.GrantId)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(clusterId))
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	}
 
 	// API终端
-	apiNodes, err := models.SharedAPINodeDAO.FindAllEnabledAndOnAPINodes()
+	apiNodes, err := models.SharedAPINodeDAO.FindAllEnabledAndOnAPINodes(nil)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 
 // 启动边缘节点
 func (this *Queue) StartNode(nodeId int64) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -238,7 +238,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 		}
 		loginParams.GrantId = grantId
 	}
-	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(nil, loginParams.GrantId)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(clusterId))
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}
@@ -299,7 +299,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 
 // 停止节点
 func (this *Queue) StopNode(nodeId int64) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nodeId)
+	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -308,7 +308,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(int64(node.ClusterId))
+		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -339,7 +339,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 		}
 		loginParams.GrantId = grantId
 	}
-	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(loginParams.GrantId)
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(nil, loginParams.GrantId)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(clusterId))
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}

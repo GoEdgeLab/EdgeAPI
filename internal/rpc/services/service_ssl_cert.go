@@ -21,7 +21,9 @@ func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSL
 		return nil, err
 	}
 
-	certId, err := models.SharedSSLCertDAO.CreateCert(adminId, userId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
+	tx := this.NullTx()
+
+	certId, err := models.SharedSSLCertDAO.CreateCert(tx, adminId, userId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
 	if err != nil {
 		return nil, err
 	}
@@ -37,15 +39,17 @@ func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSL
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查权限
 	if userId > 0 {
-		err := models.SharedSSLCertDAO.CheckUserCert(req.SslCertId, userId)
+		err := models.SharedSSLCertDAO.CheckUserCert(tx, req.SslCertId, userId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err = models.SharedSSLCertDAO.UpdateCert(req.SslCertId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
+	err = models.SharedSSLCertDAO.UpdateCert(tx, req.SslCertId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
 	if err != nil {
 		return nil, err
 	}
@@ -61,15 +65,17 @@ func (this *SSLCertService) FindEnabledSSLCertConfig(ctx context.Context, req *p
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查权限
 	if userId > 0 {
-		err := models.SharedSSLCertDAO.CheckUserCert(req.SslCertId, userId)
+		err := models.SharedSSLCertDAO.CheckUserCert(tx, req.SslCertId, userId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	config, err := models.SharedSSLCertDAO.ComposeCertConfig(req.SslCertId)
+	config, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, req.SslCertId)
 	if err != nil {
 		return nil, err
 	}
@@ -89,21 +95,23 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查权限
 	if userId > 0 {
-		err := models.SharedSSLCertDAO.CheckUserCert(req.SslCertId, userId)
+		err := models.SharedSSLCertDAO.CheckUserCert(tx, req.SslCertId, userId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err = models.SharedSSLCertDAO.DisableSSLCert(req.SslCertId)
+	err = models.SharedSSLCertDAO.DisableSSLCert(tx, req.SslCertId)
 	if err != nil {
 		return nil, err
 	}
 
 	// 停止相关ACME任务
-	err = models.SharedACMETaskDAO.DisableAllTasksWithCertId(req.SslCertId)
+	err = models.SharedACMETaskDAO.DisableAllTasksWithCertId(tx, req.SslCertId)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +127,9 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 		return nil, err
 	}
 
-	count, err := models.SharedSSLCertDAO.CountCerts(req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId)
+	tx := this.NullTx()
+
+	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -135,14 +145,16 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 		return nil, err
 	}
 
-	certIds, err := models.SharedSSLCertDAO.ListCertIds(req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	certIds, err := models.SharedSSLCertDAO.ListCertIds(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
 
 	certConfigs := []*sslconfigs.SSLCertConfig{}
 	for _, certId := range certIds {
-		certConfig, err := models.SharedSSLCertDAO.ComposeCertConfig(certId)
+		certConfig, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, certId)
 		if err != nil {
 			return nil, err
 		}

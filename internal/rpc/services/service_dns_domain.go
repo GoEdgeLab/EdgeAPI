@@ -26,8 +26,10 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 查询Provider
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(req.DnsProviderId)
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	domainId, err := models.SharedDNSDomainDAO.CreateDomain(adminId, userId, req.DnsProviderId, req.Name)
+	domainId, err := models.SharedDNSDomainDAO.CreateDomain(tx, adminId, userId, req.DnsProviderId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +67,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		if err != nil {
 			return
 		}
-		err = models.SharedDNSDomainDAO.UpdateDomainRoutes(domainId, routesJSON)
+		err = models.SharedDNSDomainDAO.UpdateDomainRoutes(tx, domainId, routesJSON)
 		if err != nil {
 			return
 		}
@@ -78,7 +80,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		if err != nil {
 			return
 		}
-		err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+		err = models.SharedDNSDomainDAO.UpdateDomainRecords(tx, domainId, recordsJSON)
 		if err != nil {
 			return
 		}
@@ -95,7 +97,9 @@ func (this *DNSDomainService) UpdateDNSDomain(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	err = models.SharedDNSDomainDAO.UpdateDomain(req.DnsDomainId, req.Name, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedDNSDomainDAO.UpdateDomain(tx, req.DnsDomainId, req.Name, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +114,9 @@ func (this *DNSDomainService) DeleteDNSDomain(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	err = models.SharedDNSDomainDAO.DisableDNSDomain(req.DnsDomainId)
+	tx := this.NullTx()
+
+	err = models.SharedDNSDomainDAO.DisableDNSDomain(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +131,9 @@ func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(req.DnsDomainId)
+	tx := this.NullTx()
+
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +153,9 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 		return nil, err
 	}
 
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(req.DnsDomainId)
+	tx := this.NullTx()
+
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +179,9 @@ func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx con
 		return nil, err
 	}
 
-	count, err := models.SharedDNSDomainDAO.CountAllEnabledDomainsWithProviderId(req.DnsProviderId)
+	tx := this.NullTx()
+
+	count, err := models.SharedDNSDomainDAO.CountAllEnabledDomainsWithProviderId(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +196,9 @@ func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx cont
 		return nil, err
 	}
 
-	domains, err := models.SharedDNSDomainDAO.FindAllEnabledDomainsWithProviderId(req.DnsProviderId)
+	tx := this.NullTx()
+
+	domains, err := models.SharedDNSDomainDAO.FindAllEnabledDomainsWithProviderId(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +223,9 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 		return nil, err
 	}
 
-	domains, err := models.SharedDNSDomainDAO.FindAllEnabledDomainsWithProviderId(req.DnsProviderId)
+	tx := this.NullTx()
+
+	domains, err := models.SharedDNSDomainDAO.FindAllEnabledDomainsWithProviderId(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +260,9 @@ func (this *DNSDomainService) FindAllDNSDomainRoutes(ctx context.Context, req *p
 		return nil, err
 	}
 
-	routes, err := models.SharedDNSDomainDAO.FindDomainRoutes(req.DnsDomainId)
+	tx := this.NullTx()
+
+	routes, err := models.SharedDNSDomainDAO.FindDomainRoutes(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +286,9 @@ func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	exist, err := models.SharedDNSDomainDAO.ExistAvailableDomains()
+	tx := this.NullTx()
+
+	exist, err := models.SharedDNSDomainDAO.ExistAvailableDomains(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +315,10 @@ func (this *DNSDomainService) convertDomainToPB(domain *models.DNSDomain) (*pb.D
 	countServerRecords := 0
 	serversChanged := false
 
+	tx := this.NullTx()
+
 	// 检查是否所有的集群都已经被解析
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(domainId)
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(tx, domainId)
 	if err != nil {
 		return nil, err
 	}
@@ -367,8 +389,10 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	clusterDnsName := cluster.DnsName
 	clusterDomain := clusterDnsName + "." + domainName
 
+	tx := this.NullTx()
+
 	// 节点域名
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(clusterId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId)
 	if err != nil {
 		return nil, nil, nil, 0, 0, false, false, err
 	}
@@ -385,7 +409,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 新增的节点域名
 	nodeKeys := []string{}
 	for _, node := range nodes {
-		ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(int64(node.Id))
+		ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(tx, int64(node.Id))
 		if err != nil {
 			return nil, nil, nil, 0, 0, false, false, err
 		}
@@ -434,7 +458,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	// 服务域名
-	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(clusterId)
+	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(tx, clusterId)
 	if err != nil {
 		return nil, nil, nil, 0, 0, false, false, err
 	}
@@ -490,11 +514,13 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 
 // 执行同步
 func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (*pb.SyncDNSDomainDataResponse, error) {
+	tx := this.NullTx()
+
 	// 查询集群信息
 	var err error
 	clusters := []*models.NodeCluster{}
 	if req.NodeClusterId > 0 {
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(req.NodeClusterId)
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
 		if err != nil {
 			return nil, err
 		}
@@ -514,14 +540,14 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 		}
 		clusters = append(clusters, cluster)
 	} else {
-		clusters, err = models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(req.DnsDomainId)
+		clusters, err = models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(tx, req.DnsDomainId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// 域名信息
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(req.DnsDomainId)
+	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +558,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	domainName := domain.Name
 
 	// 服务商信息
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(domain.ProviderId))
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
 	if err != nil {
 		return nil, err
 	}
@@ -566,14 +592,14 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedDNSDomainDAO.UpdateDomainRoutes(domainId, routesJSON)
+	err = models.SharedDNSDomainDAO.UpdateDomainRoutes(tx, domainId, routesJSON)
 	if err != nil {
 		return nil, err
 	}
 
 	// 检查集群设置
 	for _, cluster := range clusters {
-		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(cluster)
+		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(tx, cluster)
 		if err != nil {
 			return nil, err
 		}
@@ -591,7 +617,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+	err = models.SharedDNSDomainDAO.UpdateDomainRecords(tx, domainId, recordsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -639,7 +665,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 		if err != nil {
 			return nil, err
 		}
-		err = models.SharedDNSDomainDAO.UpdateDomainRecords(domainId, recordsJSON)
+		err = models.SharedDNSDomainDAO.UpdateDomainRecords(tx, domainId, recordsJSON)
 		if err != nil {
 			return nil, err
 		}
@@ -657,7 +683,9 @@ func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	isOk, err := models.SharedDNSDomainDAO.ExistDomainRecord(req.DnsDomainId, req.Name, req.Type, req.Route, req.Value)
+	tx := this.NullTx()
+
+	isOk, err := models.SharedDNSDomainDAO.ExistDomainRecord(tx, req.DnsDomainId, req.Name, req.Type, req.Route, req.Value)
 	if err != nil {
 		return nil, err
 	}

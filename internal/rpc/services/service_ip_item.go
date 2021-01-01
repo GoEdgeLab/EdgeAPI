@@ -20,12 +20,12 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		return nil, err
 	}
 
-	itemId, err := models.SharedIPItemDAO.CreateIPItem(req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
+	tx := this.NullTx()
+
+	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
 	if err != nil {
 		return nil, err
 	}
-
-
 
 	return &pb.CreateIPItemResponse{IpItemId: itemId}, nil
 }
@@ -38,7 +38,9 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 		return nil, err
 	}
 
-	err = models.SharedIPItemDAO.UpdateIPItem(req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
+	tx := this.NullTx()
+
+	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +55,9 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 		return nil, err
 	}
 
-	err = models.SharedIPItemDAO.DisableIPItem(req.IpItemId)
+	tx := this.NullTx()
+
+	err = models.SharedIPItemDAO.DisableIPItem(tx, req.IpItemId)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +72,9 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	count, err := models.SharedIPItemDAO.CountIPItemsWithListId(req.IpListId)
+	tx := this.NullTx()
+
+	count, err := models.SharedIPItemDAO.CountIPItemsWithListId(tx, req.IpListId)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +89,9 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 		return nil, err
 	}
 
-	items, err := models.SharedIPItemDAO.ListIPItemsWithListId(req.IpListId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	items, err := models.SharedIPItemDAO.ListIPItemsWithListId(tx, req.IpListId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +118,9 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 		return nil, err
 	}
 
-	item, err := models.SharedIPItemDAO.FindEnabledIPItem(req.IpItemId)
+	tx := this.NullTx()
+
+	item, err := models.SharedIPItemDAO.FindEnabledIPItem(tx, req.IpItemId)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +145,10 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	result := []*pb.IPItem{}
-	items, err := models.SharedIPItemDAO.ListIPItemsAfterVersion(req.Version, req.Size)
+	items, err := models.SharedIPItemDAO.ListIPItemsAfterVersion(tx, req.Version, req.Size)
 	if err != nil {
 		return nil, err
 	}

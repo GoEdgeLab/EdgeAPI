@@ -41,8 +41,8 @@ func init() {
 }
 
 // 启用条目
-func (this *LoginDAO) EnableLogin(id int64) error {
-	_, err := this.Query().
+func (this *LoginDAO) EnableLogin(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", LoginStateEnabled).
 		Update()
@@ -50,8 +50,8 @@ func (this *LoginDAO) EnableLogin(id int64) error {
 }
 
 // 禁用条目
-func (this *LoginDAO) DisableLogin(id int64) error {
-	_, err := this.Query().
+func (this *LoginDAO) DisableLogin(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", LoginStateDisabled).
 		Update()
@@ -59,8 +59,8 @@ func (this *LoginDAO) DisableLogin(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *LoginDAO) FindEnabledLogin(id int64) (*Login, error) {
-	result, err := this.Query().
+func (this *LoginDAO) FindEnabledLogin(tx *dbs.Tx, id int64) (*Login, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", LoginStateEnabled).
 		Find()
@@ -71,7 +71,7 @@ func (this *LoginDAO) FindEnabledLogin(id int64) (*Login, error) {
 }
 
 // 创建认证
-func (this *LoginDAO) CreateLogin(Id int64, loginType LoginType, params maps.Map) (int64, error) {
+func (this *LoginDAO) CreateLogin(tx *dbs.Tx, Id int64, loginType LoginType, params maps.Map) (int64, error) {
 	if Id <= 0 {
 		return 0, errors.New("invalid Id")
 	}
@@ -84,13 +84,13 @@ func (this *LoginDAO) CreateLogin(Id int64, loginType LoginType, params maps.Map
 	op.Params = params.AsJSON()
 	op.State = LoginStateEnabled
 	op.IsOn = true
-	return this.SaveInt64(op)
+	return this.SaveInt64(tx, op)
 }
 
 // 修改认证
-func (this *LoginDAO) UpdateLogin(adminId int64, loginType LoginType, params maps.Map, isOn bool) error {
+func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, loginType LoginType, params maps.Map, isOn bool) error {
 	// 是否已经存在
-	loginId, err := this.Query().
+	loginId, err := this.Query(tx).
 		Attr("adminId", adminId).
 		Attr("type", loginType).
 		State(LoginStateEnabled).
@@ -114,12 +114,12 @@ func (this *LoginDAO) UpdateLogin(adminId int64, loginType LoginType, params map
 
 	op.IsOn = isOn
 	op.Params = params.AsJSON()
-	return this.Save(op)
+	return this.Save(tx, op)
 }
 
 // 禁用相关认证
-func (this *LoginDAO) DisableLoginWithAdminId(adminId int64, loginType LoginType) error {
-	_, err := this.Query().
+func (this *LoginDAO) DisableLoginWithAdminId(tx *dbs.Tx, adminId int64, loginType LoginType) error {
+	_, err := this.Query(tx).
 		Attr("adminId", adminId).
 		Attr("type", loginType).
 		Set("isOn", false).
@@ -128,8 +128,8 @@ func (this *LoginDAO) DisableLoginWithAdminId(adminId int64, loginType LoginType
 }
 
 // 查找管理员相关的认证
-func (this *LoginDAO) FindEnabledLoginWithAdminId(adminId int64, loginType LoginType) (*Login, error) {
-	one, err := this.Query().
+func (this *LoginDAO) FindEnabledLoginWithAdminId(tx *dbs.Tx, adminId int64, loginType LoginType) (*Login, error) {
+	one, err := this.Query(tx).
 		Attr("adminId", adminId).
 		Attr("type", loginType).
 		State(LoginStateEnabled).
@@ -141,8 +141,8 @@ func (this *LoginDAO) FindEnabledLoginWithAdminId(adminId int64, loginType Login
 }
 
 // 检查某个认证是否启用
-func (this *LoginDAO) CheckLoginIsOn(adminId int64, loginType LoginType) (bool, error) {
-	return this.Query().
+func (this *LoginDAO) CheckLoginIsOn(tx *dbs.Tx, adminId int64, loginType LoginType) (bool, error) {
+	return this.Query(tx).
 		Attr("adminId", adminId).
 		Attr("type", loginType).
 		State(LoginStateEnabled).

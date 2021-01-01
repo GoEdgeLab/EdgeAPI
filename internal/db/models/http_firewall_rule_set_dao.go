@@ -41,19 +41,19 @@ func init() {
 func (this *HTTPFirewallRuleSetDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(id int64) error {
-	_, err := this.Query().
+func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPFirewallRuleSetStateEnabled).
 		Update()
@@ -61,8 +61,8 @@ func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(id int64) error {
-	_, err := this.Query().
+func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPFirewallRuleSetStateDisabled).
 		Update()
@@ -70,8 +70,8 @@ func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(id int64) (*HTTPFirewallRuleSet, error) {
-	result, err := this.Query().
+func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(tx *dbs.Tx, id int64) (*HTTPFirewallRuleSet, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPFirewallRuleSetStateEnabled).
 		Find()
@@ -82,16 +82,16 @@ func (this *HTTPFirewallRuleSetDAO) FindEnabledHTTPFirewallRuleSet(id int64) (*H
 }
 
 // 根据主键查找名称
-func (this *HTTPFirewallRuleSetDAO) FindHTTPFirewallRuleSetName(id int64) (string, error) {
-	return this.Query().
+func (this *HTTPFirewallRuleSetDAO) FindHTTPFirewallRuleSetName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 组合配置
-func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(setId int64) (*firewallconfigs.HTTPFirewallRuleSet, error) {
-	set, err := this.FindEnabledHTTPFirewallRuleSet(setId)
+func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int64) (*firewallconfigs.HTTPFirewallRuleSet, error) {
+	set, err := this.FindEnabledHTTPFirewallRuleSet(tx, setId)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(setId int64) (*firewa
 			return nil, err
 		}
 		for _, ruleRef := range ruleRefs {
-			ruleConfig, err := SharedHTTPFirewallRuleDAO.ComposeFirewallRule(ruleRef.RuleId)
+			ruleConfig, err := SharedHTTPFirewallRuleDAO.ComposeFirewallRule(tx, ruleRef.RuleId)
 			if err != nil {
 				return nil, err
 			}
@@ -138,7 +138,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(setId int64) (*firewa
 }
 
 // 从配置中创建规则集
-func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
+func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(tx *dbs.Tx, setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
 	op := NewHTTPFirewallRuleSetOperator()
 	op.State = HTTPFirewallRuleSetStateEnabled
 	op.Id = setConfig.Id
@@ -162,7 +162,7 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firew
 	// rules
 	ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
 	for _, ruleConfig := range setConfig.Rules {
-		ruleId, err := SharedHTTPFirewallRuleDAO.CreateOrUpdateRuleFromConfig(ruleConfig)
+		ruleId, err := SharedHTTPFirewallRuleDAO.CreateOrUpdateRuleFromConfig(tx, ruleConfig)
 		if err != nil {
 			return 0, err
 		}
@@ -176,7 +176,7 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firew
 		return 0, err
 	}
 	op.Rules = ruleRefsJSON
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -184,11 +184,11 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(setConfig *firew
 }
 
 // 设置是否启用
-func (this *HTTPFirewallRuleSetDAO) UpdateRuleSetIsOn(ruleSetId int64, isOn bool) error {
+func (this *HTTPFirewallRuleSetDAO) UpdateRuleSetIsOn(tx *dbs.Tx, ruleSetId int64, isOn bool) error {
 	if ruleSetId <= 0 {
 		return errors.New("invalid ruleSetId")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(ruleSetId).
 		Set("isOn", isOn).
 		Update()

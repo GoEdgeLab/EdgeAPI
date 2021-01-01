@@ -89,7 +89,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
 	settingKey := models.SettingCodeClusterHealthCheck + "Loop" + numberutils.FormatInt64(this.clusterId)
 	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
+	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	}
 
 	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(settingKey, []byte(numberutils.FormatInt64(timestamp)))
+	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 			return err
 		}
 		message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
-		err = models.NewMessageDAO().CreateClusterMessage(this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, failedResultsJSON)
+		err = models.NewMessageDAO().CreateClusterMessage(nil, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, failedResultsJSON)
 		if err != nil {
 			return err
 		}

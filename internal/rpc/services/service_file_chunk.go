@@ -9,6 +9,7 @@ import (
 
 // 文件片段相关服务
 type FileChunkService struct {
+	BaseService
 }
 
 // 创建文件片段
@@ -19,7 +20,9 @@ func (this *FileChunkService) CreateFileChunk(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	chunkId, err := models.SharedFileChunkDAO.CreateFileChunk(req.FileId, req.Data)
+	tx := this.NullTx()
+
+	chunkId, err := models.SharedFileChunkDAO.CreateFileChunk(tx, req.FileId, req.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +37,9 @@ func (this *FileChunkService) FindAllFileChunkIds(ctx context.Context, req *pb.F
 		return nil, err
 	}
 
-	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(req.FileId)
+	tx := this.NullTx()
+
+	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(tx, req.FileId)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +54,9 @@ func (this *FileChunkService) DownloadFileChunk(ctx context.Context, req *pb.Dow
 		return nil, err
 	}
 
-	chunk, err := models.SharedFileChunkDAO.FindFileChunk(req.FileChunkId)
+	tx := this.NullTx()
+
+	chunk, err := models.SharedFileChunkDAO.FindFileChunk(tx, req.FileChunkId)
 	if err != nil {
 		return nil, err
 	}

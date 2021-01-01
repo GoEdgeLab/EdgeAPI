@@ -37,8 +37,8 @@ func init() {
 }
 
 // 启用条目
-func (this *RegionCountryDAO) EnableRegionCountry(id uint32) error {
-	_, err := this.Query().
+func (this *RegionCountryDAO) EnableRegionCountry(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionCountryStateEnabled).
 		Update()
@@ -46,8 +46,8 @@ func (this *RegionCountryDAO) EnableRegionCountry(id uint32) error {
 }
 
 // 禁用条目
-func (this *RegionCountryDAO) DisableRegionCountry(id int64) error {
-	_, err := this.Query().
+func (this *RegionCountryDAO) DisableRegionCountry(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionCountryStateDisabled).
 		Update()
@@ -55,8 +55,8 @@ func (this *RegionCountryDAO) DisableRegionCountry(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *RegionCountryDAO) FindEnabledRegionCountry(id int64) (*RegionCountry, error) {
-	result, err := this.Query().
+func (this *RegionCountryDAO) FindEnabledRegionCountry(tx *dbs.Tx, id int64) (*RegionCountry, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", RegionCountryStateEnabled).
 		Find()
@@ -67,16 +67,16 @@ func (this *RegionCountryDAO) FindEnabledRegionCountry(id int64) (*RegionCountry
 }
 
 // 根据主键查找名称
-func (this *RegionCountryDAO) FindRegionCountryName(id int64) (string, error) {
-	return this.Query().
+func (this *RegionCountryDAO) FindRegionCountryName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 根据数据ID查找国家
-func (this *RegionCountryDAO) FindCountryIdWithDataId(dataId string) (int64, error) {
-	return this.Query().
+func (this *RegionCountryDAO) FindCountryIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
+	return this.Query(tx).
 		Attr("dataId", dataId).
 		ResultPk().
 		FindInt64Col(0)
@@ -84,8 +84,8 @@ func (this *RegionCountryDAO) FindCountryIdWithDataId(dataId string) (int64, err
 
 // 根据国家名查找国家ID
 // TODO 加入缓存
-func (this *RegionCountryDAO) FindCountryIdWithCountryName(countryName string) (int64, error) {
-	return this.Query().
+func (this *RegionCountryDAO) FindCountryIdWithCountryName(tx *dbs.Tx, countryName string) (int64, error) {
+	return this.Query(tx).
 		Where("JSON_CONTAINS(codes, :countryName)").
 		Param("countryName", "\""+countryName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
 		ResultPk().
@@ -93,7 +93,7 @@ func (this *RegionCountryDAO) FindCountryIdWithCountryName(countryName string) (
 }
 
 // 根据数据ID创建国家
-func (this *RegionCountryDAO) CreateCountry(name string, dataId string) (int64, error) {
+func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId string) (int64, error) {
 	op := NewRegionCountryOperator()
 	op.Name = name
 
@@ -114,7 +114,7 @@ func (this *RegionCountryDAO) CreateCountry(name string, dataId string) (int64, 
 
 	op.DataId = dataId
 	op.State = RegionCountryStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -122,8 +122,8 @@ func (this *RegionCountryDAO) CreateCountry(name string, dataId string) (int64, 
 }
 
 // 查找所有可用的国家
-func (this *RegionCountryDAO) FindAllEnabledCountriesOrderByPinyin() (result []*RegionCountry, err error) {
-	_, err = this.Query().
+func (this *RegionCountryDAO) FindAllEnabledCountriesOrderByPinyin(tx *dbs.Tx) (result []*RegionCountry, err error) {
+	_, err = this.Query(tx).
 		State(RegionCountryStateEnabled).
 		Slice(&result).
 		Asc("pinyin").

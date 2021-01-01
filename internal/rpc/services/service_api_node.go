@@ -19,7 +19,9 @@ func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPI
 		return nil, err
 	}
 
-	nodeId, err := models.SharedAPINodeDAO.CreateAPINode(req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
+	tx := this.NullTx()
+
+	nodeId, err := models.SharedAPINodeDAO.CreateAPINode(tx, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +36,9 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 		return nil, err
 	}
 
-	err = models.SharedAPINodeDAO.UpdateAPINode(req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedAPINodeDAO.UpdateAPINode(tx, req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +53,9 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 		return nil, err
 	}
 
-	err = models.SharedAPINodeDAO.DisableAPINode(req.NodeId)
+	tx := this.NullTx()
+
+	err = models.SharedAPINodeDAO.DisableAPINode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +70,9 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	nodes, err := models.SharedAPINodeDAO.FindAllEnabledAPINodes()
+	tx := this.NullTx()
+
+	nodes, err := models.SharedAPINodeDAO.FindAllEnabledAPINodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +109,9 @@ func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	count, err := models.SharedAPINodeDAO.CountAllEnabledAPINodes()
+	tx := this.NullTx()
+
+	count, err := models.SharedAPINodeDAO.CountAllEnabledAPINodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +126,9 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 		return nil, err
 	}
 
-	nodes, err := models.SharedAPINodeDAO.ListEnabledAPINodes(req.Offset, req.Size)
+	tx := this.NullTx()
+
+	nodes, err := models.SharedAPINodeDAO.ListEnabledAPINodes(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +169,9 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(req.NodeId)
+	tx := this.NullTx()
+
+	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}

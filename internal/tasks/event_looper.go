@@ -34,12 +34,12 @@ func (this *EventLooper) Start() {
 
 func (this *EventLooper) loop() error {
 	lockerKey := "eventLooper"
-	isOk, err := models.SharedSysLockerDAO.Lock(lockerKey, 3600)
+	isOk, err := models.SharedSysLockerDAO.Lock(nil, lockerKey, 3600)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err = models.SharedSysLockerDAO.Unlock(lockerKey)
+		err = models.SharedSysLockerDAO.Unlock(nil, lockerKey)
 		if err != nil {
 			logs.Println("[EVENT_LOOPER]" + err.Error())
 		}
@@ -48,7 +48,7 @@ func (this *EventLooper) loop() error {
 		return nil
 	}
 
-	events, err := models.SharedSysEventDAO.FindEvents(100)
+	events, err := models.SharedSysEventDAO.FindEvents(nil, 100)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (this *EventLooper) loop() error {
 			logs.Println("[EVENT_LOOPER]" + err.Error())
 			continue
 		}
-		err = models.SharedSysEventDAO.DeleteEvent(int64(eventOne.Id))
+		err = models.SharedSysEventDAO.DeleteEvent(nil, int64(eventOne.Id))
 		if err != nil {
 			return err
 		}

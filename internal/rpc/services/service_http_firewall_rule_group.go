@@ -21,7 +21,9 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupIsOn(ctx co
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupIsOn(req.FirewallRuleGroupId, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupIsOn(tx, req.FirewallRuleGroupId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,9 @@ func (this *HTTPFirewallRuleGroupService) CreateHTTPFirewallRuleGroup(ctx contex
 		return nil, err
 	}
 
-	groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroup(req.IsOn, req.Name, req.Description)
+	tx := this.NullTx()
+
+	groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroup(tx, req.IsOn, req.Name, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,9 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx contex
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(req.FirewallRuleGroupId, req.IsOn, req.Name, req.Description)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(tx, req.FirewallRuleGroupId, req.IsOn, req.Name, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +74,9 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroupConfig
 		return nil, err
 	}
 
-	groupConfig, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(req.FirewallRuleGroupId)
+	tx := this.NullTx()
+
+	groupConfig, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, req.FirewallRuleGroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +98,9 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroup(ctx c
 		return nil, err
 	}
 
-	group, err := models.SharedHTTPFirewallRuleGroupDAO.FindEnabledHTTPFirewallRuleGroup(req.FirewallRuleGroupId)
+	tx := this.NullTx()
+
+	group, err := models.SharedHTTPFirewallRuleGroupDAO.FindEnabledHTTPFirewallRuleGroup(tx, req.FirewallRuleGroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +129,9 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupSets(ctx co
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(req.GetFirewallRuleGroupId(), req.FirewallRuleSetsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, req.GetFirewallRuleGroupId(), req.FirewallRuleSetsJSON)
 	if err != nil {
 		return nil, err
 	}

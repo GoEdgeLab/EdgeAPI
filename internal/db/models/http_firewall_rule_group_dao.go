@@ -40,19 +40,19 @@ func init() {
 func (this *HTTPFirewallRuleGroupDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPFirewallRuleGroupDAO) EnableHTTPFirewallRuleGroup(id int64) error {
-	_, err := this.Query().
+func (this *HTTPFirewallRuleGroupDAO) EnableHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPFirewallRuleGroupStateEnabled).
 		Update()
@@ -60,8 +60,8 @@ func (this *HTTPFirewallRuleGroupDAO) EnableHTTPFirewallRuleGroup(id int64) erro
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleGroupDAO) DisableHTTPFirewallRuleGroup(id int64) error {
-	_, err := this.Query().
+func (this *HTTPFirewallRuleGroupDAO) DisableHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPFirewallRuleGroupStateDisabled).
 		Update()
@@ -69,8 +69,8 @@ func (this *HTTPFirewallRuleGroupDAO) DisableHTTPFirewallRuleGroup(id int64) err
 }
 
 // 查找启用中的条目
-func (this *HTTPFirewallRuleGroupDAO) FindEnabledHTTPFirewallRuleGroup(id int64) (*HTTPFirewallRuleGroup, error) {
-	result, err := this.Query().
+func (this *HTTPFirewallRuleGroupDAO) FindEnabledHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) (*HTTPFirewallRuleGroup, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPFirewallRuleGroupStateEnabled).
 		Find()
@@ -81,16 +81,16 @@ func (this *HTTPFirewallRuleGroupDAO) FindEnabledHTTPFirewallRuleGroup(id int64)
 }
 
 // 根据主键查找名称
-func (this *HTTPFirewallRuleGroupDAO) FindHTTPFirewallRuleGroupName(id int64) (string, error) {
-	return this.Query().
+func (this *HTTPFirewallRuleGroupDAO) FindHTTPFirewallRuleGroupName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 组合配置
-func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(groupId int64) (*firewallconfigs.HTTPFirewallRuleGroup, error) {
-	group, err := this.FindEnabledHTTPFirewallRuleGroup(groupId)
+func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, groupId int64) (*firewallconfigs.HTTPFirewallRuleGroup, error) {
+	group, err := this.FindEnabledHTTPFirewallRuleGroup(tx, groupId)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(groupId int64) (*
 			return nil, err
 		}
 		for _, setRef := range setRefs {
-			setConfig, err := SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(setRef.SetId)
+			setConfig, err := SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, setRef.SetId)
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +126,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(groupId int64) (*
 }
 
 // 从配置中创建分组
-func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewallconfigs.HTTPFirewallRuleGroup) (int64, error) {
+func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(tx *dbs.Tx, groupConfig *firewallconfigs.HTTPFirewallRuleGroup) (int64, error) {
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.IsOn = groupConfig.IsOn
 	op.Name = groupConfig.Name
@@ -137,7 +137,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewal
 	// sets
 	setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
 	for _, setConfig := range groupConfig.Sets {
-		setId, err := SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(setConfig)
+		setId, err := SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, setConfig)
 		if err != nil {
 			return 0, err
 		}
@@ -151,7 +151,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewal
 		return 0, err
 	}
 	op.Sets = setRefsJSON
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -159,8 +159,8 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(groupConfig *firewal
 }
 
 // 修改开启状态
-func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(groupId int64, isOn bool) error {
-	_, err := this.Query().
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(tx *dbs.Tx, groupId int64, isOn bool) error {
+	_, err := this.Query(tx).
 		Pk(groupId).
 		Set("isOn", isOn).
 		Update()
@@ -168,13 +168,13 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(groupId int64, isOn bool) 
 }
 
 // 创建分组
-func (this *HTTPFirewallRuleGroupDAO) CreateGroup(isOn bool, name string, description string) (int64, error) {
+func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name string, description string) (int64, error) {
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.State = HTTPFirewallRuleStateEnabled
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -182,7 +182,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroup(isOn bool, name string, descri
 }
 
 // 修改分组
-func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(groupId int64, isOn bool, name string, description string) error {
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isOn bool, name string, description string) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
@@ -191,18 +191,18 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(groupId int64, isOn bool, name
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改分组中的规则集
-func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(groupId int64, setsJSON []byte) error {
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64, setsJSON []byte) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.Id = groupId
 	op.Sets = setsJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }

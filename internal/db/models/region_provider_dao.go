@@ -33,8 +33,8 @@ func init() {
 }
 
 // 启用条目
-func (this *RegionProviderDAO) EnableRegionProvider(id uint32) error {
-	_, err := this.Query().
+func (this *RegionProviderDAO) EnableRegionProvider(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionProviderStateEnabled).
 		Update()
@@ -42,8 +42,8 @@ func (this *RegionProviderDAO) EnableRegionProvider(id uint32) error {
 }
 
 // 禁用条目
-func (this *RegionProviderDAO) DisableRegionProvider(id uint32) error {
-	_, err := this.Query().
+func (this *RegionProviderDAO) DisableRegionProvider(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionProviderStateDisabled).
 		Update()
@@ -51,8 +51,8 @@ func (this *RegionProviderDAO) DisableRegionProvider(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *RegionProviderDAO) FindEnabledRegionProvider(id uint32) (*RegionProvider, error) {
-	result, err := this.Query().
+func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id uint32) (*RegionProvider, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", RegionProviderStateEnabled).
 		Find()
@@ -63,8 +63,8 @@ func (this *RegionProviderDAO) FindEnabledRegionProvider(id uint32) (*RegionProv
 }
 
 // 根据主键查找名称
-func (this *RegionProviderDAO) FindRegionProviderName(id uint32) (string, error) {
-	return this.Query().
+func (this *RegionProviderDAO) FindRegionProviderName(tx *dbs.Tx, id uint32) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")

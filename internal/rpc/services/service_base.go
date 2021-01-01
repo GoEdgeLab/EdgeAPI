@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 )
 
 type BaseService struct {
@@ -84,4 +85,9 @@ func (this *BaseService) SuccessCount(count int64) (*pb.RPCCountResponse, error)
 // 返回权限错误
 func (this *BaseService) PermissionError() error {
 	return errors.New("Permission Denied")
+}
+
+// 空的数据库事务
+func (this *BaseService) NullTx() *dbs.Tx {
+	return nil
 }

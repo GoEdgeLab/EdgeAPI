@@ -33,24 +33,24 @@ func init() {
 }
 
 // 启用条目
-func (this *ApiTokenDAO) EnableApiToken(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *ApiTokenDAO) EnableApiToken(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", ApiTokenStateEnabled).
 		Update()
 }
 
 // 禁用条目
-func (this *ApiTokenDAO) DisableApiToken(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *ApiTokenDAO) DisableApiToken(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", ApiTokenStateDisabled).
 		Update()
 }
 
 // 查找启用中的条目
-func (this *ApiTokenDAO) FindEnabledApiToken(id uint32) (*ApiToken, error) {
-	result, err := this.Query().
+func (this *ApiTokenDAO) FindEnabledApiToken(tx *dbs.Tx, id uint32) (*ApiToken, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ApiTokenStateEnabled).
 		Find()
@@ -62,8 +62,8 @@ func (this *ApiTokenDAO) FindEnabledApiToken(id uint32) (*ApiToken, error) {
 
 // 获取节点Token信息
 // TODO 需要添加缓存
-func (this *ApiTokenDAO) FindEnabledTokenWithNode(nodeId string) (*ApiToken, error) {
-	one, err := this.Query().
+func (this *ApiTokenDAO) FindEnabledTokenWithNode(tx *dbs.Tx, nodeId string) (*ApiToken, error) {
+	one, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(ApiTokenStateEnabled).
 		Find()
@@ -74,8 +74,8 @@ func (this *ApiTokenDAO) FindEnabledTokenWithNode(nodeId string) (*ApiToken, err
 }
 
 // 根据角色获取节点
-func (this *ApiTokenDAO) FindEnabledTokenWithRole(role string) (*ApiToken, error) {
-	one, err := this.Query().
+func (this *ApiTokenDAO) FindEnabledTokenWithRole(tx *dbs.Tx, role string) (*ApiToken, error) {
+	one, err := this.Query(tx).
 		Attr("role", role).
 		State(ApiTokenStateEnabled).
 		Find()
@@ -86,12 +86,12 @@ func (this *ApiTokenDAO) FindEnabledTokenWithRole(role string) (*ApiToken, error
 }
 
 // 保存API Token
-func (this *ApiTokenDAO) CreateAPIToken(nodeId string, secret string, role NodeRole) error {
+func (this *ApiTokenDAO) CreateAPIToken(tx *dbs.Tx, nodeId string, secret string, role NodeRole) error {
 	op := NewApiTokenOperator()
 	op.NodeId = nodeId
 	op.Secret = secret
 	op.Role = role
 	op.State = ApiTokenStateEnabled
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }

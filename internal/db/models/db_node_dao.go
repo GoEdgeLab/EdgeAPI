@@ -35,8 +35,8 @@ func init() {
 }
 
 // 启用条目
-func (this *DBNodeDAO) EnableDBNode(id int64) error {
-	_, err := this.Query().
+func (this *DBNodeDAO) EnableDBNode(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", DBNodeStateEnabled).
 		Update()
@@ -44,8 +44,8 @@ func (this *DBNodeDAO) EnableDBNode(id int64) error {
 }
 
 // 禁用条目
-func (this *DBNodeDAO) DisableDBNode(id int64) error {
-	_, err := this.Query().
+func (this *DBNodeDAO) DisableDBNode(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", DBNodeStateDisabled).
 		Update()
@@ -53,8 +53,8 @@ func (this *DBNodeDAO) DisableDBNode(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *DBNodeDAO) FindEnabledDBNode(id int64) (*DBNode, error) {
-	result, err := this.Query().
+func (this *DBNodeDAO) FindEnabledDBNode(tx *dbs.Tx, id int64) (*DBNode, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", DBNodeStateEnabled).
 		Find()
@@ -65,23 +65,23 @@ func (this *DBNodeDAO) FindEnabledDBNode(id int64) (*DBNode, error) {
 }
 
 // 根据主键查找名称
-func (this *DBNodeDAO) FindDBNodeName(id int64) (string, error) {
-	return this.Query().
+func (this *DBNodeDAO) FindDBNodeName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 计算可用的节点数量
-func (this *DBNodeDAO) CountAllEnabledNodes() (int64, error) {
-	return this.Query().
+func (this *DBNodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
 		State(DBNodeStateEnabled).
 		Count()
 }
 
 // 获取单页的节点
-func (this *DBNodeDAO) ListEnabledNodes(offset int64, size int64) (result []*DBNode, err error) {
-	_, err = this.Query().
+func (this *DBNodeDAO) ListEnabledNodes(tx *dbs.Tx, offset int64, size int64) (result []*DBNode, err error) {
+	_, err = this.Query(tx).
 		State(DBNodeStateEnabled).
 		Offset(offset).
 		Limit(size).
@@ -92,7 +92,7 @@ func (this *DBNodeDAO) ListEnabledNodes(offset int64, size int64) (result []*DBN
 }
 
 // 创建节点
-func (this *DBNodeDAO) CreateDBNode(isOn bool, name string, description string, host string, port int32, database string, username string, password string, charset string) (int64, error) {
+func (this *DBNodeDAO) CreateDBNode(tx *dbs.Tx, isOn bool, name string, description string, host string, port int32, database string, username string, password string, charset string) (int64, error) {
 	op := NewDBNodeOperator()
 	op.State = NodeStateEnabled
 	op.IsOn = isOn
@@ -104,7 +104,7 @@ func (this *DBNodeDAO) CreateDBNode(isOn bool, name string, description string, 
 	op.Username = username
 	op.Password = password
 	op.Charset = charset
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +112,7 @@ func (this *DBNodeDAO) CreateDBNode(isOn bool, name string, description string, 
 }
 
 // 修改节点
-func (this *DBNodeDAO) UpdateNode(nodeId int64, isOn bool, name string, description string, host string, port int32, database string, username string, password string, charset string) error {
+func (this *DBNodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, isOn bool, name string, description string, host string, port int32, database string, username string, password string, charset string) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -127,13 +127,13 @@ func (this *DBNodeDAO) UpdateNode(nodeId int64, isOn bool, name string, descript
 	op.Username = username
 	op.Password = password
 	op.Charset = charset
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 查找所有可用的数据库节点
-func (this *DBNodeDAO) FindAllEnabledAndOnDBNodes() (result []*DBNode, err error) {
-	_, err = this.Query().
+func (this *DBNodeDAO) FindAllEnabledAndOnDBNodes(tx *dbs.Tx) (result []*DBNode, err error) {
+	_, err = this.Query(tx).
 		State(DBNodeStateEnabled).
 		Attr("isOn", true).
 		Slice(&result).

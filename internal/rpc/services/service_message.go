@@ -19,7 +19,9 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 		return nil, err
 	}
 
-	count, err := models.SharedMessageDAO.CountUnreadMessages(adminId, userId)
+	tx := this.NullTx()
+
+	count, err := models.SharedMessageDAO.CountUnreadMessages(tx, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +36,9 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 		return nil, err
 	}
 
-	messages, err := models.SharedMessageDAO.ListUnreadMessages(adminId, userId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	messages, err := models.SharedMessageDAO.ListUnreadMessages(tx, adminId, userId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 		var pbNode *pb.Node = nil
 
 		if message.ClusterId > 0 {
-			cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(int64(message.ClusterId))
+			cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, int64(message.ClusterId))
 			if err != nil {
 				return nil, err
 			}
@@ -57,7 +61,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 		}
 
 		if message.NodeId > 0 {
-			node, err := models.SharedNodeDAO.FindEnabledNode(int64(message.NodeId))
+			node, err := models.SharedNodeDAO.FindEnabledNode(tx, int64(message.NodeId))
 			if err != nil {
 				return nil, err
 			}
@@ -93,8 +97,10 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 校验权限
-	exists, err := models.SharedMessageDAO.CheckMessageUser(req.MessageId, adminId, userId)
+	exists, err := models.SharedMessageDAO.CheckMessageUser(tx, req.MessageId, adminId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +108,7 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedMessageDAO.UpdateMessageRead(req.MessageId, req.IsRead)
+	err = models.SharedMessageDAO.UpdateMessageRead(tx, req.MessageId, req.IsRead)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +123,11 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 校验权限
 	for _, messageId := range req.MessageIds {
-		exists, err := models.SharedMessageDAO.CheckMessageUser(messageId, adminId, userId)
+		exists, err := models.SharedMessageDAO.CheckMessageUser(tx, messageId, adminId, userId)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +135,7 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 			return nil, this.PermissionError()
 		}
 
-		err = models.SharedMessageDAO.UpdateMessageRead(messageId, req.IsRead)
+		err = models.SharedMessageDAO.UpdateMessageRead(tx, messageId, req.IsRead)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +152,9 @@ func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	err = models.SharedMessageDAO.UpdateAllMessagesRead(adminId, userId)
+	tx := this.NullTx()
+
+	err = models.SharedMessageDAO.UpdateAllMessagesRead(tx, adminId, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -68,7 +68,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 
 	// 获取角色Node信息
 	// TODO 缓存节点ID相关信息
-	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNode(nodeId)
+	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNode(nil, nodeId)
 	if err != nil {
 		utils.PrintError(err)
 		return UserTypeNone, 0, err
@@ -121,7 +121,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 
 	switch apiToken.Role {
 	case UserTypeNode:
-		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nodeId)
+		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
 		if err != nil {
 			return UserTypeNode, 0, errors.New("context: " + err.Error())
 		}
@@ -130,7 +130,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		}
 		nodeUserId = nodeIntId
 	case UserTypeCluster:
-		clusterId, err := models.SharedNodeClusterDAO.FindEnabledClusterIdWithUniqueId(nodeId)
+		clusterId, err := models.SharedNodeClusterDAO.FindEnabledClusterIdWithUniqueId(nil, nodeId)
 		if err != nil {
 			return UserTypeCluster, 0, errors.New("context: " + err.Error())
 		}

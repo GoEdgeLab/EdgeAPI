@@ -40,8 +40,8 @@ func init() {
 }
 
 // 启用条目
-func (this *ACMEUserDAO) EnableACMEUser(id int64) error {
-	_, err := this.Query().
+func (this *ACMEUserDAO) EnableACMEUser(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ACMEUserStateEnabled).
 		Update()
@@ -49,8 +49,8 @@ func (this *ACMEUserDAO) EnableACMEUser(id int64) error {
 }
 
 // 禁用条目
-func (this *ACMEUserDAO) DisableACMEUser(id int64) error {
-	_, err := this.Query().
+func (this *ACMEUserDAO) DisableACMEUser(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ACMEUserStateDisabled).
 		Update()
@@ -58,8 +58,8 @@ func (this *ACMEUserDAO) DisableACMEUser(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *ACMEUserDAO) FindEnabledACMEUser(id int64) (*ACMEUser, error) {
-	result, err := this.Query().
+func (this *ACMEUserDAO) FindEnabledACMEUser(tx *dbs.Tx, id int64) (*ACMEUser, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ACMEUserStateEnabled).
 		Find()
@@ -70,7 +70,7 @@ func (this *ACMEUserDAO) FindEnabledACMEUser(id int64) (*ACMEUser, error) {
 }
 
 // 创建用户
-func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email string, description string) (int64, error) {
+func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64, email string, description string) (int64, error) {
 	// 生成私钥
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -90,7 +90,7 @@ func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email strin
 	op.Description = description
 	op.PrivateKey = privateKeyText
 	op.State = ACMEUserStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -98,32 +98,32 @@ func (this *ACMEUserDAO) CreateACMEUser(adminId int64, userId int64, email strin
 }
 
 // 修改用户信息
-func (this *ACMEUserDAO) UpdateACMEUser(acmeUserId int64, description string) error {
+func (this *ACMEUserDAO) UpdateACMEUser(tx *dbs.Tx, acmeUserId int64, description string) error {
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
 	}
 	op := NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Description = description
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改用户ACME注册信息
-func (this *ACMEUserDAO) UpdateACMEUserRegistration(acmeUserId int64, registrationJSON []byte) error {
+func (this *ACMEUserDAO) UpdateACMEUserRegistration(tx *dbs.Tx, acmeUserId int64, registrationJSON []byte) error {
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
 	}
 	op := NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Registration = registrationJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 计算用户数量
-func (this *ACMEUserDAO) CountACMEUsersWithAdminId(adminId int64, userId int64) (int64, error) {
-	query := this.Query()
+func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
+	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
@@ -137,8 +137,8 @@ func (this *ACMEUserDAO) CountACMEUsersWithAdminId(adminId int64, userId int64) 
 }
 
 // 列出当前管理员的用户
-func (this *ACMEUserDAO) ListACMEUsers(adminId int64, userId int64, offset int64, size int64) (result []*ACMEUser, err error) {
-	query := this.Query()
+func (this *ACMEUserDAO) ListACMEUsers(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*ACMEUser, err error) {
+	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
@@ -157,13 +157,13 @@ func (this *ACMEUserDAO) ListACMEUsers(adminId int64, userId int64, offset int64
 }
 
 // 查找所有用户
-func (this *ACMEUserDAO) FindAllACMEUsers(adminId int64, userId int64) (result []*ACMEUser, err error) {
+func (this *ACMEUserDAO) FindAllACMEUsers(tx *dbs.Tx, adminId int64, userId int64) (result []*ACMEUser, err error) {
 	// 防止没有传入条件导致返回的数据过多
 	if adminId <= 0 && userId <= 0 {
 		return nil, errors.New("'adminId' or 'userId' should not be empty")
 	}
 
-	query := this.Query()
+	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
@@ -179,12 +179,12 @@ func (this *ACMEUserDAO) FindAllACMEUsers(adminId int64, userId int64) (result [
 }
 
 // 检查用户权限
-func (this *ACMEUserDAO) CheckACMEUser(acmeUserId int64, adminId int64, userId int64) (bool, error) {
+func (this *ACMEUserDAO) CheckACMEUser(tx *dbs.Tx, acmeUserId int64, adminId int64, userId int64) (bool, error) {
 	if acmeUserId <= 0 {
 		return false, nil
 	}
 
-	query := this.Query()
+	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	} else if userId > 0 {

@@ -20,7 +20,9 @@ func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateU
 		return nil, err
 	}
 
-	nodeId, err := models.SharedUserNodeDAO.CreateUserNode(req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
+	tx := this.NullTx()
+
+	nodeId, err := models.SharedUserNodeDAO.CreateUserNode(tx, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateU
 		return nil, err
 	}
 
-	err = models.SharedUserNodeDAO.UpdateUserNode(req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedUserNodeDAO.UpdateUserNode(tx, req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +54,9 @@ func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteU
 		return nil, err
 	}
 
-	err = models.SharedUserNodeDAO.DisableUserNode(req.NodeId)
+	tx := this.NullTx()
+
+	err = models.SharedUserNodeDAO.DisableUserNode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +71,9 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 		return nil, err
 	}
 
-	nodes, err := models.SharedUserNodeDAO.FindAllEnabledUserNodes()
+	tx := this.NullTx()
+
+	nodes, err := models.SharedUserNodeDAO.FindAllEnabledUserNodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +109,9 @@ func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *
 		return nil, err
 	}
 
-	count, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes()
+	tx := this.NullTx()
+
+	count, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +126,9 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 		return nil, err
 	}
 
-	nodes, err := models.SharedUserNodeDAO.ListEnabledUserNodes(req.Offset, req.Size)
+	tx := this.NullTx()
+
+	nodes, err := models.SharedUserNodeDAO.ListEnabledUserNodes(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +164,9 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
-	node, err := models.SharedUserNodeDAO.FindEnabledUserNode(req.NodeId)
+	tx := this.NullTx()
+
+	node, err := models.SharedUserNodeDAO.FindEnabledUserNode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -188,6 +202,8 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("context: need 'nodeId'")
@@ -197,7 +213,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		return nil, errors.New("invalid 'nodeId'")
 	}
 	nodeId := nodeIds[0]
-	node, err := models.SharedUserNodeDAO.FindEnabledUserNodeWithUniqueId(nodeId)
+	node, err := models.SharedUserNodeDAO.FindEnabledUserNodeWithUniqueId(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}

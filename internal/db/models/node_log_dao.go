@@ -34,7 +34,7 @@ func init() {
 }
 
 // 创建日志
-func (this *NodeLogDAO) CreateLog(nodeRole NodeRole, nodeId int64, level string, tag string, description string, createdAt int64) error {
+func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole NodeRole, nodeId int64, level string, tag string, description string, createdAt int64) error {
 	op := NewNodeLogOperator()
 	op.Role = nodeRole
 	op.NodeId = nodeId
@@ -43,18 +43,18 @@ func (this *NodeLogDAO) CreateLog(nodeRole NodeRole, nodeId int64, level string,
 	op.Description = description
 	op.CreatedAt = createdAt
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 清除超出一定日期的日志
-func (this *NodeLogDAO) DeleteExpiredLogs(days int) error {
+func (this *NodeLogDAO) DeleteExpiredLogs(tx *dbs.Tx, days int) error {
 	if days <= 0 {
 		return errors.New("invalid days '" + strconv.Itoa(days) + "'")
 	}
 	date := time.Now().AddDate(0, 0, -days)
 	expireDay := timeutil.Format("Ymd", date)
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Where("day<=:day").
 		Param("day", expireDay).
 		Delete()
@@ -62,16 +62,16 @@ func (this *NodeLogDAO) DeleteExpiredLogs(days int) error {
 }
 
 // 计算节点数量
-func (this *NodeLogDAO) CountNodeLogs(role string, nodeId int64) (int64, error) {
-	return this.Query().
+func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx, role string, nodeId int64) (int64, error) {
+	return this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("role", role).
 		Count()
 }
 
 // 列出单页日志
-func (this *NodeLogDAO) ListNodeLogs(role string, nodeId int64, offset int64, size int64) (result []*NodeLog, err error) {
-	_, err = this.Query().
+func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx, role string, nodeId int64, offset int64, size int64) (result []*NodeLog, err error) {
+	_, err = this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("role", role).
 		Offset(offset).

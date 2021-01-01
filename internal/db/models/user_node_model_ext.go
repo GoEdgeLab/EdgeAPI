@@ -43,7 +43,7 @@ func (this *UserNode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) 
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(nil, policyId)
 			if err != nil {
 				return nil, err
 			}

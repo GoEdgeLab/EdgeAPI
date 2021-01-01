@@ -18,7 +18,9 @@ func (this *NodePriceItemService) CreateNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	itemId, err := models.SharedNodePriceItemDAO.CreateItem(req.Name, req.Type, req.BitsFrom, req.BitsTo)
+	tx := this.NullTx()
+
+	itemId, err := models.SharedNodePriceItemDAO.CreateItem(tx, req.Name, req.Type, req.BitsFrom, req.BitsTo)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +34,9 @@ func (this *NodePriceItemService) UpdateNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	err = models.SharedNodePriceItemDAO.UpdateItem(req.NodePriceItemId, req.Name, req.BitsFrom, req.BitsTo)
+	tx := this.NullTx()
+
+	err = models.SharedNodePriceItemDAO.UpdateItem(tx, req.NodePriceItemId, req.Name, req.BitsFrom, req.BitsTo)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +50,9 @@ func (this *NodePriceItemService) DeleteNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	err = models.SharedNodePriceItemDAO.DisableNodePriceItem(req.NodePriceItemId)
+	tx := this.NullTx()
+
+	err = models.SharedNodePriceItemDAO.DisableNodePriceItem(tx, req.NodePriceItemId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +66,9 @@ func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Conte
 		return nil, err
 	}
 
-	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledRegionPrices(req.Type)
+	tx := this.NullTx()
+
+	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledRegionPrices(tx, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +94,9 @@ func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.
 		return nil, err
 	}
 
-	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledAndOnRegionPrices(req.Type)
+	tx := this.NullTx()
+
+	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledAndOnRegionPrices(tx, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +122,9 @@ func (this *NodePriceItemService) FindEnabledNodePriceItem(ctx context.Context, 
 		return nil, err
 	}
 
-	price, err := models.SharedNodePriceItemDAO.FindEnabledNodePriceItem(req.NodePriceItemId)
+	tx := this.NullTx()
+
+	price, err := models.SharedNodePriceItemDAO.FindEnabledNodePriceItem(tx, req.NodePriceItemId)
 	if err != nil {
 		return nil, err
 	}

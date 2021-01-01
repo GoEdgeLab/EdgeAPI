@@ -37,8 +37,8 @@ func init() {
 }
 
 // 启用条目
-func (this *IPListDAO) EnableIPList(id int64) error {
-	_, err := this.Query().
+func (this *IPListDAO) EnableIPList(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", IPListStateEnabled).
 		Update()
@@ -46,8 +46,8 @@ func (this *IPListDAO) EnableIPList(id int64) error {
 }
 
 // 禁用条目
-func (this *IPListDAO) DisableIPList(id int64) error {
-	_, err := this.Query().
+func (this *IPListDAO) DisableIPList(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", IPListStateDisabled).
 		Update()
@@ -55,8 +55,8 @@ func (this *IPListDAO) DisableIPList(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *IPListDAO) FindEnabledIPList(id int64) (*IPList, error) {
-	result, err := this.Query().
+func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64) (*IPList, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", IPListStateEnabled).
 		Find()
@@ -67,15 +67,15 @@ func (this *IPListDAO) FindEnabledIPList(id int64) (*IPList, error) {
 }
 
 // 根据主键查找名称
-func (this *IPListDAO) FindIPListName(id int64) (string, error) {
-	return this.Query().
+func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建名单
-func (this *IPListDAO) CreateIPList(listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte) (int64, error) {
+func (this *IPListDAO) CreateIPList(tx *dbs.Tx, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte) (int64, error) {
 	op := NewIPListOperator()
 	op.IsOn = true
 	op.State = IPListStateEnabled
@@ -85,7 +85,7 @@ func (this *IPListDAO) CreateIPList(listType ipconfigs.IPListType, name string, 
 	if len(timeoutJSON) > 0 {
 		op.Timeout = timeoutJSON
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +93,7 @@ func (this *IPListDAO) CreateIPList(listType ipconfigs.IPListType, name string, 
 }
 
 // 修改名单
-func (this *IPListDAO) UpdateIPList(listId int64, name string, code string, timeoutJSON []byte) error {
+func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code string, timeoutJSON []byte) error {
 	if listId <= 0 {
 		return errors.New("invalid listId")
 	}
@@ -106,18 +106,18 @@ func (this *IPListDAO) UpdateIPList(listId int64, name string, code string, time
 	} else {
 		op.Timeout = "null"
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 增加版本
-func (this *IPListDAO) IncreaseVersion() (int64, error) {
-	valueJSON, err := SharedSysSettingDAO.ReadSetting(SettingCodeIPListVersion)
+func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
+	valueJSON, err := SharedSysSettingDAO.ReadSetting(tx, SettingCodeIPListVersion)
 	if err != nil {
 		return 0, err
 	}
 	if len(valueJSON) == 0 {
-		err = SharedSysSettingDAO.UpdateSetting(SettingCodeIPListVersion, []byte("1"))
+		err = SharedSysSettingDAO.UpdateSetting(tx, SettingCodeIPListVersion, []byte("1"))
 		if err != nil {
 			return 0, err
 		}
@@ -125,6 +125,6 @@ func (this *IPListDAO) IncreaseVersion() (int64, error) {
 	}
 
 	value := types.Int64(string(valueJSON)) + 1
-	err = SharedSysSettingDAO.UpdateSetting(SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
+	err = SharedSysSettingDAO.UpdateSetting(tx, SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
 	return value, nil
 }

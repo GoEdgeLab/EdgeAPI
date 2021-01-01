@@ -42,7 +42,7 @@ func NewHTTPAccessLogDAO() *HTTPAccessLogDAO {
 }
 
 // 创建访问日志
-func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(accessLogs []*pb.HTTPAccessLog) error {
+func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(tx *dbs.Tx, accessLogs []*pb.HTTPAccessLog) error {
 	dao := randomAccessLogDAO()
 	if dao == nil {
 		dao = &HTTPAccessLogDAOWrapper{
@@ -50,11 +50,11 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(accessLogs []*pb.HTTPAccessLo
 			NodeId: 0,
 		}
 	}
-	return this.CreateHTTPAccessLogsWithDAO(dao, accessLogs)
+	return this.CreateHTTPAccessLogsWithDAO(tx, dao, accessLogs)
 }
 
 // 使用特定的DAO创建访问日志
-func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(daoWrapper *HTTPAccessLogDAOWrapper, accessLogs []*pb.HTTPAccessLog) error {
+func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *HTTPAccessLogDAOWrapper, accessLogs []*pb.HTTPAccessLog) error {
 	if daoWrapper == nil {
 		return errors.New("dao should not be nil")
 	}
@@ -90,7 +90,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(daoWrapper *HTTPAccess
 		}
 		fields["content"] = content
 
-		_, err = dao.Query().
+		_, err = dao.Query(tx).
 			Table(table).
 			Sets(fields).
 			Insert()
@@ -101,7 +101,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(daoWrapper *HTTPAccess
 				if err != nil {
 					return err
 				}
-				_, err = dao.Query().
+				_, err = dao.Query(tx).
 					Table(table).
 					Sets(fields).
 					Insert()
@@ -116,7 +116,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(daoWrapper *HTTPAccess
 }
 
 // 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -126,18 +126,18 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(lastRequestId string, size int64, d
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -177,7 +177,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, d
 				return
 			}
 
-			query := dao.Query()
+			query := dao.Query(tx)
 
 			// 条件
 			if serverId > 0 {
@@ -262,7 +262,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, d
 }
 
 // 根据请求ID获取访问日志
-func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(requestId string) (*HTTPAccessLog, error) {
+func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId string) (*HTTPAccessLog, error) {
 	if !regexp.MustCompile(`^\d{30,}`).MatchString(requestId) {
 		return nil, errors.New("invalid requestId")
 	}
@@ -301,7 +301,7 @@ func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(requestId string) (*HTT
 				return
 			}
 
-			one, err := dao.Query().
+			one, err := dao.Query(tx).
 				Table(tableName).
 				Attr("requestId", requestId).
 				Find()

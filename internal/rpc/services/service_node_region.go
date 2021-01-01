@@ -17,7 +17,10 @@ func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.Cre
 	if err != nil {
 		return nil, err
 	}
-	regionId, err := models.SharedNodeRegionDAO.CreateRegion(adminId, req.Name, req.Description)
+
+	tx := this.NullTx()
+
+	regionId, err := models.SharedNodeRegionDAO.CreateRegion(tx, adminId, req.Name, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +33,10 @@ func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.Upd
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeRegionDAO.UpdateRegion(req.NodeRegionId, req.Name, req.Description, req.IsOn)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeRegionDAO.UpdateRegion(tx, req.NodeRegionId, req.Name, req.Description, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +49,10 @@ func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.Del
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeRegionDAO.DisableNodeRegion(req.NodeRegionId)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeRegionDAO.DisableNodeRegion(tx, req.NodeRegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +65,10 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	regions, err := models.SharedNodeRegionDAO.FindAllEnabledRegions()
+
+	tx := this.NullTx()
+
+	regions, err := models.SharedNodeRegionDAO.FindAllEnabledRegions(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +91,10 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	regions, err := models.SharedNodeRegionDAO.FindAllEnabledAndOnRegions()
+
+	tx := this.NullTx()
+
+	regions, err := models.SharedNodeRegionDAO.FindAllEnabledAndOnRegions(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +117,10 @@ func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeRegionDAO.UpdateRegionOrders(req.NodeRegionIds)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeRegionDAO.UpdateRegionOrders(tx, req.NodeRegionIds)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +133,10 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	}
-	region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(req.NodeRegionId)
+
+	tx := this.NullTx()
+
+	region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(tx, req.NodeRegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +158,10 @@ func (this *NodeRegionService) UpdateNodeRegionPrice(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedNodeRegionDAO.UpdateRegionItemPrice(req.NodeRegionId, req.NodeItemId, req.Price)
+
+	tx := this.NullTx()
+
+	err = models.SharedNodeRegionDAO.UpdateRegionItemPrice(tx, req.NodeRegionId, req.NodeItemId, req.Price)
 	if err != nil {
 		return nil, err
 	}

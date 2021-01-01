@@ -21,7 +21,9 @@ func (this *HTTPLocationService) CreateHTTPLocation(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	locationId, err := models.SharedHTTPLocationDAO.CreateLocation(req.ParentId, req.Name, req.Pattern, req.Description, req.IsBreak)
+	tx := this.NullTx()
+
+	locationId, err := models.SharedHTTPLocationDAO.CreateLocation(tx, req.ParentId, req.Name, req.Pattern, req.Description, req.IsBreak)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,9 @@ func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	err = models.SharedHTTPLocationDAO.UpdateLocation(req.LocationId, req.Name, req.Pattern, req.Description, req.IsOn, req.IsBreak)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPLocationDAO.UpdateLocation(tx, req.LocationId, req.Name, req.Pattern, req.Description, req.IsOn, req.IsBreak)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,9 @@ func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Conte
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(req.LocationId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(tx, req.LocationId)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +78,9 @@ func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	err = models.SharedHTTPLocationDAO.DisableHTTPLocation(req.LocationId)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPLocationDAO.DisableHTTPLocation(tx, req.LocationId)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +95,14 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationReverseProxyConfig(ctx c
 		return nil, err
 	}
 
-	reverseProxyRef, err := models.SharedHTTPLocationDAO.FindLocationReverseProxy(req.LocationId)
+	tx := this.NullTx()
+
+	reverseProxyRef, err := models.SharedHTTPLocationDAO.FindLocationReverseProxy(tx, req.LocationId)
 	if err != nil {
 		return nil, err
 	}
 	if reverseProxyRef == nil || reverseProxyRef.ReverseProxyId <= 0 {
-		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(adminId, userId, nil, nil, nil)
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, userId, nil, nil, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -104,13 +114,13 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationReverseProxyConfig(ctx c
 		if err != nil {
 			return nil, err
 		}
-		err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(req.LocationId, reverseProxyJSON)
+		err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(tx, req.LocationId, reverseProxyJSON)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(reverseProxyRef.ReverseProxyId)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId)
 	if err != nil {
 		return nil, err
 	}
@@ -138,23 +148,25 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 		return nil, rpcutils.Wrap("ValidateRequest()", err)
 	}
 
-	webId, err := models.SharedHTTPLocationDAO.FindLocationWebId(req.LocationId)
+	tx := this.NullTx()
+
+	webId, err := models.SharedHTTPLocationDAO.FindLocationWebId(tx, req.LocationId)
 	if err != nil {
 		return nil, rpcutils.Wrap("FindLocationWebId()", err)
 	}
 
 	if webId <= 0 {
-		webId, err = models.SharedHTTPWebDAO.CreateWeb(adminId, userId, nil)
+		webId, err = models.SharedHTTPWebDAO.CreateWeb(tx, adminId, userId, nil)
 		if err != nil {
 			return nil, rpcutils.Wrap("CreateWeb()", err)
 		}
-		err = models.SharedHTTPLocationDAO.UpdateLocationWeb(req.LocationId, webId)
+		err = models.SharedHTTPLocationDAO.UpdateLocationWeb(tx, req.LocationId, webId)
 		if err != nil {
 			return nil, rpcutils.Wrap("UpdateLocationWeb()", err)
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(webId)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId)
 	if err != nil {
 		return nil, rpcutils.Wrap("ComposeWebConfig()", err)
 	}
@@ -175,7 +187,9 @@ func (this *HTTPLocationService) UpdateHTTPLocationReverseProxy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(req.LocationId, req.ReverseProxyJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPLocationDAO.UpdateLocationReverseProxy(tx, req.LocationId, req.ReverseProxyJSON)
 	if err != nil {
 		return nil, err
 	}

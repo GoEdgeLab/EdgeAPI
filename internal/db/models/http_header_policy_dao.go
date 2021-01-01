@@ -40,19 +40,19 @@ func init() {
 func (this *HTTPHeaderPolicyDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(id int64) error {
-	_, err := this.Query().
+func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPHeaderPolicyStateEnabled).
 		Update()
@@ -60,8 +60,8 @@ func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(id int64) error {
-	_, err := this.Query().
+func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPHeaderPolicyStateDisabled).
 		Update()
@@ -69,8 +69,8 @@ func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(id int64) (*HTTPHeaderPolicy, error) {
-	result, err := this.Query().
+func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(tx *dbs.Tx, id int64) (*HTTPHeaderPolicy, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPHeaderPolicyStateEnabled).
 		Find()
@@ -81,11 +81,11 @@ func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(id int64) (*HTTPHea
 }
 
 // 创建策略
-func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy() (int64, error) {
+func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy(tx *dbs.Tx) (int64, error) {
 	op := NewHTTPHeaderPolicyOperator()
 	op.IsOn = true
 	op.State = HTTPHeaderPolicyStateEnabled
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +93,7 @@ func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy() (int64, error) {
 }
 
 // 修改AddHeaders
-func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(policyId int64, headersJSON []byte) error {
+func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -101,13 +101,13 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(policyId int64, headersJSON
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddHeaders = headersJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改SetHeaders
-func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(policyId int64, headersJSON []byte) error {
+func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -115,13 +115,13 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(policyId int64, headersJSO
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.SetHeaders = headersJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改ReplaceHeaders
-func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(policyId int64, headersJSON []byte) error {
+func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -129,13 +129,13 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(policyId int64, headersJ
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.ReplaceHeaders = headersJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改AddTrailers
-func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(policyId int64, headersJSON []byte) error {
+func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -143,13 +143,13 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(policyId int64, headersJSO
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddTrailers = headersJSON
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改DeleteHeaders
-func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(policyId int64, headerNames []string) error {
+func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int64, headerNames []string) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -162,14 +162,14 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(policyId int64, headerNam
 	op := NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.DeleteHeaders = string(namesJSON)
-	err = this.Save(op)
+	err = this.Save(tx, op)
 
 	return err
 }
 
 // 组合配置
-func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64) (*shared.HTTPHeaderPolicy, error) {
-	policy, err := this.FindEnabledHTTPHeaderPolicy(headerPolicyId)
+func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPolicyId int64) (*shared.HTTPHeaderPolicy, error) {
+	policy, err := this.FindEnabledHTTPHeaderPolicy(tx, headerPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
@@ -209,7 +209,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 		if len(refs) > 0 {
 			resultRefs := []*shared.HTTPHeaderRef{}
 			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
@@ -233,7 +233,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 		if len(refs) > 0 {
 			resultRefs := []*shared.HTTPHeaderRef{}
 			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}
@@ -257,7 +257,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(headerPolicyId int64)
 		if len(refs) > 0 {
 			resultRefs := []*shared.HTTPHeaderRef{}
 			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(ref.HeaderId)
+				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
 				if err != nil {
 					return nil, err
 				}

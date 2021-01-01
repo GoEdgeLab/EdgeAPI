@@ -35,8 +35,8 @@ func init() {
 }
 
 // 启用条目
-func (this *UserAccessKeyDAO) EnableUserAccessKey(id int64) error {
-	_, err := this.Query().
+func (this *UserAccessKeyDAO) EnableUserAccessKey(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", UserAccessKeyStateEnabled).
 		Update()
@@ -44,8 +44,8 @@ func (this *UserAccessKeyDAO) EnableUserAccessKey(id int64) error {
 }
 
 // 禁用条目
-func (this *UserAccessKeyDAO) DisableUserAccessKey(id int64) error {
-	_, err := this.Query().
+func (this *UserAccessKeyDAO) DisableUserAccessKey(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", UserAccessKeyStateDisabled).
 		Update()
@@ -53,8 +53,8 @@ func (this *UserAccessKeyDAO) DisableUserAccessKey(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *UserAccessKeyDAO) FindEnabledUserAccessKey(id int64) (*UserAccessKey, error) {
-	result, err := this.Query().
+func (this *UserAccessKeyDAO) FindEnabledUserAccessKey(tx *dbs.Tx, id int64) (*UserAccessKey, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", UserAccessKeyStateEnabled).
 		Find()
@@ -65,7 +65,7 @@ func (this *UserAccessKeyDAO) FindEnabledUserAccessKey(id int64) (*UserAccessKey
 }
 
 // 创建Key
-func (this *UserAccessKeyDAO) CreateAccessKey(userId int64, description string) (int64, error) {
+func (this *UserAccessKeyDAO) CreateAccessKey(tx *dbs.Tx, userId int64, description string) (int64, error) {
 	if userId <= 0 {
 		return 0, errors.New("invalid userId")
 	}
@@ -76,12 +76,12 @@ func (this *UserAccessKeyDAO) CreateAccessKey(userId int64, description string) 
 	op.Secret = rands.String(32)
 	op.IsOn = true
 	op.State = UserAccessKeyStateEnabled
-	return this.SaveInt64(op)
+	return this.SaveInt64(tx, op)
 }
 
 // 查找用户所有的Key
-func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(userId int64) (result []*UserAccessKey, err error) {
-	_, err = this.Query().
+func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(tx *dbs.Tx, userId int64) (result []*UserAccessKey, err error) {
+	_, err = this.Query(tx).
 		State(UserAccessKeyStateEnabled).
 		DescPk().
 		Slice(&result).
@@ -90,8 +90,8 @@ func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(userId int64) (result []*
 }
 
 // 检查用户的AccessKey
-func (this *UserAccessKeyDAO) CheckUserAccessKey(userId int64, accessKeyId int64) (bool, error) {
-	return this.Query().
+func (this *UserAccessKeyDAO) CheckUserAccessKey(tx *dbs.Tx, userId int64, accessKeyId int64) (bool, error) {
+	return this.Query(tx).
 		Pk(accessKeyId).
 		State(UserAccessKeyStateEnabled).
 		Attr("userId", userId).
@@ -99,11 +99,11 @@ func (this *UserAccessKeyDAO) CheckUserAccessKey(userId int64, accessKeyId int64
 }
 
 // 设置是否启用
-func (this *UserAccessKeyDAO) UpdateAccessKeyIsOn(accessKeyId int64, isOn bool) error {
+func (this *UserAccessKeyDAO) UpdateAccessKeyIsOn(tx *dbs.Tx, accessKeyId int64, isOn bool) error {
 	if accessKeyId <= 0 {
 		return errors.New("invalid accessKeyId")
 	}
-	_, err := this.Query().
+	_, err := this.Query(tx).
 		Pk(accessKeyId).
 		Set("isOn", isOn).
 		Update()
@@ -111,8 +111,8 @@ func (this *UserAccessKeyDAO) UpdateAccessKeyIsOn(accessKeyId int64, isOn bool) 
 }
 
 // 根据UniqueId查找AccessKey
-func (this *UserAccessKeyDAO) FindAccessKeyWithUniqueId(uniqueId string) (*UserAccessKey, error) {
-	one, err := this.Query().
+func (this *UserAccessKeyDAO) FindAccessKeyWithUniqueId(tx *dbs.Tx, uniqueId string) (*UserAccessKey, error) {
+	one, err := this.Query(tx).
 		Attr("uniqueId", uniqueId).
 		Attr("isOn", true).
 		State(UserAccessKeyStateEnabled).

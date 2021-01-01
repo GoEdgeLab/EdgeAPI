@@ -149,7 +149,7 @@ func (this *DBNodeInitializer) Start() {
 
 // 单次运行
 func (this *DBNodeInitializer) loop() error {
-	dbNodes, err := SharedDBNodeDAO.FindAllEnabledAndOnDBNodes()
+	dbNodes, err := SharedDBNodeDAO.FindAllEnabledAndOnDBNodes(nil)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (this *DBNodeInitializer) loop() error {
 					logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
 
 					// 创建节点日志
-					createLogErr := SharedNodeLogDAO.CreateLog(NodeRoleDatabase, nodeId, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
+					createLogErr := SharedNodeLogDAO.CreateLog(nil, NodeRoleDatabase, nodeId, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
 					if createLogErr != nil {
 						logs.Println("[NODE_LOG]" + createLogErr.Error())
 					}

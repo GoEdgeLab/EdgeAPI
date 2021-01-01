@@ -20,7 +20,9 @@ func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	groupId, err := models.SharedServerGroupDAO.CreateGroup(req.Name)
+	tx := this.NullTx()
+
+	groupId, err := models.SharedServerGroupDAO.CreateGroup(tx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	err = models.SharedServerGroupDAO.UpdateGroup(req.GroupId, req.Name)
+	tx := this.NullTx()
+
+	err = models.SharedServerGroupDAO.UpdateGroup(tx, req.GroupId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +55,9 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	err = models.SharedServerGroupDAO.DisableServerGroup(req.GroupId)
+	tx := this.NullTx()
+
+	err = models.SharedServerGroupDAO.DisableServerGroup(tx, req.GroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +73,9 @@ func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, 
 		return nil, err
 	}
 
-	groups, err := models.SharedServerGroupDAO.FindAllEnabledGroups()
+	tx := this.NullTx()
+
+	groups, err := models.SharedServerGroupDAO.FindAllEnabledGroups(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +97,9 @@ func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req
 		return nil, err
 	}
 
-	err = models.SharedServerGroupDAO.UpdateGroupOrders(req.GroupIds)
+	tx := this.NullTx()
+
+	err = models.SharedServerGroupDAO.UpdateGroupOrders(tx, req.GroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +114,9 @@ func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req 
 		return nil, err
 	}
 
-	group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(req.GroupId)
+	tx := this.NullTx()
+
+	group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(tx, req.GroupId)
 	if err != nil {
 		return nil, err
 	}

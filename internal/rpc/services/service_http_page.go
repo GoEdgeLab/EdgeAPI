@@ -21,7 +21,9 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 		return nil, err
 	}
 
-	pageId, err := models.SharedHTTPPageDAO.CreatePage(req.StatusList, req.Url, types.Int(req.NewStatus))
+	tx := this.NullTx()
+
+	pageId, err := models.SharedHTTPPageDAO.CreatePage(tx, req.StatusList, req.Url, types.Int(req.NewStatus))
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +39,9 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 		return nil, err
 	}
 
-	err = models.SharedHTTPPageDAO.UpdatePage(req.PageId, req.StatusList, req.Url, types.Int(req.NewStatus))
+	tx := this.NullTx()
+
+	err = models.SharedHTTPPageDAO.UpdatePage(tx, req.PageId, req.StatusList, req.Url, types.Int(req.NewStatus))
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,9 @@ func (this *HTTPPageService) FindEnabledHTTPPageConfig(ctx context.Context, req 
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPPageDAO.ComposePageConfig(req.PageId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPPageDAO.ComposePageConfig(tx, req.PageId)
 	if err != nil {
 		return nil, err
 	}

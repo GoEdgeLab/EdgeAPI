@@ -46,7 +46,7 @@ func (this *HealthCheckTask) Run() {
 }
 
 func (this *HealthCheckTask) loop() error {
-	clusters, err := models.NewNodeClusterDAO().FindAllEnableClusters()
+	clusters, err := models.NewNodeClusterDAO().FindAllEnableClusters(nil)
 	if err != nil {
 		return err
 	}

@@ -75,7 +75,7 @@ func (this *NodeStatusExecutor) update() {
 		remotelogs.Error("NODE_STATUS", "serial NodeStatus fail: "+err.Error())
 		return
 	}
-	err = models.SharedAPINodeDAO.UpdateAPINodeStatus(sharedAPIConfig.NumberId(), jsonData)
+	err = models.SharedAPINodeDAO.UpdateAPINodeStatus(nil, sharedAPIConfig.NumberId(), jsonData)
 	if err != nil {
 		remotelogs.Error("NODE_STATUS", "rpc UpdateNodeStatus() failed: "+err.Error())
 		return

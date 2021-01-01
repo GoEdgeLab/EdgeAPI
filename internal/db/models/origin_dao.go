@@ -42,19 +42,19 @@ func init() {
 func (this *OriginDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *OriginDAO) EnableOrigin(id int64) error {
-	_, err := this.Query().
+func (this *OriginDAO) EnableOrigin(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", OriginStateEnabled).
 		Update()
@@ -62,8 +62,8 @@ func (this *OriginDAO) EnableOrigin(id int64) error {
 }
 
 // 禁用条目
-func (this *OriginDAO) DisableOrigin(id int64) error {
-	_, err := this.Query().
+func (this *OriginDAO) DisableOrigin(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", OriginStateDisabled).
 		Update()
@@ -71,8 +71,8 @@ func (this *OriginDAO) DisableOrigin(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *OriginDAO) FindEnabledOrigin(id int64) (*Origin, error) {
-	result, err := this.Query().
+func (this *OriginDAO) FindEnabledOrigin(tx *dbs.Tx, id int64) (*Origin, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", OriginStateEnabled).
 		Find()
@@ -83,15 +83,15 @@ func (this *OriginDAO) FindEnabledOrigin(id int64) (*Origin, error) {
 }
 
 // 根据主键查找名称
-func (this *OriginDAO) FindOriginName(id int64) (string, error) {
-	return this.Query().
+func (this *OriginDAO) FindOriginName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建源站
-func (this *OriginDAO) CreateOrigin(adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool) (originId int64, err error) {
+func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool) (originId int64, err error) {
 	op := NewOriginOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -104,7 +104,7 @@ func (this *OriginDAO) CreateOrigin(adminId int64, userId int64, name string, ad
 	}
 	op.Weight = weight
 	op.State = OriginStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return
 	}
@@ -112,7 +112,7 @@ func (this *OriginDAO) CreateOrigin(adminId int64, userId int64, name string, ad
 }
 
 // 修改源站
-func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string, description string, weight int32, isOn bool) error {
+func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, addrJSON string, description string, weight int32, isOn bool) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
@@ -127,13 +127,13 @@ func (this *OriginDAO) UpdateOrigin(originId int64, name string, addrJSON string
 	op.Weight = weight
 	op.IsOn = isOn
 	op.Version = dbs.SQL("version+1")
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 将源站信息转换为配置
-func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.OriginConfig, error) {
-	origin, err := this.FindEnabledOrigin(originId)
+func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverconfigs.OriginConfig, error) {
+	origin, err := this.FindEnabledOrigin(tx, originId)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.RequestHeaderPolicyRef = ref
 
 		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -221,7 +221,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		config.ResponseHeaderPolicyRef = ref
 
 		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -248,7 +248,7 @@ func (this *OriginDAO) ComposeOriginConfig(originId int64) (*serverconfigs.Origi
 		}
 		config.CertRef = ref
 		if ref.CertId > 0 {
-			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(ref.CertId)
+			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId)
 			if err != nil {
 				return nil, err
 			}

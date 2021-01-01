@@ -28,18 +28,18 @@ func init() {
 }
 
 // 生成日志
-func (this *ACMETaskLogDAO) CreateACMETaskLog(taskId int64, isOk bool, errMsg string) error {
+func (this *ACMETaskLogDAO) CreateACMETaskLog(tx *dbs.Tx, taskId int64, isOk bool, errMsg string) error {
 	op := NewACMETaskLogOperator()
 	op.TaskId = taskId
 	op.Error = errMsg
 	op.IsOk = isOk
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 取得任务的最后一条执行日志
-func (this *ACMETaskLogDAO) FindLatestACMETasKLog(taskId int64) (*ACMETaskLog, error) {
-	one, err := this.Query().
+func (this *ACMETaskLogDAO) FindLatestACMETasKLog(tx *dbs.Tx, taskId int64) (*ACMETaskLog, error) {
+	one, err := this.Query(tx).
 		Attr("taskId", taskId).
 		DescPk().
 		Find()

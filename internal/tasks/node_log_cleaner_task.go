@@ -36,5 +36,5 @@ func (this *NodeLogCleanerTask) Start() {
 
 func (this *NodeLogCleanerTask) loop() error {
 	// TODO 30天这个数值改成可以设置
-	return models.SharedNodeLogDAO.DeleteExpiredLogs(30)
+	return models.SharedNodeLogDAO.DeleteExpiredLogs(nil, 30)
 }

@@ -28,7 +28,9 @@ func (this *HTTPFirewallRuleSetService) CreateOrUpdateHTTPFirewallRuleSetFromCon
 		return nil, err
 	}
 
-	setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(setConfig)
+	tx := this.NullTx()
+
+	setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, setConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,9 @@ func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx contex
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallRuleSetDAO.UpdateRuleSetIsOn(req.FirewallRuleSetId, req.IsOn)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPFirewallRuleSetDAO.UpdateRuleSetIsOn(tx, req.FirewallRuleSetId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +64,9 @@ func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSetConfig(ctx
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(req.FirewallRuleSetId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, req.FirewallRuleSetId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +88,9 @@ func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSet(ctx conte
 		return nil, err
 	}
 
-	set, err := models.SharedHTTPFirewallRuleSetDAO.FindEnabledHTTPFirewallRuleSet(req.FirewallRuleSetId)
+	tx := this.NullTx()
+
+	set, err := models.SharedHTTPFirewallRuleSetDAO.FindEnabledHTTPFirewallRuleSet(tx, req.FirewallRuleSetId)
 	if err != nil {
 		return nil, err
 	}

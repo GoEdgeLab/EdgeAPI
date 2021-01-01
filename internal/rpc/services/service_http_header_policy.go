@@ -18,7 +18,9 @@ func (this *HTTPHeaderPolicyService) FindEnabledHTTPHeaderPolicyConfig(ctx conte
 		return nil, err
 	}
 
-	config, err := models.SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(req.HeaderPolicyId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, req.HeaderPolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +40,9 @@ func (this *HTTPHeaderPolicyService) CreateHTTPHeaderPolicy(ctx context.Context,
 		return nil, err
 	}
 
-	headerPolicyId, err := models.SharedHTTPHeaderPolicyDAO.CreateHeaderPolicy()
+	tx := this.NullTx()
+
+	headerPolicyId, err := models.SharedHTTPHeaderPolicyDAO.CreateHeaderPolicy(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,9 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx con
 		return nil, err
 	}
 
-	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingHeaders(req.HeaderPolicyId, req.HeadersJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +74,9 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx co
 		return nil, err
 	}
 
-	err = models.SharedHTTPHeaderPolicyDAO.UpdateSettingHeaders(req.HeaderPolicyId, req.HeadersJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateSettingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +91,9 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx co
 		return nil, err
 	}
 
-	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingTrailers(req.HeaderPolicyId, req.HeadersJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingTrailers(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +108,9 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx 
 		return nil, err
 	}
 
-	err = models.SharedHTTPHeaderPolicyDAO.UpdateReplacingHeaders(req.HeaderPolicyId, req.HeadersJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateReplacingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +125,9 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx c
 		return nil, err
 	}
 
-	err = models.SharedHTTPHeaderPolicyDAO.UpdateDeletingHeaders(req.HeaderPolicyId, req.HeaderNames)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateDeletingHeaders(tx, req.HeaderPolicyId, req.HeaderNames)
 	if err != nil {
 		return nil, err
 	}

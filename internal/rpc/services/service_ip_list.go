@@ -20,7 +20,9 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 		return nil, err
 	}
 
-	listId, err := models.SharedIPListDAO.CreateIPList(req.Type, req.Name, req.Code, req.TimeoutJSON)
+	tx := this.NullTx()
+
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, req.Type, req.Name, req.Code, req.TimeoutJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPLis
 		return nil, err
 	}
 
-	err = models.SharedIPListDAO.UpdateIPList(req.IpListId, req.Name, req.Code, req.TimeoutJSON)
+	tx := this.NullTx()
+
+	err = models.SharedIPListDAO.UpdateIPList(tx, req.IpListId, req.Name, req.Code, req.TimeoutJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +54,9 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 		return nil, err
 	}
 
-	list, err := models.SharedIPListDAO.FindEnabledIPList(req.IpListId)
+	tx := this.NullTx()
+
+	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId)
 	if err != nil {
 		return nil, err
 	}

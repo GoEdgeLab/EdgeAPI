@@ -21,7 +21,9 @@ func (this *IPLibraryService) CreateIPLibrary(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	ipLibraryId, err := models.SharedIPLibraryDAO.CreateIPLibrary(req.Type, req.FileId)
+	tx := this.NullTx()
+
+	ipLibraryId, err := models.SharedIPLibraryDAO.CreateIPLibrary(tx, req.Type, req.FileId)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,9 @@ func (this *IPLibraryService) FindEnabledIPLibrary(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	ipLibrary, err := models.SharedIPLibraryDAO.FindEnabledIPLibrary(req.IpLibraryId)
+	tx := this.NullTx()
+
+	ipLibrary, err := models.SharedIPLibraryDAO.FindEnabledIPLibrary(tx, req.IpLibraryId)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +53,7 @@ func (this *IPLibraryService) FindEnabledIPLibrary(ctx context.Context, req *pb.
 
 	// 文件相关
 	var pbFile *pb.File = nil
-	file, err := models.SharedFileDAO.FindEnabledFile(int64(ipLibrary.FileId))
+	file, err := models.SharedFileDAO.FindEnabledFile(tx, int64(ipLibrary.FileId))
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +83,9 @@ func (this *IPLibraryService) FindLatestIPLibraryWithType(ctx context.Context, r
 		return nil, err
 	}
 
-	ipLibrary, err := models.SharedIPLibraryDAO.FindLatestIPLibraryWithType(req.Type)
+	tx := this.NullTx()
+
+	ipLibrary, err := models.SharedIPLibraryDAO.FindLatestIPLibraryWithType(tx, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +95,7 @@ func (this *IPLibraryService) FindLatestIPLibraryWithType(ctx context.Context, r
 
 	// 文件相关
 	var pbFile *pb.File = nil
-	file, err := models.SharedFileDAO.FindEnabledFile(int64(ipLibrary.FileId))
+	file, err := models.SharedFileDAO.FindEnabledFile(tx, int64(ipLibrary.FileId))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +125,9 @@ func (this *IPLibraryService) FindAllEnabledIPLibrariesWithType(ctx context.Cont
 		return nil, err
 	}
 
-	ipLibraries, err := models.SharedIPLibraryDAO.FindAllEnabledIPLibrariesWithType(req.Type)
+	tx := this.NullTx()
+
+	ipLibraries, err := models.SharedIPLibraryDAO.FindAllEnabledIPLibrariesWithType(tx, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +135,7 @@ func (this *IPLibraryService) FindAllEnabledIPLibrariesWithType(ctx context.Cont
 	for _, library := range ipLibraries {
 		// 文件相关
 		var pbFile *pb.File = nil
-		file, err := models.SharedFileDAO.FindEnabledFile(int64(library.FileId))
+		file, err := models.SharedFileDAO.FindEnabledFile(tx, int64(library.FileId))
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +165,9 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	err = models.SharedIPLibraryDAO.DisableIPLibrary(req.IpLibraryId)
+	tx := this.NullTx()
+
+	err = models.SharedIPLibraryDAO.DisableIPLibrary(tx, req.IpLibraryId)
 	if err != nil {
 		return nil, err
 	}
@@ -180,12 +190,14 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		return &pb.LookupIPRegionResponse{Region: nil}, nil
 	}
 
-	countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(result.Country)
+	tx := this.NullTx()
+
+	countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(tx, result.Country)
 	if err != nil {
 		return nil, err
 	}
 
-	provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(result.Province)
+	provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(tx, result.Province)
 	if err != nil {
 		return nil, err
 	}

@@ -29,7 +29,10 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	originId, err := models.SharedOriginDAO.CreateOrigin(adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn)
+
+	tx := this.NullTx()
+
+	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +58,10 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
 	}
-	err = models.SharedOriginDAO.UpdateOrigin(req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn)
+
+	tx := this.NullTx()
+
+	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +80,9 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 		// TODO 校验权限
 	}
 
-	origin, err := models.SharedOriginDAO.FindEnabledOrigin(req.OriginId)
+	tx := this.NullTx()
+
+	origin, err := models.SharedOriginDAO.FindEnabledOrigin(tx, req.OriginId)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +121,9 @@ func (this *OriginService) FindEnabledOriginConfig(ctx context.Context, req *pb.
 		// TODO 校验权限
 	}
 
-	config, err := models.SharedOriginDAO.ComposeOriginConfig(req.OriginId)
+	tx := this.NullTx()
+
+	config, err := models.SharedOriginDAO.ComposeOriginConfig(tx, req.OriginId)
 	if err != nil {
 		return nil, err
 	}

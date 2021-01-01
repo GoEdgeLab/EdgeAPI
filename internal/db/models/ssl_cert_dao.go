@@ -42,19 +42,19 @@ func init() {
 func (this *SSLCertDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *SSLCertDAO) EnableSSLCert(id int64) error {
-	_, err := this.Query().
+func (this *SSLCertDAO) EnableSSLCert(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLCertStateEnabled).
 		Update()
@@ -62,8 +62,8 @@ func (this *SSLCertDAO) EnableSSLCert(id int64) error {
 }
 
 // 禁用条目
-func (this *SSLCertDAO) DisableSSLCert(id int64) error {
-	_, err := this.Query().
+func (this *SSLCertDAO) DisableSSLCert(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLCertStateDisabled).
 		Update()
@@ -71,8 +71,8 @@ func (this *SSLCertDAO) DisableSSLCert(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *SSLCertDAO) FindEnabledSSLCert(id int64) (*SSLCert, error) {
-	result, err := this.Query().
+func (this *SSLCertDAO) FindEnabledSSLCert(tx *dbs.Tx, id int64) (*SSLCert, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", SSLCertStateEnabled).
 		Find()
@@ -83,15 +83,15 @@ func (this *SSLCertDAO) FindEnabledSSLCert(id int64) (*SSLCert, error) {
 }
 
 // 根据主键查找名称
-func (this *SSLCertDAO) FindSSLCertName(id int64) (string, error) {
-	return this.Query().
+func (this *SSLCertDAO) FindSSLCertName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建证书
-func (this *SSLCertDAO) CreateCert(adminId int64, userId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) (int64, error) {
+func (this *SSLCertDAO) CreateCert(tx *dbs.Tx, adminId int64, userId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) (int64, error) {
 	op := NewSSLCertOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -118,7 +118,7 @@ func (this *SSLCertDAO) CreateCert(adminId int64, userId int64, isOn bool, name 
 	}
 	op.CommonNames = commonNamesJSON
 
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -126,7 +126,7 @@ func (this *SSLCertDAO) CreateCert(adminId int64, userId int64, isOn bool, name 
 }
 
 // 修改证书
-func (this *SSLCertDAO) UpdateCert(certId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) error {
+func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx, certId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) error {
 	if certId <= 0 {
 		return errors.New("invalid certId")
 	}
@@ -161,13 +161,13 @@ func (this *SSLCertDAO) UpdateCert(certId int64, isOn bool, name string, descrip
 	}
 	op.CommonNames = commonNamesJSON
 
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return err
 }
 
 // 组合配置
-func (this *SSLCertDAO) ComposeCertConfig(certId int64) (*sslconfigs.SSLCertConfig, error) {
-	cert, err := this.FindEnabledSSLCert(certId)
+func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64) (*sslconfigs.SSLCertConfig, error) {
+	cert, err := this.FindEnabledSSLCert(tx, certId)
 	if err != nil {
 		return nil, err
 	}
@@ -210,8 +210,8 @@ func (this *SSLCertDAO) ComposeCertConfig(certId int64) (*sslconfigs.SSLCertConf
 }
 
 // 计算符合条件的证书数量
-func (this *SSLCertDAO) CountCerts(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64) (int64, error) {
-	query := this.Query().
+func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64) (int64, error) {
+	query := this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
 		query.Attr("isCA", true)
@@ -240,8 +240,8 @@ func (this *SSLCertDAO) CountCerts(isCA bool, isAvailable bool, isExpired bool, 
 }
 
 // 列出符合条件的证书
-func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, offset int64, size int64) (certIds []int64, err error) {
-	query := this.Query().
+func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, offset int64, size int64) (certIds []int64, err error) {
+	query := this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
 		query.Attr("isCA", true)
@@ -285,7 +285,7 @@ func (this *SSLCertDAO) ListCertIds(isCA bool, isAvailable bool, isExpired bool,
 }
 
 // 设置证书的ACME信息
-func (this *SSLCertDAO) UpdateCertACME(certId int64, acmeTaskId int64) error {
+func (this *SSLCertDAO) UpdateCertACME(tx *dbs.Tx, certId int64, acmeTaskId int64) error {
 	if certId <= 0 {
 		return errors.New("invalid certId")
 	}
@@ -293,19 +293,19 @@ func (this *SSLCertDAO) UpdateCertACME(certId int64, acmeTaskId int64) error {
 	op.Id = certId
 	op.AcmeTaskId = acmeTaskId
 	op.IsACME = true
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 查找需要自动更新的任务
 // 这里我们只返回有限的字段以节省内存
-func (this *SSLCertDAO) FindAllExpiringCerts(days int) (result []*SSLCert, err error) {
+func (this *SSLCertDAO) FindAllExpiringCerts(tx *dbs.Tx, days int) (result []*SSLCert, err error) {
 	if days < 0 {
 		days = 0
 	}
 
 	deltaSeconds := int64(days * 86400)
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		State(SSLCertStateEnabled).
 		Where("FROM_UNIXTIME(timeEndAt, '%Y-%m-%d')=:day AND FROM_UNIXTIME(notifiedAt, '%Y-%m-%d')!=:today").
 		Param("day", timeutil.FormatTime("Y-m-d", time.Now().Unix()+deltaSeconds)).
@@ -318,8 +318,8 @@ func (this *SSLCertDAO) FindAllExpiringCerts(days int) (result []*SSLCert, err e
 }
 
 // 设置当前证书事件通知时间
-func (this *SSLCertDAO) UpdateCertNotifiedAt(certId int64) error {
-	_, err := this.Query().
+func (this *SSLCertDAO) UpdateCertNotifiedAt(tx *dbs.Tx, certId int64) error {
+	_, err := this.Query(tx).
 		Pk(certId).
 		Set("notifiedAt", time.Now().Unix()).
 		Update()
@@ -327,11 +327,11 @@ func (this *SSLCertDAO) UpdateCertNotifiedAt(certId int64) error {
 }
 
 // 检查用户权限
-func (this *SSLCertDAO) CheckUserCert(certId int64, userId int64) error {
+func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) error {
 	if certId <= 0 || userId <= 0 {
 		return errors.New("not found")
 	}
-	ok, err := this.Query().
+	ok, err := this.Query(tx).
 		Pk(certId).
 		Attr("userId", userId).
 		State(SSLCertStateEnabled).

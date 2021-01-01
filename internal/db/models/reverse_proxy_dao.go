@@ -40,19 +40,19 @@ func init() {
 func (this *ReverseProxyDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *ReverseProxyDAO) EnableReverseProxy(id int64) error {
-	_, err := this.Query().
+func (this *ReverseProxyDAO) EnableReverseProxy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ReverseProxyStateEnabled).
 		Update()
@@ -63,8 +63,8 @@ func (this *ReverseProxyDAO) EnableReverseProxy(id int64) error {
 }
 
 // 禁用条目
-func (this *ReverseProxyDAO) DisableReverseProxy(id int64) error {
-	_, err := this.Query().
+func (this *ReverseProxyDAO) DisableReverseProxy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", ReverseProxyStateDisabled).
 		Update()
@@ -75,8 +75,8 @@ func (this *ReverseProxyDAO) DisableReverseProxy(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *ReverseProxyDAO) FindEnabledReverseProxy(id int64) (*ReverseProxy, error) {
-	result, err := this.Query().
+func (this *ReverseProxyDAO) FindEnabledReverseProxy(tx *dbs.Tx, id int64) (*ReverseProxy, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", ReverseProxyStateEnabled).
 		Find()
@@ -87,8 +87,8 @@ func (this *ReverseProxyDAO) FindEnabledReverseProxy(id int64) (*ReverseProxy, e
 }
 
 // 根据iD组合配置
-func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*serverconfigs.ReverseProxyConfig, error) {
-	reverseProxy, err := this.FindEnabledReverseProxy(reverseProxyId)
+func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyId int64) (*serverconfigs.ReverseProxyConfig, error) {
+	reverseProxy, err := this.FindEnabledReverseProxy(tx, reverseProxyId)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 			return nil, err
 		}
 		for _, ref := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(ref.OriginId)
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId)
 			if err != nil {
 				return nil, err
 			}
@@ -137,7 +137,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 			return nil, err
 		}
 		for _, originConfig := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(originConfig.OriginId)
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, originConfig.OriginId)
 			if err != nil {
 				return nil, err
 			}
@@ -151,7 +151,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(reverseProxyId int64) (*s
 }
 
 // 创建反向代理
-func (this *ReverseProxyDAO) CreateReverseProxy(adminId int64, userId int64, schedulingJSON []byte, primaryOriginsJSON []byte, backupOriginsJSON []byte) (int64, error) {
+func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userId int64, schedulingJSON []byte, primaryOriginsJSON []byte, backupOriginsJSON []byte) (int64, error) {
 	op := NewReverseProxyOperator()
 	op.IsOn = true
 	op.State = ReverseProxyStateEnabled
@@ -167,7 +167,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(adminId int64, userId int64, sch
 	if len(backupOriginsJSON) > 0 {
 		op.BackupOrigins = string(backupOriginsJSON)
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -176,7 +176,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(adminId int64, userId int64, sch
 }
 
 // 修改反向代理调度算法
-func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(reverseProxyId int64, schedulingJSON []byte) error {
+func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reverseProxyId int64, schedulingJSON []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -187,13 +187,13 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(reverseProxyId int64, 
 	} else {
 		op.Scheduling = "null"
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改主要源站
-func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(reverseProxyId int64, origins []byte) error {
+func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, reverseProxyId int64, origins []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -204,13 +204,13 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(reverseProxyId int
 	} else {
 		op.PrimaryOrigins = "[]"
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改备用源站
-func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int64, origins []byte) error {
+func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverseProxyId int64, origins []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -221,13 +221,13 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(reverseProxyId int6
 	} else {
 		op.BackupOrigins = "[]"
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	return err
 }
 
 // 修改是否启用
-func (this *ReverseProxyDAO) UpdateReverseProxy(reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool) error {
+func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -244,11 +244,11 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(reverseProxyId int64, requestHos
 	op.RequestURI = requestURI
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 通知更新
 func (this *ReverseProxyDAO) CreateEvent() error {
-	return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+	return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 }

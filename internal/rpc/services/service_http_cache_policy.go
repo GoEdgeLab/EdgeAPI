@@ -20,7 +20,9 @@ func (this *HTTPCachePolicyService) FindAllEnabledHTTPCachePolicies(ctx context.
 		return nil, err
 	}
 
-	policies, err := models.SharedHTTPCachePolicyDAO.FindAllEnabledCachePolicies()
+	tx := this.NullTx()
+
+	policies, err := models.SharedHTTPCachePolicyDAO.FindAllEnabledCachePolicies(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +45,9 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
+	tx := this.NullTx()
+
+	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +62,9 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +80,9 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	err = models.SharedHTTPCachePolicyDAO.DisableHTTPCachePolicy(req.HttpCachePolicyId)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPCachePolicyDAO.DisableHTTPCachePolicy(tx, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +98,9 @@ func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context
 		return nil, err
 	}
 
-	count, err := models.SharedHTTPCachePolicyDAO.CountAllEnabledHTTPCachePolicies()
+	tx := this.NullTx()
+
+	count, err := models.SharedHTTPCachePolicyDAO.CountAllEnabledHTTPCachePolicies(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +115,9 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 		return nil, err
 	}
 
-	cachePolicies, err := models.SharedHTTPCachePolicyDAO.ListEnabledHTTPCachePolicies(req.Offset, req.Size)
+	tx := this.NullTx()
+
+	cachePolicies, err := models.SharedHTTPCachePolicyDAO.ListEnabledHTTPCachePolicies(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +136,9 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context
 		return nil, err
 	}
 
-	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(req.HttpCachePolicyId)
+	tx := this.NullTx()
+
+	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +153,9 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Conte
 		return nil, err
 	}
 
-	policy, err := models.SharedHTTPCachePolicyDAO.FindEnabledHTTPCachePolicy(req.HttpCachePolicyId)
+	tx := this.NullTx()
+
+	policy, err := models.SharedHTTPCachePolicyDAO.FindEnabledHTTPCachePolicy(tx, req.HttpCachePolicyId)
 	if err != nil {
 		return nil, err
 	}

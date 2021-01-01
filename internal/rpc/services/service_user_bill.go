@@ -29,7 +29,9 @@ func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.G
 		return nil, errors.New("invalid month '" + req.Month + "'")
 	}
 
-	err = models.SharedUserBillDAO.GenerateBills(req.Month)
+	tx := this.NullTx()
+
+	err = models.SharedUserBillDAO.GenerateBills(tx, req.Month)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,9 @@ func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.Coun
 		return nil, err
 	}
 
-	count, err := models.SharedUserBillDAO.CountAllUserBills(req.PaidFlag, req.UserId, req.Month)
+	tx := this.NullTx()
+
+	count, err := models.SharedUserBillDAO.CountAllUserBills(tx, req.PaidFlag, req.UserId, req.Month)
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +62,15 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 		return nil, err
 	}
 
-	bills, err := models.SharedUserBillDAO.ListUserBills(req.PaidFlag, req.UserId, req.Month, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	bills, err := models.SharedUserBillDAO.ListUserBills(tx, req.PaidFlag, req.UserId, req.Month, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	result := []*pb.UserBill{}
 	for _, bill := range bills {
-		userFullname, err := models.SharedUserDAO.FindUserFullname(int64(bill.UserId))
+		userFullname, err := models.SharedUserDAO.FindUserFullname(tx, int64(bill.UserId))
 		if err != nil {
 			return nil, err
 		}

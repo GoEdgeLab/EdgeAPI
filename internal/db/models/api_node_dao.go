@@ -39,8 +39,8 @@ func init() {
 }
 
 // 启用条目
-func (this *APINodeDAO) EnableAPINode(id int64) error {
-	_, err := this.Query().
+func (this *APINodeDAO) EnableAPINode(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", APINodeStateEnabled).
 		Update()
@@ -48,8 +48,8 @@ func (this *APINodeDAO) EnableAPINode(id int64) error {
 }
 
 // 禁用条目
-func (this *APINodeDAO) DisableAPINode(id int64) error {
-	_, err := this.Query().
+func (this *APINodeDAO) DisableAPINode(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", APINodeStateDisabled).
 		Update()
@@ -57,8 +57,8 @@ func (this *APINodeDAO) DisableAPINode(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *APINodeDAO) FindEnabledAPINode(id int64) (*APINode, error) {
-	result, err := this.Query().
+func (this *APINodeDAO) FindEnabledAPINode(tx *dbs.Tx, id int64) (*APINode, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", APINodeStateEnabled).
 		Find()
@@ -69,8 +69,8 @@ func (this *APINodeDAO) FindEnabledAPINode(id int64) (*APINode, error) {
 }
 
 // 根据ID和Secret查找节点
-func (this *APINodeDAO) FindEnabledAPINodeWithUniqueIdAndSecret(uniqueId string, secret string) (*APINode, error) {
-	one, err := this.Query().
+func (this *APINodeDAO) FindEnabledAPINodeWithUniqueIdAndSecret(tx *dbs.Tx, uniqueId string, secret string) (*APINode, error) {
+	one, err := this.Query(tx).
 		State(APINodeStateEnabled).
 		Attr("uniqueId", uniqueId).
 		Attr("secret", secret).
@@ -82,21 +82,21 @@ func (this *APINodeDAO) FindEnabledAPINodeWithUniqueIdAndSecret(uniqueId string,
 }
 
 // 根据主键查找名称
-func (this *APINodeDAO) FindAPINodeName(id int64) (string, error) {
-	return this.Query().
+func (this *APINodeDAO) FindAPINodeName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建API节点
-func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
-	uniqueId, err := this.genUniqueId()
+func (this *APINodeDAO) CreateAPINode(tx *dbs.Tx, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
+	uniqueId, err := this.genUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
 	secret := rands.String(32)
-	err = NewApiTokenDAO().CreateAPIToken(uniqueId, secret, NodeRoleAPI)
+	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, NodeRoleAPI)
 	if err != nil {
 		return
 	}
@@ -126,7 +126,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 	}
 
 	op.State = NodeStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return
 	}
@@ -135,7 +135,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 }
 
 // 修改API节点
-func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) error {
+func (this *APINodeDAO) UpdateAPINode(tx *dbs.Tx, nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -173,13 +173,13 @@ func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description str
 		op.AccessAddrs = "[]"
 	}
 
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 列出所有可用API节点
-func (this *APINodeDAO) FindAllEnabledAPINodes() (result []*APINode, err error) {
-	_, err = this.Query().
+func (this *APINodeDAO) FindAllEnabledAPINodes(tx *dbs.Tx) (result []*APINode, err error) {
+	_, err = this.Query(tx).
 		Attr("clusterId", 0). // 非集群专用
 		State(APINodeStateEnabled).
 		Desc("order").
@@ -190,8 +190,8 @@ func (this *APINodeDAO) FindAllEnabledAPINodes() (result []*APINode, err error) 
 }
 
 // 列出所有可用而且启用的API节点
-func (this *APINodeDAO) FindAllEnabledAndOnAPINodes() (result []*APINode, err error) {
-	_, err = this.Query().
+func (this *APINodeDAO) FindAllEnabledAndOnAPINodes(tx *dbs.Tx) (result []*APINode, err error) {
+	_, err = this.Query(tx).
 		Attr("clusterId", 0). // 非集群专用
 		Attr("isOn", true).
 		State(APINodeStateEnabled).
@@ -203,15 +203,15 @@ func (this *APINodeDAO) FindAllEnabledAndOnAPINodes() (result []*APINode, err er
 }
 
 // 计算API节点数量
-func (this *APINodeDAO) CountAllEnabledAPINodes() (int64, error) {
-	return this.Query().
+func (this *APINodeDAO) CountAllEnabledAPINodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
 		State(APINodeStateEnabled).
 		Count()
 }
 
 // 列出单页的API节点
-func (this *APINodeDAO) ListEnabledAPINodes(offset int64, size int64) (result []*APINode, err error) {
-	_, err = this.Query().
+func (this *APINodeDAO) ListEnabledAPINodes(tx *dbs.Tx, offset int64, size int64) (result []*APINode, err error) {
+	_, err = this.Query(tx).
 		Attr("clusterId", 0). // 非集群专用
 		State(APINodeStateEnabled).
 		Offset(offset).
@@ -224,7 +224,7 @@ func (this *APINodeDAO) ListEnabledAPINodes(offset int64, size int64) (result []
 }
 
 // 根据主机名和端口获取ID
-func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(protocol string, host string, port int) (int64, error) {
+func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(tx *dbs.Tx, protocol string, host string, port int) (int64, error) {
 	addr := maps.Map{
 		"protocol":  protocol,
 		"host":      host,
@@ -235,7 +235,7 @@ func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(protocol string, host strin
 		return 0, err
 	}
 
-	one, err := this.Query().
+	one, err := this.Query(tx).
 		State(APINodeStateEnabled).
 		Where("JSON_CONTAINS(accessAddrs, :addr)").
 		Param("addr", string(addrJSON)).
@@ -251,8 +251,8 @@ func (this *APINodeDAO) FindEnabledAPINodeIdWithAddr(protocol string, host strin
 }
 
 // 设置API节点状态
-func (this *APINodeDAO) UpdateAPINodeStatus(apiNodeId int64, statusJSON []byte) error {
-	_, err := this.Query().
+func (this *APINodeDAO) UpdateAPINodeStatus(tx *dbs.Tx, apiNodeId int64, statusJSON []byte) error {
+	_, err := this.Query(tx).
 		Pk(apiNodeId).
 		Set("status", statusJSON).
 		Update()
@@ -260,10 +260,10 @@ func (this *APINodeDAO) UpdateAPINodeStatus(apiNodeId int64, statusJSON []byte) 
 }
 
 // 生成唯一ID
-func (this *APINodeDAO) genUniqueId() (string, error) {
+func (this *APINodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
-		ok, err := this.Query().
+		ok, err := this.Query(tx).
 			Attr("uniqueId", uniqueId).
 			Exist()
 		if err != nil {

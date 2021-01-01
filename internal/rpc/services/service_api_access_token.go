@@ -9,12 +9,15 @@ import (
 
 // AccessToken相关服务
 type APIAccessTokenService struct {
+	BaseService
 }
 
 // 获取AccessToken
 func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *pb.GetAPIAccessTokenRequest) (*pb.GetAPIAccessTokenResponse, error) {
 	if req.Type == "user" { // 用户
-		accessKey, err := models.SharedUserAccessKeyDAO.FindAccessKeyWithUniqueId(req.AccessKeyId)
+		tx := this.NullTx()
+
+		accessKey, err := models.SharedUserAccessKeyDAO.FindAccessKeyWithUniqueId(tx, req.AccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -26,7 +29,7 @@ func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *p
 		}
 
 		// 创建AccessToken
-		token, expiresAt, err := models.SharedAPIAccessTokenDAO.GenerateAccessToken(int64(accessKey.UserId))
+		token, expiresAt, err := models.SharedAPIAccessTokenDAO.GenerateAccessToken(tx, int64(accessKey.UserId))
 		if err != nil {
 			return nil, err
 		}

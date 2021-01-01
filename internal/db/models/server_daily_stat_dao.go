@@ -31,13 +31,13 @@ func init() {
 }
 
 // 提交数据
-func (this *ServerDailyStatDAO) SaveStats(stats []*pb.ServerDailyStat) error {
+func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailyStat) error {
 	for _, stat := range stats {
 		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
 		timeFrom := timeutil.FormatTime("His", stat.CreatedAt)
 		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60) // 5分钟
 
-		_, _, err := this.Query().
+		_, _, err := this.Query(tx).
 			Param("bytes", stat.Bytes).
 			InsertOrUpdate(maps.Map{
 				"serverId": stat.ServerId,
@@ -58,8 +58,8 @@ func (this *ServerDailyStatDAO) SaveStats(stats []*pb.ServerDailyStat) error {
 
 // 根据用户计算某月合计
 // month 格式为YYYYMM
-func (this *ServerDailyStatDAO) SumUserMonthly(userId int64, regionId int64, month string) (int64, error) {
-	query := this.Query()
+func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
+	query := this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
@@ -71,8 +71,8 @@ func (this *ServerDailyStatDAO) SumUserMonthly(userId int64, regionId int64, mon
 
 // 获取某月带宽峰值
 // month 格式为YYYYMM
-func (this *ServerDailyStatDAO) SumUserMonthlyPeek(userId int64, regionId int64, month string) (int64, error) {
-	query := this.Query()
+func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
+	query := this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
@@ -88,8 +88,8 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(userId int64, regionId int64,
 
 // 获取某天流量总和
 // day 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumUserDaily(userId int64, regionId int64, day string) (int64, error) {
-	query := this.Query()
+func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (int64, error) {
+	query := this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
@@ -102,8 +102,8 @@ func (this *ServerDailyStatDAO) SumUserDaily(userId int64, regionId int64, day s
 
 // 获取某天带宽峰值
 // day 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumUserDailyPeek(userId int64, regionId int64, day string) (int64, error) {
-	query := this.Query()
+func (this *ServerDailyStatDAO) SumUserDailyPeek(tx *dbs.Tx, userId int64, regionId int64, day string) (int64, error) {
+	query := this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}

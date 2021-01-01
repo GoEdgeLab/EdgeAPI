@@ -39,8 +39,8 @@ func init() {
 }
 
 // 启用条目
-func (this *UserNodeDAO) EnableUserNode(id uint32) error {
-	_, err := this.Query().
+func (this *UserNodeDAO) EnableUserNode(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", UserNodeStateEnabled).
 		Update()
@@ -48,8 +48,8 @@ func (this *UserNodeDAO) EnableUserNode(id uint32) error {
 }
 
 // 禁用条目
-func (this *UserNodeDAO) DisableUserNode(id int64) error {
-	_, err := this.Query().
+func (this *UserNodeDAO) DisableUserNode(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", UserNodeStateDisabled).
 		Update()
@@ -57,8 +57,8 @@ func (this *UserNodeDAO) DisableUserNode(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *UserNodeDAO) FindEnabledUserNode(id int64) (*UserNode, error) {
-	result, err := this.Query().
+func (this *UserNodeDAO) FindEnabledUserNode(tx *dbs.Tx, id int64) (*UserNode, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", UserNodeStateEnabled).
 		Find()
@@ -69,16 +69,16 @@ func (this *UserNodeDAO) FindEnabledUserNode(id int64) (*UserNode, error) {
 }
 
 // 根据主键查找名称
-func (this *UserNodeDAO) FindUserNodeName(id int64) (string, error) {
-	return this.Query().
+func (this *UserNodeDAO) FindUserNodeName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 列出所有可用用户节点
-func (this *UserNodeDAO) FindAllEnabledUserNodes() (result []*UserNode, err error) {
-	_, err = this.Query().
+func (this *UserNodeDAO) FindAllEnabledUserNodes(tx *dbs.Tx) (result []*UserNode, err error) {
+	_, err = this.Query(tx).
 		State(UserNodeStateEnabled).
 		Desc("order").
 		AscPk().
@@ -88,15 +88,15 @@ func (this *UserNodeDAO) FindAllEnabledUserNodes() (result []*UserNode, err erro
 }
 
 // 计算用户节点数量
-func (this *UserNodeDAO) CountAllEnabledUserNodes() (int64, error) {
-	return this.Query().
+func (this *UserNodeDAO) CountAllEnabledUserNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
 		State(UserNodeStateEnabled).
 		Count()
 }
 
 // 列出单页的用户节点
-func (this *UserNodeDAO) ListEnabledUserNodes(offset int64, size int64) (result []*UserNode, err error) {
-	_, err = this.Query().
+func (this *UserNodeDAO) ListEnabledUserNodes(tx *dbs.Tx, offset int64, size int64) (result []*UserNode, err error) {
+	_, err = this.Query(tx).
 		State(UserNodeStateEnabled).
 		Offset(offset).
 		Limit(size).
@@ -108,7 +108,7 @@ func (this *UserNodeDAO) ListEnabledUserNodes(offset int64, size int64) (result 
 }
 
 // 根据主机名和端口获取ID
-func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(protocol string, host string, port int) (int64, error) {
+func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(tx *dbs.Tx, protocol string, host string, port int) (int64, error) {
 	addr := maps.Map{
 		"protocol":  protocol,
 		"host":      host,
@@ -119,7 +119,7 @@ func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(protocol string, host str
 		return 0, err
 	}
 
-	one, err := this.Query().
+	one, err := this.Query(tx).
 		State(UserNodeStateEnabled).
 		Where("JSON_CONTAINS(accessAddrs, :addr)").
 		Param("addr", string(addrJSON)).
@@ -135,13 +135,13 @@ func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(protocol string, host str
 }
 
 // 创建用户节点
-func (this *UserNodeDAO) CreateUserNode(name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
-	uniqueId, err := this.genUniqueId()
+func (this *UserNodeDAO) CreateUserNode(tx *dbs.Tx, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
+	uniqueId, err := this.genUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
 	secret := rands.String(32)
-	err = NewApiTokenDAO().CreateAPIToken(uniqueId, secret, NodeRoleUser)
+	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, NodeRoleUser)
 	if err != nil {
 		return
 	}
@@ -164,7 +164,7 @@ func (this *UserNodeDAO) CreateUserNode(name string, description string, httpJSO
 	}
 
 	op.State = NodeStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return
 	}
@@ -173,7 +173,7 @@ func (this *UserNodeDAO) CreateUserNode(name string, description string, httpJSO
 }
 
 // 修改用户节点
-func (this *UserNodeDAO) UpdateUserNode(nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) error {
+func (this *UserNodeDAO) UpdateUserNode(tx *dbs.Tx, nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -200,13 +200,13 @@ func (this *UserNodeDAO) UpdateUserNode(nodeId int64, name string, description s
 		op.AccessAddrs = "null"
 	}
 
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 根据唯一ID获取节点信息
-func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(uniqueId string) (*UserNode, error) {
-	result, err := this.Query().
+func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(tx *dbs.Tx, uniqueId string) (*UserNode, error) {
+	result, err := this.Query(tx).
 		Attr("uniqueId", uniqueId).
 		Attr("state", UserNodeStateEnabled).
 		Find()
@@ -217,10 +217,10 @@ func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(uniqueId string) (*User
 }
 
 // 生成唯一ID
-func (this *UserNodeDAO) genUniqueId() (string, error) {
+func (this *UserNodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
-		ok, err := this.Query().
+		ok, err := this.Query(tx).
 			Attr("uniqueId", uniqueId).
 			Exist()
 		if err != nil {

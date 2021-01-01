@@ -36,8 +36,8 @@ func init() {
 }
 
 // 启用条目
-func (this *IPItemDAO) EnableIPItem(id int64) error {
-	_, err := this.Query().
+func (this *IPItemDAO) EnableIPItem(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", IPItemStateEnabled).
 		Update()
@@ -45,13 +45,13 @@ func (this *IPItemDAO) EnableIPItem(id int64) error {
 }
 
 // 禁用条目
-func (this *IPItemDAO) DisableIPItem(id int64) error {
-	version, err := SharedIPListDAO.IncreaseVersion()
+func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
+	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return err
 	}
 
-	_, err = this.Query().
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", IPItemStateDisabled).
 		Set("version", version).
@@ -60,8 +60,8 @@ func (this *IPItemDAO) DisableIPItem(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *IPItemDAO) FindEnabledIPItem(id int64) (*IPItem, error) {
-	result, err := this.Query().
+func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", IPItemStateEnabled).
 		Find()
@@ -72,8 +72,8 @@ func (this *IPItemDAO) FindEnabledIPItem(id int64) (*IPItem, error) {
 }
 
 // 创建IP
-func (this *IPItemDAO) CreateIPItem(listId int64, ipFrom string, ipTo string, expiredAt int64, reason string) (int64, error) {
-	version, err := SharedIPListDAO.IncreaseVersion()
+func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string) (int64, error) {
+	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -89,7 +89,7 @@ func (this *IPItemDAO) CreateIPItem(listId int64, ipFrom string, ipTo string, ex
 	}
 	op.ExpiredAt = expiredAt
 	op.State = IPItemStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -97,12 +97,12 @@ func (this *IPItemDAO) CreateIPItem(listId int64, ipFrom string, ipTo string, ex
 }
 
 // 修改IP
-func (this *IPItemDAO) UpdateIPItem(itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string) error {
+func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
 
-	listId, err := this.Query().
+	listId, err := this.Query(tx).
 		Pk(itemId).
 		Result("listId").
 		FindInt64Col(0)
@@ -113,7 +113,7 @@ func (this *IPItemDAO) UpdateIPItem(itemId int64, ipFrom string, ipTo string, ex
 		return errors.New("not found")
 	}
 
-	version, err := SharedIPListDAO.IncreaseVersion()
+	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return err
 	}
@@ -128,21 +128,21 @@ func (this *IPItemDAO) UpdateIPItem(itemId int64, ipFrom string, ipTo string, ex
 	}
 	op.ExpiredAt = expiredAt
 	op.Version = version
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return err
 }
 
 // 计算IP数量
-func (this *IPItemDAO) CountIPItemsWithListId(listId int64) (int64, error) {
-	return this.Query().
+func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64) (int64, error) {
+	return this.Query(tx).
 		State(IPItemStateEnabled).
 		Attr("listId", listId).
 		Count()
 }
 
 // 查找IP列表
-func (this *IPItemDAO) ListIPItemsWithListId(listId int64, offset int64, size int64) (result []*IPItem, err error) {
-	_, err = this.Query().
+func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, offset int64, size int64) (result []*IPItem, err error) {
+	_, err = this.Query(tx).
 		State(IPItemStateEnabled).
 		Attr("listId", listId).
 		DescPk().
@@ -154,8 +154,8 @@ func (this *IPItemDAO) ListIPItemsWithListId(listId int64, offset int64, size in
 }
 
 // 根据版本号查找IP列表
-func (this *IPItemDAO) ListIPItemsAfterVersion(version int64, size int64) (result []*IPItem, err error) {
-	_, err = this.Query().
+func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
+	_, err = this.Query(tx).
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
 		Gt("version", version).
 		Where("(expiredAt=0 OR expiredAt>:expiredAt)").

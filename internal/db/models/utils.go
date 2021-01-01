@@ -16,8 +16,8 @@ func IsNotNull(data string) bool {
 }
 
 // 构造Query
-func NewQuery(dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {
-	query := dao.Object().Query()
+func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {
+	query := dao.Object().Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}

@@ -9,6 +9,7 @@ import (
 
 // DNS相关服务
 type DNSService struct {
+	BaseService
 }
 
 // 查找问题
@@ -21,12 +22,14 @@ func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNS
 
 	result := []*pb.DNSIssue{}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersHaveDNSDomain()
+	tx := this.NullTx()
+
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersHaveDNSDomain(tx)
 	if err != nil {
 		return nil, err
 	}
 	for _, cluster := range clusters {
-		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(cluster)
+		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(tx, cluster)
 		if err != nil {
 			return nil, err
 		}

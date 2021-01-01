@@ -40,19 +40,19 @@ func init() {
 func (this *HTTPPageDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPPageDAO) EnableHTTPPage(id int64) error {
-	_, err := this.Query().
+func (this *HTTPPageDAO) EnableHTTPPage(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPPageStateEnabled).
 		Update()
@@ -60,8 +60,8 @@ func (this *HTTPPageDAO) EnableHTTPPage(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPPageDAO) DisableHTTPPage(id int64) error {
-	_, err := this.Query().
+func (this *HTTPPageDAO) DisableHTTPPage(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPPageStateDisabled).
 		Update()
@@ -69,8 +69,8 @@ func (this *HTTPPageDAO) DisableHTTPPage(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPPageDAO) FindEnabledHTTPPage(id int64) (*HTTPPage, error) {
-	result, err := this.Query().
+func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPPageStateEnabled).
 		Find()
@@ -81,7 +81,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(id int64) (*HTTPPage, error) {
 }
 
 // 创建Page
-func (this *HTTPPageDAO) CreatePage(statusList []string, url string, newStatus int) (pageId int64, err error) {
+func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string, newStatus int) (pageId int64, err error) {
 	op := NewHTTPPageOperator()
 	op.IsOn = true
 	op.State = HTTPPageStateEnabled
@@ -95,7 +95,7 @@ func (this *HTTPPageDAO) CreatePage(statusList []string, url string, newStatus i
 	}
 	op.Url = url
 	op.NewStatus = newStatus
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -104,7 +104,7 @@ func (this *HTTPPageDAO) CreatePage(statusList []string, url string, newStatus i
 }
 
 // 修改Page
-func (this *HTTPPageDAO) UpdatePage(pageId int64, statusList []string, url string, newStatus int) error {
+func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, url string, newStatus int) error {
 	if pageId <= 0 {
 		return errors.New("invalid pageId")
 	}
@@ -125,14 +125,14 @@ func (this *HTTPPageDAO) UpdatePage(pageId int64, statusList []string, url strin
 
 	op.Url = url
 	op.NewStatus = newStatus
-	err = this.Save(op)
+	err = this.Save(tx, op)
 
 	return err
 }
 
 // 组合配置
-func (this *HTTPPageDAO) ComposePageConfig(pageId int64) (*serverconfigs.HTTPPageConfig, error) {
-	page, err := this.FindEnabledHTTPPage(pageId)
+func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64) (*serverconfigs.HTTPPageConfig, error) {
+	page, err := this.FindEnabledHTTPPage(tx, pageId)
 	if err != nil {
 		return nil, err
 	}

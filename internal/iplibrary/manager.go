@@ -38,7 +38,7 @@ func NewManager() *Manager {
 
 func (this *Manager) Load() (LibraryInterface, error) {
 	// 当前正在使用的IP库代号
-	config, err := models.SharedSysSettingDAO.ReadGlobalConfig()
+	config, err := models.SharedSysSettingDAO.ReadGlobalConfig(nil)
 	if err != nil {
 		return nil, err
 	}

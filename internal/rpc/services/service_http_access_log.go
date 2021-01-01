@@ -25,7 +25,9 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 		return &pb.CreateHTTPAccessLogsResponse{}, nil
 	}
 
-	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(req.AccessLogs)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.AccessLogs)
 	if err != nil {
 		return nil, err
 	}
@@ -41,19 +43,21 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	// 检查服务ID
 	if userId > 0 {
 		if req.ServerId <= 0 {
 			return nil, errors.New("invalid serverId")
 		}
 
-		err = models.SharedServerDAO.CheckUserServer(req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(req.RequestId, req.Size, req.Day, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId)
+	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,9 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	accessLog, err := models.SharedHTTPAccessLogDAO.FindAccessLogWithRequestId(req.RequestId)
+	tx := this.NullTx()
+
+	accessLog, err := models.SharedHTTPAccessLogDAO.FindAccessLogWithRequestId(tx, req.RequestId)
 	if err != nil {
 		return nil, err
 	}

@@ -35,16 +35,16 @@ func init() {
 }
 
 // 启用条目
-func (this *NodeGrantDAO) EnableNodeGrant(id uint32) (rowsAffected int64, err error) {
-	return this.Query().
+func (this *NodeGrantDAO) EnableNodeGrant(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
+	return this.Query(tx).
 		Pk(id).
 		Set("state", NodeGrantStateEnabled).
 		Update()
 }
 
 // 禁用条目
-func (this *NodeGrantDAO) DisableNodeGrant(id int64) (err error) {
-	_, err = this.Query().
+func (this *NodeGrantDAO) DisableNodeGrant(tx *dbs.Tx, id int64) (err error) {
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", NodeGrantStateDisabled).
 		Update()
@@ -52,8 +52,8 @@ func (this *NodeGrantDAO) DisableNodeGrant(id int64) (err error) {
 }
 
 // 查找启用中的条目
-func (this *NodeGrantDAO) FindEnabledNodeGrant(id int64) (*NodeGrant, error) {
-	result, err := this.Query().
+func (this *NodeGrantDAO) FindEnabledNodeGrant(tx *dbs.Tx, id int64) (*NodeGrant, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", NodeGrantStateEnabled).
 		Find()
@@ -64,8 +64,8 @@ func (this *NodeGrantDAO) FindEnabledNodeGrant(id int64) (*NodeGrant, error) {
 }
 
 // 根据主键查找名称
-func (this *NodeGrantDAO) FindNodeGrantName(id uint32) (string, error) {
-	name, err := this.Query().
+func (this *NodeGrantDAO) FindNodeGrantName(tx *dbs.Tx, id uint32) (string, error) {
+	name, err := this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindCol("")
@@ -73,7 +73,7 @@ func (this *NodeGrantDAO) FindNodeGrantName(id uint32) (string, error) {
 }
 
 // 创建认证信息
-func (this *NodeGrantDAO) CreateGrant(adminId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) (grantId int64, err error) {
+func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) (grantId int64, err error) {
 	op := NewNodeGrantOperator()
 	op.AdminId = adminId
 	op.Name = name
@@ -90,12 +90,12 @@ func (this *NodeGrantDAO) CreateGrant(adminId int64, name string, method string,
 	op.Description = description
 	op.NodeId = nodeId
 	op.State = NodeGrantStateEnabled
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return types.Int64(op.Id), err
 }
 
 // 修改认证信息
-func (this *NodeGrantDAO) UpdateGrant(grantId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) error {
+func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, method string, username string, password string, privateKey string, description string, nodeId int64) error {
 	if grantId <= 0 {
 		return errors.New("invalid grantId")
 	}
@@ -115,20 +115,20 @@ func (this *NodeGrantDAO) UpdateGrant(grantId int64, name string, method string,
 	}
 	op.Description = description
 	op.NodeId = nodeId
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 计算所有认证信息数量
-func (this *NodeGrantDAO) CountAllEnabledGrants() (int64, error) {
-	return this.Query().
+func (this *NodeGrantDAO) CountAllEnabledGrants(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
 		State(NodeGrantStateEnabled).
 		Count()
 }
 
 // 列出单页的认证信息
-func (this *NodeGrantDAO) ListEnabledGrants(offset int64, size int64) (result []*NodeGrant, err error) {
-	_, err = this.Query().
+func (this *NodeGrantDAO) ListEnabledGrants(tx *dbs.Tx, offset int64, size int64) (result []*NodeGrant, err error) {
+	_, err = this.Query(tx).
 		State(NodeGrantStateEnabled).
 		Offset(offset).
 		Size(size).
@@ -139,8 +139,8 @@ func (this *NodeGrantDAO) ListEnabledGrants(offset int64, size int64) (result []
 }
 
 // 列出所有的认证信息
-func (this *NodeGrantDAO) FindAllEnabledGrants() (result []*NodeGrant, err error) {
-	_, err = this.Query().
+func (this *NodeGrantDAO) FindAllEnabledGrants(tx *dbs.Tx) (result []*NodeGrant, err error) {
+	_, err = this.Query(tx).
 		State(NodeGrantStateEnabled).
 		DescPk().
 		Slice(&result).

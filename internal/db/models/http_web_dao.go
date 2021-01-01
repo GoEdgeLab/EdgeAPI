@@ -43,19 +43,19 @@ func init() {
 func (this *HTTPWebDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPWebDAO) EnableHTTPWeb(id int64) error {
-	_, err := this.Query().
+func (this *HTTPWebDAO) EnableHTTPWeb(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPWebStateEnabled).
 		Update()
@@ -63,8 +63,8 @@ func (this *HTTPWebDAO) EnableHTTPWeb(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPWebDAO) DisableHTTPWeb(id int64) error {
-	_, err := this.Query().
+func (this *HTTPWebDAO) DisableHTTPWeb(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPWebStateDisabled).
 		Update()
@@ -72,8 +72,8 @@ func (this *HTTPWebDAO) DisableHTTPWeb(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPWebDAO) FindEnabledHTTPWeb(id int64) (*HTTPWeb, error) {
-	result, err := this.Query().
+func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPWebStateEnabled).
 		Find()
@@ -84,8 +84,8 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(id int64) (*HTTPWeb, error) {
 }
 
 // 组合配置
-func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebConfig, error) {
-	web, err := SharedHTTPWebDAO.FindEnabledHTTPWeb(webId)
+func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPWebConfig, error) {
+	web, err := SharedHTTPWebDAO.FindEnabledHTTPWeb(tx, webId)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 		config.GzipRef = gzipRef
 
-		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(gzipRef.GzipId)
+		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(tx, gzipRef.GzipId)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.RequestHeaderPolicyRef = ref
 
 		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -162,7 +162,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		config.ResponseHeaderPolicyRef = ref
 
 		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(ref.HeaderPolicyId)
+			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
 			if err != nil {
 				return nil, err
 			}
@@ -190,7 +190,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 			return nil, err
 		}
 		for index, page := range pages {
-			pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(page.Id)
+			pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(tx, page.Id)
 			if err != nil {
 				return nil, err
 			}
@@ -255,7 +255,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		if len(refs) > 0 {
 			config.LocationRefs = refs
 
-			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(refs)
+			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs)
 			if err != nil {
 				return nil, err
 			}
@@ -282,7 +282,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 		}
 		config.WebsocketRef = ref
 		if ref.WebsocketId > 0 {
-			websocketConfig, err := SharedHTTPWebsocketDAO.ComposeWebsocketConfig(ref.WebsocketId)
+			websocketConfig, err := SharedHTTPWebsocketDAO.ComposeWebsocketConfig(tx, ref.WebsocketId)
 			if err != nil {
 				return nil, err
 			}
@@ -300,7 +300,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 			return nil, err
 		}
 		for _, ref := range refs {
-			rewriteRule, err := SharedHTTPRewriteRuleDAO.ComposeRewriteRule(ref.RewriteRuleId)
+			rewriteRule, err := SharedHTTPRewriteRuleDAO.ComposeRewriteRule(tx, ref.RewriteRuleId)
 			if err != nil {
 				return nil, err
 			}
@@ -315,7 +315,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(webId int64) (*serverconfigs.HTTPWebCon
 }
 
 // 创建Web配置
-func (this *HTTPWebDAO) CreateWeb(adminId int64, userId int64, rootJSON []byte) (int64, error) {
+func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
 	op.AdminId = adminId
@@ -323,7 +323,7 @@ func (this *HTTPWebDAO) CreateWeb(adminId int64, userId int64, rootJSON []byte) 
 	if len(rootJSON) > 0 {
 		op.Root = JSONBytes(rootJSON)
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -331,188 +331,188 @@ func (this *HTTPWebDAO) CreateWeb(adminId int64, userId int64, rootJSON []byte) 
 }
 
 // 修改Web配置
-func (this *HTTPWebDAO) UpdateWeb(webId int64, rootJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Root = JSONBytes(rootJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改Gzip配置
-func (this *HTTPWebDAO) UpdateWebGzip(webId int64, gzipJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebGzip(tx *dbs.Tx, webId int64, gzipJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Gzip = JSONBytes(gzipJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改字符编码
-func (this *HTTPWebDAO) UpdateWebCharset(webId int64, charsetJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebCharset(tx *dbs.Tx, webId int64, charsetJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Charset = JSONBytes(charsetJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改请求Header策略
-func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(webId int64, headerPolicyJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(tx *dbs.Tx, webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RequestHeader = JSONBytes(headerPolicyJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改响应Header策略
-func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(webId int64, headerPolicyJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(tx *dbs.Tx, webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.ResponseHeader = JSONBytes(headerPolicyJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改特殊页面配置
-func (this *HTTPWebDAO) UpdateWebPages(webId int64, pagesJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改Shutdown配置
-func (this *HTTPWebDAO) UpdateWebShutdown(webId int64, shutdownJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebShutdown(tx *dbs.Tx, webId int64, shutdownJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改访问日志策略
-func (this *HTTPWebDAO) UpdateWebAccessLogConfig(webId int64, accessLogJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebAccessLogConfig(tx *dbs.Tx, webId int64, accessLogJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改统计配置
-func (this *HTTPWebDAO) UpdateWebStat(webId int64, statJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改缓存配置
-func (this *HTTPWebDAO) UpdateWebCache(webId int64, cacheJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改防火墙配置
-func (this *HTTPWebDAO) UpdateWebFirewall(webId int64, firewallJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改路径规则配置
-func (this *HTTPWebDAO) UpdateWebLocations(webId int64, locationsJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 更改跳转到HTTPS设置
-func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(webId int64, redirectToHTTPSJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(tx *dbs.Tx, webId int64, redirectToHTTPSJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改Websocket设置
-func (this *HTTPWebDAO) UpdateWebsocket(webId int64, websocketJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebsocket(tx *dbs.Tx, webId int64, websocketJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Websocket = JSONBytes(websocketJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 修改重写规则设置
-func (this *HTTPWebDAO) UpdateWebRewriteRules(webId int64, rewriteRulesJSON []byte) error {
+func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRulesJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.RewriteRules = JSONBytes(rewriteRulesJSON)
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 根据缓存策略ID查找所有的WebId
-func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]int64, error) {
-	ones, err := this.Query().
+func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId int64) ([]int64, error) {
+	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
 		Where(`JSON_CONTAINS(cache, '{"cachePolicyId": ` + strconv.FormatInt(cachePolicyId, 10) + ` }', '$.cacheRefs')`).
@@ -527,7 +527,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]i
 
 		// 判断是否为Location
 		for {
-			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(webId)
+			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(tx, webId)
 			if err != nil {
 				return nil, err
 			}
@@ -542,7 +542,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]i
 
 			// 查找包含此Location的Web
 			// TODO 需要支持嵌套的Location查询
-			webId, err = this.FindEnabledWebIdWithLocationId(locationId)
+			webId, err = this.FindEnabledWebIdWithLocationId(tx, locationId)
 			if err != nil {
 				return nil, err
 			}
@@ -555,8 +555,8 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(cachePolicyId int64) ([]i
 }
 
 // 根据防火墙策略ID查找所有的WebId
-func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId int64) ([]int64, error) {
-	ones, err := this.Query().
+func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(tx *dbs.Tx, firewallPolicyId int64) ([]int64, error) {
+	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
 		Where(`JSON_CONTAINS(firewall, '{"isOn": true, "firewallPolicyId": ` + strconv.FormatInt(firewallPolicyId, 10) + ` }')`).
@@ -571,7 +571,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId i
 
 		// 判断是否为Location
 		for {
-			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(webId)
+			locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(tx, webId)
 			if err != nil {
 				return nil, err
 			}
@@ -586,7 +586,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId i
 
 			// 查找包含此Location的Web
 			// TODO 需要支持嵌套的Location查询
-			webId, err = this.FindEnabledWebIdWithLocationId(locationId)
+			webId, err = this.FindEnabledWebIdWithLocationId(tx, locationId)
 			if err != nil {
 				return nil, err
 			}
@@ -599,8 +599,8 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(firewallPolicyId i
 }
 
 // 查找包含某个Location的Web
-func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(locationId int64) (webId int64, err error) {
-	return this.Query().
+func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(tx *dbs.Tx, locationId int64) (webId int64, err error) {
+	return this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
 		Where(`JSON_CONTAINS(locations, '{"locationId": ` + strconv.FormatInt(locationId, 10) + ` }')`).

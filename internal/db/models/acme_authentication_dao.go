@@ -28,19 +28,19 @@ func init() {
 }
 
 // 创建认证信息
-func (this *ACMEAuthenticationDAO) CreateAuth(taskId int64, domain string, token string, key string) error {
+func (this *ACMEAuthenticationDAO) CreateAuth(tx *dbs.Tx, taskId int64, domain string, token string, key string) error {
 	op := NewACMEAuthenticationOperator()
 	op.TaskId = taskId
 	op.Domain = domain
 	op.Token = token
 	op.Key = key
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 根据令牌查找认证信息
-func (this *ACMEAuthenticationDAO) FindAuthWithToken(token string) (*ACMEAuthentication, error) {
-	one, err := this.Query().
+func (this *ACMEAuthenticationDAO) FindAuthWithToken(tx *dbs.Tx, token string) (*ACMEAuthentication, error) {
+	one, err := this.Query(tx).
 		Attr("token", token).
 		DescPk().
 		Find()

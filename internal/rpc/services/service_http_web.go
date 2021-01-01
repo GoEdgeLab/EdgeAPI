@@ -19,7 +19,9 @@ func (this *HTTPWebService) CreateHTTPWeb(ctx context.Context, req *pb.CreateHTT
 		return nil, err
 	}
 
-	webId, err := models.SharedHTTPWebDAO.CreateWeb(adminId, userId, req.RootJSON)
+	tx := this.NullTx()
+
+	webId, err := models.SharedHTTPWebDAO.CreateWeb(tx, adminId, userId, req.RootJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,9 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 		// TODO 检查用户权限
 	}
 
-	web, err := models.SharedHTTPWebDAO.FindEnabledHTTPWeb(req.WebId)
+	tx := this.NullTx()
+
+	web, err := models.SharedHTTPWebDAO.FindEnabledHTTPWeb(tx, req.WebId)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +70,9 @@ func (this *HTTPWebService) FindEnabledHTTPWebConfig(ctx context.Context, req *p
 		// TODO 检查用户权限
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(req.WebId)
+	tx := this.NullTx()
+
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, req.WebId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +96,9 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWeb(req.WebId, req.RootJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWeb(tx, req.WebId, req.RootJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +118,9 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebGzip(req.WebId, req.GzipJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebGzip(tx, req.WebId, req.GzipJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +140,9 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebCharset(req.WebId, req.CharsetJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebCharset(tx, req.WebId, req.CharsetJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +161,9 @@ func (this *HTTPWebService) UpdateHTTPWebRequestHeader(ctx context.Context, req 
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebRequestHeaderPolicy(req.WebId, req.HeaderJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebRequestHeaderPolicy(tx, req.WebId, req.HeaderJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +183,9 @@ func (this *HTTPWebService) UpdateHTTPWebResponseHeader(ctx context.Context, req
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebResponseHeaderPolicy(req.WebId, req.HeaderJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebResponseHeaderPolicy(tx, req.WebId, req.HeaderJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +205,9 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebShutdown(req.WebId, req.ShutdownJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebShutdown(tx, req.WebId, req.ShutdownJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +226,9 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebPages(req.WebId, req.PagesJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebPages(tx, req.WebId, req.PagesJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +247,9 @@ func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebAccessLogConfig(req.WebId, req.AccessLogJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebAccessLogConfig(tx, req.WebId, req.AccessLogJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +268,9 @@ func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.Updat
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebStat(req.WebId, req.StatJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebStat(tx, req.WebId, req.StatJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +289,9 @@ func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.Upda
 		// TODO 检查权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebCache(req.WebId, req.CacheJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebCache(tx, req.WebId, req.CacheJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +311,9 @@ func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.U
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebFirewall(req.WebId, req.FirewallJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebFirewall(tx, req.WebId, req.FirewallJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +333,9 @@ func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebLocations(req.WebId, req.LocationsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebLocations(tx, req.WebId, req.LocationsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +353,9 @@ func (this *HTTPWebService) UpdateHTTPWebRedirectToHTTPS(ctx context.Context, re
 
 	// TODO 检查权限
 
-	err = models.SharedHTTPWebDAO.UpdateWebRedirectToHTTPS(req.WebId, req.RedirectToHTTPSJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebRedirectToHTTPS(tx, req.WebId, req.RedirectToHTTPSJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +372,9 @@ func (this *HTTPWebService) UpdateHTTPWebWebsocket(ctx context.Context, req *pb.
 
 	// TODO 检查权限
 
-	err = models.SharedHTTPWebDAO.UpdateWebsocket(req.WebId, req.WebsocketJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebsocket(tx, req.WebId, req.WebsocketJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +393,9 @@ func (this *HTTPWebService) UpdateHTTPWebRewriteRules(ctx context.Context, req *
 		// TODO 检查用户权限
 	}
 
-	err = models.SharedHTTPWebDAO.UpdateWebRewriteRules(req.WebId, req.RewriteRulesJSON)
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebRewriteRules(tx, req.WebId, req.RewriteRulesJSON)
 	if err != nil {
 		return nil, err
 	}

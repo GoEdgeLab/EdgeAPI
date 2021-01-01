@@ -41,19 +41,19 @@ func init() {
 func (this *HTTPGzipDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPGzipDAO) EnableHTTPGzip(id int64) error {
-	_, err := this.Query().
+func (this *HTTPGzipDAO) EnableHTTPGzip(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPGzipStateEnabled).
 		Update()
@@ -61,8 +61,8 @@ func (this *HTTPGzipDAO) EnableHTTPGzip(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPGzipDAO) DisableHTTPGzip(id int64) error {
-	_, err := this.Query().
+func (this *HTTPGzipDAO) DisableHTTPGzip(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPGzipStateDisabled).
 		Update()
@@ -70,8 +70,8 @@ func (this *HTTPGzipDAO) DisableHTTPGzip(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPGzipDAO) FindEnabledHTTPGzip(id int64) (*HTTPGzip, error) {
-	result, err := this.Query().
+func (this *HTTPGzipDAO) FindEnabledHTTPGzip(tx *dbs.Tx, id int64) (*HTTPGzip, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPGzipStateEnabled).
 		Find()
@@ -82,8 +82,8 @@ func (this *HTTPGzipDAO) FindEnabledHTTPGzip(id int64) (*HTTPGzip, error) {
 }
 
 // 组合配置
-func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzipConfig, error) {
-	gzip, err := this.FindEnabledHTTPGzip(gzipId)
+func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*serverconfigs.HTTPGzipConfig, error) {
+	gzip, err := this.FindEnabledHTTPGzip(tx, gzipId)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(gzipId int64) (*serverconfigs.HTTPGzi
 }
 
 // 创建Gzip
-func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
+func (this *HTTPGzipDAO) CreateGzip(tx *dbs.Tx, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
 	op := NewHTTPGzipOperator()
 	op.State = HTTPGzipStateEnabled
 	op.IsOn = true
@@ -140,7 +140,7 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 	if len(condsJSON) > 0 {
 		op.Conds = JSONBytes(condsJSON)
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -148,7 +148,7 @@ func (this *HTTPGzipDAO) CreateGzip(level int, minLengthJSON []byte, maxLengthJS
 }
 
 // 修改Gzip
-func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) error {
+func (this *HTTPGzipDAO) UpdateGzip(tx *dbs.Tx, gzipId int64, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) error {
 	if gzipId <= 0 {
 		return errors.New("invalid gzipId")
 	}
@@ -164,6 +164,6 @@ func (this *HTTPGzipDAO) UpdateGzip(gzipId int64, level int, minLengthJSON []byt
 	if len(condsJSON) > 0 {
 		op.Conds = JSONBytes(condsJSON)
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }

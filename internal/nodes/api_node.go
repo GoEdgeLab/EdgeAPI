@@ -55,7 +55,7 @@ func (this *APINode) Start() {
 	sharedAPIConfig = config
 
 	// 校验
-	apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINodeWithUniqueIdAndSecret(config.NodeId, config.Secret)
+	apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINodeWithUniqueIdAndSecret(nil, config.NodeId, config.Secret)
 	if err != nil {
 		logs.Println("[API_NODE]start failed: read api node from database failed: " + err.Error())
 		return
@@ -230,7 +230,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	}
 
 	// HTTPS
-	httpsConfig, err := apiNode.DecodeHTTPS()
+	httpsConfig, err := apiNode.DecodeHTTPS(nil)
 	if err != nil {
 		remotelogs.Error("API_NODE", "decode https config: "+err.Error())
 		return
@@ -296,7 +296,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	}
 
 	// Rest HTTPS
-	restHTTPSConfig, err := apiNode.DecodeRestHTTPS()
+	restHTTPSConfig, err := apiNode.DecodeRestHTTPS(nil)
 	if err != nil {
 		remotelogs.Error("API_NODE", "decode REST https config: "+err.Error())
 		return

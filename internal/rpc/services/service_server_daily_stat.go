@@ -18,7 +18,9 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 		return nil, err
 	}
 
-	err = models.SharedServerDailyStatDAO.SaveStats(req.Stats)
+	tx := this.NullTx()
+
+	err = models.SharedServerDailyStatDAO.SaveStats(tx, req.Stats)
 	if err != nil {
 		return nil, err
 	}

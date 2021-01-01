@@ -21,6 +21,8 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	if userId > 0 {
 		//  检查证书
 		if len(req.SslCertsJSON) > 0 {
@@ -30,7 +32,7 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 				return nil, err
 			}
 			for _, certRef := range certRefs {
-				err = models.SharedSSLCertDAO.CheckUserCert(certRef.CertId, userId)
+				err = models.SharedSSLCertDAO.CheckUserCert(tx, certRef.CertId, userId)
 				if err != nil {
 					return nil, err
 				}
@@ -41,7 +43,7 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 		// TODO
 	}
 
-	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(adminId, userId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(tx, adminId, userId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -56,14 +58,17 @@ func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.Updat
 	if err != nil {
 		return nil, err
 	}
+
+	tx := this.NullTx()
+
 	if userId > 0 {
-		err := models.SharedSSLPolicyDAO.CheckUserPolicy(req.SslPolicyId, userId)
+		err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, req.SslPolicyId, userId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err = models.SharedSSLPolicyDAO.UpdatePolicy(req.SslPolicyId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	err = models.SharedSSLPolicyDAO.UpdatePolicy(tx, req.SslPolicyId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +85,9 @@ func (this *SSLPolicyService) FindEnabledSSLPolicyConfig(ctx context.Context, re
 		return nil, err
 	}
 
-	config, err := models.SharedSSLPolicyDAO.ComposePolicyConfig(req.SslPolicyId)
+	tx := this.NullTx()
+
+	config, err := models.SharedSSLPolicyDAO.ComposePolicyConfig(tx, req.SslPolicyId)
 	if err != nil {
 		return nil, err
 	}

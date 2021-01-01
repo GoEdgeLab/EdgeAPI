@@ -20,7 +20,9 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 		return nil, err
 	}
 
-	err = models.SharedLogDAO.CreateLog(userType, userId, req.Level, req.Description, req.Action, req.Ip)
+	tx := this.NullTx()
+
+	err = models.SharedLogDAO.CreateLog(tx, userType, userId, req.Level, req.Description, req.Action, req.Ip)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +37,9 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 		return nil, err
 	}
 
-	count, err := models.SharedLogDAO.CountLogs(req.DayFrom, req.DayTo, req.Keyword, req.UserType)
+	tx := this.NullTx()
+
+	count, err := models.SharedLogDAO.CountLogs(tx, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +54,9 @@ func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (
 		return nil, err
 	}
 
-	logs, err := models.SharedLogDAO.ListLogs(req.Offset, req.Size, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
+	tx := this.NullTx()
+
+	logs, err := models.SharedLogDAO.ListLogs(tx, req.Offset, req.Size, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
 		return nil, err
 	}
@@ -59,11 +65,11 @@ func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (
 	for _, log := range logs {
 		userName := ""
 		if log.AdminId > 0 {
-			userName, err = models.SharedAdminDAO.FindAdminFullname(int64(log.AdminId))
+			userName, err = models.SharedAdminDAO.FindAdminFullname(tx, int64(log.AdminId))
 		} else if log.UserId > 0 {
-			userName, err = models.SharedUserDAO.FindUserFullname(int64(log.UserId))
+			userName, err = models.SharedUserDAO.FindUserFullname(tx, int64(log.UserId))
 		} else if log.ProviderId > 0 {
-			userName, err = models.SharedProviderDAO.FindProviderName(int64(log.ProviderId))
+			userName, err = models.SharedProviderDAO.FindProviderName(tx, int64(log.ProviderId))
 		}
 
 		if err != nil {
@@ -97,8 +103,10 @@ func (this *LogService) DeleteLogPermanently(ctx context.Context, req *pb.Delete
 
 	// TODO 校验权限
 
+	tx := this.NullTx()
+
 	// 执行物理删除
-	err = models.SharedLogDAO.DeleteLogPermanently(req.LogId)
+	err = models.SharedLogDAO.DeleteLogPermanently(tx, req.LogId)
 	if err != nil {
 		return nil, err
 	}
@@ -115,9 +123,11 @@ func (this *LogService) DeleteLogsPermanently(ctx context.Context, req *pb.Delet
 
 	// TODO 校验权限
 
+	tx := this.NullTx()
+
 	// 执行物理删除
 	for _, logId := range req.LogIds {
-		err = models.SharedLogDAO.DeleteLogPermanently(logId)
+		err = models.SharedLogDAO.DeleteLogPermanently(tx, logId)
 		if err != nil {
 			return nil, err
 		}
@@ -135,13 +145,15 @@ func (this *LogService) CleanLogsPermanently(ctx context.Context, req *pb.CleanL
 
 	// TODO 校验权限
 
+	tx := this.NullTx()
+
 	if req.ClearAll {
-		err = models.SharedLogDAO.DeleteAllLogsPermanently()
+		err = models.SharedLogDAO.DeleteAllLogsPermanently(tx)
 		if err != nil {
 			return nil, err
 		}
 	} else if req.Days > 0 {
-		err = models.SharedLogDAO.DeleteLogsPermanentlyBeforeDays(int(req.Days))
+		err = models.SharedLogDAO.DeleteLogsPermanentlyBeforeDays(tx, int(req.Days))
 		if err != nil {
 			return nil, err
 		}

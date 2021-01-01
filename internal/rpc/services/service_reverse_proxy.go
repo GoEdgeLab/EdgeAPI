@@ -24,7 +24,9 @@ func (this *ReverseProxyService) CreateReverseProxy(ctx context.Context, req *pb
 		// TODO 校验源站
 	}
 
-	reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(adminId, userId, req.SchedulingJSON, req.PrimaryOriginsJSON, req.BackupOriginsJSON)
+	tx := this.NullTx()
+
+	reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, userId, req.SchedulingJSON, req.PrimaryOriginsJSON, req.BackupOriginsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,9 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 		// TODO 检查权限
 	}
 
-	reverseProxy, err := models.SharedReverseProxyDAO.FindEnabledReverseProxy(req.ReverseProxyId)
+	tx := this.NullTx()
+
+	reverseProxy, err := models.SharedReverseProxyDAO.FindEnabledReverseProxy(tx, req.ReverseProxyId)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +77,9 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 		// TODO 检查权限
 	}
 
-	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(req.ReverseProxyId)
+	tx := this.NullTx()
+
+	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, req.ReverseProxyId)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +104,9 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 		// TODO 检查权限
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxyScheduling(req.ReverseProxyId, req.SchedulingJSON)
+	tx := this.NullTx()
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxyScheduling(tx, req.ReverseProxyId, req.SchedulingJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +126,9 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 		// TODO 检查权限
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxyPrimaryOrigins(req.ReverseProxyId, req.OriginsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxyPrimaryOrigins(tx, req.ReverseProxyId, req.OriginsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +148,9 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 		// TODO 检查权限
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxyBackupOrigins(req.ReverseProxyId, req.OriginsJSON)
+	tx := this.NullTx()
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxyBackupOrigins(tx, req.ReverseProxyId, req.OriginsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +170,9 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		// TODO 检查权限
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
+	tx := this.NullTx()
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
 	if err != nil {
 		return nil, err
 	}

@@ -96,23 +96,25 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 
 	logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
 
+	tx := this.NullTx()
+
 	// 标记为活跃状态
-	oldIsActive, err := models.SharedNodeDAO.FindNodeActive(nodeId)
+	oldIsActive, err := models.SharedNodeDAO.FindNodeActive(tx, nodeId)
 	if err != nil {
 		return err
 	}
 	if !oldIsActive {
-		err = models.SharedNodeDAO.UpdateNodeActive(nodeId, true)
+		err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
 		if err != nil {
 			return err
 		}
 
 		// 发送恢复消息
-		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(nodeId)
+		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 		if err != nil {
 			return err
 		}
-		err = models.SharedMessageDAO.CreateNodeMessage(clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, "节点已经恢复在线", nil)
+		err = models.SharedMessageDAO.CreateNodeMessage(tx, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, "节点已经恢复在线", nil)
 		if err != nil {
 			return err
 		}
@@ -160,7 +162,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		req, err := server.Recv()
 		if err != nil {
 			// 修改节点状态
-			err1 := models.SharedNodeDAO.UpdateNodeIsActive(nodeId, false)
+			err1 := models.SharedNodeDAO.UpdateNodeIsActive(tx, nodeId, false)
 			if err1 != nil {
 				logs.Println(err1.Error())
 			}

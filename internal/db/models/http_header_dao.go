@@ -40,19 +40,19 @@ func init() {
 func (this *HTTPHeaderDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *HTTPHeaderDAO) EnableHTTPHeader(id int64) error {
-	_, err := this.Query().
+func (this *HTTPHeaderDAO) EnableHTTPHeader(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPHeaderStateEnabled).
 		Update()
@@ -60,8 +60,8 @@ func (this *HTTPHeaderDAO) EnableHTTPHeader(id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPHeaderDAO) DisableHTTPHeader(id uint32) error {
-	_, err := this.Query().
+func (this *HTTPHeaderDAO) DisableHTTPHeader(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", HTTPHeaderStateDisabled).
 		Update()
@@ -69,8 +69,8 @@ func (this *HTTPHeaderDAO) DisableHTTPHeader(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *HTTPHeaderDAO) FindEnabledHTTPHeader(id int64) (*HTTPHeader, error) {
-	result, err := this.Query().
+func (this *HTTPHeaderDAO) FindEnabledHTTPHeader(tx *dbs.Tx, id int64) (*HTTPHeader, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", HTTPHeaderStateEnabled).
 		Find()
@@ -81,15 +81,15 @@ func (this *HTTPHeaderDAO) FindEnabledHTTPHeader(id int64) (*HTTPHeader, error) 
 }
 
 // 根据主键查找名称
-func (this *HTTPHeaderDAO) FindHTTPHeaderName(id int64) (string, error) {
-	return this.Query().
+func (this *HTTPHeaderDAO) FindHTTPHeaderName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 创建Header
-func (this *HTTPHeaderDAO) CreateHeader(name string, value string) (int64, error) {
+func (this *HTTPHeaderDAO) CreateHeader(tx *dbs.Tx, name string, value string) (int64, error) {
 	op := NewHTTPHeaderOperator()
 	op.State = HTTPHeaderStateEnabled
 	op.IsOn = true
@@ -105,7 +105,7 @@ func (this *HTTPHeaderDAO) CreateHeader(name string, value string) (int64, error
 	}
 	op.Status = statusJSON
 
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -113,7 +113,7 @@ func (this *HTTPHeaderDAO) CreateHeader(name string, value string) (int64, error
 }
 
 // 修改Header
-func (this *HTTPHeaderDAO) UpdateHeader(headerId int64, name string, value string) error {
+func (this *HTTPHeaderDAO) UpdateHeader(tx *dbs.Tx, headerId int64, name string, value string) error {
 	if headerId <= 0 {
 		return errors.New("invalid headerId")
 	}
@@ -122,7 +122,7 @@ func (this *HTTPHeaderDAO) UpdateHeader(headerId int64, name string, value strin
 	op.Id = headerId
 	op.Name = name
 	op.Value = value
-	err := this.Save(op)
+	err := this.Save(tx, op)
 
 	// TODO 更新相关配置
 
@@ -130,8 +130,8 @@ func (this *HTTPHeaderDAO) UpdateHeader(headerId int64, name string, value strin
 }
 
 // 组合Header配置
-func (this *HTTPHeaderDAO) ComposeHeaderConfig(headerId int64) (*shared.HTTPHeaderConfig, error) {
-	header, err := this.FindEnabledHTTPHeader(headerId)
+func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*shared.HTTPHeaderConfig, error) {
+	header, err := this.FindEnabledHTTPHeader(tx, headerId)
 	if err != nil {
 		return nil, err
 	}

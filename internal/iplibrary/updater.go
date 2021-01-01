@@ -44,7 +44,7 @@ func (this *Updater) Start() {
 
 // 单次任务
 func (this *Updater) loop() error {
-	config, err := models.SharedSysSettingDAO.ReadGlobalConfig()
+	config, err := models.SharedSysSettingDAO.ReadGlobalConfig(nil)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (this *Updater) loop() error {
 	if len(code) == 0 {
 		code = serverconfigs.DefaultIPLibraryType
 	}
-	lib, err := models.SharedIPLibraryDAO.FindLatestIPLibraryWithType(code)
+	lib, err := models.SharedIPLibraryDAO.FindLatestIPLibraryWithType(nil, code)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (this *Updater) loop() error {
 	}
 
 	// 开始下载
-	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(int64(lib.FileId))
+	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(nil, int64(lib.FileId))
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (this *Updater) loop() error {
 		}
 	}()
 	for _, chunkId := range chunkIds {
-		chunk, err := models.SharedFileChunkDAO.FindFileChunk(chunkId)
+		chunk, err := models.SharedFileChunkDAO.FindFileChunk(nil, chunkId)
 		if err != nil {
 			return err
 		}

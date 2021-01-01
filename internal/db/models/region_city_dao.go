@@ -35,8 +35,8 @@ func init() {
 }
 
 // 启用条目
-func (this *RegionCityDAO) EnableRegionCity(id uint32) error {
-	_, err := this.Query().
+func (this *RegionCityDAO) EnableRegionCity(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionCityStateEnabled).
 		Update()
@@ -44,8 +44,8 @@ func (this *RegionCityDAO) EnableRegionCity(id uint32) error {
 }
 
 // 禁用条目
-func (this *RegionCityDAO) DisableRegionCity(id uint32) error {
-	_, err := this.Query().
+func (this *RegionCityDAO) DisableRegionCity(tx *dbs.Tx, id uint32) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", RegionCityStateDisabled).
 		Update()
@@ -53,8 +53,8 @@ func (this *RegionCityDAO) DisableRegionCity(id uint32) error {
 }
 
 // 查找启用中的条目
-func (this *RegionCityDAO) FindEnabledRegionCity(id uint32) (*RegionCity, error) {
-	result, err := this.Query().
+func (this *RegionCityDAO) FindEnabledRegionCity(tx *dbs.Tx, id uint32) (*RegionCity, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", RegionCityStateEnabled).
 		Find()
@@ -65,23 +65,23 @@ func (this *RegionCityDAO) FindEnabledRegionCity(id uint32) (*RegionCity, error)
 }
 
 // 根据主键查找名称
-func (this *RegionCityDAO) FindRegionCityName(id uint32) (string, error) {
-	return this.Query().
+func (this *RegionCityDAO) FindRegionCityName(tx *dbs.Tx, id uint32) (string, error) {
+	return this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
 }
 
 // 根据数据ID查找城市
-func (this *RegionCityDAO) FindCityWithDataId(dataId string) (int64, error) {
-	return this.Query().
+func (this *RegionCityDAO) FindCityWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
+	return this.Query(tx).
 		Attr("dataId", dataId).
 		ResultPk().
 		FindInt64Col(0)
 }
 
 // 创建城市
-func (this *RegionCityDAO) CreateCity(provinceId int64, name string, dataId string) (int64, error) {
+func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string, dataId string) (int64, error) {
 	op := NewRegionCityOperator()
 	op.ProvinceId = provinceId
 	op.Name = name
@@ -94,7 +94,7 @@ func (this *RegionCityDAO) CreateCity(provinceId int64, name string, dataId stri
 		return 0, err
 	}
 	op.Codes = codesJSON
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}

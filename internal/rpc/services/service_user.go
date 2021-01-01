@@ -24,7 +24,9 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 		return nil, err
 	}
 
-	userId, err := models.SharedUserDAO.CreateUser(req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId)
+	tx := this.NullTx()
+
+	userId, err := models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,28 +40,30 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
-	oldClusterId, err := models.SharedUserDAO.FindUserClusterId(req.UserId)
+	tx := this.NullTx()
+
+	oldClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedUserDAO.UpdateUser(req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId)
+	err = models.SharedUserDAO.UpdateUser(tx, req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
 
 	if oldClusterId != req.NodeClusterId {
-		err = models.SharedServerDAO.UpdateUserServersClusterId(req.UserId, req.NodeClusterId)
+		err = models.SharedServerDAO.UpdateUserServersClusterId(tx, req.UserId, req.NodeClusterId)
 		if err != nil {
 			return nil, err
 		}
 
-		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(oldClusterId)
+		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, oldClusterId)
 		if err != nil {
 			return nil, err
 		}
 
-		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(req.NodeClusterId)
+		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +79,9 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 		return nil, err
 	}
 
-	_, err = models.SharedUserDAO.DisableUser(req.UserId)
+	tx := this.NullTx()
+
+	_, err = models.SharedUserDAO.DisableUser(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +95,9 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 		return nil, err
 	}
 
-	count, err := models.SharedUserDAO.CountAllEnabledUsers(req.Keyword)
+	tx := this.NullTx()
+
+	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +111,9 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 		return nil, err
 	}
 
-	users, err := models.SharedUserDAO.ListEnabledUsers(req.Keyword)
+	tx := this.NullTx()
+
+	users, err := models.SharedUserDAO.ListEnabledUsers(tx, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +123,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 		// 集群信息
 		var pbCluster *pb.NodeCluster = nil
 		if user.ClusterId > 0 {
-			clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(user.ClusterId))
+			clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(user.ClusterId))
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +157,9 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		return nil, err
 	}
 
-	user, err := models.SharedUserDAO.FindEnabledUser(req.UserId)
+	tx := this.NullTx()
+
+	user, err := models.SharedUserDAO.FindEnabledUser(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +170,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 	// 集群信息
 	var pbCluster *pb.NodeCluster = nil
 	if user.ClusterId > 0 {
-		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(int64(user.ClusterId))
+		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(user.ClusterId))
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +206,9 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 		return nil, this.PermissionError()
 	}
 
-	b, err := models.SharedUserDAO.ExistUser(req.UserId, req.Username)
+	tx := this.NullTx()
+
+	b, err := models.SharedUserDAO.ExistUser(tx, req.UserId, req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +230,9 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 		}, nil
 	}
 
-	userId, err := models.SharedUserDAO.CheckUserPassword(req.Username, req.Password)
+	tx := this.NullTx()
+
+	userId, err := models.SharedUserDAO.CheckUserPassword(tx, req.Username, req.Password)
 	if err != nil {
 		utils.PrintError(err)
 		return nil, err
@@ -247,7 +263,9 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedUserDAO.UpdateUserInfo(req.UserId, req.Fullname)
+	tx := this.NullTx()
+
+	err = models.SharedUserDAO.UpdateUserInfo(tx, req.UserId, req.Fullname)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +283,9 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedUserDAO.UpdateUserLogin(req.UserId, req.Username, req.Password)
+	tx := this.NullTx()
+
+	err = models.SharedUserDAO.UpdateUserLogin(tx, req.UserId, req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -283,34 +303,36 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		return nil, this.PermissionError()
 	}
 
+	tx := this.NullTx()
+
 	// 网站数量
-	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(0, "", req.UserId, 0, configutils.BoolStateAll)
+	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll)
 	if err != nil {
 		return nil, err
 	}
 
 	// 本月总流量
 	month := timeutil.Format("Ym")
-	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(req.UserId, 0, month)
+	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, 0, month)
 	if err != nil {
 		return nil, err
 	}
 
 	// 本月带宽峰值
-	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthlyPeek(req.UserId, 0, month)
+	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthlyPeek(tx, req.UserId, 0, month)
 	if err != nil {
 		return nil, err
 	}
 
 	// 今日总流量
 	day := timeutil.Format("Ymd")
-	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(req.UserId, 0, day)
+	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
 	if err != nil {
 		return nil, err
 	}
 
 	// 今日带宽峰值
-	dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(req.UserId, 0, day)
+	dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(tx, req.UserId, 0, day)
 	if err != nil {
 		return nil, err
 	}
@@ -322,12 +344,12 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	for i := 14; i >= 0; i-- {
 		day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
 
-		dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(req.UserId, 0, day)
+		dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
 		if err != nil {
 			return nil, err
 		}
 
-		dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(req.UserId, 0, day)
+		dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(tx, req.UserId, 0, day)
 		if err != nil {
 			return nil, err
 		}
@@ -354,7 +376,9 @@ func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	clusterId, err := models.SharedUserDAO.FindUserClusterId(req.UserId)
+	tx := this.NullTx()
+
+	clusterId, err := models.SharedUserDAO.FindUserClusterId(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +396,10 @@ func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateU
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedUserDAO.UpdateUserFeatures(req.UserId, featuresJSON)
+
+	tx := this.NullTx()
+
+	err = models.SharedUserDAO.UpdateUserFeatures(tx, req.UserId, featuresJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +418,9 @@ func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserF
 		}
 	}
 
-	features, err := models.SharedUserDAO.FindUserFeatures(req.UserId)
+	tx := this.NullTx()
+
+	features, err := models.SharedUserDAO.FindUserFeatures(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}

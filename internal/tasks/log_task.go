@@ -44,7 +44,7 @@ func (this *LogTask) loopClean(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
 	settingKey := "logTaskCleanLoop"
 	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
+	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {
 		return err
 	}
@@ -53,13 +53,13 @@ func (this *LogTask) loopClean(seconds int64) error {
 	}
 
 	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(settingKey, []byte(numberutils.FormatInt64(timestamp)))
+	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
 	if err != nil {
 		return err
 	}
 
 	configKey := "adminLogConfig"
-	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(configKey)
+	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, configKey)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (this *LogTask) loopClean(seconds int64) error {
 		return err
 	}
 	if config.Days > 0 {
-		err = models.SharedLogDAO.DeleteLogsPermanentlyBeforeDays(config.Days)
+		err = models.SharedLogDAO.DeleteLogsPermanentlyBeforeDays(nil, config.Days)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
 	settingKey := "logTaskMonitorLoop"
 	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(settingKey, timestamp-seconds)
+	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {
 		return err
 	}
@@ -104,13 +104,13 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 	}
 
 	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(settingKey, []byte(numberutils.FormatInt64(timestamp)))
+	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
 	if err != nil {
 		return err
 	}
 
 	configKey := "adminLogConfig"
-	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(configKey)
+	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, configKey)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 				return err
 			}
 			if sumBytes > capacityBytes {
-				err := models.SharedMessageDAO.CreateMessage(0, 0, models.MessageTypeLogCapacityOverflow, models.MessageLevelError, "日志用量已经超出最大限制，当前的用量为"+this.formatBytes(sumBytes)+"，而设置的最大容量为"+this.formatBytes(capacityBytes)+"。", nil)
+				err := models.SharedMessageDAO.CreateMessage(nil, 0, 0, models.MessageTypeLogCapacityOverflow, models.MessageLevelError, "日志用量已经超出最大限制，当前的用量为"+this.formatBytes(sumBytes)+"，而设置的最大容量为"+this.formatBytes(capacityBytes)+"。", nil)
 				if err != nil {
 					return err
 				}

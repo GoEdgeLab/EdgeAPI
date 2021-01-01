@@ -22,7 +22,9 @@ func (this *ACMETaskService) CountAllEnabledACMETasksWithACMEUserId(ctx context.
 
 	// TODO 校验权限
 
-	count, err := models.SharedACMETaskDAO.CountACMETasksWithACMEUserId(req.AcmeUserId)
+	tx := this.NullTx()
+
+	count, err := models.SharedACMETaskDAO.CountACMETasksWithACMEUserId(tx, req.AcmeUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +40,9 @@ func (this *ACMETaskService) CountEnabledACMETasksWithDNSProviderId(ctx context.
 
 	// TODO 校验权限
 
-	count, err := models.SharedACMETaskDAO.CountACMETasksWithDNSProviderId(req.DnsProviderId)
+	tx := this.NullTx()
+
+	count, err := models.SharedACMETaskDAO.CountACMETasksWithDNSProviderId(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,9 @@ func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *
 		return nil, err
 	}
 
-	count, err := models.SharedACMETaskDAO.CountAllEnabledACMETasks(req.AdminId, req.UserId)
+	tx := this.NullTx()
+
+	count, err := models.SharedACMETaskDAO.CountAllEnabledACMETasks(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +72,9 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		return nil, err
 	}
 
-	tasks, err := models.SharedACMETaskDAO.ListEnabledACMETasks(req.AdminId, req.UserId, req.Offset, req.Size)
+	tx := this.NullTx()
+
+	tasks, err := models.SharedACMETaskDAO.ListEnabledACMETasks(tx, req.AdminId, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +82,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 	result := []*pb.ACMETask{}
 	for _, task := range tasks {
 		// ACME用户
-		acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(int64(task.AcmeUserId))
+		acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(tx, int64(task.AcmeUserId))
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +99,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		var pbProvider *pb.DNSProvider
 		if task.AuthType == acme.AuthTypeDNS {
 			// DNS
-			provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+			provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(task.DnsProviderId))
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +117,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		// 证书
 		var pbCert *pb.SSLCert = nil
 		if task.CertId > 0 {
-			cert, err := models.SharedSSLCertDAO.FindEnabledSSLCert(int64(task.CertId))
+			cert, err := models.SharedSSLCertDAO.FindEnabledSSLCert(tx, int64(task.CertId))
 			if err != nil {
 				return nil, err
 			}
@@ -127,7 +135,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 
 		// 最近一条日志
 		var pbTaskLog *pb.ACMETaskLog = nil
-		taskLog, err := models.SharedACMETaskLogDAO.FindLatestACMETasKLog(int64(task.Id))
+		taskLog, err := models.SharedACMETaskLogDAO.FindLatestACMETasKLog(tx, int64(task.Id))
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +177,8 @@ func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateA
 		req.AuthType = acme.AuthTypeDNS
 	}
 
-	taskId, err := models.SharedACMETaskDAO.CreateACMETask(adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
+	tx := this.NullTx()
+	taskId, err := models.SharedACMETaskDAO.CreateACMETask(tx, adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +192,9 @@ func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateA
 		return nil, err
 	}
 
-	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(adminId, userId, req.AcmeTaskId)
+	tx := this.NullTx()
+
+	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(tx, adminId, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +202,7 @@ func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateA
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedACMETaskDAO.UpdateACMETask(req.AcmeTaskId, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
+	err = models.SharedACMETaskDAO.UpdateACMETask(tx, req.AcmeTaskId, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +216,9 @@ func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteA
 		return nil, err
 	}
 
-	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(adminId, userId, req.AcmeTaskId)
+	tx := this.NullTx()
+
+	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(tx, adminId, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +226,7 @@ func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteA
 		return nil, this.PermissionError()
 	}
 
-	err = models.SharedACMETaskDAO.DisableACMETask(req.AcmeTaskId)
+	err = models.SharedACMETaskDAO.DisableACMETask(tx, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +240,9 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 		return nil, err
 	}
 
-	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(adminId, userId, req.AcmeTaskId)
+	tx := this.NullTx()
+
+	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(tx, adminId, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +250,7 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 		return nil, this.PermissionError()
 	}
 
-	isOk, msg, certId := models.SharedACMETaskDAO.RunTask(req.AcmeTaskId)
+	isOk, msg, certId := models.SharedACMETaskDAO.RunTask(tx, req.AcmeTaskId)
 
 	return &pb.RunACMETaskResponse{
 		IsOk:      isOk,
@@ -251,7 +266,9 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
-	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(adminId, userId, req.AcmeTaskId)
+	tx := this.NullTx()
+
+	canAccess, err := models.SharedACMETaskDAO.CheckACMETask(tx, adminId, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +276,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		return nil, this.PermissionError()
 	}
 
-	task, err := models.SharedACMETaskDAO.FindEnabledACMETask(req.AcmeTaskId)
+	task, err := models.SharedACMETaskDAO.FindEnabledACMETask(tx, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +287,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 	// 用户
 	var pbACMEUser *pb.ACMEUser = nil
 	if task.AcmeUserId > 0 {
-		acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(int64(task.AcmeUserId))
+		acmeUser, err := models.SharedACMEUserDAO.FindEnabledACMEUser(tx, int64(task.AcmeUserId))
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +303,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 
 	// DNS
 	var pbProvider *pb.DNSProvider
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(int64(task.DnsProviderId))
+	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(task.DnsProviderId))
 	if err != nil {
 		return nil, err
 	}

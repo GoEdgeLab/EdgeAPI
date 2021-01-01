@@ -30,9 +30,9 @@ func init() {
 }
 
 // 生成AccessToken
-func (this *APIAccessTokenDAO) GenerateAccessToken(userId int64) (token string, expiresAt int64, err error) {
+func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, userId int64) (token string, expiresAt int64, err error) {
 	// 查询以前的
-	accessToken, err := this.Query().
+	accessToken, err := this.Query(tx).
 		Attr("userId", userId).
 		Find()
 	if err != nil {
@@ -52,13 +52,13 @@ func (this *APIAccessTokenDAO) GenerateAccessToken(userId int64) (token string, 
 	op.Token = token
 	op.CreatedAt = time.Now().Unix()
 	op.ExpiredAt = expiresAt
-	err = this.Save(op)
+	err = this.Save(tx, op)
 	return
 }
 
 // 查找AccessToken
-func (this *APIAccessTokenDAO) FindAccessToken(token string) (*APIAccessToken, error) {
-	one, err := this.Query().
+func (this *APIAccessTokenDAO) FindAccessToken(tx *dbs.Tx, token string) (*APIAccessToken, error) {
+	one, err := this.Query(tx).
 		Attr("token", token).
 		Find()
 	if one == nil || err != nil {

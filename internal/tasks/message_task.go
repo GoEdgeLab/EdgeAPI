@@ -37,5 +37,5 @@ func (this *MessageTask) Run() {
 // 单次运行
 func (this *MessageTask) loop() error {
 	dayTime := time.Now().AddDate(0, 0, -30) // TODO 这个30天应该可以在界面上设置
-	return models.NewMessageDAO().DeleteMessagesBeforeDay(dayTime)
+	return models.NewMessageDAO().DeleteMessagesBeforeDay(nil, dayTime)
 }

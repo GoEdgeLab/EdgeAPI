@@ -34,8 +34,8 @@ func init() {
 }
 
 // 启用条目
-func (this *FileDAO) EnableFile(id int64) error {
-	_, err := this.Query().
+func (this *FileDAO) EnableFile(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", FileStateEnabled).
 		Update()
@@ -43,8 +43,8 @@ func (this *FileDAO) EnableFile(id int64) error {
 }
 
 // 禁用条目
-func (this *FileDAO) DisableFile(id int64) error {
-	_, err := this.Query().
+func (this *FileDAO) DisableFile(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", FileStateDisabled).
 		Update()
@@ -52,8 +52,8 @@ func (this *FileDAO) DisableFile(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *FileDAO) FindEnabledFile(id int64) (*File, error) {
-	result, err := this.Query().
+func (this *FileDAO) FindEnabledFile(tx *dbs.Tx, id int64) (*File, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", FileStateEnabled).
 		Find()
@@ -64,14 +64,14 @@ func (this *FileDAO) FindEnabledFile(id int64) (*File, error) {
 }
 
 // 创建文件
-func (this *FileDAO) CreateFile(businessType, description string, filename string, size int64) (int64, error) {
+func (this *FileDAO) CreateFile(tx *dbs.Tx, businessType, description string, filename string, size int64) (int64, error) {
 	op := NewFileOperator()
 	op.Type = businessType
 	op.Description = description
 	op.State = FileStateEnabled
 	op.Size = size
 	op.Filename = filename
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -80,8 +80,8 @@ func (this *FileDAO) CreateFile(businessType, description string, filename strin
 }
 
 // 将文件置为已完成
-func (this *FileDAO) UpdateFileIsFinished(fileId int64) error {
-	_, err := this.Query().
+func (this *FileDAO) UpdateFileIsFinished(tx *dbs.Tx, fileId int64) error {
+	_, err := this.Query(tx).
 		Pk(fileId).
 		Set("isFinished", true).
 		Update()

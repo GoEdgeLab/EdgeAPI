@@ -18,7 +18,9 @@ func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *
 		return nil, err
 	}
 
-	userAccessKeyId, err := models.SharedUserAccessKeyDAO.CreateAccessKey(req.UserId, req.Description)
+	tx := this.NullTx()
+
+	userAccessKeyId, err := models.SharedUserAccessKeyDAO.CreateAccessKey(tx, req.UserId, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +34,9 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 		return nil, err
 	}
 
-	accessKeys, err := models.SharedUserAccessKeyDAO.FindAllEnabledAccessKeys(req.UserId)
+	tx := this.NullTx()
+
+	accessKeys, err := models.SharedUserAccessKeyDAO.FindAllEnabledAccessKeys(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +64,10 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	if userId > 0 {
-		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(userId, req.UserAccessKeyId)
+		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, userId, req.UserAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +76,7 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 		}
 	}
 
-	err = models.SharedUserAccessKeyDAO.DisableUserAccessKey(req.UserAccessKeyId)
+	err = models.SharedUserAccessKeyDAO.DisableUserAccessKey(tx, req.UserAccessKeyId)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +90,10 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 		return nil, err
 	}
 
+	tx := this.NullTx()
+
 	if userId > 0 {
-		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(userId, req.UserAccessKeyId)
+		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, userId, req.UserAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +102,7 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 		}
 	}
 
-	err = models.SharedUserAccessKeyDAO.UpdateAccessKeyIsOn(req.UserAccessKeyId, req.IsOn)
+	err = models.SharedUserAccessKeyDAO.UpdateAccessKeyIsOn(tx, req.UserAccessKeyId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}

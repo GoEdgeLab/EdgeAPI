@@ -41,19 +41,19 @@ func init() {
 func (this *SSLPolicyDAO) Init() {
 	this.DAOObject.Init()
 	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(NewServerChangeEvent())
+		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
 	})
 }
 
 // 启用条目
-func (this *SSLPolicyDAO) EnableSSLPolicy(id int64) error {
-	_, err := this.Query().
+func (this *SSLPolicyDAO) EnableSSLPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLPolicyStateEnabled).
 		Update()
@@ -61,8 +61,8 @@ func (this *SSLPolicyDAO) EnableSSLPolicy(id int64) error {
 }
 
 // 禁用条目
-func (this *SSLPolicyDAO) DisableSSLPolicy(id int64) error {
-	_, err := this.Query().
+func (this *SSLPolicyDAO) DisableSSLPolicy(tx *dbs.Tx, id int64) error {
+	_, err := this.Query(tx).
 		Pk(id).
 		Set("state", SSLPolicyStateDisabled).
 		Update()
@@ -70,8 +70,8 @@ func (this *SSLPolicyDAO) DisableSSLPolicy(id int64) error {
 }
 
 // 查找启用中的条目
-func (this *SSLPolicyDAO) FindEnabledSSLPolicy(id int64) (*SSLPolicy, error) {
-	result, err := this.Query().
+func (this *SSLPolicyDAO) FindEnabledSSLPolicy(tx *dbs.Tx, id int64) (*SSLPolicy, error) {
+	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", SSLPolicyStateEnabled).
 		Find()
@@ -82,8 +82,8 @@ func (this *SSLPolicyDAO) FindEnabledSSLPolicy(id int64) (*SSLPolicy, error) {
 }
 
 // 组合配置
-func (this *SSLPolicyDAO) ComposePolicyConfig(policyId int64) (*sslconfigs.SSLPolicy, error) {
-	policy, err := this.FindEnabledSSLPolicy(policyId)
+func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64) (*sslconfigs.SSLPolicy, error) {
+	policy, err := this.FindEnabledSSLPolicy(tx, policyId)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(policyId int64) (*sslconfigs.SSLPo
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(ref.CertId)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId)
 				if err != nil {
 					return nil, err
 				}
@@ -128,7 +128,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(policyId int64) (*sslconfigs.SSLPo
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(ref.CertId)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId)
 				if err != nil {
 					return nil, err
 				}
@@ -166,12 +166,12 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(policyId int64) (*sslconfigs.SSLPo
 }
 
 // 查询使用单个证书的所有策略ID
-func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(certId int64) (policyIds []int64, err error) {
+func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(tx *dbs.Tx, certId int64) (policyIds []int64, err error) {
 	if certId <= 0 {
 		return
 	}
 
-	ones, err := this.Query().
+	ones, err := this.Query(tx).
 		State(SSLPolicyStateEnabled).
 		ResultPk().
 		Where(`JSON_CONTAINS(certs, '{"certId": ` + strconv.FormatInt(certId, 10) + ` }')`).
@@ -187,7 +187,7 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(certId int64) (polic
 }
 
 // 创建Policy
-func (this *SSLPolicyDAO) CreatePolicy(adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
+func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
 	op := NewSSLPolicyOperator()
 	op.State = SSLPolicyStateEnabled
 	op.IsOn = true
@@ -217,7 +217,7 @@ func (this *SSLPolicyDAO) CreatePolicy(adminId int64, userId int64, http2Enabled
 		}
 		op.CipherSuites = cipherSuitesJSON
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -226,7 +226,7 @@ func (this *SSLPolicyDAO) CreatePolicy(adminId int64, userId int64, http2Enabled
 
 // 修改Policy
 // 创建Policy
-func (this *SSLPolicyDAO) UpdatePolicy(policyId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
+func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -258,16 +258,16 @@ func (this *SSLPolicyDAO) UpdatePolicy(policyId int64, http2Enabled bool, minVer
 	} else {
 		op.CipherSuites = "[]"
 	}
-	err := this.Save(op)
+	err := this.Save(tx, op)
 	return err
 }
 
 // 检查是否为用户所属策略
-func (this *SSLPolicyDAO) CheckUserPolicy(policyId int64, userId int64) error {
+func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, policyId int64, userId int64) error {
 	if policyId <= 0 || userId <= 0 {
 		return errors.New("not found")
 	}
-	ok, err := this.Query().
+	ok, err := this.Query(tx).
 		State(SSLPolicyStateEnabled).
 		Pk(policyId).
 		Attr("userId", userId).
