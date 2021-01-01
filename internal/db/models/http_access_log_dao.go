@@ -168,7 +168,6 @@ func (this *HTTPAccessLogDAO) listAccessLogs(lastRequestId string, size int64, d
 			dao := daoWrapper.DAO
 
 			tableName, exists, err := findAccessLogTableName(dao.Instance, day)
-			logs.Println("tableName:", tableName, exists, err) // TODO
 			if !exists {
 				// 表格不存在则跳过
 				return
