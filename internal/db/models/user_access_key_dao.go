@@ -109,3 +109,17 @@ func (this *UserAccessKeyDAO) UpdateAccessKeyIsOn(accessKeyId int64, isOn bool) 
 		Update()
 	return err
 }
+
+// 根据UniqueId查找AccessKey
+func (this *UserAccessKeyDAO) FindAccessKeyWithUniqueId(uniqueId string) (*UserAccessKey, error) {
+	one, err := this.Query().
+		Attr("uniqueId", uniqueId).
+		Attr("isOn", true).
+		State(UserAccessKeyStateEnabled).
+		Find()
+	if one == nil || err != nil {
+		return nil, err
+	}
+
+	return one.(*UserAccessKey), nil
+}

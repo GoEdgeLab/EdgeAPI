@@ -90,7 +90,7 @@ func (this *APINodeDAO) FindAPINodeName(id int64) (string, error) {
 }
 
 // 创建API节点
-func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
+func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
 	uniqueId, err := this.genUniqueId()
 	if err != nil {
 		return 0, err
@@ -114,6 +114,13 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 	if len(httpsJSON) > 0 {
 		op.Https = httpsJSON
 	}
+	op.RestIsOn = restIsOn
+	if len(restHTTPJSON) > 0 {
+		op.RestHTTP = restHTTPJSON
+	}
+	if len(restHTTPSJSON) > 0 {
+		op.RestHTTPS = restHTTPSJSON
+	}
 	if len(accessAddrsJSON) > 0 {
 		op.AccessAddrs = accessAddrsJSON
 	}
@@ -128,7 +135,7 @@ func (this *APINodeDAO) CreateAPINode(name string, description string, httpJSON 
 }
 
 // 修改API节点
-func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) error {
+func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -142,17 +149,28 @@ func (this *APINodeDAO) UpdateAPINode(nodeId int64, name string, description str
 	if len(httpJSON) > 0 {
 		op.Http = httpJSON
 	} else {
-		op.Http = "null"
+		op.Http = "{}"
 	}
 	if len(httpsJSON) > 0 {
 		op.Https = httpsJSON
 	} else {
-		op.Https = "null"
+		op.Https = "{}"
+	}
+	op.RestIsOn = restIsOn
+	if len(restHTTPJSON) > 0 {
+		op.RestHTTP = restHTTPJSON
+	} else {
+		op.RestHTTP = "{}"
+	}
+	if len(restHTTPSJSON) > 0 {
+		op.RestHTTPS = restHTTPSJSON
+	} else {
+		op.RestHTTPS = "{}"
 	}
 	if len(accessAddrsJSON) > 0 {
 		op.AccessAddrs = accessAddrsJSON
 	} else {
-		op.AccessAddrs = "null"
+		op.AccessAddrs = "[]"
 	}
 
 	err := this.Save(op)

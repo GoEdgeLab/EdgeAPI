@@ -11,6 +11,9 @@ type APINode struct {
 	Description string `field:"description"` // 描述
 	Http        string `field:"http"`        // 监听的HTTP配置
 	Https       string `field:"https"`       // 监听的HTTPS配置
+	RestIsOn    uint8  `field:"restIsOn"`    // 是否开放REST
+	RestHTTP    string `field:"restHTTP"`    // REST HTTP配置
+	RestHTTPS   string `field:"restHTTPS"`   // REST HTTPS配置
 	AccessAddrs string `field:"accessAddrs"` // 外部访问地址
 	Order       uint32 `field:"order"`       // 排序
 	State       uint8  `field:"state"`       // 状态
@@ -30,6 +33,9 @@ type APINodeOperator struct {
 	Description interface{} // 描述
 	Http        interface{} // 监听的HTTP配置
 	Https       interface{} // 监听的HTTPS配置
+	RestIsOn    interface{} // 是否开放REST
+	RestHTTP    interface{} // REST HTTP配置
+	RestHTTPS   interface{} // REST HTTPS配置
 	AccessAddrs interface{} // 外部访问地址
 	Order       interface{} // 排序
 	State       interface{} // 状态

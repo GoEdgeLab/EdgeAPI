@@ -93,3 +93,65 @@ func (this *APINode) DecodeAccessAddrStrings() ([]string, error) {
 	}
 	return result, nil
 }
+
+// 解析Rest HTTP配置
+func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
+	if this.RestIsOn != 1 {
+		return nil, nil
+	}
+	if !IsNotNull(this.RestHTTP) {
+		return nil, nil
+	}
+	config := &serverconfigs.HTTPProtocolConfig{}
+	err := json.Unmarshal([]byte(this.RestHTTP), config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = config.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// 解析HTTPS配置
+func (this *APINode) DecodeRestHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) {
+	if this.RestIsOn != 1 {
+		return nil, nil
+	}
+	if !IsNotNull(this.RestHTTPS) {
+		return nil, nil
+	}
+	config := &serverconfigs.HTTPSProtocolConfig{}
+	err := json.Unmarshal([]byte(this.RestHTTPS), config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = config.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	if config.SSLPolicyRef != nil {
+		policyId := config.SSLPolicyRef.SSLPolicyId
+		if policyId > 0 {
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(policyId)
+			if err != nil {
+				return nil, err
+			}
+			if sslPolicy != nil {
+				config.SSLPolicy = sslPolicy
+			}
+		}
+	}
+
+	err = config.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}

@@ -160,7 +160,7 @@ func (this *Setup) Run() error {
 		}
 
 		// 创建API节点
-		nodeId, err := dao.CreateAPINode("默认API节点", "这是默认创建的第一个API节点", httpJSON, httpsJSON, addrsJSON, true)
+		nodeId, err := dao.CreateAPINode("默认API节点", "这是默认创建的第一个API节点", httpJSON, httpsJSON, false, nil, nil, addrsJSON, true)
 		if err != nil {
 			return errors.New("create api node in database failed: " + err.Error())
 		}

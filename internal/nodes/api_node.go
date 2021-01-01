@@ -75,72 +75,7 @@ func (this *APINode) Start() {
 	// 监听RPC服务
 	remotelogs.Println("API_NODE", "starting RPC server ...")
 
-	// HTTP
-	httpConfig, err := apiNode.DecodeHTTP()
-	if err != nil {
-		remotelogs.Error("API_NODE", "decode http config: "+err.Error())
-		return
-	}
-	isListening := false
-	if httpConfig != nil && httpConfig.IsOn && len(httpConfig.Listen) > 0 {
-		for _, listen := range httpConfig.Listen {
-			for _, addr := range listen.Addresses() {
-				listener, err := net.Listen("tcp", addr)
-				if err != nil {
-					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
-					continue
-				}
-				go func() {
-					err := this.listenRPC(listener, nil)
-					if err != nil {
-						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
-						return
-					}
-				}()
-				isListening = true
-			}
-		}
-	}
-
-	// HTTPS
-	httpsConfig, err := apiNode.DecodeHTTPS()
-	if err != nil {
-		remotelogs.Error("API_NODE", "decode https config: "+err.Error())
-		return
-	}
-	if httpsConfig != nil &&
-		httpsConfig.IsOn &&
-		len(httpsConfig.Listen) > 0 &&
-		httpsConfig.SSLPolicy != nil &&
-		httpsConfig.SSLPolicy.IsOn &&
-		len(httpsConfig.SSLPolicy.Certs) > 0 {
-		certs := []tls.Certificate{}
-		for _, cert := range httpsConfig.SSLPolicy.Certs {
-			certs = append(certs, *cert.CertObject())
-		}
-
-		for _, listen := range httpsConfig.Listen {
-			for _, addr := range listen.Addresses() {
-				listener, err := net.Listen("tcp", addr)
-				if err != nil {
-					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
-					continue
-				}
-				go func() {
-					err := this.listenRPC(listener, &tls.Config{
-						Certificates: certs,
-					})
-					if err != nil {
-						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
-						return
-					}
-				}()
-				isListening = true
-			}
-		}
-	}
-
-	// HTTP接口
+	isListening := this.listenPorts(apiNode)
 
 	if !isListening {
 		remotelogs.Error("API_NODE", "the api node require at least one listening address")
@@ -155,10 +90,10 @@ func (this *APINode) Start() {
 func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) error {
 	var rpcServer *grpc.Server
 	if tlsConfig == nil {
-		remotelogs.Println("API_NODE", "listening http://"+listener.Addr().String()+" ...")
+		remotelogs.Println("API_NODE", "listening GRPC http://"+listener.Addr().String()+" ...")
 		rpcServer = grpc.NewServer()
 	} else {
-		logs.Println("[API_NODE]listening https://" + listener.Addr().String() + " ...")
+		logs.Println("[API_NODE]listening GRPC https://" + listener.Addr().String() + " ...")
 		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)))
 	}
 	pb.RegisterAdminServiceServer(rpcServer, &services.AdminService{})
@@ -263,4 +198,143 @@ func (this *APINode) autoUpgrade() error {
 	// 不使用remotelogs
 	logs.Println("[API_NODE]upgrade database done")
 	return nil
+}
+
+// 启动端口
+func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
+	// HTTP
+	httpConfig, err := apiNode.DecodeHTTP()
+	if err != nil {
+		remotelogs.Error("API_NODE", "decode http config: "+err.Error())
+		return
+	}
+	isListening = false
+	if httpConfig != nil && httpConfig.IsOn && len(httpConfig.Listen) > 0 {
+		for _, listen := range httpConfig.Listen {
+			for _, addr := range listen.Addresses() {
+				listener, err := net.Listen("tcp", addr)
+				if err != nil {
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
+					continue
+				}
+				go func() {
+					err := this.listenRPC(listener, nil)
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
+						return
+					}
+				}()
+				isListening = true
+			}
+		}
+	}
+
+	// HTTPS
+	httpsConfig, err := apiNode.DecodeHTTPS()
+	if err != nil {
+		remotelogs.Error("API_NODE", "decode https config: "+err.Error())
+		return
+	}
+	if httpsConfig != nil &&
+		httpsConfig.IsOn &&
+		len(httpsConfig.Listen) > 0 &&
+		httpsConfig.SSLPolicy != nil &&
+		httpsConfig.SSLPolicy.IsOn &&
+		len(httpsConfig.SSLPolicy.Certs) > 0 {
+		certs := []tls.Certificate{}
+		for _, cert := range httpsConfig.SSLPolicy.Certs {
+			certs = append(certs, *cert.CertObject())
+		}
+
+		for _, listen := range httpsConfig.Listen {
+			for _, addr := range listen.Addresses() {
+				listener, err := net.Listen("tcp", addr)
+				if err != nil {
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
+					continue
+				}
+				go func() {
+					err := this.listenRPC(listener, &tls.Config{
+						Certificates: certs,
+					})
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
+						return
+					}
+				}()
+				isListening = true
+			}
+		}
+	}
+
+	// Rest HTTP
+	restHTTPConfig, err := apiNode.DecodeRestHTTP()
+	if err != nil {
+		remotelogs.Error("API_NODE", "decode REST http config: "+err.Error())
+		return
+	}
+	if restHTTPConfig != nil && restHTTPConfig.IsOn && len(restHTTPConfig.Listen) > 0 {
+		for _, listen := range restHTTPConfig.Listen {
+			for _, addr := range listen.Addresses() {
+				listener, err := net.Listen("tcp", addr)
+				if err != nil {
+					remotelogs.Error("API_NODE", "listening REST 'http://"+addr+"' failed: "+err.Error())
+					continue
+				}
+				go func() {
+					remotelogs.Println("API_NODE", "listening REST http://"+addr+" ...")
+					server := &RestServer{}
+					err := server.Listen(listener)
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening REST 'http://"+addr+"' failed: "+err.Error())
+						return
+					}
+				}()
+				isListening = true
+			}
+		}
+	}
+
+	// Rest HTTPS
+	restHTTPSConfig, err := apiNode.DecodeRestHTTPS()
+	if err != nil {
+		remotelogs.Error("API_NODE", "decode REST https config: "+err.Error())
+		return
+	}
+	if restHTTPSConfig != nil &&
+		restHTTPSConfig.IsOn &&
+		len(restHTTPSConfig.Listen) > 0 &&
+		restHTTPSConfig.SSLPolicy != nil &&
+		restHTTPSConfig.SSLPolicy.IsOn &&
+		len(restHTTPSConfig.SSLPolicy.Certs) > 0 {
+		for _, listen := range restHTTPSConfig.Listen {
+			for _, addr := range listen.Addresses() {
+				listener, err := net.Listen("tcp", addr)
+				if err != nil {
+					remotelogs.Error("API_NODE", "listening REST 'https://"+addr+"' failed: "+err.Error())
+					continue
+				}
+				go func() {
+					remotelogs.Println("API_NODE", "listening REST https://"+addr+" ...")
+					server := &RestServer{}
+
+					certs := []tls.Certificate{}
+					for _, cert := range httpsConfig.SSLPolicy.Certs {
+						certs = append(certs, *cert.CertObject())
+					}
+
+					err := server.ListenHTTPS(listener, &tls.Config{
+						Certificates: certs,
+					})
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening REST 'https://"+addr+"' failed: "+err.Error())
+						return
+					}
+				}()
+				isListening = true
+			}
+		}
+	}
+
+	return
 }

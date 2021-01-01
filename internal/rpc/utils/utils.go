@@ -33,6 +33,29 @@ const (
 
 // 校验请求
 func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserType, userId int64, err error) {
+	if ctx == nil {
+		err = errors.New("context should not be nil")
+		return
+	}
+
+	// 支持直接认证
+	plainCtx, ok := ctx.(*PlainContext)
+	if ok {
+		userType = plainCtx.UserType
+		userId = plainCtx.UserId
+
+		if len(userTypes) > 0 && !lists.ContainsString(userTypes, userType) {
+			userType = UserTypeNone
+			userId = 0
+		}
+
+		if userId <= 0 {
+			err = errors.New("context: can not find user or permission denied")
+		}
+
+		return
+	}
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return UserTypeNone, 0, errors.New("context: need 'nodeId'")

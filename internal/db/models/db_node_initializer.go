@@ -2,11 +2,13 @@ package models
 
 import (
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"hash/crc32"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -46,17 +48,22 @@ func randomAccessLogDAO() (dao *HTTPAccessLogDAOWrapper) {
 }
 
 // 检查表格是否存在
-func findAccessLogTableName(db *dbs.DB, day string) (string, bool, error) {
+func findAccessLogTableName(db *dbs.DB, day string) (tableName string, ok bool, err error) {
+	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
+		err = errors.New("invalid day '" + day + "', should be YYYYMMDD")
+		return
+	}
+
 	config, err := db.Config()
 	if err != nil {
 		return "", false, err
 	}
 
-	tableName := "edgeHTTPAccessLogs_" + day
+	tableName = "edgeHTTPAccessLogs_" + day
 	cacheKey := tableName + "_" + fmt.Sprintf("%d", crc32.ChecksumIEEE([]byte(config.Dsn)))
 
 	accessLogLocker.RLock()
-	_, ok := accessLogTableMapping[cacheKey]
+	_, ok = accessLogTableMapping[cacheKey]
 	accessLogLocker.RUnlock()
 	if ok {
 		return tableName, true, nil
