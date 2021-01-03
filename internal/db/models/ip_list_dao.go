@@ -75,9 +75,10 @@ func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 }
 
 // 创建名单
-func (this *IPListDAO) CreateIPList(tx *dbs.Tx, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte) (int64, error) {
+func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte) (int64, error) {
 	op := NewIPListOperator()
 	op.IsOn = true
+	op.UserId = userId
 	op.State = IPListStateEnabled
 	op.Type = listType
 	op.Name = name
@@ -127,4 +128,19 @@ func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
 	value := types.Int64(string(valueJSON)) + 1
 	err = SharedSysSettingDAO.UpdateSetting(tx, SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
 	return value, nil
+}
+
+// 检查用户权限
+func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) error {
+	ok, err := this.Query(tx).
+		Pk(listId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if ok {
+		return nil
+	}
+	return ErrNotFound
 }

@@ -166,3 +166,11 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 		FindAll()
 	return
 }
+
+// 查找IPItem对应的列表ID
+func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(itemId).
+		Result("listId").
+		FindInt64Col(0)
+}

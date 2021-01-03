@@ -15,14 +15,14 @@ type IPListService struct {
 // 创建IP列表
 func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPListRequest) (*pb.CreateIPListResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	listId, err := models.SharedIPListDAO.CreateIPList(tx, req.Type, req.Name, req.Code, req.TimeoutJSON)
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON)
 	if err != nil {
 		return nil, err
 	}

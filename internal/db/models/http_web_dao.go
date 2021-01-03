@@ -242,7 +242,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 		config.FirewallRef = firewallRef
 
-		// 暂不支持自定义防火墙策略设置，因为同一个集群下的服务需要集中管理
+		// 自定义防火墙设置
+		if firewallRef.FirewallPolicyId > 0 {
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if firewallPolicy == nil {
+				config.FirewallRef = nil
+			} else {
+				config.FirewallPolicy = firewallPolicy
+			}
+		}
 	}
 
 	// 路径规则

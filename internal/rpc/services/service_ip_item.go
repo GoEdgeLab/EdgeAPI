@@ -15,12 +15,19 @@ type IPItemService struct {
 // 创建IP
 func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPItemRequest) (*pb.CreateIPItemResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
 	if err != nil {
@@ -33,12 +40,24 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 // 修改IP
 func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPItemRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		listId, err := models.SharedIPItemDAO.FindItemListId(tx, req.IpItemId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, listId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
 	if err != nil {
@@ -50,12 +69,24 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 // 删除IP
 func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPItemRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		listId, err := models.SharedIPItemDAO.FindItemListId(tx, req.IpItemId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, listId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = models.SharedIPItemDAO.DisableIPItem(tx, req.IpItemId)
 	if err != nil {
@@ -67,12 +98,19 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 // 计算IP数量
 func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.CountIPItemsWithListIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	count, err := models.SharedIPItemDAO.CountIPItemsWithListId(tx, req.IpListId)
 	if err != nil {
@@ -84,12 +122,19 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 // 列出单页的IP
 func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.ListIPItemsWithListIdRequest) (*pb.ListIPItemsWithListIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	items, err := models.SharedIPItemDAO.ListIPItemsWithListId(tx, req.IpListId, req.Offset, req.Size)
 	if err != nil {
@@ -113,7 +158,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 // 查找单个IP
 func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEnabledIPItemRequest) (*pb.FindEnabledIPItemResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +172,14 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 	if item == nil {
 		return &pb.FindEnabledIPItemResponse{IpItem: nil}, nil
 	}
+
+	if userId > 0 {
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, int64(item.ListId))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &pb.FindEnabledIPItemResponse{IpItem: &pb.IPItem{
 		Id:        int64(item.Id),
 		IpFrom:    item.IpFrom,

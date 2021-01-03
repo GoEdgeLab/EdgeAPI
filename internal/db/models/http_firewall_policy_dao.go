@@ -99,8 +99,9 @@ func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (r
 }
 
 // 创建策略
-func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
+func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
 	op := NewHTTPFirewallPolicyOperator()
+	op.UserId = userId
 	op.State = HTTPFirewallPolicyStateEnabled
 	op.IsOn = isOn
 	op.Name = name
@@ -281,4 +282,19 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	}
 
 	return config, nil
+}
+
+// 检查用户防火墙策略
+func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId int64, firewallPolicyId int64) error {
+	ok, err := this.Query(tx).
+		Pk(firewallPolicyId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrNotFound
+	}
+	return nil
 }
