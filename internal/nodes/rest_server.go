@@ -20,6 +20,7 @@ var servicePathReg = regexp.MustCompile(`^/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)$`)
 var servicesMap = map[string]reflect.Value{
 	"APIAccessTokenService": reflect.ValueOf(new(services.APIAccessTokenService)),
 	"HTTPAccessLogService":  reflect.ValueOf(new(services.HTTPAccessLogService)),
+	"IPItemService":         reflect.ValueOf(new(services.IPItemService)),
 }
 
 type RestServer struct{}
@@ -43,6 +44,20 @@ func (this *RestServer) ListenHTTPS(listener net.Listener, tlsConfig *tls.Config
 
 func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
+
+	// 是否显示Pretty后的JSON
+	shouldPretty := req.Header.Get("Edge-Response-Pretty") == "on"
+
+	// 欢迎页
+	if path == "/" {
+		this.writeJSON(writer, maps.Map{
+			"code":    200,
+			"message": "Welcome to API",
+			"data":    maps.Map{},
+		}, shouldPretty)
+		return
+	}
+
 	matches := servicePathReg.FindStringSubmatch(path)
 	if len(matches) != 3 {
 		writer.WriteHeader(http.StatusNotFound)
@@ -71,9 +86,6 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
-
-	// 是否显示Pretty后的JSON
-	shouldPretty := req.Header.Get("Edge-Response-Pretty") == "on"
 
 	// 上下文
 	ctx := context.Background()
@@ -181,6 +193,8 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (this *RestServer) writeJSON(writer http.ResponseWriter, v maps.Map, pretty bool) {
+	writer.Header().Set("Content-Type", "application/json")
+
 	if pretty {
 		_, _ = writer.Write(v.AsPrettyJSON())
 	} else {

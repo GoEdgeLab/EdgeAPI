@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"net"
 )
 
 // IP条目相关服务
@@ -18,6 +20,22 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(req.IpFrom) == 0 {
+		return nil, errors.New("'ipFrom' should not be empty")
+	}
+
+	ipFrom := net.ParseIP(req.IpFrom)
+	if ipFrom == nil {
+		return nil, errors.New("invalid 'ipFrom'")
+	}
+
+	if len(req.IpTo) > 0 {
+		ipTo := net.ParseIP(req.IpTo)
+		if ipTo == nil {
+			return nil, errors.New("invalid 'ipTo'")
+		}
 	}
 
 	tx := this.NullTx()

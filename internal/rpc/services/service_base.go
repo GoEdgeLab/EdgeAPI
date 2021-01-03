@@ -35,7 +35,7 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminI
 	switch reqUserType {
 	case rpcutils.UserTypeAdmin:
 		adminId = reqUserId
-		if adminId <= 0 {
+		if adminId < 0 { // 允许AdminId = 0
 			err = errors.New("invalid 'adminId'")
 			return
 		}
