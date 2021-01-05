@@ -19,7 +19,7 @@ func IsNotNull(data string) bool {
 func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {
 	query := dao.Object().Query(tx)
 	if adminId > 0 {
-		query.Attr("adminId", adminId)
+		//query.Attr("adminId", adminId)
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)

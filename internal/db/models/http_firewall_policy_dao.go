@@ -184,6 +184,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
+		Attr("userId", 0).
 		Count()
 }
 
@@ -191,6 +192,7 @@ func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx) (
 func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, offset int64, size int64) (result []*HTTPFirewallPolicy, err error) {
 	_, err = this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
+		Attr("userId", 0).
 		Offset(offset).
 		Limit(size).
 		DescPk().
