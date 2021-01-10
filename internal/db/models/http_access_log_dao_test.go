@@ -4,12 +4,15 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
+	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
 	"time"
 )
 
 func TestCreateHTTPAccessLogs(t *testing.T) {
+	var tx *dbs.Tx
+
 	err := NewDBNodeInitializer().loop()
 	if err != nil {
 		t.Fatal(err)
@@ -23,7 +26,7 @@ func TestCreateHTTPAccessLogs(t *testing.T) {
 	}
 	dao := randomAccessLogDAO()
 	t.Log("dao:", dao)
-	err = SharedHTTPAccessLogDAO.CreateHTTPAccessLogsWithDAO(dao, []*pb.HTTPAccessLog{accessLog})
+	err = SharedHTTPAccessLogDAO.CreateHTTPAccessLogsWithDAO(tx, dao, []*pb.HTTPAccessLog{accessLog})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,12 +34,14 @@ func TestCreateHTTPAccessLogs(t *testing.T) {
 }
 
 func TestHTTPAccessLogDAO_ListAccessLogs(t *testing.T) {
+	var tx *dbs.Tx
+
 	err := NewDBNodeInitializer().loop()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs("", 10, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0)
+	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "", 10, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,6 +56,8 @@ func TestHTTPAccessLogDAO_ListAccessLogs(t *testing.T) {
 }
 
 func TestHTTPAccessLogDAO_ListAccessLogs_Page(t *testing.T) {
+	var tx *dbs.Tx
+
 	err := NewDBNodeInitializer().loop()
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +68,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page(t *testing.T) {
 	times := 0 // 防止循环次数太多
 	for {
 		before := time.Now()
-		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(lastRequestId, 2, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0)
+		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0)
 		cost := time.Since(before).Seconds()
 		if err != nil {
 			t.Fatal(err)
@@ -84,13 +91,15 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page(t *testing.T) {
 }
 
 func TestHTTPAccessLogDAO_ListAccessLogs_Reverse(t *testing.T) {
+	var tx *dbs.Tx
+
 	err := NewDBNodeInitializer().loop()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	before := time.Now()
-	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs("16023261176446590001000000000000003500000004", 2, timeutil.Format("Ymd"), 0, true, false, 0, 0, 0)
+	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "16023261176446590001000000000000003500000004", 2, timeutil.Format("Ymd"), 0, true, false, 0, 0, 0)
 	cost := time.Since(before).Seconds()
 	if err != nil {
 		t.Fatal(err)
@@ -103,6 +112,8 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Reverse(t *testing.T) {
 }
 
 func TestHTTPAccessLogDAO_ListAccessLogs_Page_NotExists(t *testing.T) {
+	var tx *dbs.Tx
+
 	err := NewDBNodeInitializer().loop()
 	if err != nil {
 		t.Fatal(err)
@@ -113,7 +124,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page_NotExists(t *testing.T) {
 	times := 0 // 防止循环次数太多
 	for {
 		before := time.Now()
-		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(lastRequestId, 2, timeutil.Format("Ymd", time.Now().AddDate(0, 0, 1)), 0, false, false, 0, 0, 0)
+		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd", time.Now().AddDate(0, 0, 1)), 0, false, false, 0, 0, 0)
 		cost := time.Since(before).Seconds()
 		if err != nil {
 			t.Fatal(err)

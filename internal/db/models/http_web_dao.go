@@ -322,6 +322,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 	}
 
+	// 主机跳转
+	if IsNotNull(web.HostRedirects) {
+		redirects := []*serverconfigs.HTTPHostRedirectConfig{}
+		err = json.Unmarshal([]byte(web.HostRedirects), &redirects)
+		if err != nil {
+			return nil, err
+		}
+		config.HostRedirects = redirects
+	}
+
 	return config, nil
 }
 
@@ -617,4 +627,80 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(tx *dbs.Tx, locationId in
 		Where(`JSON_CONTAINS(locations, '{"locationId": ` + strconv.FormatInt(locationId, 10) + ` }')`).
 		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
 		FindInt64Col(0)
+}
+
+// 查找使用此Web的Server
+func (this *HTTPWebDAO) FindWebServerId(tx *dbs.Tx, webId int64) (serverId int64, err error) {
+	if webId <= 0 {
+		return 0, nil
+	}
+	serverId, err = SharedServerDAO.FindEnabledServerIdWithWebId(tx, webId)
+	if err != nil {
+		return
+	}
+	if serverId > 0 {
+		return
+	}
+
+	// web在Location中的情况
+	locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(tx, webId)
+	if err != nil {
+		return 0, err
+	}
+	if locationId == 0 {
+		return
+	}
+	webId, err = this.FindEnabledWebIdWithLocationId(tx, locationId)
+	if err != nil {
+		return
+	}
+	if webId <= 0 {
+		return
+	}
+
+	// 第二轮查找
+	return this.FindWebServerId(tx, webId)
+}
+
+// 检查用户权限
+func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) error {
+	serverId, err := this.FindWebServerId(tx, webId)
+	if err != nil {
+		return err
+	}
+	if serverId == 0 {
+		return ErrNotFound
+	}
+	return SharedServerDAO.CheckUserServer(tx, serverId, userId)
+}
+
+// 设置主机跳转
+func (this *HTTPWebDAO) UpdateWebHostRedirects(tx *dbs.Tx, webId int64, hostRedirects []*serverconfigs.HTTPHostRedirectConfig) error {
+	if webId <= 0 {
+		return errors.New("invalid ")
+	}
+	if hostRedirects == nil {
+		hostRedirects = []*serverconfigs.HTTPHostRedirectConfig{}
+	}
+	hostRedirectsJSON, err := json.Marshal(hostRedirects)
+	if err != nil {
+		return err
+	}
+	_, err = this.Query(tx).
+		Pk(webId).
+		Set("hostRedirects", hostRedirectsJSON).
+		Update()
+	return err
+}
+
+// 查找主机跳转
+func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, error) {
+	col, err := this.Query(tx).
+		Pk(webId).
+		Result("hostRedirects").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(col), nil
 }

@@ -11,7 +11,8 @@ import (
 
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	dbs.NotifyReady()
-	config, err := SharedServerDAO.ComposeServerConfig(1)
+	var tx *dbs.Tx
+	config, err := SharedServerDAO.ComposeServerConfig(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +21,8 @@ func TestServerDAO_ComposeServerConfig(t *testing.T) {
 
 func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 	dbs.NotifyReady()
-	config, err := SharedServerDAO.ComposeServerConfig(14)
+	var tx *dbs.Tx
+	config, err := SharedServerDAO.ComposeServerConfig(tx, 14)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,8 +31,8 @@ func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 
 func TestServerDAO_UpdateServerConfig(t *testing.T) {
 	dbs.NotifyReady()
-
-	config, err := SharedServerDAO.ComposeServerConfig(1)
+	var tx *dbs.Tx
+	config, err := SharedServerDAO.ComposeServerConfig(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +41,7 @@ func TestServerDAO_UpdateServerConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = SharedServerDAO.UpdateServerConfig(1, configJSON, false)
+	_, err = SharedServerDAO.UpdateServerConfig(tx, 1, configJSON, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +60,8 @@ func TestNewServerDAO_md5(t *testing.T) {
 
 func TestServerDAO_genDNSName(t *testing.T) {
 	dbs.NotifyReady()
-	dnsName, err := SharedServerDAO.genDNSName()
+	var tx *dbs.Tx
+	dnsName, err := SharedServerDAO.genDNSName(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,8 +70,8 @@ func TestServerDAO_genDNSName(t *testing.T) {
 
 func TestServerDAO_FindAllServerDNSNamesWithDNSDomainId(t *testing.T) {
 	dbs.NotifyReady()
-
-	dnsNames, err := SharedServerDAO.FindAllServerDNSNamesWithDNSDomainId(2)
+	var tx *dbs.Tx
+	dnsNames, err := SharedServerDAO.FindAllServerDNSNamesWithDNSDomainId(tx, 2)
 	if err != nil {
 		t.Fatal(err)
 	}

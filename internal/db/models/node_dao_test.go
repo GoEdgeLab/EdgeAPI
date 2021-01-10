@@ -7,7 +7,8 @@ import (
 )
 
 func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
-	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(1)
+	var tx *dbs.Tx
+	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -15,7 +16,8 @@ func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
 }
 
 func TestNodeDAO_FindChangedClusterIds(t *testing.T) {
-	clusterIds, err := SharedNodeDAO.FindChangedClusterIds()
+	var tx *dbs.Tx
+	clusterIds, err := SharedNodeDAO.FindChangedClusterIds(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +26,8 @@ func TestNodeDAO_FindChangedClusterIds(t *testing.T) {
 
 func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 	dbs.NotifyReady()
-	isChanged, err := SharedNodeDAO.UpdateNodeUp(57, false, 3, 3)
+	var tx *dbs.Tx
+	isChanged, err := SharedNodeDAO.UpdateNodeUp(tx, 57, false, 3, 3)
 	if err != nil {
 		t.Fatal(err)
 	}

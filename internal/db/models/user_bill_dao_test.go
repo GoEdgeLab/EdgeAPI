@@ -10,7 +10,9 @@ import (
 func TestUserBillDAO_GenerateBills(t *testing.T) {
 	dbs.NotifyReady()
 
-	err := SharedUserBillDAO.GenerateBills(timeutil.Format("Ym"))
+	var tx *dbs.Tx
+
+	err := SharedUserBillDAO.GenerateBills(tx, timeutil.Format("Ym"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,15 +7,16 @@ import (
 )
 
 func TestHTTPWebDAO_UpdateWebShutdown(t *testing.T) {
+	var tx *dbs.Tx
 	{
-		err := SharedHTTPWebDAO.UpdateWebShutdown(1, []byte("{}"))
+		err := SharedHTTPWebDAO.UpdateWebShutdown(tx, 1, []byte("{}"))
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	{
-		err := SharedHTTPWebDAO.UpdateWebShutdown(1, nil)
+		err := SharedHTTPWebDAO.UpdateWebShutdown(tx, 1, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -27,15 +28,50 @@ func TestHTTPWebDAO_UpdateWebShutdown(t *testing.T) {
 func TestHTTPWebDAO_FindAllWebIdsWithHTTPFirewallPolicyId(t *testing.T) {
 	dbs.NotifyReady()
 
-	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(9)
+	var tx *dbs.Tx
+
+	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, 9)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("webIds:", webIds)
 
-	count, err := SharedServerDAO.CountEnabledServersWithWebIds(webIds)
+	count, err := SharedServerDAO.CountEnabledServersWithWebIds(tx, webIds)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("count:", count)
+}
+
+
+func TestHTTPWebDAO_FindWebServerId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+
+	// server
+	{
+		serverId, err := SharedHTTPWebDAO.FindWebServerId(tx, 60)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("serverId:", serverId)
+	}
+
+	// location
+	{
+		serverId, err := SharedHTTPWebDAO.FindWebServerId(tx, 45)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("serverId:", serverId)
+	}
+
+	{
+		serverId, err := SharedHTTPWebDAO.FindWebServerId(tx, 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("serverId:", serverId)
+	}
 }

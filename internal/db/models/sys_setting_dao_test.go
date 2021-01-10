@@ -2,16 +2,18 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
 	"testing"
 )
 
 func TestSysSettingDAO_UpdateSetting(t *testing.T) {
-	err := NewSysSettingDAO().UpdateSetting("hello", []byte(`"world"`))
+	var tx *dbs.Tx
+	err := NewSysSettingDAO().UpdateSetting(tx, "hello", []byte(`"world"`))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err := NewSysSettingDAO().ReadSetting("hello")
+	value, err := NewSysSettingDAO().ReadSetting(tx, "hello")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,12 +21,13 @@ func TestSysSettingDAO_UpdateSetting(t *testing.T) {
 }
 
 func TestSysSettingDAO_UpdateSetting_Args(t *testing.T) {
-	err := NewSysSettingDAO().UpdateSetting("hello %d", []byte(`"world 123"`), 123)
+	var tx *dbs.Tx
+	err := NewSysSettingDAO().UpdateSetting(tx, "hello %d", []byte(`"world 123"`), 123)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err := NewSysSettingDAO().ReadSetting("hello %d", 123)
+	value, err := NewSysSettingDAO().ReadSetting(tx, "hello %d", 123)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +35,8 @@ func TestSysSettingDAO_UpdateSetting_Args(t *testing.T) {
 }
 
 func TestSysSettingDAO_CompareInt64Setting(t *testing.T) {
-	i, err := NewSysSettingDAO().CompareInt64Setting("int64", 1024)
+	var tx *dbs.Tx
+	i, err := NewSysSettingDAO().CompareInt64Setting(tx, "int64", 1024)
 	if err != nil {
 		t.Fatal(err)
 	}

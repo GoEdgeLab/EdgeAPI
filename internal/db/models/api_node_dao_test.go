@@ -2,14 +2,16 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
 	"runtime"
 	"testing"
 )
 
 func TestAPINodeDAO_FindEnabledAPINodeIdWithAddr(t *testing.T) {
 	dao := NewAPINodeDAO()
+	var tx *dbs.Tx
 	{
-		apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr("http", "127.0.0.1", 123)
+		apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr(tx, "http", "127.0.0.1", 123)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -17,7 +19,7 @@ func TestAPINodeDAO_FindEnabledAPINodeIdWithAddr(t *testing.T) {
 	}
 
 	{
-		apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr("http", "127.0.0.1", 8003)
+		apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr(tx, "http", "127.0.0.1", 8003)
 		if err != nil {
 			t.Fatal(err)
 		}

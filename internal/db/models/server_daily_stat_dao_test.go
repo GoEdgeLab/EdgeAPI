@@ -9,6 +9,7 @@ import (
 )
 
 func TestServerDailyStatDAO_SaveStats(t *testing.T) {
+	var tx *dbs.Tx
 	stats := []*pb.ServerDailyStat{
 		{
 			ServerId:  1,
@@ -17,7 +18,7 @@ func TestServerDailyStatDAO_SaveStats(t *testing.T) {
 			CreatedAt: 1607671488,
 		},
 	}
-	err := NewServerDailyStatDAO().SaveStats(stats)
+	err := NewServerDailyStatDAO().SaveStats(tx, stats)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,6 +26,7 @@ func TestServerDailyStatDAO_SaveStats(t *testing.T) {
 }
 
 func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
+	var tx *dbs.Tx
 	stats := []*pb.ServerDailyStat{
 		{
 			ServerId:  1,
@@ -33,7 +35,7 @@ func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
 			CreatedAt: 1607671488,
 		},
 	}
-	err := NewServerDailyStatDAO().SaveStats(stats)
+	err := NewServerDailyStatDAO().SaveStats(tx, stats)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +44,8 @@ func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
 
 func TestServerDailyStatDAO_SumUserMonthly(t *testing.T) {
 	dbs.NotifyReady()
-	bytes, err := NewServerDailyStatDAO().SumUserMonthly(1, 1, timeutil.Format("Ym"))
+	var tx *dbs.Tx
+	bytes, err := NewServerDailyStatDAO().SumUserMonthly(tx, 1, 1, timeutil.Format("Ym"))
 	if err != nil {
 		t.Fatal(err)
 	}

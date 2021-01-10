@@ -10,8 +10,10 @@ import (
 func TestIPListDAO_IncreaseVersion(t *testing.T) {
 	dbs.NotifyReady()
 
+	var tx *dbs.Tx
+
 	dao := NewIPListDAO()
-	version, err := dao.IncreaseVersion()
+	version, err := dao.IncreaseVersion(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,8 +25,10 @@ func BenchmarkIPListDAO_IncreaseVersion(b *testing.B) {
 
 	dbs.NotifyReady()
 
+	var tx *dbs.Tx
+
 	dao := NewIPListDAO()
 	for i := 0; i < b.N; i++ {
-		_, _ = dao.IncreaseVersion()
+		_, _ = dao.IncreaseVersion(tx)
 	}
 }

@@ -1077,6 +1077,18 @@ func (this *ServerDAO) FindAllEnabledServersWithUserId(tx *dbs.Tx, userId int64)
 	return
 }
 
+// 根据WebId查找ServerId
+func (this *ServerDAO) FindEnabledServerIdWithWebId(tx *dbs.Tx, webId int64) (serverId int64, err error) {
+	if webId <= 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("webId", webId).
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // 生成DNS Name
 func (this *ServerDAO) genDNSName(tx *dbs.Tx) (string, error) {
 	for {

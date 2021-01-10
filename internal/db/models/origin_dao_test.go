@@ -2,11 +2,13 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iwind/TeaGo/dbs"
 	"testing"
 )
 
 func TestOriginServerDAO_ComposeOriginConfig(t *testing.T) {
-	config, err := SharedOriginDAO.ComposeOriginConfig(1)
+	var tx *dbs.Tx
+	config, err := SharedOriginDAO.ComposeOriginConfig(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}

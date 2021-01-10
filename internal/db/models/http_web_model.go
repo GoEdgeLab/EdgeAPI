@@ -26,6 +26,7 @@ type HTTPWeb struct {
 	Locations          string `field:"locations"`          // 路径规则配置
 	Websocket          string `field:"websocket"`          // Websocket设置
 	RewriteRules       string `field:"rewriteRules"`       // 重写规则配置
+	HostRedirects      string `field:"hostRedirects"`      // 域名跳转
 }
 
 type HTTPWebOperator struct {
@@ -53,6 +54,7 @@ type HTTPWebOperator struct {
 	Locations          interface{} // 路径规则配置
 	Websocket          interface{} // Websocket设置
 	RewriteRules       interface{} // 重写规则配置
+	HostRedirects      interface{} // 域名跳转
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {
