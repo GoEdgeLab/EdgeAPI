@@ -9,6 +9,8 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
 )
@@ -24,9 +26,23 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	systemServices := map[string]maps.Map{}
+	if len(req.SystemServicesJSON) > 0 {
+		err = json.Unmarshal(req.SystemServicesJSON, &systemServices)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	clusterId, err := models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId)
+	var clusterId int64
+	err = this.RunTx(func(tx *dbs.Tx) error {
+		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -776,4 +792,56 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx contex
 	}
 
 	return this.Success()
+}
+
+// 修改集群的系统服务设置
+func (this *NodeClusterService) UpdateNodeClusterSystemService(ctx context.Context, req *pb.UpdateNodeClusterSystemServiceRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	params := maps.Map{}
+	if len(req.ParamsJSON) > 0 {
+		err = json.Unmarshal(req.ParamsJSON, &params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tx := this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateNodeClusterSystemService(tx, req.NodeClusterId, req.Type, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// 增加节点版本号
+	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// 查找集群的系统服务设置
+func (this *NodeClusterService) FindNodeClusterSystemService(ctx context.Context, req *pb.FindNodeClusterSystemServiceRequest) (*pb.FindNodeClusterSystemServiceResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	params, err := models.SharedNodeClusterDAO.FindNodeClusterSystemServiceParams(tx, req.NodeClusterId, req.Type)
+	if err != nil {
+		return nil, err
+	}
+	if params == nil {
+		params = maps.Map{}
+	}
+	paramsJSON, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNodeClusterSystemServiceResponse{ParamsJSON: paramsJSON}, nil
 }

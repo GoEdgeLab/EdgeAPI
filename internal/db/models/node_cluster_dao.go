@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
@@ -102,7 +103,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeClu
 }
 
 // 创建集群
-func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
 	uniqueId, err := this.genUniqueId(tx)
 	if err != nil {
 		return 0, err
@@ -138,6 +139,13 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 
 	// WAF策略
 	op.HttpFirewallPolicyId = httpFirewallPolicyId
+
+	// 系统服务
+	systemServicesJSON, err := json.Marshal(systemServices)
+	if err != nil {
+		return 0, err
+	}
+	op.SystemServices = systemServicesJSON
 
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
@@ -650,6 +658,89 @@ func (this *NodeClusterDAO) UpdateNodeClusterHTTPFirewallPolicyId(tx *dbs.Tx, cl
 		Set("httpFirewallPolicyId", httpFirewallPolicyId).
 		Update()
 	return err
+}
+
+// 修改集群的系统服务设置
+func (this *NodeClusterDAO) UpdateNodeClusterSystemService(tx *dbs.Tx, clusterId int64, serviceType nodeconfigs.SystemServiceType, params maps.Map) error {
+	if clusterId <= 0 {
+		return errors.New("invalid clusterId")
+	}
+	service, err := this.Query(tx).
+		Pk(clusterId).
+		Result("systemServices").
+		FindStringCol("")
+	if err != nil {
+		return err
+	}
+	servicesMap := map[string]maps.Map{}
+	if IsNotNull(service) {
+		err = json.Unmarshal([]byte(service), &servicesMap)
+		if err != nil {
+			return err
+		}
+	}
+
+	if params == nil {
+		params = maps.Map{}
+	}
+	servicesMap[serviceType] = params
+	servicesJSON, err := json.Marshal(servicesMap)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
+		Pk(clusterId).
+		Set("systemServices", servicesJSON).
+		Update()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 查找集群的系统服务设置
+func (this *NodeClusterDAO) FindNodeClusterSystemServiceParams(tx *dbs.Tx, clusterId int64, serviceType nodeconfigs.SystemServiceType) (params maps.Map, err error) {
+	if clusterId <= 0 {
+		return nil, errors.New("invalid clusterId")
+	}
+	service, err := this.Query(tx).
+		Pk(clusterId).
+		Result("systemServices").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	servicesMap := map[string]maps.Map{}
+	if IsNotNull(service) {
+		err = json.Unmarshal([]byte(service), &servicesMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return servicesMap[serviceType], nil
+}
+
+// 查找集群的所有服务设置
+func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId int64) (services map[string]maps.Map, err error) {
+	if clusterId <= 0 {
+		return nil, errors.New("invalid clusterId")
+	}
+	service, err := this.Query(tx).
+		Pk(clusterId).
+		Result("systemServices").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	servicesMap := map[string]maps.Map{}
+	if IsNotNull(service) {
+		err = json.Unmarshal([]byte(service), &servicesMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return servicesMap, nil
 }
 
 // 生成唯一ID

@@ -91,3 +91,12 @@ func (this *BaseService) PermissionError() error {
 func (this *BaseService) NullTx() *dbs.Tx {
 	return nil
 }
+
+// 获取当前的数据库
+func (this *BaseService) RunTx(callback func(tx *dbs.Tx) error) error {
+	db, err := dbs.Default()
+	if err != nil {
+		return err
+	}
+	return db.RunTx(callback)
+}

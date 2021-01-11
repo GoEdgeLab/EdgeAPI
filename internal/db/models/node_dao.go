@@ -553,6 +553,15 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 	config.TOA = toaConfig
 
+	// 系统服务
+	services, err := SharedNodeClusterDAO.FindNodeClusterSystemServices(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if len(services) > 0 {
+		config.SystemServices = services
+	}
+
 	return config, nil
 }
 
