@@ -13,4 +13,6 @@ const (
 	EncryptMethod = "aes-256-cfb"
 
 	ErrServer = "服务器出了点小问题，请稍后重试"
+
+	SystemdServiceName = "edge-api"
 )

@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
@@ -14,14 +15,18 @@ import (
 	"github.com/go-yaml/yaml"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
+	"time"
 )
 
 var sharedAPIConfig *configs.APIConfig = nil
@@ -36,8 +41,15 @@ func NewAPINode() *APINode {
 func (this *APINode) Start() {
 	logs.Println("[API_NODE]start api node, pid: " + strconv.Itoa(os.Getpid()))
 
+	// 本地Sock
+	err := this.listenSock()
+	if err != nil {
+		logs.Println("[API_NODE]" + err.Error())
+		return
+	}
+
 	// 自动升级
-	err := this.autoUpgrade()
+	err = this.autoUpgrade()
 	if err != nil {
 		logs.Println("[API_NODE]auto upgrade failed: " + err.Error())
 		return
@@ -84,6 +96,68 @@ func (this *APINode) Start() {
 
 	// 保持进程
 	select {}
+}
+
+// 实现守护进程
+func (this *APINode) Daemon() {
+	path := os.TempDir() + "/edge-api.sock"
+	isDebug := lists.ContainsString(os.Args, "debug")
+	isDebug = true
+	for {
+		conn, err := net.DialTimeout("unix", path, 1*time.Second)
+		if err != nil {
+			if isDebug {
+				log.Println("[DAEMON]starting ...")
+			}
+
+			// 尝试启动
+			err = func() error {
+				exe, err := os.Executable()
+				if err != nil {
+					return err
+				}
+				cmd := exec.Command(exe)
+				err = cmd.Start()
+				if err != nil {
+					return err
+				}
+				err = cmd.Wait()
+				if err != nil {
+					return err
+				}
+				return nil
+			}()
+
+			if err != nil {
+				if isDebug {
+					log.Println("[DAEMON]", err)
+				}
+				time.Sleep(1 * time.Second)
+			} else {
+				time.Sleep(5 * time.Second)
+			}
+		} else {
+			_ = conn.Close()
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
+// 安装系统服务
+func (this *APINode) InstallSystemService() error {
+	shortName := teaconst.SystemdServiceName
+
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	manager := utils.NewServiceManager(shortName, teaconst.ProductName)
+	err = manager.Install(exe, []string{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 启动RPC监听
@@ -337,4 +411,41 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	}
 
 	return
+}
+
+// 监听本地sock
+func (this *APINode) listenSock() error {
+	path := os.TempDir() + "/edge-api.sock"
+
+	// 检查是否已经存在
+	_, err := os.Stat(path)
+	if err == nil {
+		conn, err := net.Dial("unix", path)
+		if err != nil {
+			_ = os.Remove(path)
+		} else {
+			_ = conn.Close()
+		}
+	}
+
+	// 新的监听任务
+	listener, err := net.Listen("unix", path)
+	if err != nil {
+		return err
+	}
+	events.On(events.EventQuit, func() {
+		remotelogs.Println("API_NODE", "quit unix sock")
+		_ = listener.Close()
+	})
+
+	go func() {
+		for {
+			_, err := listener.Accept()
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return nil
 }

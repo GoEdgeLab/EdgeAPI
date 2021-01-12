@@ -22,7 +22,7 @@ func main() {
 	app := apps.NewAppCmd()
 	app.Version(teaconst.Version)
 	app.Product(teaconst.ProductName)
-	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup|upgrade]")
+	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup|upgrade|service|daemon]")
 	app.On("setup", func() {
 		setupCmd := setup.NewSetupFromCmd()
 		err := setupCmd.Run()
@@ -55,6 +55,16 @@ func main() {
 			return
 		}
 		fmt.Println("finished!")
+	})
+	app.On("daemon", func() {
+		nodes.NewAPINode().Daemon()
+	})
+	app.On("service", func() {
+		err := nodes.NewAPINode().InstallSystemService()
+		if err != nil {
+			fmt.Println("[ERROR]install failed: " + err.Error())
+		}
+		fmt.Println("done")
 	})
 	app.Run(func() {
 		nodes.NewAPINode().Start()
