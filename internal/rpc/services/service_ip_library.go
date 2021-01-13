@@ -187,7 +187,7 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		return nil, err
 	}
 	if result == nil {
-		return &pb.LookupIPRegionResponse{Region: nil}, nil
+		return &pb.LookupIPRegionResponse{IpRegion: nil}, nil
 	}
 
 	tx := this.NullTx()
@@ -202,7 +202,7 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		return nil, err
 	}
 
-	return &pb.LookupIPRegionResponse{Region: &pb.IPRegion{
+	return &pb.LookupIPRegionResponse{IpRegion: &pb.IPRegion{
 		Country:    result.Country,
 		Region:     result.Region,
 		Province:   result.Province,
@@ -210,5 +210,37 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		Isp:        result.ISP,
 		CountryId:  countryId,
 		ProvinceId: provinceId,
+		Summary:    result.Summary(),
 	}}, nil
+}
+
+// 查询一组IP信息
+func (this *IPLibraryService) LookupIPRegions(ctx context.Context, req *pb.LookupIPRegionsRequest) (*pb.LookupIPRegionsResponse, error) {
+	// 校验请求
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	result := map[string]*pb.IPRegion{}
+	if len(req.IpList) > 0 {
+		for _, ip := range req.IpList {
+			info, err := iplibrary.SharedLibrary.Lookup(ip)
+			if err != nil {
+				return nil, err
+			}
+			if info != nil {
+				result[ip] = &pb.IPRegion{
+					Country:  info.Country,
+					Region:   info.Region,
+					Province: info.Province,
+					City:     info.City,
+					Isp:      info.ISP,
+					Summary:  info.Summary(),
+				}
+			}
+		}
+	}
+
+	return &pb.LookupIPRegionsResponse{IpRegionMap: result}, nil
 }
