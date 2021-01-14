@@ -177,7 +177,7 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 // 查询某个IP信息
 func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.LookupIPRegionRequest) (*pb.LookupIPRegionResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 // 查询一组IP信息
 func (this *IPLibraryService) LookupIPRegions(ctx context.Context, req *pb.LookupIPRegionsRequest) (*pb.LookupIPRegionsResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}

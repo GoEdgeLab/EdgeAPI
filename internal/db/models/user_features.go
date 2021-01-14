@@ -11,6 +11,11 @@ var (
 			Description: "用户可以开启服务的访问日志",
 		},
 		{
+			Name:        "查看访问日志",
+			Code:        "server.viewAccessLog",
+			Description: "用户可以查看服务的访问日志",
+		},
+		{
 			Name:        "转发访问日志",
 			Code:        "server.accessLog.forward",
 			Description: "用户可以配置访问日志转发到自定义的API",

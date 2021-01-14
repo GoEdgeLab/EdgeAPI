@@ -81,7 +81,7 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 // 查找单个日志
 func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb.FindHTTPAccessLogRequest) (*pb.FindHTTPAccessLogResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +95,15 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 	if accessLog == nil {
 		return &pb.FindHTTPAccessLogResponse{AccessLog: nil}, nil
 	}
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, int64(accessLog.ServerId), userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	a, err := accessLog.ToPB()
 	if err != nil {
 		return nil, err
