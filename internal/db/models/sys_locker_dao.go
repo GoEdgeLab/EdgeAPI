@@ -30,7 +30,7 @@ func init() {
 }
 
 // 开锁
-func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (bool, error) {
+func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, err error) {
 	maxErrors := 5
 	for {
 		one, err := this.Query(tx).

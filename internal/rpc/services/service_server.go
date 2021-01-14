@@ -43,6 +43,21 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 				}
 			}
 		}
+
+		// TLS
+		if len(req.TlsJSON) > 0 {
+			tlsConfig := &serverconfigs.TLSProtocolConfig{}
+			err = json.Unmarshal(req.TlsJSON, tlsConfig)
+			if err != nil {
+				return nil, err
+			}
+			if tlsConfig.SSLPolicyRef != nil && tlsConfig.SSLPolicyRef.SSLPolicyId > 0 {
+				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, userId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	// 是否需要审核
@@ -50,14 +65,17 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	serverNamesJSON := req.ServerNamesJON
 	auditingServerNamesJSON := []byte("[]")
 	if userId > 0 {
-		globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
-		if err != nil {
-			return nil, err
-		}
-		if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
-			isAuditing = true
-			serverNamesJSON = []byte("[]")
-			auditingServerNamesJSON = req.ServerNamesJON
+		// 如果域名不为空的时候需要审核
+		if len(serverNamesJSON) > 0 && string(serverNamesJSON) != "[]" {
+			globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+			if err != nil {
+				return nil, err
+			}
+			if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
+				isAuditing = true
+				serverNamesJSON = []byte("[]")
+				auditingServerNamesJSON = req.ServerNamesJON
+			}
 		}
 	}
 
@@ -487,7 +505,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.GroupId, req.Keyword, req.UserId, req.ClusterId, types.Int8(req.AuditingFlag))
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.GroupId, req.Keyword, req.UserId, req.ClusterId, types.Int8(req.AuditingFlag), req.ProtocolFamily)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +523,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag, req.ProtocolFamily)
 	if err != nil {
 		return nil, err
 	}
@@ -1187,4 +1205,61 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 		}
 	}
 	return &pb.FindAllEnabledServerNamesWithUserIdResponse{ServerNames: serverNames}, nil
+}
+
+// 查找服务基本信息
+func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *pb.FindEnabledUserServerBasicRequest) (*pb.FindEnabledUserServerBasicResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	server, err := models.SharedServerDAO.FindEnabledServerBasic(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return &pb.FindEnabledUserServerBasicResponse{Server: nil}, nil
+	}
+
+	return &pb.FindEnabledUserServerBasicResponse{Server: &pb.Server{
+		Id:          int64(server.Id),
+		Name:        server.Name,
+		Description: server.Description,
+		IsOn:        server.IsOn == 1,
+		Type:        server.Type,
+	}}, nil
+}
+
+// 修改用户服务基本信息
+func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req *pb.UpdateEnabledUserServerBasicRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedServerDAO.UpdateUserServerBasic(tx, req.ServerId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

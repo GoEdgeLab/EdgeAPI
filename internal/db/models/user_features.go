@@ -16,9 +16,19 @@ var (
 			Description: "用户可以配置访问日志转发到自定义的API",
 		},
 		{
+			Name:        "负载均衡",
+			Code:        "server.tcp",
+			Description: "用户可以添加TCP/TLS负载均衡服务",
+		},
+		{
 			Name:        "开启WAF",
 			Code:        "server.waf",
 			Description: "用户可以开启WAF功能并可以设置黑白名单等",
+		},
+		{
+			Name:        "费用账单",
+			Code:        "finance",
+			Description: "开启费用账单相关功能",
 		},
 	}
 )

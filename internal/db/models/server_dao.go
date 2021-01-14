@@ -70,11 +70,24 @@ func (this *ServerDAO) DisableServer(tx *dbs.Tx, id int64) (err error) {
 	return
 }
 
-// 查找启用中的条目
-func (this *ServerDAO) FindEnabledServer(tx *dbs.Tx, id int64) (*Server, error) {
+// 查找启用中的服务
+func (this *ServerDAO) FindEnabledServer(tx *dbs.Tx, serverId int64) (*Server, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(serverId).
 		Attr("state", ServerStateEnabled).
+		Find()
+	if result == nil {
+		return nil, err
+	}
+	return result.(*Server), err
+}
+
+// 查找服务基本信息
+func (this *ServerDAO) FindEnabledServerBasic(tx *dbs.Tx, serverId int64) (*Server, error) {
+	result, err := this.Query(tx).
+		Pk(serverId).
+		State(ServerStateEnabled).
+		Result("id", "name", "description", "isOn", "type", "clusterId").
 		Find()
 	if result == nil {
 		return nil, err
@@ -218,6 +231,28 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 		}
 		op.GroupIds = groupIdsJSON
 	}
+
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.RenewServerConfig(tx, serverId, false)
+	if err != nil {
+		return err
+	}
+
+	return this.createEvent()
+}
+
+// 设置用户相关的基本信息
+func (this *ServerDAO) UpdateUserServerBasic(tx *dbs.Tx, serverId int64, name string) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+	op := NewServerOperator()
+	op.Id = serverId
+	op.Name = name
 
 	err := this.Save(tx, op)
 	if err != nil {
@@ -558,7 +593,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(tx *dbs.Tx, serverId int64, conf
 }
 
 // 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState) (int64, error) {
+func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamily string) (int64, error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled)
 	if groupId > 0 {
@@ -578,11 +613,16 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 	if auditingFlag == configutils.BoolStateYes {
 		query.Attr("isAuditing", true)
 	}
+	if protocolFamily == "http" {
+		query.Where("(http IS NOT NULL OR https IS NOT NULL)")
+	} else if protocolFamily == "tcp" {
+		query.Where("(tcp IS NOT NULL OR tls IS NOT NULL)")
+	}
 	return query.Count()
 }
 
 // 列出单页的服务
-func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32) (result []*Server, err error) {
+func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamily string) (result []*Server, err error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled).
 		Offset(offset).
@@ -606,6 +646,11 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	}
 	if auditingFlag == 1 {
 		query.Attr("isAuditing", true)
+	}
+	if protocolFamily == "http" {
+		query.Where("(http IS NOT NULL OR https IS NOT NULL)")
+	} else if protocolFamily == "tcp" {
+		query.Where("(tcp IS NOT NULL OR tls IS NOT NULL)")
 	}
 
 	_, err = query.FindAll()
@@ -1087,6 +1132,20 @@ func (this *ServerDAO) FindEnabledServerIdWithWebId(tx *dbs.Tx, webId int64) (se
 		Attr("webId", webId).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// 检查端口是否被使用
+func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, port int) (bool, error) {
+	listen := maps.Map{
+		"portRange": strconv.Itoa(port),
+	}
+
+	return this.Query(tx).
+		Attr("clusterId", clusterId).
+		State(ServerStateEnabled).
+		Where("(JSON_CONTAINS(http, :listen) OR JSON_CONTAINS(https, :listen) OR JSON_CONTAINS(tcp, :listen) OR JSON_CONTAINS(tls, :listen))").
+		Param(":listen", string(listen.AsJSON())).
+		Exist()
 }
 
 // 生成DNS Name

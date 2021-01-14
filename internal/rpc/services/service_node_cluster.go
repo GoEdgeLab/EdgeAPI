@@ -10,7 +10,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
 )
@@ -844,4 +846,62 @@ func (this *NodeClusterService) FindNodeClusterSystemService(ctx context.Context
 		return nil, err
 	}
 	return &pb.FindNodeClusterSystemServiceResponse{ParamsJSON: paramsJSON}, nil
+}
+
+// 获取集群中可以使用的端口
+func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, req *pb.FindFreePortInNodeClusterRequest) (*pb.FindFreePortInNodeClusterResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查端口
+	portMin := globalConfig.TCPAll.PortRangeMin
+	portMax := globalConfig.TCPAll.PortRangeMax
+	denyPorts := globalConfig.TCPAll.DenyPorts
+
+	if portMin == 0 && portMax == 0 {
+		portMin = 10_000
+		portMax = 40_000
+	}
+	if portMin < 1024 {
+		portMin = 10_000
+	}
+	if portMin > 65534 {
+		portMin = 65534
+	}
+	if portMax < 1024 {
+		portMax = 30_000
+	}
+	if portMax > 65534 {
+		portMax = 65534
+	}
+
+	if portMin > portMax {
+		portMax, portMin = portMin, portMax
+	}
+
+	// 最多尝试N次
+	for i := 0; i < 60; i++ {
+		port := rands.Int(portMin, portMax)
+		if len(denyPorts) > 0 && lists.ContainsInt(denyPorts, port) {
+			continue
+		}
+
+		isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, port)
+		if err != nil {
+			return nil, err
+		}
+		if !isUsing {
+			return &pb.FindFreePortInNodeClusterResponse{Port: int32(port)}, nil
+		}
+	}
+
+	return nil, errors.New("can not find random port")
 }
