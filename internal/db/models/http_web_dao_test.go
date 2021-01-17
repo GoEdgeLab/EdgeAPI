@@ -43,7 +43,6 @@ func TestHTTPWebDAO_FindAllWebIdsWithHTTPFirewallPolicyId(t *testing.T) {
 	t.Log("count:", count)
 }
 
-
 func TestHTTPWebDAO_FindWebServerId(t *testing.T) {
 	dbs.NotifyReady()
 
@@ -74,4 +73,59 @@ func TestHTTPWebDAO_FindWebServerId(t *testing.T) {
 		}
 		t.Log("serverId:", serverId)
 	}
+}
+
+func TestHTTPWebDAO_FindEnabledWebIdWithLocationId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithLocationId(tx, 17)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
+}
+
+func TestHTTPWebDAO_FindEnabledWebIdWithRewriteRuleId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithRewriteRuleId(tx, 13)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
+}
+
+func TestHTTPWebDAO_FindEnabledWebIdWithPageId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithPageId(tx, 15)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
+}
+
+func TestHTTPWebDAO_FindEnabledWebIdWithHeaderPolicyId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithHeaderPolicyId(tx, 52)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
+}
+
+func TestHTTPWebDAO_FindEnabledWebIdWithGzip(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithGzipId(tx, 9)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
 }

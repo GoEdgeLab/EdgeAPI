@@ -57,16 +57,6 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		if err != nil {
 			return nil, err
 		}
-
-		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, oldClusterId)
-		if err != nil {
-			return nil, err
-		}
-
-		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return this.Success()
@@ -80,6 +70,18 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 	}
 
 	tx := this.NullTx()
+
+	// 删除其下的Server
+	serverIds, err := models.SharedServerDAO.FindAllEnabledServerIdsWithUserId(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	for _, serverId := range serverIds {
+		err := models.SharedServerDAO.DisableServer(tx, serverId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	_, err = models.SharedUserDAO.DisableUser(tx, req.UserId)
 	if err != nil {

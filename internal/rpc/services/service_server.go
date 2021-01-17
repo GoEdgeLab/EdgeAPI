@@ -84,12 +84,6 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		return nil, err
 	}
 
-	// 更新节点版本
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.CreateServerResponse{ServerId: serverId}, nil
 }
 
@@ -132,20 +126,6 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		}()
 	}
 
-	// 更新老的节点版本
-	if req.NodeClusterId != int64(server.ClusterId) {
-		err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, int64(server.ClusterId))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 更新新的节点版本
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, req.NodeClusterId)
-	if err != nil {
-		return nil, err
-	}
-
 	return this.Success()
 }
 
@@ -159,7 +139,7 @@ func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateS
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +162,7 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +188,7 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +306,7 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -352,7 +332,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -377,7 +357,7 @@ func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServ
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -625,29 +605,14 @@ func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServe
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// 查找服务
-	server, err := models.SharedServerDAO.FindEnabledServer(tx, req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if server == nil {
-		return nil, errors.New("can not find the server")
-	}
-
 	// 禁用服务
 	err = models.SharedServerDAO.DisableServer(tx, req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-
-	// 更新节点版本
-	err = models.SharedNodeDAO.IncreaseAllNodesLatestVersionMatch(tx, int64(server.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +632,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 
 	// 检查权限
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -769,7 +734,7 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 
 	// 检查权限
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -802,7 +767,7 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 
 	// 检查权限
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -880,7 +845,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -1022,9 +987,15 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, req *pb.Noti
 
 	tx := this.NullTx()
 
-	err = models.SharedSysEventDAO.CreateEvent(tx, models.NewServerChangeEvent())
+	clusterIds, err := models.SharedNodeClusterDAO.FindAllEnableClusterIds(tx)
 	if err != nil {
 		return nil, err
+	}
+	for _, clusterId := range clusterIds {
+		err = models.SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &pb.NotifyServersChangeResponse{}, nil
@@ -1167,7 +1138,7 @@ func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUse
 
 	tx := this.NullTx()
 
-	err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+	err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 	if err != nil {
 		return nil, err
 	}
@@ -1217,7 +1188,7 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 	var tx = this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -1250,7 +1221,7 @@ func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req
 	var tx = this.NullTx()
 
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}

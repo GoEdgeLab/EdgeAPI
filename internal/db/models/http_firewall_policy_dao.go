@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -38,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPFirewallPolicyDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -298,5 +290,60 @@ func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId in
 	if !ok {
 		return ErrNotFound
 	}
+	return nil
+}
+
+// 查找包含某个IPList的所有策略
+func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *dbs.Tx, ipListId int64) ([]int64, error) {
+	ones, err := this.Query(tx).
+		ResultPk().
+		State(HTTPFirewallPolicyStateEnabled).
+		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') )").
+		Param("listQuery", maps.Map{"isOn": true, "listId": ipListId}.AsJSON()).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*HTTPFirewallPolicy).Id))
+	}
+	return result, nil
+}
+
+// 查找包含某个规则分组的策略ID
+func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx *dbs.Tx, ruleGroupId int64) (int64, error) {
+	return this.Query(tx).
+		ResultPk().
+		State(HTTPFirewallPolicyStateEnabled).
+		Where("(JSON_CONTAINS(inbound, :jsonQuery, '$.groupRefs') OR JSON_CONTAINS(outbound, :jsonQuery, '$.groupRefs'))").
+		Param("jsonQuery", maps.Map{"groupId": ruleGroupId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *HTTPFirewallPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
+	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, policyId)
+	if err != nil {
+		return err
+	}
+	for _, webId := range webIds {
+		err := SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+		if err != nil {
+			return err
+		}
+	}
+
+	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId(tx, policyId)
+	if err != nil {
+		return err
+	}
+	for _, clusterId := range clusterIds {
+		err := SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

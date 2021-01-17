@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -38,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPFirewallRuleGroupDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -164,7 +156,10 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(tx *dbs.Tx, groupId int64,
 		Pk(groupId).
 		Set("isOn", isOn).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, groupId)
 }
 
 // 创建分组
@@ -192,7 +187,10 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isO
 	op.Name = name
 	op.Description = description
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, groupId)
 }
 
 // 修改分组中的规则集
@@ -204,5 +202,30 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64,
 	op.Id = groupId
 	op.Sets = setsJSON
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, groupId)
+}
+
+// 根据规则集查找规则分组
+func (this *HTTPFirewallRuleGroupDAO) FindRuleGroupIdWithRuleSetId(tx *dbs.Tx, setId int64) (int64, error) {
+	return this.Query(tx).
+		State(HTTPFirewallRuleStateEnabled).
+		Where("JSON_CONTAINS(sets, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"setId": setId}.AsJSON()).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *HTTPFirewallRuleGroupDAO) NotifyUpdate(tx *dbs.Tx, groupId int64) error {
+	policyId, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdWithRuleGroupId(tx, groupId)
+	if err != nil {
+		return err
+	}
+	if policyId > 0 {
+		return SharedHTTPFirewallPolicyDAO.NotifyUpdate(tx, policyId)
+	}
+	return nil
 }

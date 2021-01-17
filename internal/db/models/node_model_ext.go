@@ -66,3 +66,15 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 	domainRoutes, _ := routes[dnsDomainId]
 	return domainRoutes, nil
 }
+
+// 连接的API
+func (this *Node) DecodeConnectedAPINodeIds() ([]int64, error) {
+	apiNodeIds := []int64{}
+	if IsNotNull(this.ConnectedAPINodes) {
+		err := json.Unmarshal([]byte(this.ConnectedAPINodes), &apiNodeIds)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return apiNodeIds, nil
+}

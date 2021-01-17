@@ -39,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *SSLPolicyDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -61,12 +52,15 @@ func (this *SSLPolicyDAO) EnableSSLPolicy(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *SSLPolicyDAO) DisableSSLPolicy(tx *dbs.Tx, id int64) error {
+func (this *SSLPolicyDAO) DisableSSLPolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(policyId).
 		Set("state", SSLPolicyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 查找启用中的条目
@@ -259,7 +253,10 @@ func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled 
 		op.CipherSuites = "[]"
 	}
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 检查是否为用户所属策略
@@ -277,6 +274,21 @@ func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, policyId int64, userId int
 	}
 	if !ok {
 		return errors.New("not found")
+	}
+	return nil
+}
+
+// 通知更新
+func (this *SSLPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
+	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithSSLPolicyIds(tx, []int64{policyId})
+	if err != nil {
+		return err
+	}
+	for _, serverId := range serverIds {
+		err := SharedServerDAO.NotifyUpdate(tx, serverId)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

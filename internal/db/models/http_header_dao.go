@@ -38,16 +38,7 @@ func init() {
 
 // 初始化
 func (this *HTTPHeaderDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -155,4 +146,16 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 	}
 
 	return config, nil
+}
+
+// 通知更新
+func (this *HTTPHeaderDAO) NotifyUpdate(tx *dbs.Tx, headerId int64) error {
+	policyId, err := SharedHTTPHeaderPolicyDAO.FindHeaderPolicyIdWithHeaderId(tx, headerId)
+	if err != nil {
+		return err
+	}
+	if policyId > 0 {
+		return SharedHTTPHeaderPolicyDAO.NotifyUpdate(tx, policyId)
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"time"
 )
@@ -173,4 +174,69 @@ func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 		Pk(itemId).
 		Result("listId").
 		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *IPItemDAO) NotifyClustersUpdate(tx *dbs.Tx, itemId int64, taskType NodeTaskType) error {
+	// 获取ListId
+	listId, err := this.FindItemListId(tx, itemId)
+	if err != nil {
+		return err
+	}
+
+	if listId == 0 {
+		return nil
+	}
+
+	httpFirewallPolicyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
+	if err != nil {
+		return err
+	}
+	resultClusterIds := []int64{}
+	for _, policyId := range httpFirewallPolicyIds {
+		// 集群
+		clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId(tx, policyId)
+		if err != nil {
+			return err
+		}
+		for _, clusterId := range clusterIds {
+			if !lists.ContainsInt64(resultClusterIds, clusterId) {
+				resultClusterIds = append(resultClusterIds, clusterId)
+			}
+		}
+
+		// 服务
+		webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, policyId)
+		if err != nil {
+			return err
+		}
+		if len(webIds) > 0 {
+			for _, webId := range webIds {
+				serverId, err := SharedServerDAO.FindEnabledServerIdWithWebId(tx, webId)
+				if err != nil {
+					return err
+				}
+				if serverId > 0 {
+					clusterId, err := SharedServerDAO.FindServerClusterId(tx, serverId)
+					if err != nil {
+						return err
+					}
+					if !lists.ContainsInt64(resultClusterIds, clusterId) {
+						resultClusterIds = append(resultClusterIds, clusterId)
+					}
+				}
+			}
+		}
+	}
+
+	if len(resultClusterIds) > 0 {
+		for _, clusterId := range resultClusterIds {
+			err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, taskType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

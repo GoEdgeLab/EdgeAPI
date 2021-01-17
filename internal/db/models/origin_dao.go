@@ -40,16 +40,7 @@ func init() {
 
 // 初始化
 func (this *OriginDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -62,12 +53,16 @@ func (this *OriginDAO) EnableOrigin(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *OriginDAO) DisableOrigin(tx *dbs.Tx, id int64) error {
+func (this *OriginDAO) DisableOrigin(tx *dbs.Tx, originId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(originId).
 		Set("state", OriginStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, originId)
 }
 
 // 查找启用中的条目
@@ -128,7 +123,11 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 	op.IsOn = isOn
 	op.Version = dbs.SQL("version+1")
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, originId)
 }
 
 // 将源站信息转换为配置
@@ -261,4 +260,16 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverc
 	}
 
 	return config, nil
+}
+
+// 通知更新
+func (this *OriginDAO) NotifyUpdate(tx *dbs.Tx, originId int64) error {
+	reverseProxyId, err := SharedReverseProxyDAO.FindReverseProxyContainsOriginId(tx, originId)
+	if err != nil {
+		return err
+	}
+	if reverseProxyId > 0 {
+		return SharedReverseProxyDAO.NotifyUpdate(tx, reverseProxyId)
+	}
+	return nil
 }

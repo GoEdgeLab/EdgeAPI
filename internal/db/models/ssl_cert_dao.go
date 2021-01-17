@@ -40,16 +40,7 @@ func init() {
 
 // 初始化
 func (this *SSLCertDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -62,12 +53,15 @@ func (this *SSLCertDAO) EnableSSLCert(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *SSLCertDAO) DisableSSLCert(tx *dbs.Tx, id int64) error {
+func (this *SSLCertDAO) DisableSSLCert(tx *dbs.Tx, certId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(certId).
 		Set("state", SSLCertStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, certId)
 }
 
 // 查找启用中的条目
@@ -162,7 +156,10 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx, certId int64, isOn bool, name str
 	op.CommonNames = commonNamesJSON
 
 	err = this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, certId)
 }
 
 // 组合配置
@@ -341,6 +338,32 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 	}
 	if !ok {
 		return errors.New("not found")
+	}
+	return nil
+}
+
+// 通知更新
+func (this *SSLCertDAO) NotifyUpdate(tx *dbs.Tx, certId int64) error {
+	policyIds, err := SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, certId)
+	if err != nil {
+		return err
+	}
+	if len(policyIds) == 0 {
+		return nil
+	}
+
+	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithSSLPolicyIds(tx, policyIds)
+	if err != nil {
+		return err
+	}
+	if len(serverIds) == 0 {
+		return nil
+	}
+	for _, serverId := range serverIds {
+		err := SharedServerDAO.NotifyUpdate(tx, serverId)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

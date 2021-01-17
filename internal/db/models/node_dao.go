@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -13,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -50,12 +52,16 @@ func (this *NodeDAO) EnableNode(tx *dbs.Tx, id uint32) (rowsAffected int64, err 
 }
 
 // 禁用条目
-func (this *NodeDAO) DisableNode(tx *dbs.Tx, id int64) (err error) {
+func (this *NodeDAO) DisableNode(tx *dbs.Tx, nodeId int64) (err error) {
 	_, err = this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", NodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // 查找启用中的条目
@@ -71,7 +77,7 @@ func (this *NodeDAO) FindEnabledNode(tx *dbs.Tx, id int64) (*Node, error) {
 }
 
 // 根据主键查找名称
-func (this *NodeDAO) FindNodeName(tx *dbs.Tx, id uint32) (string, error) {
+func (this *NodeDAO) FindNodeName(tx *dbs.Tx, id int64) (string, error) {
 	name, err := this.Query(tx).
 		Pk(id).
 		Result("name").
@@ -127,59 +133,11 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 	op.MaxCPU = maxCPU
 	op.IsOn = isOn
 	err := this.Save(tx, op)
-	return err
-}
-
-// 更新节点版本
-func (this *NodeDAO) UpdateNodeLatestVersion(tx *dbs.Tx, nodeId int64) error {
-	if nodeId <= 0 {
-		return errors.New("invalid nodeId")
-	}
-	op := NewNodeOperator()
-	op.Id = nodeId
-	op.LatestVersion = dbs.SQL("latestVersion+1")
-	err := this.Save(tx, op)
-	return err
-}
-
-// 批量更新节点版本
-func (this *NodeDAO) IncreaseAllNodesLatestVersionMatch(tx *dbs.Tx, clusterId int64) error {
-	_, err := this.Query(tx).
-		Attr("clusterId", clusterId).
-		Set("latestVersion", dbs.SQL("latestVersion+1")).
-		Update()
-
-	return err
-}
-
-// 同步集群中的节点版本
-func (this *NodeDAO) SyncNodeVersionsWithCluster(tx *dbs.Tx, clusterId int64) error {
-	if clusterId <= 0 {
-		return errors.New("invalid cluster")
-	}
-	_, err := this.Query(tx).
-		Attr("clusterId", clusterId).
-		Set("version", dbs.SQL("latestVersion")).
-		Update()
-	return err
-}
-
-// 取得有变更的集群
-func (this *NodeDAO) FindChangedClusterIds(tx *dbs.Tx) ([]int64, error) {
-	ones, _, err := this.Query(tx).
-		State(NodeStateEnabled).
-		Gt("latestVersion", 0).
-		Where("version!=latestVersion").
-		Result("DISTINCT(clusterId) AS clusterId").
-		FindOnes()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	result := []int64{}
-	for _, one := range ones {
-		result = append(result, one.GetInt64("clusterId"))
-	}
-	return result, nil
+
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // 计算所有节点数量
@@ -282,11 +240,16 @@ func (this *NodeDAO) FindNodeClusterId(tx *dbs.Tx, nodeId int64) (int64, error) 
 }
 
 // 匹配节点并返回节点ID
-func (this *NodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64) (result []int64, err error) {
+func (this *NodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, isOn configutils.BoolState) (result []int64, err error) {
 	query := this.Query(tx)
 	query.State(NodeStateEnabled)
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+	}
+	if isOn == configutils.BoolStateYes {
+		query.Attr("isOn", true)
+	} else if isOn == configutils.BoolStateNo {
+		query.Attr("isOn", false)
 	}
 	query.Result("id")
 	ones, _, err := query.FindOnes()
@@ -737,7 +700,11 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 	op.Id = nodeId
 	op.DnsRoutes = routesJSON
 	err = this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // 计算节点上线|下线状态
@@ -792,6 +759,7 @@ func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool, maxUp int
 	if err != nil {
 		return false, err
 	}
+
 	return
 }
 
@@ -842,4 +810,35 @@ func (this *NodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
 		}
 		return uniqueId, nil
 	}
+}
+
+// 根据一组ID查找一组节点
+func (this *NodeDAO) FindEnabledNodesWithIds(tx *dbs.Tx, nodeIds []int64) (result []*Node, err error) {
+	if len(nodeIds) == 0 {
+		return nil, nil
+	}
+	idStrings := []string{}
+	for _, nodeId := range nodeIds {
+		idStrings = append(idStrings, numberutils.FormatInt64(nodeId))
+	}
+	_, err = this.Query(tx).
+		State(NodeStateEnabled).
+		Where("id IN ("+strings.Join(idStrings, ", ")+")").
+		Result("id", "connectedAPINodes", "isActive", "isOn").
+		Slice(&result).
+		Reuse(false).
+		FindAll()
+	return
+}
+
+// 通知更新
+func (this *NodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
+	clusterId, err := this.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return err
+	}
+	if clusterId > 0 {
+		return SharedNodeTaskDAO.CreateNodeTask(tx, clusterId, nodeId, NodeTaskTypeConfigChanged)
+	}
+	return nil
 }

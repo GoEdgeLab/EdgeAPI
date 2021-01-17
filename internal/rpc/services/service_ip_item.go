@@ -52,6 +52,12 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		return nil, err
 	}
 
+	// 通知更新
+	err = models.SharedIPListDAO.NotifyUpdate(tx, req.IpListId, models.NodeTaskTypeIPItemChanged)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.CreateIPItemResponse{IpItemId: itemId}, nil
 }
 
@@ -81,6 +87,13 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 	if err != nil {
 		return nil, err
 	}
+
+	// 通知更新
+	err = models.SharedIPItemDAO.NotifyClustersUpdate(tx, req.IpItemId, models.NodeTaskTypeIPItemChanged)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 
@@ -110,6 +123,13 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	if err != nil {
 		return nil, err
 	}
+
+	// 通知更新
+	err = models.SharedIPItemDAO.NotifyClustersUpdate(tx, req.IpItemId, models.NodeTaskTypeIPItemChanged)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 

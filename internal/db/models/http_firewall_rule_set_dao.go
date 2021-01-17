@@ -39,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPFirewallRuleSetDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -61,12 +52,15 @@ func (this *HTTPFirewallRuleSetDAO) EnableHTTPFirewallRuleSet(tx *dbs.Tx, id int
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(tx *dbs.Tx, id int64) error {
+func (this *HTTPFirewallRuleSetDAO) DisableHTTPFirewallRuleSet(tx *dbs.Tx, ruleSetId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(ruleSetId).
 		Set("state", HTTPFirewallRuleSetStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, ruleSetId)
 }
 
 // 查找启用中的条目
@@ -180,6 +174,15 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(tx *dbs.Tx, setC
 	if err != nil {
 		return 0, err
 	}
+
+	// 通知更新
+	if setConfig.Id > 0 {
+		err := this.NotifyUpdate(tx, setConfig.Id)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	return types.Int64(op.Id), nil
 }
 
@@ -192,5 +195,30 @@ func (this *HTTPFirewallRuleSetDAO) UpdateRuleSetIsOn(tx *dbs.Tx, ruleSetId int6
 		Pk(ruleSetId).
 		Set("isOn", isOn).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, ruleSetId)
+}
+
+// 根据规则查找规则集
+func (this *HTTPFirewallRuleSetDAO) FindEnabledRuleSetIdWithRuleId(tx *dbs.Tx, ruleId int64) (int64, error) {
+	return this.Query(tx).
+		State(HTTPFirewallRuleStateEnabled).
+		Where("JSON_CONTAINS(rules, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"ruleId": ruleId}.AsJSON()).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *HTTPFirewallRuleSetDAO) NotifyUpdate(tx *dbs.Tx, setId int64) error {
+	groupId, err := SharedHTTPFirewallRuleGroupDAO.FindRuleGroupIdWithRuleSetId(tx, setId)
+	if err != nil {
+		return err
+	}
+	if groupId > 0 {
+		return SharedHTTPFirewallRuleGroupDAO.NotifyUpdate(tx, groupId)
+	}
+	return nil
 }

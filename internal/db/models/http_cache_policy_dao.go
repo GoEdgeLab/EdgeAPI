@@ -39,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPCachePolicyDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -61,12 +52,15 @@ func (this *HTTPCachePolicyDAO) EnableHTTPCachePolicy(tx *dbs.Tx, id int64) erro
 }
 
 // 禁用条目
-func (this *HTTPCachePolicyDAO) DisableHTTPCachePolicy(tx *dbs.Tx, id int64) error {
+func (this *HTTPCachePolicyDAO) DisableHTTPCachePolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(policyId).
 		Set("state", HTTPCachePolicyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 查找启用中的条目
@@ -147,7 +141,10 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 		op.Options = storageOptionsJSON
 	}
 	err := this.Save(tx, op)
-	return errors.Wrap(err)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 组合配置
@@ -238,4 +235,30 @@ func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, offset 
 		cachePolicies = append(cachePolicies, cachePolicyConfig)
 	}
 	return cachePolicies, nil
+}
+
+// 通知更新
+func (this *HTTPCachePolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
+	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(tx, policyId)
+	if err != nil {
+		return err
+	}
+	for _, webId := range webIds {
+		err := SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+		if err != nil {
+			return err
+		}
+	}
+
+	clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIdsWithCachePolicyId(tx, policyId)
+	if err != nil {
+		return err
+	}
+	for _, clusterId := range clusterIds {
+		err := SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

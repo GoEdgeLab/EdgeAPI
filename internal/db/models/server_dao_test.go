@@ -77,3 +77,13 @@ func TestServerDAO_FindAllServerDNSNamesWithDNSDomainId(t *testing.T) {
 	}
 	t.Log("dnsNames:", dnsNames)
 }
+
+func TestServerDAO_FindAllEnabledServerIdsWithSSLPolicyIds(t *testing.T) {
+	dbs.NotifyReady()
+	var tx *dbs.Tx
+	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithSSLPolicyIds(tx, []int64{14})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("serverIds:", serverIds)
+}

@@ -37,16 +37,7 @@ func init() {
 
 // 初始化
 func (this *HTTPRewriteRuleDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -59,12 +50,15 @@ func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(tx *dbs.Tx, id int64) erro
 }
 
 // 禁用条目
-func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(tx *dbs.Tx, id int64) error {
+func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(tx *dbs.Tx, rewriteRuleId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(rewriteRuleId).
 		Set("state", HTTPRewriteRuleStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, rewriteRuleId)
 }
 
 // 查找启用中的条目
@@ -135,5 +129,20 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int6
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, rewriteRuleId)
+}
+
+// 通知更新
+func (this *HTTPRewriteRuleDAO) NotifyUpdate(tx *dbs.Tx, rewriteRuleId int64) error {
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithRewriteRuleId(tx, rewriteRuleId)
+	if err != nil {
+		return err
+	}
+	if webId > 0 {
+		return SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+	}
+	return nil
 }

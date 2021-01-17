@@ -14,3 +14,14 @@ func TestReverseProxyDAO_ComposeReverseProxyConfig(t *testing.T) {
 	}
 	t.Log(config)
 }
+
+func TestReverseProxyDAO_FindReverseProxyContainsOriginId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	reverseProxyId, err := SharedReverseProxyDAO.FindReverseProxyContainsOriginId(tx, 68)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("reverseProxyId:", reverseProxyId)
+}

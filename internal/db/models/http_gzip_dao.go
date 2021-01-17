@@ -39,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPGzipDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -61,12 +52,15 @@ func (this *HTTPGzipDAO) EnableHTTPGzip(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPGzipDAO) DisableHTTPGzip(tx *dbs.Tx, id int64) error {
+func (this *HTTPGzipDAO) DisableHTTPGzip(tx *dbs.Tx, gzipId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(gzipId).
 		Set("state", HTTPGzipStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, gzipId)
 }
 
 // 查找启用中的条目
@@ -165,5 +159,20 @@ func (this *HTTPGzipDAO) UpdateGzip(tx *dbs.Tx, gzipId int64, level int, minLeng
 		op.Conds = JSONBytes(condsJSON)
 	}
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, gzipId)
+}
+
+// 通知更新
+func (this *HTTPGzipDAO) NotifyUpdate(tx *dbs.Tx, gzipId int64) error {
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithGzipId(tx, gzipId)
+	if err != nil {
+		return err
+	}
+	if webId > 0 {
+		return SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+	}
+	return nil
 }

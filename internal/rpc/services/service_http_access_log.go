@@ -51,7 +51,7 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 			return nil, errors.New("invalid serverId")
 		}
 
-		err = models.SharedServerDAO.CheckUserServer(tx, req.ServerId, userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 
 	// 检查权限
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, int64(accessLog.ServerId), userId)
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, int64(accessLog.ServerId))
 		if err != nil {
 			return nil, err
 		}

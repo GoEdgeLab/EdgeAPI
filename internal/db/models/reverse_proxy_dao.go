@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -38,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *ReverseProxyDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -59,7 +51,7 @@ func (this *ReverseProxyDAO) EnableReverseProxy(tx *dbs.Tx, id int64) error {
 	if err != nil {
 		return err
 	}
-	return this.CreateEvent()
+	return this.NotifyUpdate(tx, id)
 }
 
 // 禁用条目
@@ -71,7 +63,7 @@ func (this *ReverseProxyDAO) DisableReverseProxy(tx *dbs.Tx, id int64) error {
 	if err != nil {
 		return err
 	}
-	return this.CreateEvent()
+	return this.NotifyUpdate(tx, id)
 }
 
 // 查找启用中的条目
@@ -188,8 +180,10 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reversePro
 		op.Scheduling = "null"
 	}
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
 // 修改主要源站
@@ -205,8 +199,10 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, revers
 		op.PrimaryOrigins = "[]"
 	}
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
 // 修改备用源站
@@ -222,8 +218,10 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 		op.BackupOrigins = "[]"
 	}
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
 // 修改是否启用
@@ -245,10 +243,31 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, reverseProxyId)
+}
+
+// 查找包含某个源站的反向代理ID
+func (this *ReverseProxyDAO) FindReverseProxyContainsOriginId(tx *dbs.Tx, originId int64) (int64, error) {
+	return this.Query(tx).
+		ResultPk().
+		Where("(JSON_CONTAINS(primaryOrigins, :jsonQuery) OR JSON_CONTAINS(backupOrigins, :jsonQuery))").
+		Param("jsonQuery", maps.Map{
+			"originId": originId,
+		}.AsJSON()).
+		FindInt64Col(0)
 }
 
 // 通知更新
-func (this *ReverseProxyDAO) CreateEvent() error {
-	return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
+func (this *ReverseProxyDAO) NotifyUpdate(tx *dbs.Tx, reverseProxyId int64) error {
+	serverId, err := SharedServerDAO.FindEnabledServerIdWithReverseProxyId(tx, reverseProxyId)
+	if err != nil {
+		return err
+	}
+	if serverId > 0 {
+		return SharedServerDAO.NotifyUpdate(tx, serverId)
+	}
+	return nil
 }

@@ -38,16 +38,7 @@ func init() {
 
 // 初始化
 func (this *HTTPLocationDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -60,12 +51,15 @@ func (this *HTTPLocationDAO) EnableHTTPLocation(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPLocationDAO) DisableHTTPLocation(tx *dbs.Tx, id int64) error {
+func (this *HTTPLocationDAO) DisableHTTPLocation(tx *dbs.Tx, locationId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(locationId).
 		Set("state", HTTPLocationStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, locationId)
 }
 
 // 查找启用中的条目
@@ -118,7 +112,10 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 	op.IsOn = isOn
 	op.IsBreak = isBreak
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, locationId)
 }
 
 // 组合配置
@@ -198,7 +195,10 @@ func (this *HTTPLocationDAO) UpdateLocationReverseProxy(tx *dbs.Tx, locationId i
 	op.Id = locationId
 	op.ReverseProxy = JSONBytes(reverseProxyJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, locationId)
 }
 
 // 查找WebId
@@ -219,7 +219,10 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, web
 	op.Id = locationId
 	op.WebId = webId
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, locationId)
 }
 
 // 转换引用为配置
@@ -249,4 +252,16 @@ func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(tx *dbs.Tx, webId in
 		Attr("webId", webId).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *HTTPLocationDAO) NotifyUpdate(tx *dbs.Tx, locationId int64) error {
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithLocationId(tx, locationId)
+	if err != nil {
+		return err
+	}
+	if webId > 0 {
+		return SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+	}
+	return nil
 }

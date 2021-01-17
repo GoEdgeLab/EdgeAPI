@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -38,16 +39,7 @@ func init() {
 
 // 初始化
 func (this *HTTPHeaderPolicyDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -60,12 +52,15 @@ func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(tx *dbs.Tx, id int64) er
 }
 
 // 禁用条目
-func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(tx *dbs.Tx, id int64) error {
+func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(policyId).
 		Set("state", HTTPHeaderPolicyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 查找启用中的条目
@@ -102,8 +97,10 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(tx *dbs.Tx, policyId int64,
 	op.Id = policyId
 	op.AddHeaders = headersJSON
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改SetHeaders
@@ -116,8 +113,10 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(tx *dbs.Tx, policyId int64
 	op.Id = policyId
 	op.SetHeaders = headersJSON
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改ReplaceHeaders
@@ -130,8 +129,10 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(tx *dbs.Tx, policyId int
 	op.Id = policyId
 	op.ReplaceHeaders = headersJSON
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改AddTrailers
@@ -144,8 +145,10 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(tx *dbs.Tx, policyId int64
 	op.Id = policyId
 	op.AddTrailers = headersJSON
 	err := this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改DeleteHeaders
@@ -163,8 +166,10 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int6
 	op.Id = policyId
 	op.DeleteHeaders = string(namesJSON)
 	err = this.Save(tx, op)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 组合配置
@@ -285,4 +290,25 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 	// TODO
 
 	return config, nil
+}
+
+// 查找Header所在Policy
+func (this *HTTPHeaderPolicyDAO) FindHeaderPolicyIdWithHeaderId(tx *dbs.Tx, headerId int64) (int64, error) {
+	return this.Query(tx).
+		Where("(JSON_CONTAINS(addHeaders, :jsonQuery) OR JSON_CONTAINS(addTrailers, :jsonQuery) OR JSON_CONTAINS(setHeaders, :jsonQuery) OR JSON_CONTAINS(replaceHeaders, :jsonQuery))").
+		Param("jsonQuery", maps.Map{"id": headerId}.AsJSON()).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// 通知更新
+func (this *HTTPHeaderPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithHeaderPolicyId(tx, policyId)
+	if err != nil {
+		return err
+	}
+	if webId > 0 {
+		return SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+	}
+	return nil
 }

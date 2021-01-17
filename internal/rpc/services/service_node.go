@@ -351,6 +351,12 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 		}
 	}()
 
+	// 删除节点相关任务
+	err = models.SharedNodeTaskDAO.DeleteNodeTasks(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 
@@ -575,23 +581,6 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 		return nil, err
 	}
 	return this.Success()
-}
-
-// 同步集群中的节点版本
-func (this *NodeService) SyncNodesVersionWithCluster(ctx context.Context, req *pb.SyncNodesVersionWithClusterRequest) (*pb.SyncNodesVersionWithClusterResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	tx := this.NullTx()
-
-	err = models.SharedNodeDAO.SyncNodeVersionsWithCluster(tx, req.NodeClusterId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.SyncNodesVersionWithClusterResponse{}, nil
 }
 
 // 修改节点安装状态
@@ -1325,4 +1314,33 @@ func (this *NodeService) CountAllEnabledNodesWithNodeRegionId(ctx context.Contex
 		return nil, err
 	}
 	return this.SuccessCount(count)
+}
+
+// 根据一组ID获取节点信息
+func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.FindEnabledNodesWithIdsRequest) (*pb.FindEnabledNodesWithIdsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	nodes, err := models.SharedNodeDAO.FindEnabledNodesWithIds(tx, req.NodeIds)
+	if err != nil {
+		return nil, err
+	}
+	pbNodes := []*pb.Node{}
+	for _, node := range nodes {
+		connectedAPINodeIds, err := node.DecodeConnectedAPINodeIds()
+		if err != nil {
+			return nil, err
+		}
+		pbNodes = append(pbNodes, &pb.Node{
+			Id:                  int64(node.Id),
+			IsOn:                node.IsOn == 1,
+			IsActive:            node.IsActive == 1,
+			ConnectedAPINodeIds: connectedAPINodeIds,
+		})
+	}
+	return &pb.FindEnabledNodesWithIdsResponse{Nodes: pbNodes}, nil
 }

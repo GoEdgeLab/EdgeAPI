@@ -37,16 +37,7 @@ func init() {
 
 // 初始化
 func (this *HTTPFirewallRuleDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -59,12 +50,15 @@ func (this *HTTPFirewallRuleDAO) EnableHTTPFirewallRule(tx *dbs.Tx, id int64) er
 }
 
 // 禁用条目
-func (this *HTTPFirewallRuleDAO) DisableHTTPFirewallRule(tx *dbs.Tx, id int64) error {
+func (this *HTTPFirewallRuleDAO) DisableHTTPFirewallRule(tx *dbs.Tx, ruleId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(ruleId).
 		Set("state", HTTPFirewallRuleStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, ruleId)
 }
 
 // 查找启用中的条目
@@ -154,5 +148,26 @@ func (this *HTTPFirewallRuleDAO) CreateOrUpdateRuleFromConfig(tx *dbs.Tx, ruleCo
 	if err != nil {
 		return 0, err
 	}
+
+	// 通知更新
+	if ruleConfig.Id > 0 {
+		err := this.NotifyUpdate(tx, ruleConfig.Id)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	return types.Int64(op.Id), nil
+}
+
+// 通知更新
+func (this *HTTPFirewallRuleDAO) NotifyUpdate(tx *dbs.Tx, ruleId int64) error {
+	setId, err := SharedHTTPFirewallRuleSetDAO.FindEnabledRuleSetIdWithRuleId(tx, ruleId)
+	if err != nil {
+		return err
+	}
+	if setId > 0 {
+		return SharedHTTPFirewallRuleSetDAO.NotifyUpdate(tx, setId)
+	}
+	return nil
 }

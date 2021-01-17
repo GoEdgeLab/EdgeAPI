@@ -10,8 +10,8 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
-	"strconv"
 )
 
 const (
@@ -41,16 +41,7 @@ func init() {
 }
 
 func (this *HTTPWebDAO) Init() {
-	this.DAOObject.Init()
-	this.DAOObject.OnUpdate(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnInsert(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
-	this.DAOObject.OnDelete(func() error {
-		return SharedSysEventDAO.CreateEvent(nil, NewServerChangeEvent())
-	})
+	_ = this.DAOObject.Init()
 }
 
 // 启用条目
@@ -360,7 +351,11 @@ func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) erro
 	op.Id = webId
 	op.Root = JSONBytes(rootJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 修改Gzip配置
@@ -372,7 +367,11 @@ func (this *HTTPWebDAO) UpdateWebGzip(tx *dbs.Tx, webId int64, gzipJSON []byte) 
 	op.Id = webId
 	op.Gzip = JSONBytes(gzipJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 修改字符编码
@@ -384,7 +383,11 @@ func (this *HTTPWebDAO) UpdateWebCharset(tx *dbs.Tx, webId int64, charsetJSON []
 	op.Id = webId
 	op.Charset = JSONBytes(charsetJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改请求Header策略
@@ -396,7 +399,11 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(tx *dbs.Tx, webId int64, he
 	op.Id = webId
 	op.RequestHeader = JSONBytes(headerPolicyJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改响应Header策略
@@ -408,7 +415,11 @@ func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(tx *dbs.Tx, webId int64, h
 	op.Id = webId
 	op.ResponseHeader = JSONBytes(headerPolicyJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改特殊页面配置
@@ -420,7 +431,11 @@ func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改Shutdown配置
@@ -432,7 +447,11 @@ func (this *HTTPWebDAO) UpdateWebShutdown(tx *dbs.Tx, webId int64, shutdownJSON 
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改访问日志策略
@@ -444,7 +463,11 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(tx *dbs.Tx, webId int64, access
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改统计配置
@@ -456,7 +479,11 @@ func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) 
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改缓存配置
@@ -468,7 +495,11 @@ func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改防火墙配置
@@ -480,7 +511,11 @@ func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON 
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改路径规则配置
@@ -492,7 +527,11 @@ func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSO
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 更改跳转到HTTPS设置
@@ -504,7 +543,11 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(tx *dbs.Tx, webId int64, redire
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 修改Websocket设置
@@ -516,7 +559,11 @@ func (this *HTTPWebDAO) UpdateWebsocket(tx *dbs.Tx, webId int64, websocketJSON [
 	op.Id = webId
 	op.Websocket = JSONBytes(websocketJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 修改重写规则设置
@@ -528,7 +575,11 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRu
 	op.Id = webId
 	op.RewriteRules = JSONBytes(rewriteRulesJSON)
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 根据缓存策略ID查找所有的WebId
@@ -536,8 +587,8 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId
 	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(cache, '{"cachePolicyId": ` + strconv.FormatInt(cachePolicyId, 10) + ` }', '$.cacheRefs')`).
-		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		Where(`JSON_CONTAINS(cache, :jsonQuery, '$.cacheRefs')`).
+		Param("jsonQuery", maps.Map{"cachePolicyId": cachePolicyId}.AsJSON()).
 		FindAll()
 	if err != nil {
 		return nil, err
@@ -580,8 +631,11 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(tx *dbs.Tx, firewa
 	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(firewall, '{"isOn": true, "firewallPolicyId": ` + strconv.FormatInt(firewallPolicyId, 10) + ` }')`).
-		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		Where(`JSON_CONTAINS(firewall, :jsonQuery)`).
+		Param("jsonQuery", maps.Map{
+			// 这里不加入isOn的判断，无论是否开启我们都同步
+			"firewallPolicyId": firewallPolicyId,
+		}.AsJSON()).
 		FindAll()
 	if err != nil {
 		return nil, err
@@ -624,8 +678,48 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(tx *dbs.Tx, locationId in
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(locations, '{"locationId": ` + strconv.FormatInt(locationId, 10) + ` }')`).
-		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		Where("JSON_CONTAINS(locations, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"locationId": locationId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// 查找包含某个重写规则的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithRewriteRuleId(tx *dbs.Tx, rewriteRuleId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(rewriteRules, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"rewriteRuleId": rewriteRuleId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// 查找包含某个页面的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithPageId(tx *dbs.Tx, pageId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(pages, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"id": pageId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// 查找包含某个Header的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithHeaderPolicyId(tx *dbs.Tx, headerPolicyId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("(JSON_CONTAINS(requestHeader, :jsonQuery) OR JSON_CONTAINS(responseHeader, :jsonQuery))").
+		Param("jsonQuery", maps.Map{"headerPolicyId": headerPolicyId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// 查找包含某个Gzip配置的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithGzipId(tx *dbs.Tx, gzipId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(gzip, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"gzipId": gzipId}.AsJSON()).
 		FindInt64Col(0)
 }
 
@@ -671,7 +765,7 @@ func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) erro
 	if serverId == 0 {
 		return ErrNotFound
 	}
-	return SharedServerDAO.CheckUserServer(tx, serverId, userId)
+	return SharedServerDAO.CheckUserServer(tx, userId, serverId)
 }
 
 // 设置主机跳转
@@ -690,7 +784,11 @@ func (this *HTTPWebDAO) UpdateWebHostRedirects(tx *dbs.Tx, webId int64, hostRedi
 		Pk(webId).
 		Set("hostRedirects", hostRedirectsJSON).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // 查找主机跳转
@@ -703,4 +801,16 @@ func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, e
 		return nil, err
 	}
 	return []byte(col), nil
+}
+
+// 通知更新
+func (this *HTTPWebDAO) NotifyUpdate(tx *dbs.Tx, webId int64) error {
+	serverId, err := this.FindWebServerId(tx, webId)
+	if err != nil {
+		return err
+	}
+	if serverId == 0 {
+		return nil
+	}
+	return SharedServerDAO.NotifyUpdate(tx, serverId)
 }
