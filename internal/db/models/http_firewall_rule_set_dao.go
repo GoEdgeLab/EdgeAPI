@@ -211,6 +211,18 @@ func (this *HTTPFirewallRuleSetDAO) FindEnabledRuleSetIdWithRuleId(tx *dbs.Tx, r
 		FindInt64Col(0)
 }
 
+// 检查用户
+func (this *HTTPFirewallRuleSetDAO) CheckUserRuleSet(tx *dbs.Tx, userId int64, setId int64) error {
+	groupId, err := SharedHTTPFirewallRuleGroupDAO.FindRuleGroupIdWithRuleSetId(tx, setId)
+	if err != nil {
+		return err
+	}
+	if groupId == 0 {
+		return ErrNotFound
+	}
+	return SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(tx, userId, groupId)
+}
+
 // 通知更新
 func (this *HTTPFirewallRuleSetDAO) NotifyUpdate(tx *dbs.Tx, setId int64) error {
 	groupId, err := SharedHTTPFirewallRuleGroupDAO.FindRuleGroupIdWithRuleSetId(tx, setId)

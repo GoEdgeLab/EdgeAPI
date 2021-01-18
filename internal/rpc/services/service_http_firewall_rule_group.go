@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -16,9 +15,17 @@ type HTTPFirewallRuleGroupService struct {
 // 设置是否启用分组
 func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupIsOn(ctx context.Context, req *pb.UpdateHTTPFirewallRuleGroupIsOnRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(nil, userId, req.FirewallRuleGroupId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -34,7 +41,7 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupIsOn(ctx co
 // 创建分组
 func (this *HTTPFirewallRuleGroupService) CreateHTTPFirewallRuleGroup(ctx context.Context, req *pb.CreateHTTPFirewallRuleGroupRequest) (*pb.CreateHTTPFirewallRuleGroupResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +58,17 @@ func (this *HTTPFirewallRuleGroupService) CreateHTTPFirewallRuleGroup(ctx contex
 // 修改分组
 func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx context.Context, req *pb.UpdateHTTPFirewallRuleGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(nil, userId, req.FirewallRuleGroupId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -69,9 +84,17 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx contex
 // 获取分组配置
 func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroupConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleGroupConfigRequest) (*pb.FindEnabledHTTPFirewallRuleGroupConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(nil, userId, req.FirewallRuleGroupId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -93,9 +116,17 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroupConfig
 // 获取分组信息
 func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroup(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleGroupRequest) (*pb.FindEnabledHTTPFirewallRuleGroupResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(nil, userId, req.FirewallRuleGroupId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -124,11 +155,19 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroup(ctx c
 // 修改分组的规则集
 func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroupSets(ctx context.Context, req *pb.UpdateHTTPFirewallRuleGroupSetsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallRuleGroupDAO.CheckUserRuleGroup(nil, userId, req.FirewallRuleGroupId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	
 	tx := this.NullTx()
 
 	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, req.GetFirewallRuleGroupId(), req.FirewallRuleSetsJSON)

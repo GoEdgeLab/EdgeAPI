@@ -287,10 +287,13 @@ func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId in
 	if err != nil {
 		return err
 	}
-	if !ok {
-		return ErrNotFound
+	if ok {
+		return nil
 	}
-	return nil
+
+	// TODO 检查是否为用户Server所使用
+
+	return ErrNotFound
 }
 
 // 查找包含某个IPList的所有策略

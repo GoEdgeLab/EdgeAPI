@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 )
@@ -17,7 +16,7 @@ type HTTPFirewallRuleSetService struct {
 // 根据配置创建规则集
 func (this *HTTPFirewallRuleSetService) CreateOrUpdateHTTPFirewallRuleSetFromConfig(ctx context.Context, req *pb.CreateOrUpdateHTTPFirewallRuleSetFromConfigRequest) (*pb.CreateOrUpdateHTTPFirewallRuleSetFromConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +25,13 @@ func (this *HTTPFirewallRuleSetService) CreateOrUpdateHTTPFirewallRuleSetFromCon
 	err = json.Unmarshal(req.FirewallRuleSetConfigJSON, setConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 && setConfig.Id > 0 {
+		err = models.SharedHTTPFirewallRuleSetDAO.CheckUserRuleSet(nil, userId, setConfig.Id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -41,9 +47,16 @@ func (this *HTTPFirewallRuleSetService) CreateOrUpdateHTTPFirewallRuleSetFromCon
 // 修改是否开启
 func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx context.Context, req *pb.UpdateHTTPFirewallRuleSetIsOnRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPFirewallRuleSetDAO.CheckUserRuleSet(nil, userId, req.FirewallRuleSetId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -59,9 +72,16 @@ func (this *HTTPFirewallRuleSetService) UpdateHTTPFirewallRuleSetIsOn(ctx contex
 // 查找规则集配置
 func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSetConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleSetConfigRequest) (*pb.FindEnabledHTTPFirewallRuleSetConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPFirewallRuleSetDAO.CheckUserRuleSet(nil, userId, req.FirewallRuleSetId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -83,9 +103,16 @@ func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSetConfig(ctx
 // 查找规则集
 func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSet(ctx context.Context, req *pb.FindEnabledHTTPFirewallRuleSetRequest) (*pb.FindEnabledHTTPFirewallRuleSetResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPFirewallRuleSetDAO.CheckUserRuleSet(nil, userId, req.FirewallRuleSetId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()

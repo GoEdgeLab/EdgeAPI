@@ -282,9 +282,16 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 // 修改分组信息
 func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyGroupsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(nil, userId, req.HttpFirewallPolicyId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -390,9 +397,17 @@ func (this *HTTPFirewallPolicyService) DeleteHTTPFirewallPolicy(ctx context.Cont
 // 查找单个防火墙配置
 func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyConfigRequest) (*pb.FindEnabledHTTPFirewallPolicyConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		// 校验权限
+		err = models.SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(nil, userId, req.HttpFirewallPolicyId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -416,9 +431,16 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx c
 // 获取防火墙的基本信息
 func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyRequest) (*pb.FindEnabledHTTPFirewallPolicyResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(nil, userId, req.HttpFirewallPolicyId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
