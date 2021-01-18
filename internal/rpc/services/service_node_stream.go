@@ -135,7 +135,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 			case <-server.Context().Done():
 				return
 			case commandRequest := <-requestChan:
-				logs.Println("[RPC]sending command '" + commandRequest.Code + "' to node '" + strconv.FormatInt(nodeId, 10) + "'")
+				// logs.Println("[RPC]sending command '" + commandRequest.Code + "' to node '" + strconv.FormatInt(nodeId, 10) + "'")
 				retries := 3 // 错误重试次数
 				for i := 0; i < retries; i++ {
 					err := server.Send(&pb.NodeStreamMessage{

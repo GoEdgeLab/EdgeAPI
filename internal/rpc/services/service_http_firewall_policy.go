@@ -114,6 +114,43 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 	return &pb.CreateHTTPFirewallPolicyResponse{HttpFirewallPolicyId: policyId}, nil
 }
 
+// 创建空防火墙策略
+func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context.Context, req *pb.CreateEmptyHTTPFirewallPolicyRequest) (*pb.CreateEmptyHTTPFirewallPolicyResponse, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.IsOn, req.Name, req.Description, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// 初始化
+	inboundConfig := &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	outboundConfig := &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
+
+	inboundConfigJSON, err := json.Marshal(inboundConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	outboundConfigJSON, err := json.Marshal(outboundConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, inboundConfigJSON, outboundConfigJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CreateEmptyHTTPFirewallPolicyResponse{HttpFirewallPolicyId: policyId}, nil
+}
+
 // 修改防火墙策略
 func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
