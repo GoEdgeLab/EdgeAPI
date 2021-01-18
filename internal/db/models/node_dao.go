@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -10,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
@@ -603,10 +605,10 @@ func (this *NodeDAO) CountAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterI
 		Where("status IS NOT NULL").
 		Where("JSON_EXTRACT(status, '$.os')=:os").
 		Where("JSON_EXTRACT(status, '$.arch')=:arch").
-		Where("INET_ATON(JSON_UNQUOTE(JSON_EXTRACT(status, '$.buildVersion')))<INET_ATON(:version)").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("os", os).
 		Param("arch", arch).
-		Param("version", version).
+		Param("version", utils.VersionToLong(version)).
 		Count()
 }
 
@@ -618,13 +620,14 @@ func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId
 		Where("status IS NOT NULL").
 		Where("JSON_EXTRACT(status, '$.os')=:os").
 		Where("JSON_EXTRACT(status, '$.arch')=:arch").
-		Where("INET_ATON(JSON_UNQUOTE(JSON_EXTRACT(status, '$.buildVersion')))<INET_ATON(:version)").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("os", os).
 		Param("arch", arch).
-		Param("version", version).
+		Param("version", utils.VersionToLong(version)).
 		DescPk().
 		Slice(&result).
 		FindAll()
+	logs.Println(len(result), version) // TODO
 	return
 }
 
