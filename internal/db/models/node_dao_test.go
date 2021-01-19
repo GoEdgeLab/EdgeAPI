@@ -15,15 +15,6 @@ func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
 	t.Log(nodeIds)
 }
 
-func TestNodeDAO_FindChangedClusterIds(t *testing.T) {
-	var tx *dbs.Tx
-	clusterIds, err := SharedNodeDAO.FindChangedClusterIds(tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(clusterIds)
-}
-
 func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx

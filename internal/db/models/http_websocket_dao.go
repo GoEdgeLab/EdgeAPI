@@ -47,12 +47,15 @@ func (this *HTTPWebsocketDAO) EnableHTTPWebsocket(tx *dbs.Tx, id int64) error {
 }
 
 // 禁用条目
-func (this *HTTPWebsocketDAO) DisableHTTPWebsocket(tx *dbs.Tx, id int64) error {
+func (this *HTTPWebsocketDAO) DisableHTTPWebsocket(tx *dbs.Tx, websocketId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(websocketId).
 		Set("state", HTTPWebsocketStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, websocketId)
 }
 
 // 查找启用中的条目
@@ -150,5 +153,20 @@ func (this *HTTPWebsocketDAO) UpdateWebsocket(tx *dbs.Tx, websocketId int64, han
 	op.RequestSameOrigin = requestSameOrigin
 	op.RequestOrigin = requestOrigin
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, websocketId)
+}
+
+// 通知更新
+func (this *HTTPWebsocketDAO) NotifyUpdate(tx *dbs.Tx, websocketId int64) error {
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithWebsocketId(tx, websocketId)
+	if err != nil {
+		return err
+	}
+	if webId > 0 {
+		return SharedHTTPWebDAO.NotifyUpdate(tx, webId)
+	}
+	return nil
 }

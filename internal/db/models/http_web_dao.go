@@ -723,6 +723,16 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithGzipId(tx *dbs.Tx, gzipId int64) (we
 		FindInt64Col(0)
 }
 
+// 查找包含某个Websocket配置的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithWebsocketId(tx *dbs.Tx, websocketId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(websocket, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"websocketId": websocketId}.AsJSON()).
+		FindInt64Col(0)
+}
+
 // 查找使用此Web的Server
 func (this *HTTPWebDAO) FindWebServerId(tx *dbs.Tx, webId int64) (serverId int64, err error) {
 	if webId <= 0 {

@@ -129,3 +129,15 @@ func TestHTTPWebDAO_FindEnabledWebIdWithGzip(t *testing.T) {
 	}
 	t.Log("webId:", webId)
 }
+
+func TestHTTPWebDAO_FindEnabledWebIdWithWebsocket(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithWebsocketId(tx, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("webId:", webId)
+}
+
