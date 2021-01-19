@@ -27,7 +27,7 @@ type HTTPAccessLogDAOWrapper struct {
 
 func init() {
 	initializer := NewDBNodeInitializer()
-	dbs.OnReady(func() {
+	dbs.OnReadyDone(func() {
 		go initializer.Start()
 	})
 }
