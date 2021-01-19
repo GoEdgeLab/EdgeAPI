@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -11,16 +12,6 @@ import (
 )
 
 type SysSettingDAO dbs.DAO
-
-type SettingCode = string
-
-const (
-	SettingCodeServerGlobalConfig  SettingCode = "serverGlobalConfig"  // 服务相关全局设置
-	SettingCodeNodeMonitor         SettingCode = "nodeMonitor"         // 监控节点状态
-	SettingCodeClusterHealthCheck  SettingCode = "clusterHealthCheck"  // 集群健康检查
-	SettingCodeIPListVersion       SettingCode = "ipListVersion"       // IP名单的版本号
-	SettingCodeAdminSecurityConfig SettingCode = "adminSecurityConfig" // 管理员安全设置
-)
 
 func NewSysSettingDAO() *SysSettingDAO {
 	return dbs.NewDAO(&SysSettingDAO{
@@ -116,7 +107,7 @@ func (this *SysSettingDAO) CompareInt64Setting(tx *dbs.Tx, code string, anotherV
 
 // 读取全局配置
 func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalConfig, error) {
-	globalConfigData, err := this.ReadSetting(tx, SettingCodeServerGlobalConfig)
+	globalConfigData, err := this.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
 	if err != nil {
 		return nil, err
 	}

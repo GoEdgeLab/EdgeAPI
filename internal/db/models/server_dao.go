@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -295,7 +296,7 @@ func (this *ServerDAO) UpdateServerConfig(tx *dbs.Tx, serverId int64, configJSON
 		return false, err
 	}
 
-	globalConfig, err := SharedSysSettingDAO.ReadSetting(tx, SettingCodeServerGlobalConfig)
+	globalConfig, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
 	if err != nil {
 		return false, err
 	}

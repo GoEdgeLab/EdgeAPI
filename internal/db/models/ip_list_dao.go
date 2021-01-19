@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -114,12 +115,12 @@ func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code 
 
 // 增加版本
 func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
-	valueJSON, err := SharedSysSettingDAO.ReadSetting(tx, SettingCodeIPListVersion)
+	valueJSON, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeIPListVersion)
 	if err != nil {
 		return 0, err
 	}
 	if len(valueJSON) == 0 {
-		err = SharedSysSettingDAO.UpdateSetting(tx, SettingCodeIPListVersion, []byte("1"))
+		err = SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeIPListVersion, []byte("1"))
 		if err != nil {
 			return 0, err
 		}
@@ -127,7 +128,7 @@ func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
 	}
 
 	value := types.Int64(string(valueJSON)) + 1
-	err = SharedSysSettingDAO.UpdateSetting(tx, SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
+	err = SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
 	return value, nil
 }
 

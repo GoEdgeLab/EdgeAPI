@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"time"
@@ -87,7 +88,7 @@ func (this *HealthCheckClusterTask) Stop() {
 // 单个循环任务
 func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := models.SettingCodeClusterHealthCheck + "Loop" + numberutils.FormatInt64(this.clusterId)
+	settingKey := systemconfigs.SettingCodeClusterHealthCheck + "Loop" + numberutils.FormatInt64(this.clusterId)
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {

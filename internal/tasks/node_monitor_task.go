@@ -3,6 +3,7 @@ package tasks
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
@@ -40,7 +41,7 @@ func (this *NodeMonitorTask) Run() {
 
 func (this *NodeMonitorTask) loop() error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := models.SettingCodeNodeMonitor + "Loop"
+	settingKey := systemconfigs.SettingCodeNodeMonitor + "Loop"
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-int64(this.intervalSeconds))
 	if err != nil {
