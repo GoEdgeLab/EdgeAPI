@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -47,17 +46,20 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 
 	// 检查服务ID
 	if userId > 0 {
-		if req.ServerId <= 0 {
-			return nil, errors.New("invalid serverId")
+		if req.UserId > 0 && userId != req.UserId {
+			return nil, this.PermissionError()
 		}
 
-		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
-		if err != nil {
-			return nil, err
+		// 这里不用担心serverId <= 0 的情况，因为如果userId>0，则只会查询当前用户下的服务，不会产生安全问题
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId)
+	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId, req.HasFirewallPolicy, req.UserId)
 	if err != nil {
 		return nil, err
 	}
