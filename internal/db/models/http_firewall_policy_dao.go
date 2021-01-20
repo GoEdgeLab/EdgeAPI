@@ -91,9 +91,10 @@ func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (r
 }
 
 // 创建策略
-func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
+func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, serverId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
 	op := NewHTTPFirewallPolicyOperator()
 	op.UserId = userId
+	op.ServerId = serverId
 	op.State = HTTPFirewallPolicyStateEnabled
 	op.IsOn = isOn
 	op.Name = name
@@ -177,6 +178,7 @@ func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx) (
 	return this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
+		Attr("serverId", 0).
 		Count()
 }
 
@@ -185,6 +187,7 @@ func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, offse
 	_, err = this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
+		Attr("serverId", 0).
 		Offset(offset).
 		Limit(size).
 		DescPk().
@@ -322,6 +325,15 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx
 		Where("(JSON_CONTAINS(inbound, :jsonQuery, '$.groupRefs') OR JSON_CONTAINS(outbound, :jsonQuery, '$.groupRefs'))").
 		Param("jsonQuery", maps.Map{"groupId": ruleGroupId}.AsJSON()).
 		FindInt64Col(0)
+}
+
+// 设置某个策略所属的服务ID
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, policyId int64, serverId int64) error {
+	_, err :=  this.Query(tx).
+		Pk(policyId).
+		Set("serverId", serverId).
+		Update()
+	return err
 }
 
 // 通知更新

@@ -2,8 +2,10 @@ package setup
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -23,6 +25,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.0.6", upgradeV0_0_6,
+	},
+	{
+		"0.0.9", upgradeV0_0_9,
 	},
 }
 
@@ -132,6 +137,45 @@ func upgradeV0_0_6(db *dbs.DB) error {
 	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role) VALUES (?, ?, ?)", nodeId, secret, "user")
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// v0.0.9
+func upgradeV0_0_9(db *dbs.DB) error {
+	// firewall policies
+	var tx *dbs.Tx
+	dbs.NotifyReady()
+	policies, err := models.NewHTTPFirewallPolicyDAO().FindAllEnabledFirewallPolicies(tx)
+	if err != nil {
+		return err
+	}
+	for _, policy := range policies {
+		if policy.ServerId > 0 {
+			continue
+		}
+		policyId := int64(policy.Id)
+		webIds, err := models.NewHTTPWebDAO().FindAllWebIdsWithHTTPFirewallPolicyId(tx, policyId)
+		if err != nil {
+			return err
+		}
+		serverIds := []int64{}
+		for _, webId := range webIds {
+			serverId, err := models.NewServerDAO().FindEnabledServerIdWithWebId(tx, webId)
+			if err != nil {
+				return err
+			}
+			if serverId > 0 && !lists.ContainsInt64(serverIds, serverId) {
+				serverIds = append(serverIds, serverId)
+			}
+		}
+		if len(serverIds) == 1 {
+			err = models.NewHTTPFirewallPolicyDAO().UpdateFirewallPolicyServerId(tx, policyId, serverIds[0])
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

@@ -56,7 +56,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 
 	tx := this.NullTx()
 
-	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.IsOn, req.Name, req.Description, nil, nil)
+	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.ServerId, req.IsOn, req.Name, req.Description, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +122,18 @@ func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context
 		return nil, err
 	}
 
+	if userId > 0 {
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(nil, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	tx := this.NullTx()
 
-	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.IsOn, req.Name, req.Description, nil, nil)
+	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.ServerId, req.IsOn, req.Name, req.Description, nil, nil)
 	if err != nil {
 		return nil, err
 	}
