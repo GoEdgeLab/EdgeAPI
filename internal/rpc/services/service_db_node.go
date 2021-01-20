@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-var db *dbs.DB
-
 // 数据库节点相关服务
 type DBNodeService struct {
 	BaseService
@@ -108,7 +106,7 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 
 		// 是否能够连接
 		if node.IsOn == 1 {
-			db, err = dbs.NewInstanceFromConfig(node.DBConfig())
+			db, err := dbs.NewInstanceFromConfig(node.DBConfig())
 			if err != nil {
 				status.Error = err.Error()
 			} else {
