@@ -136,7 +136,7 @@ func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(tx *dbs.Tx, protocol stri
 
 // 创建用户节点
 func (this *UserNodeDAO) CreateUserNode(tx *dbs.Tx, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
-	uniqueId, err := this.genUniqueId(tx)
+	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -216,8 +216,17 @@ func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(tx *dbs.Tx, uniqueId st
 	return result.(*UserNode), err
 }
 
+// 根据唯一ID获取节点ID
+func (this *UserNodeDAO) FindEnabledUserNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
+	return this.Query(tx).
+		Attr("uniqueId", uniqueId).
+		Attr("state", UserNodeStateEnabled).
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // 生成唯一ID
-func (this *UserNodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
+func (this *UserNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
 		ok, err := this.Query(tx).
@@ -231,4 +240,13 @@ func (this *UserNodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
 		}
 		return uniqueId, nil
 	}
+}
+
+// 更改节点状态
+func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
+	_, err := this.Query(tx).
+		Pk(nodeId).
+		Set("status", string(statusJSON)).
+		Update()
+	return err
 }

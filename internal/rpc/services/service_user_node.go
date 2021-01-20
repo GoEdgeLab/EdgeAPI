@@ -151,6 +151,7 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 			HttpsJSON:       []byte(node.Https),
 			AccessAddrsJSON: []byte(node.AccessAddrs),
 			AccessAddrs:     accessAddrs,
+			StatusJSON:      []byte(node.Status),
 		})
 	}
 
@@ -240,4 +241,29 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindCurrentUserNodeResponse{Node: result}, nil
+}
+
+// 更新节点状态
+func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.UpdateUserNodeStatusRequest) (*pb.RPCSuccess, error) {
+	// 校验节点
+	_, nodeId, err := this.ValidateNodeId(ctx, rpcutils.UserTypeUser)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.NodeId > 0 {
+		nodeId = req.NodeId
+	}
+
+	if nodeId <= 0 {
+		return nil, errors.New("'nodeId' should be greater than 0")
+	}
+
+	tx := this.NullTx()
+
+	err = models.SharedUserNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }
