@@ -1,4 +1,4 @@
-package models
+package stats
 
 // 总的流量统计
 type TrafficDailyStat struct {

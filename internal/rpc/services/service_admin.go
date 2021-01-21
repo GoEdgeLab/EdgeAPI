@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -515,7 +516,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 按日流量统计
 	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
-	dailyTrafficStats, err := models.SharedTrafficDailyStatDAO.FindDailyStats(tx, dayFrom, timeutil.Format("Ymd"))
+	dailyTrafficStats, err := stats.SharedTrafficDailyStatDAO.FindDailyStats(tx, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +530,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	// 小时流量统计
 	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
 	hourTo := timeutil.Format("YmdH")
-	hourlyTrafficStats, err := models.SharedTrafficHourlyStatDAO.FindHourlyStats(tx, hourFrom, hourTo)
+	hourlyTrafficStats, err := stats.SharedTrafficHourlyStatDAO.FindHourlyStats(tx, hourFrom, hourTo)
 	if err != nil {
 		return nil, err
 	}

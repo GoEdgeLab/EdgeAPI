@@ -1,4 +1,4 @@
-package models
+package stats
 
 import (
 	_ "github.com/go-sql-driver/mysql"
@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func TestTrafficHourlyStatDAO_IncreaseDayBytes(t *testing.T) {
+func TestTrafficDailyStatDAO_IncreaseDayBytes(t *testing.T) {
 	dbs.NotifyReady()
 
 	now := time.Now()
-	err := SharedTrafficHourlyStatDAO.IncreaseDayBytes(nil, timeutil.Format("YmdH"), 1)
+	err := SharedTrafficDailyStatDAO.IncreaseDailyBytes(nil, timeutil.Format("Ymd"), 1)
 	if err != nil {
 		t.Fatal(err)
 	}

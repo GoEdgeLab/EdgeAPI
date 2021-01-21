@@ -1,4 +1,4 @@
-package models
+package stats
 
 // 总的流量统计（按小时）
 type TrafficHourlyStat struct {

@@ -1,4 +1,4 @@
-package models
+package stats
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
