@@ -163,6 +163,8 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 func (this *NodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM "+SharedNodeClusterDAO.Table+" WHERE state=:clusterState)").
+		Param("clusterState", NodeClusterStateEnabled).
 		Count()
 }
 

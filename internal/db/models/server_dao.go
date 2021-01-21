@@ -593,6 +593,13 @@ func (this *ServerDAO) UpdateServerReverseProxy(tx *dbs.Tx, serverId int64, conf
 }
 
 // 计算所有可用服务数量
+func (this *ServerDAO) CountAllEnabledServers(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(ServerStateEnabled).
+		Count()
+}
+
+// 计算所有可用服务数量
 func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamily string) (int64, error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled)

@@ -9,6 +9,8 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
+	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 type AdminService struct {
@@ -449,4 +451,94 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 		return nil, err
 	}
 	return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: otpIsOn}, nil
+}
+
+// 取得管理员Dashboard数据
+func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.ComposeAdminDashboardRequest) (*pb.ComposeAdminDashboardResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.ComposeAdminDashboardResponse{}
+
+	var tx = this.NullTx()
+
+	// 集群数
+	countClusters, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(tx, "")
+	if err != nil {
+		return nil, err
+	}
+	resp.CountNodeClusters = countClusters
+
+	// 节点数
+	countNodes, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	resp.CountNodes = countNodes
+
+	// 服务数
+	countServers, err := models.SharedServerDAO.CountAllEnabledServers(tx)
+	if err != nil {
+		return nil, err
+	}
+	resp.CountServers = countServers
+
+	// 用户数
+	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, "")
+	if err != nil {
+		return nil, err
+	}
+	resp.CountUsers = countUsers
+
+	// API节点数
+	countAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAPINodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	resp.CountAPINodes = countAPINodes
+
+	// 数据库节点数
+	countDBNodes, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	resp.CountDBNodes = countDBNodes
+
+	// 用户节点数
+	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	resp.CountUserNodes = countUserNodes
+
+	// 按日流量统计
+	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
+	dailyTrafficStats, err := models.SharedTrafficDailyStatDAO.FindDailyStats(tx, dayFrom, timeutil.Format("Ymd"))
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range dailyTrafficStats {
+		resp.DailyTrafficStats = append(resp.DailyTrafficStats, &pb.ComposeAdminDashboardResponse_DailyTrafficStat{
+			Day:   stat.Day,
+			Bytes: int64(stat.Bytes),
+		})
+	}
+
+	// 小时流量统计
+	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	hourTo := timeutil.Format("YmdH")
+	hourlyTrafficStats, err := models.SharedTrafficHourlyStatDAO.FindHourlyStats(tx, hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range hourlyTrafficStats {
+		resp.HourlyTrafficStats = append(resp.HourlyTrafficStats, &pb.ComposeAdminDashboardResponse_HourlyTrafficStat{
+			Hour:  stat.Hour,
+			Bytes: int64(stat.Bytes),
+		})
+	}
+
+	return resp, nil
 }
