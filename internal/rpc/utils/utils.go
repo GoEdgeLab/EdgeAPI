@@ -67,8 +67,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	nodeId := nodeIds[0]
 
 	// 获取角色Node信息
-	// TODO 缓存节点ID相关信息
-	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNode(nil, nodeId)
+	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNodeCacheable(nil, nodeId)
 	if err != nil {
 		utils.PrintError(err)
 		return UserTypeNone, 0, err
@@ -121,7 +120,8 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 
 	switch apiToken.Role {
 	case UserTypeNode:
-		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
+		// TODO 需要检查集群是否已经删除
+		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueIdCacheable(nil, nodeId)
 		if err != nil {
 			return UserTypeNode, 0, errors.New("context: " + err.Error())
 		}

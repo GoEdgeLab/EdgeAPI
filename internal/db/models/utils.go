@@ -1,6 +1,11 @@
 package models
 
-import "github.com/iwind/TeaGo/dbs"
+import (
+	"github.com/iwind/TeaGo/dbs"
+	"sync"
+)
+
+var SharedCacheLocker = sync.RWMutex{}
 
 // 处理JSON字节Slice
 func JSONBytes(data []byte) []byte {

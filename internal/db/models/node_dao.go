@@ -25,6 +25,8 @@ const (
 	NodeStateDisabled = 0 // 已禁用
 )
 
+var nodeIdCacheMap = map[string]int64{} // uniqueId => nodeId
+
 type NodeDAO dbs.DAO
 
 func NewNodeDAO() *NodeDAO {
@@ -56,6 +58,20 @@ func (this *NodeDAO) EnableNode(tx *dbs.Tx, id uint32) (rowsAffected int64, err 
 
 // 禁用条目
 func (this *NodeDAO) DisableNode(tx *dbs.Tx, nodeId int64) (err error) {
+	// 删除缓存
+	uniqueId, err := this.Query(tx).
+		Pk(nodeId).
+		Result("uniqueId").
+		FindStringCol("")
+	if err != nil {
+		return err
+	}
+	if len(uniqueId) > 0 {
+		SharedCacheLocker.Lock()
+		delete(nodeIdCacheMap, uniqueId)
+		SharedCacheLocker.Unlock()
+	}
+
 	_, err = this.Query(tx).
 		Pk(nodeId).
 		Set("state", NodeStateDisabled).
@@ -554,13 +570,37 @@ func (this *NodeDAO) UpdateNodeConnectedAPINodes(tx *dbs.Tx, nodeId int64, apiNo
 }
 
 // 根据UniqueId获取ID
-// TODO 增加缓存
 func (this *NodeDAO) FindEnabledNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("uniqueId", uniqueId).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// 根据UniqueId获取ID，并可以使用缓存
+func (this *NodeDAO) FindEnabledNodeIdWithUniqueIdCacheable(tx *dbs.Tx, uniqueId string) (int64, error) {
+	SharedCacheLocker.RLock()
+	nodeId, ok := nodeIdCacheMap[uniqueId]
+	if ok {
+		SharedCacheLocker.RUnlock()
+		return nodeId, nil
+	}
+	SharedCacheLocker.RUnlock()
+	nodeId, err := this.Query(tx).
+		State(NodeStateEnabled).
+		Attr("uniqueId", uniqueId).
+		ResultPk().
+		FindInt64Col(0)
+	if err != nil {
+		return 0, err
+	}
+	if nodeId > 0 {
+		SharedCacheLocker.Lock()
+		nodeIdCacheMap[uniqueId] = nodeId
+		SharedCacheLocker.Unlock()
+	}
+	return nodeId, nil
 }
 
 // 计算使用某个认证的节点数量

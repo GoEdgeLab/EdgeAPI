@@ -11,6 +11,8 @@ const (
 	ApiTokenStateDisabled = 0 // 已禁用
 )
 
+var apiTokenCacheMap = map[string]*ApiToken{} // uniqueId => ApiToken
+
 type ApiTokenDAO dbs.DAO
 
 func NewApiTokenDAO() *ApiTokenDAO {
@@ -60,8 +62,30 @@ func (this *ApiTokenDAO) FindEnabledApiToken(tx *dbs.Tx, id uint32) (*ApiToken, 
 	return result.(*ApiToken), err
 }
 
-// 获取节点Token信息
-// TODO 需要添加缓存
+// 获取可缓存的节点Token信息
+func (this *ApiTokenDAO) FindEnabledTokenWithNodeCacheable(tx *dbs.Tx, nodeId string) (*ApiToken, error) {
+	SharedCacheLocker.RLock()
+	token, ok := apiTokenCacheMap[nodeId]
+	if ok {
+		SharedCacheLocker.RUnlock()
+		return token, nil
+	}
+	SharedCacheLocker.RUnlock()
+	one, err := this.Query(tx).
+		Attr("nodeId", nodeId).
+		State(ApiTokenStateEnabled).
+		Find()
+	if one != nil {
+		token := one.(*ApiToken)
+		SharedCacheLocker.Lock()
+		apiTokenCacheMap[nodeId] = token
+		SharedCacheLocker.Unlock()
+		return token, nil
+	}
+	return nil, err
+}
+
+// 获取节点Token信息并可以缓存
 func (this *ApiTokenDAO) FindEnabledTokenWithNode(tx *dbs.Tx, nodeId string) (*ApiToken, error) {
 	one, err := this.Query(tx).
 		Attr("nodeId", nodeId).
