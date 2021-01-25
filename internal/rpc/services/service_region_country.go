@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -23,7 +23,7 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 
 	tx := this.NullTx()
 
-	countries, err := models.SharedRegionCountryDAO.FindAllEnabledCountriesOrderByPinyin(tx)
+	countries, err := regions.SharedRegionCountryDAO.FindAllEnabledCountriesOrderByPinyin(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, 
 
 	tx := this.NullTx()
 
-	country, err := models.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.CountryId)
+	country, err := regions.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.CountryId)
 	if err != nil {
 		return nil, err
 	}

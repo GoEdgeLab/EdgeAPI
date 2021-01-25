@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
@@ -179,7 +180,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	if clusterDNS != nil {
 		dnsDomainId = int64(clusterDNS.DnsDomainId)
 		if clusterDNS.DnsDomainId > 0 {
-			domainRoutes, err = models.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
+			domainRoutes, err = dns.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
 			if err != nil {
 				return nil, err
 			}
@@ -1086,7 +1087,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 	}
 	dnsDomainId := int64(clusterDNS.DnsDomainId)
 
-	routes, err := models.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
+	routes, err := dns.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -1164,7 +1165,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 	}
 
 	dnsDomainId := int64(clusterDNS.DnsDomainId)
-	dnsDomainName, err := models.SharedDNSDomainDAO.FindDNSDomainName(tx, dnsDomainId)
+	dnsDomainName, err := dns.SharedDNSDomainDAO.FindDNSDomainName(tx, dnsDomainId)
 	if err != nil {
 		return nil, err
 	}
@@ -1177,7 +1178,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		}
 
 		for _, routeCode := range routeCodes {
-			routeName, err := models.SharedDNSDomainDAO.FindDomainRouteName(tx, dnsDomainId, routeCode)
+			routeName, err := dns.SharedDNSDomainDAO.FindDomainRouteName(tx, dnsDomainId, routeCode)
 			if err != nil {
 				return nil, err
 			}

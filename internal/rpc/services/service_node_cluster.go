@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -412,7 +413,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		}, nil
 	}
 
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(dnsInfo.DnsDomainId))
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(dnsInfo.DnsDomainId))
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +430,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		IsOn: domain.IsOn == 1,
 	}
 
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
+	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +569,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	}
 
 	domainId := int64(cluster.DnsDomainId)
-	domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
 	if err != nil {
 		return nil, err
 	}

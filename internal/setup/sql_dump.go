@@ -21,6 +21,10 @@ var recordsTables = []*SQLRecordsTable{
 		TableName:    "edgeRegionProvinces",
 		UniqueFields: []string{"name", "countryId"},
 	},
+	{
+		TableName:    "edgeRegionProviders",
+		UniqueFields: []string{"name"},
+	},
 }
 
 type SQLDump struct {

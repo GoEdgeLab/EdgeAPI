@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/iwind/TeaGo/Tea"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
@@ -48,21 +48,21 @@ func main() {
 
 			switch level {
 			case "1": // 国家|地区
-				countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithDataId(dataId)
+				countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithDataId(nil, dataId)
 				if err != nil {
 					logs.Println("[ERROR]" + err.Error())
 					return
 				}
 				if countryId == 0 {
 					logs.Println("creating country or region ", name)
-					_, err = models.SharedRegionCountryDAO.CreateCountry(name, dataId)
+					_, err = regions.SharedRegionCountryDAO.CreateCountry(nil, name, dataId)
 					if err != nil {
 						logs.Println("[ERROR]" + err.Error())
 						return
 					}
 				}
 			case "2": // 省份|地区
-				provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithDataId(dataId)
+				provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithDataId(nil, dataId)
 				if err != nil {
 					logs.Println("[ERROR]" + err.Error())
 					return
@@ -70,7 +70,7 @@ func main() {
 				if provinceId == 0 {
 					logs.Println("creating province", name)
 
-					countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithDataId(parentDataId)
+					countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithDataId(nil, parentDataId)
 					if err != nil {
 						logs.Println("[ERROR]" + err.Error())
 						return
@@ -80,14 +80,14 @@ func main() {
 						return
 					}
 
-					_, err = models.SharedRegionProvinceDAO.CreateProvince(countryId, name, dataId)
+					_, err = regions.SharedRegionProvinceDAO.CreateProvince(nil, countryId, name, dataId)
 					if err != nil {
 						logs.Println("[ERROR]" + err.Error())
 						return
 					}
 				}
 			case "3": // 城市
-				cityId, err := models.SharedRegionCityDAO.FindCityWithDataId(dataId)
+				cityId, err := regions.SharedRegionCityDAO.FindCityWithDataId(nil, dataId)
 				if err != nil {
 					logs.Println("[ERROR]" + err.Error())
 					return
@@ -95,12 +95,12 @@ func main() {
 				if cityId == 0 {
 					logs.Println("creating city", name)
 
-					provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithDataId(parentDataId)
+					provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithDataId(nil, parentDataId)
 					if err != nil {
 						logs.Println("[ERROR]" + err.Error())
 						return
 					}
-					_, err = models.SharedRegionCityDAO.CreateCity(provinceId, name, dataId)
+					_, err = regions.SharedRegionCityDAO.CreateCity(nil, provinceId, name, dataId)
 					if err != nil {
 						logs.Println("[ERROR]" + err.Error())
 						return
@@ -134,13 +134,33 @@ func main() {
 			pieces := strings.Split(s, "|")
 			countryName := pieces[2]
 			provinceName := pieces[4]
+			providerName := pieces[6]
+
+			// 记录provider
+			if len(providerName) > 0 && providerName != "0" {
+				providerId, err := regions.SharedRegionProviderDAO.FindProviderIdWithNameCacheable(nil, providerName)
+				if err != nil {
+					logs.Println("[ERROR]find provider id failed: " + err.Error())
+					return
+				}
+				if providerId == 0 {
+					logs.Println("creating new provider '"+providerName+"' ... ", index, "line")
+					_, err = regions.SharedRegionProviderDAO.CreateProvider(nil, providerName)
+					if err != nil {
+						logs.Println("create new provider failed: " + providerName)
+						return
+					}
+					logs.Println("created new provider '" + providerName + "'")
+					return
+				}
+			}
 
 			if lists.ContainsString([]string{"0", "欧洲", "北美地区", "法国南部领地", "非洲地区", "亚太地区"}, countryName) {
 				continue
 			}
 
 			// 检查国家
-			countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(countryName)
+			countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(nil, countryName)
 			if err != nil {
 				logs.Println("[ERROR]" + err.Error())
 				return
@@ -156,7 +176,7 @@ func main() {
 					continue
 				}
 
-				provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(provinceName)
+				provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(nil, countryId, provinceName)
 				if err != nil {
 					logs.Println("[ERROR]" + err.Error())
 					return

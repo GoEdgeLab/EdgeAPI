@@ -56,6 +56,12 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		return
 	}
 
+	// 是否是模拟测试
+	mockCtx, isMock := ctx.(*MockNodeContext)
+	if isMock {
+		return UserTypeNode, mockCtx.NodeId, nil
+	}
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return UserTypeNone, 0, errors.New("context: need 'nodeId'")

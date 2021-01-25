@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/iplibrary"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -192,12 +193,12 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 
 	tx := this.NullTx()
 
-	countryId, err := models.SharedRegionCountryDAO.FindCountryIdWithCountryName(tx, result.Country)
+	countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, result.Country)
 	if err != nil {
 		return nil, err
 	}
 
-	provinceId, err := models.SharedRegionProvinceDAO.FindProvinceIdWithProvinceName(tx, result.Province)
+	provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, result.Province)
 	if err != nil {
 		return nil, err
 	}

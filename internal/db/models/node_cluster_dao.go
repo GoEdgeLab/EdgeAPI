@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -332,7 +333,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(tx *dbs.Tx, grantI
 func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
-		Where("dnsDomainId IN (SELECT id FROM "+SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
+		Where("dnsDomainId IN (SELECT id FROM "+dns.SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
 		Param("providerId", dnsProviderId).
 		Count()
 }
@@ -341,7 +342,7 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(tx *dbs.Tx,
 func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
-		Where("dnsDomainId IN (SELECT id FROM "+SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
+		Where("dnsDomainId IN (SELECT id FROM "+dns.SharedDNSDomainDAO.Table+" WHERE state=1 AND providerId=:providerId)").
 		Param("providerId", dnsProviderId).
 		Slice(&result).
 		DescPk().
@@ -462,7 +463,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 	domainId := int64(cluster.DnsDomainId)
 
 	// 检查域名
-	domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
 	if err != nil {
 		return nil, err
 	}

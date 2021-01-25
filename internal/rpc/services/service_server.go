@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -1065,7 +1068,7 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 		if clusterDNS != nil {
 			domainId := int64(clusterDNS.DnsDomainId)
 			if domainId > 0 {
-				domain, err := models.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+				domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
 				if err != nil {
 					return nil, err
 				}
@@ -1230,6 +1233,160 @@ func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req
 	err = models.SharedServerDAO.UpdateUserServerBasic(tx, req.ServerId, req.Name)
 	if err != nil {
 		return nil, err
+	}
+
+	return this.Success()
+}
+
+// 上传待统计数据
+func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req *pb.UploadServerHTTPRequestStatRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 全局
+	month := req.Month
+	if len(month) != 6 {
+		return nil, errors.New("invalid month '" + month + "'")
+	}
+
+	// 区域
+	for _, result := range req.RegionCities {
+		// IP => 地理位置
+		err := func() error {
+			// 区域
+			if len(result.CountryName) > 0 {
+				countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, result.CountryName)
+				if err != nil {
+					return err
+				}
+				if countryId > 0 {
+					key := fmt.Sprintf("%d@%d@%s", result.ServerId, countryId, month)
+					serverStatLocker.Lock()
+					serverHTTPCountryStatMap[key] += result.Count
+					serverStatLocker.Unlock()
+
+					// 省份
+					if len(result.ProvinceName) > 0 {
+						provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, result.ProvinceName)
+						if err != nil {
+							return err
+						}
+						if provinceId > 0 {
+							key := fmt.Sprintf("%d@%d@%s", result.ServerId, provinceId, month)
+							serverStatLocker.Lock()
+							serverHTTPProvinceStatMap[key] += result.Count
+							serverStatLocker.Unlock()
+
+							// 城市
+							if len(result.CityName) > 0 {
+								cityId, err := regions.SharedRegionCityDAO.FindCityIdWithNameCacheable(tx, provinceId, result.CityName)
+								if err != nil {
+									return err
+								}
+								if cityId > 0 {
+									key := fmt.Sprintf("%d@%d@%s", result.ServerId, cityId, month)
+									serverStatLocker.Lock()
+									serverHTTPCityStatMap[key] += result.Count
+									serverStatLocker.Unlock()
+								}
+							}
+
+						}
+					}
+				}
+			}
+
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 运营商
+	for _, result := range req.RegionProviders {
+		// IP => 地理位置
+		err := func() error {
+			if len(result.Name) == 0 {
+				return nil
+			}
+			providerId, err := regions.SharedRegionProviderDAO.FindProviderIdWithNameCacheable(tx, result.Name)
+			if err != nil {
+				return err
+			}
+			if providerId > 0 {
+				key := fmt.Sprintf("%d@%d@%s", result.ServerId, providerId, month)
+				serverStatLocker.Lock()
+				serverHTTPProviderStatMap[key] += result.Count
+				serverStatLocker.Unlock()
+			}
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// OS
+	for _, result := range req.Systems {
+		err := func() error {
+			if len(result.Name) == 0 {
+				return nil
+			}
+
+			systemId, err := models.SharedClientSystemDAO.FindSystemIdWithNameCacheable(tx, result.Name)
+			if err != nil {
+				return err
+			}
+			if systemId == 0 {
+				// TODO 失败时，需要查询一次确认是否已添加
+				systemId, err = models.SharedClientSystemDAO.CreateSystem(tx, result.Name)
+				if err != nil {
+					return err
+				}
+			}
+			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, systemId, result.Version, month)
+			serverStatLocker.Lock()
+			serverHTTPSystemStatMap[key] += result.Count
+			serverStatLocker.Unlock()
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Browser
+	for _, result := range req.Browsers {
+		err := func() error {
+			if len(result.Name) == 0 {
+				return nil
+			}
+
+			browserId, err := models.SharedClientBrowserDAO.FindBrowserIdWithNameCacheable(tx, result.Name)
+			if err != nil {
+				return err
+			}
+			if browserId == 0 {
+				// TODO 失败时，需要查询一次确认是否已添加
+				browserId, err = models.SharedClientBrowserDAO.CreateBrowser(tx, result.Name)
+				if err != nil {
+					return err
+				}
+			}
+			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, browserId, result.Version, month)
+			serverStatLocker.Lock()
+			serverHTTPBrowserStatMap[key] += result.Count
+			serverStatLocker.Unlock()
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return this.Success()

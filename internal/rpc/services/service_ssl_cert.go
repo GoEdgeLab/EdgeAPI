@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 )
@@ -111,7 +112,7 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 	}
 
 	// 停止相关ACME任务
-	err = models.SharedACMETaskDAO.DisableAllTasksWithCertId(tx, req.SslCertId)
+	err = acme.SharedACMETaskDAO.DisableAllTasksWithCertId(tx, req.SslCertId)
 	if err != nil {
 		return nil, err
 	}

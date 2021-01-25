@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -762,7 +763,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 			return nil, err
 		}
 		if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
-			domain, err := SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId))
+			domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId))
 			if err != nil {
 				return nil, err
 			}

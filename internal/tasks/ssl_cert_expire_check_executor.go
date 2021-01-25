@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -69,7 +70,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
-				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
+				task, err := acme.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
 				if err != nil {
 					return err
 				}
@@ -112,13 +113,13 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
-				task, err := models.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
+				task, err := acme.SharedACMETaskDAO.FindEnabledACMETask(nil, int64(cert.AcmeTaskId))
 				if err != nil {
 					return err
 				}
 				if task != nil {
 					if task.AutoRenew == 1 {
-						isOk, errMsg, _ := models.SharedACMETaskDAO.RunTask(nil, int64(cert.AcmeTaskId))
+						isOk, errMsg, _ := acme.SharedACMETaskDAO.RunTask(nil, int64(cert.AcmeTaskId))
 						if isOk {
 							// 发送成功通知
 							msg = "系统已成功为你自动更新了证书\"" + cert.Name + "\"（" + cert.DnsNames + "）。"

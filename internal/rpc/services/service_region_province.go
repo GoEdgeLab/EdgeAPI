@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -22,7 +22,7 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 
 	tx := this.NullTx()
 
-	provinces, err := models.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.CountryId)
+	provinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.CountryId)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context
 
 	tx := this.NullTx()
 
-	province, err := models.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.ProvinceId)
+	province, err := regions.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.ProvinceId)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -24,7 +24,7 @@ func (this *ACMEAuthenticationService) FindACMEAuthenticationKeyWithToken(ctx co
 
 	tx := this.NullTx()
 
-	auth, err := models.SharedACMEAuthenticationDAO.FindAuthWithToken(tx, req.Token)
+	auth, err := acme.SharedACMEAuthenticationDAO.FindAuthWithToken(tx, req.Token)
 	if err != nil {
 		return nil, err
 	}

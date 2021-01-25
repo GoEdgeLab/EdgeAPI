@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -23,7 +23,7 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 
 	tx := this.NullTx()
 
-	providerId, err := models.SharedDNSProviderDAO.CreateDNSProvider(tx, adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
+	providerId, err := dns.SharedDNSProviderDAO.CreateDNSProvider(tx, adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedDNSProviderDAO.UpdateDNSProvider(tx, req.DnsProviderId, req.Name, req.ApiParamsJSON)
+	err = dns.SharedDNSProviderDAO.UpdateDNSProvider(tx, req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 
 	tx := this.NullTx()
 
-	count, err := models.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
+	count, err := dns.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 
 	tx := this.NullTx()
 
-	providers, err := models.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Offset, req.Size)
+	providers, err := dns.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, 
 
 	tx := this.NullTx()
 
-	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
+	providers, err := dns.SharedDNSProviderDAO.FindAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.D
 
 	tx := this.NullTx()
 
-	err = models.SharedDNSProviderDAO.DisableDNSProvider(tx, req.DnsProviderId)
+	err = dns.SharedDNSProviderDAO.DisableDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	provider, err := models.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
+	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (this *DNSProviderService) FindAllEnabledDNSProvidersWithType(ctx context.C
 
 	tx := this.NullTx()
 
-	providers, err := models.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(tx, req.ProviderTypeCode)
+	providers, err := dns.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(tx, req.ProviderTypeCode)
 	if err != nil {
 		return nil, err
 	}
