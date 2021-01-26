@@ -12,12 +12,13 @@ import (
 )
 
 // HTTP请求统计缓存队列
-var serverHTTPCountryStatMap = map[string]int64{}  // serverId@countryId@month => count
-var serverHTTPProvinceStatMap = map[string]int64{} // serverId@provinceId@month => count
-var serverHTTPCityStatMap = map[string]int64{}     // serverId@cityId@month => count
-var serverHTTPProviderStatMap = map[string]int64{} // serverId@providerId@month => count
-var serverHTTPSystemStatMap = map[string]int64{}   // serverId@systemId@version@month => count
-var serverHTTPBrowserStatMap = map[string]int64{}  // serverId@browserId@version@month => count
+var serverHTTPCountryStatMap = map[string]int64{}           // serverId@countryId@month => count
+var serverHTTPProvinceStatMap = map[string]int64{}          // serverId@provinceId@month => count
+var serverHTTPCityStatMap = map[string]int64{}              // serverId@cityId@month => count
+var serverHTTPProviderStatMap = map[string]int64{}          // serverId@providerId@month => count
+var serverHTTPSystemStatMap = map[string]int64{}            // serverId@systemId@version@month => count
+var serverHTTPBrowserStatMap = map[string]int64{}           // serverId@browserId@version@month => count
+var serverHTTPFirewallRuleGroupStatMap = map[string]int64{} // serverId@firewallRuleGroupId@action@day => count
 var serverStatLocker = sync.Mutex{}
 
 func init() {
@@ -29,7 +30,7 @@ func init() {
 			var duration = 30 * time.Minute
 			if Tea.IsTesting() {
 				// 测试条件下缩短时间，以便进行观察
-				duration = 1 * time.Minute
+				duration = 10 * time.Second
 			}
 			ticker := time.NewTicker(duration)
 			for range ticker.C {
@@ -150,6 +151,25 @@ func (this *ServerService) dumpServerHTTPStats() error {
 			}
 		}
 	}
+
+	// 防火墙
+	{
+		serverStatLocker.Lock()
+		m := serverHTTPFirewallRuleGroupStatMap
+		serverHTTPFirewallRuleGroupStatMap = map[string]int64{}
+		serverStatLocker.Unlock()
+		for k, count := range m {
+			pieces := strings.Split(k, "@")
+			if len(pieces) != 4 {
+				continue
+			}
+			err := stats.SharedServerHTTPFirewallDailyStatDAO.IncreaseDailyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], pieces[3], count)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 
 	return nil
 }

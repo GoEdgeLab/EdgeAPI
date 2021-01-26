@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 )
 
 type ServerService struct {
@@ -1247,10 +1248,14 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 
 	var tx = this.NullTx()
 
-	// 全局
 	month := req.Month
-	if len(month) != 6 {
-		return nil, errors.New("invalid month '" + month + "'")
+	if len(month) == 0 {
+		month = timeutil.Format("Ym")
+	}
+
+	day := req.Day
+	if len(day) == 0 {
+		day = timeutil.Format("Ymd")
 	}
 
 	// 区域
@@ -1381,6 +1386,23 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, browserId, result.Version, month)
 			serverStatLocker.Lock()
 			serverHTTPBrowserStatMap[key] += result.Count
+			serverStatLocker.Unlock()
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 防火墙
+	for _, result := range req.HttpFirewallRuleGroups {
+		err := func() error {
+			if result.HttpFirewallRuleGroupId <= 0 {
+				return nil
+			}
+			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, result.HttpFirewallRuleGroupId, result.Action, day)
+			serverStatLocker.Lock()
+			serverHTTPFirewallRuleGroupStatMap[key] += result.Count
 			serverStatLocker.Unlock()
 			return nil
 		}()
