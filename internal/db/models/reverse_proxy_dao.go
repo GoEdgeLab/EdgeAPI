@@ -159,7 +159,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	op.State = ReverseProxyStateEnabled
 	op.AdminId = adminId
 	op.UserId = userId
-	op.AddHeaders = []string{"X-Real-IP"}
+	op.AddHeaders = "[\"X-Real-IP\"]"
 
 	if len(schedulingJSON) > 0 {
 		op.Scheduling = string(schedulingJSON)
