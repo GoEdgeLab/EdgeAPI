@@ -63,6 +63,7 @@ func main() {
 		err := nodes.NewAPINode().InstallSystemService()
 		if err != nil {
 			fmt.Println("[ERROR]install failed: " + err.Error())
+			return
 		}
 		fmt.Println("done")
 	})
