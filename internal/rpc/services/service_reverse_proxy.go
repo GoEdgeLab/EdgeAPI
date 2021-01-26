@@ -43,7 +43,14 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -74,7 +81,14 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -101,7 +115,14 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -123,7 +144,14 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -145,7 +173,14 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -167,12 +202,19 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 	}
 
 	if userId > 0 {
-		// TODO 检查权限
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders)
 	if err != nil {
 		return nil, err
 	}

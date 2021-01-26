@@ -139,6 +139,16 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		}
 	}
 
+	// add headers
+	if IsNotNull(reverseProxy.AddHeaders) {
+		addHeaders := []string{}
+		err = json.Unmarshal([]byte(reverseProxy.AddHeaders), &addHeaders)
+		if err != nil {
+			return nil, err
+		}
+		config.AddHeaders = addHeaders
+	}
+
 	return config, nil
 }
 
@@ -149,6 +159,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	op.State = ReverseProxyStateEnabled
 	op.AdminId = adminId
 	op.UserId = userId
+	op.AddHeaders = []string{"X-Real-IP"}
 
 	if len(schedulingJSON) > 0 {
 		op.Scheduling = string(schedulingJSON)
@@ -225,7 +236,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 }
 
 // 修改是否启用
-func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool) error {
+func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool, addHeaders []string) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -242,7 +253,17 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64
 	op.RequestURI = requestURI
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush
-	err := this.Save(tx, op)
+
+	if len(addHeaders) == 0 {
+		addHeaders = []string{}
+	}
+	addHeadersJSON, err := json.Marshal(addHeaders)
+	if err != nil {
+		return err
+	}
+	op.AddHeaders = addHeadersJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}

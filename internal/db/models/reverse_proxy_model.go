@@ -15,6 +15,7 @@ type ReverseProxy struct {
 	RequestHost     string `field:"requestHost"`     // 请求Host
 	RequestURI      string `field:"requestURI"`      // 请求URI
 	AutoFlush       uint8  `field:"autoFlush"`       // 是否自动刷新缓冲区
+	AddHeaders      string `field:"addHeaders"`      // 自动添加的Header列表
 	State           uint8  `field:"state"`           // 状态
 	CreatedAt       uint64 `field:"createdAt"`       // 创建时间
 }
@@ -33,6 +34,7 @@ type ReverseProxyOperator struct {
 	RequestHost     interface{} // 请求Host
 	RequestURI      interface{} // 请求URI
 	AutoFlush       interface{} // 是否自动刷新缓冲区
+	AddHeaders      interface{} // 自动添加的Header列表
 	State           interface{} // 状态
 	CreatedAt       interface{} // 创建时间
 }
