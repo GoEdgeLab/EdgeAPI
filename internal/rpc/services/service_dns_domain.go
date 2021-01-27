@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
+	"net"
 )
 
 // DNS域名相关服务
@@ -410,11 +411,11 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 新增的节点域名
 	nodeKeys := []string{}
 	for _, node := range nodes {
-		ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeIPAddress(tx, int64(node.Id))
+		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id))
 		if err != nil {
 			return nil, nil, nil, 0, 0, false, false, err
 		}
-		if len(ipAddr) == 0 {
+		if len(ipAddresses) == 0 {
 			continue
 		}
 		routeCodes, err := node.DNSRouteCodesForDomainId(int64(cluster.DnsDomainId))
@@ -425,23 +426,32 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 			continue
 		}
 		for _, route := range routeCodes {
-			key := ipAddr + "_" + route
-			nodeKeys = append(nodeKeys, key)
-			record, ok := nodeRecordMapping[key]
-			if !ok {
-				result = append(result, maps.Map{
-					"action": "create",
-					"record": &dnsclients.Record{
-						Id:    "",
-						Name:  clusterDnsName,
-						Type:  dnsclients.RecordTypeA,
-						Value: ipAddr,
-						Route: route,
-					},
-				})
-				nodesChanged = true
-			} else {
-				doneNodeRecords = append(doneNodeRecords, record)
+			for _, ipAddress := range ipAddresses {
+				ip := ipAddress.Ip
+				if len(ip) == 0 {
+					continue
+				}
+				if net.ParseIP(ip) == nil {
+					continue
+				}
+				key := ip + "_" + route
+				nodeKeys = append(nodeKeys, key)
+				record, ok := nodeRecordMapping[key]
+				if !ok {
+					result = append(result, maps.Map{
+						"action": "create",
+						"record": &dnsclients.Record{
+							Id:    "",
+							Name:  clusterDnsName,
+							Type:  dnsclients.RecordTypeA,
+							Value: ip,
+							Route: route,
+						},
+					})
+					nodesChanged = true
+				} else {
+					doneNodeRecords = append(doneNodeRecords, record)
+				}
 			}
 		}
 	}

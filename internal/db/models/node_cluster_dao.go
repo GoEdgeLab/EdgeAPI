@@ -120,7 +120,7 @@ func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64,
 
 // 创建集群
 func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
-	uniqueId, err := this.genUniqueId(tx)
+	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -454,7 +454,11 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, clusterId)
+	err = this.NotifyUpdate(tx, clusterId)
+	if err != nil {
+		return err
+	}
+	return this.NotifyDNSUpdate(tx, clusterId)
 }
 
 // 检查集群的DNS问题
@@ -545,7 +549,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 		}
 
 		// 检查IP地址
-		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeIPAddress(tx, nodeId)
+		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId)
 		if err != nil {
 			return nil, err
 		}
@@ -801,7 +805,7 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId 
 }
 
 // 生成唯一ID
-func (this *NodeClusterDAO) genUniqueId(tx *dbs.Tx) (string, error) {
+func (this *NodeClusterDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
 		ok, err := this.Query(tx).
@@ -820,4 +824,14 @@ func (this *NodeClusterDAO) genUniqueId(tx *dbs.Tx) (string, error) {
 // 通知更新
 func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
+}
+
+// 通知DNS更新
+// TODO 更新新的DNS解析记录的同时，需要删除老的DNS解析记录
+func (this *NodeClusterDAO) NotifyDNSUpdate(tx *dbs.Tx, clusterId int64) error {
+	err := dns.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dns.DNSTaskTypeClusterChange)
+	if err != nil {
+		return err
+	}
+	return nil
 }

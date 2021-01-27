@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
@@ -12,7 +13,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
@@ -80,7 +80,17 @@ func (this *NodeDAO) DisableNode(tx *dbs.Tx, nodeId int64) (err error) {
 		return err
 	}
 
-	return this.NotifyUpdate(tx, nodeId)
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	err = this.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 查找启用中的条目
@@ -106,7 +116,7 @@ func (this *NodeDAO) FindNodeName(tx *dbs.Tx, id int64) (string, error) {
 
 // 创建节点
 func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterId int64, groupId int64, regionId int64) (nodeId int64, err error) {
-	uniqueId, err := this.genUniqueId(tx)
+	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -134,7 +144,20 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 		return 0, err
 	}
 
-	return types.Int64(op.Id), nil
+	// 通知节点更新
+	nodeId = types.Int64(op.Id)
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return 0, err
+	}
+
+	// 通知DNS更新
+	err = this.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return 0, err
+	}
+
+	return nodeId, nil
 }
 
 // 修改节点
@@ -156,7 +179,12 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 		return err
 	}
 
-	return this.NotifyUpdate(tx, nodeId)
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyDNSUpdate(tx, nodeId)
 }
 
 // 计算所有节点数量
@@ -670,7 +698,6 @@ func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId
 		DescPk().
 		Slice(&result).
 		FindAll()
-	logs.Println(len(result), version) // TODO
 	return
 }
 
@@ -730,6 +757,18 @@ func (this *NodeDAO) FindEnabledNodeDNS(tx *dbs.Tx, nodeId int64) (*Node, error)
 	return one.(*Node), nil
 }
 
+// 获取单个节点的DNS信息，无论什么状态
+func (this *NodeDAO) FindStatelessNodeDNS(tx *dbs.Tx, nodeId int64) (*Node, error) {
+	one, err := this.Query(tx).
+		Pk(nodeId).
+		Result("id", "name", "dnsRoutes", "clusterId", "isOn", "state").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Node), nil
+}
+
 // 修改节点的DNS信息
 func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]string) error {
 	if nodeId <= 0 {
@@ -750,7 +789,17 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 		return err
 	}
 
-	return this.NotifyUpdate(tx, nodeId)
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	err = this.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 计算节点上线|下线状态
@@ -806,6 +855,11 @@ func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool, maxUp int
 		return false, err
 	}
 
+	err = this.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return false, err
+	}
+
 	return
 }
 
@@ -842,7 +896,7 @@ func (this *NodeDAO) FindNodeVersion(tx *dbs.Tx, nodeId int64) (int64, error) {
 }
 
 // 生成唯一ID
-func (this *NodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
+func (this *NodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
 		ok, err := this.Query(tx).
@@ -887,4 +941,29 @@ func (this *NodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 		return SharedNodeTaskDAO.CreateNodeTask(tx, clusterId, nodeId, NodeTaskTypeConfigChanged)
 	}
 	return nil
+}
+
+// 通知DNS更新
+func (this *NodeDAO) NotifyDNSUpdate(tx *dbs.Tx, nodeId int64) error {
+	clusterId, err := this.Query(tx).
+		Pk(nodeId).
+		Result("clusterId").
+		FindInt64Col(0) // 这里不需要加服务状态条件，因为我们即使删除也要删除对应的服务的DNS解析
+	if err != nil {
+		return err
+	}
+	if clusterId <= 0 {
+		return nil
+	}
+	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+	if err != nil {
+		return err
+	}
+	if dnsInfo == nil {
+		return nil
+	}
+	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId <= 0 {
+		return nil
+	}
+	return dns.SharedDNSTaskDAO.CreateNodeTask(tx, nodeId, dns.DNSTaskTypeNodeChange)
 }

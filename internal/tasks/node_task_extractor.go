@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
+	dbs.OnReadyDone(func() {
 		go NewNodeTaskExtractor().Start()
 	})
 }

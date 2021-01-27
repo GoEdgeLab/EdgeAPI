@@ -96,6 +96,12 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, name strin
 	if err != nil {
 		return 0, err
 	}
+
+	err = SharedNodeDAO.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return 0, err
+	}
+
 	return types.Int64(op.Id), nil
 }
 
@@ -134,7 +140,15 @@ func (this *NodeIPAddressDAO) UpdateAddressNodeId(tx *dbs.Tx, addressId int64, n
 		Set("nodeId", nodeId).
 		Set("state", NodeIPAddressStateEnabled). // 恢复状态
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	err = SharedNodeDAO.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 查找节点的所有的IP地址
@@ -150,7 +164,7 @@ func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(tx *dbs.Tx, nodeId
 }
 
 // 查找节点的第一个可访问的IP地址
-func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(tx *dbs.Tx, nodeId int64) (string, error) {
+func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId int64) (string, error) {
 	return this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
@@ -162,7 +176,7 @@ func (this *NodeIPAddressDAO) FindFirstNodeIPAddress(tx *dbs.Tx, nodeId int64) (
 }
 
 // 查找节点的第一个可访问的IP地址ID
-func (this *NodeIPAddressDAO) FindFirstNodeIPAddressId(tx *dbs.Tx, nodeId int64) (int64, error) {
+func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId int64) (int64, error) {
 	return this.Query(tx).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
@@ -171,4 +185,17 @@ func (this *NodeIPAddressDAO) FindFirstNodeIPAddressId(tx *dbs.Tx, nodeId int64)
 		AscPk().
 		Result("id").
 		FindInt64Col(0)
+}
+
+// 查找节点所有的可访问的IP地址
+func (this *NodeIPAddressDAO) FindNodeAccessIPAddresses(tx *dbs.Tx, nodeId int64) (result []*NodeIPAddress, err error) {
+	_, err = this.Query(tx).
+		Attr("nodeId", nodeId).
+		State(NodeIPAddressStateEnabled).
+		Attr("canAccess", true).
+		Desc("order").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
 }

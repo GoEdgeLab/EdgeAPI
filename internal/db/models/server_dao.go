@@ -65,15 +65,24 @@ func (this *ServerDAO) EnableServer(tx *dbs.Tx, id uint32) (rowsAffected int64, 
 }
 
 // 禁用条目
-func (this *ServerDAO) DisableServer(tx *dbs.Tx, id int64) (err error) {
+func (this *ServerDAO) DisableServer(tx *dbs.Tx, serverId int64) (err error) {
 	_, err = this.Query(tx).
-		Pk(id).
+		Pk(serverId).
 		Set("state", ServerStateDisabled).
 		Update()
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, id)
+	err = this.NotifyUpdate(tx, serverId)
+	if err != nil {
+		return err
+	}
+
+	err = this.NotifyDNSUpdate(tx, serverId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 查找启用中的服务
@@ -86,6 +95,15 @@ func (this *ServerDAO) FindEnabledServer(tx *dbs.Tx, serverId int64) (*Server, e
 		return nil, err
 	}
 	return result.(*Server), err
+}
+
+// 查找服务名称
+func (this *ServerDAO) FindEnabledServerName(tx *dbs.Tx, serverId int64) (string, error) {
+	return this.Query(tx).
+		Pk(serverId).
+		State(ServerStateEnabled).
+		Result("name").
+		FindStringCol("")
 }
 
 // 查找服务基本信息
@@ -186,7 +204,7 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 		op.GroupIds = groupIdsJSON
 	}
 
-	dnsName, err := this.genDNSName(tx)
+	dnsName, err := this.GenDNSName(tx)
 	if err != nil {
 		return 0, err
 	}
@@ -203,7 +221,14 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 
 	serverId = types.Int64(op.Id)
 
+	// 通知配置更改
 	err = this.NotifyUpdate(tx, serverId)
+	if err != nil {
+		return 0, err
+	}
+
+	// 通知DNS更改
+	err = this.NotifyDNSUpdate(tx, serverId)
 	if err != nil {
 		return 0, err
 	}
@@ -244,7 +269,8 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 		return err
 	}
 
-	return nil
+	// 因为可能有isOn的原因，所以需要修改
+	return this.NotifyDNSUpdate(tx, serverId)
 }
 
 // 设置用户相关的基本信息
@@ -487,7 +513,7 @@ func (this *ServerDAO) InitServerWeb(tx *dbs.Tx, serverId int64) (int64, error) 
 }
 
 // 查找ServerNames配置
-func (this *ServerDAO) FindServerNames(tx *dbs.Tx, serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
+func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
 	if serverId <= 0 {
 		return
 	}
@@ -574,7 +600,12 @@ func (this *ServerDAO) UpdateServerAuditing(tx *dbs.Tx, serverId int64, result *
 		return err
 	}
 
-	return this.NotifyUpdate(tx, serverId)
+	err = this.NotifyUpdate(tx, serverId)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyDNSUpdate(tx, serverId)
 }
 
 // 修改反向代理配置
@@ -1085,7 +1116,7 @@ func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string
 	if serverId <= 0 {
 		return "", errors.New("invalid serverId")
 	}
-	dnsName, err := this.genDNSName(tx)
+	dnsName, err := this.GenDNSName(tx)
 	if err != nil {
 		return "", err
 	}
@@ -1098,6 +1129,11 @@ func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string
 	}
 
 	err = this.NotifyUpdate(tx, serverId)
+	if err != nil {
+		return "", err
+	}
+
+	err = this.NotifyDNSUpdate(tx, serverId)
 	if err != nil {
 		return "", err
 	}
@@ -1119,6 +1155,18 @@ func (this *ServerDAO) FindServerDNSName(tx *dbs.Tx, serverId int64) (string, er
 		Pk(serverId).
 		Result("dnsName").
 		FindStringCol("")
+}
+
+// 查询服务的DNS相关信息，并且不关注状态
+func (this *ServerDAO) FindStatelessServerDNS(tx *dbs.Tx, serverId int64) (*Server, error) {
+	one, err := this.Query(tx).
+		Pk(serverId).
+		Result("id", "dnsName", "isOn", "state", "clusterId").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Server), nil
 }
 
 // 获取当前服务的管理员ID和用户ID
@@ -1271,6 +1319,22 @@ func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, port int, e
 		Exist()
 }
 
+// 生成DNS Name
+func (this *ServerDAO) GenDNSName(tx *dbs.Tx) (string, error) {
+	for {
+		dnsName := rands.HexString(8)
+		exist, err := this.Query(tx).
+			Attr("dnsName", dnsName).
+			Exist()
+		if err != nil {
+			return "", err
+		}
+		if !exist {
+			return dnsName, nil
+		}
+	}
+}
+
 // 同步集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	// 更新配置
@@ -1290,18 +1354,27 @@ func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
 }
 
-// 生成DNS Name
-func (this *ServerDAO) genDNSName(tx *dbs.Tx) (string, error) {
-	for {
-		dnsName := rands.HexString(8)
-		exist, err := this.Query(tx).
-			Attr("dnsName", dnsName).
-			Exist()
-		if err != nil {
-			return "", err
-		}
-		if !exist {
-			return dnsName, nil
-		}
+// 通知DNS更新
+func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
+	clusterId, err := this.Query(tx).
+		Pk(serverId).
+		Result("clusterId").
+		FindInt64Col(0) // 这里不需要加服务状态条件，因为我们即使删除也要删除对应的服务的DNS解析
+	if err != nil {
+		return err
 	}
+	if clusterId <= 0 {
+		return nil
+	}
+	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+	if err != nil {
+		return err
+	}
+	if dnsInfo == nil {
+		return nil
+	}
+	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId <= 0 {
+		return nil
+	}
+	return dns.SharedDNSTaskDAO.CreateServerTask(tx, serverId, dns.DNSTaskTypeServerChange)
 }

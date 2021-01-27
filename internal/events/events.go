@@ -8,7 +8,3 @@ const (
 	EventQuit   Event = "quit"   // quit node gracefully
 	EventReload Event = "reload" // reload config
 )
-
-// 节点更新事件
-// TODO 改成事件
-var NodeDNSChanges = make(chan int64, 128)

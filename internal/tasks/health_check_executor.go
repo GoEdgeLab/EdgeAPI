@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
@@ -56,7 +56,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			Node: node,
 		}
 
-		ipAddr, err := models.NewNodeIPAddressDAO().FindFirstNodeIPAddress(nil, int64(node.Id))
+		ipAddr, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id))
 		if err != nil {
 			return nil, err
 		}
@@ -133,11 +133,10 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 						if err != nil {
 							logs.Println("[HEALTH_CHECK]" + err.Error())
 						} else if isChanged {
-							// 通知更新
-							select {
-							case events.NodeDNSChanges <- int64(result.Node.Id):
-							default:
-
+							// 通知DNS更新
+							err = dns.SharedDNSTaskDAO.CreateNodeTask(nil, int64(result.Node.Id), dns.DNSTaskTypeNodeChange)
+							if err != nil {
+								logs.Println("[HEALTH_CHECK]" + err.Error())
 							}
 
 							// 通知恢复或下线
