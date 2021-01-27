@@ -26,6 +26,11 @@ var (
 			Description: "用户可以添加TCP/TLS负载均衡服务",
 		},
 		{
+			Name:        "自定义负载均衡端口",
+			Code:        "server.tcp.port",
+			Description: "用户可以自定义TCP端口",
+		},
+		{
 			Name:        "开启WAF",
 			Code:        "server.waf",
 			Description: "用户可以开启WAF功能并可以设置黑白名单等",

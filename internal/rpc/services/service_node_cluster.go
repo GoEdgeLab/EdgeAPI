@@ -839,7 +839,7 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 			continue
 		}
 
-		isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, port)
+		isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, port, 0, "")
 		if err != nil {
 			return nil, err
 		}
@@ -849,4 +849,19 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 	}
 
 	return nil, errors.New("can not find random port")
+}
+
+// 检查端口是否已经被使用
+func (this *NodeClusterService) CheckPortIsUsingInNodeCluster(ctx context.Context, req *pb.CheckPortIsUsingInNodeClusterRequest) (*pb.CheckPortIsUsingInNodeClusterResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, int(req.Port), req.ExcludeServerId, req.ExcludeProtocol)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckPortIsUsingInNodeClusterResponse{IsUsing: isUsing}, nil
 }

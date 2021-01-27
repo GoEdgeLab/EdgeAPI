@@ -210,13 +210,16 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 // 修改TCP服务
 func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()
@@ -233,13 +236,16 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 // 修改TLS服务
 func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tx := this.NullTx()

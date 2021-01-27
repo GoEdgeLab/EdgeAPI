@@ -87,3 +87,22 @@ func TestServerDAO_FindAllEnabledServerIdsWithSSLPolicyIds(t *testing.T) {
 	}
 	t.Log("serverIds:", serverIds)
 }
+
+func TestServerDAO_CheckPortIsUsing(t *testing.T) {
+	dbs.NotifyReady()
+	var tx *dbs.Tx
+	//{
+	//	isUsing, err := SharedServerDAO.CheckPortIsUsing(tx, 18, 1234, 0, "")
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	t.Log("isUsing:", isUsing)
+	//}
+	{
+		isUsing, err := SharedServerDAO.CheckPortIsUsing(tx, 18, 1234, 44, "tcp")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("isUsing:", isUsing)
+	}
+}

@@ -1232,16 +1232,42 @@ func (this *ServerDAO) FindEnabledServerIdWithReverseProxyId(tx *dbs.Tx, reverse
 }
 
 // 检查端口是否被使用
-func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, port int) (bool, error) {
+func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, port int, excludeServerId int64, excludeProtocol string) (bool, error) {
 	listen := maps.Map{
 		"portRange": strconv.Itoa(port),
 	}
-
-	return this.Query(tx).
+	query := this.Query(tx).
 		Attr("clusterId", clusterId).
-		State(ServerStateEnabled).
-		Where("(JSON_CONTAINS(http, :listen) OR JSON_CONTAINS(https, :listen) OR JSON_CONTAINS(tcp, :listen) OR JSON_CONTAINS(tls, :listen))").
-		Param(":listen", string(listen.AsJSON())).
+		State(ServerStateEnabled)
+	protocols := []string{"http", "https", "tcp", "tls", "udp"}
+	where := ""
+	if excludeServerId <= 0 {
+		conds := []string{}
+		for _, p := range protocols {
+			conds = append(conds, "JSON_CONTAINS("+p+", :listen, '$.listen')")
+		}
+		where = strings.Join(conds, " OR ")
+	} else {
+		conds := []string{}
+		for _, p := range protocols {
+			conds = append(conds, "JSON_CONTAINS("+p+", :listen, '$.listen')")
+		}
+		where1 := "(id!=:serverId AND (" + strings.Join(conds, " OR ") + "))"
+
+		conds = []string{}
+		for _, p := range protocols {
+			if p == excludeProtocol {
+				continue
+			}
+			conds = append(conds, "JSON_CONTAINS("+p+", :listen, '$.listen')")
+		}
+		where2 := "(id=:serverId AND (" + strings.Join(conds, " OR ") + "))"
+		where = where1 + " OR " + where2
+		query.Param("serverId", excludeServerId)
+	}
+	return query.
+		Where("("+where+")").
+		Param("listen", string(listen.AsJSON())).
 		Exist()
 }
 
