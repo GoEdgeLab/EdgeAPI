@@ -6,9 +6,10 @@ type ProviderType = string
 
 // 服务商代号
 const (
-	ProviderTypeDNSPod ProviderType = "dnspod"
-	ProviderTypeAliDNS ProviderType = "alidns"
-	ProviderTypeDNSCom ProviderType = "dnscom"
+	ProviderTypeDNSPod     ProviderType = "dnspod"
+	ProviderTypeAliDNS     ProviderType = "alidns"
+	ProviderTypeDNSCom     ProviderType = "dnscom"
+	ProviderTypeCustomHTTP ProviderType = "customHTTP"
 )
 
 // 所有的服务商类型
@@ -25,6 +26,10 @@ var AllProviderTypes = []maps.Map{
 		"name": "帝恩思DNS.COM",
 		"code": ProviderTypeDNSCom,
 	},**/
+	{
+		"name": "自定义HTTP DNS",
+		"code": ProviderTypeCustomHTTP,
+	},
 }
 
 // 查找服务商实例
@@ -34,6 +39,8 @@ func FindProvider(providerType ProviderType) ProviderInterface {
 		return &DNSPodProvider{}
 	case ProviderTypeAliDNS:
 		return &AliDNSProvider{}
+	case ProviderTypeCustomHTTP:
+		return &CustomHTTPProvider{}
 	}
 	return nil
 }
