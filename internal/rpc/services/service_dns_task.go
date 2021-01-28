@@ -89,6 +89,15 @@ func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.Fi
 				serverName = "服务[" + fmt.Sprintf("%d", task.ServerId) + "]"
 			}
 			pbTask.Server = &pb.Server{Id: int64(task.ServerId), Name: serverName}
+		case dns.DNSTaskTypeDomainChange:
+			domainName, err := dns.SharedDNSDomainDAO.FindDNSDomainName(tx, int64(task.DomainId))
+			if err != nil {
+				return nil, err
+			}
+			if len(domainName) == 0 {
+				domainName = "域名[" + fmt.Sprintf("%d", task.DomainId) + "]"
+			}
+			pbTask.DnsDomain = &pb.DNSDomain{Id: int64(task.DomainId), Name: domainName}
 		}
 		pbTasks = append(pbTasks, pbTask)
 	}
