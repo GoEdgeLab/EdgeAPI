@@ -14,6 +14,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 	"net"
 )
 
@@ -1253,4 +1254,18 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 		})
 	}
 	return &pb.FindEnabledNodesWithIdsResponse{Nodes: pbNodes}, nil
+}
+
+// 检查新版本
+func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.CheckNodeLatestVersionRequest) (*pb.CheckNodeLatestVersionResponse, error) {
+	deployFiles := installers.SharedDeployManager.LoadFiles()
+	for _, file := range deployFiles {
+		if file.OS == req.Os && file.Arch == req.Arch && stringutil.VersionCompare(file.Version, req.CurrentVersion) > 0 {
+			return &pb.CheckNodeLatestVersionResponse{
+				HasNewVersion: true,
+				NewVersion:    file.Version,
+			}, nil
+		}
+	}
+	return &pb.CheckNodeLatestVersionResponse{HasNewVersion: false}, nil
 }
