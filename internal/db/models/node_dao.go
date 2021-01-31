@@ -656,6 +656,15 @@ func (this *NodeDAO) FindAllEnabledNodesWithGrantId(tx *dbs.Tx, grantId int64) (
 	return
 }
 
+// 计算未安装的节点数量
+func (this *NodeDAO) CountAllNotInstalledNodesWithClusterId(tx *dbs.Tx, clusterId int64) (int64, error) {
+	return this.Query(tx).
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isInstalled", false).
+		Count()
+}
+
 // 查找所有未安装的节点
 func (this *NodeDAO) FindAllNotInstalledNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*Node, err error) {
 	_, err = this.Query(tx).

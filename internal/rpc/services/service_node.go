@@ -733,10 +733,23 @@ func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req
 	return &pb.FindAllEnabledNodesWithGrantIdResponse{Nodes: result}, nil
 }
 
+// 计算没有安装的节点数量
+func (this *NodeService) CountAllNotInstalledNodesWithClusterId(ctx context.Context, req *pb.CountAllNotInstalledNodesWithClusterIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+	tx := this.NullTx()
+	count, err := models.SharedNodeDAO.CountAllNotInstalledNodesWithClusterId(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
 // 列出所有未安装的节点
 func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Context, req *pb.FindAllNotInstalledNodesWithClusterIdRequest) (*pb.FindAllNotInstalledNodesWithClusterIdResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
