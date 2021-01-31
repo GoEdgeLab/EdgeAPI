@@ -186,6 +186,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		PrivateKey: grant.PrivateKey,
 	})
 	if err != nil {
+		installStatus.ErrorCode = "SSH_LOGIN_FAILED"
 		return err
 	}
 	defer func() {
