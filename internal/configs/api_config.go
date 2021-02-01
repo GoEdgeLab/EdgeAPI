@@ -34,14 +34,15 @@ func SharedAPIConfig() (*APIConfig, error) {
 	localFile := Tea.ConfigFile("api.yaml")
 	isFromLocal := false
 	paths := []string{localFile}
-	homeDir, err := os.UserHomeDir()
-	if err == nil {
+	homeDir, homeErr := os.UserHomeDir()
+	if homeErr == nil {
 		paths = append(paths, homeDir+"/."+teaconst.ProcessName+"/api.yaml")
 	}
 	paths = append(paths, "/etc/"+teaconst.ProcessName+"/api.yaml")
 
 	// 依次检查文件
 	var data []byte
+	var err error
 	for _, path := range paths {
 		data, err = ioutil.ReadFile(path)
 		if err == nil {
@@ -73,8 +74,8 @@ func SharedAPIConfig() (*APIConfig, error) {
 		_, err := os.Stat(dbConfigFile)
 		if err == nil {
 			paths := []string{}
-			homeDir, err := os.UserHomeDir()
-			if err == nil {
+			homeDir, homeErr := os.UserHomeDir()
+			if homeErr == nil {
 				paths = append(paths, homeDir+"/."+teaconst.ProcessName+"/db.yaml")
 			}
 			paths = append(paths, "/etc/"+teaconst.ProcessName+"/db.yaml")
