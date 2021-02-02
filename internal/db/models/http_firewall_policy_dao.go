@@ -52,12 +52,16 @@ func (this *HTTPFirewallPolicyDAO) EnableHTTPFirewallPolicy(tx *dbs.Tx, id int64
 }
 
 // 禁用条目
-func (this *HTTPFirewallPolicyDAO) DisableHTTPFirewallPolicy(tx *dbs.Tx, id int64) error {
+func (this *HTTPFirewallPolicyDAO) DisableHTTPFirewallPolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(policyId).
 		Set("state", HTTPFirewallPolicyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 查找启用中的条目
@@ -127,7 +131,11 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *db
 		op.Outbound = "null"
 	}
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改策略的Inbound
@@ -143,7 +151,11 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 		op.Inbound = "null"
 	}
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 修改策略
@@ -170,7 +182,11 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 		op.BlockOptions = blockOptionsJSON
 	}
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, policyId)
 }
 
 // 计算所有可用的策略数量
@@ -329,7 +345,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx
 
 // 设置某个策略所属的服务ID
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, policyId int64, serverId int64) error {
-	_, err :=  this.Query(tx).
+	_, err := this.Query(tx).
 		Pk(policyId).
 		Set("serverId", serverId).
 		Update()
