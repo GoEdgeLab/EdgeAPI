@@ -170,6 +170,24 @@ func (this *NodeTaskService) DeleteNodeTask(ctx context.Context, req *pb.DeleteN
 	return this.Success()
 }
 
+// 批量删除任务
+func (this *NodeTaskService) DeleteNodeTasks(ctx context.Context, req *pb.DeleteNodeTasksRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	for _, taskId := range req.NodeTaskIds {
+		err = models.SharedNodeTaskDAO.DeleteNodeTask(tx, taskId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return this.Success()
+}
+
 // 计算正在执行的任务数量
 func (this *NodeTaskService) CountDoingNodeTasks(ctx context.Context, req *pb.CountDoingNodeTasksRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
