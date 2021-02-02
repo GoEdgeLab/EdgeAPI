@@ -2,11 +2,13 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
+	"math"
 	"time"
 )
 
@@ -95,6 +97,8 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 	op.ListId = listId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
+	op.IpFromLong = utils.IP2Long(ipFrom)
+	op.IpToLong = utils.IP2Long(ipTo)
 	op.Reason = reason
 	op.Type = itemType
 	op.Version = version
@@ -142,6 +146,8 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	op.Id = itemId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
+	op.IpFromLong = utils.IP2Long(ipFrom)
+	op.IpToLong = utils.IP2Long(ipTo)
 	op.Reason = reason
 	op.Type = itemType
 	if expiredAt < 0 {
@@ -198,6 +204,27 @@ func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 		Pk(itemId).
 		Result("listId").
 		FindInt64Col(0)
+}
+
+// 查找包含某个IP的Item
+func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip uint64) (*IPItem, error) {
+	query := this.Query(tx).
+		Attr("listId", listId).
+		State(IPItemStateEnabled)
+	if ip > math.MaxUint32 {
+		query.Where("(type='all' OR ipFromLong=:ip)")
+	} else {
+		query.Where("(type='all' OR ipFromLong=:ip OR (ipToLong>0 AND ipFromLong<=:ip AND ipToLong>=:ip))").
+			Param("ip", ip)
+	}
+	one, err := query.Find()
+	if err != nil {
+		return nil, err
+	}
+	if one == nil {
+		return nil, nil
+	}
+	return one.(*IPItem), nil
 }
 
 // 通知更新

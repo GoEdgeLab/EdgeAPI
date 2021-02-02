@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/rands"
@@ -28,6 +29,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.0.9", upgradeV0_0_9,
+	},
+	{
+		"0.0.10", upgradeV0_0_10,
 	},
 }
 
@@ -175,6 +179,25 @@ func upgradeV0_0_9(db *dbs.DB) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// v0.0.10
+func upgradeV0_0_10(db *dbs.DB) error {
+	// IP Item列表转换
+	ones, _, err := db.FindOnes("SELECT * FROM edgeIPItems ORDER BY id ASC")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		ipFromLong := utils.IP2Long(one.GetString("ipFrom"))
+		ipToLong := utils.IP2Long(one.GetString("ipTo"))
+		_, err = db.Exec("UPDATE edgeIPItems SET ipFromLong=?, ipToLong=? WHERE id=?", ipFromLong, ipToLong, one.GetInt64("id"))
+		if err != nil {
+			return err
 		}
 	}
 

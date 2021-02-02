@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/iplibrary"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/iwind/TeaGo/lists"
+	"net"
 )
 
 // HTTP防火墙（WAF）相关服务
@@ -627,4 +631,166 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 	}
 
 	return this.Success()
+}
+
+// 检查IP状态
+func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx context.Context, req *pb.CheckHTTPFirewallPolicyIPStatusRequest) (*pb.CheckHTTPFirewallPolicyIPStatusResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// 校验IP
+	ip := net.ParseIP(req.Ip)
+	if len(ip) == 0 {
+		return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+			IsOk:  false,
+			Error: "请输入正确的IP",
+		}, nil
+	}
+	ipLong := utils.IP2Long(req.Ip)
+
+	tx := this.NullTx()
+	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
+	if firewallPolicy == nil {
+		return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+			IsOk:  false,
+			Error: "找不到策略信息",
+		}, nil
+	}
+
+	// 检查白名单
+	if firewallPolicy.Inbound != nil &&
+		firewallPolicy.Inbound.IsOn &&
+		firewallPolicy.Inbound.AllowListRef != nil &&
+		firewallPolicy.Inbound.AllowListRef.IsOn &&
+		firewallPolicy.Inbound.AllowListRef.ListId > 0 {
+		item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, firewallPolicy.Inbound.AllowListRef.ListId, ipLong)
+		if err != nil {
+			return nil, err
+		}
+		if item != nil {
+			return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+				IsOk:      true,
+				Error:     "",
+				IsFound:   true,
+				IsAllowed: true,
+				IpList:    &pb.IPList{Name: "白名单", Id: firewallPolicy.Inbound.AllowListRef.ListId},
+				IpItem: &pb.IPItem{
+					Id:        int64(item.Id),
+					IpFrom:    item.IpFrom,
+					IpTo:      item.IpTo,
+					ExpiredAt: int64(item.ExpiredAt),
+					Reason:    item.Reason,
+					Type:      item.Type,
+				},
+				RegionCountry:  nil,
+				RegionProvince: nil,
+			}, nil
+		}
+	}
+
+	// 检查黑名单
+	if firewallPolicy.Inbound != nil &&
+		firewallPolicy.Inbound.IsOn &&
+		firewallPolicy.Inbound.AllowListRef != nil &&
+		firewallPolicy.Inbound.AllowListRef.IsOn &&
+		firewallPolicy.Inbound.AllowListRef.ListId > 0 {
+		item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, firewallPolicy.Inbound.DenyListRef.ListId, ipLong)
+		if err != nil {
+			return nil, err
+		}
+		if item != nil {
+			return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+				IsOk:      true,
+				Error:     "",
+				IsFound:   true,
+				IsAllowed: false,
+				IpList:    &pb.IPList{Name: "黑名单", Id: firewallPolicy.Inbound.DenyListRef.ListId},
+				IpItem: &pb.IPItem{
+					Id:        int64(item.Id),
+					IpFrom:    item.IpFrom,
+					IpTo:      item.IpTo,
+					ExpiredAt: int64(item.ExpiredAt),
+					Reason:    item.Reason,
+					Type:      item.Type,
+				},
+				RegionCountry:  nil,
+				RegionProvince: nil,
+			}, nil
+		}
+	}
+
+	// 检查封禁的地区和省份
+	info, err := iplibrary.SharedLibrary.Lookup(req.Ip)
+	if err != nil {
+		return nil, err
+	}
+	if info != nil {
+		if firewallPolicy.Inbound != nil &&
+			firewallPolicy.Inbound.IsOn &&
+			firewallPolicy.Inbound.Region != nil &&
+			firewallPolicy.Inbound.Region.IsOn {
+			// 检查封禁的地区
+			countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, info.Country)
+			if err != nil {
+				return nil, err
+			}
+			if countryId > 0 && lists.ContainsInt64(firewallPolicy.Inbound.Region.DenyCountryIds, countryId) {
+				return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+					IsOk:      true,
+					Error:     "",
+					IsFound:   true,
+					IsAllowed: false,
+					IpList:    nil,
+					IpItem:    nil,
+					RegionCountry: &pb.RegionCountry{
+						Id:   countryId,
+						Name: info.Country,
+					},
+					RegionProvince: nil,
+				}, nil
+			}
+
+			// 检查封禁的省份
+			if countryId > 0 {
+				provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, info.Province)
+				if err != nil {
+					return nil, err
+				}
+				if provinceId > 0 && lists.ContainsInt64(firewallPolicy.Inbound.Region.DenyProvinceIds, provinceId) {
+					return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+						IsOk:      true,
+						Error:     "",
+						IsFound:   true,
+						IsAllowed: false,
+						IpList:    nil,
+						IpItem:    nil,
+						RegionCountry: &pb.RegionCountry{
+							Id:   countryId,
+							Name: info.Country,
+						},
+						RegionProvince: &pb.RegionProvince{
+							Id:   provinceId,
+							Name: info.Province,
+						},
+					}, nil
+				}
+			}
+		}
+	}
+
+	return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+		IsOk:           true,
+		Error:          "",
+		IsFound:        false,
+		IsAllowed:      false,
+		IpList:         nil,
+		IpItem:         nil,
+		RegionCountry:  nil,
+		RegionProvince: nil,
+	}, nil
 }
