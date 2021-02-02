@@ -4,6 +4,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"time"
 )
@@ -109,4 +110,34 @@ func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
 		Set("timeoutAt", time.Now().Unix()-86400*365).
 		Update()
 	return err
+}
+
+// 增加版本号
+func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (int64, error) {
+	if tx == nil {
+		var result int64
+		var err error
+		err = this.Instance.RunTx(func(tx *dbs.Tx) error {
+			result, err = this.Increase(tx, key, defaultValue)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return result, err
+	}
+	err := this.Query(tx).
+		InsertOrUpdateQuickly(maps.Map{
+			"key":     key,
+			"version": defaultValue,
+		}, maps.Map{
+			"version": dbs.SQL("version+1"),
+		})
+	if err != nil {
+		return 0, err
+	}
+	return this.Query(tx).
+		Attr("key", key).
+		Result("version").
+		FindInt64Col(0)
 }

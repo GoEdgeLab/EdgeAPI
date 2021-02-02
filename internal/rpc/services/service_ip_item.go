@@ -47,13 +47,11 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		}
 	}
 
-	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
-	if err != nil {
-		return nil, err
+	if len(req.Type) == 0 {
+		req.Type = models.IPItemTypeIPv4
 	}
 
-	// 通知更新
-	err = models.SharedIPListDAO.NotifyUpdate(tx, req.IpListId, models.NodeTaskTypeIPItemChanged)
+	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -83,13 +81,11 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 		}
 	}
 
-	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason)
-	if err != nil {
-		return nil, err
+	if len(req.Type) == 0 {
+		req.Type = models.IPItemTypeIPv4
 	}
 
-	// 通知更新
-	err = models.SharedIPItemDAO.NotifyClustersUpdate(tx, req.IpItemId, models.NodeTaskTypeIPItemChanged)
+	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -120,12 +116,6 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	}
 
 	err = models.SharedIPItemDAO.DisableIPItem(tx, req.IpItemId)
-	if err != nil {
-		return nil, err
-	}
-
-	// 通知更新
-	err = models.SharedIPItemDAO.NotifyClustersUpdate(tx, req.IpItemId, models.NodeTaskTypeIPItemChanged)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +170,10 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 	}
 	result := []*pb.IPItem{}
 	for _, item := range items {
+		if len(item.Type) == 0 {
+			item.Type = models.IPItemTypeIPv4
+		}
+
 		result = append(result, &pb.IPItem{
 			Id:        int64(item.Id),
 			IpFrom:    item.IpFrom,
@@ -187,6 +181,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 			Version:   int64(item.Version),
 			ExpiredAt: int64(item.ExpiredAt),
 			Reason:    item.Reason,
+			Type:      item.Type,
 		})
 	}
 
@@ -218,6 +213,10 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 		}
 	}
 
+	if len(item.Type) == 0 {
+		item.Type = models.IPItemTypeIPv4
+	}
+
 	return &pb.FindEnabledIPItemResponse{IpItem: &pb.IPItem{
 		Id:        int64(item.Id),
 		IpFrom:    item.IpFrom,
@@ -225,6 +224,7 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 		Version:   int64(item.Version),
 		ExpiredAt: int64(item.ExpiredAt),
 		Reason:    item.Reason,
+		Type:      item.Type,
 	}}, nil
 }
 
@@ -244,6 +244,10 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 		return nil, err
 	}
 	for _, item := range items {
+		if len(item.Type) == 0 {
+			item.Type = models.IPItemTypeIPv4
+		}
+
 		result = append(result, &pb.IPItem{
 			Id:        int64(item.Id),
 			IpFrom:    item.IpFrom,
@@ -253,6 +257,7 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			Reason:    "", // 这里我们不需要这个数据
 			ListId:    int64(item.ListId),
 			IsDeleted: item.State == 0,
+			Type:      item.Type,
 		})
 	}
 

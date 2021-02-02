@@ -15,6 +15,14 @@ const (
 	IPItemStateDisabled = 0 // 已禁用
 )
 
+type IPItemType = string
+
+const (
+	IPItemTypeIPv4 IPItemType = "ipv4" // IPv4
+	IPItemTypeIPv6 IPItemType = "ipv6" // IPv6
+	IPItemTypeAll  IPItemType = "all"  // 所有IP
+)
+
 type IPItemDAO dbs.DAO
 
 func NewIPItemDAO() *IPItemDAO {
@@ -57,7 +65,11 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 		Set("state", IPItemStateDisabled).
 		Set("version", version).
 		Update()
-	return err
+
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, id)
 }
 
 // 查找启用中的条目
@@ -73,7 +85,7 @@ func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) 
 }
 
 // 创建IP
-func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string) (int64, error) {
+func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType) (int64, error) {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -84,6 +96,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
 	op.Reason = reason
+	op.Type = itemType
 	op.Version = version
 	if expiredAt < 0 {
 		expiredAt = 0
@@ -94,11 +107,17 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 	if err != nil {
 		return 0, err
 	}
-	return types.Int64(op.Id), nil
+	itemId := types.Int64(op.Id)
+
+	err = this.NotifyUpdate(tx, itemId)
+	if err != nil {
+		return 0, err
+	}
+	return itemId, nil
 }
 
 // 修改IP
-func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string) error {
+func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
@@ -124,13 +143,18 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
 	op.Reason = reason
+	op.Type = itemType
 	if expiredAt < 0 {
 		expiredAt = 0
 	}
 	op.ExpiredAt = expiredAt
 	op.Version = version
 	err = this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, itemId)
 }
 
 // 计算IP数量
@@ -177,7 +201,7 @@ func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 }
 
 // 通知更新
-func (this *IPItemDAO) NotifyClustersUpdate(tx *dbs.Tx, itemId int64, taskType NodeTaskType) error {
+func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 	// 获取ListId
 	listId, err := this.FindItemListId(tx, itemId)
 	if err != nil {
@@ -231,7 +255,7 @@ func (this *IPItemDAO) NotifyClustersUpdate(tx *dbs.Tx, itemId int64, taskType N
 
 	if len(resultClusterIds) > 0 {
 		for _, clusterId := range resultClusterIds {
-			err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, taskType)
+			err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeIPItemChanged)
 			if err != nil {
 				return err
 			}

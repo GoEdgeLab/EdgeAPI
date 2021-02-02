@@ -3,6 +3,7 @@ package models
 import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
+	"sync"
 	"testing"
 )
 
@@ -21,4 +22,24 @@ func TestSysLockerDAO_Lock(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+}
+
+func TestSysLocker_Increase(t *testing.T) {
+	count := 100
+	wg := sync.WaitGroup{}
+	wg.Add(count)
+
+	for i := 0; i < count; i++ {
+		go func() {
+			defer wg.Done()
+			v, err := NewSysLockerDAO().Increase(nil, "hello", 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log("v:", v)
+		}()
+	}
+
+	wg.Wait()
+	t.Log("ok")
 }

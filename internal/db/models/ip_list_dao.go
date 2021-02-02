@@ -2,9 +2,7 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -115,21 +113,7 @@ func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code 
 
 // 增加版本
 func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
-	valueJSON, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeIPListVersion)
-	if err != nil {
-		return 0, err
-	}
-	if len(valueJSON) == 0 {
-		err = SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeIPListVersion, []byte("1"))
-		if err != nil {
-			return 0, err
-		}
-		return 1, nil
-	}
-
-	value := types.Int64(string(valueJSON)) + 1
-	err = SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeIPListVersion, []byte(numberutils.FormatInt64(value)))
-	return value, nil
+	return SharedSysLockerDAO.Increase(tx, "IP_LIST_VERSION", 1000000)
 }
 
 // 检查用户权限

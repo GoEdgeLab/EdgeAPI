@@ -61,7 +61,7 @@ func TestNewServerDAO_md5(t *testing.T) {
 func TestServerDAO_genDNSName(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	dnsName, err := SharedServerDAO.genDNSName(tx)
+	dnsName, err := SharedServerDAO.GenDNSName(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
