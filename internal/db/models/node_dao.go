@@ -738,6 +738,7 @@ func (this *NodeDAO) CountAllEnabledNodesWithRegionId(tx *dbs.Tx, regionId int64
 	return this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("regionId", regionId).
+		Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)").
 		Count()
 }
 
