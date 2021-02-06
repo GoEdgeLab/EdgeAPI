@@ -106,3 +106,33 @@ func TestServerDAO_CheckPortIsUsing(t *testing.T) {
 		t.Log("isUsing:", isUsing)
 	}
 }
+
+func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	{
+		exist, err := SharedServerDAO.ExistServerNameInCluster(tx, 18, "hello.teaos.cn", 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(exist)
+	}
+
+	{
+		exist, err := SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(exist)
+	}
+
+	{
+		exist, err := SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 23)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(exist)
+	}
+
+}

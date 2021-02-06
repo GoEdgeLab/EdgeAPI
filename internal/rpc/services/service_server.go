@@ -1355,3 +1355,30 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 
 	return this.Success()
 }
+
+// 检查域名是否已经存在
+func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.Context, req *pb.CheckServerNameDuplicationInNodeClusterRequest) (*pb.CheckServerNameDuplicationInNodeClusterResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.ServerNames) == 0 {
+		return &pb.CheckServerNameDuplicationInNodeClusterResponse{DuplicatedServerNames: nil}, nil
+	}
+
+	var tx = this.NullTx()
+
+	duplicatedServerNames := []string{}
+	for _, serverName := range req.ServerNames {
+		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, req.NodeClusterId, serverName, req.ExcludeServerId)
+		if err != nil {
+			return nil, err
+		}
+		if exist {
+			duplicatedServerNames = append(duplicatedServerNames, serverName)
+		}
+	}
+
+	return &pb.CheckServerNameDuplicationInNodeClusterResponse{DuplicatedServerNames: duplicatedServerNames}, nil
+}

@@ -1319,6 +1319,20 @@ func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, port int, e
 		Exist()
 }
 
+// 检查ServerName是否已存在
+func (this *ServerDAO) ExistServerNameInCluster(tx *dbs.Tx, clusterId int64, serverName string, excludeServerId int64) (bool, error) {
+	query := this.Query(tx).
+		Attr("clusterId", clusterId).
+		Where("(JSON_CONTAINS(serverNames, :jsonQuery1) OR JSON_CONTAINS(serverNames, :jsonQuery2))").
+		Param("jsonQuery1", maps.Map{"name": serverName}.AsJSON()).
+		Param("jsonQuery2", maps.Map{"subNames": serverName}.AsJSON())
+	if excludeServerId > 0 {
+		query.Neq("id", excludeServerId)
+	}
+	query.State(ServerStateEnabled)
+	return query.Exist()
+}
+
 // 生成DNS Name
 func (this *ServerDAO) GenDNSName(tx *dbs.Tx) (string, error) {
 	for {

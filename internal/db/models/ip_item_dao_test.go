@@ -10,7 +10,7 @@ func TestIPItemDAO_NotifyClustersUpdate(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := SharedIPItemDAO.NotifyClustersUpdate(tx, 28, NodeTaskTypeIPItemChanged)
+	err := SharedIPItemDAO.NotifyUpdate(tx, 28)
 	if err != nil {
 		t.Fatal(err)
 	}
