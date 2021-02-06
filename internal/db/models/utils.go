@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// 缓存专用Locker
 var SharedCacheLocker = sync.RWMutex{}
 
 // 处理JSON字节Slice

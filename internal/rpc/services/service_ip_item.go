@@ -51,7 +51,7 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		req.Type = models.IPItemTypeIPv4
 	}
 
-	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type)
+	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 		req.Type = models.IPItemTypeIPv4
 	}
 
-	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type)
+	err = models.SharedIPItemDAO.UpdateIPItem(tx, req.IpItemId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -175,13 +175,14 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 		}
 
 		result = append(result, &pb.IPItem{
-			Id:        int64(item.Id),
-			IpFrom:    item.IpFrom,
-			IpTo:      item.IpTo,
-			Version:   int64(item.Version),
-			ExpiredAt: int64(item.ExpiredAt),
-			Reason:    item.Reason,
-			Type:      item.Type,
+			Id:         int64(item.Id),
+			IpFrom:     item.IpFrom,
+			IpTo:       item.IpTo,
+			Version:    int64(item.Version),
+			ExpiredAt:  int64(item.ExpiredAt),
+			Reason:     item.Reason,
+			Type:       item.Type,
+			EventLevel: item.EventLevel,
 		})
 	}
 
@@ -218,13 +219,14 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 	}
 
 	return &pb.FindEnabledIPItemResponse{IpItem: &pb.IPItem{
-		Id:        int64(item.Id),
-		IpFrom:    item.IpFrom,
-		IpTo:      item.IpTo,
-		Version:   int64(item.Version),
-		ExpiredAt: int64(item.ExpiredAt),
-		Reason:    item.Reason,
-		Type:      item.Type,
+		Id:         int64(item.Id),
+		IpFrom:     item.IpFrom,
+		IpTo:       item.IpTo,
+		Version:    int64(item.Version),
+		ExpiredAt:  int64(item.ExpiredAt),
+		Reason:     item.Reason,
+		Type:       item.Type,
+		EventLevel: item.EventLevel,
 	}}, nil
 }
 
@@ -248,16 +250,24 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			item.Type = models.IPItemTypeIPv4
 		}
 
+		// List类型
+		listType, err := models.SharedIPListDAO.FindIPListTypeCacheable(tx, int64(item.ListId))
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.IPItem{
-			Id:        int64(item.Id),
-			IpFrom:    item.IpFrom,
-			IpTo:      item.IpTo,
-			Version:   int64(item.Version),
-			ExpiredAt: int64(item.ExpiredAt),
-			Reason:    "", // 这里我们不需要这个数据
-			ListId:    int64(item.ListId),
-			IsDeleted: item.State == 0,
-			Type:      item.Type,
+			Id:         int64(item.Id),
+			IpFrom:     item.IpFrom,
+			IpTo:       item.IpTo,
+			Version:    int64(item.Version),
+			ExpiredAt:  int64(item.ExpiredAt),
+			Reason:     "", // 这里我们不需要这个数据
+			ListId:     int64(item.ListId),
+			IsDeleted:  item.State == 0,
+			Type:       item.Type,
+			EventLevel: item.EventLevel,
+			ListType:   listType,
 		})
 	}
 

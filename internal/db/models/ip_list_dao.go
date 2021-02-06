@@ -15,6 +15,8 @@ const (
 	IPListStateDisabled = 0 // 已禁用
 )
 
+var listTypeCacheMap = map[int64]string{} // listId => type
+
 type IPListDAO dbs.DAO
 
 func NewIPListDAO() *IPListDAO {
@@ -72,6 +74,36 @@ func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+}
+
+// 获取名单类型
+func (this *IPListDAO) FindIPListTypeCacheable(tx *dbs.Tx, listId int64) (string, error) {
+	// 检查缓存
+	SharedCacheLocker.RLock()
+	listType, ok := listTypeCacheMap[listId]
+	SharedCacheLocker.RUnlock()
+	if ok {
+		return listType, nil
+	}
+
+	listType, err := this.Query(tx).
+		Pk(listId).
+		Result("type").
+		FindStringCol("")
+	if err != nil {
+		return "", err
+	}
+
+	if len(listType) == 0 {
+		return "", nil
+	}
+
+	// 保存缓存
+	SharedCacheLocker.Lock()
+	listTypeCacheMap[listId] = listType
+	SharedCacheLocker.Unlock()
+
+	return listType, nil
 }
 
 // 创建名单

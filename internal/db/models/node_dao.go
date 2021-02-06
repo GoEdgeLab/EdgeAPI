@@ -574,6 +574,21 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		config.SystemServices = services
 	}
 
+	// 防火墙动作
+	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	for _, action := range actions {
+		actionConfig, err := SharedNodeClusterFirewallActionDAO.ComposeFirewallActionConfig(tx, action)
+		if err != nil {
+			return nil, err
+		}
+		if actionConfig != nil {
+			config.FirewallActions = append(config.FirewallActions, actionConfig)
+		}
+	}
+
 	return config, nil
 }
 

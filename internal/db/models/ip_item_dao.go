@@ -87,7 +87,7 @@ func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) 
 }
 
 // 创建IP
-func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType) (int64, error) {
+func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) (int64, error) {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -101,6 +101,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 	op.IpToLong = utils.IP2Long(ipTo)
 	op.Reason = reason
 	op.Type = itemType
+	op.EventLevel = eventLevel
 	op.Version = version
 	if expiredAt < 0 {
 		expiredAt = 0
@@ -121,7 +122,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 }
 
 // 修改IP
-func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType) error {
+func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
@@ -150,6 +151,7 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	op.IpToLong = utils.IP2Long(ipTo)
 	op.Reason = reason
 	op.Type = itemType
+	op.EventLevel = eventLevel
 	if expiredAt < 0 {
 		expiredAt = 0
 	}
