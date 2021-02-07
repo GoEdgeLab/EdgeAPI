@@ -1148,12 +1148,21 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 		return &pb.FindEnabledUserServerBasicResponse{Server: nil}, nil
 	}
 
+	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(server.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.FindEnabledUserServerBasicResponse{Server: &pb.Server{
 		Id:          int64(server.Id),
 		Name:        server.Name,
 		Description: server.Description,
 		IsOn:        server.IsOn == 1,
 		Type:        server.Type,
+		NodeCluster: &pb.NodeCluster{
+			Id:   int64(server.ClusterId),
+			Name: clusterName,
+		},
 	}}, nil
 }
 
