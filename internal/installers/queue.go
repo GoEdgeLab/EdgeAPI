@@ -287,6 +287,9 @@ func (this *Queue) StartNode(nodeId int64) error {
 		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
 	}
 
+	// 我们先尝试Systemd启动
+	_, _, _ = installer.client.Exec("systemctl start edge-node")
+
 	_, stderr, err := installer.client.Exec(exeFile + " start")
 	if err != nil {
 		return errors.New("start failed: " + err.Error())
@@ -388,12 +391,15 @@ func (this *Queue) StopNode(nodeId int64) error {
 		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
 	}
 
+	// 我们先尝试Systemd停止
+	_, _, _ = installer.client.Exec("systemctl stop edge-node")
+
 	_, stderr, err := installer.client.Exec(exeFile + " stop")
 	if err != nil {
-		return errors.New("start failed: " + err.Error())
+		return errors.New("stop failed: " + err.Error())
 	}
 	if len(stderr) > 0 {
-		return errors.New("start failed: " + stderr)
+		return errors.New("stop failed: " + stderr)
 	}
 
 	return nil
