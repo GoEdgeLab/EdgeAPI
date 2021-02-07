@@ -1,11 +1,14 @@
 package models
 
 import (
+	"encoding/base64"
+	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strings"
 )
 
 const (
@@ -14,6 +17,8 @@ const (
 )
 
 type DBNodeDAO dbs.DAO
+
+const DBNodePasswordEncodedPrefix = "EDGE_ENCODED:"
 
 func NewDBNodeDAO() *DBNodeDAO {
 	return dbs.NewDAO(&DBNodeDAO{
@@ -61,7 +66,9 @@ func (this *DBNodeDAO) FindEnabledDBNode(tx *dbs.Tx, id int64) (*DBNode, error) 
 	if result == nil {
 		return nil, err
 	}
-	return result.(*DBNode), err
+	node := result.(*DBNode)
+	node.Password = this.DecodePassword(node.Password)
+	return node, nil
 }
 
 // 根据主键查找名称
@@ -88,6 +95,9 @@ func (this *DBNodeDAO) ListEnabledNodes(tx *dbs.Tx, offset int64, size int64) (r
 		Slice(&result).
 		DescPk().
 		FindAll()
+	for _, node := range result {
+		node.Password = this.DecodePassword(node.Password)
+	}
 	return
 }
 
@@ -102,7 +112,7 @@ func (this *DBNodeDAO) CreateDBNode(tx *dbs.Tx, isOn bool, name string, descript
 	op.Port = port
 	op.Database = database
 	op.Username = username
-	op.Password = password
+	op.Password = this.EncodePassword(password)
 	op.Charset = charset
 	err := this.Save(tx, op)
 	if err != nil {
@@ -125,7 +135,7 @@ func (this *DBNodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, isOn bool, name stri
 	op.Port = port
 	op.Database = database
 	op.Username = username
-	op.Password = password
+	op.Password = this.EncodePassword(password)
 	op.Charset = charset
 	err := this.Save(tx, op)
 	return err
@@ -139,5 +149,30 @@ func (this *DBNodeDAO) FindAllEnabledAndOnDBNodes(tx *dbs.Tx) (result []*DBNode,
 		Slice(&result).
 		DescPk().
 		FindAll()
+	for _, node := range result {
+		node.Password = this.DecodePassword(node.Password)
+	}
 	return
+}
+
+// 加密密码
+func (this *DBNodeDAO) EncodePassword(password string) string {
+	if strings.HasPrefix(password, DBNodePasswordEncodedPrefix) {
+		return password
+	}
+	encodedString := base64.StdEncoding.EncodeToString(encrypt.MagicKeyEncode([]byte(password)))
+	return DBNodePasswordEncodedPrefix + encodedString
+}
+
+// 解密密码
+func (this *DBNodeDAO) DecodePassword(password string) string {
+	if !strings.HasPrefix(password, DBNodePasswordEncodedPrefix) {
+		return password
+	}
+	dataString := password[len(DBNodePasswordEncodedPrefix):]
+	data, err := base64.StdEncoding.DecodeString(dataString)
+	if err != nil {
+		return password
+	}
+	return string(encrypt.MagicKeyDecode(data))
 }
