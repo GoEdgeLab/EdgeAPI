@@ -1271,6 +1271,11 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 
 // 检查新版本
 func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.CheckNodeLatestVersionRequest) (*pb.CheckNodeLatestVersionResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	deployFiles := installers.SharedDeployManager.LoadFiles()
 	for _, file := range deployFiles {
 		if file.OS == req.Os && file.Arch == req.Arch && stringutil.VersionCompare(file.Version, req.CurrentVersion) > 0 {
@@ -1281,4 +1286,20 @@ func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.Che
 		}
 	}
 	return &pb.CheckNodeLatestVersionResponse{HasNewVersion: false}, nil
+}
+
+// 设置节点上线状态
+func (this *NodeService) UpdateNodeUp(ctx context.Context, req *pb.UpdateNodeUpRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeDAO.UpdateNodeUp(tx, req.NodeId, req.IsUp)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

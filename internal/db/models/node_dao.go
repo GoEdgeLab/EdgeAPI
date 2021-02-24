@@ -828,7 +828,7 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 }
 
 // 计算节点上线|下线状态
-func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool, maxUp int, maxDown int) (changed bool, err error) {
+func (this *NodeDAO) UpdateNodeUpCount(tx *dbs.Tx, nodeId int64, isUp bool, maxUp int, maxDown int) (changed bool, err error) {
 	if nodeId <= 0 {
 		return false, errors.New("invalid nodeId")
 	}
@@ -886,6 +886,23 @@ func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool, maxUp int
 	}
 
 	return
+}
+
+// 设置节点上下线状态
+func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	op := NewNodeOperator()
+	op.Id = nodeId
+	op.IsUp = isUp
+	op.CountDown = 0
+	op.CountDown = 0
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyDNSUpdate(tx, nodeId)
 }
 
 // 修改节点活跃状态

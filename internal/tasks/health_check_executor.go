@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
@@ -131,16 +130,10 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 
 					// 修改节点状态
 					if healthCheckConfig.AutoDown {
-						isChanged, err := models.SharedNodeDAO.UpdateNodeUp(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
+						isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
 						if err != nil {
 							logs.Println("[HEALTH_CHECK]" + err.Error())
 						} else if isChanged {
-							// 通知DNS更新
-							err = dns.SharedDNSTaskDAO.CreateNodeTask(nil, int64(result.Node.Id), dns.DNSTaskTypeNodeChange)
-							if err != nil {
-								logs.Println("[HEALTH_CHECK]" + err.Error())
-							}
-
 							// 通知恢复或下线
 							if result.IsOk {
 								err = models.NewMessageDAO().CreateNodeMessage(nil, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, "健康检查成功，节点\""+result.Node.Name+"\"已恢复上线", nil)

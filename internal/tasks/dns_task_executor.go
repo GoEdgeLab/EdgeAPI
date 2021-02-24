@@ -94,6 +94,7 @@ func (this *DNSTaskExecutor) Loop() error {
 	return nil
 }
 
+// 修改服务相关记录
 func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 	var tx *dbs.Tx
 
@@ -208,6 +209,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 	return nil
 }
 
+// 修改节点相关记录
 func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
 	isOk := false
 	defer func() {
@@ -245,6 +247,7 @@ func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
 	return nil
 }
 
+// 修改集群相关记录
 func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	isOk := false
 	defer func() {
