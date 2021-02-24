@@ -65,7 +65,7 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 
 // 列出所有可用API节点
 func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.FindAllEnabledAPINodesRequest) (*pb.FindAllEnabledAPINodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
