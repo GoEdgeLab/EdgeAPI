@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -10,6 +11,7 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -176,6 +178,13 @@ func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.Heal
 	client := &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				_, port, err := net.SplitHostPort(addr)
+				if err != nil {
+					return nil, err
+				}
+				return net.Dial(network, result.NodeAddr+":"+port)
+			},
 			MaxIdleConns:          1,
 			MaxIdleConnsPerHost:   1,
 			MaxConnsPerHost:       1,
