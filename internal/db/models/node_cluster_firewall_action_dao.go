@@ -153,6 +153,14 @@ func (this *NodeClusterFirewallActionDAO) ComposeFirewallActionConfig(tx *dbs.Tx
 	return config, nil
 }
 
+// 计算动作数量
+func (this *NodeClusterFirewallActionDAO) CountAllEnabledFirewallActions(tx *dbs.Tx, clusterId int64) (int64, error) {
+	return this.Query(tx).
+		State(NodeClusterFirewallActionStateEnabled).
+		Attr("clusterId", clusterId).
+		Count()
+}
+
 // 通知更新
 func (this *NodeClusterFirewallActionDAO) NotifyUpdate(tx *dbs.Tx, actionId int64) error {
 	clusterId, err := this.Query(tx).

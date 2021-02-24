@@ -124,3 +124,18 @@ func (this *NodeClusterFirewallActionService) FindEnabledNodeClusterFirewallActi
 		ParamsJSON:    []byte(action.Params),
 	}}, nil
 }
+
+// 计算动作数量
+func (this *NodeClusterFirewallActionService) CountAllEnabledNodeClusterFirewallActions(ctx context.Context, req *pb.CountAllEnabledNodeClusterFirewallActionsRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedNodeClusterFirewallActionDAO.CountAllEnabledFirewallActions(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
