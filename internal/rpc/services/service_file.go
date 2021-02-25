@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -12,17 +11,50 @@ type FileService struct {
 	BaseService
 }
 
+// 查找文件
+func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnabledFileRequest) (*pb.FindEnabledFileResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, -1)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	file, err := models.SharedFileDAO.FindEnabledFile(tx, req.FileId)
+	if err != nil {
+		return nil, err
+	}
+	if file == nil {
+		return &pb.FindEnabledFileResponse{File: nil}, nil
+	}
+
+	if file.IsPublic != 1 {
+		// 校验权限
+		if userId > 0 && int64(file.UserId) != userId {
+			return nil, this.PermissionError()
+		}
+	}
+
+	return &pb.FindEnabledFileResponse{
+		File: &pb.File{
+			Id:        int64(file.Id),
+			Filename:  file.Filename,
+			Size:      int64(file.Size),
+			CreatedAt: int64(file.CreatedAt),
+			IsPublic:  file.IsPublic == 1,
+		},
+	}, nil
+}
+
 // 创建文件
 func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileRequest) (*pb.CreateFileResponse, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	fileId, err := models.SharedFileDAO.CreateFile(tx, "ipLibrary", "", req.Filename, req.Size)
+	fileId, err := models.SharedFileDAO.CreateFile(tx, adminId, userId, "ipLibrary", "", req.Filename, req.Size, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +63,7 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 
 // 将文件置为已完成
 func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateFileFinishedRequest) (*pb.RPCSuccess, error) {
-	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

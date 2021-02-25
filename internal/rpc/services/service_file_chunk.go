@@ -32,10 +32,12 @@ func (this *FileChunkService) CreateFileChunk(ctx context.Context, req *pb.Creat
 // 获取的一个文件的所有片段IDs
 func (this *FileChunkService) FindAllFileChunkIds(ctx context.Context, req *pb.FindAllFileChunkIdsRequest) (*pb.FindAllFileChunkIdsResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, -1)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 校验用户
 
 	tx := this.NullTx()
 
@@ -49,10 +51,12 @@ func (this *FileChunkService) FindAllFileChunkIds(ctx context.Context, req *pb.F
 // 下载文件片段
 func (this *FileChunkService) DownloadFileChunk(ctx context.Context, req *pb.DownloadFileChunkRequest) (*pb.DownloadFileChunkResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeAdmin)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, -1)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 校验用户
 
 	tx := this.NullTx()
 

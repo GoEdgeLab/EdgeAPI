@@ -13,6 +13,7 @@ type File struct {
 	Type        string `field:"type"`        // 类型
 	State       uint8  `field:"state"`       // 状态
 	IsFinished  uint8  `field:"isFinished"`  // 是否已完成上传
+	IsPublic    uint8  `field:"isPublic"`    // 是否可以公开访问
 }
 
 type FileOperator struct {
@@ -27,6 +28,7 @@ type FileOperator struct {
 	Type        interface{} // 类型
 	State       interface{} // 状态
 	IsFinished  interface{} // 是否已完成上传
+	IsPublic    interface{} // 是否可以公开访问
 }
 
 func NewFileOperator() *FileOperator {

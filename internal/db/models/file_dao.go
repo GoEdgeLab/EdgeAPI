@@ -64,13 +64,16 @@ func (this *FileDAO) FindEnabledFile(tx *dbs.Tx, id int64) (*File, error) {
 }
 
 // 创建文件
-func (this *FileDAO) CreateFile(tx *dbs.Tx, businessType, description string, filename string, size int64) (int64, error) {
+func (this *FileDAO) CreateFile(tx *dbs.Tx, adminId int64, userId int64, businessType, description string, filename string, size int64, isPublic bool) (int64, error) {
 	op := NewFileOperator()
+	op.AdminId = adminId
+	op.UserId = userId
 	op.Type = businessType
 	op.Description = description
 	op.State = FileStateEnabled
 	op.Size = size
 	op.Filename = filename
+	op.IsPublic = isPublic
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err

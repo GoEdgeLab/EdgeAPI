@@ -55,7 +55,7 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminI
 		}
 	case rpcutils.UserTypeUser:
 		userId = reqUserId
-		if userId <= 0 {
+		if requireUserId >= 0 && userId <= 0 {
 			err = errors.New("invalid 'userId'")
 			return
 		}
