@@ -177,6 +177,8 @@ github.com/iij/doapi v0.0.0-20190504054126-0bbf12d6d7df/go.mod h1:QMZY7/J/KSQEhK
 github.com/iwind/TeaGo v0.0.0-20200923021120-f5d76441fe9e/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/TeaGo v0.0.0-20210125103732-4d79fc3c3d0b h1:niQL2t//041GUaqDPM5D+ldyr0Ng2WKwZJHPRLQhQtk=
 github.com/iwind/TeaGo v0.0.0-20210125103732-4d79fc3c3d0b/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
+github.com/iwind/TeaGo v0.0.0-20210302120856-7588e79bdbe3 h1:k9K3HHMmkF7HYyIHz21AtmYH4Zdk/8OI98a8P0O8o1I=
+github.com/iwind/TeaGo v0.0.0-20210302120856-7588e79bdbe3/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.3.0 h1:OS12ieG61fsCg5+qLJ+SsW9NicxNkg3b25OyT2yCeUc=
 github.com/jmespath/go-jmespath v0.3.0/go.mod h1:9QtRXoHjLGCJ5IBSaohpXITPlowMeeYCZ7fLUTSywik=
