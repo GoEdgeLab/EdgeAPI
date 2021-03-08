@@ -1033,6 +1033,7 @@ func (this *ServerDAO) CountEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64)
 	return this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("webId", webIds).
+		Reuse(false).
 		Count()
 }
 
@@ -1044,6 +1045,7 @@ func (this *ServerDAO) FindAllEnabledServersWithWebIds(tx *dbs.Tx, webIds []int6
 	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("webId", webIds).
+		Reuse(false).
 		AscPk().
 		Slice(&result).
 		FindAll()
