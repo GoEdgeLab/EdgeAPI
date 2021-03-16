@@ -15,6 +15,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 const (
@@ -99,15 +100,58 @@ func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) err
 }
 
 // 计算所有任务数量
-func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
-	return dbutils.NewQuery(tx, this, adminId, userId).
-		State(ACMETaskStateEnabled).
+func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
+	query := dbutils.NewQuery(tx, this, adminId, userId)
+	if isAvailable || isExpired || expiringDays > 0 {
+		query.Gt("certId", 0)
+
+		if isAvailable {
+			query.Where("certId IN (SELECT id FROM " + models.SharedSSLCertDAO.Table + " WHERE timeBeginAt<=UNIX_TIMESTAMP() AND timeEndAt>=UNIX_TIMESTAMP())")
+		}
+		if isExpired {
+			query.Where("certId IN (SELECT id FROM " + models.SharedSSLCertDAO.Table + " WHERE timeEndAt<UNIX_TIMESTAMP())")
+		}
+		if expiringDays > 0 {
+			query.Where("certId IN (SELECT id FROM "+models.SharedSSLCertDAO.Table+" WHERE timeEndAt>UNIX_TIMESTAMP() AND timeEndAt<:expiredAt)").
+				Param("expiredAt", time.Now().Unix()+expiringDays*86400)
+		}
+	}
+
+	if len(keyword) > 0 {
+		query.Where("(domains LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	if len(keyword) > 0 {
+		query.Where("domains LIKE :keyword").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	return query.State(ACMETaskStateEnabled).
 		Count()
 }
 
 // 列出单页任务
-func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*ACMETask, err error) {
-	_, err = dbutils.NewQuery(tx, this, adminId, userId).
+func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (result []*ACMETask, err error) {
+	query := dbutils.NewQuery(tx, this, adminId, userId)
+	if isAvailable || isExpired || expiringDays > 0 {
+		query.Gt("certId", 0)
+
+		if isAvailable {
+			query.Where("certId IN (SELECT id FROM " + models.SharedSSLCertDAO.Table + " WHERE timeBeginAt<=UNIX_TIMESTAMP() AND timeEndAt>=UNIX_TIMESTAMP())")
+		}
+		if isExpired {
+			query.Where("certId IN (SELECT id FROM " + models.SharedSSLCertDAO.Table + " WHERE timeEndAt<UNIX_TIMESTAMP())")
+		}
+		if expiringDays > 0 {
+			query.Where("certId IN (SELECT id FROM "+models.SharedSSLCertDAO.Table+" WHERE timeEndAt>UNIX_TIMESTAMP() AND timeEndAt<:expiredAt)").
+				Param("expiredAt", time.Now().Unix()+expiringDays*86400)
+		}
+	}
+	if len(keyword) > 0 {
+		query.Where("(domains LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
 		State(ACMETaskStateEnabled).
 		DescPk().
 		Offset(offset).

@@ -60,7 +60,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	count, err := acmemodels.SharedACMETaskDAO.CountAllEnabledACMETasks(tx, req.AdminId, req.UserId)
+	count, err := acmemodels.SharedACMETaskDAO.CountAllEnabledACMETasks(tx, req.AdminId, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 
 	tx := this.NullTx()
 
-	tasks, err := acmemodels.SharedACMETaskDAO.ListEnabledACMETasks(tx, req.AdminId, req.UserId, req.Offset, req.Size)
+	tasks, err := acmemodels.SharedACMETaskDAO.ListEnabledACMETasks(tx, req.AdminId, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
