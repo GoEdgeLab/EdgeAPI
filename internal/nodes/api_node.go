@@ -17,6 +17,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -25,6 +26,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -53,6 +55,14 @@ func (this *APINode) Start() {
 	if err != nil {
 		logs.Println("[API_NODE]auto upgrade failed: " + err.Error())
 		return
+	}
+
+	// 自动设置数据库
+	err = this.setupDB()
+	if err != nil {
+		logs.Println("[API_NODE]setup database '" + err.Error() + "'")
+
+		// 不阻断执行
 	}
 
 	// 数据库通知启动
@@ -283,6 +293,34 @@ func (this *APINode) autoUpgrade() error {
 	}
 	// 不使用remotelogs
 	logs.Println("[API_NODE]upgrade database done")
+	return nil
+}
+
+// 自动设置数据库
+func (this *APINode) setupDB() error {
+	db, err := dbs.Default()
+	if err != nil {
+		return err
+	}
+
+	// 调整预处理语句数量
+	{
+		result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='max_prepared_stmt_count'")
+		if err != nil {
+			return err
+		}
+		value := result.GetString("Value")
+		if regexp.MustCompile(`^\d+$`).MatchString(value) {
+			valueInt := types.Int(value)
+			if valueInt < 65535 {
+				_, err := db.Exec("SET GLOBAL max_prepared_stmt_count=65535")
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
