@@ -14,7 +14,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.4.2
-	github.com/iwind/TeaGo v0.0.0-20210302120856-7588e79bdbe3
+	github.com/iwind/TeaGo v0.0.0-20210325033016-3279bdaa087d
 	github.com/lionsoul2014/ip2region v2.2.0-release+incompatible
 	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/pkg/sftp v1.12.0
