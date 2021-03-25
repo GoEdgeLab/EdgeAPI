@@ -86,12 +86,45 @@ func (this *OriginDAO) FindOriginName(tx *dbs.Tx, id int64) (string, error) {
 }
 
 // 创建源站
-func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool) (originId int64, err error) {
+func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) (originId int64, err error) {
 	op := NewOriginOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.IsOn = isOn
 	op.Name = name
+
+	if connTimeout != nil {
+		connTimeoutJSON, err := connTimeout.AsJSON()
+		if err != nil {
+			return 0, err
+		}
+		op.ConnTimeout = connTimeoutJSON
+	}
+	if readTimeout != nil {
+		readTimeoutJSON, err := readTimeout.AsJSON()
+		if err != nil {
+			return 0, err
+		}
+		op.ReadTimeout = readTimeoutJSON
+	}
+	if idleTimeout != nil {
+		idleTimeoutJSON, err := idleTimeout.AsJSON()
+		if err != nil {
+			return 0, err
+		}
+		op.IdleTimeout = idleTimeoutJSON
+	}
+	if maxConns >= 0 {
+		op.MaxConns = maxConns
+	} else {
+		op.MaxConns = 0
+	}
+	if maxIdleConns >= 0 {
+		op.MaxIdleConns = maxIdleConns
+	} else {
+		op.MaxIdleConns = 0
+	}
+
 	op.Addr = addrJSON
 	op.Description = description
 	if weight < 0 {
@@ -107,7 +140,7 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, nam
 }
 
 // 修改源站
-func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, addrJSON string, description string, weight int32, isOn bool) error {
+func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
@@ -120,6 +153,39 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 		weight = 0
 	}
 	op.Weight = weight
+
+	if connTimeout != nil {
+		connTimeoutJSON, err := connTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.ConnTimeout = connTimeoutJSON
+	}
+	if readTimeout != nil {
+		readTimeoutJSON, err := readTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.ReadTimeout = readTimeoutJSON
+	}
+	if idleTimeout != nil {
+		idleTimeoutJSON, err := idleTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.IdleTimeout = idleTimeoutJSON
+	}
+	if maxConns >= 0 {
+		op.MaxConns = maxConns
+	} else {
+		op.MaxConns = 0
+	}
+	if maxIdleConns >= 0 {
+		op.MaxIdleConns = maxIdleConns
+	} else {
+		op.MaxIdleConns = 0
+	}
+
 	op.IsOn = isOn
 	op.Version = dbs.SQL("version+1")
 	err := this.Save(tx, op)
