@@ -18,6 +18,11 @@ type ReverseProxy struct {
 	AddHeaders      string `field:"addHeaders"`      // 自动添加的Header列表
 	State           uint8  `field:"state"`           // 状态
 	CreatedAt       uint64 `field:"createdAt"`       // 创建时间
+	ConnTimeout     string `field:"connTimeout"`     // 连接超时时间
+	ReadTimeout     string `field:"readTimeout"`     // 读取超时时间
+	IdleTimeout     string `field:"idleTimeout"`     // 空闲超时时间
+	MaxConns        uint32 `field:"maxConns"`        // 最大并发连接数
+	MaxIdleConns    uint32 `field:"maxIdleConns"`    // 最大空闲连接数
 }
 
 type ReverseProxyOperator struct {
@@ -37,6 +42,11 @@ type ReverseProxyOperator struct {
 	AddHeaders      interface{} // 自动添加的Header列表
 	State           interface{} // 状态
 	CreatedAt       interface{} // 创建时间
+	ConnTimeout     interface{} // 连接超时时间
+	ReadTimeout     interface{} // 读取超时时间
+	IdleTimeout     interface{} // 空闲超时时间
+	MaxConns        interface{} // 最大并发连接数
+	MaxIdleConns    interface{} // 最大空闲连接数
 }
 
 func NewReverseProxyOperator() *ReverseProxyOperator {

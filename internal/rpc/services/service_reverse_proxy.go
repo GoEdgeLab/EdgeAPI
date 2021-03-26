@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -214,7 +215,32 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 
 	tx := this.NullTx()
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders)
+	// 校验参数
+	var connTimeout = &shared.TimeDuration{}
+	if len(req.ConnTimeoutJSON) > 0 {
+		err = json.Unmarshal(req.ConnTimeoutJSON, connTimeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var readTimeout = &shared.TimeDuration{}
+	if len(req.ReadTimeoutJSON) > 0 {
+		err = json.Unmarshal(req.ReadTimeoutJSON, readTimeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var idleTimeout = &shared.TimeDuration{}
+	if len(req.IdleTimeoutJSON) > 0 {
+		err = json.Unmarshal(req.IdleTimeoutJSON, idleTimeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -149,6 +150,37 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		config.AddHeaders = addHeaders
 	}
 
+	// 源站相关默认设置
+	config.MaxConns = int(reverseProxy.MaxConns)
+	config.MaxIdleConns = int(reverseProxy.MaxIdleConns)
+
+	if IsNotNull(reverseProxy.ConnTimeout) {
+		connTimeout := &shared.TimeDuration{}
+		err = json.Unmarshal([]byte(reverseProxy.ConnTimeout), &connTimeout)
+		if err != nil {
+			return nil, err
+		}
+		config.ConnTimeout = connTimeout
+	}
+
+	if IsNotNull(reverseProxy.ReadTimeout) {
+		readTimeout := &shared.TimeDuration{}
+		err = json.Unmarshal([]byte(reverseProxy.ReadTimeout), &readTimeout)
+		if err != nil {
+			return nil, err
+		}
+		config.ReadTimeout = readTimeout
+	}
+
+	if IsNotNull(reverseProxy.IdleTimeout) {
+		idleTimeout := &shared.TimeDuration{}
+		err = json.Unmarshal([]byte(reverseProxy.IdleTimeout), &idleTimeout)
+		if err != nil {
+			return nil, err
+		}
+		config.IdleTimeout = idleTimeout
+	}
+
 	return config, nil
 }
 
@@ -242,7 +274,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 }
 
 // 修改是否启用
-func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool, addHeaders []string) error {
+func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool, addHeaders []string, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -268,6 +300,38 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64
 		return err
 	}
 	op.AddHeaders = addHeadersJSON
+
+	if connTimeout != nil {
+		connTimeoutJSON, err := connTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.ConnTimeout = connTimeoutJSON
+	}
+	if readTimeout != nil {
+		readTimeoutJSON, err := readTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.ReadTimeout = readTimeoutJSON
+	}
+	if idleTimeout != nil {
+		idleTimeoutJSON, err := idleTimeout.AsJSON()
+		if err != nil {
+			return err
+		}
+		op.IdleTimeout = idleTimeoutJSON
+	}
+	if maxConns >= 0 {
+		op.MaxConns = maxConns
+	} else {
+		op.MaxConns = 0
+	}
+	if maxIdleConns >= 0 {
+		op.MaxIdleConns = maxIdleConns
+	} else {
+		op.MaxIdleConns = 0
+	}
 
 	err = this.Save(tx, op)
 	if err != nil {
