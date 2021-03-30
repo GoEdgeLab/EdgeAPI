@@ -12,6 +12,7 @@ type Admin struct {
 	UpdatedAt uint64 `field:"updatedAt"` // 修改时间
 	State     uint8  `field:"state"`     // 状态
 	Modules   string `field:"modules"`   // 允许的模块
+	CanLogin  uint8  `field:"canLogin"`  // 是否可以登录
 }
 
 type AdminOperator struct {
@@ -25,6 +26,7 @@ type AdminOperator struct {
 	UpdatedAt interface{} // 修改时间
 	State     interface{} // 状态
 	Modules   interface{} // 允许的模块
+	CanLogin  interface{} // 是否可以登录
 }
 
 func NewAdminOperator() *AdminOperator {

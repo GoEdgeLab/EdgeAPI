@@ -181,6 +181,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		IsSuper:  admin.IsSuper == 1,
 		Modules:  pbModules,
 		OtpLogin: pbOtpAuth,
+		CanLogin: admin.CanLogin == 1,
 	}
 	return &pb.FindEnabledAdminResponse{Admin: result}, nil
 }
@@ -206,7 +207,7 @@ func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.Creat
 		}
 		return &pb.CreateOrUpdateAdminResponse{AdminId: adminId}, nil
 	}
-	adminId, err = models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.Password, "管理员", true, nil)
+	adminId, err = models.SharedAdminDAO.CreateAdmin(tx, req.Username, true, req.Password, "管理员", true, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +313,7 @@ func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRe
 
 	tx := this.NullTx()
 
-	adminId, err := models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
+	adminId, err := models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.CanLogin, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +332,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 
 	tx := this.NullTx()
 
-	err = models.SharedAdminDAO.UpdateAdmin(tx, req.AdminId, req.Username, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
+	err = models.SharedAdminDAO.UpdateAdmin(tx, req.AdminId, req.Username, req.CanLogin, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -399,6 +400,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 			IsSuper:   admin.IsSuper == 1,
 			CreatedAt: int64(admin.CreatedAt),
 			OtpLogin:  pbOtpAuth,
+			CanLogin:  admin.CanLogin == 1,
 		})
 	}
 

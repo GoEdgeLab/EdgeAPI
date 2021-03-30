@@ -89,6 +89,7 @@ func (this *AdminDAO) CheckAdminPassword(tx *dbs.Tx, username string, encryptedP
 		Attr("password", encryptedPassword).
 		Attr("state", AdminStateEnabled).
 		Attr("isOn", true).
+		Attr("canLogin", 1).
 		ResultPk().
 		FindInt64Col(0)
 }
@@ -122,11 +123,12 @@ func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password st
 }
 
 // 创建管理员
-func (this *AdminDAO) CreateAdmin(tx *dbs.Tx, username string, password string, fullname string, isSuper bool, modulesJSON []byte) (int64, error) {
+func (this *AdminDAO) CreateAdmin(tx *dbs.Tx, username string, canLogin bool, password string, fullname string, isSuper bool, modulesJSON []byte) (int64, error) {
 	op := NewAdminOperator()
 	op.IsOn = true
 	op.State = AdminStateEnabled
 	op.Username = username
+	op.CanLogin = canLogin
 	op.Password = stringutil.Md5(password)
 	op.Fullname = fullname
 	op.IsSuper = isSuper
@@ -155,7 +157,7 @@ func (this *AdminDAO) UpdateAdminInfo(tx *dbs.Tx, adminId int64, fullname string
 }
 
 // 修改管理员详细信息
-func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, password string, fullname string, isSuper bool, modulesJSON []byte, isOn bool) error {
+func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, canLogin bool, password string, fullname string, isSuper bool, modulesJSON []byte, isOn bool) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
@@ -163,6 +165,7 @@ func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, pa
 	op.Id = adminId
 	op.Fullname = fullname
 	op.Username = username
+	op.CanLogin = canLogin
 	if len(password) > 0 {
 		op.Password = stringutil.Md5(password)
 	}
@@ -242,7 +245,7 @@ func (this *AdminDAO) CountAllEnabledAdmins(tx *dbs.Tx) (int64, error) {
 func (this *AdminDAO) ListEnabledAdmins(tx *dbs.Tx, offset int64, size int64) (result []*Admin, err error) {
 	_, err = this.Query(tx).
 		State(AdminStateEnabled).
-		Result("id", "isOn", "username", "fullname", "isSuper", "createdAt").
+		Result("id", "isOn", "username", "fullname", "isSuper", "createdAt", "canLogin").
 		Offset(offset).
 		Limit(size).
 		DescPk().
