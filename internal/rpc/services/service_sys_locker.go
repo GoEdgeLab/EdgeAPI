@@ -15,7 +15,10 @@ type SysLockerService struct {
 func (this *SysLockerService) SysLockerLock(ctx context.Context, req *pb.SysLockerLockRequest) (*pb.SysLockerLockResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
-		return nil, err
+		_, err = this.ValidateMonitor(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	key := req.Key
@@ -42,7 +45,10 @@ func (this *SysLockerService) SysLockerLock(ctx context.Context, req *pb.SysLock
 func (this *SysLockerService) SysLockerUnlock(ctx context.Context, req *pb.SysLockerUnlockRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
-		return nil, err
+		_, err = this.ValidateMonitor(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	key := req.Key

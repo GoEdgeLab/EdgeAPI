@@ -244,6 +244,9 @@ func (this *UserNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 
 // 更改节点状态
 func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
+	if len(statusJSON) == 0 {
+		return nil
+	}
 	_, err := this.Query(tx).
 		Pk(nodeId).
 		Set("status", string(statusJSON)).

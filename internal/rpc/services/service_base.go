@@ -82,6 +82,12 @@ func (this *BaseService) ValidateUser(ctx context.Context) (userId int64, err er
 	return
 }
 
+// 校验监控节点
+func (this *BaseService) ValidateMonitor(ctx context.Context) (nodeId int64, err error) {
+	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
+	return
+}
+
 // 获取节点ID
 func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.UserType) (role rpcutils.UserType, nodeIntId int64, err error) {
 	if ctx == nil {
@@ -170,6 +176,8 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 		nodeIntId, err = models.SharedUserNodeDAO.FindEnabledUserNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeAdmin:
 		nodeIntId = 0
+	case rpcutils.UserTypeMonitor:
+		nodeIntId, err = models.SharedMonitorNodeDAO.FindEnabledMonitorNodeIdWithUniqueId(nil, nodeId)
 	default:
 		err = errors.New("unsupported user role '" + apiToken.Role + "'")
 	}

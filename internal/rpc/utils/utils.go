@@ -154,6 +154,8 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		}
 		nodeUserId = clusterId
 	case UserTypeUser:
+	case UserTypeMonitor:
+	case UserTypeDNS:
 	}
 
 	if nodeUserId > 0 {
