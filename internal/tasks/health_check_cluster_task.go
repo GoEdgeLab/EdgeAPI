@@ -132,7 +132,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 			return err
 		}
 		message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
-		err = models.NewMessageDAO().CreateClusterMessage(nil, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, failedResultsJSON)
+		err = models.NewMessageDAO().CreateClusterMessage(nil, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
 		if err != nil {
 			return err
 		}
@@ -141,7 +141,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	return nil
 }
 
-// 获取当前配置
+// Config 获取当前配置
 func (this *HealthCheckClusterTask) Config() *serverconfigs.HealthCheckConfig {
 	return this.config
 }

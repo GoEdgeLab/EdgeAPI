@@ -446,14 +446,18 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 	_, userId, err := models.SharedServerDAO.FindServerAdminIdAndUserId(tx, req.ServerId)
 	if userId > 0 {
 		if req.AuditingResult.IsOk {
-			err = models.SharedMessageDAO.CreateMessage(tx, 0, userId, models.MessageTypeServerNamesAuditingSuccess, models.MessageLevelSuccess, "服务域名审核通过", maps.Map{
+			subject := "服务域名审核通过"
+			msg := "服务域名审核通过"
+			err = models.SharedMessageDAO.CreateMessage(tx, 0, userId, models.MessageTypeServerNamesAuditingSuccess, models.MessageLevelSuccess, subject, msg, maps.Map{
 				"serverId": req.ServerId,
 			}.AsJSON())
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			err = models.SharedMessageDAO.CreateMessage(tx, 0, userId, models.MessageTypeServerNamesAuditingFailed, models.LevelError, "服务域名审核失败，原因："+req.AuditingResult.Reason, maps.Map{
+			subject := "服务域名审核失败"
+			msg := "服务域名审核失败，原因：" + req.AuditingResult.Reason
+			err = models.SharedMessageDAO.CreateMessage(tx, 0, userId, models.MessageTypeServerNamesAuditingFailed, models.LevelError, subject, msg, maps.Map{
 				"serverId": req.ServerId,
 			}.AsJSON())
 			if err != nil {

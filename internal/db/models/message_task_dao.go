@@ -41,7 +41,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMessageTask 启用条目
 func (this *MessageTaskDAO) EnableMessageTask(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -50,7 +50,7 @@ func (this *MessageTaskDAO) EnableMessageTask(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableMessageTask 禁用条目
 func (this *MessageTaskDAO) DisableMessageTask(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -59,7 +59,7 @@ func (this *MessageTaskDAO) DisableMessageTask(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledMessageTask 查找启用中的条目
 func (this *MessageTaskDAO) FindEnabledMessageTask(tx *dbs.Tx, id int64) (*MessageTask, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -71,7 +71,7 @@ func (this *MessageTaskDAO) FindEnabledMessageTask(tx *dbs.Tx, id int64) (*Messa
 	return result.(*MessageTask), err
 }
 
-// 创建任务
+// CreateMessageTask 创建任务
 func (this *MessageTaskDAO) CreateMessageTask(tx *dbs.Tx, recipientId int64, instanceId int64, user string, subject string, body string, isPrimary bool) (int64, error) {
 	op := NewMessageTaskOperator()
 	op.RecipientId = recipientId
@@ -85,7 +85,7 @@ func (this *MessageTaskDAO) CreateMessageTask(tx *dbs.Tx, recipientId int64, ins
 	return this.SaveInt64(tx, op)
 }
 
-// 查找需要发送的任务
+// FindSendingMessageTasks 查找需要发送的任务
 func (this *MessageTaskDAO) FindSendingMessageTasks(tx *dbs.Tx, size int64) (result []*MessageTask, err error) {
 	if size <= 0 {
 		return nil, nil
@@ -101,7 +101,7 @@ func (this *MessageTaskDAO) FindSendingMessageTasks(tx *dbs.Tx, size int64) (res
 	return
 }
 
-// 设置发送的状态
+// UpdateMessageTaskStatus 设置发送的状态
 func (this *MessageTaskDAO) UpdateMessageTaskStatus(tx *dbs.Tx, taskId int64, status MessageTaskStatus, result []byte) error {
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
@@ -114,4 +114,32 @@ func (this *MessageTaskDAO) UpdateMessageTaskStatus(tx *dbs.Tx, taskId int64, st
 		op.Result = result
 	}
 	return this.Save(tx, op)
+}
+
+// CreateMessageTasks 从集群、节点或者服务中创建任务
+func (this *MessageTaskDAO) CreateMessageTasks(tx *dbs.Tx, target MessageTaskTarget, messageType MessageType, subject string, body string) error {
+	receivers, err := SharedMessageReceiverDAO.FindAllReceivers(tx, target, messageType)
+	if err != nil {
+		return err
+	}
+	for _, receiver := range receivers {
+		if receiver.RecipientId > 0 {
+			_, err := this.CreateMessageTask(tx, int64(receiver.RecipientId), 0, "", subject, body, false)
+			if err != nil {
+				return err
+			}
+		} else if receiver.RecipientGroupId > 0 {
+			recipientIds, err := SharedMessageRecipientDAO.FindAllEnabledAndOnRecipientIdsWithGroup(tx, int64(receiver.RecipientGroupId))
+			if err != nil {
+				return err
+			}
+			for _, recipientId := range recipientIds {
+				_, err := this.CreateMessageTask(tx, recipientId, 0, "", subject, body, false)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }

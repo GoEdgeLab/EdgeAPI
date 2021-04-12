@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -34,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMessageRecipient 启用条目
 func (this *MessageRecipientDAO) EnableMessageRecipient(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -43,7 +44,7 @@ func (this *MessageRecipientDAO) EnableMessageRecipient(tx *dbs.Tx, id int64) er
 	return err
 }
 
-// 禁用条目
+// DisableMessageRecipient 禁用条目
 func (this *MessageRecipientDAO) DisableMessageRecipient(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -52,7 +53,7 @@ func (this *MessageRecipientDAO) DisableMessageRecipient(tx *dbs.Tx, id int64) e
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledMessageRecipient 查找启用中的条目
 func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, id int64) (*MessageRecipient, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -64,7 +65,7 @@ func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, id int6
 	return result.(*MessageRecipient), err
 }
 
-// 创建接收人
+// CreateRecipient 创建接收人
 func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, instanceId int64, user string, groupIds []int64, description string) (int64, error) {
 	op := NewMessageRecipientOperator()
 	op.AdminId = adminId
@@ -87,7 +88,7 @@ func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, inst
 	return this.SaveInt64(tx, op)
 }
 
-// 修改接收人
+// UpdateRecipient 修改接收人
 func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, adminId int64, instanceId int64, user string, groupIds []int64, description string, isOn bool) error {
 	if recipientId <= 0 {
 		return errors.New("invalid recipientId")
@@ -114,14 +115,15 @@ func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, 
 	return this.Save(tx, op)
 }
 
-// 计算接收人数量
+// CountAllEnabledRecipients 计算接收人数量
 func (this *MessageRecipientDAO) CountAllEnabledRecipients(tx *dbs.Tx, adminId int64, groupId int64, mediaType string, keyword string) (int64, error) {
 	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
 	if groupId > 0 {
-		query.Attr("groupId", groupId)
+		query.Where("JSON_CONTAINS(groupIds, :groupId)").
+			Param("groupId", numberutils.FormatInt64(groupId))
 	}
 	if len(mediaType) > 0 {
 		query.Where("instanceId IN (SELECT id FROM "+SharedMessageMediaInstanceDAO.Table+" WHERE state=1 AND mediaType=:mediaType)").
@@ -138,14 +140,15 @@ func (this *MessageRecipientDAO) CountAllEnabledRecipients(tx *dbs.Tx, adminId i
 		Count()
 }
 
-// 列出单页接收人
+// ListAllEnabledRecipients 列出单页接收人
 func (this *MessageRecipientDAO) ListAllEnabledRecipients(tx *dbs.Tx, adminId int64, groupId int64, mediaType string, keyword string, offset int64, size int64) (result []*MessageRecipient, err error) {
 	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
 	if groupId > 0 {
-		query.Attr("groupId", groupId)
+		query.Where("JSON_CONTAINS(groupIds, :groupId)").
+			Param("groupId", numberutils.FormatInt64(groupId))
 	}
 	if len(mediaType) > 0 {
 		query.Where("instanceId IN (SELECT id FROM "+SharedMessageMediaInstanceDAO.Table+" WHERE state=1 AND mediaType=:mediaType)").
@@ -165,4 +168,22 @@ func (this *MessageRecipientDAO) ListAllEnabledRecipients(tx *dbs.Tx, adminId in
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindAllEnabledAndOnRecipientIdsWithGroup 查找某个分组下的所有可用接收人ID
+func (this *MessageRecipientDAO) FindAllEnabledAndOnRecipientIdsWithGroup(tx *dbs.Tx, groupId int64) ([]int64, error) {
+	ones, err := this.Query(tx).
+		Where("JSON_CONTAINS(groupIds, :groupId)").
+		Param("groupId", numberutils.FormatInt64(groupId)).
+		State(MessageRecipientStateEnabled).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	result := []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*MessageRecipient).Id))
+	}
+	return result, nil
 }

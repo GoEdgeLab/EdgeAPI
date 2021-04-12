@@ -65,7 +65,7 @@ func init() {
 	}()
 }
 
-// 节点stream
+// NodeStream 节点stream
 func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
 	// TODO 使用此stream快速通知边缘节点更新
 	// 校验节点
@@ -114,7 +114,13 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		if err != nil {
 			return err
 		}
-		err = models.SharedMessageDAO.CreateNodeMessage(tx, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, "节点已经恢复在线", nil)
+		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, nodeId)
+		if err != nil {
+			return err
+		}
+		subject := "节点\"" + nodeName + "\"已经恢复在线"
+		msg := "节点\"" + nodeName + "\"已经恢复在线"
+		err = models.SharedMessageDAO.CreateNodeMessage(tx, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil)
 		if err != nil {
 			return err
 		}
@@ -190,7 +196,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	}
 }
 
-// 向节点发送命令
+// SendCommandToNode 向节点发送命令
 func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStreamMessage) (*pb.NodeStreamMessage, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)

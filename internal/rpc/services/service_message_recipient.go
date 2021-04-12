@@ -19,7 +19,7 @@ func (this *MessageRecipientService) CreateMessageRecipient(ctx context.Context,
 	}
 
 	var tx = this.NullTx()
-	recipientId, err := models.SharedMessageRecipientDAO.CreateRecipient(tx, req.AdminId, req.InstanceId, req.User, req.GroupIds, req.Description)
+	recipientId, err := models.SharedMessageRecipientDAO.CreateRecipient(tx, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (this *MessageRecipientService) UpdateMessageRecipient(ctx context.Context,
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMessageRecipientDAO.UpdateRecipient(tx, req.MessageRecipientId, req.AdminId, req.InstanceId, req.User, req.GroupIds, req.Description, req.IsOn)
+	err = models.SharedMessageRecipientDAO.UpdateRecipient(tx, req.MessageRecipientId, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (this *MessageRecipientService) CountAllEnabledMessageRecipients(ctx contex
 	}
 
 	var tx = this.NullTx()
-	count, err := models.SharedMessageRecipientDAO.CountAllEnabledRecipients(tx, req.AdminId, req.GroupId, req.MediaType, req.Keyword)
+	count, err := models.SharedMessageRecipientDAO.CountAllEnabledRecipients(tx, req.AdminId, req.MessageRecipientGroupId, req.MediaType, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 	}
 
 	var tx = this.NullTx()
-	recipients, err := models.SharedMessageRecipientDAO.ListAllEnabledRecipients(tx, req.AdminId, req.GroupId, req.MediaType, req.Keyword, req.Offset, req.Size)
+	recipients, err := models.SharedMessageRecipientDAO.ListAllEnabledRecipients(tx, req.AdminId, req.MessageRecipientGroupId, req.MediaType, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

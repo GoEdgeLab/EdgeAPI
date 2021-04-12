@@ -18,9 +18,9 @@ func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
 func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	isChanged, err := SharedNodeDAO.UpdateNodeUp(tx, 57, false, 3, 3)
+	err := SharedNodeDAO.UpdateNodeUp(tx, 57, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("changed:", isChanged)
+	t.Log("ok")
 }

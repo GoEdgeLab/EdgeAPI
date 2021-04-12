@@ -1,6 +1,6 @@
 package models
 
-// 消息通知
+// Message 消息通知
 type Message struct {
 	Id        uint64 `field:"id"`        // ID
 	AdminId   uint32 `field:"adminId"`   // 管理员ID
@@ -8,6 +8,7 @@ type Message struct {
 	ClusterId uint32 `field:"clusterId"` // 集群ID
 	NodeId    uint32 `field:"nodeId"`    // 节点ID
 	Level     string `field:"level"`     // 级别
+	Subject   string `field:"subject"`   // 标题
 	Body      string `field:"body"`      // 内容
 	Type      string `field:"type"`      // 消息类型
 	Params    string `field:"params"`    // 额外的参数
@@ -25,6 +26,7 @@ type MessageOperator struct {
 	ClusterId interface{} // 集群ID
 	NodeId    interface{} // 节点ID
 	Level     interface{} // 级别
+	Subject   interface{} // 标题
 	Body      interface{} // 内容
 	Type      interface{} // 消息类型
 	Params    interface{} // 额外的参数

@@ -210,6 +210,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterHTTPAccessLogServiceServer(rpcServer, &services.HTTPAccessLogService{})
 	pb.RegisterMessageServiceServer(rpcServer, &services.MessageService{})
 	pb.RegisterMessageRecipientServiceServer(rpcServer, &services.MessageRecipientService{})
+	pb.RegisterMessageReceiverServiceServer(rpcServer, &services.MessageReceiverService{})
 	pb.RegisterMessageMediaServiceServer(rpcServer, &services.MessageMediaService{})
 	pb.RegisterMessageRecipientGroupServiceServer(rpcServer, &services.MessageRecipientGroupService{})
 	pb.RegisterMessageMediaInstanceServiceServer(rpcServer, &services.MessageMediaInstanceService{})

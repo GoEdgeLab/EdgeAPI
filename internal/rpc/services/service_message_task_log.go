@@ -25,7 +25,7 @@ func (this *MessageTaskLogService) CountMessageTaskLogs(ctx context.Context, req
 	return this.SuccessCount(count)
 }
 
-// 列出当页日志
+// ListMessageTaskLogs 列出当页日志
 func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req *pb.ListMessageTaskLogsRequest) (*pb.ListMessageTaskLogsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -58,6 +58,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 					Id:   int64(recipient.Id),
 					User: recipient.User,
 				}
+				task.InstanceId = recipient.InstanceId
 			}
 		}
 

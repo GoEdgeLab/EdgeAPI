@@ -24,7 +24,7 @@ func init() {
 	})
 }
 
-// 健康节点任务
+// NodeMonitorTask 健康节点任务
 type NodeMonitorTask struct {
 	intervalSeconds int
 }
@@ -80,7 +80,9 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 		return err
 	}
 	for _, node := range inactiveNodes {
-		err = models.SharedMessageDAO.CreateNodeMessage(nil, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, "节点已处于离线状态", nil)
+		subject := "节点\"" + node.Name + "\"已处于离线状态"
+		msg := "节点\"" + node.Name + "\"已处于离线状态"
+		err = models.SharedMessageDAO.CreateNodeMessage(nil, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, subject, msg, nil)
 		if err != nil {
 			return err
 		}

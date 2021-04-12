@@ -132,7 +132,7 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 				return err
 			}
 			if sumBytes > capacityBytes {
-				err := models.SharedMessageDAO.CreateMessage(nil, 0, 0, models.MessageTypeLogCapacityOverflow, models.MessageLevelError, "日志用量已经超出最大限制，当前的用量为"+this.formatBytes(sumBytes)+"，而设置的最大容量为"+this.formatBytes(capacityBytes)+"。", nil)
+				err := models.SharedMessageDAO.CreateMessage(nil, 0, 0, models.MessageTypeLogCapacityOverflow, models.MessageLevelError, "日志用量已经超出最大限制", "日志用量已经超出最大限制，当前的用量为"+this.formatBytes(sumBytes)+"，而设置的最大容量为"+this.formatBytes(capacityBytes)+"。", nil)
 				if err != nil {
 					return err
 				}

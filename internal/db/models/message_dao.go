@@ -25,12 +25,12 @@ const (
 type MessageType = string
 
 const (
-	MessageTypeHealthCheckFailed          MessageType = "HealthCheckFailed"
-	MessageTypeHealthCheckNodeUp          MessageType = "HealthCheckNodeUp"
-	MessageTypeHealthCheckNodeDown        MessageType = "HealthCheckNodeDown"
-	MessageTypeNodeInactive               MessageType = "NodeInactive"
-	MessageTypeNodeActive                 MessageType = "NodeActive"
-	MessageTypeClusterDNSSyncFailed       MessageType = "ClusterDNSSyncFailed"
+	MessageTypeHealthCheckFailed          MessageType = "HealthCheckFailed"          // 节点健康检查失败
+	MessageTypeHealthCheckNodeUp          MessageType = "HealthCheckNodeUp"          // 因健康检查节点上线
+	MessageTypeHealthCheckNodeDown        MessageType = "HealthCheckNodeDown"        // 因健康检查节点下线
+	MessageTypeNodeInactive               MessageType = "NodeInactive"               // 节点不活跃
+	MessageTypeNodeActive                 MessageType = "NodeActive"                 // 节点活跃
+	MessageTypeClusterDNSSyncFailed       MessageType = "ClusterDNSSyncFailed"       // DNS同步失败
 	MessageTypeSSLCertExpiring            MessageType = "SSLCertExpiring"            // SSL证书即将过期
 	MessageTypeSSLCertACMETaskFailed      MessageType = "SSLCertACMETaskFailed"      // SSL证书任务执行失败
 	MessageTypeSSLCertACMETaskSuccess     MessageType = "SSLCertACMETaskSuccess"     // SSL证书任务执行成功
@@ -60,7 +60,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMessage 启用条目
 func (this *MessageDAO) EnableMessage(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -69,7 +69,7 @@ func (this *MessageDAO) EnableMessage(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableMessage 禁用条目
 func (this *MessageDAO) DisableMessage(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -78,7 +78,7 @@ func (this *MessageDAO) DisableMessage(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledMessage 查找启用中的条目
 func (this *MessageDAO) FindEnabledMessage(tx *dbs.Tx, id int64) (*Message, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -90,20 +90,60 @@ func (this *MessageDAO) FindEnabledMessage(tx *dbs.Tx, id int64) (*Message, erro
 	return result.(*Message), err
 }
 
-// 创建集群消息
-func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, clusterId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
-	_, err := this.createMessage(tx, clusterId, 0, messageType, level, body, paramsJSON)
-	return err
+// CreateClusterMessage 创建集群消息
+func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, clusterId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
+	_, err := this.createMessage(tx, clusterId, 0, messageType, level, subject, body, paramsJSON)
+	if err != nil {
+		return err
+	}
+
+	// 发送给媒介接收人
+	err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
+		ClusterId: clusterId,
+		NodeId:    0,
+		ServerId:  0,
+	}, messageType, subject, body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// 创建节点消息
-func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
-	_, err := this.createMessage(tx, clusterId, nodeId, messageType, level, body, paramsJSON)
-	return err
+// CreateNodeMessage 创建节点消息
+func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
+	_, err := this.createMessage(tx, clusterId, nodeId, messageType, level, subject, body, paramsJSON)
+	if err != nil {
+		return err
+	}
+
+	// 发送给媒介接收人 - 集群
+	err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
+		ClusterId: clusterId,
+		NodeId:    0,
+		ServerId:  0,
+	}, messageType, subject, body)
+	if err != nil {
+		return err
+	}
+
+	// 发送给媒介接收人 - 节点
+	if nodeId > 0 {
+		err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
+			ClusterId: clusterId,
+			NodeId:    nodeId,
+			ServerId:  0,
+		}, messageType, subject, body)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// 创建普通消息
-func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, body string, paramsJSON []byte) error {
+// CreateMessage 创建普通消息
+func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
 	h := md5.New()
 	h.Write([]byte(body))
 	h.Write(paramsJSON)
@@ -114,6 +154,14 @@ func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, m
 	op.UserId = userId
 	op.Type = messageType
 	op.Level = level
+
+	subjectRunes := []rune(subject)
+	if len(subjectRunes) > 100 {
+		op.Subject = string(subjectRunes[:100]) + "..."
+	} else {
+		op.Subject = subject
+	}
+
 	op.Body = body
 	if len(paramsJSON) > 0 {
 		op.Params = paramsJSON
@@ -123,10 +171,14 @@ func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, m
 	op.Day = timeutil.Format("Ymd")
 	op.Hash = hash
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// 删除某天之前的消息
+// DeleteMessagesBeforeDay 删除某天之前的消息
 func (this *MessageDAO) DeleteMessagesBeforeDay(tx *dbs.Tx, dayTime time.Time) error {
 	day := timeutil.Format("Ymd", dayTime)
 	_, err := this.Query(tx).
@@ -136,7 +188,7 @@ func (this *MessageDAO) DeleteMessagesBeforeDay(tx *dbs.Tx, dayTime time.Time) e
 	return err
 }
 
-// 计算未读消息数量
+// CountUnreadMessages 计算未读消息数量
 func (this *MessageDAO) CountUnreadMessages(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
 	query := this.Query(tx).
 		Attr("isRead", false)
@@ -149,7 +201,7 @@ func (this *MessageDAO) CountUnreadMessages(tx *dbs.Tx, adminId int64, userId in
 	return query.Count()
 }
 
-// 列出单页未读消息
+// ListUnreadMessages 列出单页未读消息
 func (this *MessageDAO) ListUnreadMessages(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*Message, err error) {
 	query := this.Query(tx).
 		Attr("isRead", false)
@@ -168,7 +220,7 @@ func (this *MessageDAO) ListUnreadMessages(tx *dbs.Tx, adminId int64, userId int
 	return
 }
 
-// 设置消息已读状态
+// UpdateMessageRead 设置消息已读状态
 func (this *MessageDAO) UpdateMessageRead(tx *dbs.Tx, messageId int64, b bool) error {
 	if messageId <= 0 {
 		return errors.New("invalid messageId")
@@ -180,7 +232,7 @@ func (this *MessageDAO) UpdateMessageRead(tx *dbs.Tx, messageId int64, b bool) e
 	return err
 }
 
-// 设置一组消息为已读状态
+// UpdateMessagesRead 设置一组消息为已读状态
 func (this *MessageDAO) UpdateMessagesRead(tx *dbs.Tx, messageIds []int64, b bool) error {
 	// 这里我们一个一个更改，因为In语句不容易Prepare，且效率不高
 	for _, messageId := range messageIds {
@@ -192,7 +244,7 @@ func (this *MessageDAO) UpdateMessagesRead(tx *dbs.Tx, messageIds []int64, b boo
 	return nil
 }
 
-// 设置所有消息为已读
+// UpdateAllMessagesRead 设置所有消息为已读
 func (this *MessageDAO) UpdateAllMessagesRead(tx *dbs.Tx, adminId int64, userId int64) error {
 	query := this.Query(tx).
 		Attr("isRead", false)
@@ -208,7 +260,7 @@ func (this *MessageDAO) UpdateAllMessagesRead(tx *dbs.Tx, adminId int64, userId 
 	return err
 }
 
-// 检查消息权限
+// CheckMessageUser 检查消息权限
 func (this *MessageDAO) CheckMessageUser(tx *dbs.Tx, messageId int64, adminId int64, userId int64) (bool, error) {
 	if messageId <= 0 || (adminId <= 0 && userId <= 0) {
 		return false, nil
@@ -225,7 +277,7 @@ func (this *MessageDAO) CheckMessageUser(tx *dbs.Tx, messageId int64, adminId in
 }
 
 // 创建消息
-func (this *MessageDAO) createMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, body string, paramsJSON []byte) (int64, error) {
+func (this *MessageDAO) createMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) (int64, error) {
 	h := md5.New()
 	h.Write([]byte(body))
 	h.Write(paramsJSON)
@@ -241,6 +293,14 @@ func (this *MessageDAO) createMessage(tx *dbs.Tx, clusterId int64, nodeId int64,
 	op.NodeId = nodeId
 	op.Type = messageType
 	op.Level = level
+
+	subjectRunes := []rune(subject)
+	if len(subjectRunes) > 100 {
+		op.Subject = string(subjectRunes[:100]) + "..."
+	} else {
+		op.Subject = subject
+	}
+
 	op.Body = body
 	if len(paramsJSON) > 0 {
 		op.Params = paramsJSON
