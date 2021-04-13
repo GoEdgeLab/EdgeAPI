@@ -5,7 +5,7 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -22,7 +22,7 @@ func (this *AuthorityKeyService) UpdateAuthorityKey(ctx context.Context, req *pb
 		return nil, err
 	}
 	var tx = this.NullTx()
-	err = models.SharedAuthorityKeyDAO.UpdateKey(tx, req.Value, req.DayFrom, req.DayTo, req.Hostname, req.MacAddresses)
+	err = authority.SharedAuthorityKeyDAO.UpdateKey(tx, req.Value, req.DayFrom, req.DayTo, req.Hostname, req.MacAddresses)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (this *AuthorityKeyService) ReadAuthorityKey(ctx context.Context, req *pb.R
 		return nil, err
 	}
 	var tx = this.NullTx()
-	key, err := models.SharedAuthorityKeyDAO.ReadKey(tx)
+	key, err := authority.SharedAuthorityKeyDAO.ReadKey(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (this *AuthorityKeyService) ResetAuthorityKey(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	err = models.SharedAuthorityKeyDAO.ResetKey(nil)
+	err = authority.SharedAuthorityKeyDAO.ResetKey(nil)
 	if err != nil {
 		return nil, err
 	}

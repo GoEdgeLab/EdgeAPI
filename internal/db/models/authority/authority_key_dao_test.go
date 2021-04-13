@@ -1,4 +1,4 @@
-package models
+package authority
 
 import (
 	_ "github.com/go-sql-driver/mysql"

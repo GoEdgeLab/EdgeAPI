@@ -21,7 +21,7 @@ import (
 type BaseService struct {
 }
 
-// 校验管理员
+// ValidateAdmin 校验管理员
 func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (adminId int64, err error) {
 	_, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -33,7 +33,7 @@ func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (a
 	return reqUserId, nil
 }
 
-// 校验管理员和用户
+// ValidateAdminAndUser 校验管理员和用户
 func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminId int64, requireUserId int64) (adminId int64, userId int64, err error) {
 	reqUserType, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
@@ -70,25 +70,31 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminI
 	return
 }
 
-// 校验边缘节点
+// ValidateNode 校验边缘节点
 func (this *BaseService) ValidateNode(ctx context.Context) (nodeId int64, err error) {
 	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	return
 }
 
-// 校验用户节点
+// ValidateUser 校验用户节点
 func (this *BaseService) ValidateUser(ctx context.Context) (userId int64, err error) {
 	_, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
 	return
 }
 
-// 校验监控节点
+// ValidateMonitor 校验监控节点
 func (this *BaseService) ValidateMonitor(ctx context.Context) (nodeId int64, err error) {
 	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
 	return
 }
 
-// 获取节点ID
+// ValidateAuthority 校验认证节点
+func (this *BaseService) ValidateAuthority(ctx context.Context) (nodeId int64, err error) {
+	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
+	return
+}
+
+// ValidateNodeId 获取节点ID
 func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.UserType) (role rpcutils.UserType, nodeIntId int64, err error) {
 	if ctx == nil {
 		err = errors.New("context should not be nil")
@@ -185,27 +191,27 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 	return
 }
 
-// 返回成功
+// Success 返回成功
 func (this *BaseService) Success() (*pb.RPCSuccess, error) {
 	return &pb.RPCSuccess{}, nil
 }
 
-// 返回数字
+// SuccessCount 返回数字
 func (this *BaseService) SuccessCount(count int64) (*pb.RPCCountResponse, error) {
 	return &pb.RPCCountResponse{Count: count}, nil
 }
 
-// 返回权限错误
+// PermissionError 返回权限错误
 func (this *BaseService) PermissionError() error {
 	return errors.New("Permission Denied")
 }
 
-// 空的数据库事务
+// NullTx 空的数据库事务
 func (this *BaseService) NullTx() *dbs.Tx {
 	return nil
 }
 
-// 获取当前的数据库
+// RunTx 在当前数据中执行一个事务
 func (this *BaseService) RunTx(callback func(tx *dbs.Tx) error) error {
 	db, err := dbs.Default()
 	if err != nil {

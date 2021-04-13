@@ -1,4 +1,4 @@
-package models
+package authority
 
 // AuthorityKey 企业版认证信息
 type AuthorityKey struct {

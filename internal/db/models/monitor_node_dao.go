@@ -1,15 +1,12 @@
 package models
 
 import (
-	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
-	"strconv"
 )
 
 const (
@@ -38,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMonitorNode 启用条目
 func (this *MonitorNodeDAO) EnableMonitorNode(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -47,7 +44,7 @@ func (this *MonitorNodeDAO) EnableMonitorNode(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableMonitorNode 禁用条目
 func (this *MonitorNodeDAO) DisableMonitorNode(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -56,7 +53,7 @@ func (this *MonitorNodeDAO) DisableMonitorNode(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledMonitorNode 查找启用中的条目
 func (this *MonitorNodeDAO) FindEnabledMonitorNode(tx *dbs.Tx, id int64) (*MonitorNode, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -68,7 +65,7 @@ func (this *MonitorNodeDAO) FindEnabledMonitorNode(tx *dbs.Tx, id int64) (*Monit
 	return result.(*MonitorNode), err
 }
 
-// 根据主键查找名称
+// FindMonitorNodeName 根据主键查找名称
 func (this *MonitorNodeDAO) FindMonitorNodeName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -76,7 +73,7 @@ func (this *MonitorNodeDAO) FindMonitorNodeName(tx *dbs.Tx, id int64) (string, e
 		FindStringCol("")
 }
 
-// 列出所有可用监控节点
+// FindAllEnabledMonitorNodes 列出所有可用监控节点
 func (this *MonitorNodeDAO) FindAllEnabledMonitorNodes(tx *dbs.Tx) (result []*MonitorNode, err error) {
 	_, err = this.Query(tx).
 		State(MonitorNodeStateEnabled).
@@ -87,14 +84,14 @@ func (this *MonitorNodeDAO) FindAllEnabledMonitorNodes(tx *dbs.Tx) (result []*Mo
 	return
 }
 
-// 计算监控节点数量
+// CountAllEnabledMonitorNodes 计算监控节点数量
 func (this *MonitorNodeDAO) CountAllEnabledMonitorNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(MonitorNodeStateEnabled).
 		Count()
 }
 
-// 列出单页的监控节点
+// ListEnabledMonitorNodes 列出单页的监控节点
 func (this *MonitorNodeDAO) ListEnabledMonitorNodes(tx *dbs.Tx, offset int64, size int64) (result []*MonitorNode, err error) {
 	_, err = this.Query(tx).
 		State(MonitorNodeStateEnabled).
@@ -107,34 +104,7 @@ func (this *MonitorNodeDAO) ListEnabledMonitorNodes(tx *dbs.Tx, offset int64, si
 	return
 }
 
-// 根据主机名和端口获取ID
-func (this *MonitorNodeDAO) FindEnabledMonitorNodeIdWithAddr(tx *dbs.Tx, protocol string, host string, port int) (int64, error) {
-	addr := maps.Map{
-		"protocol":  protocol,
-		"host":      host,
-		"portRange": strconv.Itoa(port),
-	}
-	addrJSON, err := json.Marshal(addr)
-	if err != nil {
-		return 0, err
-	}
-
-	one, err := this.Query(tx).
-		State(MonitorNodeStateEnabled).
-		Where("JSON_CONTAINS(accessAddrs, :addr)").
-		Param("addr", string(addrJSON)).
-		ResultPk().
-		Find()
-	if err != nil {
-		return 0, err
-	}
-	if one == nil {
-		return 0, nil
-	}
-	return int64(one.(*MonitorNode).Id), nil
-}
-
-// 创建监控节点
+// CreateMonitorNode 创建监控节点
 func (this *MonitorNodeDAO) CreateMonitorNode(tx *dbs.Tx, name string, description string, isOn bool) (nodeId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
@@ -161,7 +131,7 @@ func (this *MonitorNodeDAO) CreateMonitorNode(tx *dbs.Tx, name string, descripti
 	return types.Int64(op.Id), nil
 }
 
-// 修改监控节点
+// UpdateMonitorNode 修改监控节点
 func (this *MonitorNodeDAO) UpdateMonitorNode(tx *dbs.Tx, nodeId int64, name string, description string, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
@@ -176,7 +146,7 @@ func (this *MonitorNodeDAO) UpdateMonitorNode(tx *dbs.Tx, nodeId int64, name str
 	return err
 }
 
-// 根据唯一ID获取节点信息
+// FindEnabledMonitorNodeWithUniqueId 根据唯一ID获取节点信息
 func (this *MonitorNodeDAO) FindEnabledMonitorNodeWithUniqueId(tx *dbs.Tx, uniqueId string) (*MonitorNode, error) {
 	result, err := this.Query(tx).
 		Attr("uniqueId", uniqueId).
@@ -188,7 +158,7 @@ func (this *MonitorNodeDAO) FindEnabledMonitorNodeWithUniqueId(tx *dbs.Tx, uniqu
 	return result.(*MonitorNode), err
 }
 
-// 根据唯一ID获取节点ID
+// FindEnabledMonitorNodeIdWithUniqueId 根据唯一ID获取节点ID
 func (this *MonitorNodeDAO) FindEnabledMonitorNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
 	return this.Query(tx).
 		Attr("uniqueId", uniqueId).
@@ -197,7 +167,7 @@ func (this *MonitorNodeDAO) FindEnabledMonitorNodeIdWithUniqueId(tx *dbs.Tx, uni
 		FindInt64Col(0)
 }
 
-// 生成唯一ID
+// GenUniqueId 生成唯一ID
 func (this *MonitorNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
@@ -214,7 +184,7 @@ func (this *MonitorNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	}
 }
 
-// 更改节点状态
+// UpdateNodeStatus 更改节点状态
 func (this *MonitorNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
 	if statusJSON == nil {
 		return nil
