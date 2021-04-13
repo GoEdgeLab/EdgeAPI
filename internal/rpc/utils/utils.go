@@ -18,20 +18,21 @@ import (
 type UserType = string
 
 const (
-	UserTypeNone     = "none"
-	UserTypeAdmin    = "admin"
-	UserTypeUser     = "user"
-	UserTypeProvider = "provider"
-	UserTypeNode     = "node"
-	UserTypeCluster  = "cluster"
-	UserTypeMonitor  = "monitor"
-	UserTypeStat     = "stat"
-	UserTypeDNS      = "dns"
-	UserTypeLog      = "log"
-	UserTypeAPI      = "api"
+	UserTypeNone      = "none"
+	UserTypeAdmin     = "admin"
+	UserTypeUser      = "user"
+	UserTypeProvider  = "provider"
+	UserTypeNode      = "node"
+	UserTypeCluster   = "cluster"
+	UserTypeMonitor   = "monitor"
+	UserTypeStat      = "stat"
+	UserTypeDNS       = "dns"
+	UserTypeLog       = "log"
+	UserTypeAPI       = "api"
+	UserTypeAuthority = "authority"
 )
 
-// 校验请求
+// ValidateRequest 校验请求
 func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserType, userId int64, err error) {
 	if ctx == nil {
 		err = errors.New("context should not be nil")
@@ -165,7 +166,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	}
 }
 
-// 包装错误
+// Wrap 包装错误
 func Wrap(description string, err error) error {
 	if err == nil {
 		return errors.New(description)

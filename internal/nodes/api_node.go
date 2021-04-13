@@ -253,6 +253,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterDNSTaskServiceServer(rpcServer, &services.DNSTaskService{})
 	pb.RegisterNodeClusterFirewallActionServiceServer(rpcServer, &services.NodeClusterFirewallActionService{})
 	pb.RegisterMonitorNodeServiceServer(rpcServer, &services.MonitorNodeService{})
+	pb.RegisterAuthorityKeyServiceServer(rpcServer, &services.AuthorityKeyService{})
 	err := rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API_NODE]start rpc failed: " + err.Error())
