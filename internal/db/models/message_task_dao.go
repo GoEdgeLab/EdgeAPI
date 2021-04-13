@@ -122,24 +122,31 @@ func (this *MessageTaskDAO) CreateMessageTasks(tx *dbs.Tx, target MessageTaskTar
 	if err != nil {
 		return err
 	}
+	allRecipientIds := []int64{}
 	for _, receiver := range receivers {
 		if receiver.RecipientId > 0 {
-			_, err := this.CreateMessageTask(tx, int64(receiver.RecipientId), 0, "", subject, body, false)
-			if err != nil {
-				return err
-			}
+			allRecipientIds = append(allRecipientIds, int64(receiver.RecipientId))
 		} else if receiver.RecipientGroupId > 0 {
 			recipientIds, err := SharedMessageRecipientDAO.FindAllEnabledAndOnRecipientIdsWithGroup(tx, int64(receiver.RecipientGroupId))
 			if err != nil {
 				return err
 			}
-			for _, recipientId := range recipientIds {
-				_, err := this.CreateMessageTask(tx, recipientId, 0, "", subject, body, false)
-				if err != nil {
-					return err
-				}
-			}
+			allRecipientIds = append(allRecipientIds, recipientIds...)
 		}
 	}
+
+	sentMap := map[int64]bool{} // recipientId => bool 用来检查是否已经发送，防止重复发送给某个接收人
+	for _, recipientId := range allRecipientIds {
+		_, ok := sentMap[recipientId]
+		if ok {
+			continue
+		}
+		sentMap[recipientId] = true
+		_, err := this.CreateMessageTask(tx, recipientId, 0, "", subject, body, false)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
