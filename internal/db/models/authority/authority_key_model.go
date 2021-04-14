@@ -9,6 +9,7 @@ type AuthorityKey struct {
 	Hostname     string `field:"hostname"`     // Hostname
 	MacAddresses string `field:"macAddresses"` // MAC地址
 	UpdatedAt    uint64 `field:"updatedAt"`    // 创建/修改时间
+	Company      string `field:"company"`      // 公司组织
 }
 
 type AuthorityKeyOperator struct {
@@ -19,6 +20,7 @@ type AuthorityKeyOperator struct {
 	Hostname     interface{} // Hostname
 	MacAddresses interface{} // MAC地址
 	UpdatedAt    interface{} // 创建/修改时间
+	Company      interface{} // 公司组织
 }
 
 func NewAuthorityKeyOperator() *AuthorityKeyOperator {

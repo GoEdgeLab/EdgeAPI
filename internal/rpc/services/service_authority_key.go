@@ -22,7 +22,7 @@ func (this *AuthorityKeyService) UpdateAuthorityKey(ctx context.Context, req *pb
 		return nil, err
 	}
 	var tx = this.NullTx()
-	err = authority.SharedAuthorityKeyDAO.UpdateKey(tx, req.Value, req.DayFrom, req.DayTo, req.Hostname, req.MacAddresses)
+	err = authority.SharedAuthorityKeyDAO.UpdateKey(tx, req.Value, req.DayFrom, req.DayTo, req.Hostname, req.MacAddresses, req.Company)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +58,7 @@ func (this *AuthorityKeyService) ReadAuthorityKey(ctx context.Context, req *pb.R
 		DayTo:        key.DayTo,
 		Hostname:     key.Hostname,
 		MacAddresses: macAddresses,
+		Company:      key.Company,
 		UpdatedAt:    int64(key.UpdatedAt),
 	}}, nil
 }

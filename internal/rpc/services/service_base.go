@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -184,6 +185,8 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 		nodeIntId = 0
 	case rpcutils.UserTypeMonitor:
 		nodeIntId, err = models.SharedMonitorNodeDAO.FindEnabledMonitorNodeIdWithUniqueId(nil, nodeId)
+	case rpcutils.UserTypeAuthority:
+		nodeIntId, err = authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNodeIdWithUniqueId(nil, nodeId)
 	default:
 		err = errors.New("unsupported user role '" + apiToken.Role + "'")
 	}

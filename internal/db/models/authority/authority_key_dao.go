@@ -30,7 +30,7 @@ func init() {
 }
 
 // UpdateKey 设置Key
-func (this *AuthorityKeyDAO) UpdateKey(tx *dbs.Tx, value string, dayFrom string, dayTo string, hostname string, macAddresses []string) error {
+func (this *AuthorityKeyDAO) UpdateKey(tx *dbs.Tx, value string, dayFrom string, dayTo string, hostname string, macAddresses []string, company string) error {
 	one, err := this.Query(tx).
 		AscPk().
 		Find()
@@ -55,6 +55,7 @@ func (this *AuthorityKeyDAO) UpdateKey(tx *dbs.Tx, value string, dayFrom string,
 	}
 
 	op.MacAddresses = macAddressesJSON
+	op.Company = company
 	op.UpdatedAt = time.Now().Unix()
 
 	return this.Save(tx, op)
