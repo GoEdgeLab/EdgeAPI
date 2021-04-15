@@ -3,6 +3,7 @@ package nodes
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -43,8 +44,15 @@ func NewAPINode() *APINode {
 func (this *APINode) Start() {
 	logs.Println("[API_NODE]start api node, pid: " + strconv.Itoa(os.Getpid()))
 
+	// 检查数据库连接
+	err := this.checkDB()
+	if err != nil {
+		logs.Println("[API_NODE]" + err.Error())
+		return
+	}
+
 	// 本地Sock
-	err := this.listenSock()
+	err = this.listenSock()
 	if err != nil {
 		logs.Println("[API_NODE]" + err.Error())
 		return
@@ -108,7 +116,7 @@ func (this *APINode) Start() {
 	select {}
 }
 
-// 实现守护进程
+// Daemon 实现守护进程
 func (this *APINode) Daemon() {
 	path := os.TempDir() + "/edge-api.sock"
 	isDebug := lists.ContainsString(os.Args, "debug")
@@ -153,7 +161,7 @@ func (this *APINode) Daemon() {
 	}
 }
 
-// 安装系统服务
+// InstallSystemService 安装系统服务
 func (this *APINode) InstallSystemService() error {
 	shortName := teaconst.SystemdServiceName
 
@@ -258,6 +266,35 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	err := rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API_NODE]start rpc failed: " + err.Error())
+	}
+
+	return nil
+}
+
+// 检查数据库
+func (this *APINode) checkDB() error {
+	logs.Println("checking database connection ...")
+
+	db, err := dbs.Default()
+	if err != nil {
+		return err
+	}
+
+	maxTries := 600
+	for i := 0; i <= maxTries; i++ {
+		_, err := db.Exec("SELECT 1")
+		if err != nil {
+			if i == maxTries-1 {
+				return err
+			} else {
+				if i%10 == 0 { // 这让提示不会太多
+					logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i * 100)/float32(maxTries+1)) + "%) ...")
+				}
+				time.Sleep(1 * time.Second)
+			}
+		} else {
+			return nil
+		}
 	}
 
 	return nil
