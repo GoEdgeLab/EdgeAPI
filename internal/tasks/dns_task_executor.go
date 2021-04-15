@@ -19,7 +19,7 @@ func init() {
 	})
 }
 
-// DNS任务执行器
+// DNSTaskExecutor DNS任务执行器
 type DNSTaskExecutor struct {
 }
 
@@ -341,6 +341,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	// 删除多余的节点解析记录
 	for key, record := range oldRecordsMap {
 		if !lists.ContainsString(newRecordKeys, key) {
+			isChanged = true
 			err = manager.DeleteRecord(domain, record)
 			if err != nil {
 				return err
