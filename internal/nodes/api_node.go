@@ -273,7 +273,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 
 // 检查数据库
 func (this *APINode) checkDB() error {
-	logs.Println("checking database connection ...")
+	logs.Println("[API_NODE]checking database connection ...")
 
 	db, err := dbs.Default()
 	if err != nil {
@@ -293,6 +293,7 @@ func (this *APINode) checkDB() error {
 				time.Sleep(1 * time.Second)
 			}
 		} else {
+			logs.Println("[API_NODE]database connected")
 			return nil
 		}
 	}
