@@ -24,13 +24,13 @@ var customHTTPClient = &http.Client{
 	},
 }
 
-// HTTP自定义DNS
+// CustomHTTPProvider HTTP自定义DNS
 type CustomHTTPProvider struct {
 	url    string
 	secret string
 }
 
-// 认证
+// Auth 认证
 // 参数：
 //   - url
 //   - secret
@@ -48,7 +48,7 @@ func (this *CustomHTTPProvider) Auth(params maps.Map) error {
 	return nil
 }
 
-// 获取域名解析记录列表
+// GetRecords 获取域名解析记录列表
 func (this *CustomHTTPProvider) GetRecords(domain string) (records []*Record, err error) {
 	resp, err := this.post(maps.Map{
 		"action": "GetRecords",
@@ -61,7 +61,7 @@ func (this *CustomHTTPProvider) GetRecords(domain string) (records []*Record, er
 	return
 }
 
-// 读取域名支持的线路数据
+// GetRoutes 读取域名支持的线路数据
 func (this *CustomHTTPProvider) GetRoutes(domain string) (routes []*Route, err error) {
 	resp, err := this.post(maps.Map{
 		"action": "GetRoutes",
@@ -74,7 +74,7 @@ func (this *CustomHTTPProvider) GetRoutes(domain string) (routes []*Route, err e
 	return
 }
 
-// 查询单个记录
+// QueryRecord 查询单个记录
 func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
 	resp, err := this.post(maps.Map{
 		"action":     "QueryRecord",
@@ -99,7 +99,7 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 	return record, nil
 }
 
-// 设置记录
+// AddRecord 设置记录
 func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *Record) error {
 	_, err := this.post(maps.Map{
 		"action":    "AddRecord",
@@ -109,7 +109,7 @@ func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *Record) erro
 	return err
 }
 
-// 修改记录
+// UpdateRecord 修改记录
 func (this *CustomHTTPProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
 	_, err := this.post(maps.Map{
 		"action":    "UpdateRecord",
@@ -120,7 +120,7 @@ func (this *CustomHTTPProvider) UpdateRecord(domain string, record *Record, newR
 	return err
 }
 
-// 删除记录
+// DeleteRecord 删除记录
 func (this *CustomHTTPProvider) DeleteRecord(domain string, record *Record) error {
 	_, err := this.post(maps.Map{
 		"action": "DeleteRecord",
@@ -130,7 +130,7 @@ func (this *CustomHTTPProvider) DeleteRecord(domain string, record *Record) erro
 	return err
 }
 
-// 默认线路
+// DefaultRoute 默认线路
 func (this *CustomHTTPProvider) DefaultRoute() string {
 	resp, err := this.post(maps.Map{
 		"action": "DefaultRoute",

@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// DNSPod服务商
+// DNSPodProvider DNSPod服务商
 type DNSPodProvider struct {
 	BaseProvider
 
@@ -20,7 +20,7 @@ type DNSPodProvider struct {
 	apiToken string
 }
 
-// 认证
+// Auth 认证
 func (this *DNSPodProvider) Auth(params maps.Map) error {
 	this.apiId = params.GetString("id")
 	this.apiToken = params.GetString("token")
@@ -34,7 +34,7 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 	return nil
 }
 
-// 获取域名列表
+// GetRecords 获取域名列表
 func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err error) {
 	offset := 0
 	size := 100
@@ -72,7 +72,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err er
 	return
 }
 
-// 读取线路数据
+// GetRoutes 读取线路数据
 func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error) {
 	infoResp, err := this.post("/Domain.info", map[string]string{
 		"domain": domain,
@@ -106,7 +106,7 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error
 	return routes, nil
 }
 
-// 查询单个记录
+// QueryRecord 查询单个记录
 func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
 	records, err := this.GetRecords(domain)
 	if err != nil {
@@ -120,7 +120,7 @@ func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType R
 	return nil, err
 }
 
-// 设置记录
+// AddRecord 设置记录
 func (this *DNSPodProvider) AddRecord(domain string, newRecord *Record) error {
 	if newRecord == nil {
 		return errors.New("invalid new record")
@@ -140,7 +140,7 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *Record) error {
 	return err
 }
 
-// 修改记录
+// UpdateRecord 修改记录
 func (this *DNSPodProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
 	if record == nil {
 		return errors.New("invalid record")
@@ -164,7 +164,7 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *Record, newRecor
 	return err
 }
 
-// 删除记录
+// DeleteRecord 删除记录
 func (this *DNSPodProvider) DeleteRecord(domain string, record *Record) error {
 	if record == nil {
 		return errors.New("invalid record to delete")
@@ -223,7 +223,7 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 	return m, nil
 }
 
-// 默认线路
+// DefaultRoute 默认线路
 func (this *DNSPodProvider) DefaultRoute() string {
 	return "默认"
 }

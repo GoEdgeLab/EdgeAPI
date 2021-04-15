@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// 阿里云服务商
+// AliDNSProvider 阿里云服务商
 type AliDNSProvider struct {
 	BaseProvider
 
@@ -17,7 +17,7 @@ type AliDNSProvider struct {
 	accessKeySecret string
 }
 
-// 认证
+// Auth 认证
 func (this *AliDNSProvider) Auth(params maps.Map) error {
 	this.accessKeyId = params.GetString("accessKeyId")
 	this.accessKeySecret = params.GetString("accessKeySecret")
@@ -30,7 +30,7 @@ func (this *AliDNSProvider) Auth(params maps.Map) error {
 	return nil
 }
 
-// 获取域名列表
+// GetRecords 获取域名列表
 func (this *AliDNSProvider) GetRecords(domain string) (records []*Record, err error) {
 	pageNumber := 1
 	size := 100
@@ -70,7 +70,7 @@ func (this *AliDNSProvider) GetRecords(domain string) (records []*Record, err er
 	return
 }
 
-// 读取域名支持的线路数据
+// GetRoutes 读取域名支持的线路数据
 func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error) {
 	req := alidns.CreateDescribeSupportLinesRequest()
 	req.DomainName = domain
@@ -89,7 +89,7 @@ func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error
 	return
 }
 
-// 查询单个记录
+// QueryRecord 查询单个记录
 func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
 	records, err := this.GetRecords(domain)
 	if err != nil {
@@ -103,7 +103,7 @@ func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType R
 	return nil, err
 }
 
-// 设置记录
+// AddRecord 设置记录
 func (this *AliDNSProvider) AddRecord(domain string, newRecord *Record) error {
 	req := alidns.CreateAddDomainRecordRequest()
 	req.RR = newRecord.Name
@@ -124,7 +124,7 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *Record) error {
 	return errors.New(resp.GetHttpContentString())
 }
 
-// 修改记录
+// UpdateRecord 修改记录
 func (this *AliDNSProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
 	req := alidns.CreateUpdateDomainRecordRequest()
 	req.RecordId = record.Id
@@ -138,7 +138,7 @@ func (this *AliDNSProvider) UpdateRecord(domain string, record *Record, newRecor
 	return err
 }
 
-// 删除记录
+// DeleteRecord 删除记录
 func (this *AliDNSProvider) DeleteRecord(domain string, record *Record) error {
 	req := alidns.CreateDeleteDomainRecordRequest()
 	req.RecordId = record.Id
@@ -148,7 +148,7 @@ func (this *AliDNSProvider) DeleteRecord(domain string, record *Record) error {
 	return err
 }
 
-// 默认线路
+// DefaultRoute 默认线路
 func (this *AliDNSProvider) DefaultRoute() string {
 	return "default"
 }
