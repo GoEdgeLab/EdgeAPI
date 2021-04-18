@@ -52,9 +52,8 @@ import (
 	"github.com/iwind/TeaGo/logs"
 )
 
-// 最新的SQL语句
-// 由sql-dump/main.go自动生成
-
+// 最新版本的数据库SQL语句，用来对比并升级已有的数据库
+// 由 sql-dump/main.go 自动生成
 func init() {
 	err := json.Unmarshal([]byte(` + strconv.Quote(string(resultsJSON)) + `), LatestSQLResult)
 	if err != nil {

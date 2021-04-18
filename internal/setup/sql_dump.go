@@ -34,7 +34,7 @@ func NewSQLDump() *SQLDump {
 	return &SQLDump{}
 }
 
-// 导出数据
+// Dump 导出数据
 func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 	result = &SQLDumpResult{}
 
@@ -107,7 +107,7 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 	return
 }
 
-// 应用数据
+// Apply 应用数据
 func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, err error) {
 	currentResult, err := this.Dump(db)
 	if err != nil {
