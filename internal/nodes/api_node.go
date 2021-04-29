@@ -250,6 +250,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterUserAccessKeyServiceServer(rpcServer, &services.UserAccessKeyService{})
 	pb.RegisterSysLockerServiceServer(rpcServer, &services.SysLockerService{})
 	pb.RegisterNodeTaskServiceServer(rpcServer, &services.NodeTaskService{})
+	pb.RegisterNodeValueServiceServer(rpcServer, &services.NodeValueService{})
 	pb.RegisterDBServiceServer(rpcServer, &services.DBService{})
 	pb.RegisterServerRegionCityMonthlyStatServiceServer(rpcServer, &services.ServerRegionCityMonthlyStatService{})
 	pb.RegisterServerRegionCountryMonthlyStatServiceServer(rpcServer, &services.ServerRegionCountryMonthlyStatService{})
@@ -288,7 +289,7 @@ func (this *APINode) checkDB() error {
 				return err
 			} else {
 				if i%10 == 0 { // 这让提示不会太多
-					logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i * 100)/float32(maxTries+1)) + "%) ...")
+					logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i*100)/float32(maxTries+1)) + "%) ...")
 				}
 				time.Sleep(1 * time.Second)
 			}
