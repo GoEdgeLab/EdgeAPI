@@ -22,7 +22,7 @@ type NodeClusterService struct {
 	BaseService
 }
 
-// 创建集群
+// CreateNodeCluster 创建集群
 func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.CreateNodeClusterRequest) (*pb.CreateNodeClusterResponse, error) {
 	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -53,7 +53,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 	return &pb.CreateNodeClusterResponse{NodeClusterId: clusterId}, nil
 }
 
-// 修改集群
+// UpdateNodeCluster 修改集群
 func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -70,7 +70,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// 禁用集群
+// DeleteNodeCluster 禁用集群
 func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.DeleteNodeClusterRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -93,7 +93,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 	return this.Success()
 }
 
-// 查找单个集群
+// FindEnabledNodeCluster 查找单个集群
 func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req *pb.FindEnabledNodeClusterRequest) (*pb.FindEnabledNodeClusterResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -130,7 +130,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 	}}, nil
 }
 
-// 查找集群的API节点信息
+// FindAPINodesWithNodeCluster 查找集群的API节点信息
 func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context, req *pb.FindAPINodesWithNodeClusterRequest) (*pb.FindAPINodesWithNodeClusterResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -184,7 +184,7 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 	return result, nil
 }
 
-// 查找所有可用的集群
+// FindAllEnabledNodeClusters 查找所有可用的集群
 func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, req *pb.FindAllEnabledNodeClustersRequest) (*pb.FindAllEnabledNodeClustersResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -215,7 +215,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 	}, nil
 }
 
-// 计算所有集群数量
+// CountAllEnabledNodeClusters 计算所有集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context, req *pb.CountAllEnabledNodeClustersRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -232,7 +232,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 	return this.SuccessCount(count)
 }
 
-// 列出单页集群
+// ListEnabledNodeClusters 列出单页集群
 func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req *pb.ListEnabledNodeClustersRequest) (*pb.ListEnabledNodeClustersResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -264,7 +264,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 	return &pb.ListEnabledNodeClustersResponse{NodeClusters: result}, nil
 }
 
-// 查找集群的健康检查配置
+// FindNodeClusterHealthCheckConfig 查找集群的健康检查配置
 func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Context, req *pb.FindNodeClusterHealthCheckConfigRequest) (*pb.FindNodeClusterHealthCheckConfigResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -285,7 +285,7 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 	return &pb.FindNodeClusterHealthCheckConfigResponse{HealthCheckJSON: configJSON}, nil
 }
 
-// 修改集群健康检查设置
+// UpdateNodeClusterHealthCheck 修改集群健康检查设置
 func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context, req *pb.UpdateNodeClusterHealthCheckRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -302,7 +302,7 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 	return this.Success()
 }
 
-// 执行健康检查
+// ExecuteNodeClusterHealthCheck 执行健康检查
 func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Context, req *pb.ExecuteNodeClusterHealthCheckRequest) (*pb.ExecuteNodeClusterHealthCheckResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -331,7 +331,7 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 	return &pb.ExecuteNodeClusterHealthCheckResponse{Results: pbResults}, nil
 }
 
-// 计算使用某个认证的集群数量
+// CountAllEnabledNodeClustersWithGrantId 计算使用某个认证的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -348,7 +348,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx conte
 	return this.SuccessCount(count)
 }
 
-// 查找使用某个认证的所有集群
+// FindAllEnabledNodeClustersWithGrantId 查找使用某个认证的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithGrantIdRequest) (*pb.FindAllEnabledNodeClustersWithGrantIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -376,7 +376,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx contex
 	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{NodeClusters: result}, nil
 }
 
-// 查找集群的DNS配置
+// FindEnabledNodeClusterDNS 查找集群的DNS配置
 func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, req *pb.FindEnabledNodeClusterDNSRequest) (*pb.FindEnabledNodeClusterDNSResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -454,7 +454,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	}, nil
 }
 
-// 计算使用某个DNS服务商的集群数量
+// CountAllEnabledNodeClustersWithDNSProviderId 计算使用某个DNS服务商的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -471,7 +471,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 	return this.SuccessCount(count)
 }
 
-// 计算使用某个DNS域名的集群数量
+// CountAllEnabledNodeClustersWithDNSDomainId 计算使用某个DNS域名的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -488,7 +488,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 	return this.SuccessCount(count)
 }
 
-// 查找使用某个域名的所有集群
+// FindAllEnabledNodeClustersWithDNSDomainId 查找使用某个域名的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -515,7 +515,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 	return &pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse{NodeClusters: result}, nil
 }
 
-// 检查集群域名是否已经被使用
+// CheckNodeClusterDNSName 检查集群域名是否已经被使用
 func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req *pb.CheckNodeClusterDNSNameRequest) (*pb.CheckNodeClusterDNSNameResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -532,7 +532,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req
 	return &pb.CheckNodeClusterDNSNameResponse{IsUsed: exists}, nil
 }
 
-// 修改集群的域名设置
+// UpdateNodeClusterDNS 修改集群的域名设置
 func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *pb.UpdateNodeClusterDNSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -549,7 +549,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 	return this.Success()
 }
 
-// 检查集群的DNS是否有变化
+// CheckNodeClusterDNSChanges 检查集群的DNS是否有变化
 func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, req *pb.CheckNodeClusterDNSChangesRequest) (*pb.CheckNodeClusterDNSChangesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -590,7 +590,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	return &pb.CheckNodeClusterDNSChangesResponse{IsChanged: len(changes) > 0}, nil
 }
 
-// 查找集群的TOA配置
+// FindEnabledNodeClusterTOA 查找集群的TOA配置
 func (this *NodeClusterService) FindEnabledNodeClusterTOA(ctx context.Context, req *pb.FindEnabledNodeClusterTOARequest) (*pb.FindEnabledNodeClusterTOAResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -612,7 +612,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterTOA(ctx context.Context, r
 	return &pb.FindEnabledNodeClusterTOAResponse{ToaJSON: configJSON}, nil
 }
 
-// 修改集群的TOA设置
+// UpdateNodeClusterTOA 修改集群的TOA设置
 func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *pb.UpdateNodeClusterTOARequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -631,7 +631,7 @@ func (this *NodeClusterService) UpdateNodeClusterTOA(ctx context.Context, req *p
 	return this.Success()
 }
 
-// 计算使用某个缓存策略的集群数量
+// CountAllEnabledNodeClustersWithHTTPCachePolicyId 计算使用某个缓存策略的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPCachePolicyId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithHTTPCachePolicyIdRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -647,7 +647,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPCachePolicyId
 	return this.SuccessCount(count)
 }
 
-// 查找使用缓存策略的所有集群
+// FindAllEnabledNodeClustersWithHTTPCachePolicyId 查找使用缓存策略的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdRequest) (*pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -672,7 +672,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(
 	}, nil
 }
 
-// 计算使用某个WAF策略的集群数量
+// CountAllEnabledNodeClustersWithHTTPFirewallPolicyId 计算使用某个WAF策略的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithHTTPFirewallPolicyIdRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -688,7 +688,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithHTTPFirewallPolic
 	return this.SuccessCount(count)
 }
 
-// 查找使用WAF策略的所有集群
+// FindAllEnabledNodeClustersWithHTTPFirewallPolicyId 查找使用WAF策略的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdRequest) (*pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -713,7 +713,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicy
 	}, nil
 }
 
-// 修改集群的缓存策略
+// UpdateNodeClusterHTTPCachePolicyId 修改集群的缓存策略
 func (this *NodeClusterService) UpdateNodeClusterHTTPCachePolicyId(ctx context.Context, req *pb.UpdateNodeClusterHTTPCachePolicyIdRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -730,7 +730,7 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPCachePolicyId(ctx context.C
 	return this.Success()
 }
 
-// 修改集群的WAF策略
+// UpdateNodeClusterHTTPFirewallPolicyId 修改集群的WAF策略
 func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx context.Context, req *pb.UpdateNodeClusterHTTPFirewallPolicyIdRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -747,7 +747,7 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPFirewallPolicyId(ctx contex
 	return this.Success()
 }
 
-// 修改集群的系统服务设置
+// UpdateNodeClusterSystemService 修改集群的系统服务设置
 func (this *NodeClusterService) UpdateNodeClusterSystemService(ctx context.Context, req *pb.UpdateNodeClusterSystemServiceRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -771,7 +771,7 @@ func (this *NodeClusterService) UpdateNodeClusterSystemService(ctx context.Conte
 	return this.Success()
 }
 
-// 查找集群的系统服务设置
+// FindNodeClusterSystemService 查找集群的系统服务设置
 func (this *NodeClusterService) FindNodeClusterSystemService(ctx context.Context, req *pb.FindNodeClusterSystemServiceRequest) (*pb.FindNodeClusterSystemServiceResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -793,7 +793,7 @@ func (this *NodeClusterService) FindNodeClusterSystemService(ctx context.Context
 	return &pb.FindNodeClusterSystemServiceResponse{ParamsJSON: paramsJSON}, nil
 }
 
-// 获取集群中可以使用的端口
+// FindFreePortInNodeCluster 获取集群中可以使用的端口
 func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, req *pb.FindFreePortInNodeClusterRequest) (*pb.FindFreePortInNodeClusterResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -851,7 +851,7 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 	return nil, errors.New("can not find random port")
 }
 
-// 检查端口是否已经被使用
+// CheckPortIsUsingInNodeCluster 检查端口是否已经被使用
 func (this *NodeClusterService) CheckPortIsUsingInNodeCluster(ctx context.Context, req *pb.CheckPortIsUsingInNodeClusterRequest) (*pb.CheckPortIsUsingInNodeClusterResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -864,4 +864,26 @@ func (this *NodeClusterService) CheckPortIsUsingInNodeCluster(ctx context.Contex
 		return nil, err
 	}
 	return &pb.CheckPortIsUsingInNodeClusterResponse{IsUsing: isUsing}, nil
+}
+
+// FindLatestNodeClusters 查找最近访问的集群
+func (this *NodeClusterService) FindLatestNodeClusters(ctx context.Context, req *pb.FindLatestNodeClustersRequest) (*pb.FindLatestNodeClustersResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusters, err := models.SharedNodeClusterDAO.FindLatestNodeClusters(tx, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	pbClusters := []*pb.NodeCluster{}
+	for _, cluster := range clusters {
+		pbClusters = append(pbClusters, &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			Name: cluster.Name,
+		})
+	}
+	return &pb.FindLatestNodeClustersResponse{NodeClusters: pbClusters}, nil
 }

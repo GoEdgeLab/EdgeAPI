@@ -44,7 +44,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableNodeCluster 启用条目
 func (this *NodeClusterDAO) EnableNodeCluster(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *NodeClusterDAO) EnableNodeCluster(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableNodeCluster 禁用条目
 func (this *NodeClusterDAO) DisableNodeCluster(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -62,7 +62,7 @@ func (this *NodeClusterDAO) DisableNodeCluster(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找集群
+// FindEnabledNodeCluster 查找集群
 func (this *NodeClusterDAO) FindEnabledNodeCluster(tx *dbs.Tx, id int64) (*NodeCluster, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -74,7 +74,7 @@ func (this *NodeClusterDAO) FindEnabledNodeCluster(tx *dbs.Tx, id int64) (*NodeC
 	return result.(*NodeCluster), err
 }
 
-// 根据UniqueId获取ID
+// FindEnabledClusterIdWithUniqueId 根据UniqueId获取ID
 // TODO 增加缓存
 func (this *NodeClusterDAO) FindEnabledClusterIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
 	return this.Query(tx).
@@ -84,7 +84,7 @@ func (this *NodeClusterDAO) FindEnabledClusterIdWithUniqueId(tx *dbs.Tx, uniqueI
 		FindInt64Col(0)
 }
 
-// 根据主键查找名称
+// FindNodeClusterName 根据主键查找名称
 func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -92,7 +92,7 @@ func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, id int64) (string, e
 		FindStringCol("")
 }
 
-// 查找所有可用的集群
+// FindAllEnableClusters 查找所有可用的集群
 func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -103,7 +103,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeClu
 	return
 }
 
-// 查找所有可用的集群Ids
+// FindAllEnableClusterIds 查找所有可用的集群Ids
 func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64, err error) {
 	ones, err := this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -118,7 +118,7 @@ func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64,
 	return
 }
 
-// 创建集群
+// CreateCluster 创建集群
 func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
@@ -176,7 +176,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 	return types.Int64(op.Id), nil
 }
 
-// 修改集群
+// UpdateCluster 修改集群
 func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
@@ -190,7 +190,7 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 	return err
 }
 
-// 计算所有集群数量
+// CountAllEnabledClusters 计算所有集群数量
 func (this *NodeClusterDAO) CountAllEnabledClusters(tx *dbs.Tx, keyword string) (int64, error) {
 	query := this.Query(tx).
 		State(NodeClusterStateEnabled)
@@ -201,7 +201,7 @@ func (this *NodeClusterDAO) CountAllEnabledClusters(tx *dbs.Tx, keyword string) 
 	return query.Count()
 }
 
-// 列出单页集群
+// ListEnabledClusters 列出单页集群
 func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offset, size int64) (result []*NodeCluster, err error) {
 	query := this.Query(tx).
 		State(NodeClusterStateEnabled)
@@ -218,7 +218,7 @@ func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offs
 	return
 }
 
-// 查找所有API节点地址
+// FindAllAPINodeAddrsWithCluster 查找所有API节点地址
 func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId int64) (result []string, err error) {
 	one, err := this.Query(tx).
 		Pk(clusterId).
@@ -274,7 +274,7 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId
 	return result, nil
 }
 
-// 查找健康检查设置
+// FindClusterHealthCheckConfig 查找健康检查设置
 func (this *NodeClusterDAO) FindClusterHealthCheckConfig(tx *dbs.Tx, clusterId int64) (*serverconfigs.HealthCheckConfig, error) {
 	col, err := this.Query(tx).
 		Pk(clusterId).
@@ -295,7 +295,7 @@ func (this *NodeClusterDAO) FindClusterHealthCheckConfig(tx *dbs.Tx, clusterId i
 	return config, nil
 }
 
-// 修改健康检查设置
+// UpdateClusterHealthCheck 修改健康检查设置
 func (this *NodeClusterDAO) UpdateClusterHealthCheck(tx *dbs.Tx, clusterId int64, healthCheckJSON []byte) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId '" + strconv.FormatInt(clusterId, 10) + "'")
@@ -310,7 +310,7 @@ func (this *NodeClusterDAO) UpdateClusterHealthCheck(tx *dbs.Tx, clusterId int64
 	return this.NotifyUpdate(tx, clusterId)
 }
 
-// 计算使用某个认证的集群数量
+// CountAllEnabledClustersWithGrantId 计算使用某个认证的集群数量
 func (this *NodeClusterDAO) CountAllEnabledClustersWithGrantId(tx *dbs.Tx, grantId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -318,7 +318,7 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithGrantId(tx *dbs.Tx, grant
 		Count()
 }
 
-// 获取使用某个认证的所有集群
+// FindAllEnabledClustersWithGrantId 获取使用某个认证的所有集群
 func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(tx *dbs.Tx, grantId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -329,7 +329,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithGrantId(tx *dbs.Tx, grantI
 	return
 }
 
-// 计算使用某个DNS服务商的集群数量
+// CountAllEnabledClustersWithDNSProviderId 计算使用某个DNS服务商的集群数量
 func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -338,7 +338,7 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSProviderId(tx *dbs.Tx,
 		Count()
 }
 
-// 获取所有使用某个DNS服务商的集群
+// FindAllEnabledClustersWithDNSProviderId 获取所有使用某个DNS服务商的集群
 func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -350,7 +350,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSProviderId(tx *dbs.Tx, 
 	return
 }
 
-// 计算使用某个DNS域名的集群数量
+// CountAllEnabledClustersWithDNSDomainId 计算使用某个DNS域名的集群数量
 func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, dnsDomainId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -358,7 +358,7 @@ func (this *NodeClusterDAO) CountAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, d
 		Count()
 }
 
-// 查询使用某个DNS域名的集群ID列表
+// FindAllEnabledClusterIdsWithDNSDomainId 查询使用某个DNS域名的集群ID列表
 func (this *NodeClusterDAO) FindAllEnabledClusterIdsWithDNSDomainId(tx *dbs.Tx, dnsDomainId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -375,7 +375,7 @@ func (this *NodeClusterDAO) FindAllEnabledClusterIdsWithDNSDomainId(tx *dbs.Tx, 
 	return result, nil
 }
 
-// 查询使用某个DNS域名的所有集群域名
+// FindAllEnabledClustersWithDNSDomainId 查询使用某个DNS域名的所有集群域名
 func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, dnsDomainId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -386,7 +386,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, dn
 	return
 }
 
-// 查询已经设置了域名的集群
+// FindAllEnabledClustersHaveDNSDomain 查询已经设置了域名的集群
 func (this *NodeClusterDAO) FindAllEnabledClustersHaveDNSDomain(tx *dbs.Tx) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -397,7 +397,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersHaveDNSDomain(tx *dbs.Tx) (res
 	return
 }
 
-// 查找集群的认证ID
+// FindClusterGrantId 查找集群的认证ID
 func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(clusterId).
@@ -405,7 +405,7 @@ func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int
 		FindInt64Col(0)
 }
 
-// 查找DNS信息
+// FindClusterDNSInfo 查找DNS信息
 func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64) (*NodeCluster, error) {
 	one, err := this.Query(tx).
 		Pk(clusterId).
@@ -420,7 +420,7 @@ func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64) (*No
 	return one.(*NodeCluster), nil
 }
 
-// 检查某个子域名是否可用
+// ExistClusterDNSName 检查某个子域名是否可用
 func (this *NodeClusterDAO) ExistClusterDNSName(tx *dbs.Tx, dnsName string, excludeClusterId int64) (bool, error) {
 	return this.Query(tx).
 		Attr("dnsName", dnsName).
@@ -430,7 +430,7 @@ func (this *NodeClusterDAO) ExistClusterDNSName(tx *dbs.Tx, dnsName string, excl
 		Exist()
 }
 
-// 修改集群DNS相关信息
+// UpdateClusterDNS 修改集群DNS相关信息
 func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsName string, dnsDomainId int64, nodesAutoSync bool, serversAutoSync bool) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
@@ -461,7 +461,7 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	return this.NotifyDNSUpdate(tx, clusterId)
 }
 
-// 检查集群的DNS问题
+// CheckClusterDNS 检查集群的DNS问题
 func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (issues []*pb.DNSIssue, err error) {
 	clusterId := int64(cluster.Id)
 	domainId := int64(cluster.DnsDomainId)
@@ -573,7 +573,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 	return
 }
 
-// 查找集群所属管理员
+// FindClusterAdminId 查找集群所属管理员
 func (this *NodeClusterDAO) FindClusterAdminId(tx *dbs.Tx, clusterId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(clusterId).
@@ -581,7 +581,7 @@ func (this *NodeClusterDAO) FindClusterAdminId(tx *dbs.Tx, clusterId int64) (int
 		FindInt64Col(0)
 }
 
-// 查找集群的TOA设置
+// FindClusterTOAConfig 查找集群的TOA设置
 func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64) (*nodeconfigs.TOAConfig, error) {
 	toa, err := this.Query(tx).
 		Pk(clusterId).
@@ -602,7 +602,7 @@ func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64) (*
 	return config, nil
 }
 
-// 修改集群的TOA设置
+// UpdateClusterTOA 修改集群的TOA设置
 func (this *NodeClusterDAO) UpdateClusterTOA(tx *dbs.Tx, clusterId int64, toaJSON []byte) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
@@ -617,7 +617,7 @@ func (this *NodeClusterDAO) UpdateClusterTOA(tx *dbs.Tx, clusterId int64, toaJSO
 	return this.NotifyUpdate(tx, clusterId)
 }
 
-// 计算使用某个缓存策略的集群数量
+// CountAllEnabledNodeClustersWithHTTPCachePolicyId 计算使用某个缓存策略的集群数量
 func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPCachePolicyId(tx *dbs.Tx, httpCachePolicyId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -625,7 +625,7 @@ func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPCachePolicyId(tx 
 		Count()
 }
 
-// 查找使用缓存策略的所有集群
+// FindAllEnabledNodeClustersWithHTTPCachePolicyId 查找使用缓存策略的所有集群
 func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPCachePolicyId(tx *dbs.Tx, httpCachePolicyId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -636,7 +636,7 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPCachePolicyId(tx *
 	return
 }
 
-// 计算使用某个WAF策略的集群数量
+// CountAllEnabledNodeClustersWithHTTPFirewallPolicyId 计算使用某个WAF策略的集群数量
 func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(tx *dbs.Tx, httpFirewallPolicyId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -644,7 +644,7 @@ func (this *NodeClusterDAO) CountAllEnabledNodeClustersWithHTTPFirewallPolicyId(
 		Count()
 }
 
-// 查找使用WAF策略的所有集群
+// FindAllEnabledNodeClustersWithHTTPFirewallPolicyId 查找使用WAF策略的所有集群
 func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(tx *dbs.Tx, httpFirewallPolicyId int64) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -655,7 +655,7 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClustersWithHTTPFirewallPolicyId(t
 	return
 }
 
-// 查找使用WAF策略的所有集群Ids
+// FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId 查找使用WAF策略的所有集群Ids
 func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId(tx *dbs.Tx, httpFirewallPolicyId int64) (result []int64, err error) {
 	ones, err := this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -668,7 +668,7 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId
 	return
 }
 
-// 查找使用缓存策略的所有集群Ids
+// FindAllEnabledNodeClusterIdsWithCachePolicyId 查找使用缓存策略的所有集群Ids
 func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId int64) (result []int64, err error) {
 	ones, err := this.Query(tx).
 		State(NodeClusterStateEnabled).
@@ -681,7 +681,7 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithCachePolicyId(tx *db
 	return
 }
 
-// 获取集群的WAF策略ID
+// FindClusterHTTPFirewallPolicyId 获取集群的WAF策略ID
 func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(clusterId).
@@ -689,7 +689,7 @@ func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterI
 		FindInt64Col(0)
 }
 
-// 设置集群的缓存策略
+// UpdateNodeClusterHTTPCachePolicyId 设置集群的缓存策略
 func (this *NodeClusterDAO) UpdateNodeClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64, httpCachePolicyId int64) error {
 	_, err := this.Query(tx).
 		Pk(clusterId).
@@ -701,7 +701,7 @@ func (this *NodeClusterDAO) UpdateNodeClusterHTTPCachePolicyId(tx *dbs.Tx, clust
 	return this.NotifyUpdate(tx, clusterId)
 }
 
-// 获取集群的缓存策略ID
+// FindClusterHTTPCachePolicyId 获取集群的缓存策略ID
 func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(clusterId).
@@ -709,7 +709,7 @@ func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId i
 		FindInt64Col(0)
 }
 
-// 设置集群的WAF策略
+// UpdateNodeClusterHTTPFirewallPolicyId 设置集群的WAF策略
 func (this *NodeClusterDAO) UpdateNodeClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64, httpFirewallPolicyId int64) error {
 	_, err := this.Query(tx).
 		Pk(clusterId).
@@ -721,7 +721,7 @@ func (this *NodeClusterDAO) UpdateNodeClusterHTTPFirewallPolicyId(tx *dbs.Tx, cl
 	return this.NotifyUpdate(tx, clusterId)
 }
 
-// 修改集群的系统服务设置
+// UpdateNodeClusterSystemService 修改集群的系统服务设置
 func (this *NodeClusterDAO) UpdateNodeClusterSystemService(tx *dbs.Tx, clusterId int64, serviceType nodeconfigs.SystemServiceType, params maps.Map) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
@@ -760,7 +760,7 @@ func (this *NodeClusterDAO) UpdateNodeClusterSystemService(tx *dbs.Tx, clusterId
 	return this.NotifyUpdate(tx, clusterId)
 }
 
-// 查找集群的系统服务设置
+// FindNodeClusterSystemServiceParams 查找集群的系统服务设置
 func (this *NodeClusterDAO) FindNodeClusterSystemServiceParams(tx *dbs.Tx, clusterId int64, serviceType nodeconfigs.SystemServiceType) (params maps.Map, err error) {
 	if clusterId <= 0 {
 		return nil, errors.New("invalid clusterId")
@@ -782,7 +782,7 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServiceParams(tx *dbs.Tx, clust
 	return servicesMap[serviceType], nil
 }
 
-// 查找集群的所有服务设置
+// FindNodeClusterSystemServices 查找集群的所有服务设置
 func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId int64) (services map[string]maps.Map, err error) {
 	if clusterId <= 0 {
 		return nil, errors.New("invalid clusterId")
@@ -804,7 +804,7 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId 
 	return servicesMap, nil
 }
 
-// 生成唯一ID
+// GenUniqueId 生成唯一ID
 func (this *NodeClusterDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
@@ -821,12 +821,26 @@ func (this *NodeClusterDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	}
 }
 
-// 通知更新
+// FindLatestNodeClusters 查询最近访问的集群
+func (this *NodeClusterDAO) FindLatestNodeClusters(tx *dbs.Tx, size int64) (result []*NodeCluster, err error) {
+	_, err = this.Query(tx).
+		Result(this.Table+".id", this.Table+".name").
+		Join(SharedLatestItemDAO, dbs.QueryJoinRight, this.Table+".id="+SharedLatestItemDAO.Table+".itemId AND "+SharedLatestItemDAO.Table+".itemType='cluster'").
+		Asc("CEIL((UNIX_TIMESTAMP() - updatedAt)/(7 * 86400))"). // 优先一个星期以内的
+		Desc(SharedLatestItemDAO.Table + ".count").
+		State(NodeClusterStateEnabled).
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// NotifyUpdate 通知更新
 func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
 }
 
-// 通知DNS更新
+// NotifyDNSUpdate 通知DNS更新
 // TODO 更新新的DNS解析记录的同时，需要删除老的DNS解析记录
 func (this *NodeClusterDAO) NotifyDNSUpdate(tx *dbs.Tx, clusterId int64) error {
 	err := dns.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dns.DNSTaskTypeClusterChange)
