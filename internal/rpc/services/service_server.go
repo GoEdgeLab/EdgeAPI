@@ -20,7 +20,7 @@ type ServerService struct {
 	BaseService
 }
 
-// 创建服务
+// CreateServer 创建服务
 func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -90,7 +90,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	return &pb.CreateServerResponse{ServerId: serverId}, nil
 }
 
-// 修改服务基本信息
+// UpdateServerBasic 修改服务基本信息
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -121,7 +121,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	return this.Success()
 }
 
-// 修改服务是否启用
+// UpdateServerIsOn 修改服务是否启用
 func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateServerIsOnRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -143,7 +143,7 @@ func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateS
 	return this.Success()
 }
 
-// 修改HTTP服务
+// UpdateServerHTTP 修改HTTP服务
 func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -169,7 +169,7 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 	return this.Success()
 }
 
-// 修改HTTPS服务
+// UpdateServerHTTPS 修改HTTPS服务
 func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -195,7 +195,7 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 	return this.Success()
 }
 
-// 修改TCP服务
+// UpdateServerTCP 修改TCP服务
 func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -221,7 +221,7 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 	return this.Success()
 }
 
-// 修改TLS服务
+// UpdateServerTLS 修改TLS服务
 func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -247,7 +247,7 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 	return this.Success()
 }
 
-// 修改Unix服务
+// UpdateServerUnix 修改Unix服务
 func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -270,7 +270,7 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 	return this.Success()
 }
 
-// 修改UDP服务
+// UpdateServerUDP 修改UDP服务
 func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -293,7 +293,7 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 	return this.Success()
 }
 
-// 修改Web服务
+// UpdateServerWeb 修改Web服务
 func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -319,7 +319,7 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 	return this.Success()
 }
 
-// 修改反向代理服务
+// UpdateServerReverseProxy 修改反向代理服务
 func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -345,7 +345,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 	return this.Success()
 }
 
-// 查找服务的域名设置
+// FindServerNames 查找服务的域名设置
 func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServerNamesRequest) (*pb.FindServerNamesResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -385,7 +385,7 @@ func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServ
 	}, nil
 }
 
-// 修改域名服务
+// UpdateServerNames 修改域名服务
 func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -423,7 +423,7 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 	return this.Success()
 }
 
-// 审核服务的域名设置
+// UpdateServerNamesAuditing 审核服务的域名设置
 func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *pb.UpdateServerNamesAuditingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -469,7 +469,7 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 	return this.Success()
 }
 
-// 计算服务数量
+// CountAllEnabledServersMatch 计算服务数量
 func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -487,7 +487,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 	return this.SuccessCount(count)
 }
 
-// 列出单页服务
+// ListEnabledServersMatch 列出单页服务
 func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.ListEnabledServersMatchRequest) (*pb.ListEnabledServersMatchResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -588,7 +588,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 	return &pb.ListEnabledServersMatchResponse{Servers: result}, nil
 }
 
-// 禁用某服务
+// DeleteServer 禁用某服务
 func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServerRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -614,7 +614,7 @@ func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServe
 	return this.Success()
 }
 
-// 查找单个服务
+// FindEnabledServer 查找单个服务
 func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEnabledServerRequest) (*pb.FindEnabledServerResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -716,7 +716,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}}, nil
 }
 
-// 查找服务配置
+// FindEnabledServerConfig 查找服务配置
 func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.FindEnabledServerConfigRequest) (*pb.FindEnabledServerConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -749,7 +749,7 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 	return &pb.FindEnabledServerConfigResponse{ServerJSON: configJSON}, nil
 }
 
-// 查找服务的服务类型
+// FindEnabledServerType 查找服务的服务类型
 func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -775,7 +775,7 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 	return &pb.FindEnabledServerTypeResponse{Type: serverType}, nil
 }
 
-// 查找反向代理设置
+// FindAndInitServerReverseProxyConfig 查找反向代理设置
 func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerReverseProxyConfigRequest) (*pb.FindAndInitServerReverseProxyConfigResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -828,7 +828,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 	return &pb.FindAndInitServerReverseProxyConfigResponse{ReverseProxyJSON: configJSON, ReverseProxyRefJSON: refJSON}, nil
 }
 
-// 初始化Web设置
+// FindAndInitServerWebConfig 初始化Web设置
 func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebConfigRequest) (*pb.FindAndInitServerWebConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -869,7 +869,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 	return &pb.FindAndInitServerWebConfigResponse{WebJSON: configJSON}, nil
 }
 
-// 计算使用某个SSL证书的服务数量
+// CountAllEnabledServersWithSSLCertId 计算使用某个SSL证书的服务数量
 func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -899,7 +899,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 	return this.SuccessCount(count)
 }
 
-// 查找使用某个SSL证书的所有服务
+// FindAllEnabledServersWithSSLCertId 查找使用某个SSL证书的所有服务
 func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.FindAllEnabledServersWithSSLCertIdRequest) (*pb.FindAllEnabledServersWithSSLCertIdResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -937,7 +937,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 	return &pb.FindAllEnabledServersWithSSLCertIdResponse{Servers: result}, nil
 }
 
-// 计算运行在某个集群上的所有服务数量
+// CountAllEnabledServersWithNodeClusterId 计算运行在某个集群上的所有服务数量
 func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -954,7 +954,7 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 	return this.SuccessCount(count)
 }
 
-// 计算使用某个分组的服务数量
+// CountAllEnabledServersWithGroupId 计算使用某个分组的服务数量
 func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -971,8 +971,8 @@ func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context
 	return this.SuccessCount(count)
 }
 
-// 通知更新
-func (this *ServerService) NotifyServersChange(ctx context.Context, req *pb.NotifyServersChangeRequest) (*pb.NotifyServersChangeResponse, error) {
+// NotifyServersChange 通知更新
+func (this *ServerService) NotifyServersChange(ctx context.Context, _ *pb.NotifyServersChangeRequest) (*pb.NotifyServersChangeResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -995,7 +995,7 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, req *pb.Noti
 	return &pb.NotifyServersChangeResponse{}, nil
 }
 
-// 取得某个集群下的所有服务相关的DNS
+// FindAllEnabledServersDNSWithClusterId 取得某个集群下的所有服务相关的DNS
 func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Context, req *pb.FindAllEnabledServersDNSWithClusterIdRequest) (*pb.FindAllEnabledServersDNSWithClusterIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -1031,7 +1031,7 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 	return &pb.FindAllEnabledServersDNSWithClusterIdResponse{Servers: result}, nil
 }
 
-// 查找单个服务的DNS信息
+// FindEnabledServerDNS 查找单个服务的DNS信息
 func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.FindEnabledServerDNSRequest) (*pb.FindEnabledServerDNSResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -1079,7 +1079,7 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 	}, nil
 }
 
-// 检查服务是否属于某个用户
+// CheckUserServer 检查服务是否属于某个用户
 func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUserServerRequest) (*pb.RPCSuccess, error) {
 	userId, err := this.ValidateUser(ctx)
 	if err != nil {
@@ -1095,7 +1095,7 @@ func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUse
 	return this.Success()
 }
 
-// 查找一个用户下的所有域名列表
+// FindAllEnabledServerNamesWithUserId 查找一个用户下的所有域名列表
 func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Context, req *pb.FindAllEnabledServerNamesWithUserIdRequest) (*pb.FindAllEnabledServerNamesWithUserIdResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -1128,7 +1128,7 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 	return &pb.FindAllEnabledServerNamesWithUserIdResponse{ServerNames: serverNames}, nil
 }
 
-// 查找服务基本信息
+// FindEnabledUserServerBasic 查找服务基本信息
 func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *pb.FindEnabledUserServerBasicRequest) (*pb.FindEnabledUserServerBasicResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -1170,7 +1170,7 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 	}}, nil
 }
 
-// 修改用户服务基本信息
+// UpdateEnabledUserServerBasic 修改用户服务基本信息
 func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req *pb.UpdateEnabledUserServerBasicRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -1194,7 +1194,7 @@ func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req
 	return this.Success()
 }
 
-// 上传待统计数据
+// UploadServerHTTPRequestStat 上传待统计数据
 func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req *pb.UploadServerHTTPRequestStatRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateNode(ctx)
 	if err != nil {
@@ -1369,7 +1369,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 	return this.Success()
 }
 
-// 检查域名是否已经存在
+// CheckServerNameDuplicationInNodeCluster 检查域名是否已经存在
 func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.Context, req *pb.CheckServerNameDuplicationInNodeClusterRequest) (*pb.CheckServerNameDuplicationInNodeClusterResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -1394,4 +1394,26 @@ func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.C
 	}
 
 	return &pb.CheckServerNameDuplicationInNodeClusterResponse{DuplicatedServerNames: duplicatedServerNames}, nil
+}
+
+// FindLatestServers 查找最近访问的服务
+func (this *ServerService) FindLatestServers(ctx context.Context, req *pb.FindLatestServersRequest) (*pb.FindLatestServersResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	servers, err := models.SharedServerDAO.FindLatestServers(tx, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	pbServers := []*pb.Server{}
+	for _, server := range servers {
+		pbServers = append(pbServers, &pb.Server{
+			Id:   int64(server.Id),
+			Name: server.Name,
+		})
+	}
+	return &pb.FindLatestServersResponse{Servers: pbServers}, nil
 }
