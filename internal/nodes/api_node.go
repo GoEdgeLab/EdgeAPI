@@ -265,6 +265,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	pb.RegisterAuthorityKeyServiceServer(rpcServer, &services.AuthorityKeyService{})
 	pb.RegisterAuthorityNodeServiceServer(rpcServer, &services.AuthorityNodeService{})
 	pb.RegisterLatestItemServiceServer(rpcServer, &services.LatestItemService{})
+	pb.RegisterNodeThresholdServiceServer(rpcServer, &services.NodeThresholdService{})
 	err := rpcServer.Serve(listener)
 	if err != nil {
 		return errors.New("[API_NODE]start rpc failed: " + err.Error())

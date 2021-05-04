@@ -56,15 +56,15 @@ func (this *MessageReceiverService) UpdateMessageReceivers(ctx context.Context, 
 	return this.Success()
 }
 
-// FindAllMessageReceivers 查找接收者
-func (this *MessageReceiverService) FindAllMessageReceivers(ctx context.Context, req *pb.FindAllMessageReceiversRequest) (*pb.FindAllMessageReceiversResponse, error) {
+// FindAllEnabledMessageReceivers 查找接收者
+func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.Context, req *pb.FindAllEnabledMessageReceiversRequest) (*pb.FindAllEnabledMessageReceiversResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	receivers, err := models.SharedMessageReceiverDAO.FindAllReceivers(tx, models.MessageTaskTarget{
+	receivers, err := models.SharedMessageReceiverDAO.FindAllEnabledReceivers(tx, models.MessageTaskTarget{
 		ClusterId: req.NodeClusterId,
 		NodeId:    req.NodeId,
 		ServerId:  req.ServerId,
@@ -152,7 +152,7 @@ func (this *MessageReceiverService) FindAllMessageReceivers(ctx context.Context,
 			MessageRecipientGroup: pbRecipientGroup,
 		})
 	}
-	return &pb.FindAllMessageReceiversResponse{MessageReceivers: pbReceivers}, nil
+	return &pb.FindAllEnabledMessageReceiversResponse{MessageReceivers: pbReceivers}, nil
 }
 
 // DeleteMessageReceiver 删除接收者
@@ -168,4 +168,23 @@ func (this *MessageReceiverService) DeleteMessageReceiver(ctx context.Context, r
 		return nil, err
 	}
 	return this.Success()
+}
+
+// CountAllEnabledMessageReceivers 计算接收者数量
+func (this *MessageReceiverService) CountAllEnabledMessageReceivers(ctx context.Context, req *pb.CountAllEnabledMessageReceiversRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, models.MessageTaskTarget{
+		ClusterId: req.NodeClusterId,
+		NodeId:    req.NodeId,
+		ServerId:  req.ServerId,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
 }

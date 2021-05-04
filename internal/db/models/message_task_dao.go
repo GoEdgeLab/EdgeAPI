@@ -118,7 +118,7 @@ func (this *MessageTaskDAO) UpdateMessageTaskStatus(tx *dbs.Tx, taskId int64, st
 
 // CreateMessageTasks 从集群、节点或者服务中创建任务
 func (this *MessageTaskDAO) CreateMessageTasks(tx *dbs.Tx, target MessageTaskTarget, messageType MessageType, subject string, body string) error {
-	receivers, err := SharedMessageReceiverDAO.FindAllReceivers(tx, target, messageType)
+	receivers, err := SharedMessageReceiverDAO.FindAllEnabledReceivers(tx, target, messageType)
 	if err != nil {
 		return err
 	}

@@ -97,8 +97,8 @@ func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, target MessageTaskTar
 	return this.SaveInt64(tx, op)
 }
 
-// FindAllReceivers 查询接收人
-func (this *MessageReceiverDAO) FindAllReceivers(tx *dbs.Tx, target MessageTaskTarget, messageType string) (result []*MessageReceiver, err error) {
+// FindAllEnabledReceivers 查询接收人
+func (this *MessageReceiverDAO) FindAllEnabledReceivers(tx *dbs.Tx, target MessageTaskTarget, messageType string) (result []*MessageReceiver, err error) {
 	query := this.Query(tx)
 	if len(messageType) > 0 {
 		query.Attr("type", []string{"*", messageType}) // *表示所有的
@@ -112,4 +112,18 @@ func (this *MessageReceiverDAO) FindAllReceivers(tx *dbs.Tx, target MessageTaskT
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// CountAllEnabledReceivers 计算接收人数量
+func (this *MessageReceiverDAO) CountAllEnabledReceivers(tx *dbs.Tx, target MessageTaskTarget, messageType string) (int64, error) {
+	query := this.Query(tx)
+	if len(messageType) > 0 {
+		query.Attr("type", []string{"*", messageType}) // *表示所有的
+	}
+	return query.
+		Attr("clusterId", target.ClusterId).
+		Attr("nodeId", target.NodeId).
+		Attr("serverId", target.ServerId).
+		State(MessageReceiverStateEnabled).
+		Count()
 }
