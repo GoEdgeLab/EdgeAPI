@@ -89,3 +89,32 @@ func (this *NodeValueDAO) ListValues(tx *dbs.Tx, role string, nodeId int64, item
 		FindAll()
 	return
 }
+
+// SumValues 计算某项参数值
+func (this *NodeValueDAO) SumValues(tx *dbs.Tx, role string, nodeId int64, item string, param string, method nodeconfigs.NodeValueSumMethod, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit) (float64, error) {
+	if duration <= 0 {
+		return 0, nil
+	}
+
+	query := this.Query(tx).
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		Attr("item", item)
+	switch method {
+	case nodeconfigs.NodeValueSumMethodAvg:
+		query.Result("AVG(JSON_EXTRACT(value, '$." + param + "'))")
+	case nodeconfigs.NodeValueSumMethodSum:
+		query.Result("SUM(JSON_EXTRACT(value, '$." + param + "'))")
+	default:
+		query.Result("AVG(JSON_EXTRACT(value, '$." + param + "'))")
+	}
+	switch durationUnit {
+	case nodeconfigs.NodeValueDurationUnitMinute:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration * 60))
+		query.Gte("minute", fromMinute)
+	default:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration * 60))
+		query.Gte("minute", fromMinute)
+	}
+	return query.FindFloat64Col(0)
+}

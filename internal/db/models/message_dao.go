@@ -37,6 +37,7 @@ const (
 	MessageTypeLogCapacityOverflow        MessageType = "LogCapacityOverflow"        // 日志超出最大限制
 	MessageTypeServerNamesAuditingSuccess MessageType = "ServerNamesAuditingSuccess" // 服务域名审核成功
 	MessageTypeServerNamesAuditingFailed  MessageType = "ServerNamesAuditingFailed"  // 服务域名审核失败
+	MessageTypeThresholdSatisfied         MessageType = "ThresholdSatisfied"         // 满足阈值
 )
 
 type MessageDAO dbs.DAO
@@ -112,7 +113,20 @@ func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, clusterId int64, messag
 
 // CreateNodeMessage 创建节点消息
 func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
-	_, err := this.createMessage(tx, clusterId, nodeId, messageType, level, subject, body, paramsJSON)
+	// 检查N分钟内是否已经发送过
+	hash := this.calHash(subject, body, paramsJSON)
+	exists, err := this.Query(tx).
+		Attr("hash", hash).
+		Gt("createdAt", time.Now().Unix()-10*60). // 10分钟
+		Exist()
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+
+	_, err = this.createMessage(tx, clusterId, nodeId, messageType, level, subject, body, paramsJSON)
 	if err != nil {
 		return err
 	}
@@ -144,11 +158,6 @@ func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, clusterId int64, nodeId in
 
 // CreateMessage 创建普通消息
 func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
-	h := md5.New()
-	h.Write([]byte(body))
-	h.Write(paramsJSON)
-	hash := fmt.Sprintf("%x", h.Sum(nil))
-
 	op := NewMessageOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -169,7 +178,7 @@ func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, m
 	op.State = MessageStateEnabled
 	op.IsRead = false
 	op.Day = timeutil.Format("Ymd")
-	op.Hash = hash
+	op.Hash = this.calHash(subject, body, paramsJSON)
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -278,11 +287,6 @@ func (this *MessageDAO) CheckMessageUser(tx *dbs.Tx, messageId int64, adminId in
 
 // 创建消息
 func (this *MessageDAO) createMessage(tx *dbs.Tx, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) (int64, error) {
-	h := md5.New()
-	h.Write([]byte(body))
-	h.Write(paramsJSON)
-	hash := fmt.Sprintf("%x", h.Sum(nil))
-
 	// TODO 检查同样的消息最近是否发送过
 
 	// 创建新消息
@@ -309,11 +313,20 @@ func (this *MessageDAO) createMessage(tx *dbs.Tx, clusterId int64, nodeId int64,
 	op.State = MessageStateEnabled
 	op.CreatedAt = time.Now().Unix()
 	op.Day = timeutil.Format("Ymd")
-	op.Hash = hash
+	op.Hash = this.calHash(subject, body, paramsJSON)
 
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
 	return types.Int64(op.Id), nil
+}
+
+// 计算Hash
+func (this *MessageDAO) calHash(subject string, body string, paramsJSON []byte) string {
+	h := md5.New()
+	h.Write([]byte(subject))
+	h.Write([]byte(body))
+	h.Write(paramsJSON)
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

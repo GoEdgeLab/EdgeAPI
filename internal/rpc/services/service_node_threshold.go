@@ -5,6 +5,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -21,7 +22,7 @@ func (this *NodeThresholdService) CreateNodeThreshold(ctx context.Context, req *
 		return nil, err
 	}
 	var tx = this.NullTx()
-	thresholdId, err := models.SharedNodeThresholdDAO.CreateThreshold(tx, req.NodeClusterId, req.NodeId, req.Item, req.Param, req.Operator, req.ValueJSON, req.Message, req.SumMethod, req.Duration, req.DurationUnit)
+	thresholdId, err := models.SharedNodeThresholdDAO.CreateThreshold(tx, rpcutils.UserTypeNode, req.NodeClusterId, req.NodeId, req.Item, req.Param, req.Operator, req.ValueJSON, req.Message, req.SumMethod, req.Duration, req.DurationUnit, req.NotifyDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func (this *NodeThresholdService) UpdateNodeThreshold(ctx context.Context, req *
 		return nil, err
 	}
 	var tx = this.NullTx()
-	err = models.SharedNodeThresholdDAO.UpdateThreshold(tx, req.NodeThresholdId, req.Item, req.Param, req.Operator, req.ValueJSON, req.Message, req.SumMethod, req.Duration, req.DurationUnit, req.IsOn)
+	err = models.SharedNodeThresholdDAO.UpdateThreshold(tx, req.NodeThresholdId, req.Item, req.Param, req.Operator, req.ValueJSON, req.Message, req.SumMethod, req.Duration, req.DurationUnit, req.NotifyDuration, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -65,24 +66,41 @@ func (this *NodeThresholdService) FindAllEnabledNodeThresholds(ctx context.Conte
 
 	var tx = this.NullTx()
 	pbThresholds := []*pb.NodeThreshold{}
-	thresholds, err := models.SharedNodeThresholdDAO.FindAllEnabledThresholds(tx, req.NodeClusterId, req.NodeId)
+	thresholds, err := models.SharedNodeThresholdDAO.FindAllEnabledThresholds(tx, req.Role, req.NodeClusterId, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
 	for _, threshold := range thresholds {
+		// 节点信息
+		var pbNode *pb.Node = nil
+		if threshold.NodeId > 0 {
+			nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(threshold.NodeId))
+			if err != nil {
+				return nil, err
+			}
+			if len(nodeName) == 0 {
+				continue
+			}
+			pbNode = &pb.Node{
+				Id:   int64(threshold.NodeId),
+				Name: nodeName,
+			}
+		}
+
 		pbThresholds = append(pbThresholds, &pb.NodeThreshold{
-			Id:           int64(threshold.Id),
-			ClusterId:    int64(threshold.ClusterId),
-			NodeId:       int64(threshold.NodeId),
-			Item:         threshold.Item,
-			Param:        threshold.Param,
-			Operator:     threshold.Operator,
-			ValueJSON:    []byte(threshold.Value),
-			Message:      threshold.Message,
-			Duration:     types.Int32(threshold.Duration),
-			DurationUnit: threshold.DurationUnit,
-			SumMethod:    threshold.SumMethod,
-			IsOn:         threshold.IsOn == 1,
+			Id:             int64(threshold.Id),
+			ClusterId:      int64(threshold.ClusterId),
+			Node:           pbNode,
+			Item:           threshold.Item,
+			Param:          threshold.Param,
+			Operator:       threshold.Operator,
+			ValueJSON:      []byte(threshold.Value),
+			Message:        threshold.Message,
+			Duration:       types.Int32(threshold.Duration),
+			DurationUnit:   threshold.DurationUnit,
+			SumMethod:      threshold.SumMethod,
+			NotifyDuration: int32(threshold.NotifyDuration),
+			IsOn:           threshold.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodeThresholdsResponse{NodeThresholds: pbThresholds}, nil
@@ -119,18 +137,35 @@ func (this *NodeThresholdService) FindEnabledNodeThreshold(ctx context.Context, 
 		return &pb.FindEnabledNodeThresholdResponse{NodeThreshold: nil}, nil
 	}
 
+	// 节点信息
+	var pbNode *pb.Node = nil
+	if threshold.NodeId > 0 {
+		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(threshold.NodeId))
+		if err != nil {
+			return nil, err
+		}
+		if len(nodeName) == 0 {
+			return &pb.FindEnabledNodeThresholdResponse{NodeThreshold: nil}, nil
+		}
+		pbNode = &pb.Node{
+			Id:   int64(threshold.NodeId),
+			Name: nodeName,
+		}
+	}
+
 	return &pb.FindEnabledNodeThresholdResponse{NodeThreshold: &pb.NodeThreshold{
-		Id:           int64(threshold.Id),
-		ClusterId:    int64(threshold.ClusterId),
-		NodeId:       int64(threshold.NodeId),
-		Item:         threshold.Item,
-		Param:        threshold.Param,
-		Operator:     threshold.Operator,
-		ValueJSON:    []byte(threshold.Value),
-		Message:      threshold.Message,
-		Duration:     types.Int32(threshold.Duration),
-		DurationUnit: threshold.DurationUnit,
-		SumMethod:    threshold.SumMethod,
-		IsOn:         threshold.IsOn == 1,
+		Id:             int64(threshold.Id),
+		ClusterId:      int64(threshold.ClusterId),
+		Node:           pbNode,
+		Item:           threshold.Item,
+		Param:          threshold.Param,
+		Operator:       threshold.Operator,
+		ValueJSON:      []byte(threshold.Value),
+		Message:        threshold.Message,
+		Duration:       types.Int32(threshold.Duration),
+		DurationUnit:   threshold.DurationUnit,
+		SumMethod:      threshold.SumMethod,
+		NotifyDuration: int32(threshold.NotifyDuration),
+		IsOn:           threshold.IsOn == 1,
 	}}, nil
 }

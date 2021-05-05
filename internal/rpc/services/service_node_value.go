@@ -26,6 +26,12 @@ func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
+	// 触发阈值
+	err = models.SharedNodeThresholdDAO.FireNodeThreshold(tx, role, nodeId, req.Item)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 
