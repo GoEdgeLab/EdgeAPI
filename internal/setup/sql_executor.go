@@ -198,7 +198,7 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 	}
 
 	// 创建默认集群
-	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state) VALUES (?, ?, ?)", "默认集群", 1, 1)
+	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, rands.HexString(32), rands.String(32))
 	if err != nil {
 		return err
 	}
