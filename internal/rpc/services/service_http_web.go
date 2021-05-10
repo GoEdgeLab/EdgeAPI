@@ -14,7 +14,7 @@ type HTTPWebService struct {
 	BaseService
 }
 
-// 创建Web配置
+// CreateHTTPWeb 创建Web配置
 func (this *HTTPWebService) CreateHTTPWeb(ctx context.Context, req *pb.CreateHTTPWebRequest) (*pb.CreateHTTPWebResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -32,7 +32,7 @@ func (this *HTTPWebService) CreateHTTPWeb(ctx context.Context, req *pb.CreateHTT
 	return &pb.CreateHTTPWebResponse{WebId: webId}, nil
 }
 
-// 查找Web配置
+// FindEnabledHTTPWeb 查找Web配置
 func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.FindEnabledHTTPWebRequest) (*pb.FindEnabledHTTPWebResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -65,7 +65,7 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 	return &pb.FindEnabledHTTPWebResponse{Web: result}, nil
 }
 
-// 查找Web配置
+// FindEnabledHTTPWebConfig 查找Web配置
 func (this *HTTPWebService) FindEnabledHTTPWebConfig(ctx context.Context, req *pb.FindEnabledHTTPWebConfigRequest) (*pb.FindEnabledHTTPWebConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -95,7 +95,7 @@ func (this *HTTPWebService) FindEnabledHTTPWebConfig(ctx context.Context, req *p
 	return &pb.FindEnabledHTTPWebConfigResponse{WebJSON: configJSON}, nil
 }
 
-// 修改Web配置
+// UpdateHTTPWeb 修改Web配置
 func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTTPWebRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -121,7 +121,7 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 	return this.Success()
 }
 
-// 修改Gzip配置
+// UpdateHTTPWebGzip 修改Gzip配置
 func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.UpdateHTTPWebGzipRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -147,7 +147,7 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// 修改字符集配置
+// UpdateHTTPWebCharset 修改字符集配置
 func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.UpdateHTTPWebCharsetRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -172,7 +172,7 @@ func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.Up
 	return this.Success()
 }
 
-// 更改请求Header策略
+// UpdateHTTPWebRequestHeader 更改请求Header策略
 func (this *HTTPWebService) UpdateHTTPWebRequestHeader(ctx context.Context, req *pb.UpdateHTTPWebRequestHeaderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -198,7 +198,7 @@ func (this *HTTPWebService) UpdateHTTPWebRequestHeader(ctx context.Context, req 
 	return this.Success()
 }
 
-// 更改响应Header策略
+// UpdateHTTPWebResponseHeader 更改响应Header策略
 func (this *HTTPWebService) UpdateHTTPWebResponseHeader(ctx context.Context, req *pb.UpdateHTTPWebResponseHeaderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -224,7 +224,7 @@ func (this *HTTPWebService) UpdateHTTPWebResponseHeader(ctx context.Context, req
 	return this.Success()
 }
 
-// 更改Shutdown
+// UpdateHTTPWebShutdown 更改Shutdown
 func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.UpdateHTTPWebShutdownRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -249,7 +249,7 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// 更改Pages
+// UpdateHTTPWebPages 更改Pages
 func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.UpdateHTTPWebPagesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -274,7 +274,7 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	return this.Success()
 }
 
-// 更改访问日志配置
+// UpdateHTTPWebAccessLog 更改访问日志配置
 func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.UpdateHTTPWebAccessLogRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -299,7 +299,7 @@ func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.
 	return this.Success()
 }
 
-// 更改统计配置
+// UpdateHTTPWebStat 更改统计配置
 func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.UpdateHTTPWebStatRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -324,7 +324,7 @@ func (this *HTTPWebService) UpdateHTTPWebStat(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// 更改缓存配置
+// UpdateHTTPWebCache 更改缓存配置
 func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.UpdateHTTPWebCacheRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -350,7 +350,7 @@ func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.Upda
 	return this.Success()
 }
 
-// 更改防火墙设置
+// UpdateHTTPWebFirewall 更改防火墙设置
 func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.UpdateHTTPWebFirewallRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -376,7 +376,7 @@ func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// 更改路径规则设置
+// UpdateHTTPWebLocations 更改路径规则设置
 func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.UpdateHTTPWebLocationsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -402,7 +402,7 @@ func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.
 	return this.Success()
 }
 
-// 更改跳转到HTTPS设置
+// UpdateHTTPWebRedirectToHTTPS 更改跳转到HTTPS设置
 func (this *HTTPWebService) UpdateHTTPWebRedirectToHTTPS(ctx context.Context, req *pb.UpdateHTTPWebRedirectToHTTPSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -427,7 +427,7 @@ func (this *HTTPWebService) UpdateHTTPWebRedirectToHTTPS(ctx context.Context, re
 	return this.Success()
 }
 
-// 更改Websocket设置
+// UpdateHTTPWebWebsocket 更改Websocket设置
 func (this *HTTPWebService) UpdateHTTPWebWebsocket(ctx context.Context, req *pb.UpdateHTTPWebWebsocketRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -451,7 +451,31 @@ func (this *HTTPWebService) UpdateHTTPWebWebsocket(ctx context.Context, req *pb.
 	return this.Success()
 }
 
-// 更改重写规则设置
+// UpdateHTTPWebFastcgi 更改Fastcgi设置
+func (this *HTTPWebService) UpdateHTTPWebFastcgi(ctx context.Context, req *pb.UpdateHTTPWebFastcgiRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(nil, userId, req.WebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tx := this.NullTx()
+
+	err = models.SharedHTTPWebDAO.UpdateWebFastcgi(tx, req.WebId, req.FastcgiJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// UpdateHTTPWebRewriteRules 更改重写规则设置
 func (this *HTTPWebService) UpdateHTTPWebRewriteRules(ctx context.Context, req *pb.UpdateHTTPWebRewriteRulesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -475,7 +499,7 @@ func (this *HTTPWebService) UpdateHTTPWebRewriteRules(ctx context.Context, req *
 	return this.Success()
 }
 
-// 更改主机跳转设置
+// UpdateHTTPWebHostRedirects 更改主机跳转设置
 func (this *HTTPWebService) UpdateHTTPWebHostRedirects(ctx context.Context, req *pb.UpdateHTTPWebHostRedirectsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -515,7 +539,7 @@ func (this *HTTPWebService) UpdateHTTPWebHostRedirects(ctx context.Context, req 
 	return this.Success()
 }
 
-// 查找主机跳转设置
+// FindHTTPWebHostRedirects 查找主机跳转设置
 func (this *HTTPWebService) FindHTTPWebHostRedirects(ctx context.Context, req *pb.FindHTTPWebHostRedirectsRequest) (*pb.FindHTTPWebHostRedirectsResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)

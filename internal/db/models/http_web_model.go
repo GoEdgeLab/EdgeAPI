@@ -1,6 +1,6 @@
 package models
 
-// HTTP Web
+// HTTPWeb HTTP Web
 type HTTPWeb struct {
 	Id                 uint32 `field:"id"`                 // ID
 	IsOn               uint8  `field:"isOn"`               // 是否启用
@@ -27,6 +27,7 @@ type HTTPWeb struct {
 	Websocket          string `field:"websocket"`          // Websocket设置
 	RewriteRules       string `field:"rewriteRules"`       // 重写规则配置
 	HostRedirects      string `field:"hostRedirects"`      // 域名跳转
+	Fastcgi            string `field:"fastcgi"`            // Fastcgi配置
 }
 
 type HTTPWebOperator struct {
@@ -55,6 +56,7 @@ type HTTPWebOperator struct {
 	Websocket          interface{} // Websocket设置
 	RewriteRules       interface{} // 重写规则配置
 	HostRedirects      interface{} // 域名跳转
+	Fastcgi            interface{} // Fastcgi配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

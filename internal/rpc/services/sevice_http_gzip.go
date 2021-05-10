@@ -13,7 +13,7 @@ type HTTPGzipService struct {
 	BaseService
 }
 
-// 创建Gzip配置
+// CreateHTTPGzip 创建Gzip配置
 func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateHTTPGzipRequest) (*pb.CreateHTTPGzipResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -50,10 +50,10 @@ func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateH
 		return nil, err
 	}
 
-	return &pb.CreateHTTPGzipResponse{GzipId: gzipId}, nil
+	return &pb.CreateHTTPGzipResponse{HttpGzipId: gzipId}, nil
 }
 
-// 查找Gzip
+// FindEnabledHTTPGzipConfig 查找Gzip
 func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req *pb.FindEnabledGzipConfigRequest) (*pb.FindEnabledGzipConfigResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -63,7 +63,7 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	config, err := models.SharedHTTPGzipDAO.ComposeGzipConfig(tx, req.GzipId)
+	config, err := models.SharedHTTPGzipDAO.ComposeGzipConfig(tx, req.HttpGzipId)
 	if err != nil {
 		return nil, err
 	}
@@ -72,10 +72,10 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindEnabledGzipConfigResponse{GzipJSON: configData}, nil
+	return &pb.FindEnabledGzipConfigResponse{HttpGzipJSON: configData}, nil
 }
 
-// 修改Gzip配置
+// UpdateHTTPGzip 修改Gzip配置
 func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateHTTPGzipRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -107,7 +107,7 @@ func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateH
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPGzipDAO.UpdateGzip(tx, req.GzipId, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
+	err = models.SharedHTTPGzipDAO.UpdateGzip(tx, req.HttpGzipId, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
 	if err != nil {
 		return nil, err
 	}

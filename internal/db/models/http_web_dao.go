@@ -44,7 +44,7 @@ func (this *HTTPWebDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPWeb 启用条目
 func (this *HTTPWebDAO) EnableHTTPWeb(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *HTTPWebDAO) EnableHTTPWeb(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableHTTPWeb 禁用条目
 func (this *HTTPWebDAO) DisableHTTPWeb(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -62,7 +62,7 @@ func (this *HTTPWebDAO) DisableHTTPWeb(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPWeb 查找启用中的条目
 func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -74,7 +74,7 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, erro
 	return result.(*HTTPWeb), err
 }
 
-// 组合配置
+// ComposeWebConfig 组合配置
 func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPWebConfig, error) {
 	web, err := SharedHTTPWebDAO.FindEnabledHTTPWeb(tx, webId)
 	if err != nil {
@@ -323,10 +323,34 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		config.HostRedirects = redirects
 	}
 
+	// Fastcgi
+	if IsNotNull(web.Fastcgi) {
+		ref := &serverconfigs.HTTPFastcgiRef{}
+		err = json.Unmarshal([]byte(web.Fastcgi), ref)
+		if err != nil {
+			return nil, err
+		}
+		config.FastcgiRef = ref
+
+		if len(ref.FastcgiIds) > 0 {
+			list := []*serverconfigs.HTTPFastcgiConfig{}
+			for _, fastcgiId := range ref.FastcgiIds {
+				fastcgiConfig, err := SharedHTTPFastcgiDAO.ComposeFastcgiConfig(tx, fastcgiId)
+				if err != nil {
+					return nil, err
+				}
+				if fastcgiConfig != nil {
+					list = append(list, fastcgiConfig)
+				}
+			}
+			config.FastcgiList = list
+		}
+	}
+
 	return config, nil
 }
 
-// 创建Web配置
+// CreateWeb 创建Web配置
 func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJSON []byte) (int64, error) {
 	op := NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
@@ -342,7 +366,7 @@ func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJ
 	return types.Int64(op.Id), nil
 }
 
-// 修改Web配置
+// UpdateWeb 修改Web配置
 func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -358,7 +382,7 @@ func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) erro
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 修改Gzip配置
+// UpdateWebGzip 修改Gzip配置
 func (this *HTTPWebDAO) UpdateWebGzip(tx *dbs.Tx, webId int64, gzipJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -374,7 +398,7 @@ func (this *HTTPWebDAO) UpdateWebGzip(tx *dbs.Tx, webId int64, gzipJSON []byte) 
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 修改字符编码
+// UpdateWebCharset 修改字符编码
 func (this *HTTPWebDAO) UpdateWebCharset(tx *dbs.Tx, webId int64, charsetJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -390,7 +414,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(tx *dbs.Tx, webId int64, charsetJSON []
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改请求Header策略
+// UpdateWebRequestHeaderPolicy 更改请求Header策略
 func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(tx *dbs.Tx, webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -406,7 +430,7 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(tx *dbs.Tx, webId int64, he
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改响应Header策略
+// UpdateWebResponseHeaderPolicy 更改响应Header策略
 func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(tx *dbs.Tx, webId int64, headerPolicyJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -422,7 +446,7 @@ func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(tx *dbs.Tx, webId int64, h
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改特殊页面配置
+// UpdateWebPages 更改特殊页面配置
 func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -438,7 +462,7 @@ func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改Shutdown配置
+// UpdateWebShutdown 更改Shutdown配置
 func (this *HTTPWebDAO) UpdateWebShutdown(tx *dbs.Tx, webId int64, shutdownJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -454,7 +478,7 @@ func (this *HTTPWebDAO) UpdateWebShutdown(tx *dbs.Tx, webId int64, shutdownJSON 
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改访问日志策略
+// UpdateWebAccessLogConfig 更改访问日志策略
 func (this *HTTPWebDAO) UpdateWebAccessLogConfig(tx *dbs.Tx, webId int64, accessLogJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -470,7 +494,7 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(tx *dbs.Tx, webId int64, access
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改统计配置
+// UpdateWebStat 更改统计配置
 func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -486,7 +510,7 @@ func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) 
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改缓存配置
+// UpdateWebCache 更改缓存配置
 func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -502,7 +526,7 @@ func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改防火墙配置
+// UpdateWebFirewall 更改防火墙配置
 func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -518,7 +542,7 @@ func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON 
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改路径规则配置
+// UpdateWebLocations 更改路径规则配置
 func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -534,7 +558,7 @@ func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSO
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 更改跳转到HTTPS设置
+// UpdateWebRedirectToHTTPS 更改跳转到HTTPS设置
 func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(tx *dbs.Tx, webId int64, redirectToHTTPSJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -550,7 +574,7 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(tx *dbs.Tx, webId int64, redire
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 修改Websocket设置
+// UpdateWebsocket 修改Websocket设置
 func (this *HTTPWebDAO) UpdateWebsocket(tx *dbs.Tx, webId int64, websocketJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -566,7 +590,23 @@ func (this *HTTPWebDAO) UpdateWebsocket(tx *dbs.Tx, webId int64, websocketJSON [
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 修改重写规则设置
+// UpdateWebFastcgi 修改Fastcgi设置
+func (this *HTTPWebDAO) UpdateWebFastcgi(tx *dbs.Tx, webId int64, fastcgiJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Fastcgi = JSONBytes(fastcgiJSON)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateWebRewriteRules 修改重写规则设置
 func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRulesJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
@@ -582,7 +622,7 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRu
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 根据缓存策略ID查找所有的WebId
+// FindAllWebIdsWithCachePolicyId 根据缓存策略ID查找所有的WebId
 func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -626,7 +666,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId
 	return result, nil
 }
 
-// 根据防火墙策略ID查找所有的WebId
+// FindAllWebIdsWithHTTPFirewallPolicyId 根据防火墙策略ID查找所有的WebId
 func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(tx *dbs.Tx, firewallPolicyId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -673,7 +713,7 @@ func (this *HTTPWebDAO) FindAllWebIdsWithHTTPFirewallPolicyId(tx *dbs.Tx, firewa
 	return result, nil
 }
 
-// 查找包含某个Location的Web
+// FindEnabledWebIdWithLocationId 查找包含某个Location的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(tx *dbs.Tx, locationId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -683,7 +723,7 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithLocationId(tx *dbs.Tx, locationId in
 		FindInt64Col(0)
 }
 
-// 查找包含某个重写规则的Web
+// FindEnabledWebIdWithRewriteRuleId 查找包含某个重写规则的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithRewriteRuleId(tx *dbs.Tx, rewriteRuleId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -693,7 +733,7 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithRewriteRuleId(tx *dbs.Tx, rewriteRul
 		FindInt64Col(0)
 }
 
-// 查找包含某个页面的Web
+// FindEnabledWebIdWithPageId 查找包含某个页面的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithPageId(tx *dbs.Tx, pageId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -703,7 +743,7 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithPageId(tx *dbs.Tx, pageId int64) (we
 		FindInt64Col(0)
 }
 
-// 查找包含某个Header的Web
+// FindEnabledWebIdWithHeaderPolicyId 查找包含某个Header的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithHeaderPolicyId(tx *dbs.Tx, headerPolicyId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -713,7 +753,7 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithHeaderPolicyId(tx *dbs.Tx, headerPol
 		FindInt64Col(0)
 }
 
-// 查找包含某个Gzip配置的Web
+// FindEnabledWebIdWithGzipId 查找包含某个Gzip配置的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithGzipId(tx *dbs.Tx, gzipId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -723,7 +763,7 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithGzipId(tx *dbs.Tx, gzipId int64) (we
 		FindInt64Col(0)
 }
 
-// 查找包含某个Websocket配置的Web
+// FindEnabledWebIdWithWebsocketId 查找包含某个Websocket配置的Web
 func (this *HTTPWebDAO) FindEnabledWebIdWithWebsocketId(tx *dbs.Tx, websocketId int64) (webId int64, err error) {
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
@@ -733,7 +773,17 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithWebsocketId(tx *dbs.Tx, websocketId 
 		FindInt64Col(0)
 }
 
-// 查找使用此Web的Server
+// FindEnabledWebIdWithFastcgiId 查找包含某个Fastcgi配置的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithFastcgiId(tx *dbs.Tx, fastcgiId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(fastcgi, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"fastcgiIds": fastcgiId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// FindWebServerId 查找使用此Web的Server
 func (this *HTTPWebDAO) FindWebServerId(tx *dbs.Tx, webId int64) (serverId int64, err error) {
 	if webId <= 0 {
 		return 0, nil
@@ -766,7 +816,7 @@ func (this *HTTPWebDAO) FindWebServerId(tx *dbs.Tx, webId int64) (serverId int64
 	return this.FindWebServerId(tx, webId)
 }
 
-// 检查用户权限
+// CheckUserWeb 检查用户权限
 func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) error {
 	serverId, err := this.FindWebServerId(tx, webId)
 	if err != nil {
@@ -778,7 +828,7 @@ func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) erro
 	return SharedServerDAO.CheckUserServer(tx, userId, serverId)
 }
 
-// 设置主机跳转
+// UpdateWebHostRedirects 设置主机跳转
 func (this *HTTPWebDAO) UpdateWebHostRedirects(tx *dbs.Tx, webId int64, hostRedirects []*serverconfigs.HTTPHostRedirectConfig) error {
 	if webId <= 0 {
 		return errors.New("invalid ")
@@ -801,7 +851,7 @@ func (this *HTTPWebDAO) UpdateWebHostRedirects(tx *dbs.Tx, webId int64, hostRedi
 	return this.NotifyUpdate(tx, webId)
 }
 
-// 查找主机跳转
+// FindWebHostRedirects 查找主机跳转
 func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, error) {
 	col, err := this.Query(tx).
 		Pk(webId).
@@ -813,7 +863,7 @@ func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, e
 	return []byte(col), nil
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPWebDAO) NotifyUpdate(tx *dbs.Tx, webId int64) error {
 	serverId, err := this.FindWebServerId(tx, webId)
 	if err != nil {
