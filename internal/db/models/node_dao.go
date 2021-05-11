@@ -692,7 +692,7 @@ func (this *NodeDAO) FindAllNotInstalledNodesWithClusterId(tx *dbs.Tx, clusterId
 	return
 }
 
-// CountAllLowerVersionNodesWithClusterId 计算所有低于某个版本的节点数量
+// CountAllLowerVersionNodesWithClusterId 计算单个集群中所有低于某个版本的节点数量
 func (this *NodeDAO) CountAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId int64, os string, arch string, version string) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
@@ -707,7 +707,7 @@ func (this *NodeDAO) CountAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterI
 		Count()
 }
 
-// FindAllLowerVersionNodesWithClusterId 查找所有低于某个版本的节点
+// FindAllLowerVersionNodesWithClusterId 查找单个集群中所有低于某个版本的节点
 func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId int64, os string, arch string, version string) (result []*Node, err error) {
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
@@ -723,6 +723,17 @@ func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// CountAllLowerVersionNodes 计算所有集群中低于某个版本的节点数量
+func (this *NodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
+	return this.Query(tx).
+		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM "+SharedNodeClusterDAO.Table+" WHERE state=1)").
+		Where("status IS NOT NULL").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
+		Param("version", utils.VersionToLong(version)).
+		Count()
 }
 
 // CountAllEnabledNodesWithGroupId 查找某个节点分组下的所有节点数量

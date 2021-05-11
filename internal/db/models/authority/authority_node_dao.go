@@ -3,6 +3,7 @@ package authority
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -195,4 +196,14 @@ func (this *AuthorityNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJ
 		Set("status", string(statusJSON)).
 		Update()
 	return err
+}
+
+// CountAllLowerVersionNodes 计算所有节点中低于某个版本的节点数量
+func (this *AuthorityNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
+	return this.Query(tx).
+		State(AuthorityNodeStateEnabled).
+		Where("status IS NOT NULL").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
+		Param("version", utils.VersionToLong(version)).
+		Count()
 }

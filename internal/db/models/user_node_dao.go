@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -38,7 +39,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableUserNode 启用条目
 func (this *UserNodeDAO) EnableUserNode(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -47,7 +48,7 @@ func (this *UserNodeDAO) EnableUserNode(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 禁用条目
+// DisableUserNode 禁用条目
 func (this *UserNodeDAO) DisableUserNode(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -56,7 +57,7 @@ func (this *UserNodeDAO) DisableUserNode(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledUserNode 查找启用中的条目
 func (this *UserNodeDAO) FindEnabledUserNode(tx *dbs.Tx, id int64) (*UserNode, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -68,7 +69,7 @@ func (this *UserNodeDAO) FindEnabledUserNode(tx *dbs.Tx, id int64) (*UserNode, e
 	return result.(*UserNode), err
 }
 
-// 根据主键查找名称
+// FindUserNodeName 根据主键查找名称
 func (this *UserNodeDAO) FindUserNodeName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -76,7 +77,7 @@ func (this *UserNodeDAO) FindUserNodeName(tx *dbs.Tx, id int64) (string, error) 
 		FindStringCol("")
 }
 
-// 列出所有可用用户节点
+// FindAllEnabledUserNodes 列出所有可用用户节点
 func (this *UserNodeDAO) FindAllEnabledUserNodes(tx *dbs.Tx) (result []*UserNode, err error) {
 	_, err = this.Query(tx).
 		State(UserNodeStateEnabled).
@@ -87,14 +88,14 @@ func (this *UserNodeDAO) FindAllEnabledUserNodes(tx *dbs.Tx) (result []*UserNode
 	return
 }
 
-// 计算用户节点数量
+// CountAllEnabledUserNodes 计算用户节点数量
 func (this *UserNodeDAO) CountAllEnabledUserNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(UserNodeStateEnabled).
 		Count()
 }
 
-// 列出单页的用户节点
+// ListEnabledUserNodes 列出单页的用户节点
 func (this *UserNodeDAO) ListEnabledUserNodes(tx *dbs.Tx, offset int64, size int64) (result []*UserNode, err error) {
 	_, err = this.Query(tx).
 		State(UserNodeStateEnabled).
@@ -107,7 +108,7 @@ func (this *UserNodeDAO) ListEnabledUserNodes(tx *dbs.Tx, offset int64, size int
 	return
 }
 
-// 根据主机名和端口获取ID
+// FindEnabledUserNodeIdWithAddr 根据主机名和端口获取ID
 func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(tx *dbs.Tx, protocol string, host string, port int) (int64, error) {
 	addr := maps.Map{
 		"protocol":  protocol,
@@ -134,7 +135,7 @@ func (this *UserNodeDAO) FindEnabledUserNodeIdWithAddr(tx *dbs.Tx, protocol stri
 	return int64(one.(*UserNode).Id), nil
 }
 
-// 创建用户节点
+// CreateUserNode 创建用户节点
 func (this *UserNodeDAO) CreateUserNode(tx *dbs.Tx, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) (nodeId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
@@ -172,7 +173,7 @@ func (this *UserNodeDAO) CreateUserNode(tx *dbs.Tx, name string, description str
 	return types.Int64(op.Id), nil
 }
 
-// 修改用户节点
+// UpdateUserNode 修改用户节点
 func (this *UserNodeDAO) UpdateUserNode(tx *dbs.Tx, nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, accessAddrsJSON []byte, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
@@ -204,7 +205,7 @@ func (this *UserNodeDAO) UpdateUserNode(tx *dbs.Tx, nodeId int64, name string, d
 	return err
 }
 
-// 根据唯一ID获取节点信息
+// FindEnabledUserNodeWithUniqueId 根据唯一ID获取节点信息
 func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(tx *dbs.Tx, uniqueId string) (*UserNode, error) {
 	result, err := this.Query(tx).
 		Attr("uniqueId", uniqueId).
@@ -216,7 +217,7 @@ func (this *UserNodeDAO) FindEnabledUserNodeWithUniqueId(tx *dbs.Tx, uniqueId st
 	return result.(*UserNode), err
 }
 
-// 根据唯一ID获取节点ID
+// FindEnabledUserNodeIdWithUniqueId 根据唯一ID获取节点ID
 func (this *UserNodeDAO) FindEnabledUserNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
 	return this.Query(tx).
 		Attr("uniqueId", uniqueId).
@@ -225,7 +226,7 @@ func (this *UserNodeDAO) FindEnabledUserNodeIdWithUniqueId(tx *dbs.Tx, uniqueId 
 		FindInt64Col(0)
 }
 
-// 生成唯一ID
+// GenUniqueId 生成唯一ID
 func (this *UserNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	for {
 		uniqueId := rands.HexString(32)
@@ -242,7 +243,7 @@ func (this *UserNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 	}
 }
 
-// 更改节点状态
+// UpdateNodeStatus 更改节点状态
 func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
 	if len(statusJSON) == 0 {
 		return nil
@@ -252,4 +253,14 @@ func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON [
 		Set("status", string(statusJSON)).
 		Update()
 	return err
+}
+
+// CountAllLowerVersionNodes 计算所有节点中低于某个版本的节点数量
+func (this *UserNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
+	return this.Query(tx).
+		State(UserNodeStateEnabled).
+		Where("status IS NOT NULL").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
+		Param("version", utils.VersionToLong(version)).
+		Count()
 }

@@ -3,7 +3,9 @@ package services
 import (
 	"context"
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -14,13 +16,14 @@ import (
 	"time"
 )
 
+// AdminService 管理员相关服务
 type AdminService struct {
 	BaseService
 
 	debug bool
 }
 
-// 登录
+// LoginAdmin 登录
 func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequest) (*pb.LoginAdminResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
@@ -57,7 +60,7 @@ func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequ
 	}, nil
 }
 
-// 检查管理员是否存在
+// CheckAdminExists 检查管理员是否存在
 func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdminExistsRequest) (*pb.CheckAdminExistsResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -82,7 +85,7 @@ func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdm
 	}, nil
 }
 
-// 检查用户名是否存在
+// CheckAdminUsername 检查用户名是否存在
 func (this *AdminService) CheckAdminUsername(ctx context.Context, req *pb.CheckAdminUsernameRequest) (*pb.CheckAdminUsernameResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -100,7 +103,7 @@ func (this *AdminService) CheckAdminUsername(ctx context.Context, req *pb.CheckA
 	return &pb.CheckAdminUsernameResponse{Exists: exists}, nil
 }
 
-// 获取管理员名称
+// FindAdminFullname 获取管理员名称
 func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdminFullnameRequest) (*pb.FindAdminFullnameResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -121,7 +124,7 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 	}, nil
 }
 
-// 获取管理员信息
+// FindEnabledAdmin 获取管理员信息
 func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnabledAdminRequest) (*pb.FindEnabledAdminResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -186,7 +189,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 	return &pb.FindEnabledAdminResponse{Admin: result}, nil
 }
 
-// 创建或修改管理员
+// CreateOrUpdateAdmin 创建或修改管理员
 func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.CreateOrUpdateAdminRequest) (*pb.CreateOrUpdateAdminResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeAPI)
@@ -214,7 +217,7 @@ func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.Creat
 	return &pb.CreateOrUpdateAdminResponse{AdminId: adminId}, nil
 }
 
-// 修改管理员信息
+// UpdateAdminInfo 修改管理员信息
 func (this *AdminService) UpdateAdminInfo(ctx context.Context, req *pb.UpdateAdminInfoRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeAPI)
@@ -231,7 +234,7 @@ func (this *AdminService) UpdateAdminInfo(ctx context.Context, req *pb.UpdateAdm
 	return this.Success()
 }
 
-// 修改管理员登录信息
+// UpdateAdminLogin 修改管理员登录信息
 func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAdminLoginRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeAPI)
@@ -256,7 +259,7 @@ func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAd
 	return this.Success()
 }
 
-// 获取所有管理员的权限列表
+// FindAllAdminModules 获取所有管理员的权限列表
 func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindAllAdminModulesRequest) (*pb.FindAllAdminModulesResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -302,7 +305,7 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 	return &pb.FindAllAdminModulesResponse{AdminModules: result}, nil
 }
 
-// 创建管理员
+// CreateAdmin 创建管理员
 func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRequest) (*pb.CreateAdminResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -321,7 +324,7 @@ func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRe
 	return &pb.CreateAdminResponse{AdminId: adminId}, nil
 }
 
-// 修改管理员
+// UpdateAdmin 修改管理员
 func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -340,7 +343,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 	return this.Success()
 }
 
-// 计算管理员数量
+// CountAllEnabledAdmins 计算管理员数量
 func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.CountAllEnabledAdminsRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -358,7 +361,7 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 	return this.SuccessCount(count)
 }
 
-// 列出单页的管理员
+// ListEnabledAdmins 列出单页的管理员
 func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEnabledAdminsRequest) (*pb.ListEnabledAdminsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -407,7 +410,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 	return &pb.ListEnabledAdminsResponse{Admins: result}, nil
 }
 
-// 删除管理员
+// DeleteAdmin 删除管理员
 func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -428,7 +431,7 @@ func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRe
 	return this.Success()
 }
 
-// 检查是否需要输入OTP
+// CheckAdminOTPWithUsername 检查是否需要输入OTP
 func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb.CheckAdminOTPWithUsernameRequest) (*pb.CheckAdminOTPWithUsernameResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -456,7 +459,7 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 	return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: otpIsOn}, nil
 }
 
-// 取得管理员Dashboard数据
+// ComposeAdminDashboard 取得管理员Dashboard数据
 func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.ComposeAdminDashboardRequest) (*pb.ComposeAdminDashboardResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -541,6 +544,71 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			Hour:  stat.Hour,
 			Bytes: int64(stat.Bytes),
 		})
+	}
+
+	// 边缘节点升级信息
+	{
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.NodeVersion,
+		}
+		countNodes, err := models.SharedNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.NodeUpgradeInfo = upgradeInfo
+	}
+
+	// 监控节点升级信息
+	{
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.MonitorNodeVersion,
+		}
+		countNodes, err := models.SharedMonitorNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.MonitorNodeUpgradeInfo = upgradeInfo
+	}
+
+	// 认证节点升级信息
+	{
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.AuthorityNodeVersion,
+		}
+		countNodes, err := authority.SharedAuthorityNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.AuthorityNodeUpgradeInfo = upgradeInfo
+	}
+
+	// 用户节点升级信息
+	{
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.UserNodeVersion,
+		}
+		countNodes, err := models.SharedUserNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.UserNodeUpgradeInfo = upgradeInfo
+	}
+
+	// API节点升级信息
+	{
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.Version,
+		}
+		countNodes, err := models.SharedAPINodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.ApiNodeUpgradeInfo = upgradeInfo
 	}
 
 	return resp, nil
