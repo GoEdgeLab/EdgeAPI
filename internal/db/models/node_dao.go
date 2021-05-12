@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -161,7 +162,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 }
 
 // UpdateNode 修改节点
-func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, groupId int64, regionId int64, maxCPU int32, isOn bool) error {
+func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, groupId int64, regionId int64, maxCPU int32, isOn bool, maxCacheDiskCapacityJSON []byte, maxCacheMemoryCapacityJSON []byte) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -174,6 +175,12 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
 	op.MaxCPU = maxCPU
 	op.IsOn = isOn
+	if len(maxCacheDiskCapacityJSON) > 0 {
+		op.MaxCacheDiskCapacity = maxCacheDiskCapacityJSON
+	}
+	if len(maxCacheMemoryCapacityJSON) > 0 {
+		op.MaxCacheMemoryCapacity = maxCacheMemoryCapacityJSON
+	}
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -555,6 +562,29 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		}
 		if cachePolicy != nil {
 			config.HTTPCachePolicy = cachePolicy
+		}
+	}
+
+	// 缓存最大容量设置
+	if len(node.MaxCacheDiskCapacity) > 0 {
+		capacity := &shared.SizeCapacity{}
+		err = json.Unmarshal([]byte(node.MaxCacheDiskCapacity), capacity)
+		if err != nil {
+			return nil, err
+		}
+		if capacity.Count > 0 {
+			config.MaxCacheDiskCapacity = capacity
+		}
+	}
+
+	if len(node.MaxCacheMemoryCapacity) > 0 {
+		capacity := &shared.SizeCapacity{}
+		err = json.Unmarshal([]byte(node.MaxCacheMemoryCapacity), capacity)
+		if err != nil {
+			return nil, err
+		}
+		if capacity.Count > 0 {
+			config.MaxCacheMemoryCapacity = capacity
 		}
 	}
 

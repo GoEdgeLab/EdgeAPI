@@ -12,18 +12,19 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"net"
 )
 
-// 边缘节点相关服务
+// NodeService 边缘节点相关服务
 type NodeService struct {
 	BaseService
 }
 
-// 创建节点
+// CreateNode 创建节点
 func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeRequest) (*pb.CreateNodeResponse, error) {
 	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -60,7 +61,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 	}, nil
 }
 
-// 注册集群节点
+// RegisterClusterNode 注册集群节点
 func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.RegisterClusterNodeRequest) (*pb.RegisterClusterNodeResponse, error) {
 	// 校验请求
 	_, clusterId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeCluster)
@@ -105,7 +106,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 	}, nil
 }
 
-// 计算节点数量
+// CountAllEnabledNodes 计算节点数量
 func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -123,7 +124,7 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 	return this.SuccessCount(count)
 }
 
-// 计算匹配的节点数量
+// CountAllEnabledNodesMatch 计算匹配的节点数量
 func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.CountAllEnabledNodesMatchRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -139,7 +140,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 	return this.SuccessCount(count)
 }
 
-// 列出单页的节点
+// ListEnabledNodesMatch 列出单页的节点
 func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.ListEnabledNodesMatchRequest) (*pb.ListEnabledNodesMatchResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -268,7 +269,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	}, nil
 }
 
-// 查找一个集群下的所有节点
+// FindAllEnabledNodesWithClusterId 查找一个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodesWithClusterIdRequest) (*pb.FindAllEnabledNodesWithClusterIdResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -308,7 +309,7 @@ func (this *NodeService) FindAllEnabledNodesWithClusterId(ctx context.Context, r
 	return &pb.FindAllEnabledNodesWithClusterIdResponse{Nodes: result}, nil
 }
 
-// 删除节点
+// DeleteNode 删除节点
 func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -331,7 +332,7 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 	return this.Success()
 }
 
-// 修改节点
+// UpdateNode 修改节点
 func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -340,7 +341,29 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.GroupId, req.RegionId, req.MaxCPU, req.IsOn)
+	var maxCacheDiskCapacityJSON []byte
+	if req.MaxCacheDiskCapacity != nil {
+		maxCacheDiskCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
+			Count: req.MaxCacheDiskCapacity.Count,
+			Unit:  req.MaxCacheDiskCapacity.Unit,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var maxCacheMemoryCapacityJSON []byte
+	if req.MaxCacheMemoryCapacity != nil {
+		maxCacheMemoryCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
+			Count: req.MaxCacheMemoryCapacity.Count,
+			Unit:  req.MaxCacheMemoryCapacity.Unit,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.GroupId, req.RegionId, req.MaxCPU, req.IsOn, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +400,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 	return this.Success()
 }
 
-// 列出单个节点
+// FindEnabledNode 列出单个节点
 func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnabledNodeRequest) (*pb.FindEnabledNodeResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -463,6 +486,26 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 最大硬盘容量
+	var pbMaxCacheDiskCapacity *pb.SizeCapacity
+	if len(node.MaxCacheDiskCapacity) > 0 {
+		pbMaxCacheDiskCapacity = &pb.SizeCapacity{}
+		err = json.Unmarshal([]byte(node.MaxCacheDiskCapacity), pbMaxCacheDiskCapacity)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 最大内存容量
+	var pbMaxCacheMemoryCapacity *pb.SizeCapacity
+	if len(node.MaxCacheMemoryCapacity) > 0 {
+		pbMaxCacheMemoryCapacity = &pb.SizeCapacity{}
+		err = json.Unmarshal([]byte(node.MaxCacheMemoryCapacity), pbMaxCacheMemoryCapacity)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
@@ -477,16 +520,18 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
 		},
-		Login:         respLogin,
-		InstallStatus: installStatusResult,
-		MaxCPU:        types.Int32(node.MaxCPU),
-		IsOn:          node.IsOn == 1,
-		Group:         pbGroup,
-		Region:        pbRegion,
+		Login:                  respLogin,
+		InstallStatus:          installStatusResult,
+		MaxCPU:                 types.Int32(node.MaxCPU),
+		IsOn:                   node.IsOn == 1,
+		Group:                  pbGroup,
+		Region:                 pbRegion,
+		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
+		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
 	}}, nil
 }
 
-// 组合节点配置
+// FindCurrentNodeConfig 组合节点配置
 func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.FindCurrentNodeConfigRequest) (*pb.FindCurrentNodeConfigResponse, error) {
 	_ = req
 
@@ -520,7 +565,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 	return &pb.FindCurrentNodeConfigResponse{IsChanged: true, NodeJSON: data}, nil
 }
 
-// 更新节点状态
+// UpdateNodeStatus 更新节点状态
 func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
@@ -545,7 +590,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 	return this.Success()
 }
 
-// 修改节点安装状态
+// UpdateNodeIsInstalled 修改节点安装状态
 func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.RPCSuccess, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -562,7 +607,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 	return this.Success()
 }
 
-// 安装节点
+// InstallNode 安装节点
 func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeRequest) (*pb.InstallNodeResponse, error) {
 	// 校验节点
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -580,7 +625,7 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	return &pb.InstallNodeResponse{}, nil
 }
 
-// 升级节点
+// UpgradeNode 升级节点
 func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeRequest) (*pb.UpgradeNodeResponse, error) {
 	// 校验节点
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -620,7 +665,7 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 	return &pb.UpgradeNodeResponse{}, nil
 }
 
-// 启动节点
+// StartNode 启动节点
 func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest) (*pb.StartNodeResponse, error) {
 	// 校验节点
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -639,7 +684,7 @@ func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest
 	return &pb.StartNodeResponse{IsOk: true}, nil
 }
 
-// 停止节点
+// StopNode 停止节点
 func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) (*pb.StopNodeResponse, error) {
 	// 校验节点
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -658,7 +703,7 @@ func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) 
 	return &pb.StopNodeResponse{IsOk: true}, nil
 }
 
-// 更改节点连接的API节点信息
+// UpdateNodeConnectedAPINodes 更改节点连接的API节点信息
 func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNodeConnectedAPINodesRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
@@ -676,7 +721,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 	return this.Success()
 }
 
-// 计算使用某个认证的节点数量
+// CountAllEnabledNodesWithGrantId 计算使用某个认证的节点数量
 func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodesWithGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -693,7 +738,7 @@ func (this *NodeService) CountAllEnabledNodesWithGrantId(ctx context.Context, re
 	return this.SuccessCount(count)
 }
 
-// 查找使用某个认证的所有节点
+// FindAllEnabledNodesWithGrantId 查找使用某个认证的所有节点
 func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req *pb.FindAllEnabledNodesWithGrantIdRequest) (*pb.FindAllEnabledNodesWithGrantIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -733,7 +778,7 @@ func (this *NodeService) FindAllEnabledNodesWithGrantId(ctx context.Context, req
 	return &pb.FindAllEnabledNodesWithGrantIdResponse{Nodes: result}, nil
 }
 
-// 计算没有安装的节点数量
+// CountAllNotInstalledNodesWithClusterId 计算没有安装的节点数量
 func (this *NodeService) CountAllNotInstalledNodesWithClusterId(ctx context.Context, req *pb.CountAllNotInstalledNodesWithClusterIdRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -747,7 +792,7 @@ func (this *NodeService) CountAllNotInstalledNodesWithClusterId(ctx context.Cont
 	return this.SuccessCount(count)
 }
 
-// 列出所有未安装的节点
+// FindAllNotInstalledNodesWithClusterId 列出所有未安装的节点
 func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Context, req *pb.FindAllNotInstalledNodesWithClusterIdRequest) (*pb.FindAllNotInstalledNodesWithClusterIdResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -829,7 +874,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithClusterId(ctx context.Conte
 	return &pb.FindAllNotInstalledNodesWithClusterIdResponse{Nodes: result}, nil
 }
 
-// 计算需要升级的节点数量
+// CountAllUpgradeNodesWithClusterId 计算需要升级的节点数量
 func (this *NodeService) CountAllUpgradeNodesWithClusterId(ctx context.Context, req *pb.CountAllUpgradeNodesWithClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -852,7 +897,7 @@ func (this *NodeService) CountAllUpgradeNodesWithClusterId(ctx context.Context, 
 	return this.SuccessCount(total)
 }
 
-// 列出所有需要升级的节点
+// FindAllUpgradeNodesWithClusterId 列出所有需要升级的节点
 func (this *NodeService) FindAllUpgradeNodesWithClusterId(ctx context.Context, req *pb.FindAllUpgradeNodesWithClusterIdRequest) (*pb.FindAllUpgradeNodesWithClusterIdResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -958,7 +1003,7 @@ func (this *NodeService) FindAllUpgradeNodesWithClusterId(ctx context.Context, r
 	}, nil
 }
 
-// 读取节点安装状态
+// FindNodeInstallStatus 读取节点安装状态
 func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.FindNodeInstallStatusRequest) (*pb.FindNodeInstallStatusResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -987,7 +1032,7 @@ func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.Find
 	return &pb.FindNodeInstallStatusResponse{InstallStatus: pbInstallStatus}, nil
 }
 
-// 修改节点登录信息
+// UpdateNodeLogin 修改节点登录信息
 func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNodeLoginRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -1026,7 +1071,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGroupId(ctx context.Context
 	return this.SuccessCount(count)
 }
 
-// 取得某个集群下的所有节点
+// FindAllEnabledNodesDNSWithClusterId 取得某个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodesDNSWithClusterIdRequest) (*pb.FindAllEnabledNodesDNSWithClusterIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -1098,7 +1143,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithClusterId(ctx context.Context
 	return &pb.FindAllEnabledNodesDNSWithClusterIdResponse{Nodes: result}, nil
 }
 
-// 查找单个节点的域名解析信息
+// FindEnabledNodeDNS 查找单个节点的域名解析信息
 func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEnabledNodeDNSRequest) (*pb.FindEnabledNodeDNSResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -1170,7 +1215,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 	}, nil
 }
 
-// 修改节点的DNS解析信息
+// UpdateNodeDNS 修改节点的DNS解析信息
 func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDNSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -1224,7 +1269,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 	return this.Success()
 }
 
-// 计算某个区域下的节点数量
+// CountAllEnabledNodesWithNodeRegionId 计算某个区域下的节点数量
 func (this *NodeService) CountAllEnabledNodesWithNodeRegionId(ctx context.Context, req *pb.CountAllEnabledNodesWithNodeRegionIdRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -1240,7 +1285,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeRegionId(ctx context.Contex
 	return this.SuccessCount(count)
 }
 
-// 根据一组ID获取节点信息
+// FindEnabledNodesWithIds 根据一组ID获取节点信息
 func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.FindEnabledNodesWithIdsRequest) (*pb.FindEnabledNodesWithIdsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -1269,7 +1314,7 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 	return &pb.FindEnabledNodesWithIdsResponse{Nodes: pbNodes}, nil
 }
 
-// 检查新版本
+// CheckNodeLatestVersion 检查新版本
 func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.CheckNodeLatestVersionRequest) (*pb.CheckNodeLatestVersionResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -1288,7 +1333,7 @@ func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.Che
 	return &pb.CheckNodeLatestVersionResponse{HasNewVersion: false}, nil
 }
 
-// 设置节点上线状态
+// UpdateNodeUp 设置节点上线状态
 func (this *NodeService) UpdateNodeUp(ctx context.Context, req *pb.UpdateNodeUpRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
