@@ -8,7 +8,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
@@ -94,7 +93,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		}
 	}
 
-	logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
+	//logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
 
 	tx := this.NullTx()
 
