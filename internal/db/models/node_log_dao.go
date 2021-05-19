@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strconv"
 	"strings"
@@ -34,6 +35,27 @@ func init() {
 
 // CreateLog 创建日志
 func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole NodeRole, nodeId int64, level string, tag string, description string, createdAt int64) error {
+	hash := stringutil.Md5(nodeRole + "@" + strconv.FormatInt(nodeId, 10) + "@" + level + "@" + tag + "@" + description)
+
+	// 检查是否在重复最后一条，避免重复创建
+	lastLog, err := this.Query(tx).
+		Result("id", "hash", "createdAt").
+		DescPk().
+		Find()
+	if err != nil {
+		return err
+	}
+	if lastLog != nil {
+		nodeLog := lastLog.(*NodeLog)
+		if nodeLog.Hash == hash && time.Now().Unix()-int64(nodeLog.CreatedAt) < 1800 {
+			err = this.Query(tx).
+				Pk(nodeLog.Id).
+				Set("count", dbs.SQL("count+1")).
+				UpdateQuickly()
+			return err
+		}
+	}
+
 	op := NewNodeLogOperator()
 	op.Role = nodeRole
 	op.NodeId = nodeId
@@ -42,7 +64,8 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole NodeRole, nodeId int64, l
 	op.Description = description
 	op.CreatedAt = createdAt
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
-	err := this.Save(tx, op)
+	op.Hash = hash
+	err = this.Save(tx, op)
 	return err
 }
 
