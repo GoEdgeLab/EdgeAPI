@@ -5,14 +5,15 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/types"
 )
 
-// 节点日志相关服务
+// NodeLogService 节点日志相关服务
 type NodeLogService struct {
 	BaseService
 }
 
-// 创建日志
+// CreateNodeLogs 创建日志
 func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNodeLogsRequest) (*pb.CreateNodeLogsResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
@@ -30,7 +31,7 @@ func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNo
 	return &pb.CreateNodeLogsResponse{}, nil
 }
 
-// 查询日志数量
+// CountNodeLogs 查询日志数量
 func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNodeLogsRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
@@ -39,14 +40,14 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId)
+	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
 	if err != nil {
 		return nil, err
 	}
 	return this.SuccessCount(count)
 }
 
-// 列出单页日志
+// ListNodeLogs 列出单页日志
 func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLogsRequest) (*pb.ListNodeLogsResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
@@ -55,7 +56,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 
 	tx := this.NullTx()
 
-	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.Offset, req.Size)
+	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.DayFrom, req.DayTo, req.Keyword, req.Level, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +70,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 			Level:       log.Level,
 			NodeId:      int64(log.NodeId),
 			CreatedAt:   int64(log.CreatedAt),
+			Count:       types.Int32(log.Count),
 		})
 	}
 	return &pb.ListNodeLogsResponse{NodeLogs: result}, nil
