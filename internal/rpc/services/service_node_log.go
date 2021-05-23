@@ -23,7 +23,7 @@ func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNo
 	tx := this.NullTx()
 
 	for _, nodeLog := range req.NodeLogs {
-		err := models.SharedNodeLogDAO.CreateLog(tx, nodeLog.Role, nodeLog.NodeId, nodeLog.Level, nodeLog.Tag, nodeLog.Description, nodeLog.CreatedAt)
+		err := models.SharedNodeLogDAO.CreateLog(tx, nodeLog.Role, nodeLog.NodeId, nodeLog.ServerId, nodeLog.Level, nodeLog.Tag, nodeLog.Description, nodeLog.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +40,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
+	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 
 	tx := this.NullTx()
 
-	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.DayFrom, req.DayTo, req.Keyword, req.Level, req.Offset, req.Size)
+	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +64,33 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 	result := []*pb.NodeLog{}
 	for _, log := range logs {
 		result = append(result, &pb.NodeLog{
+			Id:          int64(log.Id),
 			Role:        log.Role,
 			Tag:         log.Tag,
 			Description: log.Description,
 			Level:       log.Level,
 			NodeId:      int64(log.NodeId),
+			ServerId:    int64(log.ServerId),
 			CreatedAt:   int64(log.CreatedAt),
 			Count:       types.Int32(log.Count),
+			IsFixed:     log.IsFixed == 1,
 		})
 	}
 	return &pb.ListNodeLogsResponse{NodeLogs: result}, nil
+}
+
+// FixNodeLog 设置日志为已修复
+func (this *NodeLogService) FixNodeLog(ctx context.Context, req *pb.FixNodeLogRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeLogDAO.UpdateNodeLogFixed(tx, req.NodeLogId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }
