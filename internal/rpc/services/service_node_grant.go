@@ -73,7 +73,7 @@ func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeGrantDAO.CountAllEnabledGrants(tx)
+	count, err := models.SharedNodeGrantDAO.CountAllEnabledGrants(tx, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (this *NodeGrantService) ListEnabledNodeGrants(ctx context.Context, req *pb
 
 	tx := this.NullTx()
 
-	grants, err := models.SharedNodeGrantDAO.ListEnabledGrants(tx, req.Offset, req.Size)
+	grants, err := models.SharedNodeGrantDAO.ListEnabledGrants(tx, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +99,7 @@ func (this *NodeGrantService) ListEnabledNodeGrants(ctx context.Context, req *pb
 			Id:          int64(grant.Id),
 			Name:        grant.Name,
 			Method:      grant.Method,
+			Username:    grant.Username,
 			Password:    grant.Password,
 			Su:          grant.Su == 1,
 			PrivateKey:  grant.PrivateKey,
@@ -126,6 +127,7 @@ func (this *NodeGrantService) FindAllEnabledNodeGrants(ctx context.Context, req 
 			Id:          int64(grant.Id),
 			Name:        grant.Name,
 			Method:      grant.Method,
+			Username:    grant.Username,
 			Password:    grant.Password,
 			Su:          grant.Su == 1,
 			PrivateKey:  grant.PrivateKey,
