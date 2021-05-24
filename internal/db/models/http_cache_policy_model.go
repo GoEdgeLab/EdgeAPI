@@ -1,6 +1,6 @@
 package models
 
-// HTTP缓存策略
+// HTTPCachePolicy HTTP缓存策略
 type HTTPCachePolicy struct {
 	Id          uint32 `field:"id"`          // ID
 	AdminId     uint32 `field:"adminId"`     // 管理员ID
@@ -16,6 +16,7 @@ type HTTPCachePolicy struct {
 	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
 	State       uint8  `field:"state"`       // 状态
 	Description string `field:"description"` // 描述
+	Refs        string `field:"refs"`        // 默认的缓存设置
 }
 
 type HTTPCachePolicyOperator struct {
@@ -33,6 +34,7 @@ type HTTPCachePolicyOperator struct {
 	CreatedAt   interface{} // 创建时间
 	State       interface{} // 状态
 	Description interface{} // 描述
+	Refs        interface{} // 默认的缓存设置
 }
 
 func NewHTTPCachePolicyOperator() *HTTPCachePolicyOperator {

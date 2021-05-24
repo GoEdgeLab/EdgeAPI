@@ -12,7 +12,7 @@ type HTTPCachePolicyService struct {
 	BaseService
 }
 
-// 获取所有可用策略
+// FindAllEnabledHTTPCachePolicies 获取所有可用策略
 func (this *HTTPCachePolicyService) FindAllEnabledHTTPCachePolicies(ctx context.Context, req *pb.FindAllEnabledHTTPCachePoliciesRequest) (*pb.FindAllEnabledHTTPCachePoliciesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -37,7 +37,7 @@ func (this *HTTPCachePolicyService) FindAllEnabledHTTPCachePolicies(ctx context.
 	return &pb.FindAllEnabledHTTPCachePoliciesResponse{CachePolicies: result}, nil
 }
 
-// 创建缓存策略
+// CreateHTTPCachePolicy 创建缓存策略
 func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, req *pb.CreateHTTPCachePolicyRequest) (*pb.CreateHTTPCachePolicyResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -54,7 +54,7 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 	return &pb.CreateHTTPCachePolicyResponse{HttpCachePolicyId: policyId}, nil
 }
 
-// 修改缓存策略
+// UpdateHTTPCachePolicy 修改缓存策略
 func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, req *pb.UpdateHTTPCachePolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -72,7 +72,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 	return this.Success()
 }
 
-// 删除缓存策略
+// DeleteHTTPCachePolicy 删除缓存策略
 func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, req *pb.DeleteHTTPCachePolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -90,7 +90,7 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 	return this.Success()
 }
 
-// 计算缓存策略数量
+// CountAllEnabledHTTPCachePolicies 计算缓存策略数量
 func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context.Context, req *pb.CountAllEnabledHTTPCachePoliciesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -107,7 +107,7 @@ func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context
 	return this.SuccessCount(count)
 }
 
-// 列出单页的缓存策略
+// ListEnabledHTTPCachePolicies 列出单页的缓存策略
 func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Context, req *pb.ListEnabledHTTPCachePoliciesRequest) (*pb.ListEnabledHTTPCachePoliciesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -128,7 +128,7 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 	return &pb.ListEnabledHTTPCachePoliciesResponse{HttpCachePoliciesJSON: cachePoliciesJSON}, nil
 }
 
-// 查找单个缓存策略配置
+// FindEnabledHTTPCachePolicyConfig 查找单个缓存策略配置
 func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPCachePolicyConfigRequest) (*pb.FindEnabledHTTPCachePolicyConfigResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -146,7 +146,7 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context
 	return &pb.FindEnabledHTTPCachePolicyConfigResponse{HttpCachePolicyJSON: cachePolicyJSON}, nil
 }
 
-// 查找单个缓存策略信息
+// FindEnabledHTTPCachePolicy 查找单个缓存策略信息
 func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Context, req *pb.FindEnabledHTTPCachePolicyRequest) (*pb.FindEnabledHTTPCachePolicyResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -167,4 +167,19 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Conte
 		Name: policy.Name,
 		IsOn: policy.IsOn == 1,
 	}}, nil
+}
+
+// UpdateHTTPCachePolicyRefs 设置缓存策略的默认条件
+func (this *HTTPCachePolicyService) UpdateHTTPCachePolicyRefs(ctx context.Context, req *pb.UpdateHTTPCachePolicyRefsRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	err = models.SharedHTTPCachePolicyDAO.UpdatePolicyRefs(tx, req.HttpCachePolicyId, req.RefsJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

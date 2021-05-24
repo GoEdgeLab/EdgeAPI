@@ -37,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPCachePolicyDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPCachePolicy 启用条目
 func (this *HTTPCachePolicyDAO) EnableHTTPCachePolicy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *HTTPCachePolicyDAO) EnableHTTPCachePolicy(tx *dbs.Tx, id int64) erro
 	return err
 }
 
-// 禁用条目
+// DisableHTTPCachePolicy 禁用条目
 func (this *HTTPCachePolicyDAO) DisableHTTPCachePolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
 		Pk(policyId).
@@ -63,7 +63,7 @@ func (this *HTTPCachePolicyDAO) DisableHTTPCachePolicy(tx *dbs.Tx, policyId int6
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPCachePolicy 查找启用中的条目
 func (this *HTTPCachePolicyDAO) FindEnabledHTTPCachePolicy(tx *dbs.Tx, id int64) (*HTTPCachePolicy, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -75,7 +75,7 @@ func (this *HTTPCachePolicyDAO) FindEnabledHTTPCachePolicy(tx *dbs.Tx, id int64)
 	return result.(*HTTPCachePolicy), err
 }
 
-// 根据主键查找名称
+// FindHTTPCachePolicyName 根据主键查找名称
 func (this *HTTPCachePolicyDAO) FindHTTPCachePolicyName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -83,7 +83,7 @@ func (this *HTTPCachePolicyDAO) FindHTTPCachePolicyName(tx *dbs.Tx, id int64) (s
 		FindStringCol("")
 }
 
-// 查找所有可用的缓存策略
+// FindAllEnabledCachePolicies 查找所有可用的缓存策略
 func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies(tx *dbs.Tx) (result []*HTTPCachePolicy, err error) {
 	_, err = this.Query(tx).
 		State(HTTPCachePolicyStateEnabled).
@@ -93,7 +93,7 @@ func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies(tx *dbs.Tx) (result 
 	return
 }
 
-// 创建缓存策略
+// CreateCachePolicy 创建缓存策略
 func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte) (int64, error) {
 	op := NewHTTPCachePolicyOperator()
 	op.State = HTTPCachePolicyStateEnabled
@@ -118,7 +118,7 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 	return types.Int64(op.Id), nil
 }
 
-// 修改缓存策略
+// UpdateCachePolicy 修改缓存策略
 func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -147,7 +147,7 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 组合配置
+// ComposeCachePolicy 组合配置
 func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64) (*serverconfigs.HTTPCachePolicy, error) {
 	policy, err := this.FindEnabledHTTPCachePolicy(tx, policyId)
 	if err != nil {
@@ -196,17 +196,27 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64) (
 		config.Options = m
 	}
 
+	// refs
+	if IsNotNull(policy.Refs) {
+		refs := []*serverconfigs.HTTPCacheRef{}
+		err = json.Unmarshal([]byte(policy.Refs), &refs)
+		if err != nil {
+			return nil, err
+		}
+		config.CacheRefs = refs
+	}
+
 	return config, nil
 }
 
-// 计算可用缓存策略数量
+// CountAllEnabledHTTPCachePolicies 计算可用缓存策略数量
 func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(HTTPCachePolicyStateEnabled).
 		Count()
 }
 
-// 列出单页的缓存策略
+// ListEnabledHTTPCachePolicies 列出单页的缓存策略
 func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
 	ones, err := this.Query(tx).
 		State(HTTPCachePolicyStateEnabled).
@@ -237,7 +247,22 @@ func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, offset 
 	return cachePolicies, nil
 }
 
-// 通知更新
+// UpdatePolicyRefs 设置默认的缓存条件
+func (this *HTTPCachePolicyDAO) UpdatePolicyRefs(tx *dbs.Tx, policyId int64, refsJSON []byte) error {
+	if len(refsJSON) == 0 {
+		return nil
+	}
+	err := this.Query(tx).
+		Pk(policyId).
+		Set("refs", refsJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
+}
+
+// NotifyUpdate 通知更新
 func (this *HTTPCachePolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
 	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithCachePolicyId(tx, policyId)
 	if err != nil {
