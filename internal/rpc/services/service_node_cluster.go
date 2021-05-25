@@ -39,7 +39,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 
 	var clusterId int64
 	err = this.RunTx(func(tx *dbs.Tx) error {
-		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.GrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
+		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.GrantId, req.InstallDir)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		Name:                 cluster.Name,
 		CreatedAt:            int64(cluster.CreatedAt),
 		InstallDir:           cluster.InstallDir,
-		GrantId:              int64(cluster.GrantId),
+		NodeGrantId:          int64(cluster.GrantId),
 		UniqueId:             cluster.UniqueId,
 		Secret:               cluster.Secret,
 		HttpCachePolicyId:    int64(cluster.CachePolicyId),
@@ -252,7 +252,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			Id:          int64(cluster.Id),
 			Name:        cluster.Name,
 			CreatedAt:   int64(cluster.CreatedAt),
-			GrantId:     int64(cluster.GrantId),
+			NodeGrantId: int64(cluster.GrantId),
 			InstallDir:  cluster.InstallDir,
 			UniqueId:    cluster.UniqueId,
 			Secret:      cluster.Secret,
@@ -341,7 +341,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithNodeGrantId(ctx c
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithGrantId(tx, req.GrantId)
+	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx co
 
 	tx := this.NullTx()
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithGrantId(tx, req.GrantId)
+	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
 		return nil, err
 	}

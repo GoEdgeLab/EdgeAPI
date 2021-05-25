@@ -258,8 +258,8 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			MaxCPU:        types.Int32(node.MaxCPU),
 			IsOn:          node.IsOn == 1,
 			IsUp:          node.IsUp == 1,
-			Group:         pbGroup,
-			Region:        pbRegion,
+			NodeGroup:     pbGroup,
+			NodeRegion:    pbRegion,
 			DnsRoutes:     pbRoutes,
 		})
 	}
@@ -524,8 +524,8 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
 		IsOn:                   node.IsOn == 1,
-		Group:                  pbGroup,
-		Region:                 pbRegion,
+		NodeGroup:              pbGroup,
+		NodeRegion:             pbRegion,
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
 		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
 	}}, nil
@@ -731,7 +731,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGrantId(ctx context.Context
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGrantId(tx, req.GrantId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
 		return nil, err
 	}
@@ -748,7 +748,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context,
 
 	tx := this.NullTx()
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithGrantId(tx, req.GrantId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
 		return nil, err
 	}

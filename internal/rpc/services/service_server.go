@@ -580,8 +580,8 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
-			Groups: pbGroups,
-			User:   pbUser,
+			ServerGroups: pbGroups,
+			User:         pbUser,
 		})
 	}
 
@@ -711,8 +711,8 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 			Id:   int64(server.ClusterId),
 			Name: clusterName,
 		},
-		Groups: pbGroups,
-		User:   pbUser,
+		ServerGroups: pbGroups,
+		User:         pbUser,
 	}}, nil
 }
 

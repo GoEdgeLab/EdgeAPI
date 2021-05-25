@@ -26,7 +26,7 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CreateNodeGroupResponse{GroupId: groupId}, nil
+	return &pb.CreateNodeGroupResponse{NodeGroupId: groupId}, nil
 }
 
 // UpdateNodeGroup 修改分组
@@ -39,7 +39,7 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeGroupDAO.UpdateNodeGroup(tx, req.GroupId, req.Name)
+	err = models.SharedNodeGroupDAO.UpdateNodeGroup(tx, req.NodeGroupId, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 
 	tx := this.NullTx()
 
-	_, err = models.SharedNodeGroupDAO.DisableNodeGroup(tx, req.GroupId)
+	_, err = models.SharedNodeGroupDAO.DisableNodeGroup(tx, req.NodeGroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithNodeClusterId(ctx cont
 			Name: group.Name,
 		})
 	}
-	return &pb.FindAllEnabledNodeGroupsWithNodeClusterIdResponse{Groups: result}, nil
+	return &pb.FindAllEnabledNodeGroupsWithNodeClusterIdResponse{NodeGroups: result}, nil
 }
 
 // UpdateNodeGroupOrders 修改分组排序
@@ -99,7 +99,7 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeGroupDAO.UpdateGroupOrders(tx, req.GroupIds)
+	err = models.SharedNodeGroupDAO.UpdateGroupOrders(tx, req.NodeGroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -116,18 +116,18 @@ func (this *NodeGroupService) FindEnabledNodeGroup(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(tx, req.GroupId)
+	group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(tx, req.NodeGroupId)
 	if err != nil {
 		return nil, err
 	}
 	if group == nil {
 		return &pb.FindEnabledNodeGroupResponse{
-			Group: nil,
+			NodeGroup: nil,
 		}, nil
 	}
 
 	return &pb.FindEnabledNodeGroupResponse{
-		Group: &pb.NodeGroup{
+		NodeGroup: &pb.NodeGroup{
 			Id:   int64(group.Id),
 			Name: group.Name,
 		},
