@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 节点分组相关服务
+// NodeGroupService 节点分组相关服务
 type NodeGroupService struct {
 	BaseService
 }
 
-// 创建分组
+// CreateNodeGroup 创建分组
 func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.CreateNodeGroupRequest) (*pb.CreateNodeGroupResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -29,7 +29,7 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 	return &pb.CreateNodeGroupResponse{GroupId: groupId}, nil
 }
 
-// 修改分组
+// UpdateNodeGroup 修改分组
 func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.UpdateNodeGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -47,7 +47,7 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// 删除分组
+// DeleteNodeGroup 删除分组
 func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.DeleteNodeGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -65,8 +65,8 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 	return this.Success()
 }
 
-// 查询所有分组
-func (this *NodeGroupService) FindAllEnabledNodeGroupsWithClusterId(ctx context.Context, req *pb.FindAllEnabledNodeGroupsWithClusterIdRequest) (*pb.FindAllEnabledNodeGroupsWithClusterIdResponse, error) {
+// FindAllEnabledNodeGroupsWithNodeClusterId 查询所有分组
+func (this *NodeGroupService) FindAllEnabledNodeGroupsWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledNodeGroupsWithNodeClusterIdRequest) (*pb.FindAllEnabledNodeGroupsWithNodeClusterIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -86,10 +86,10 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithClusterId(ctx context.
 			Name: group.Name,
 		})
 	}
-	return &pb.FindAllEnabledNodeGroupsWithClusterIdResponse{Groups: result}, nil
+	return &pb.FindAllEnabledNodeGroupsWithNodeClusterIdResponse{Groups: result}, nil
 }
 
-// 修改分组排序
+// UpdateNodeGroupOrders 修改分组排序
 func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb.UpdateNodeGroupOrdersRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -106,7 +106,7 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 	return this.Success()
 }
 
-// 查找单个分组信息
+// FindEnabledNodeGroup 查找单个分组信息
 func (this *NodeGroupService) FindEnabledNodeGroup(ctx context.Context, req *pb.FindEnabledNodeGroupRequest) (*pb.FindEnabledNodeGroupResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)

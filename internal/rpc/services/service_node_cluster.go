@@ -331,8 +331,8 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 	return &pb.ExecuteNodeClusterHealthCheckResponse{Results: pbResults}, nil
 }
 
-// CountAllEnabledNodeClustersWithGrantId 计算使用某个认证的集群数量
-func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithGrantIdRequest) (*pb.RPCCountResponse, error) {
+// CountAllEnabledNodeClustersWithNodeGrantId 计算使用某个认证的集群数量
+func (this *NodeClusterService) CountAllEnabledNodeClustersWithNodeGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithNodeGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -348,8 +348,8 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithGrantId(ctx conte
 	return this.SuccessCount(count)
 }
 
-// FindAllEnabledNodeClustersWithGrantId 查找使用某个认证的所有集群
-func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithGrantIdRequest) (*pb.FindAllEnabledNodeClustersWithGrantIdResponse, error) {
+// FindAllEnabledNodeClustersWithNodeGrantId 查找使用某个认证的所有集群
+func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithNodeGrantIdRequest) (*pb.FindAllEnabledNodeClustersWithNodeGrantIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -373,7 +373,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithGrantId(ctx contex
 			Secret:    cluster.Secret,
 		})
 	}
-	return &pb.FindAllEnabledNodeClustersWithGrantIdResponse{NodeClusters: result}, nil
+	return &pb.FindAllEnabledNodeClustersWithNodeGrantIdResponse{NodeClusters: result}, nil
 }
 
 // FindEnabledNodeClusterDNS 查找集群的DNS配置

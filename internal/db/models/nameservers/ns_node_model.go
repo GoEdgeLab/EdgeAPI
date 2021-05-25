@@ -4,6 +4,7 @@ package nameservers
 type NSNode struct {
 	Id        uint32 `field:"id"`        // ID
 	ClusterId uint32 `field:"clusterId"` // 集群ID
+	Name      string `field:"name"`      // 节点名称
 	IsOn      uint8  `field:"isOn"`      // 是否启用
 	Status    string `field:"status"`    // 运行状态
 	UniqueId  string `field:"uniqueId"`  // 节点ID
@@ -14,6 +15,7 @@ type NSNode struct {
 type NSNodeOperator struct {
 	Id        interface{} // ID
 	ClusterId interface{} // 集群ID
+	Name      interface{} // 节点名称
 	IsOn      interface{} // 是否启用
 	Status    interface{} // 运行状态
 	UniqueId  interface{} // 节点ID

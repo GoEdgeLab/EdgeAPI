@@ -82,7 +82,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.GroupIds)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServerBasic(tx, req.ServerId, req.Name, req.Description, req.NodeClusterId, req.IsOn, req.GroupIds)
+	err = models.SharedServerDAO.UpdateServerBasic(tx, req.ServerId, req.Name, req.Description, req.NodeClusterId, req.IsOn, req.ServerGroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +479,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.GroupId, req.Keyword, req.UserId, req.ClusterId, types.Int8(req.AuditingFlag), req.ProtocolFamily)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), req.ProtocolFamily)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +497,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.GroupId, req.Keyword, req.UserId, req.ClusterId, req.AuditingFlag, req.ProtocolFamily)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, req.ProtocolFamily)
 	if err != nil {
 		return nil, err
 	}
@@ -954,8 +954,8 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 	return this.SuccessCount(count)
 }
 
-// CountAllEnabledServersWithGroupId 计算使用某个分组的服务数量
-func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithGroupIdRequest) (*pb.RPCCountResponse, error) {
+// CountAllEnabledServersWithServerGroupId 计算使用某个分组的服务数量
+func (this *ServerService) CountAllEnabledServersWithServerGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithServerGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -964,7 +964,7 @@ func (this *ServerService) CountAllEnabledServersWithGroupId(ctx context.Context
 
 	tx := this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.GroupId)
+	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.ServerGroupId)
 	if err != nil {
 		return nil, err
 	}
@@ -995,8 +995,8 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, _ *pb.Notify
 	return &pb.NotifyServersChangeResponse{}, nil
 }
 
-// FindAllEnabledServersDNSWithClusterId 取得某个集群下的所有服务相关的DNS
-func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Context, req *pb.FindAllEnabledServersDNSWithClusterIdRequest) (*pb.FindAllEnabledServersDNSWithClusterIdResponse, error) {
+// FindAllEnabledServersDNSWithNodeClusterId 取得某个集群下的所有服务相关的DNS
+func (this *ServerService) FindAllEnabledServersDNSWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledServersDNSWithNodeClusterIdRequest) (*pb.FindAllEnabledServersDNSWithNodeClusterIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
@@ -1028,7 +1028,7 @@ func (this *ServerService) FindAllEnabledServersDNSWithClusterId(ctx context.Con
 		})
 	}
 
-	return &pb.FindAllEnabledServersDNSWithClusterIdResponse{Servers: result}, nil
+	return &pb.FindAllEnabledServersDNSWithNodeClusterIdResponse{Servers: result}, nil
 }
 
 // FindEnabledServerDNS 查找单个服务的DNS信息
