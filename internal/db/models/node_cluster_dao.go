@@ -126,7 +126,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 	}
 
 	secret := rands.String(32)
-	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, NodeRoleCluster)
+	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleCluster)
 	if err != nil {
 		return 0, err
 	}
@@ -549,7 +549,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 		}
 
 		// 检查IP地址
-		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId)
+		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}

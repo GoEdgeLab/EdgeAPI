@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	"time"
@@ -99,7 +100,7 @@ Loop:
 	for {
 		select {
 		case log := <-logChan:
-			err := models.SharedNodeLogDAO.CreateLog(nil, models.NodeRoleAPI, log.NodeId, 0, log.Level, log.Tag, log.Description, log.CreatedAt)
+			err := models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, 0, log.Level, log.Tag, log.Description, log.CreatedAt)
 			if err != nil {
 				return err
 			}

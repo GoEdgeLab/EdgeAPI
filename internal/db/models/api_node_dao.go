@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -97,7 +98,7 @@ func (this *APINodeDAO) CreateAPINode(tx *dbs.Tx, name string, description strin
 		return 0, err
 	}
 	secret := rands.String(32)
-	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, NodeRoleAPI)
+	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleAPI)
 	if err != nil {
 		return
 	}

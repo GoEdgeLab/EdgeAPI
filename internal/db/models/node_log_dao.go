@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -35,7 +36,7 @@ func init() {
 }
 
 // CreateLog 创建日志
-func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole NodeRole, nodeId int64, serverId int64, level string, tag string, description string, createdAt int64) error {
+func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nodeId int64, serverId int64, level string, tag string, description string, createdAt int64) error {
 	hash := stringutil.Md5(nodeRole + "@" + strconv.FormatInt(nodeId, 10) + "@" + strconv.FormatInt(serverId, 10) + "@" + level + "@" + tag + "@" + description)
 
 	// 检查是否在重复最后一条，避免重复创建
@@ -93,7 +94,7 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx, role string, nodeId int64, ser
 		query.Attr("nodeId", nodeId)
 	} else {
 		switch role {
-		case NodeRoleNode:
+		case nodeconfigs.NodeRoleNode:
 			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1)")
 		}
 	}
@@ -138,7 +139,7 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 		query.Attr("nodeId", nodeId)
 	} else {
 		switch role {
-		case NodeRoleNode:
+		case nodeconfigs.NodeRoleNode:
 			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1)")
 		}
 	}

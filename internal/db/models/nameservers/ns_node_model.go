@@ -2,25 +2,35 @@ package nameservers
 
 // NSNode 域名服务器节点
 type NSNode struct {
-	Id        uint32 `field:"id"`        // ID
-	ClusterId uint32 `field:"clusterId"` // 集群ID
-	Name      string `field:"name"`      // 节点名称
-	IsOn      uint8  `field:"isOn"`      // 是否启用
-	Status    string `field:"status"`    // 运行状态
-	UniqueId  string `field:"uniqueId"`  // 节点ID
-	Secret    string `field:"secret"`    // 密钥
-	State     uint8  `field:"state"`     // 状态
+	Id            uint32 `field:"id"`            // ID
+	AdminId       uint32 `field:"adminId"`       // 管理员ID
+	ClusterId     uint32 `field:"clusterId"`     // 集群ID
+	Name          string `field:"name"`          // 节点名称
+	IsOn          uint8  `field:"isOn"`          // 是否启用
+	Status        string `field:"status"`        // 运行状态
+	UniqueId      string `field:"uniqueId"`      // 节点ID
+	Secret        string `field:"secret"`        // 密钥
+	IsUp          uint8  `field:"isUp"`          // 是否运行
+	IsInstalled   uint8  `field:"isInstalled"`   // 是否已安装
+	InstallStatus string `field:"installStatus"` // 安装状态
+	InstallDir    string `field:"installDir"`    // 安装目录
+	State         uint8  `field:"state"`         // 状态
 }
 
 type NSNodeOperator struct {
-	Id        interface{} // ID
-	ClusterId interface{} // 集群ID
-	Name      interface{} // 节点名称
-	IsOn      interface{} // 是否启用
-	Status    interface{} // 运行状态
-	UniqueId  interface{} // 节点ID
-	Secret    interface{} // 密钥
-	State     interface{} // 状态
+	Id            interface{} // ID
+	AdminId       interface{} // 管理员ID
+	ClusterId     interface{} // 集群ID
+	Name          interface{} // 节点名称
+	IsOn          interface{} // 是否启用
+	Status        interface{} // 运行状态
+	UniqueId      interface{} // 节点ID
+	Secret        interface{} // 密钥
+	IsUp          interface{} // 是否运行
+	IsInstalled   interface{} // 是否已安装
+	InstallStatus interface{} // 安装状态
+	InstallDir    interface{} // 安装目录
+	State         interface{} // 状态
 }
 
 func NewNSNodeOperator() *NSNodeOperator {

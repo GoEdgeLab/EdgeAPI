@@ -33,7 +33,7 @@ func init() {
 }
 
 // CreateValue 创建值
-func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, role NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
+func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, role nodeconfigs.NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
 	day := timeutil.FormatTime("Ymd", createdAt)
 	hour := timeutil.FormatTime("YmdH", createdAt)
 	minute := timeutil.FormatTime("YmdHi", createdAt)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -34,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableApiToken 启用条目
 func (this *ApiTokenDAO) EnableApiToken(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -42,7 +43,7 @@ func (this *ApiTokenDAO) EnableApiToken(tx *dbs.Tx, id uint32) (rowsAffected int
 		Update()
 }
 
-// 禁用条目
+// DisableApiToken 禁用条目
 func (this *ApiTokenDAO) DisableApiToken(tx *dbs.Tx, id uint32) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -50,7 +51,7 @@ func (this *ApiTokenDAO) DisableApiToken(tx *dbs.Tx, id uint32) (rowsAffected in
 		Update()
 }
 
-// 查找启用中的条目
+// FindEnabledApiToken 查找启用中的条目
 func (this *ApiTokenDAO) FindEnabledApiToken(tx *dbs.Tx, id uint32) (*ApiToken, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -62,7 +63,7 @@ func (this *ApiTokenDAO) FindEnabledApiToken(tx *dbs.Tx, id uint32) (*ApiToken, 
 	return result.(*ApiToken), err
 }
 
-// 获取可缓存的节点Token信息
+// FindEnabledTokenWithNodeCacheable 获取可缓存的节点Token信息
 func (this *ApiTokenDAO) FindEnabledTokenWithNodeCacheable(tx *dbs.Tx, nodeId string) (*ApiToken, error) {
 	SharedCacheLocker.RLock()
 	token, ok := apiTokenCacheMap[nodeId]
@@ -85,7 +86,7 @@ func (this *ApiTokenDAO) FindEnabledTokenWithNodeCacheable(tx *dbs.Tx, nodeId st
 	return nil, err
 }
 
-// 获取节点Token信息并可以缓存
+// FindEnabledTokenWithNode 获取节点Token信息并可以缓存
 func (this *ApiTokenDAO) FindEnabledTokenWithNode(tx *dbs.Tx, nodeId string) (*ApiToken, error) {
 	one, err := this.Query(tx).
 		Attr("nodeId", nodeId).
@@ -97,7 +98,7 @@ func (this *ApiTokenDAO) FindEnabledTokenWithNode(tx *dbs.Tx, nodeId string) (*A
 	return nil, err
 }
 
-// 根据角色获取节点
+// FindEnabledTokenWithRole 根据角色获取节点
 func (this *ApiTokenDAO) FindEnabledTokenWithRole(tx *dbs.Tx, role string) (*ApiToken, error) {
 	one, err := this.Query(tx).
 		Attr("role", role).
@@ -109,8 +110,8 @@ func (this *ApiTokenDAO) FindEnabledTokenWithRole(tx *dbs.Tx, role string) (*Api
 	return nil, err
 }
 
-// 保存API Token
-func (this *ApiTokenDAO) CreateAPIToken(tx *dbs.Tx, nodeId string, secret string, role NodeRole) error {
+// CreateAPIToken 保存API Token
+func (this *ApiTokenDAO) CreateAPIToken(tx *dbs.Tx, nodeId string, secret string, role nodeconfigs.NodeRole) error {
 	op := NewApiTokenOperator()
 	op.NodeId = nodeId
 	op.Secret = secret

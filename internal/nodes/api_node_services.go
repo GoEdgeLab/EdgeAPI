@@ -90,4 +90,5 @@ func (this *APINode) registerServices(server *grpc.Server) {
 	pb.RegisterNodeThresholdServiceServer(server, &services.NodeThresholdService{})
 	pb.RegisterHTTPFastcgiServiceServer(server, &services.HTTPFastcgiService{})
 	pb.RegisterNSClusterServiceServer(server, &services.NSClusterService{})
+	pb.RegisterNSNodeServiceServer(server, &services.NSNodeService{})
 }

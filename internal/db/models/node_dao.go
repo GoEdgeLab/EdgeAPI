@@ -125,7 +125,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 	secret := rands.String(32)
 
 	// 保存API Token
-	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, NodeRoleNode)
+	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return
 	}

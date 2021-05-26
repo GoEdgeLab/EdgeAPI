@@ -63,6 +63,15 @@ func (this *NSClusterDAO) FindEnabledNSCluster(tx *dbs.Tx, id int64) (*NSCluster
 	return result.(*NSCluster), err
 }
 
+// FindEnabledNSClusterName 查找启用中的条目名称
+func (this *NSClusterDAO) FindEnabledNSClusterName(tx *dbs.Tx, id int64) (string, error) {
+	return this.Query(tx).
+		Pk(id).
+		State(NSClusterStateEnabled).
+		Result("name").
+		FindStringCol("")
+}
+
 // CreateCluster 创建集群
 func (this *NSClusterDAO) CreateCluster(tx *dbs.Tx, name string) (int64, error) {
 	op := NewNSClusterOperator()

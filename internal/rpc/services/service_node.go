@@ -11,6 +11,7 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/logs"
@@ -400,9 +401,9 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 	return this.Success()
 }
 
-// FindEnabledNode 列出单个节点
+// FindEnabledNode 查询单个节点信息
 func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnabledNodeRequest) (*pb.FindEnabledNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +824,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 		}
 
 		// IP信息
-		addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, int64(node.Id))
+		addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
@@ -932,7 +933,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 			}
 
 			// IP信息
-			addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, int64(node.Id))
+			addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 			if err != nil {
 				return nil, err
 			}
@@ -1101,7 +1102,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 	}
 	result := []*pb.NodeDNSInfo{}
 	for _, node := range nodes {
-		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id))
+		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
@@ -1162,7 +1163,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
 	}
 
-	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id))
+	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}
@@ -1249,7 +1250,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 
 	// 修改IP
 	if len(req.IpAddr) > 0 {
-		ipAddrId, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddressId(tx, req.NodeId)
+		ipAddrId, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddressId(tx, req.NodeId, nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
@@ -1259,7 +1260,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 				return nil, err
 			}
 		} else {
-			_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, req.NodeId, "DNS IP", req.IpAddr, true)
+			_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true)
 			if err != nil {
 				return nil, err
 			}

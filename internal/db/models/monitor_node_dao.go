@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -112,7 +113,7 @@ func (this *MonitorNodeDAO) CreateMonitorNode(tx *dbs.Tx, name string, descripti
 		return 0, err
 	}
 	secret := rands.String(32)
-	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, NodeRoleMonitor)
+	err = NewApiTokenDAO().CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleMonitor)
 	if err != nil {
 		return
 	}
