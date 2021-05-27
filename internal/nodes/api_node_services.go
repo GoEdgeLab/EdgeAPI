@@ -4,6 +4,7 @@ package nodes
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services/nameservers"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc"
 )
@@ -89,6 +90,8 @@ func (this *APINode) registerServices(server *grpc.Server) {
 	pb.RegisterLatestItemServiceServer(server, &services.LatestItemService{})
 	pb.RegisterNodeThresholdServiceServer(server, &services.NodeThresholdService{})
 	pb.RegisterHTTPFastcgiServiceServer(server, &services.HTTPFastcgiService{})
-	pb.RegisterNSClusterServiceServer(server, &services.NSClusterService{})
-	pb.RegisterNSNodeServiceServer(server, &services.NSNodeService{})
+	pb.RegisterNSClusterServiceServer(server, &nameservers.NSClusterService{})
+	pb.RegisterNSNodeServiceServer(server, &nameservers.NSNodeService{})
+	pb.RegisterNSDomainServiceServer(server, &nameservers.NSDomainService{})
+	pb.RegisterNSRecordServiceServer(server, &nameservers.NSRecordService{})
 }

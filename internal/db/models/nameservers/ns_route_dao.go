@@ -51,7 +51,7 @@ func (this *NSRouteDAO) DisableNSRoute(tx *dbs.Tx, id uint32) error {
 }
 
 // FindEnabledNSRoute 查找启用中的条目
-func (this *NSRouteDAO) FindEnabledNSRoute(tx *dbs.Tx, id uint32) (*NSRoute, error) {
+func (this *NSRouteDAO) FindEnabledNSRoute(tx *dbs.Tx, id int64) (*NSRoute, error) {
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", NSRouteStateEnabled).

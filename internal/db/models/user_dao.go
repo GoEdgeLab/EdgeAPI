@@ -36,7 +36,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableUser 启用条目
 func (this *UserDAO) EnableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -44,7 +44,7 @@ func (this *UserDAO) EnableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err e
 		Update()
 }
 
-// 禁用条目
+// DisableUser 禁用条目
 func (this *UserDAO) DisableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -52,7 +52,7 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err 
 		Update()
 }
 
-// 查找启用中的条目
+// FindEnabledUser 查找启用中的条目
 func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, id int64) (*User, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -64,7 +64,7 @@ func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, id int64) (*User, error) {
 	return result.(*User), err
 }
 
-// 查找用户基本信息
+// FindEnabledBasicUser 查找用户基本信息
 func (this *UserDAO) FindEnabledBasicUser(tx *dbs.Tx, id int64) (*User, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -77,7 +77,7 @@ func (this *UserDAO) FindEnabledBasicUser(tx *dbs.Tx, id int64) (*User, error) {
 	return result.(*User), err
 }
 
-// 获取管理员名称
+// FindUserFullname 获取管理员名称
 func (this *UserDAO) FindUserFullname(tx *dbs.Tx, userId int64) (string, error) {
 	return this.Query(tx).
 		Pk(userId).
@@ -85,7 +85,7 @@ func (this *UserDAO) FindUserFullname(tx *dbs.Tx, userId int64) (string, error) 
 		FindStringCol("")
 }
 
-// 创建用户
+// CreateUser 创建用户
 func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fullname string, mobile string, tel string, email string, remark string, source string, clusterId int64) (int64, error) {
 	op := NewUserOperator()
 	op.Username = username
@@ -107,7 +107,7 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fu
 	return types.Int64(op.Id), nil
 }
 
-// 修改用户
+// UpdateUser 修改用户
 func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, clusterId int64) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
@@ -129,7 +129,7 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	return err
 }
 
-// 修改用户基本信息
+// UpdateUserInfo 修改用户基本信息
 func (this *UserDAO) UpdateUserInfo(tx *dbs.Tx, userId int64, fullname string) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
@@ -140,7 +140,7 @@ func (this *UserDAO) UpdateUserInfo(tx *dbs.Tx, userId int64, fullname string) e
 	return this.Save(tx, op)
 }
 
-// 修改用户登录信息
+// UpdateUserLogin 修改用户登录信息
 func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, password string) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
@@ -155,7 +155,7 @@ func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, 
 	return err
 }
 
-// 计算用户数量
+// CountAllEnabledUsers 计算用户数量
 func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, keyword string) (int64, error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
@@ -166,8 +166,8 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, keyword string) (int64, er
 	return query.Count()
 }
 
-// 列出单页用户
-func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, keyword string) (result []*User, err error) {
+// ListEnabledUsers 列出单页用户
+func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*User, err error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
 	if len(keyword) > 0 {
@@ -176,12 +176,14 @@ func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, keyword string) (result []*Use
 	}
 	_, err = query.
 		DescPk().
+		Offset(offset).
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
-// 检查用户名是否存在
+// ExistUser 检查用户名是否存在
 func (this *UserDAO) ExistUser(tx *dbs.Tx, userId int64, username string) (bool, error) {
 	return this.Query(tx).
 		State(UserStateEnabled).
@@ -190,7 +192,7 @@ func (this *UserDAO) ExistUser(tx *dbs.Tx, userId int64, username string) (bool,
 		Exist()
 }
 
-// 列出单页的用户ID
+// ListEnabledUserIds 列出单页的用户ID
 func (this *UserDAO) ListEnabledUserIds(tx *dbs.Tx, offset, size int64) ([]int64, error) {
 	ones, _, err := this.Query(tx).
 		ResultPk().
@@ -209,7 +211,7 @@ func (this *UserDAO) ListEnabledUserIds(tx *dbs.Tx, offset, size int64) ([]int64
 	return result, nil
 }
 
-// 检查用户名、密码
+// CheckUserPassword 检查用户名、密码
 func (this *UserDAO) CheckUserPassword(tx *dbs.Tx, username string, encryptedPassword string) (int64, error) {
 	if len(username) == 0 || len(encryptedPassword) == 0 {
 		return 0, nil
@@ -223,7 +225,7 @@ func (this *UserDAO) CheckUserPassword(tx *dbs.Tx, username string, encryptedPas
 		FindInt64Col(0)
 }
 
-// 查找用户所在集群
+// FindUserClusterId 查找用户所在集群
 func (this *UserDAO) FindUserClusterId(tx *dbs.Tx, userId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(userId).
@@ -231,7 +233,7 @@ func (this *UserDAO) FindUserClusterId(tx *dbs.Tx, userId int64) (int64, error) 
 		FindInt64Col(0)
 }
 
-// 更新用户Features
+// UpdateUserFeatures 更新用户Features
 func (this *UserDAO) UpdateUserFeatures(tx *dbs.Tx, userId int64, featuresJSON []byte) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
@@ -249,7 +251,7 @@ func (this *UserDAO) UpdateUserFeatures(tx *dbs.Tx, userId int64, featuresJSON [
 	return nil
 }
 
-// 查找用户Features
+// FindUserFeatures 查找用户Features
 func (this *UserDAO) FindUserFeatures(tx *dbs.Tx, userId int64) ([]*UserFeature, error) {
 	featuresJSON, err := this.Query(tx).
 		Pk(userId).

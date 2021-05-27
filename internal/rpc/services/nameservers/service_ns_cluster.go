@@ -1,16 +1,17 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 
-package services
+package nameservers
 
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
 // NSClusterService 域名服务集群相关服务
 type NSClusterService struct {
-	BaseService
+	services.BaseService
 }
 
 // CreateNSCluster 创建集群

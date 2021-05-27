@@ -12,12 +12,12 @@ import (
 	"time"
 )
 
-// 用户相关服务
+// UserService 用户相关服务
 type UserService struct {
 	BaseService
 }
 
-// 创建用户
+// CreateUser 创建用户
 func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -33,7 +33,7 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 	return &pb.CreateUserResponse{UserId: userId}, nil
 }
 
-// 修改用户
+// UpdateUser 修改用户
 func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -62,7 +62,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 	return this.Success()
 }
 
-// 删除用户
+// DeleteUser 删除用户
 func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -90,7 +90,7 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 	return this.Success()
 }
 
-// 计算用户数量
+// CountAllEnabledUsers 计算用户数量
 func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.CountAllEnabledUsersRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -106,7 +106,7 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 	return this.SuccessCount(count)
 }
 
-// 列出单页用户
+// ListEnabledUsers 列出单页用户
 func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabledUsersRequest) (*pb.ListEnabledUsersResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -115,7 +115,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 	tx := this.NullTx()
 
-	users, err := models.SharedUserDAO.ListEnabledUsers(tx, req.Keyword)
+	users, err := models.SharedUserDAO.ListEnabledUsers(tx, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 	return &pb.ListEnabledUsersResponse{Users: result}, nil
 }
 
-// 查询单个用户信息
+// FindEnabledUser 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -196,7 +196,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 	}}, nil
 }
 
-// 检查用户名是否存在
+// CheckUserUsername 检查用户名是否存在
 func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUserUsernameRequest) (*pb.CheckUserUsernameResponse, error) {
 	userType, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
@@ -217,7 +217,7 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 	return &pb.CheckUserUsernameResponse{Exists: b}, nil
 }
 
-// 登录
+// LoginUser 登录
 func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	_, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
@@ -254,7 +254,7 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 	}, nil
 }
 
-// 修改用户基本信息
+// UpdateUserInfo 修改用户基本信息
 func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserInfoRequest) (*pb.RPCSuccess, error) {
 	userId, err := this.ValidateUser(ctx)
 	if err != nil {
@@ -274,7 +274,7 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 	return this.Success()
 }
 
-// 修改用户登录信息
+// UpdateUserLogin 修改用户登录信息
 func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUserLoginRequest) (*pb.RPCSuccess, error) {
 	userId, err := this.ValidateUser(ctx)
 	if err != nil {
@@ -294,7 +294,7 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 	return this.Success()
 }
 
-// 取得用户Dashboard数据
+// ComposeUserDashboard 取得用户Dashboard数据
 func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
 	userId, err := this.ValidateUser(ctx)
 	if err != nil {
@@ -371,7 +371,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	}, nil
 }
 
-// 获取用户所在的集群ID
+// FindUserNodeClusterId 获取用户所在的集群ID
 func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.FindUserNodeClusterIdRequest) (*pb.FindUserNodeClusterIdResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -387,7 +387,7 @@ func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.Find
 	return &pb.FindUserNodeClusterIdResponse{NodeClusterId: clusterId}, nil
 }
 
-// 设置用户能使用的功能
+// UpdateUserFeatures 设置用户能使用的功能
 func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateUserFeaturesRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -408,7 +408,7 @@ func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateU
 	return this.Success()
 }
 
-// 获取用户所有的功能列表
+// FindUserFeatures 获取用户所有的功能列表
 func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -435,7 +435,7 @@ func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserF
 	return &pb.FindUserFeaturesResponse{Features: result}, nil
 }
 
-// 获取所有的功能定义
+// FindAllUserFeatureDefinitions 获取所有的功能定义
 func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req *pb.FindAllUserFeatureDefinitionsRequest) (*pb.FindAllUserFeatureDefinitionsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

@@ -1,19 +1,20 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 
-package services
+package nameservers
 
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
 // NSNodeService 域名服务器节点服务
 type NSNodeService struct {
-	BaseService
+	services.BaseService
 }
 
 // FindAllEnabledNSNodesWithNSClusterId 根据集群查找所有节点
