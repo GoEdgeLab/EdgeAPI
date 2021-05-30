@@ -94,4 +94,5 @@ func (this *APINode) registerServices(server *grpc.Server) {
 	pb.RegisterNSNodeServiceServer(server, &nameservers.NSNodeService{})
 	pb.RegisterNSDomainServiceServer(server, &nameservers.NSDomainService{})
 	pb.RegisterNSRecordServiceServer(server, &nameservers.NSRecordService{})
+	pb.RegisterNSRouteServiceServer(server, &nameservers.NSRouteService{})
 }

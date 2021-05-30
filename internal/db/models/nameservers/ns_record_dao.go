@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"strconv"
 )
 
 const (
@@ -132,11 +133,11 @@ func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsT
 		query.Attr("type", dnsType)
 	}
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
+		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
 	}
 	if routeId > 0 {
-		query.JSONContains("routeIds", routeId)
+		query.JSONContains("routeIds", strconv.FormatInt(routeId, 10))
 	}
 	return query.Count()
 }
@@ -149,11 +150,11 @@ func (this *NSRecordDAO) ListAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsTy
 		query.Attr("type", dnsType)
 	}
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
+		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
 	}
 	if routeId > 0 {
-		query.JSONContains("routeIds", routeId)
+		query.JSONContains("routeIds", strconv.FormatInt(routeId, 10))
 	}
 	_, err = query.
 		DescPk().
