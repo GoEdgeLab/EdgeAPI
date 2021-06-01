@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -38,7 +39,7 @@ func (this *NSDomainService) UpdateNSDomain(ctx context.Context, req *pb.UpdateN
 	}
 
 	var tx = this.NullTx()
-	err = nameservers.SharedNSDomainDAO.UpdateDomain(tx, req.NsDomainId, req.NsClusterId, req.UserId, req.Name, req.IsOn)
+	err = nameservers.SharedNSDomainDAO.UpdateDomain(tx, req.NsDomainId, req.NsClusterId, req.UserId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -188,4 +189,33 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 	}
 
 	return &pb.ListEnabledNSDomainsResponse{NsDomains: pbDomains}, nil
+}
+
+// ListNSDomainsAfterVersion 根据版本列出一组域名
+func (this *NSDomainService) ListNSDomainsAfterVersion(ctx context.Context, req *pb.ListNSDomainsAfterVersionRequest) (*pb.ListNSDomainsAfterVersionResponse, error) {
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	// 集群ID
+	var tx = this.NullTx()
+	domains, err := nameservers.SharedNSDomainDAO.ListDomainsAfterVersion(tx, req.Version, 2000)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbDomains []*pb.NSDomain
+	for _, domain := range domains {
+		pbDomains = append(pbDomains, &pb.NSDomain{
+			Id:        int64(domain.Id),
+			Name:      domain.Name,
+			IsOn:      domain.IsOn == 1,
+			IsDeleted: domain.State == nameservers.NSDomainStateDisabled,
+			Version:   int64(domain.Version),
+			NsCluster: &pb.NSCluster{Id: int64(domain.ClusterId)},
+			User:      nil,
+		})
+	}
+	return &pb.ListNSDomainsAfterVersionResponse{NsDomains: pbDomains}, nil
 }

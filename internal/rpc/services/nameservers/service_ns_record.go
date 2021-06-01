@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -114,6 +115,7 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 			Ttl:         types.Int32(record.Ttl),
 			Weight:      types.Int32(record.Weight),
 			CreatedAt:   int64(record.CreatedAt),
+			IsOn:        record.IsOn == 1,
 			NsDomain:    nil,
 			NsRoutes:    pbRoutes,
 		})
@@ -176,7 +178,49 @@ func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.Fi
 		Ttl:         types.Int32(record.Ttl),
 		Weight:      types.Int32(record.Weight),
 		CreatedAt:   int64(record.CreatedAt),
+		IsOn:        record.IsOn == 1,
 		NsDomain:    pbDomain,
 		NsRoutes:    pbRoutes,
 	}}, nil
+}
+
+// ListNSRecordsAfterVersion 根据版本列出一组记录
+func (this *NSRecordService) ListNSRecordsAfterVersion(ctx context.Context, req *pb.ListNSRecordsAfterVersionRequest) (*pb.ListNSRecordsAfterVersionResponse, error) {
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	// 集群ID
+	var tx = this.NullTx()
+	records, err := nameservers.SharedNSRecordDAO.ListRecordsAfterVersion(tx, req.Version, 2000)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbRecords []*pb.NSRecord
+	for _, record := range records {
+		// 线路
+		pbRoutes := []*pb.NSRoute{}
+		routeIds := record.DecodeRouteIds()
+		for _, routeId := range routeIds {
+			pbRoutes = append(pbRoutes, &pb.NSRoute{Id: routeId})
+		}
+
+		pbRecords = append(pbRecords, &pb.NSRecord{
+			Id:          int64(record.Id),
+			Description: "",
+			Name:        record.Name,
+			Type:        record.Type,
+			Value:       record.Value,
+			Ttl:         types.Int32(record.Ttl),
+			Weight:      types.Int32(record.Weight),
+			IsDeleted:   record.State == nameservers.NSRecordStateDisabled,
+			IsOn:        record.IsOn == 1,
+			Version:     int64(record.Version),
+			NsDomain:    &pb.NSDomain{Id: int64(record.DomainId)},
+			NsRoutes:    pbRoutes,
+		})
+	}
+	return &pb.ListNSRecordsAfterVersionResponse{NsRecords: pbRecords}, nil
 }

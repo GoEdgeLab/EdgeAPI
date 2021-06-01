@@ -7,6 +7,8 @@ import (
 	"errors"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/lists"
@@ -156,7 +158,24 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		nodeUserId = clusterId
 	case UserTypeUser:
 	case UserTypeMonitor:
+	case UserTypeAuthority:
+		nodeIntId, err := authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNodeIdWithUniqueId(nil, nodeId)
+		if err != nil {
+			return UserTypeNode, 0, errors.New("context: " + err.Error())
+		}
+		if nodeIntId <= 0 {
+			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+		}
+		nodeUserId = nodeIntId
 	case UserTypeDNS:
+		nodeIntId, err := nameservers.SharedNSNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
+		if err != nil {
+			return UserTypeNode, 0, errors.New("context: " + err.Error())
+		}
+		if nodeIntId <= 0 {
+			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+		}
+		nodeUserId = nodeIntId
 	}
 
 	if nodeUserId > 0 {

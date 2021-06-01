@@ -10,6 +10,7 @@ type NSRoute struct {
 	Name      string `field:"name"`      // 名称
 	Ranges    string `field:"ranges"`    // 范围
 	Order     uint32 `field:"order"`     // 排序
+	Version   uint64 `field:"version"`   // 版本号
 	State     uint8  `field:"state"`     // 状态
 }
 
@@ -22,6 +23,7 @@ type NSRouteOperator struct {
 	Name      interface{} // 名称
 	Ranges    interface{} // 范围
 	Order     interface{} // 排序
+	Version   interface{} // 版本号
 	State     interface{} // 状态
 }
 

@@ -96,6 +96,8 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx, role string, nodeId int64, ser
 		switch role {
 		case nodeconfigs.NodeRoleNode:
 			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1)")
+		case nodeconfigs.NodeRoleDNS:
+			query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
 		}
 	}
 	if serverId > 0 {
@@ -141,6 +143,8 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 		switch role {
 		case nodeconfigs.NodeRoleNode:
 			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1)")
+		case nodeconfigs.NodeRoleDNS:
+			query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
 		}
 	}
 	if serverId > 0 {

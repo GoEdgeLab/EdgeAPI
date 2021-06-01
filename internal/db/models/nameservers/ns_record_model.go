@@ -13,6 +13,7 @@ type NSRecord struct {
 	Weight      uint32 `field:"weight"`      // 权重
 	RouteIds    string `field:"routeIds"`    // 线路
 	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
+	Version     uint64 `field:"version"`     //
 	State       uint8  `field:"state"`       // 状态
 }
 
@@ -28,6 +29,7 @@ type NSRecordOperator struct {
 	Weight      interface{} // 权重
 	RouteIds    interface{} // 线路
 	CreatedAt   interface{} // 创建时间
+	Version     interface{} //
 	State       interface{} // 状态
 }
 

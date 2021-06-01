@@ -318,6 +318,18 @@ func (this *NSNodeDAO) UpdateNodeIsInstalled(tx *dbs.Tx, nodeId int64, isInstall
 	return err
 }
 
+// UpdateNodeStatus 更改节点状态
+func (this NSNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
+	if statusJSON == nil {
+		return nil
+	}
+	_, err := this.Query(tx).
+		Pk(nodeId).
+		Set("status", string(statusJSON)).
+		Update()
+	return err
+}
+
 // NotifyUpdate 通知更新
 func (this *NSNodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 	// TODO 先什么都不做

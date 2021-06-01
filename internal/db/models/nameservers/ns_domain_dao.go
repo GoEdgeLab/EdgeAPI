@@ -44,10 +44,16 @@ func (this *NSDomainDAO) EnableNSDomain(tx *dbs.Tx, id int64) error {
 }
 
 // DisableNSDomain 禁用条目
-func (this *NSDomainDAO) DisableNSDomain(tx *dbs.Tx, id int64) error {
-	_, err := this.Query(tx).
-		Pk(id).
+func (this *NSDomainDAO) DisableNSDomain(tx *dbs.Tx, domainId int64) error {
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
+		Pk(domainId).
 		Set("state", NSDomainStateDisabled).
+		Set("version", version).
 		Update()
 	return err
 }
@@ -74,26 +80,38 @@ func (this *NSDomainDAO) FindNSDomainName(tx *dbs.Tx, id int64) (string, error) 
 
 // CreateDomain 创建域名
 func (this *NSDomainDAO) CreateDomain(tx *dbs.Tx, clusterId int64, userId int64, name string) (int64, error) {
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return 0, err
+	}
+
 	op := NewNSDomainOperator()
 	op.ClusterId = clusterId
 	op.UserId = userId
 	op.Name = name
+	op.Version = version
 	op.IsOn = true
 	op.State = NSDomainStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdateDomain 修改域名
-func (this *NSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, clusterId int64, userId int64, name string, isOn bool) error {
+func (this *NSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, clusterId int64, userId int64, isOn bool) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
+
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
 	op := NewNSDomainOperator()
 	op.Id = domainId
 	op.ClusterId = clusterId
 	op.UserId = userId
-	op.Name = name
 	op.IsOn = isOn
+	op.Version = version
 	return this.Save(tx, op)
 }
 
@@ -142,6 +160,26 @@ func (this *NSDomainDAO) ListEnabledDomains(tx *dbs.Tx, clusterId int64, userId 
 		DescPk().
 		Offset(offset).
 		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// IncreaseVersion 增加版本
+func (this *NSDomainDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
+	return models.SharedSysLockerDAO.Increase(tx, "NS_DOMAIN_VERSION", 1)
+}
+
+// ListDomainsAfterVersion 列出某个版本后的域名
+func (this *NSDomainDAO) ListDomainsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*NSDomain, err error) {
+	if size <= 0 {
+		size = 10000
+	}
+
+	_, err = this.Query(tx).
+		Gte("version", version).
+		Limit(size).
+		Asc("version").
 		Slice(&result).
 		FindAll()
 	return

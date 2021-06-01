@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -182,4 +183,47 @@ func (this *NSRouteService) UpdateNSRouteOrders(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 	return this.Success()
+}
+
+// ListNSRoutesAfterVersion 根据版本列出一组线路
+func (this *NSRouteService) ListNSRoutesAfterVersion(ctx context.Context, req *pb.ListNSRoutesAfterVersionRequest) (*pb.ListNSRoutesAfterVersionResponse, error) {
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	// 集群ID
+	var tx = this.NullTx()
+	routes, err := nameservers.SharedNSRouteDAO.ListRoutesAfterVersion(tx, req.Version, 2000)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbRoutes []*pb.NSRoute
+	for _, route := range routes {
+		// 集群
+		var pbCluster *pb.NSCluster
+		if route.ClusterId > 0 {
+			pbCluster = &pb.NSCluster{Id: int64(route.ClusterId)}
+		}
+
+		// 域名
+		var pbDomain *pb.NSDomain
+		if route.DomainId > 0 {
+			pbDomain = &pb.NSDomain{Id: int64(route.DomainId)}
+		}
+
+		pbRoutes = append(pbRoutes, &pb.NSRoute{
+			Id:         int64(route.Id),
+			IsOn:       route.IsOn == 1,
+			Name:       "",
+			RangesJSON: []byte(route.Ranges),
+			IsDeleted:  route.State == nameservers.NSRouteStateDisabled,
+			Order:      int64(route.Order),
+			Version:    int64(route.Version),
+			NsCluster:  pbCluster,
+			NsDomain:   pbDomain,
+		})
+	}
+	return &pb.ListNSRoutesAfterVersionResponse{NsRoutes: pbRoutes}, nil
 }

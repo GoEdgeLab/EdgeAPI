@@ -2,6 +2,7 @@ package nameservers
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -47,9 +48,15 @@ func (this *NSRecordDAO) EnableNSRecord(tx *dbs.Tx, id uint64) error {
 
 // DisableNSRecord 禁用条目
 func (this *NSRecordDAO) DisableNSRecord(tx *dbs.Tx, id int64) error {
-	_, err := this.Query(tx).
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", NSRecordStateDisabled).
+		Set("version", version).
 		Update()
 	return err
 }
@@ -76,6 +83,11 @@ func (this *NSRecordDAO) FindNSRecordName(tx *dbs.Tx, id int64) (string, error) 
 
 // CreateRecord 创建记录
 func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64) (int64, error) {
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return 0, err
+	}
+
 	op := NewNSRecordOperator()
 	op.DomainId = domainId
 	op.Description = description
@@ -96,12 +108,18 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 
 	op.IsOn = true
 	op.State = NSRecordStateEnabled
+	op.Version = version
 	return this.SaveInt64(tx, op)
 }
 
 func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64) error {
 	if recordId <= 0 {
 		return errors.New("invalid recordId")
+	}
+
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
 	}
 
 	op := NewNSRecordOperator()
@@ -121,6 +139,8 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 		}
 		op.RouteIds = routeIds
 	}
+
+	op.Version = version
 
 	return this.Save(tx, op)
 }
@@ -160,6 +180,26 @@ func (this *NSRecordDAO) ListAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsTy
 		DescPk().
 		Offset(offset).
 		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// IncreaseVersion 增加版本
+func (this *NSRecordDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
+	return models.SharedSysLockerDAO.Increase(tx, "NS_RECORD_VERSION", 1)
+}
+
+// ListRecordsAfterVersion 列出某个版本后的记录
+func (this *NSRecordDAO) ListRecordsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*NSRecord, err error) {
+	if size <= 0 {
+		size = 10000
+	}
+
+	_, err = this.Query(tx).
+		Gte("version", version).
+		Limit(size).
+		Asc("version").
 		Slice(&result).
 		FindAll()
 	return
