@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
 
@@ -80,4 +81,16 @@ func (this *AuthorityKeyDAO) ResetKey(tx *dbs.Tx) error {
 	_, err := this.Query(tx).
 		Delete()
 	return err
+}
+
+// IsPlus 判断是否为企业版
+func (this *AuthorityKeyDAO) IsPlus(tx *dbs.Tx) (bool, error) {
+	key, err := this.ReadKey(tx)
+	if err != nil {
+		return false, err
+	}
+	if key == nil {
+		return false, nil
+	}
+	return key.DayTo >= timeutil.Format("Y-m-d"), nil
 }

@@ -6,6 +6,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -546,6 +547,12 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		})
 	}
 
+	// 是否是企业版
+	isPlus, err := authority.SharedAuthorityKeyDAO.IsPlus(tx)
+	if err != nil {
+		return nil, err
+	}
+
 	// 边缘节点升级信息
 	{
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
@@ -560,7 +567,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 监控节点升级信息
-	{
+	if isPlus {
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.MonitorNodeVersion,
 		}
@@ -573,7 +580,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 认证节点升级信息
-	{
+	if isPlus {
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.AuthorityNodeVersion,
 		}
@@ -586,7 +593,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 用户节点升级信息
-	{
+	if isPlus {
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.UserNodeVersion,
 		}
@@ -609,6 +616,19 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		}
 		upgradeInfo.CountNodes = countNodes
 		resp.ApiNodeUpgradeInfo = upgradeInfo
+	}
+
+	// DNS节点升级信息
+	if isPlus {
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.DNSNodeVersion,
+		}
+		countNodes, err := nameservers.SharedNSNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		resp.NsNodeUpgradeInfo = upgradeInfo
 	}
 
 	return resp, nil

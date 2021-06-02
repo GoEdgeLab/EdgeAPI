@@ -42,6 +42,36 @@ func (this *NSClusterService) UpdateNSCluster(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
+// FindNSClusterAccessLog 查找集群访问日志配置
+func (this *NSClusterService) FindNSClusterAccessLog(ctx context.Context, req *pb.FindNSClusterAccessLogRequest) (*pb.FindNSClusterAccessLogResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	accessLogJSON, err := nameservers.SharedNSClusterDAO.FindClusterAccessLog(tx, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNSClusterAccessLogResponse{AccessLogJSON: accessLogJSON}, nil
+}
+
+// UpdateNSClusterAccessLog 修改集群访问日志配置
+func (this *NSClusterService) UpdateNSClusterAccessLog(ctx context.Context, req *pb.UpdateNSClusterAccessLogRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = nameservers.SharedNSClusterDAO.UpdateClusterAccessLog(tx, req.NsClusterId, req.AccessLogJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
 // DeleteNSCluster 删除集群
 func (this *NSClusterService) DeleteNSCluster(ctx context.Context, req *pb.DeleteNSCluster) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -99,7 +129,7 @@ func (this *NSClusterService) ListEnabledNSClusters(ctx context.Context, req *pb
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusters, err := nameservers.SharedNSClusterDAO.ListEnabledNSClusters(tx, req.Offset, req.Size)
+	clusters, err := nameservers.SharedNSClusterDAO.ListEnabledClusters(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +152,7 @@ func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req 
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusters, err := nameservers.SharedNSClusterDAO.FindAllEnabledNSClusters(tx)
+	clusters, err := nameservers.SharedNSClusterDAO.FindAllEnabledClusters(tx)
 	if err != nil {
 		return nil, err
 	}

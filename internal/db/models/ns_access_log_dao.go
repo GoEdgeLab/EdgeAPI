@@ -20,41 +20,41 @@ import (
 	"time"
 )
 
-type HTTPAccessLogDAO dbs.DAO
+type NSAccessLogDAO dbs.DAO
 
-var SharedHTTPAccessLogDAO *HTTPAccessLogDAO
+func NewNSAccessLogDAO() *NSAccessLogDAO {
+	return dbs.NewDAO(&NSAccessLogDAO{
+		DAOObject: dbs.DAOObject{
+			DB:     Tea.Env,
+			Table:  "edgeNSAccessLogs",
+			Model:  new(NSAccessLog),
+			PkName: "id",
+		},
+	}).(*NSAccessLogDAO)
+}
+
+var SharedNSAccessLogDAO *NSAccessLogDAO
 
 func init() {
 	dbs.OnReady(func() {
-		SharedHTTPAccessLogDAO = NewHTTPAccessLogDAO()
+		SharedNSAccessLogDAO = NewNSAccessLogDAO()
 	})
 }
 
-func NewHTTPAccessLogDAO() *HTTPAccessLogDAO {
-	return dbs.NewDAO(&HTTPAccessLogDAO{
-		DAOObject: dbs.DAOObject{
-			DB:     Tea.Env,
-			Table:  "edgeHTTPAccessLogs",
-			Model:  new(HTTPAccessLog),
-			PkName: "id",
-		},
-	}).(*HTTPAccessLogDAO)
-}
-
-// CreateHTTPAccessLogs 创建访问日志
-func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(tx *dbs.Tx, accessLogs []*pb.HTTPAccessLog) error {
-	dao := randomHTTPAccessLogDAO()
+// CreateNSAccessLogs 创建访问日志
+func (this *NSAccessLogDAO) CreateNSAccessLogs(tx *dbs.Tx, accessLogs []*pb.NSAccessLog) error {
+	dao := randomNSAccessLogDAO()
 	if dao == nil {
-		dao = &HTTPAccessLogDAOWrapper{
-			DAO:    SharedHTTPAccessLogDAO,
+		dao = &NSAccessLogDAOWrapper{
+			DAO:    SharedNSAccessLogDAO,
 			NodeId: 0,
 		}
 	}
-	return this.CreateHTTPAccessLogsWithDAO(tx, dao, accessLogs)
+	return this.CreateNSAccessLogsWithDAO(tx, dao, accessLogs)
 }
 
-// CreateHTTPAccessLogsWithDAO 使用特定的DAO创建访问日志
-func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *HTTPAccessLogDAOWrapper, accessLogs []*pb.HTTPAccessLog) error {
+// CreateNSAccessLogsWithDAO 使用特定的DAO创建访问日志
+func (this *NSAccessLogDAO) CreateNSAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *NSAccessLogDAOWrapper, accessLogs []*pb.NSAccessLog) error {
 	if daoWrapper == nil {
 		return errors.New("dao should not be nil")
 	}
@@ -68,21 +68,17 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 
 	for _, accessLog := range accessLogs {
 		day := timeutil.Format("Ymd", time.Unix(accessLog.Timestamp, 0))
-		table, err := findHTTPAccessLogTable(dao.Instance, day, false)
+		table, err := findNSAccessLogTable(dao.Instance, day, false)
 		if err != nil {
 			return err
 		}
 
 		fields := map[string]interface{}{}
-		fields["serverId"] = accessLog.ServerId
-		fields["nodeId"] = accessLog.NodeId
-		fields["status"] = accessLog.Status
+		fields["nodeId"] = accessLog.NsNodeId
+		fields["domainId"] = accessLog.NsDomainId
+		fields["recordId"] = accessLog.NsRecordId
 		fields["createdAt"] = accessLog.Timestamp
 		fields["requestId"] = accessLog.RequestId + strconv.FormatInt(time.Now().UnixNano(), 10) + configs.PaddingId
-		fields["firewallPolicyId"] = accessLog.FirewallPolicyId
-		fields["firewallRuleGroupId"] = accessLog.FirewallRuleGroupId
-		fields["firewallRuleSetId"] = accessLog.FirewallRuleSetId
-		fields["firewallRuleId"] = accessLog.FirewallRuleId
 
 		content, err := json.Marshal(accessLog)
 		if err != nil {
@@ -97,7 +93,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		if err != nil {
 			// 是否为 Error 1146: Table 'xxx.xxx' doesn't exist  如果是，则创建表之后重试
 			if strings.Contains(err.Error(), "1146") {
-				table, err = findHTTPAccessLogTable(dao.Instance, day, true)
+				table, err = findNSAccessLogTable(dao.Instance, day, true)
 				if err != nil {
 					return err
 				}
@@ -116,7 +112,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, reverse bool) (result []*NSAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -126,43 +122,32 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, s
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, nodeId, domainId, recordId, reverse)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, nodeId, domainId, recordId, reverse)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, reverse bool) (result []*NSAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
 
-	serverIds := []int64{}
-	if userId > 0 {
-		serverIds, err = SharedServerDAO.FindAllEnabledServerIdsWithUserId(tx, userId)
-		if err != nil {
-			return
-		}
-		if len(serverIds) == 0 {
-			return
-		}
-	}
-
 	accessLogLocker.RLock()
-	daoList := []*HTTPAccessLogDAOWrapper{}
-	for _, daoWrapper := range httpAccessLogDAOMapping {
+	daoList := []*NSAccessLogDAOWrapper{}
+	for _, daoWrapper := range nsAccessLogDAOMapping {
 		daoList = append(daoList, daoWrapper)
 	}
 	accessLogLocker.RUnlock()
 
 	if len(daoList) == 0 {
-		daoList = []*HTTPAccessLogDAOWrapper{{
-			DAO:    SharedHTTPAccessLogDAO,
+		daoList = []*NSAccessLogDAOWrapper{{
+			DAO:    SharedNSAccessLogDAO,
 			NodeId: 0,
 		}}
 	}
@@ -173,12 +158,12 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 	wg := &sync.WaitGroup{}
 	wg.Add(count)
 	for _, daoWrapper := range daoList {
-		go func(daoWrapper *HTTPAccessLogDAOWrapper) {
+		go func(daoWrapper *NSAccessLogDAOWrapper) {
 			defer wg.Done()
 
 			dao := daoWrapper.DAO
 
-			tableName, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, exists, err := findNSAccessLogTableName(dao.Instance, day)
 			if !exists {
 				// 表格不存在则跳过
 				return
@@ -191,26 +176,14 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			query := dao.Query(tx)
 
 			// 条件
-			if serverId > 0 {
-				query.Attr("serverId", serverId)
-			} else if userId > 0 && len(serverIds) > 0 {
-				query.Attr("serverId", serverIds).
-					Reuse(false)
+			if nodeId > 0 {
+				query.Attr("nodeId", nodeId)
 			}
-			if hasError {
-				query.Where("status>=400")
+			if domainId > 0 {
+				query.Attr("domainId", domainId)
 			}
-			if firewallPolicyId > 0 {
-				query.Attr("firewallPolicyId", firewallPolicyId)
-			}
-			if firewallRuleGroupId > 0 {
-				query.Attr("firewallRuleGroupId", firewallRuleGroupId)
-			}
-			if firewallRuleSetId > 0 {
-				query.Attr("firewallRuleSetId", firewallRuleSetId)
-			}
-			if hasFirewallPolicy {
-				query.Where("firewallPolicyId>0")
+			if recordId > 0 {
+				query.Attr("recordId", recordId)
 			}
 
 			// offset
@@ -241,7 +214,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			}
 			locker.Lock()
 			for _, one := range ones {
-				accessLog := one.(*HTTPAccessLog)
+				accessLog := one.(*NSAccessLog)
 				result = append(result, accessLog)
 			}
 			locker.Unlock()
@@ -279,21 +252,21 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 }
 
 // FindAccessLogWithRequestId 根据请求ID获取访问日志
-func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId string) (*HTTPAccessLog, error) {
+func (this *NSAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId string) (*NSAccessLog, error) {
 	if !regexp.MustCompile(`^\d{30,}`).MatchString(requestId) {
 		return nil, errors.New("invalid requestId")
 	}
 
 	accessLogLocker.RLock()
-	daoList := []*HTTPAccessLogDAOWrapper{}
-	for _, daoWrapper := range httpAccessLogDAOMapping {
+	daoList := []*NSAccessLogDAOWrapper{}
+	for _, daoWrapper := range nsAccessLogDAOMapping {
 		daoList = append(daoList, daoWrapper)
 	}
 	accessLogLocker.RUnlock()
 
 	if len(daoList) == 0 {
-		daoList = []*HTTPAccessLogDAOWrapper{{
-			DAO:    SharedHTTPAccessLogDAO,
+		daoList = []*NSAccessLogDAOWrapper{{
+			DAO:    SharedNSAccessLogDAO,
 			NodeId: 0,
 		}}
 	}
@@ -301,15 +274,15 @@ func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId s
 	count := len(daoList)
 	wg := &sync.WaitGroup{}
 	wg.Add(count)
-	var result *HTTPAccessLog = nil
+	var result *NSAccessLog = nil
 	day := timeutil.FormatTime("Ymd", types.Int64(requestId[:10]))
 	for _, daoWrapper := range daoList {
-		go func(daoWrapper *HTTPAccessLogDAOWrapper) {
+		go func(daoWrapper *NSAccessLogDAOWrapper) {
 			defer wg.Done()
 
 			dao := daoWrapper.DAO
 
-			tableName, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, exists, err := findNSAccessLogTableName(dao.Instance, day)
 			if err != nil {
 				logs.Println("[DB_NODE]" + err.Error())
 				return
@@ -327,7 +300,7 @@ func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId s
 				return
 			}
 			if one != nil {
-				result = one.(*HTTPAccessLog)
+				result = one.(*NSAccessLog)
 			}
 		}(daoWrapper)
 	}

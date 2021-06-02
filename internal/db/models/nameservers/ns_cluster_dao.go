@@ -100,8 +100,8 @@ func (this *NSClusterDAO) CountAllEnabledClusters(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
-// ListEnabledNSClusters 列出单页集群
-func (this *NSClusterDAO) ListEnabledNSClusters(tx *dbs.Tx, offset int64, size int64) (result []*NSCluster, err error) {
+// ListEnabledClusters 列出单页集群
+func (this *NSClusterDAO) ListEnabledClusters(tx *dbs.Tx, offset int64, size int64) (result []*NSCluster, err error) {
 	_, err = this.Query(tx).
 		State(NSClusterStateEnabled).
 		Offset(offset).
@@ -112,12 +112,29 @@ func (this *NSClusterDAO) ListEnabledNSClusters(tx *dbs.Tx, offset int64, size i
 	return
 }
 
-// FindAllEnabledNSClusters 列出所有集群
-func (this *NSClusterDAO) FindAllEnabledNSClusters(tx *dbs.Tx) (result []*NSCluster, err error) {
+// FindAllEnabledClusters 列出所有集群
+func (this *NSClusterDAO) FindAllEnabledClusters(tx *dbs.Tx) (result []*NSCluster, err error) {
 	_, err = this.Query(tx).
 		State(NSClusterStateEnabled).
 		DescPk().
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// UpdateClusterAccessLog 设置访问日志
+func (this *NSClusterDAO) UpdateClusterAccessLog(tx *dbs.Tx, clusterId int64, accessLogJSON []byte) error {
+	return this.Query(tx).
+		Pk(clusterId).
+		Set("accessLog", accessLogJSON).
+		UpdateQuickly()
+}
+
+// FindClusterAccessLog 读取访问日志配置
+func (this *NSClusterDAO) FindClusterAccessLog(tx *dbs.Tx, clusterId int64) ([]byte, error) {
+	accessLog, err := this.Query(tx).
+		Pk(clusterId).
+		Result("accessLog").
+		FindStringCol("")
+	return []byte(accessLog), err
 }

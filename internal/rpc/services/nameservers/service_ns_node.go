@@ -4,6 +4,7 @@ package nameservers
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
@@ -341,8 +342,8 @@ func (this *NSNodeService) UpdateNSNodeStatus(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// FindCurrentNSNode 获取当前节点信息
-func (this *NSNodeService) FindCurrentNSNode(ctx context.Context, req *pb.FindCurrentNSNodeRequest) (*pb.FindCurrentNSNodeResponse, error) {
+// FindCurrentNSNodeConfig 获取当前节点信息
+func (this *NSNodeService) FindCurrentNSNodeConfig(ctx context.Context, req *pb.FindCurrentNSNodeConfigRequest) (*pb.FindCurrentNSNodeConfigResponse, error) {
 	// 校验节点
 	_, nodeId, err := this.ValidateNodeId(ctx, rpcutils.UserTypeDNS)
 	if err != nil {
@@ -350,50 +351,17 @@ func (this *NSNodeService) FindCurrentNSNode(ctx context.Context, req *pb.FindCu
 	}
 
 	var tx = this.NullTx()
-	node, err := nameservers.SharedNSNodeDAO.FindEnabledNSNode(tx, nodeId)
-	if err != nil {
-		return nil, err
-	}
-	if node == nil {
-		return &pb.FindCurrentNSNodeResponse{NsNode: nil}, nil
-	}
-
-	// 集群信息
-	clusterName, err := nameservers.SharedNSClusterDAO.FindEnabledNSClusterName(tx, int64(node.ClusterId))
+	config, err := nameservers.SharedNSNodeDAO.ComposeNodeConfig(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}
 
-	// 安装信息
-	installStatus, err := node.DecodeInstallStatus()
+	if config == nil {
+		return &pb.FindCurrentNSNodeConfigResponse{NsNodeJSON: nil}, nil
+	}
+	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
 	}
-	installStatusResult := &pb.NodeInstallStatus{}
-	if installStatus != nil {
-		installStatusResult = &pb.NodeInstallStatus{
-			IsRunning:  installStatus.IsRunning,
-			IsFinished: installStatus.IsFinished,
-			IsOk:       installStatus.IsOk,
-			Error:      installStatus.Error,
-			ErrorCode:  installStatus.ErrorCode,
-			UpdatedAt:  installStatus.UpdatedAt,
-		}
-	}
-
-	return &pb.FindCurrentNSNodeResponse{NsNode: &pb.NSNode{
-		Id:          int64(node.Id),
-		Name:        node.Name,
-		StatusJSON:  []byte(node.Status),
-		UniqueId:    node.UniqueId,
-		Secret:      node.Secret,
-		IsInstalled: node.IsInstalled == 1,
-		InstallDir:  node.InstallDir,
-		NsCluster: &pb.NSCluster{
-			Id:   int64(node.ClusterId),
-			Name: clusterName,
-		},
-		InstallStatus: installStatusResult,
-		IsOn:          node.IsOn == 1,
-	}}, nil
+	return &pb.FindCurrentNSNodeConfigResponse{NsNodeJSON: configJSON}, nil
 }

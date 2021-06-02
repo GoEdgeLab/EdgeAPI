@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -328,6 +329,54 @@ func (this NSNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []by
 		Set("status", string(statusJSON)).
 		Update()
 	return err
+}
+
+// CountAllLowerVersionNodes 计算所有节点中低于某个版本的节点数量
+func (this *NSNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
+	return this.Query(tx).
+		State(NSNodeStateEnabled).
+		Where("status IS NOT NULL").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
+		Param("version", utils.VersionToLong(version)).
+		Count()
+}
+
+// ComposeNodeConfig 组合节点配置
+func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.NSNodeConfig, error) {
+	if nodeId <= 0 {
+		return nil, nil
+	}
+	node, err := this.FindEnabledNSNode(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, nil
+	}
+
+	cluster, err := SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(node.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
+		return nil, nil
+	}
+
+	config := &dnsconfigs.NSNodeConfig{
+		Id:        int64(node.Id),
+		ClusterId: int64(node.ClusterId),
+	}
+
+	if len(cluster.AccessLog) > 0 {
+		ref := &dnsconfigs.AccessLogRef{}
+		err = json.Unmarshal([]byte(cluster.AccessLog), ref)
+		if err != nil {
+			return nil, err
+		}
+		config.AccessLogRef = ref
+	}
+
+	return config, nil
 }
 
 // NotifyUpdate 通知更新

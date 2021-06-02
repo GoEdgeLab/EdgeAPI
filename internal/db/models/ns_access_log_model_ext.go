@@ -6,8 +6,8 @@ import (
 )
 
 // ToPB 转换成PB对象
-func (this *HTTPAccessLog) ToPB() (*pb.HTTPAccessLog, error) {
-	p := &pb.HTTPAccessLog{}
+func (this *NSAccessLog) ToPB() (*pb.NSAccessLog, error) {
+	p := &pb.NSAccessLog{}
 	err := json.Unmarshal([]byte(this.Content), p)
 	if err != nil {
 		return nil, err

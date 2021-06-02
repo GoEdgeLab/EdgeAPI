@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 访问日志相关服务
+// HTTPAccessLogService 访问日志相关服务
 type HTTPAccessLogService struct {
 	BaseService
 }
 
-// 创建访问日志
+// CreateHTTPAccessLogs 创建访问日志
 func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req *pb.CreateHTTPAccessLogsRequest) (*pb.CreateHTTPAccessLogsResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
@@ -20,13 +20,13 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 		return nil, err
 	}
 
-	if len(req.AccessLogs) == 0 {
+	if len(req.HttpAccessLogs) == 0 {
 		return &pb.CreateHTTPAccessLogsResponse{}, nil
 	}
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.AccessLogs)
+	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.HttpAccessLogs)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 	return &pb.CreateHTTPAccessLogsResponse{}, nil
 }
 
-// 列出单页访问日志
+// ListHTTPAccessLogs 列出单页访问日志
 func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *pb.ListHTTPAccessLogsRequest) (*pb.ListHTTPAccessLogsResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -74,13 +74,13 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 	}
 
 	return &pb.ListHTTPAccessLogsResponse{
-		AccessLogs: result,
-		HasMore:    hasMore,
-		RequestId:  requestId,
+		HttpAccessLogs: result,
+		HasMore:        hasMore,
+		RequestId:      requestId,
 	}, nil
 }
 
-// 查找单个日志
+// FindHTTPAccessLog 查找单个日志
 func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb.FindHTTPAccessLogRequest) (*pb.FindHTTPAccessLogResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -95,7 +95,7 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 		return nil, err
 	}
 	if accessLog == nil {
-		return &pb.FindHTTPAccessLogResponse{AccessLog: nil}, nil
+		return &pb.FindHTTPAccessLogResponse{HttpAccessLog: nil}, nil
 	}
 
 	// 检查权限
@@ -110,5 +110,5 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindHTTPAccessLogResponse{AccessLog: a}, nil
+	return &pb.FindHTTPAccessLogResponse{HttpAccessLog: a}, nil
 }
