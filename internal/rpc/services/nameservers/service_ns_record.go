@@ -84,7 +84,7 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 	}
 
 	var tx = this.NullTx()
-	records, err := nameservers.SharedNSRecordDAO.ListAllEnabledRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId, req.Offset, req.Size)
+	records, err := nameservers.SharedNSRecordDAO.ListEnabledRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

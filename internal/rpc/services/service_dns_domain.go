@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
@@ -302,7 +303,7 @@ func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb
 func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSDomain, error) {
 	domainId := int64(domain.Id)
 
-	records := []*dnsclients.Record{}
+	records := []*dnstypes.Record{}
 	if len(domain.Records) > 0 && domain.Records != "null" {
 		err := json.Unmarshal([]byte(domain.Records), &records)
 		if err != nil {
@@ -376,7 +377,7 @@ func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSD
 }
 
 // 转换域名记录信息
-func (this *DNSDomainService) convertRecordToPB(record *dnsclients.Record) *pb.DNSRecord {
+func (this *DNSDomainService) convertRecordToPB(record *dnstypes.Record) *pb.DNSRecord {
 	return &pb.DNSRecord{
 		Id:    record.Id,
 		Name:  record.Name,
@@ -387,7 +388,7 @@ func (this *DNSDomainService) convertRecordToPB(record *dnsclients.Record) *pb.D
 }
 
 // 检查集群节点变化
-func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnsclients.Record, domainName string) (result []maps.Map, doneNodeRecords []*dnsclients.Record, doneServerRecords []*dnsclients.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
+func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnstypes.Record, domainName string) (result []maps.Map, doneNodeRecords []*dnstypes.Record, doneServerRecords []*dnstypes.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
 	clusterId := int64(cluster.Id)
 	clusterDnsName := cluster.DnsName
 	clusterDomain := clusterDnsName + "." + domainName
@@ -400,10 +401,10 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		return nil, nil, nil, 0, 0, false, false, err
 	}
 	countAllNodes = int64(len(nodes))
-	nodeRecords := []*dnsclients.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
-	nodeRecordMapping := map[string]*dnsclients.Record{} // value_route => *Record
+	nodeRecords := []*dnstypes.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
+	nodeRecordMapping := map[string]*dnstypes.Record{} // value_route => *Record
 	for _, record := range records {
-		if record.Type == dnsclients.RecordTypeA && record.Name == clusterDnsName {
+		if record.Type == dnstypes.RecordTypeA && record.Name == clusterDnsName {
 			nodeRecords = append(nodeRecords, record)
 			nodeRecordMapping[record.Value+"_"+record.Route] = record
 		}
@@ -441,10 +442,10 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				if !ok {
 					result = append(result, maps.Map{
 						"action": "create",
-						"record": &dnsclients.Record{
+						"record": &dnstypes.Record{
 							Id:    "",
 							Name:  clusterDnsName,
-							Type:  dnsclients.RecordTypeA,
+							Type:  dnstypes.RecordTypeA,
 							Value: ip,
 							Route: route,
 						},
@@ -475,10 +476,10 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		return nil, nil, nil, 0, 0, false, false, err
 	}
 	countAllServers = int64(len(servers))
-	serverRecords := []*dnsclients.Record{}             // 之所以用数组再存一遍，是因为dnsName可能会重复
-	serverRecordsMap := map[string]*dnsclients.Record{} // dnsName => *Record
+	serverRecords := []*dnstypes.Record{}             // 之所以用数组再存一遍，是因为dnsName可能会重复
+	serverRecordsMap := map[string]*dnstypes.Record{} // dnsName => *Record
 	for _, record := range records {
-		if record.Type == dnsclients.RecordTypeCName && record.Value == clusterDomain+"." {
+		if record.Type == dnstypes.RecordTypeCNAME && record.Value == clusterDomain+"." {
 			serverRecords = append(serverRecords, record)
 			serverRecordsMap[record.Name] = record
 		}
@@ -497,10 +498,10 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 			serversChanged = true
 			result = append(result, maps.Map{
 				"action": "create",
-				"record": &dnsclients.Record{
+				"record": &dnstypes.Record{
 					Id:    "",
 					Name:  dnsName,
-					Type:  dnsclients.RecordTypeCName,
+					Type:  dnstypes.RecordTypeCNAME,
 					Value: clusterDomain + ".",
 					Route: "", // 注意这里为空，需要在执行过程中获取默认值
 				},
@@ -645,7 +646,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}
 	for _, change := range allChanges {
 		action := change.GetString("action")
-		record := change.Get("record").(*dnsclients.Record)
+		record := change.Get("record").(*dnstypes.Record)
 
 		if len(record.Route) == 0 {
 			record.Route = manager.DefaultRoute()

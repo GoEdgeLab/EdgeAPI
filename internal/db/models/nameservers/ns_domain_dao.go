@@ -184,3 +184,13 @@ func (this *NSDomainDAO) ListDomainsAfterVersion(tx *dbs.Tx, version int64, size
 		FindAll()
 	return
 }
+
+// FindDomainIdWithName 根据名称查找域名
+func (this *NSDomainDAO) FindDomainIdWithName(tx *dbs.Tx, clusterId int64, name string) (int64, error) {
+	return this.Query(tx).
+		Attr("clusterId", clusterId).
+		Attr("name", name).
+		State(NSDomainStateEnabled).
+		ResultPk().
+		FindInt64Col(0)
+}

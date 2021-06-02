@@ -2,6 +2,7 @@ package acme
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"strings"
@@ -24,15 +25,15 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 		return errors.New("invalid fqdn value")
 	}
 	recordName := fqdn[:index]
-	record, err := this.raw.QueryRecord(domain, recordName, dnsclients.RecordTypeTXT)
+	record, err := this.raw.QueryRecord(domain, recordName, dnstypes.RecordTypeTXT)
 	if err != nil {
 		return errors.New("query DNS record failed: " + err.Error())
 	}
 	if record == nil {
-		err = this.raw.AddRecord(domain, &dnsclients.Record{
+		err = this.raw.AddRecord(domain, &dnstypes.Record{
 			Id:    "",
 			Name:  recordName,
-			Type:  dnsclients.RecordTypeTXT,
+			Type:  dnstypes.RecordTypeTXT,
 			Value: value,
 			Route: this.raw.DefaultRoute(),
 		})
@@ -40,9 +41,9 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 			return errors.New("create DNS record failed: " + err.Error())
 		}
 	} else {
-		err = this.raw.UpdateRecord(domain, record, &dnsclients.Record{
+		err = this.raw.UpdateRecord(domain, record, &dnstypes.Record{
 			Name:  recordName,
-			Type:  dnsclients.RecordTypeTXT,
+			Type:  dnstypes.RecordTypeTXT,
 			Value: value,
 			Route: this.raw.DefaultRoute(),
 		})

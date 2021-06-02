@@ -162,7 +162,7 @@ func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsT
 	return query.Count()
 }
 
-func (this *NSRecordDAO) ListAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64, offset int64, size int64) (result []*NSRecord, err error) {
+func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64, offset int64, size int64) (result []*NSRecord, err error) {
 	query := this.Query(tx).
 		Attr("domainId", domainId).
 		State(NSRecordStateEnabled)
@@ -203,4 +203,18 @@ func (this *NSRecordDAO) ListRecordsAfterVersion(tx *dbs.Tx, version int64, size
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindEnabledRecordWithName 查询单条记录
+func (this *NSRecordDAO) FindEnabledRecordWithName(tx *dbs.Tx, domainId int64, recordName string, recordType dnsconfigs.RecordType) (*NSRecord, error) {
+	record, err := this.Query(tx).
+		State(NSRecordStateEnabled).
+		Attr("domainId", domainId).
+		Attr("name", recordName).
+		Attr("type", recordType).
+		Find()
+	if record == nil {
+		return nil, err
+	}
+	return record.(*NSRecord), nil
 }

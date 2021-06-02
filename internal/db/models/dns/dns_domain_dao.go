@@ -2,7 +2,7 @@ package dns
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableDNSDomain 启用条目
 func (this *DNSDomainDAO) EnableDNSDomain(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -48,7 +48,7 @@ func (this *DNSDomainDAO) EnableDNSDomain(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableDNSDomain 禁用条目
 func (this *DNSDomainDAO) DisableDNSDomain(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -57,7 +57,7 @@ func (this *DNSDomainDAO) DisableDNSDomain(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledDNSDomain 查找启用中的条目
 func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, id int64) (*DNSDomain, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -69,7 +69,7 @@ func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, id int64) (*DNSDomain
 	return result.(*DNSDomain), err
 }
 
-// 根据主键查找名称
+// FindDNSDomainName 根据主键查找名称
 func (this *DNSDomainDAO) FindDNSDomainName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -77,7 +77,7 @@ func (this *DNSDomainDAO) FindDNSDomainName(tx *dbs.Tx, id int64) (string, error
 		FindStringCol("")
 }
 
-// 创建域名
+// CreateDomain 创建域名
 func (this *DNSDomainDAO) CreateDomain(tx *dbs.Tx, adminId int64, userId int64, providerId int64, name string) (int64, error) {
 	op := NewDNSDomainOperator()
 	op.ProviderId = providerId
@@ -93,7 +93,7 @@ func (this *DNSDomainDAO) CreateDomain(tx *dbs.Tx, adminId int64, userId int64, 
 	return types.Int64(op.Id), nil
 }
 
-// 修改域名
+// UpdateDomain 修改域名
 func (this *DNSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, name string, isOn bool) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
@@ -109,7 +109,7 @@ func (this *DNSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, name string, 
 	return nil
 }
 
-// 查询一个服务商下面的所有域名
+// FindAllEnabledDomainsWithProviderId 查询一个服务商下面的所有域名
 func (this *DNSDomainDAO) FindAllEnabledDomainsWithProviderId(tx *dbs.Tx, providerId int64) (result []*DNSDomain, err error) {
 	_, err = this.Query(tx).
 		State(DNSDomainStateEnabled).
@@ -120,7 +120,7 @@ func (this *DNSDomainDAO) FindAllEnabledDomainsWithProviderId(tx *dbs.Tx, provid
 	return
 }
 
-// 计算某个服务商下的域名数量
+// CountAllEnabledDomainsWithProviderId 计算某个服务商下的域名数量
 func (this *DNSDomainDAO) CountAllEnabledDomainsWithProviderId(tx *dbs.Tx, providerId int64) (int64, error) {
 	return this.Query(tx).
 		State(DNSDomainStateEnabled).
@@ -128,7 +128,7 @@ func (this *DNSDomainDAO) CountAllEnabledDomainsWithProviderId(tx *dbs.Tx, provi
 		Count()
 }
 
-// 更新域名数据
+// UpdateDomainData 更新域名数据
 func (this *DNSDomainDAO) UpdateDomainData(tx *dbs.Tx, domainId int64, data string) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
@@ -140,7 +140,7 @@ func (this *DNSDomainDAO) UpdateDomainData(tx *dbs.Tx, domainId int64, data stri
 	return err
 }
 
-// 更新域名解析记录
+// UpdateDomainRecords 更新域名解析记录
 func (this *DNSDomainDAO) UpdateDomainRecords(tx *dbs.Tx, domainId int64, recordsJSON []byte) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
@@ -153,7 +153,7 @@ func (this *DNSDomainDAO) UpdateDomainRecords(tx *dbs.Tx, domainId int64, record
 	return err
 }
 
-// 更新线路
+// UpdateDomainRoutes 更新线路
 func (this *DNSDomainDAO) UpdateDomainRoutes(tx *dbs.Tx, domainId int64, routesJSON []byte) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
@@ -166,8 +166,8 @@ func (this *DNSDomainDAO) UpdateDomainRoutes(tx *dbs.Tx, domainId int64, routesJ
 	return err
 }
 
-// 查找域名线路
-func (this *DNSDomainDAO) FindDomainRoutes(tx *dbs.Tx, domainId int64) ([]*dnsclients.Route, error) {
+// FindDomainRoutes 查找域名线路
+func (this *DNSDomainDAO) FindDomainRoutes(tx *dbs.Tx, domainId int64) ([]*dnstypes.Route, error) {
 	routes, err := this.Query(tx).
 		Pk(domainId).
 		Result("routes").
@@ -178,7 +178,7 @@ func (this *DNSDomainDAO) FindDomainRoutes(tx *dbs.Tx, domainId int64) ([]*dnscl
 	if len(routes) == 0 || routes == "null" {
 		return nil, nil
 	}
-	result := []*dnsclients.Route{}
+	result := []*dnstypes.Route{}
 	err = json.Unmarshal([]byte(routes), &result)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (this *DNSDomainDAO) FindDomainRoutes(tx *dbs.Tx, domainId int64) ([]*dnscl
 	return result, nil
 }
 
-// 查找线路名称
+// FindDomainRouteName 查找线路名称
 func (this *DNSDomainDAO) FindDomainRouteName(tx *dbs.Tx, domainId int64, routeCode string) (string, error) {
 	routes, err := this.FindDomainRoutes(tx, domainId)
 	if err != nil {
@@ -200,7 +200,7 @@ func (this *DNSDomainDAO) FindDomainRouteName(tx *dbs.Tx, domainId int64, routeC
 	return "", nil
 }
 
-// 判断是否有域名可选
+// ExistAvailableDomains 判断是否有域名可选
 func (this *DNSDomainDAO) ExistAvailableDomains(tx *dbs.Tx) (bool, error) {
 	subQuery, err := SharedDNSProviderDAO.Query(tx).
 		Where("state=1"). // 这里要使用非变量
@@ -216,7 +216,7 @@ func (this *DNSDomainDAO) ExistAvailableDomains(tx *dbs.Tx) (bool, error) {
 		Exist()
 }
 
-// 检查域名解析记录是否存在
+// ExistDomainRecord 检查域名解析记录是否存在
 func (this *DNSDomainDAO) ExistDomainRecord(tx *dbs.Tx, domainId int64, recordName string, recordType string, recordRoute string, recordValue string) (bool, error) {
 	query := maps.Map{
 		"name": recordName,

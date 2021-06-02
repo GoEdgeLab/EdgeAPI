@@ -1,4 +1,4 @@
-package dnsclients
+package dnstypes
 
 // Route 线路描述
 type Route struct {

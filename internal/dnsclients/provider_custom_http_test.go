@@ -1,6 +1,7 @@
 package dnsclients
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"testing"
@@ -15,10 +16,10 @@ func TestCustomHTTPProvider_AddRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = provider.AddRecord("hello.com", &Record{
+	err = provider.AddRecord("hello.com", &dnstypes.Record{
 		Id:    "",
 		Name:  "world",
-		Type:  RecordTypeA,
+		Type:  dnstypes.RecordTypeA,
 		Value: "127.0.0.1",
 		Route: "default",
 	})

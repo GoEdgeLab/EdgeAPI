@@ -2,15 +2,15 @@ package dns
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 )
 
-// 获取所有的线路
-func (this *DNSDomain) DecodeRoutes() ([]*dnsclients.Route, error) {
+// DecodeRoutes 获取所有的线路
+func (this *DNSDomain) DecodeRoutes() ([]*dnstypes.Route, error) {
 	if len(this.Routes) == 0 || this.Routes == "null" {
 		return nil, nil
 	}
-	result := []*dnsclients.Route{}
+	result := []*dnstypes.Route{}
 	err := json.Unmarshal([]byte(this.Routes), &result)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func (this *DNSDomain) DecodeRoutes() ([]*dnsclients.Route, error) {
 	return result, nil
 }
 
-// 检查是否包含某个线路
+// ContainsRouteCode 检查是否包含某个线路
 func (this *DNSDomain) ContainsRouteCode(route string) (bool, error) {
 	routes, err := this.DecodeRoutes()
 	if err != nil {
@@ -32,13 +32,13 @@ func (this *DNSDomain) ContainsRouteCode(route string) (bool, error) {
 	return false, nil
 }
 
-// 获取所有的记录
-func (this *DNSDomain) DecodeRecords() ([]*dnsclients.Record, error) {
+// DecodeRecords 获取所有的记录
+func (this *DNSDomain) DecodeRecords() ([]*dnstypes.Record, error) {
 	records := this.Records
 	if len(records) == 0 || records == "null" {
 		return nil, nil
 	}
-	result := []*dnsclients.Record{}
+	result := []*dnstypes.Record{}
 	err := json.Unmarshal([]byte(records), &result)
 	if err != nil {
 		return nil, err

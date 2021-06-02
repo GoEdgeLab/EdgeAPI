@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/maps"
 	"io/ioutil"
@@ -49,7 +50,7 @@ func (this *CustomHTTPProvider) Auth(params maps.Map) error {
 }
 
 // GetRecords 获取域名解析记录列表
-func (this *CustomHTTPProvider) GetRecords(domain string) (records []*Record, err error) {
+func (this *CustomHTTPProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	resp, err := this.post(maps.Map{
 		"action": "GetRecords",
 		"domain": domain,
@@ -62,7 +63,7 @@ func (this *CustomHTTPProvider) GetRecords(domain string) (records []*Record, er
 }
 
 // GetRoutes 读取域名支持的线路数据
-func (this *CustomHTTPProvider) GetRoutes(domain string) (routes []*Route, err error) {
+func (this *CustomHTTPProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
 	resp, err := this.post(maps.Map{
 		"action": "GetRoutes",
 		"domain": domain,
@@ -75,7 +76,7 @@ func (this *CustomHTTPProvider) GetRoutes(domain string) (routes []*Route, err e
 }
 
 // QueryRecord 查询单个记录
-func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
 	resp, err := this.post(maps.Map{
 		"action":     "QueryRecord",
 		"domain":     domain,
@@ -88,7 +89,7 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 	if len(resp) == 0 {
 		return nil, nil
 	}
-	record := &Record{}
+	record := &dnstypes.Record{}
 	err = json.Unmarshal(resp, record)
 	if err != nil {
 		return nil, err
@@ -100,7 +101,7 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 }
 
 // AddRecord 设置记录
-func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *Record) error {
+func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	_, err := this.post(maps.Map{
 		"action":    "AddRecord",
 		"domain":    domain,
@@ -110,7 +111,7 @@ func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *Record) erro
 }
 
 // UpdateRecord 修改记录
-func (this *CustomHTTPProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
+func (this *CustomHTTPProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	_, err := this.post(maps.Map{
 		"action":    "UpdateRecord",
 		"domain":    domain,
@@ -121,7 +122,7 @@ func (this *CustomHTTPProvider) UpdateRecord(domain string, record *Record, newR
 }
 
 // DeleteRecord 删除记录
-func (this *CustomHTTPProvider) DeleteRecord(domain string, record *Record) error {
+func (this *CustomHTTPProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	_, err := this.post(maps.Map{
 		"action": "DeleteRecord",
 		"domain": domain,

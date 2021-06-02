@@ -4,6 +4,7 @@ package dnsclients
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -45,7 +46,7 @@ func TestCloudFlareProvider_QueryRecord(t *testing.T) {
 	}
 	{
 		t.Log("== www.meloy.cn/A ==")
-		record, err := provider.QueryRecord("meloy.cn", "www", RecordTypeA)
+		record, err := provider.QueryRecord("meloy.cn", "www", dnstypes.RecordTypeA)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +54,7 @@ func TestCloudFlareProvider_QueryRecord(t *testing.T) {
 	}
 	{
 		t.Log("== www.meloy.cn/CNAME ==")
-		record, err := provider.QueryRecord("meloy.cn", "www", RecordTypeCName)
+		record, err := provider.QueryRecord("meloy.cn", "www", dnstypes.RecordTypeCNAME)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +62,7 @@ func TestCloudFlareProvider_QueryRecord(t *testing.T) {
 	}
 	{
 		t.Log("== hello.meloy.cn ==")
-		record, err := provider.QueryRecord("meloy.cn", "hello", RecordTypeA)
+		record, err := provider.QueryRecord("meloy.cn", "hello", dnstypes.RecordTypeA)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -69,7 +70,7 @@ func TestCloudFlareProvider_QueryRecord(t *testing.T) {
 	}
 	{
 		t.Log("== test.meloy.cn ==")
-		record, err := provider.QueryRecord("meloy.cn", "test", RecordTypeCName)
+		record, err := provider.QueryRecord("meloy.cn", "test", dnstypes.RecordTypeCNAME)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -83,10 +84,10 @@ func TestCloudFlareProvider_AddRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 	{
-		err = provider.AddRecord("meloy.cn", &Record{
+		err = provider.AddRecord("meloy.cn", &dnstypes.Record{
 			Id:    "",
 			Name:  "test",
-			Type:  RecordTypeA,
+			Type:  dnstypes.RecordTypeA,
 			Value: "182.92.212.46",
 			Route: "",
 		})
@@ -95,10 +96,10 @@ func TestCloudFlareProvider_AddRecord(t *testing.T) {
 		}
 	}
 	{
-		err = provider.AddRecord("meloy.cn", &Record{
+		err = provider.AddRecord("meloy.cn", &dnstypes.Record{
 			Id:    "",
 			Name:  "test1",
-			Type:  RecordTypeCName,
+			Type:  dnstypes.RecordTypeCNAME,
 			Value: "cdn.meloy.cn.",
 			Route: "",
 		})
@@ -114,10 +115,10 @@ func TestCloudFlareProvider_UpdateRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = provider.UpdateRecord("meloy.cn", &Record{Id: "b4da7ad9f90173ec37c80ba6bb70641a"}, &Record{
+	err = provider.UpdateRecord("meloy.cn", &dnstypes.Record{Id: "b4da7ad9f90173ec37c80ba6bb70641a"}, &dnstypes.Record{
 		Id:    "",
 		Name:  "test1",
-		Type:  RecordTypeCName,
+		Type:  dnstypes.RecordTypeCNAME,
 		Value: "cdn123.meloy.cn.",
 		Route: "",
 	})
@@ -132,7 +133,7 @@ func TestCloudFlareProvider_DeleteRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = provider.DeleteRecord("meloy.cn", &Record{
+	err = provider.DeleteRecord("meloy.cn", &dnstypes.Record{
 		Id: "86282d89bbd1f66a69ca409da84f34b1",
 	})
 	if err != nil {

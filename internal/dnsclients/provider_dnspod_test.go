@@ -2,6 +2,7 @@ package dnsclients
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
@@ -40,8 +41,8 @@ func TestDNSPodProvider_AddRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.AddRecord("yun4s.cn", &Record{
-		Type:  RecordTypeCName,
+	err = provider.AddRecord("yun4s.cn", &dnstypes.Record{
+		Type:  dnstypes.RecordTypeCNAME,
 		Name:  "hello-forward",
 		Value: "hello.yun4s.cn",
 		Route: "联通",
@@ -58,10 +59,10 @@ func TestDNSPodProvider_UpdateRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.UpdateRecord("yun4s.cn", &Record{
+	err = provider.UpdateRecord("yun4s.cn", &dnstypes.Record{
 		Id: "697036856",
-	}, &Record{
-		Type:  RecordTypeA,
+	}, &dnstypes.Record{
+		Type:  dnstypes.RecordTypeA,
 		Name:  "hello",
 		Value: "192.168.1.102",
 		Route: "联通",
@@ -78,7 +79,7 @@ func TestDNSPodProvider_DeleteRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.DeleteRecord("yun4s.cn", &Record{
+	err = provider.DeleteRecord("yun4s.cn", &dnstypes.Record{
 		Id: "697040986",
 	})
 	if err != nil {

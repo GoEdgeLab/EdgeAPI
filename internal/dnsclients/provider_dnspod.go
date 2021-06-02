@@ -3,6 +3,7 @@ package dnsclients
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
@@ -35,7 +36,7 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 }
 
 // GetRecords 获取域名列表
-func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err error) {
+func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	offset := 0
 	size := 100
 	for {
@@ -53,7 +54,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err er
 		recordSlice := recordsResp.GetSlice("records")
 		for _, record := range recordSlice {
 			recordMap := maps.NewMap(record)
-			records = append(records, &Record{
+			records = append(records, &dnstypes.Record{
 				Id:    recordMap.GetString("id"),
 				Name:  recordMap.GetString("name"),
 				Type:  recordMap.GetString("type"),
@@ -73,7 +74,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*Record, err er
 }
 
 // GetRoutes 读取线路数据
-func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error) {
+func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
 	infoResp, err := this.post("/Domain.info", map[string]string{
 		"domain": domain,
 	})
@@ -97,7 +98,7 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error
 	}
 	for _, line := range lines {
 		lineString := types.String(line)
-		routes = append(routes, &Route{
+		routes = append(routes, &dnstypes.Route{
 			Name: lineString,
 			Code: lineString,
 		})
@@ -107,7 +108,7 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*Route, err error
 }
 
 // QueryRecord 查询单个记录
-func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
 	records, err := this.GetRecords(domain)
 	if err != nil {
 		return nil, err
@@ -121,13 +122,13 @@ func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType R
 }
 
 // AddRecord 设置记录
-func (this *DNSPodProvider) AddRecord(domain string, newRecord *Record) error {
+func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	if newRecord == nil {
 		return errors.New("invalid new record")
 	}
 
 	// 在CHANGE记录后面加入点
-	if newRecord.Type == RecordTypeCName && !strings.HasSuffix(newRecord.Value, ".") {
+	if newRecord.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(newRecord.Value, ".") {
 		newRecord.Value += "."
 	}
 	_, err := this.post("/Record.Create", map[string]string{
@@ -141,7 +142,7 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *Record) error {
 }
 
 // UpdateRecord 修改记录
-func (this *DNSPodProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
+func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	if record == nil {
 		return errors.New("invalid record")
 	}
@@ -150,7 +151,7 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *Record, newRecor
 	}
 
 	// 在CHANGE记录后面加入点
-	if newRecord.Type == RecordTypeCName && !strings.HasSuffix(newRecord.Value, ".") {
+	if newRecord.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(newRecord.Value, ".") {
 		newRecord.Value += "."
 	}
 	_, err := this.post("/Record.Modify", map[string]string{
@@ -165,7 +166,7 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *Record, newRecor
 }
 
 // DeleteRecord 删除记录
-func (this *DNSPodProvider) DeleteRecord(domain string, record *Record) error {
+func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	if record == nil {
 		return errors.New("invalid record to delete")
 	}

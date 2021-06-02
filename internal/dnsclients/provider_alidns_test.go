@@ -2,6 +2,7 @@ package dnsclients
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
@@ -29,7 +30,7 @@ func TestAliDNSProvider_DeleteRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.DeleteRecord("meloy.cn", &Record{
+	err = provider.DeleteRecord("meloy.cn", &dnstypes.Record{
 		Id: "20746603318032384",
 	})
 	if err != nil {
@@ -57,10 +58,10 @@ func TestAliDNSProvider_AddRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.AddRecord("meloy.cn", &Record{
+	err = provider.AddRecord("meloy.cn", &dnstypes.Record{
 		Id:    "",
 		Name:  "test",
-		Type:  RecordTypeA,
+		Type:  dnstypes.RecordTypeA,
 		Value: "192.168.1.100",
 		Route: "unicom",
 	})
@@ -76,10 +77,10 @@ func TestAliDNSProvider_UpdateRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.UpdateRecord("meloy.cn", &Record{Id: "20746664455255040"}, &Record{
+	err = provider.UpdateRecord("meloy.cn", &dnstypes.Record{Id: "20746664455255040"}, &dnstypes.Record{
 		Id:    "",
 		Name:  "test",
-		Type:  RecordTypeA,
+		Type:  dnstypes.RecordTypeA,
 		Value: "192.168.1.101",
 		Route: "unicom",
 	})

@@ -1,10 +1,10 @@
-package dnsclients
+package dnstypes
 
 type RecordType = string
 
 const (
 	RecordTypeA     RecordType = "A"
-	RecordTypeCName RecordType = "CNAME"
+	RecordTypeCNAME RecordType = "CNAME"
 	RecordTypeTXT   RecordType = "TXT"
 )
 

@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/cloudflare"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/maps"
 	"io"
@@ -59,7 +60,7 @@ func (this *CloudFlareProvider) Auth(params maps.Map) error {
 }
 
 // GetRecords 获取域名解析记录列表
-func (this *CloudFlareProvider) GetRecords(domain string) (records []*Record, err error) {
+func (this *CloudFlareProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
 		return nil, err
@@ -81,13 +82,13 @@ func (this *CloudFlareProvider) GetRecords(domain string) (records []*Record, er
 
 		for _, record := range resp.Result {
 			// 修正Record
-			if record.Type == RecordTypeCName && !strings.HasSuffix(record.Content, ".") {
+			if record.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(record.Content, ".") {
 				record.Content += "."
 			}
 
 			record.Name = strings.TrimSuffix(record.Name, "."+domain)
 
-			records = append(records, &Record{
+			records = append(records, &dnstypes.Record{
 				Id:    record.Id,
 				Name:  record.Name,
 				Type:  record.Type,
@@ -101,15 +102,15 @@ func (this *CloudFlareProvider) GetRecords(domain string) (records []*Record, er
 }
 
 // GetRoutes 读取域名支持的线路数据
-func (this *CloudFlareProvider) GetRoutes(domain string) (routes []*Route, err error) {
-	routes = []*Route{
+func (this *CloudFlareProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
+	routes = []*dnstypes.Route{
 		{Name: "默认", Code: CloudFlareDefaultRoute},
 	}
 	return
 }
 
 // QueryRecord 查询单个记录
-func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
 		return nil, err
@@ -131,13 +132,13 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 	record := resp.Result[0]
 
 	// 修正Record
-	if record.Type == RecordTypeCName && !strings.HasSuffix(record.Content, ".") {
+	if record.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(record.Content, ".") {
 		record.Content += "."
 	}
 
 	record.Name = strings.TrimSuffix(record.Name, "."+domain)
 
-	return &Record{
+	return &dnstypes.Record{
 		Id:    record.Id,
 		Name:  record.Name,
 		Type:  record.Type,
@@ -147,7 +148,7 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 }
 
 // AddRecord 设置记录
-func (this *CloudFlareProvider) AddRecord(domain string, newRecord *Record) error {
+func (this *CloudFlareProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
 		return err
@@ -167,7 +168,7 @@ func (this *CloudFlareProvider) AddRecord(domain string, newRecord *Record) erro
 }
 
 // UpdateRecord 修改记录
-func (this *CloudFlareProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
+func (this *CloudFlareProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
 		return err
@@ -183,7 +184,7 @@ func (this *CloudFlareProvider) UpdateRecord(domain string, record *Record, newR
 }
 
 // DeleteRecord 删除记录
-func (this *CloudFlareProvider) DeleteRecord(domain string, record *Record) error {
+func (this *CloudFlareProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
 		return err

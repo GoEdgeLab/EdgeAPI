@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	dnsmodels "github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
@@ -135,7 +136,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 	recordName := serverDNS.DnsName
 	recordValue := clusterDNSName + "." + domain + "."
 	recordRoute := manager.DefaultRoute()
-	recordType := dnsclients.RecordTypeCName
+	recordType := dnstypes.RecordTypeCNAME
 	if serverDNS.State == models.ServerStateDisabled || serverDNS.IsOn == 0 {
 		// 检查记录是否已经存在
 		record, err := manager.QueryRecord(domain, recordName, recordType)
@@ -188,7 +189,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 			}
 		}
 
-		err = manager.AddRecord(domain, &dnsclients.Record{
+		err = manager.AddRecord(domain, &dnstypes.Record{
 			Id:    "",
 			Name:  recordName,
 			Type:  recordType,
@@ -275,9 +276,9 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	if err != nil {
 		return err
 	}
-	oldRecordsMap := map[string]*dnsclients.Record{} // route@value => record
+	oldRecordsMap := map[string]*dnstypes.Record{} // route@value => record
 	for _, record := range records {
-		if record.Type == dnsclients.RecordTypeA && record.Name == clusterDNSName {
+		if record.Type == dnstypes.RecordTypeA && record.Name == clusterDNSName {
 			key := record.Route + "@" + record.Value
 			oldRecordsMap[key] = record
 		}
@@ -323,10 +324,10 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 					continue
 				}
 
-				err = manager.AddRecord(domain, &dnsclients.Record{
+				err = manager.AddRecord(domain, &dnstypes.Record{
 					Id:    "",
 					Name:  clusterDNSName,
-					Type:  dnsclients.RecordTypeA,
+					Type:  dnstypes.RecordTypeA,
 					Value: ip,
 					Route: route,
 				})

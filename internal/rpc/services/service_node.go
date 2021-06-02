@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
-	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -156,7 +156,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 	}
 
 	dnsDomainId := int64(0)
-	domainRoutes := []*dnsclients.Route{}
+	domainRoutes := []*dnstypes.Route{}
 	if clusterDNS != nil {
 		dnsDomainId = int64(clusterDNS.DnsDomainId)
 		if clusterDNS.DnsDomainId > 0 {

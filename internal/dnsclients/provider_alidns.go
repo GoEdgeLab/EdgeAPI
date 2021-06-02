@@ -2,6 +2,7 @@ package dnsclients
 
 import (
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/responses"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
@@ -31,7 +32,7 @@ func (this *AliDNSProvider) Auth(params maps.Map) error {
 }
 
 // GetRecords 获取域名列表
-func (this *AliDNSProvider) GetRecords(domain string) (records []*Record, err error) {
+func (this *AliDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	pageNumber := 1
 	size := 100
 
@@ -48,11 +49,11 @@ func (this *AliDNSProvider) GetRecords(domain string) (records []*Record, err er
 		}
 		for _, record := range resp.DomainRecords.Record {
 			// 修正Record
-			if record.Type == RecordTypeCName && !strings.HasSuffix(record.Value, ".") {
+			if record.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(record.Value, ".") {
 				record.Value += "."
 			}
 
-			records = append(records, &Record{
+			records = append(records, &dnstypes.Record{
 				Id:    record.RecordId,
 				Name:  record.RR,
 				Type:  record.Type,
@@ -71,7 +72,7 @@ func (this *AliDNSProvider) GetRecords(domain string) (records []*Record, err er
 }
 
 // GetRoutes 读取域名支持的线路数据
-func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error) {
+func (this *AliDNSProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
 	req := alidns.CreateDescribeSupportLinesRequest()
 	req.DomainName = domain
 
@@ -81,7 +82,7 @@ func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error
 		return nil, err
 	}
 	for _, line := range resp.RecordLines.RecordLine {
-		routes = append(routes, &Route{
+		routes = append(routes, &dnstypes.Route{
 			Name: line.LineName,
 			Code: line.LineCode,
 		})
@@ -90,7 +91,7 @@ func (this *AliDNSProvider) GetRoutes(domain string) (routes []*Route, err error
 }
 
 // QueryRecord 查询单个记录
-func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType RecordType) (*Record, error) {
+func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
 	records, err := this.GetRecords(domain)
 	if err != nil {
 		return nil, err
@@ -104,7 +105,7 @@ func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType R
 }
 
 // AddRecord 设置记录
-func (this *AliDNSProvider) AddRecord(domain string, newRecord *Record) error {
+func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	req := alidns.CreateAddDomainRecordRequest()
 	req.RR = newRecord.Name
 	req.Type = newRecord.Type
@@ -125,7 +126,7 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *Record) error {
 }
 
 // UpdateRecord 修改记录
-func (this *AliDNSProvider) UpdateRecord(domain string, record *Record, newRecord *Record) error {
+func (this *AliDNSProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	req := alidns.CreateUpdateDomainRecordRequest()
 	req.RecordId = record.Id
 	req.RR = newRecord.Name
@@ -139,7 +140,7 @@ func (this *AliDNSProvider) UpdateRecord(domain string, record *Record, newRecor
 }
 
 // DeleteRecord 删除记录
-func (this *AliDNSProvider) DeleteRecord(domain string, record *Record) error {
+func (this *AliDNSProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	req := alidns.CreateDeleteDomainRecordRequest()
 	req.RecordId = record.Id
 

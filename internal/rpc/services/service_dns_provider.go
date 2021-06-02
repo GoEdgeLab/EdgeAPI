@@ -8,12 +8,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// DNS服务商相关服务
+// DNSProviderService DNS服务商相关服务
 type DNSProviderService struct {
 	BaseService
 }
 
-// 创建服务商
+// CreateDNSProvider 创建服务商
 func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.CreateDNSProviderRequest) (*pb.CreateDNSProviderResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -31,7 +31,7 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 	return &pb.CreateDNSProviderResponse{DnsProviderId: providerId}, nil
 }
 
-// 修改服务商
+// UpdateDNSProvider 修改服务商
 func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.UpdateDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -50,7 +50,7 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// 计算服务商数量
+// CountAllEnabledDNSProviders 计算服务商数量
 func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context, req *pb.CountAllEnabledDNSProvidersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -67,7 +67,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 	return this.SuccessCount(count)
 }
 
-// 列出单页服务商信息
+// ListEnabledDNSProviders 列出单页服务商信息
 func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req *pb.ListEnabledDNSProvidersRequest) (*pb.ListEnabledDNSProvidersResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -97,7 +97,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 	return &pb.ListEnabledDNSProvidersResponse{DnsProviders: result}, nil
 }
 
-// 查找所有的DNS服务商
+// FindAllEnabledDNSProviders 查找所有的DNS服务商
 func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, req *pb.FindAllEnabledDNSProvidersRequest) (*pb.FindAllEnabledDNSProvidersResponse, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -127,7 +127,7 @@ func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, 
 	return &pb.FindAllEnabledDNSProvidersResponse{DnsProviders: result}, nil
 }
 
-// 删除服务商
+// DeleteDNSProvider 删除服务商
 func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -146,7 +146,7 @@ func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.D
 	return this.Success()
 }
 
-// 查找单个服务商
+// FindEnabledDNSProvider 查找单个服务商
 func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req *pb.FindEnabledDNSProviderRequest) (*pb.FindEnabledDNSProviderResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -174,7 +174,7 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 	}}, nil
 }
 
-// 取得所有服务商类型
+// FindAllDNSProviderTypes 取得所有服务商类型
 func (this *DNSProviderService) FindAllDNSProviderTypes(ctx context.Context, req *pb.FindAllDNSProviderTypesRequest) (*pb.FindAllDNSProviderTypesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -183,16 +183,17 @@ func (this *DNSProviderService) FindAllDNSProviderTypes(ctx context.Context, req
 	}
 
 	result := []*pb.DNSProviderType{}
-	for _, t := range dnsclients.AllProviderTypes {
+	for _, t := range dnsclients.FindAllProviderTypes() {
 		result = append(result, &pb.DNSProviderType{
-			Name: t.GetString("name"),
-			Code: t.GetString("code"),
+			Name:        t.GetString("name"),
+			Code:        t.GetString("code"),
+			Description: t.GetString("description"),
 		})
 	}
 	return &pb.FindAllDNSProviderTypesResponse{ProviderTypes: result}, nil
 }
 
-// 取得某个类型的所有服务商
+// FindAllEnabledDNSProvidersWithType 取得某个类型的所有服务商
 func (this *DNSProviderService) FindAllEnabledDNSProvidersWithType(ctx context.Context, req *pb.FindAllEnabledDNSProvidersWithTypeRequest) (*pb.FindAllEnabledDNSProvidersWithTypeResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
