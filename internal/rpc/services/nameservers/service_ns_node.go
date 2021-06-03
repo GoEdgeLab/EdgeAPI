@@ -12,6 +12,7 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 )
 
 // NSNodeService 域名服务器节点服务
@@ -135,7 +136,7 @@ func (this *NSNodeService) CountAllUpgradeNSNodesWithNSClusterId(ctx context.Con
 
 	tx := this.NullTx()
 
-	deployFiles := installers.SharedDeployManager.LoadFiles()
+	deployFiles := installers.SharedDeployManager.LoadNSNodeFiles()
 	total := int64(0)
 	for _, deployFile := range deployFiles {
 		count, err := nameservers.SharedNSNodeDAO.CountAllLowerVersionNodesWithClusterId(tx, req.NsClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
@@ -364,4 +365,23 @@ func (this *NSNodeService) FindCurrentNSNodeConfig(ctx context.Context, req *pb.
 		return nil, err
 	}
 	return &pb.FindCurrentNSNodeConfigResponse{NsNodeJSON: configJSON}, nil
+}
+
+// CheckNSNodeLatestVersion 检查新版本
+func (this *NSNodeService) CheckNSNodeLatestVersion(ctx context.Context, req *pb.CheckNSNodeLatestVersionRequest) (*pb.CheckNSNodeLatestVersionResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	deployFiles := installers.SharedDeployManager.LoadNSNodeFiles()
+	for _, file := range deployFiles {
+		if file.OS == req.Os && file.Arch == req.Arch && stringutil.VersionCompare(file.Version, req.CurrentVersion) > 0 {
+			return &pb.CheckNSNodeLatestVersionResponse{
+				HasNewVersion: true,
+				NewVersion:    file.Version,
+			}, nil
+		}
+	}
+	return &pb.CheckNSNodeLatestVersionResponse{HasNewVersion: false}, nil
 }

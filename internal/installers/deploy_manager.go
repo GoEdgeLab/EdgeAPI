@@ -26,11 +26,48 @@ func NewDeployManager() *DeployManager {
 	}
 }
 
-// 加载所有文件
-func (this *DeployManager) LoadFiles() []*DeployFile {
+// LoadNodeFiles 加载所有边缘节点文件
+func (this *DeployManager) LoadNodeFiles() []*DeployFile {
 	keyMap := map[string]*DeployFile{} // key => File
 
-	reg := regexp.MustCompile(`(\w+)-(\w+)-v([0-9.]+)\.zip`)
+	reg := regexp.MustCompile(`^edge-node-(\w+)-(\w+)-v([0-9.]+)\.zip$`)
+	for _, file := range files.NewFile(this.dir).List() {
+		name := file.Name()
+		if !reg.MatchString(name) {
+			continue
+		}
+		matches := reg.FindStringSubmatch(name)
+		osName := matches[1]
+		arch := matches[2]
+		version := matches[3]
+
+		key := osName + "_" + arch
+		oldFile, ok := keyMap[key]
+		if ok && stringutil.VersionCompare(oldFile.Version, version) > 0 {
+			continue
+		}
+		keyMap[key] = &DeployFile{
+			OS:      osName,
+			Arch:    arch,
+			Version: version,
+			Path:    file.Path(),
+		}
+	}
+
+	result := []*DeployFile{}
+	for _, v := range keyMap {
+		result = append(result, v)
+	}
+	return result
+}
+
+
+
+// LoadNSNodeFiles 加载所有文件
+func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
+	keyMap := map[string]*DeployFile{} // key => File
+
+	reg := regexp.MustCompile(`^edge-dns-(\w+)-(\w+)-v([0-9.]+)\.zip$`)
 	for _, file := range files.NewFile(this.dir).List() {
 		name := file.Name()
 		if !reg.MatchString(name) {

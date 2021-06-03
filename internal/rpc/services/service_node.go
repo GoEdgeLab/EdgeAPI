@@ -885,7 +885,7 @@ func (this *NodeService) CountAllUpgradeNodesWithNodeClusterId(ctx context.Conte
 
 	tx := this.NullTx()
 
-	deployFiles := installers.SharedDeployManager.LoadFiles()
+	deployFiles := installers.SharedDeployManager.LoadNodeFiles()
 	total := int64(0)
 	for _, deployFile := range deployFiles {
 		count, err := models.SharedNodeDAO.CountAllLowerVersionNodesWithClusterId(tx, req.NodeClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
@@ -909,7 +909,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 	tx := this.NullTx()
 
 	// 获取当前能升级到的最新版本
-	deployFiles := installers.SharedDeployManager.LoadFiles()
+	deployFiles := installers.SharedDeployManager.LoadNodeFiles()
 	result := []*pb.FindAllUpgradeNodesWithNodeClusterIdResponse_NodeUpgrade{}
 	for _, deployFile := range deployFiles {
 		nodes, err := models.SharedNodeDAO.FindAllLowerVersionNodesWithClusterId(tx, req.NodeClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
@@ -1322,7 +1322,7 @@ func (this *NodeService) CheckNodeLatestVersion(ctx context.Context, req *pb.Che
 		return nil, err
 	}
 
-	deployFiles := installers.SharedDeployManager.LoadFiles()
+	deployFiles := installers.SharedDeployManager.LoadNodeFiles()
 	for _, file := range deployFiles {
 		if file.OS == req.Os && file.Arch == req.Arch && stringutil.VersionCompare(file.Version, req.CurrentVersion) > 0 {
 			return &pb.CheckNodeLatestVersionResponse{
