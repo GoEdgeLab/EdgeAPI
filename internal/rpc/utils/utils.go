@@ -128,7 +128,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	timestamp := m.GetInt64("timestamp")
 	if time.Now().Unix()-timestamp > 600 {
 		// 请求超过10分钟认为超时
-		return UserTypeNone, 0, errors.New("authenticate timeout")
+		return UserTypeNone, 0, errors.New("authenticate timeout, please check your system clock")
 	}
 
 	t := m.GetString("type")
