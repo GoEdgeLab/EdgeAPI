@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
@@ -116,7 +117,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -126,18 +127,18 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, s
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -211,6 +212,46 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			}
 			if hasFirewallPolicy {
 				query.Where("firewallPolicyId>0")
+			}
+
+			// keyword
+			if len(keyword) > 0 {
+				useOriginKeyword := false
+
+				where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
+
+				// 请求方法
+				if keyword == http.MethodGet ||
+					keyword == http.MethodPost ||
+					keyword == http.MethodHead ||
+					keyword == http.MethodConnect ||
+					keyword == http.MethodPut ||
+					keyword == http.MethodTrace ||
+					keyword == http.MethodOptions ||
+					keyword == http.MethodDelete ||
+					keyword == http.MethodPatch {
+					where += " OR JSON_EXTRACT(content, '$.requestMethod')=:originKeyword"
+					useOriginKeyword = true
+				}
+
+				// 响应状态码
+				if regexp.MustCompile(`^\d{3}$`).MatchString(keyword) {
+					where += " OR JSON_EXTRACT(content, '$.status')=:intKeyword"
+					query.Param("intKeyword", types.Int(keyword))
+				}
+
+				if regexp.MustCompile(`^\d{3}-\d{3}$`).MatchString(keyword) {
+					pieces := strings.Split(keyword, "-")
+					where += " OR JSON_EXTRACT(content, '$.status') BETWEEN :intKeyword1 AND :intKeyword2"
+					query.Param("intKeyword1", types.Int(pieces[0]))
+					query.Param("intKeyword2", types.Int(pieces[1]))
+				}
+
+				query.Where("("+where+")").
+					Param("keyword", "%"+keyword+"%")
+				if useOriginKeyword {
+					query.Param("originKeyword", keyword)
+				}
 			}
 
 			// offset
