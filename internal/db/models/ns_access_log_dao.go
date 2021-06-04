@@ -112,7 +112,7 @@ func (this *NSAccessLogDAO) CreateNSAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *NS
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, reverse bool) (result []*NSAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -122,18 +122,18 @@ func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, nodeId, domainId, recordId, reverse)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, nodeId, domainId, recordId, keyword, reverse)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, nodeId, domainId, recordId, reverse)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, nodeId, domainId, recordId, keyword, reverse)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, reverse bool) (result []*NSAccessLog, nextLastRequestId string, err error) {
+func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -195,6 +195,12 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 					query.Where("requestId>:requestId").
 						Param("requestId", lastRequestId)
 				}
+			}
+
+			// keyword
+			if len(keyword) > 0 {
+				query.Where("(JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.questionName') LIKE :keyword OR JSON_EXTRACT(content, '$.recordValue') LIKE :keyword)").
+					Param("keyword", "%"+keyword+"%")
 			}
 
 			if !reverse {

@@ -50,7 +50,7 @@ func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.Li
 		// TODO
 	}
 
-	accessLogs, requestId, hasMore, err := models.SharedNSAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.NsNodeId, req.NsDomainId, req.NsRecordId, req.Reverse)
+	accessLogs, requestId, hasMore, err := models.SharedNSAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.NsNodeId, req.NsDomainId, req.NsRecordId, req.Keyword, req.Reverse)
 	if err != nil {
 		return nil, err
 	}
