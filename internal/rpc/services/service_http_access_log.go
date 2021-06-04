@@ -75,6 +75,7 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 
 	return &pb.ListHTTPAccessLogsResponse{
 		HttpAccessLogs: result,
+		AccessLogs:     result, // TODO 仅仅为了兼容，当用户节点版本大于0.0.8时可以删除
 		HasMore:        hasMore,
 		RequestId:      requestId,
 	}, nil
