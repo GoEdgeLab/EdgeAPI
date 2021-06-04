@@ -13,7 +13,7 @@ type ReverseProxyService struct {
 	BaseService
 }
 
-// 创建反向代理
+// CreateReverseProxy 创建反向代理
 func (this *ReverseProxyService) CreateReverseProxy(ctx context.Context, req *pb.CreateReverseProxyRequest) (*pb.CreateReverseProxyResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -35,7 +35,7 @@ func (this *ReverseProxyService) CreateReverseProxy(ctx context.Context, req *pb
 	return &pb.CreateReverseProxyResponse{ReverseProxyId: reverseProxyId}, nil
 }
 
-// 查找反向代理
+// FindEnabledReverseProxy 查找反向代理
 func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, req *pb.FindEnabledReverseProxyRequest) (*pb.FindEnabledReverseProxyResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -44,11 +44,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +69,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 	return &pb.FindEnabledReverseProxyResponse{ReverseProxy: result}, nil
 }
 
-// 查找反向代理配置
+// FindEnabledReverseProxyConfig 查找反向代理配置
 func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Context, req *pb.FindEnabledReverseProxyConfigRequest) (*pb.FindEnabledReverseProxyConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -82,11 +78,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +99,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 	return &pb.FindEnabledReverseProxyConfigResponse{ReverseProxyJSON: configData}, nil
 }
 
-// 修改反向代理调度算法
+// UpdateReverseProxyScheduling 修改反向代理调度算法
 func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Context, req *pb.UpdateReverseProxySchedulingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -116,11 +108,7 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +124,7 @@ func (this *ReverseProxyService) UpdateReverseProxyScheduling(ctx context.Contex
 	return this.Success()
 }
 
-// 修改主要源站信息
+// UpdateReverseProxyPrimaryOrigins 修改主要源站信息
 func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Context, req *pb.UpdateReverseProxyPrimaryOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -145,11 +133,7 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +149,7 @@ func (this *ReverseProxyService) UpdateReverseProxyPrimaryOrigins(ctx context.Co
 	return this.Success()
 }
 
-// 修改备用源站信息
+// UpdateReverseProxyBackupOrigins 修改备用源站信息
 func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Context, req *pb.UpdateReverseProxyBackupOriginsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -174,11 +158,7 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +174,7 @@ func (this *ReverseProxyService) UpdateReverseProxyBackupOrigins(ctx context.Con
 	return this.Success()
 }
 
-// 修改是否启用
+// UpdateReverseProxy 修改是否启用
 func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb.UpdateReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -203,11 +183,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 	}
 
 	if userId > 0 {
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithReverseProxyId(nil, req.ReverseProxyId)
-		if err != nil {
-			return nil, err
-		}
-		err = models.SharedServerDAO.CheckUserServer(nil, userId, serverId)
+		err = models.SharedReverseProxyDAO.CheckUserReverseProxy(nil, userId, req.ReverseProxyId)
 		if err != nil {
 			return nil, err
 		}

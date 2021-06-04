@@ -38,12 +38,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *ReverseProxyDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableReverseProxy 启用条目
 func (this *ReverseProxyDAO) EnableReverseProxy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -55,7 +55,7 @@ func (this *ReverseProxyDAO) EnableReverseProxy(tx *dbs.Tx, id int64) error {
 	return this.NotifyUpdate(tx, id)
 }
 
-// 禁用条目
+// DisableReverseProxy 禁用条目
 func (this *ReverseProxyDAO) DisableReverseProxy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -67,7 +67,7 @@ func (this *ReverseProxyDAO) DisableReverseProxy(tx *dbs.Tx, id int64) error {
 	return this.NotifyUpdate(tx, id)
 }
 
-// 查找启用中的条目
+// FindEnabledReverseProxy 查找启用中的条目
 func (this *ReverseProxyDAO) FindEnabledReverseProxy(tx *dbs.Tx, id int64) (*ReverseProxy, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -79,7 +79,7 @@ func (this *ReverseProxyDAO) FindEnabledReverseProxy(tx *dbs.Tx, id int64) (*Rev
 	return result.(*ReverseProxy), err
 }
 
-// 根据iD组合配置
+// ComposeReverseProxyConfig 根据ID组合配置
 func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyId int64) (*serverconfigs.ReverseProxyConfig, error) {
 	reverseProxy, err := this.FindEnabledReverseProxy(tx, reverseProxyId)
 	if err != nil {
@@ -184,7 +184,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	return config, nil
 }
 
-// 创建反向代理
+// CreateReverseProxy 创建反向代理
 func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userId int64, schedulingJSON []byte, primaryOriginsJSON []byte, backupOriginsJSON []byte) (int64, error) {
 	op := NewReverseProxyOperator()
 	op.IsOn = true
@@ -216,7 +216,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	return types.Int64(op.Id), nil
 }
 
-// 修改反向代理调度算法
+// UpdateReverseProxyScheduling 修改反向代理调度算法
 func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reverseProxyId int64, schedulingJSON []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
@@ -235,7 +235,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reversePro
 	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
-// 修改主要源站
+// UpdateReverseProxyPrimaryOrigins 修改主要源站
 func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, reverseProxyId int64, origins []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
@@ -254,7 +254,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, revers
 	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
-// 修改备用源站
+// UpdateReverseProxyBackupOrigins 修改备用源站
 func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverseProxyId int64, origins []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
@@ -273,7 +273,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
-// 修改是否启用
+// UpdateReverseProxy 修改是否启用
 func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool, addHeaders []string, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
@@ -340,7 +340,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64
 	return this.NotifyUpdate(tx, reverseProxyId)
 }
 
-// 查找包含某个源站的反向代理ID
+// FindReverseProxyContainsOriginId 查找包含某个源站的反向代理ID
 func (this *ReverseProxyDAO) FindReverseProxyContainsOriginId(tx *dbs.Tx, originId int64) (int64, error) {
 	return this.Query(tx).
 		ResultPk().
@@ -351,7 +351,31 @@ func (this *ReverseProxyDAO) FindReverseProxyContainsOriginId(tx *dbs.Tx, origin
 		FindInt64Col(0)
 }
 
-// 通知更新
+// CheckUserReverseProxy 检查用户权限
+func (this *ReverseProxyDAO) CheckUserReverseProxy(tx *dbs.Tx, userId int64, reverseProxyId int64) error {
+	exists, err := this.Query(tx).
+		Pk(reverseProxyId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+
+	// 检查server是否为用户的
+	serverId, err := SharedServerDAO.FindEnabledServerIdWithReverseProxyId(tx, reverseProxyId)
+	if err != nil {
+		return err
+	}
+	if serverId == 0 {
+		return ErrNotFound
+	}
+	return SharedServerDAO.CheckUserServer(tx, userId, serverId)
+}
+
+// NotifyUpdate 通知更新
 func (this *ReverseProxyDAO) NotifyUpdate(tx *dbs.Tx, reverseProxyId int64) error {
 	serverId, err := SharedServerDAO.FindEnabledServerIdWithReverseProxyId(tx, reverseProxyId)
 	if err != nil {
