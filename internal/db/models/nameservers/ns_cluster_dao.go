@@ -73,9 +73,14 @@ func (this *NSClusterDAO) FindEnabledNSClusterName(tx *dbs.Tx, id int64) (string
 }
 
 // CreateCluster 创建集群
-func (this *NSClusterDAO) CreateCluster(tx *dbs.Tx, name string) (int64, error) {
+func (this *NSClusterDAO) CreateCluster(tx *dbs.Tx, name string, accessLogRefJSON []byte) (int64, error) {
 	op := NewNSClusterOperator()
 	op.Name = name
+
+	if len(accessLogRefJSON) > 0 {
+		op.AccessLog = accessLogRefJSON
+	}
+
 	op.IsOn = true
 	op.State = NSClusterStateEnabled
 	return this.SaveInt64(tx, op)

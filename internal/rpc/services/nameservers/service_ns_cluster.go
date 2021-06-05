@@ -21,7 +21,7 @@ func (this *NSClusterService) CreateNSCluster(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusterId, err := nameservers.SharedNSClusterDAO.CreateCluster(tx, req.Name)
+	clusterId, err := nameservers.SharedNSClusterDAO.CreateCluster(tx, req.Name, req.AccessLogJSON)
 	if err != nil {
 		return nil, err
 	}
