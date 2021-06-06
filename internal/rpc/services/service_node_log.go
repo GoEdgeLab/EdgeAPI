@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -61,8 +62,18 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 		return nil, err
 	}
 
+	hashList := []string{}
+
 	result := []*pb.NodeLog{}
 	for _, log := range logs {
+		// 如果是需要修复的日志，我们需要去重
+		if req.FixedState > 0 {
+			if lists.ContainsString(hashList, log.Hash) {
+				continue
+			}
+			hashList = append(hashList, log.Hash)
+		}
+
 		result = append(result, &pb.NodeLog{
 			Id:          int64(log.Id),
 			Role:        log.Role,
