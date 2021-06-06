@@ -5,6 +5,7 @@ const (
 	LevelInfo    = "info"
 	LevelWarning = "warning"
 	LevelError   = "error"
+	LevelSuccess = "success"
 
 	LogTypeAdmin = "admin"
 	LogTypeUser  = "user"
