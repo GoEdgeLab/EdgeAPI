@@ -191,6 +191,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	op.State = ReverseProxyStateEnabled
 	op.AdminId = adminId
 	op.UserId = userId
+	op.RequestHostType = serverconfigs.RequestHostTypeProxyServer
 
 	defaultHeaders := []string{"X-Real-IP", "X-Forwarded-For", "X-Forwarded-By", "X-Forwarded-Host", "X-Forwarded-Proto"}
 	defaultHeadersJSON, err := json.Marshal(defaultHeaders)
