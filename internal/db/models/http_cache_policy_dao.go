@@ -210,16 +210,25 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64) (
 }
 
 // CountAllEnabledHTTPCachePolicies 计算可用缓存策略数量
-func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx) (int64, error) {
-	return this.Query(tx).
-		State(HTTPCachePolicyStateEnabled).
-		Count()
+func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, keyword string) (int64, error) {
+	query := this.Query(tx).
+		State(HTTPCachePolicyStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
 }
 
 // ListEnabledHTTPCachePolicies 列出单页的缓存策略
-func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
-	ones, err := this.Query(tx).
-		State(HTTPCachePolicyStateEnabled).
+func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, keyword string, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
+	query := this.Query(tx).
+		State(HTTPCachePolicyStateEnabled)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	ones, err := query.
 		ResultPk().
 		Offset(offset).
 		Limit(size).
