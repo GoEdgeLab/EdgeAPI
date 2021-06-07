@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -17,12 +18,12 @@ import (
 	"net"
 )
 
-// DNS域名相关服务
+// DNSDomainService DNS域名相关服务
 type DNSDomainService struct {
 	BaseService
 }
 
-// 创建域名
+// CreateDNSDomain 创建域名
 func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.CreateDNSDomainRequest) (*pb.CreateDNSDomainResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -93,7 +94,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 	return &pb.CreateDNSDomainResponse{DnsDomainId: domainId}, nil
 }
 
-// 修改域名
+// UpdateDNSDomain 修改域名
 func (this *DNSDomainService) UpdateDNSDomain(ctx context.Context, req *pb.UpdateDNSDomainRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -110,7 +111,7 @@ func (this *DNSDomainService) UpdateDNSDomain(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// 删除域名
+// DeleteDNSDomain 删除域名
 func (this *DNSDomainService) DeleteDNSDomain(ctx context.Context, req *pb.DeleteDNSDomainRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -127,7 +128,7 @@ func (this *DNSDomainService) DeleteDNSDomain(ctx context.Context, req *pb.Delet
 	return this.Success()
 }
 
-// 查询单个域名完整信息
+// FindEnabledDNSDomain 查询单个域名完整信息
 func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.FindEnabledDNSDomainRequest) (*pb.FindEnabledDNSDomainResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -149,7 +150,7 @@ func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.
 	return &pb.FindEnabledDNSDomainResponse{DnsDomain: pbDomain}, nil
 }
 
-// 查询单个域名基础信息
+// FindEnabledBasicDNSDomain 查询单个域名基础信息
 func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req *pb.FindEnabledBasicDNSDomainRequest) (*pb.FindEnabledBasicDNSDomainResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -175,7 +176,7 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 	}}, nil
 }
 
-// 计算服务商下的域名数量
+// CountAllEnabledDNSDomainsWithDNSProviderId 计算服务商下的域名数量
 func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledDNSDomainsWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -192,7 +193,7 @@ func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx con
 	return this.SuccessCount(count)
 }
 
-// 列出服务商下的所有域名
+// FindAllEnabledDNSDomainsWithDNSProviderId 列出服务商下的所有域名
 func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllEnabledDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllEnabledDNSDomainsWithDNSProviderIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -219,7 +220,7 @@ func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx cont
 	return &pb.FindAllEnabledDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
 }
 
-// 列出服务商下的所有域名基本信息
+// FindAllEnabledBasicDNSDomainsWithDNSProviderId 列出服务商下的所有域名基本信息
 func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -246,7 +247,7 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 	return &pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
 }
 
-// 同步域名数据
+// SyncDNSDomainData 同步域名数据
 func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.SyncDNSDomainDataRequest) (*pb.SyncDNSDomainDataResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -256,7 +257,7 @@ func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.Syn
 	return this.syncClusterDNS(req)
 }
 
-// 查看支持的线路
+// FindAllDNSDomainRoutes 查看支持的线路
 func (this *DNSDomainService) FindAllDNSDomainRoutes(ctx context.Context, req *pb.FindAllDNSDomainRoutesRequest) (*pb.FindAllDNSDomainRoutesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -282,7 +283,7 @@ func (this *DNSDomainService) FindAllDNSDomainRoutes(ctx context.Context, req *p
 	return &pb.FindAllDNSDomainRoutesResponse{Routes: pbRoutes}, nil
 }
 
-// 判断是否有域名可选
+// ExistAvailableDomains 判断是否有域名可选
 func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb.ExistAvailableDomainsRequest) (*pb.ExistAvailableDomainsResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -404,7 +405,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	nodeRecords := []*dnstypes.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
 	nodeRecordMapping := map[string]*dnstypes.Record{} // value_route => *Record
 	for _, record := range records {
-		if record.Type == dnstypes.RecordTypeA && record.Name == clusterDnsName {
+		if (record.Type == dnstypes.RecordTypeA || record.Type == dnstypes.RecordTypeAAAA) && record.Name == clusterDnsName {
 			nodeRecords = append(nodeRecords, record)
 			nodeRecordMapping[record.Value+"_"+record.Route] = record
 		}
@@ -440,12 +441,16 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				nodeKeys = append(nodeKeys, key)
 				record, ok := nodeRecordMapping[key]
 				if !ok {
+					recordType := dnstypes.RecordTypeA
+					if utils.IsIPv6(ip) {
+						recordType = dnstypes.RecordTypeAAAA
+					}
 					result = append(result, maps.Map{
 						"action": "create",
 						"record": &dnstypes.Record{
 							Id:    "",
 							Name:  clusterDnsName,
-							Type:  dnstypes.RecordTypeA,
+							Type:  recordType,
 							Value: ip,
 							Route: route,
 						},

@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// DNS相关服务
+// DNSService DNS相关服务
 type DNSService struct {
 	BaseService
 }
 
-// 查找问题
+// FindAllDNSIssues 查找问题
 func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNSIssuesRequest) (*pb.FindAllDNSIssuesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -20,13 +20,24 @@ func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNS
 		return nil, err
 	}
 
-	result := []*pb.DNSIssue{}
+	var result = []*pb.DNSIssue{}
+	var tx = this.NullTx()
+	var clusters []*models.NodeCluster
 
-	tx := this.NullTx()
-
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersHaveDNSDomain(tx)
-	if err != nil {
-		return nil, err
+	if req.NodeClusterId <= 0 {
+		clusters, err = models.SharedNodeClusterDAO.FindAllEnabledClustersHaveDNSDomain(tx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			return &pb.FindAllDNSIssuesResponse{Issues: nil}, nil
+		}
+		clusters = []*models.NodeCluster{cluster}
 	}
 	for _, cluster := range clusters {
 		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(tx, cluster)

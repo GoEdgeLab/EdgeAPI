@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -278,7 +279,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}
 	oldRecordsMap := map[string]*dnstypes.Record{} // route@value => record
 	for _, record := range records {
-		if record.Type == dnstypes.RecordTypeA && record.Name == clusterDNSName {
+		if (record.Type == dnstypes.RecordTypeA || record.Type == dnstypes.RecordTypeAAAA) && record.Name == clusterDNSName {
 			key := record.Route + "@" + record.Value
 			oldRecordsMap[key] = record
 		}
@@ -310,7 +311,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		}
 		for _, ipAddress := range ipAddresses {
 			ip := ipAddress.Ip
-			if len(ip) == 0 {
+			if len(ip) == 0 || ipAddress.CanAccess == 0 {
 				continue
 			}
 			if net.ParseIP(ip) == nil {
@@ -324,10 +325,14 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 					continue
 				}
 
+				recordType := dnstypes.RecordTypeA
+				if utils.IsIPv6(ip) {
+					recordType = dnstypes.RecordTypeAAAA
+				}
 				err = manager.AddRecord(domain, &dnstypes.Record{
 					Id:    "",
 					Name:  clusterDNSName,
-					Type:  dnstypes.RecordTypeA,
+					Type:  recordType,
 					Value: ip,
 					Route: route,
 				})
