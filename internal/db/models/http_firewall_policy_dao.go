@@ -37,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPFirewallPolicyDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPFirewallPolicy 启用条目
 func (this *HTTPFirewallPolicyDAO) EnableHTTPFirewallPolicy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *HTTPFirewallPolicyDAO) EnableHTTPFirewallPolicy(tx *dbs.Tx, id int64
 	return err
 }
 
-// 禁用条目
+// DisableHTTPFirewallPolicy 禁用条目
 func (this *HTTPFirewallPolicyDAO) DisableHTTPFirewallPolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
 		Pk(policyId).
@@ -64,7 +64,7 @@ func (this *HTTPFirewallPolicyDAO) DisableHTTPFirewallPolicy(tx *dbs.Tx, policyI
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPFirewallPolicy 查找启用中的条目
 func (this *HTTPFirewallPolicyDAO) FindEnabledHTTPFirewallPolicy(tx *dbs.Tx, id int64) (*HTTPFirewallPolicy, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -76,7 +76,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledHTTPFirewallPolicy(tx *dbs.Tx, id 
 	return result.(*HTTPFirewallPolicy), err
 }
 
-// 根据主键查找名称
+// FindHTTPFirewallPolicyName 根据主键查找名称
 func (this *HTTPFirewallPolicyDAO) FindHTTPFirewallPolicyName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -84,7 +84,7 @@ func (this *HTTPFirewallPolicyDAO) FindHTTPFirewallPolicyName(tx *dbs.Tx, id int
 		FindStringCol("")
 }
 
-// 查找所有可用策略
+// FindAllEnabledFirewallPolicies 查找所有可用策略
 func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (result []*HTTPFirewallPolicy, err error) {
 	_, err = this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
@@ -94,7 +94,7 @@ func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (r
 	return
 }
 
-// 创建策略
+// CreateFirewallPolicy 创建策略
 func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, serverId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
 	op := NewHTTPFirewallPolicyOperator()
 	op.UserId = userId
@@ -113,7 +113,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 	return types.Int64(op.Id), err
 }
 
-// 修改策略的Inbound和Outbound
+// UpdateFirewallPolicyInboundAndOutbound 修改策略的Inbound和Outbound
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *dbs.Tx, policyId int64, inboundJSON []byte, outboundJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -138,7 +138,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *db
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改策略的Inbound
+// UpdateFirewallPolicyInbound 修改策略的Inbound
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, policyId int64, inboundJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -158,7 +158,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改策略
+// UpdateFirewallPolicy 修改策略
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -189,18 +189,28 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 计算所有可用的策略数量
-func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx) (int64, error) {
-	return this.Query(tx).
+// CountAllEnabledFirewallPolicies 计算所有可用的策略数量
+func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx, keyword string) (int64, error) {
+	query := this.Query(tx)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
 		Attr("serverId", 0).
 		Count()
 }
 
-// 列出单页的策略
-func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, offset int64, size int64) (result []*HTTPFirewallPolicy, err error) {
-	_, err = this.Query(tx).
+// ListEnabledFirewallPolicies 列出单页的策略
+func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*HTTPFirewallPolicy, err error) {
+	query := this.Query(tx)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
 		Attr("serverId", 0).
@@ -212,7 +222,7 @@ func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, offse
 	return
 }
 
-// 组合策略配置
+// ComposeFirewallPolicy 组合策略配置
 func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId int64) (*firewallconfigs.HTTPFirewallPolicy, error) {
 	policy, err := this.FindEnabledHTTPFirewallPolicy(tx, policyId)
 	if err != nil {
@@ -297,7 +307,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	return config, nil
 }
 
-// 检查用户防火墙策略
+// CheckUserFirewallPolicy 检查用户防火墙策略
 func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId int64, firewallPolicyId int64) error {
 	ok, err := this.Query(tx).
 		Pk(firewallPolicyId).
@@ -315,7 +325,7 @@ func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId in
 	return ErrNotFound
 }
 
-// 查找包含某个IPList的所有策略
+// FindEnabledFirewallPolicyIdsWithIPListId 查找包含某个IPList的所有策略
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *dbs.Tx, ipListId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		ResultPk().
@@ -333,7 +343,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 	return result, nil
 }
 
-// 查找包含某个规则分组的策略ID
+// FindEnabledFirewallPolicyIdWithRuleGroupId 查找包含某个规则分组的策略ID
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx *dbs.Tx, ruleGroupId int64) (int64, error) {
 	return this.Query(tx).
 		ResultPk().
@@ -343,7 +353,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx
 		FindInt64Col(0)
 }
 
-// 设置某个策略所属的服务ID
+// UpdateFirewallPolicyServerId 设置某个策略所属的服务ID
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, policyId int64, serverId int64) error {
 	_, err := this.Query(tx).
 		Pk(policyId).
@@ -352,7 +362,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, poli
 	return err
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPFirewallPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
 	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, policyId)
 	if err != nil {

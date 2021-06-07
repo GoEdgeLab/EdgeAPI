@@ -15,12 +15,12 @@ import (
 	"net"
 )
 
-// HTTP防火墙（WAF）相关服务
+// HTTPFirewallPolicyService HTTP防火墙（WAF）相关服务
 type HTTPFirewallPolicyService struct {
 	BaseService
 }
 
-// 获取所有可用策略
+// FindAllEnabledHTTPFirewallPolicies 获取所有可用策略
 func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx context.Context, req *pb.FindAllEnabledHTTPFirewallPoliciesRequest) (*pb.FindAllEnabledHTTPFirewallPoliciesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -50,7 +50,7 @@ func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx co
 	return &pb.FindAllEnabledHTTPFirewallPoliciesResponse{FirewallPolicies: result}, nil
 }
 
-// 创建防火墙策略
+// CreateHTTPFirewallPolicy 创建防火墙策略
 func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Context, req *pb.CreateHTTPFirewallPolicyRequest) (*pb.CreateHTTPFirewallPolicyResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -118,7 +118,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 	return &pb.CreateHTTPFirewallPolicyResponse{HttpFirewallPolicyId: policyId}, nil
 }
 
-// 创建空防火墙策略
+// CreateEmptyHTTPFirewallPolicy 创建空防火墙策略
 func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context.Context, req *pb.CreateEmptyHTTPFirewallPolicyRequest) (*pb.CreateEmptyHTTPFirewallPolicyResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -164,7 +164,7 @@ func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context
 	return &pb.CreateEmptyHTTPFirewallPolicyResponse{HttpFirewallPolicyId: policyId}, nil
 }
 
-// 修改防火墙策略
+// UpdateHTTPFirewallPolicy 修改防火墙策略
 func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -292,7 +292,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 	return this.Success()
 }
 
-// 修改分组信息
+// UpdateHTTPFirewallPolicyGroups 修改分组信息
 func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx context.Context, req *pb.UpdateHTTPFirewallPolicyGroupsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -317,7 +317,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 	return this.Success()
 }
 
-// 修改inbound信息
+// UpdateHTTPFirewallInboundConfig 修改inbound信息
 func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx context.Context, req *pb.UpdateHTTPFirewallInboundConfigRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -342,7 +342,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallInboundConfig(ctx conte
 	return this.Success()
 }
 
-// 计算可用的防火墙策略数量
+// CountAllEnabledHTTPFirewallPolicies 计算可用的防火墙策略数量
 func (this *HTTPFirewallPolicyService) CountAllEnabledHTTPFirewallPolicies(ctx context.Context, req *pb.CountAllEnabledHTTPFirewallPoliciesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -352,14 +352,14 @@ func (this *HTTPFirewallPolicyService) CountAllEnabledHTTPFirewallPolicies(ctx c
 
 	tx := this.NullTx()
 
-	count, err := models.SharedHTTPFirewallPolicyDAO.CountAllEnabledFirewallPolicies(tx)
+	count, err := models.SharedHTTPFirewallPolicyDAO.CountAllEnabledFirewallPolicies(tx, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
 	return this.SuccessCount(count)
 }
 
-// 列出单页的防火墙策略
+// ListEnabledHTTPFirewallPolicies 列出单页的防火墙策略
 func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx context.Context, req *pb.ListEnabledHTTPFirewallPoliciesRequest) (*pb.ListEnabledHTTPFirewallPoliciesResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -369,7 +369,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 
 	tx := this.NullTx()
 
-	policies, err := models.SharedHTTPFirewallPolicyDAO.ListEnabledFirewallPolicies(tx, req.Offset, req.Size)
+	policies, err := models.SharedHTTPFirewallPolicyDAO.ListEnabledFirewallPolicies(tx, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +389,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 	return &pb.ListEnabledHTTPFirewallPoliciesResponse{HttpFirewallPolicies: result}, nil
 }
 
-// 删除某个防火墙策略
+// DeleteHTTPFirewallPolicy 删除某个防火墙策略
 func (this *HTTPFirewallPolicyService) DeleteHTTPFirewallPolicy(ctx context.Context, req *pb.DeleteHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
@@ -407,7 +407,7 @@ func (this *HTTPFirewallPolicyService) DeleteHTTPFirewallPolicy(ctx context.Cont
 	return this.Success()
 }
 
-// 查找单个防火墙配置
+// FindEnabledHTTPFirewallPolicyConfig 查找单个防火墙配置
 func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyConfigRequest) (*pb.FindEnabledHTTPFirewallPolicyConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -441,7 +441,7 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx c
 	return &pb.FindEnabledHTTPFirewallPolicyConfigResponse{HttpFirewallPolicyJSON: configJSON}, nil
 }
 
-// 获取防火墙的基本信息
+// FindEnabledHTTPFirewallPolicy 获取防火墙的基本信息
 func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context.Context, req *pb.FindEnabledHTTPFirewallPolicyRequest) (*pb.FindEnabledHTTPFirewallPolicyResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -475,7 +475,7 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context
 	}}, nil
 }
 
-// 导入策略数据
+// ImportHTTPFirewallPolicy 导入策略数据
 func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Context, req *pb.ImportHTTPFirewallPolicyRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -633,7 +633,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 	return this.Success()
 }
 
-// 检查IP状态
+// CheckHTTPFirewallPolicyIPStatus 检查IP状态
 func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx context.Context, req *pb.CheckHTTPFirewallPolicyIPStatusRequest) (*pb.CheckHTTPFirewallPolicyIPStatusResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
