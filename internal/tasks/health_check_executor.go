@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
@@ -160,6 +161,11 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 
 // 检查单个节点
 func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult) error {
+	// 支持IPv6
+	if utils.IsIPv6(result.NodeAddr) {
+		result.NodeAddr = "[" + result.NodeAddr + "]"
+	}
+
 	url := strings.ReplaceAll(healthCheckConfig.URL, "${host}", result.NodeAddr)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
