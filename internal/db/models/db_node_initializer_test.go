@@ -12,13 +12,13 @@ func TestDBNodeInitializer_loop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(len(accessLogDBMapping), len(accessLogDAOMapping))
+	t.Log(len(accessLogDBMapping), len(httpAccessLogDAOMapping))
 }
 
 func TestFindAccessLogTable(t *testing.T) {
 	before := time.Now()
 	db := SharedHTTPAccessLogDAO.Instance
-	tableName, err := findAccessLogTable(db, "20201010", false)
+	tableName, err := findHTTPAccessLogTable(db, "20201010", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestFindAccessLogTable(t *testing.T) {
 	t.Log(time.Since(before).Seconds()*1000, "ms")
 
 	before = time.Now()
-	tableName, err = findAccessLogTable(db, "20201010", false)
+	tableName, err = findHTTPAccessLogTable(db, "20201010", false)
 
 	if err != nil {
 		t.Fatal(err)
@@ -40,6 +40,6 @@ func BenchmarkFindAccessLogTable(b *testing.B) {
 
 	runtime.GOMAXPROCS(1)
 	for i := 0; i < b.N; i++ {
-		_, _ = findAccessLogTable(db, "20201010", false)
+		_, _ = findHTTPAccessLogTable(db, "20201010", false)
 	}
 }

@@ -6,14 +6,15 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
-// 服务统计相关服务
+// ServerDailyStatService 服务统计相关服务
 type ServerDailyStatService struct {
 	BaseService
 }
 
-// 上传统计
+// UploadServerDailyStats 上传统计
 func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, req *pb.UploadServerDailyStatsRequest) (*pb.RPCSuccess, error) {
 	nodeId, err := this.ValidateNode(ctx)
 	if err != nil {
@@ -64,4 +65,35 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 	}
 
 	return this.Success()
+}
+
+// FindServerHourlyStats 按小时读取统计数据
+func (this *ServerDailyStatService) FindServerHourlyStats(ctx context.Context, req *pb.FindServerHourlyStatsRequest) (*pb.FindServerHourlyStatsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	result := []*pb.FindServerHourlyStatsResponse_HourlyStat{}
+	if req.Hours > 0 {
+		for i := int32(0); i < req.Hours; i++ {
+			hourString := timeutil.Format("YmdH", time.Now().Add(-time.Duration(i)*time.Hour))
+			stat, err := models.SharedServerDailyStatDAO.SumHourlyStat(tx, req.ServerId, hourString)
+			if err != nil {
+				return nil, err
+			}
+			if stat != nil {
+				result = append(result, &pb.FindServerHourlyStatsResponse_HourlyStat{
+					Hour:                hourString,
+					Bytes:               stat.Bytes,
+					CachedBytes:         stat.CachedBytes,
+					CountRequests:       stat.CountRequests,
+					CountCachedRequests: stat.CountCachedRequests,
+				})
+			}
+		}
+	}
+	return &pb.FindServerHourlyStatsResponse{Stats: result}, nil
 }

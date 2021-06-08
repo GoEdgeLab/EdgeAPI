@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/maps"
@@ -13,7 +14,7 @@ func TestNodeValueDAO_CreateValue(t *testing.T) {
 	m := maps.Map{
 		"hello": "world12344",
 	}
-	err := dao.CreateValue(nil, NodeRoleNode, 1, "test", m.AsJSON(), time.Now().Unix())
+	err := dao.CreateValue(nil, nodeconfigs.NodeRoleNode, 1, "test", m.AsJSON(), time.Now().Unix())
 	if err != nil {
 		t.Fatal(err)
 	}

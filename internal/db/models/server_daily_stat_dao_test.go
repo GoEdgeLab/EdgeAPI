@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
 )
@@ -50,4 +51,15 @@ func TestServerDailyStatDAO_SumUserMonthly(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("bytes:", bytes)
+}
+
+func TestServerDailyStatDAO_SumHourlyRequests(t *testing.T) {
+	dbs.NotifyReady()
+	var tx *dbs.Tx
+
+	stats, err := NewServerDailyStatDAO().SumHourlyStats(tx, 23, timeutil.Format("YmdH"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(stats, t)
 }

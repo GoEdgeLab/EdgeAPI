@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"regexp"
 )
 
 type ServerDailyStatDAO dbs.DAO
@@ -30,24 +31,33 @@ func init() {
 	})
 }
 
-// 提交数据
+// SaveStats 提交数据
 func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailyStat) error {
 	for _, stat := range stats {
 		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
 		timeFrom := timeutil.FormatTime("His", stat.CreatedAt)
-		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60) // 5分钟
+		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60-1) // 5分钟
 
 		_, _, err := this.Query(tx).
 			Param("bytes", stat.Bytes).
+			Param("cachedBytes", stat.CachedBytes).
+			Param("countRequests", stat.CountRequests).
+			Param("countCachedRequests", stat.CountCachedRequests).
 			InsertOrUpdate(maps.Map{
-				"serverId": stat.ServerId,
-				"regionId": stat.RegionId,
-				"bytes":    dbs.SQL("bytes+:bytes"),
-				"day":      day,
-				"timeFrom": timeFrom,
-				"timeTo":   timeTo,
+				"serverId":            stat.ServerId,
+				"regionId":            stat.RegionId,
+				"bytes":               dbs.SQL("bytes+:bytes"),
+				"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
+				"countRequests":       dbs.SQL("countRequests+:countRequests"),
+				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+				"day":                 day,
+				"timeFrom":            timeFrom,
+				"timeTo":              timeTo,
 			}, maps.Map{
-				"bytes": dbs.SQL("bytes+:bytes"),
+				"bytes":               dbs.SQL("bytes+:bytes"),
+				"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
+				"countRequests":       dbs.SQL("countRequests+:countRequests"),
+				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
 			})
 		if err != nil {
 			return err
@@ -56,7 +66,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 	return nil
 }
 
-// 根据用户计算某月合计
+// SumUserMonthly 根据用户计算某月合计
 // month 格式为YYYYMM
 func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
 	query := this.Query(tx)
@@ -69,7 +79,7 @@ func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionI
 		SumInt64("bytes", 0)
 }
 
-// 获取某月带宽峰值
+// SumUserMonthlyPeek 获取某月带宽峰值
 // month 格式为YYYYMM
 func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
 	query := this.Query(tx)
@@ -86,7 +96,7 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, reg
 	return int64(max), nil
 }
 
-// 获取某天流量总和
+// SumUserDaily 获取某天流量总和
 // day 格式为YYYYMMDD
 func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (int64, error) {
 	query := this.Query(tx)
@@ -100,7 +110,7 @@ func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId 
 		SumInt64("bytes", 0)
 }
 
-// 获取某天带宽峰值
+// SumUserDailyPeek 获取某天带宽峰值
 // day 格式为YYYYMMDD
 func (this *ServerDailyStatDAO) SumUserDailyPeek(tx *dbs.Tx, userId int64, regionId int64, day string) (int64, error) {
 	query := this.Query(tx)
@@ -116,4 +126,35 @@ func (this *ServerDailyStatDAO) SumUserDailyPeek(tx *dbs.Tx, userId int64, regio
 		return 0, err
 	}
 	return int64(max), nil
+}
+
+// SumHourlyStat 获取 N 小时内的流量
+// hour 格式为YYYYMMDDHH
+func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour string) (stat *pb.ServerDailyStat, err error) {
+	stat = &pb.ServerDailyStat{}
+
+	if !regexp.MustCompile(`^\d{10}$`).MatchString(hour) {
+		return
+	}
+
+	one, _, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Attr("serverId", serverId).
+		Attr("day", hour[:8]).
+		Gte("timeFrom", hour[8:]+"0000").
+		Lte("timeTo", hour[8:]+"5959").
+		FindOne()
+	if err != nil {
+		return nil, err
+	}
+
+	if one == nil {
+		return
+	}
+
+	stat.Bytes = one.GetInt64("bytes")
+	stat.CachedBytes = one.GetInt64("cachedBytes")
+	stat.CountRequests = one.GetInt64("countRequests")
+	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	return
 }
