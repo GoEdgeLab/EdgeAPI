@@ -128,7 +128,37 @@ func (this *ServerDailyStatDAO) SumUserDailyPeek(tx *dbs.Tx, userId int64, regio
 	return int64(max), nil
 }
 
-// SumHourlyStat 获取 N 小时内的流量
+// SumMinutelyStat 获取某个分钟内的流量
+// minute 格式为YYYYMMDDHHMM，并且已经格式化成每5分钟一个值
+func (this *ServerDailyStatDAO) SumMinutelyStat(tx *dbs.Tx, serverId int64, minute string) (stat *pb.ServerDailyStat, err error) {
+	stat = &pb.ServerDailyStat{}
+
+	if !regexp.MustCompile(`^\d{12}$`).MatchString(minute) {
+		return
+	}
+
+	one, _, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Attr("serverId", serverId).
+		Attr("day", minute[:8]).
+		Attr("timeFrom", minute[8:]+"00").
+		FindOne()
+	if err != nil {
+		return nil, err
+	}
+
+	if one == nil {
+		return
+	}
+
+	stat.Bytes = one.GetInt64("bytes")
+	stat.CachedBytes = one.GetInt64("cachedBytes")
+	stat.CountRequests = one.GetInt64("countRequests")
+	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	return
+}
+
+// SumHourlyStat 获取某个小时内的流量
 // hour 格式为YYYYMMDDHH
 func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour string) (stat *pb.ServerDailyStat, err error) {
 	stat = &pb.ServerDailyStat{}
@@ -143,6 +173,35 @@ func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour s
 		Attr("day", hour[:8]).
 		Gte("timeFrom", hour[8:]+"0000").
 		Lte("timeTo", hour[8:]+"5959").
+		FindOne()
+	if err != nil {
+		return nil, err
+	}
+
+	if one == nil {
+		return
+	}
+
+	stat.Bytes = one.GetInt64("bytes")
+	stat.CachedBytes = one.GetInt64("cachedBytes")
+	stat.CountRequests = one.GetInt64("countRequests")
+	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	return
+}
+
+// SumDailyStat 获取某天内的流量
+// day 格式为YYYYMMDD
+func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day string) (stat *pb.ServerDailyStat, err error) {
+	stat = &pb.ServerDailyStat{}
+
+	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
+		return
+	}
+
+	one, _, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Attr("serverId", serverId).
+		Attr("day", day).
 		FindOne()
 	if err != nil {
 		return nil, err

@@ -57,9 +57,20 @@ func TestServerDailyStatDAO_SumHourlyRequests(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
 
-	stats, err := NewServerDailyStatDAO().SumHourlyStats(tx, 23, timeutil.Format("YmdH"))
+	stat, err := NewServerDailyStatDAO().SumHourlyStat(tx, 23, timeutil.Format("YmdH"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	logs.PrintAsJSON(stats, t)
+	logs.PrintAsJSON(stat, t)
+}
+
+func TestServerDailyStatDAO_SumMinutelyRequests(t *testing.T) {
+	dbs.NotifyReady()
+	var tx *dbs.Tx
+
+	stat, err := NewServerDailyStatDAO().SumMinutelyStat(tx, 23, timeutil.Format("Ymd") + "1435")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(stat, t)
 }
