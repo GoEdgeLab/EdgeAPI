@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -36,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPLocationDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPLocation 启用条目
 func (this *HTTPLocationDAO) EnableHTTPLocation(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -50,7 +51,7 @@ func (this *HTTPLocationDAO) EnableHTTPLocation(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableHTTPLocation 禁用条目
 func (this *HTTPLocationDAO) DisableHTTPLocation(tx *dbs.Tx, locationId int64) error {
 	_, err := this.Query(tx).
 		Pk(locationId).
@@ -62,7 +63,7 @@ func (this *HTTPLocationDAO) DisableHTTPLocation(tx *dbs.Tx, locationId int64) e
 	return this.NotifyUpdate(tx, locationId)
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPLocation 查找启用中的条目
 func (this *HTTPLocationDAO) FindEnabledHTTPLocation(tx *dbs.Tx, id int64) (*HTTPLocation, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -74,7 +75,7 @@ func (this *HTTPLocationDAO) FindEnabledHTTPLocation(tx *dbs.Tx, id int64) (*HTT
 	return result.(*HTTPLocation), err
 }
 
-// 根据主键查找名称
+// FindHTTPLocationName 根据主键查找名称
 func (this *HTTPLocationDAO) FindHTTPLocationName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -82,8 +83,8 @@ func (this *HTTPLocationDAO) FindHTTPLocationName(tx *dbs.Tx, id int64) (string,
 		FindStringCol("")
 }
 
-// 创建路径规则
-func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name string, pattern string, description string, isBreak bool) (int64, error) {
+// CreateLocation 创建路径规则
+func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name string, pattern string, description string, isBreak bool, condsJSON []byte) (int64, error) {
 	op := NewHTTPLocationOperator()
 	op.IsOn = true
 	op.State = HTTPLocationStateEnabled
@@ -92,6 +93,11 @@ func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name str
 	op.Pattern = pattern
 	op.Description = description
 	op.IsBreak = isBreak
+
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	}
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -99,8 +105,8 @@ func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name str
 	return types.Int64(op.Id), nil
 }
 
-// 修改路径规则
-func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name string, pattern string, description string, isOn bool, isBreak bool) error {
+// UpdateLocation 修改路径规则
+func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name string, pattern string, description string, isOn bool, isBreak bool, condsJSON []byte) error {
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
 	}
@@ -111,6 +117,11 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 	op.Description = description
 	op.IsOn = isOn
 	op.IsBreak = isBreak
+
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	}
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -118,7 +129,7 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 	return this.NotifyUpdate(tx, locationId)
 }
 
-// 组合配置
+// ComposeLocationConfig 组合配置
 func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64) (*serverconfigs.HTTPLocationConfig, error) {
 	location, err := this.FindEnabledHTTPLocation(tx, locationId)
 	if err != nil {
@@ -163,10 +174,20 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64)
 		}
 	}
 
+	// conds
+	if len(location.Conds) > 0 {
+		conds := &shared.HTTPRequestCondsConfig{}
+		err = json.Unmarshal([]byte(location.Conds), conds)
+		if err != nil {
+			return nil, err
+		}
+		config.Conds = conds
+	}
+
 	return config, nil
 }
 
-// 查找反向代理设置
+// FindLocationReverseProxy 查找反向代理设置
 func (this *HTTPLocationDAO) FindLocationReverseProxy(tx *dbs.Tx, locationId int64) (*serverconfigs.ReverseProxyRef, error) {
 	refString, err := this.Query(tx).
 		Pk(locationId).
@@ -186,7 +207,7 @@ func (this *HTTPLocationDAO) FindLocationReverseProxy(tx *dbs.Tx, locationId int
 	return nil, nil
 }
 
-// 更改反向代理设置
+// UpdateLocationReverseProxy 更改反向代理设置
 func (this *HTTPLocationDAO) UpdateLocationReverseProxy(tx *dbs.Tx, locationId int64, reverseProxyJSON []byte) error {
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
@@ -201,7 +222,7 @@ func (this *HTTPLocationDAO) UpdateLocationReverseProxy(tx *dbs.Tx, locationId i
 	return this.NotifyUpdate(tx, locationId)
 }
 
-// 查找WebId
+// FindLocationWebId 查找WebId
 func (this *HTTPLocationDAO) FindLocationWebId(tx *dbs.Tx, locationId int64) (int64, error) {
 	webId, err := this.Query(tx).
 		Pk(locationId).
@@ -210,7 +231,7 @@ func (this *HTTPLocationDAO) FindLocationWebId(tx *dbs.Tx, locationId int64) (in
 	return int64(webId), err
 }
 
-// 更改Web设置
+// UpdateLocationWeb 更改Web设置
 func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, webId int64) error {
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
@@ -225,7 +246,7 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, web
 	return this.NotifyUpdate(tx, locationId)
 }
 
-// 转换引用为配置
+// ConvertLocationRefs 转换引用为配置
 func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfigs.HTTPLocationRef) (locations []*serverconfigs.HTTPLocationConfig, err error) {
 	for _, ref := range refs {
 		config, err := this.ComposeLocationConfig(tx, ref.LocationId)
@@ -243,7 +264,7 @@ func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfi
 	return
 }
 
-// 根据WebId查找LocationId
+// FindEnabledLocationIdWithWebId 根据WebId查找LocationId
 func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(tx *dbs.Tx, webId int64) (locationId int64, err error) {
 	if webId <= 0 {
 		return
@@ -254,7 +275,7 @@ func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(tx *dbs.Tx, webId in
 		FindInt64Col(0)
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPLocationDAO) NotifyUpdate(tx *dbs.Tx, locationId int64) error {
 	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithLocationId(tx, locationId)
 	if err != nil {

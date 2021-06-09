@@ -1,8 +1,10 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -35,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPRewriteRuleDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPRewriteRule 启用条目
 func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -49,7 +51,7 @@ func (this *HTTPRewriteRuleDAO) EnableHTTPRewriteRule(tx *dbs.Tx, id int64) erro
 	return err
 }
 
-// 禁用条目
+// DisableHTTPRewriteRule 禁用条目
 func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(tx *dbs.Tx, rewriteRuleId int64) error {
 	_, err := this.Query(tx).
 		Pk(rewriteRuleId).
@@ -61,7 +63,7 @@ func (this *HTTPRewriteRuleDAO) DisableHTTPRewriteRule(tx *dbs.Tx, rewriteRuleId
 	return this.NotifyUpdate(tx, rewriteRuleId)
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPRewriteRule 查找启用中的条目
 func (this *HTTPRewriteRuleDAO) FindEnabledHTTPRewriteRule(tx *dbs.Tx, id int64) (*HTTPRewriteRule, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -73,7 +75,7 @@ func (this *HTTPRewriteRuleDAO) FindEnabledHTTPRewriteRule(tx *dbs.Tx, id int64)
 	return result.(*HTTPRewriteRule), err
 }
 
-// 构造配置
+// ComposeRewriteRule 构造配置
 func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int64) (*serverconfigs.HTTPRewriteRule, error) {
 	rule, err := this.FindEnabledHTTPRewriteRule(tx, rewriteRuleId)
 	if err != nil {
@@ -93,11 +95,21 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int
 	config.ProxyHost = rule.ProxyHost
 	config.IsBreak = rule.IsBreak == 1
 	config.WithQuery = rule.WithQuery == 1
+
+	// conds
+	if len(rule.Conds) > 0 {
+		conds := &shared.HTTPRequestCondsConfig{}
+		err = json.Unmarshal([]byte(rule.Conds), conds)
+		if err != nil {
+			return nil, err
+		}
+		config.Conds = conds
+	}
 	return config, nil
 }
 
-// 创建规则
-func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) (int64, error) {
+// CreateRewriteRule 创建规则
+func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool, condsJSON []byte) (int64, error) {
 	op := NewHTTPRewriteRuleOperator()
 	op.State = HTTPRewriteRuleStateEnabled
 	op.IsOn = isOn
@@ -109,12 +121,17 @@ func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, pattern string, re
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
+
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	}
+
 	err := this.Save(tx, op)
 	return types.Int64(op.Id), err
 }
 
-// 修改规则
-func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool) error {
+// UpdateRewriteRule 修改规则
+func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool, condsJSON []byte) error {
 	if rewriteRuleId <= 0 {
 		return errors.New("invalid rewriteRuleId")
 	}
@@ -128,6 +145,11 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int6
 	op.IsBreak = isBreak
 	op.WithQuery = withQuery
 	op.ProxyHost = proxyHost
+
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	}
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -135,7 +157,7 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int6
 	return this.NotifyUpdate(tx, rewriteRuleId)
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPRewriteRuleDAO) NotifyUpdate(tx *dbs.Tx, rewriteRuleId int64) error {
 	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithRewriteRuleId(tx, rewriteRuleId)
 	if err != nil {
