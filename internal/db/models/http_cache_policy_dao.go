@@ -111,7 +111,44 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 	if len(storageOptionsJSON) > 0 {
 		op.Options = storageOptionsJSON
 	}
-	err := this.Save(tx, op)
+
+	// 默认的缓存条件
+	cacheRef := &serverconfigs.HTTPCacheRef{
+		IsOn:                  true,
+		Key:                   "${scheme}://${host}${requestURI}",
+		Life:                  &shared.TimeDuration{Count: 2, Unit: shared.TimeDurationUnitHour},
+		Status:                []int{200},
+		MaxSize:               &shared.SizeCapacity{Count: 32, Unit: shared.SizeCapacityUnitMB},
+		SkipResponseSetCookie: true,
+		AllowChunkedEncoding:  true,
+		Conds: &shared.HTTPRequestCondsConfig{
+			IsOn:      true,
+			Connector: "or",
+			Groups: []*shared.HTTPRequestCondGroup{
+				{
+					IsOn:      true,
+					Connector: "or",
+					Conds: []*shared.HTTPRequestCond{
+						{
+							Type:      "url-extension",
+							IsRequest: true,
+							Param:     "${requestPathExtension}",
+							Operator:  shared.RequestCondOperatorIn,
+							Value:     `[".html", ".js", ".css", ".gif", ".png", ".bmp", ".jpeg", ".jpg", ".webp", ".ico", ".pdf", ".ttf", ".eot", ".tiff", ".svg", ".svgz", ".eps", ".woff", ".otf", ".woff2", ".tif", ".csv", ".xls", ".xlsx", ".doc", ".docx", ".ppt", ".pptx", ".wav", ".mp3", ".mp4", ".ogg", ".mid", ".midi"]`,
+						},
+					},
+					Description: "初始化规则",
+				},
+			},
+		},
+	}
+	refsJSON, err := json.Marshal([]*serverconfigs.HTTPCacheRef{cacheRef})
+	if err != nil {
+		return 0, err
+	}
+	op.Refs = refsJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
