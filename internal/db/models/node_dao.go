@@ -402,6 +402,27 @@ func (this *NodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byt
 	return err
 }
 
+// FindNodeStatus 获取节点状态
+func (this *NodeDAO) FindNodeStatus(tx *dbs.Tx, nodeId int64) (*nodeconfigs.NodeStatus, error) {
+	statusJSONString, err := this.Query(tx).
+		Pk(nodeId).
+		Result("status").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(statusJSONString) == 0 {
+		return nil, nil
+	}
+
+	status := &nodeconfigs.NodeStatus{}
+	err = json.Unmarshal([]byte(statusJSONString), status)
+	if err != nil {
+		return nil, err
+	}
+	return status, nil
+}
+
 // UpdateNodeIsActive 更改节点在线状态
 func (this *NodeDAO) UpdateNodeIsActive(tx *dbs.Tx, nodeId int64, isActive bool) error {
 	b := "true"

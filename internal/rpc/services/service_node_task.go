@@ -3,17 +3,19 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 	"time"
 )
 
-// 节点同步任务相关服务
+// NodeTaskService 节点同步任务相关服务
 type NodeTaskService struct {
 	BaseService
 }
 
-// 获取单节点同步任务
+// FindNodeTasks 获取单节点同步任务
 func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNodeTasksRequest) (*pb.FindNodeTasksResponse, error) {
 	nodeId, err := this.ValidateNode(ctx)
 	if err != nil {
@@ -36,10 +38,26 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 		})
 	}
 
+	// 版本更新任务
+	status, err := models.SharedNodeDAO.FindNodeStatus(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if status != nil && len(status.OS) > 0 && len(status.Arch) > 0 && len(status.BuildVersion) > 0 {
+		deployFile := installers.SharedDeployManager.FindNodeFile(status.OS, status.Arch)
+		if deployFile != nil {
+			if stringutil.VersionCompare(deployFile.Version, status.BuildVersion) > 0 {
+				pbTasks = append(pbTasks, &pb.NodeTask{
+					Type: models.NodeTaskTypeNodeVersionChanged,
+				})
+			}
+		}
+	}
+
 	return &pb.FindNodeTasksResponse{NodeTasks: pbTasks}, nil
 }
 
-// 报告同步任务结果
+// ReportNodeTaskDone 报告同步任务结果
 func (this *NodeTaskService) ReportNodeTaskDone(ctx context.Context, req *pb.ReportNodeTaskDoneRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateNode(ctx)
 	if err != nil {
@@ -55,7 +73,7 @@ func (this *NodeTaskService) ReportNodeTaskDone(ctx context.Context, req *pb.Rep
 	return this.Success()
 }
 
-// 获取所有正在同步的集群信息
+// FindNodeClusterTasks 获取所有正在同步的集群信息
 func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.FindNodeClusterTasksRequest) (*pb.FindNodeClusterTasksResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -125,7 +143,7 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 	return &pb.FindNodeClusterTasksResponse{ClusterTasks: pbClusterTasks}, nil
 }
 
-// 检查是否有正在执行的任务
+// ExistsNodeTasks 检查是否有正在执行的任务
 func (this *NodeTaskService) ExistsNodeTasks(ctx context.Context, req *pb.ExistsNodeTasksRequest) (*pb.ExistsNodeTasksResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -154,7 +172,7 @@ func (this *NodeTaskService) ExistsNodeTasks(ctx context.Context, req *pb.Exists
 	}, nil
 }
 
-// 删除任务
+// DeleteNodeTask 删除任务
 func (this *NodeTaskService) DeleteNodeTask(ctx context.Context, req *pb.DeleteNodeTaskRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -170,7 +188,7 @@ func (this *NodeTaskService) DeleteNodeTask(ctx context.Context, req *pb.DeleteN
 	return this.Success()
 }
 
-// 批量删除任务
+// DeleteNodeTasks 批量删除任务
 func (this *NodeTaskService) DeleteNodeTasks(ctx context.Context, req *pb.DeleteNodeTasksRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -188,7 +206,7 @@ func (this *NodeTaskService) DeleteNodeTasks(ctx context.Context, req *pb.Delete
 	return this.Success()
 }
 
-// 计算正在执行的任务数量
+// CountDoingNodeTasks 计算正在执行的任务数量
 func (this *NodeTaskService) CountDoingNodeTasks(ctx context.Context, req *pb.CountDoingNodeTasksRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -205,7 +223,7 @@ func (this *NodeTaskService) CountDoingNodeTasks(ctx context.Context, req *pb.Co
 	return this.SuccessCount(count)
 }
 
-// 查找需要通知的任务
+// FindNotifyingNodeTasks 查找需要通知的任务
 func (this *NodeTaskService) FindNotifyingNodeTasks(ctx context.Context, req *pb.FindNotifyingNodeTasksRequest) (*pb.FindNotifyingNodeTasksResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -241,7 +259,7 @@ func (this *NodeTaskService) FindNotifyingNodeTasks(ctx context.Context, req *pb
 	return &pb.FindNotifyingNodeTasksResponse{NodeTasks: pbTasks}, nil
 }
 
-// 设置任务已通知
+// UpdateNodeTasksNotified 设置任务已通知
 func (this *NodeTaskService) UpdateNodeTasksNotified(ctx context.Context, req *pb.UpdateNodeTasksNotifiedRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

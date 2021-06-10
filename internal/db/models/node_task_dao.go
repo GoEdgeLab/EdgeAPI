@@ -13,8 +13,9 @@ import (
 type NodeTaskType = string
 
 const (
-	NodeTaskTypeConfigChanged NodeTaskType = "configChanged"
-	NodeTaskTypeIPItemChanged NodeTaskType = "ipItemChanged"
+	NodeTaskTypeConfigChanged      NodeTaskType = "configChanged"
+	NodeTaskTypeIPItemChanged      NodeTaskType = "ipItemChanged"
+	NodeTaskTypeNodeVersionChanged NodeTaskType = "nodeVersionChanged"
 )
 
 type NodeTaskDAO dbs.DAO

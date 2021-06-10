@@ -18,6 +18,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"net"
+	"path/filepath"
 )
 
 // NodeService 边缘节点相关服务
@@ -1348,4 +1349,32 @@ func (this *NodeService) UpdateNodeUp(ctx context.Context, req *pb.UpdateNodeUpR
 	}
 
 	return this.Success()
+}
+
+// DownloadNodeInstallationFile 下载最新边缘节点安装文件
+func (this *NodeService) DownloadNodeInstallationFile(ctx context.Context, req *pb.DownloadNodeInstallationFileRequest) (*pb.DownloadNodeInstallationFileResponse, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	file := installers.SharedDeployManager.FindNodeFile(req.Os, req.Arch)
+	if file == nil {
+		return &pb.DownloadNodeInstallationFileResponse{}, nil
+	}
+
+	sum, err := file.Sum()
+	if err != nil {
+		return nil, err
+	}
+
+	data, offset, err := file.Read(req.ChunkOffset)
+
+	return &pb.DownloadNodeInstallationFileResponse{
+		Sum:       sum,
+		Offset:    offset,
+		ChunkData: data,
+		Version:   file.Version,
+		Filename:  filepath.Base(file.Path),
+	}, nil
 }

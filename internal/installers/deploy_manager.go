@@ -9,17 +9,11 @@ import (
 
 var SharedDeployManager = NewDeployManager()
 
-type DeployFile struct {
-	OS      string
-	Arch    string
-	Version string
-	Path    string
-}
-
 type DeployManager struct {
 	dir string
 }
 
+// NewDeployManager 节点部署文件管理器
 func NewDeployManager() *DeployManager {
 	return &DeployManager{
 		dir: Tea.Root + "/deploy",
@@ -61,7 +55,15 @@ func (this *DeployManager) LoadNodeFiles() []*DeployFile {
 	return result
 }
 
-
+// FindNodeFile 查找特别平台的节点文件
+func (this *DeployManager) FindNodeFile(os string, arch string) *DeployFile {
+	for _, file := range this.LoadNodeFiles() {
+		if file.OS == os && file.Arch == arch {
+			return file
+		}
+	}
+	return nil
+}
 
 // LoadNSNodeFiles 加载所有文件
 func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
