@@ -68,6 +68,7 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 	op.CreatedAt = createdAt
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
 	op.Hash = hash
+	op.Count = 1
 	err = this.Save(tx, op)
 	return err
 }
