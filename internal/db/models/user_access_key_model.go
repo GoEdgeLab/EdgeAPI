@@ -1,6 +1,6 @@
 package models
 
-// AccessKey
+// UserAccessKey AccessKey
 type UserAccessKey struct {
 	Id          uint32 `field:"id"`          // ID
 	UserId      uint32 `field:"userId"`      // 用户ID
@@ -9,6 +9,7 @@ type UserAccessKey struct {
 	UniqueId    string `field:"uniqueId"`    // 唯一的Key
 	Secret      string `field:"secret"`      // 密钥
 	Description string `field:"description"` // 备注
+	AccessedAt  uint64 `field:"accessedAt"`  // 最近一次访问时间
 	State       uint8  `field:"state"`       // 状态
 }
 
@@ -20,6 +21,7 @@ type UserAccessKeyOperator struct {
 	UniqueId    interface{} // 唯一的Key
 	Secret      interface{} // 密钥
 	Description interface{} // 备注
+	AccessedAt  interface{} // 最近一次访问时间
 	State       interface{} // 状态
 }
 

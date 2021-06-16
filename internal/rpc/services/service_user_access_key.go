@@ -6,12 +6,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 用户AccessKey相关服务
+// UserAccessKeyService 用户AccessKey相关服务
 type UserAccessKeyService struct {
 	BaseService
 }
 
-// 创建AccessKey
+// CreateUserAccessKey 创建AccessKey
 func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *pb.CreateUserAccessKeyRequest) (*pb.CreateUserAccessKeyResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -27,7 +27,7 @@ func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *
 	return &pb.CreateUserAccessKeyResponse{UserAccessKeyId: userAccessKeyId}, nil
 }
 
-// 查找所有的AccessKey
+// FindAllEnabledUserAccessKeys 查找所有的AccessKey
 func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Context, req *pb.FindAllEnabledUserAccessKeysRequest) (*pb.FindAllEnabledUserAccessKeysResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -51,13 +51,14 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 			UniqueId:    accessKey.UniqueId,
 			Secret:      accessKey.Secret,
 			Description: accessKey.Description,
+			AccessedAt:  int64(accessKey.AccessedAt),
 		})
 	}
 
 	return &pb.FindAllEnabledUserAccessKeysResponse{UserAccessKeys: result}, nil
 }
 
-// 删除AccessKey
+// DeleteUserAccessKey 删除AccessKey
 func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *pb.DeleteUserAccessKeyRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -83,7 +84,7 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 	return this.Success()
 }
 
-// 设置是否启用AccessKey
+// UpdateUserAccessKeyIsOn 设置是否启用AccessKey
 func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, req *pb.UpdateUserAccessKeyIsOnRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {

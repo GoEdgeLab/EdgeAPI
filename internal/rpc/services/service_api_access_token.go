@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// AccessToken相关服务
+// APIAccessTokenService AccessToken相关服务
 type APIAccessTokenService struct {
 	BaseService
 }
 
-// 获取AccessToken
+// GetAPIAccessToken 获取AccessToken
 func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *pb.GetAPIAccessTokenRequest) (*pb.GetAPIAccessTokenResponse, error) {
 	if req.Type == "user" { // 用户
 		tx := this.NullTx()
@@ -28,11 +28,18 @@ func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *p
 			return nil, errors.New("access key not found")
 		}
 
+		// 更新AccessKey访问时间
+		err = models.SharedUserAccessKeyDAO.UpdateAccessKeyAccessedAt(tx, int64(accessKey.Id))
+		if err != nil {
+			return nil, err
+		}
+
 		// 创建AccessToken
 		token, expiresAt, err := models.SharedAPIAccessTokenDAO.GenerateAccessToken(tx, int64(accessKey.UserId))
 		if err != nil {
 			return nil, err
 		}
+
 		return &pb.GetAPIAccessTokenResponse{
 			Token:     token,
 			ExpiresAt: expiresAt,
