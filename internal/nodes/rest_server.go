@@ -147,7 +147,7 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, reqValue)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte(err.Error()))
+		_, _ = writer.Write([]byte("Decode request failed: " + err.Error() + ". Request body should be a valid JSON data"))
 		return
 	}
 
@@ -187,13 +187,15 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 				"data":    maps.Map{},
 			}, shouldPretty)
 		} else {
+			writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 			_, _ = writer.Write(dataJSON)
 		}
 	}
 }
 
 func (this *RestServer) writeJSON(writer http.ResponseWriter, v maps.Map, pretty bool) {
-	writer.Header().Set("Content-Type", "application/json")
+	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	if pretty {
 		_, _ = writer.Write(v.AsPrettyJSON())
