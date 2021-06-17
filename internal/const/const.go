@@ -1,7 +1,7 @@
 package teaconst
 
 const (
-	Version = "0.2.1"
+	Version = "0.2.2"
 
 	ProductName   = "Edge API"
 	ProcessName   = "edge-api"
@@ -18,7 +18,7 @@ const (
 
 	// 其他节点版本号，用来检测是否有需要升级的节点
 
-	NodeVersion          = "0.2.1"
+	NodeVersion          = "0.2.2"
 	UserNodeVersion      = "0.0.8"
 	AuthorityNodeVersion = "0.0.2"
 	MonitorNodeVersion   = "0.0.2"
