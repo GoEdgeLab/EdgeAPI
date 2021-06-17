@@ -347,6 +347,27 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 	}
 
+	// 认证
+	if IsNotNull(web.Auth) {
+		authConfig := &serverconfigs.HTTPAuthConfig{}
+		err = json.Unmarshal([]byte(web.Auth), authConfig)
+		if err != nil {
+			return nil, err
+		}
+		var newRefs []*serverconfigs.HTTPAuthPolicyRef
+		for _, ref := range authConfig.PolicyRefs {
+			policyConfig, err := SharedHTTPAuthPolicyDAO.ComposePolicyConfig(tx, ref.AuthPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if policyConfig != nil {
+				ref.AuthPolicy = policyConfig
+				newRefs = append(newRefs, ref)
+			}
+		}
+		config.Auth = authConfig
+	}
+
 	return config, nil
 }
 
@@ -622,6 +643,22 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRu
 	return this.NotifyUpdate(tx, webId)
 }
 
+// UpdateWebAuth 修改认证信息
+func (this *HTTPWebDAO) UpdateWebAuth(tx *dbs.Tx, webId int64, authJSON []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Auth = JSONBytes(authJSON)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
 // FindAllWebIdsWithCachePolicyId 根据缓存策略ID查找所有的WebId
 func (this *HTTPWebDAO) FindAllWebIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
@@ -780,6 +817,16 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithFastcgiId(tx *dbs.Tx, fastcgiId int6
 		ResultPk().
 		Where("JSON_CONTAINS(fastcgi, :jsonQuery)").
 		Param("jsonQuery", maps.Map{"fastcgiIds": fastcgiId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// FindEnabledWebIdWithHTTPAuthPolicyId 查找包含某个认证策略的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithHTTPAuthPolicyId(tx *dbs.Tx, httpAuthPolicyId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(auth, :jsonQuery, '$.policyRefs')").
+		Param("jsonQuery", maps.Map{"authPolicyId": httpAuthPolicyId}.AsJSON()).
 		FindInt64Col(0)
 }
 

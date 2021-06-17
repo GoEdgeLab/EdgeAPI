@@ -561,3 +561,26 @@ func (this *HTTPWebService) FindHTTPWebHostRedirects(ctx context.Context, req *p
 	}
 	return &pb.FindHTTPWebHostRedirectsResponse{HostRedirectsJSON: redirectsJSON}, nil
 }
+
+// UpdateHTTPWebAuth 更改认证设置
+func (this *HTTPWebService) UpdateHTTPWebAuth(ctx context.Context, req *pb.UpdateHTTPWebAuthRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(nil, userId, req.WebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var tx *dbs.Tx
+	err = models.SharedHTTPWebDAO.UpdateWebAuth(tx, req.WebId, req.AuthJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}

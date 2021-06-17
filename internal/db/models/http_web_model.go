@@ -28,6 +28,7 @@ type HTTPWeb struct {
 	RewriteRules       string `field:"rewriteRules"`       // 重写规则配置
 	HostRedirects      string `field:"hostRedirects"`      // 域名跳转
 	Fastcgi            string `field:"fastcgi"`            // Fastcgi配置
+	Auth               string `field:"auth"`               // 认证策略配置
 }
 
 type HTTPWebOperator struct {
@@ -57,6 +58,7 @@ type HTTPWebOperator struct {
 	RewriteRules       interface{} // 重写规则配置
 	HostRedirects      interface{} // 域名跳转
 	Fastcgi            interface{} // Fastcgi配置
+	Auth               interface{} // 认证策略配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

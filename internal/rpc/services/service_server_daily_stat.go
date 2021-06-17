@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"math"
 	"time"
 )
 
@@ -144,8 +145,8 @@ func (this *ServerDailyStatService) FindLatestServerMinutelyStats(ctx context.Co
 					Minute:              minuteString,
 					Bytes:               stat.Bytes / avgRatio,
 					CachedBytes:         stat.CachedBytes / avgRatio,
-					CountRequests:       stat.CountRequests / avgRatio,
-					CountCachedRequests: stat.CountCachedRequests / avgRatio,
+					CountRequests:       int64(math.Ceil(float64(stat.CountRequests) / float64(avgRatio))),
+					CountCachedRequests: int64(math.Ceil(float64(stat.CountCachedRequests) / float64(avgRatio))),
 				}
 				result = append(result, pbStat)
 				cache[queryMinuteString] = pbStat

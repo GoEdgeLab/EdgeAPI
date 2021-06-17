@@ -96,4 +96,5 @@ func (this *APINode) registerServices(server *grpc.Server) {
 	pb.RegisterNSRecordServiceServer(server, &nameservers.NSRecordService{})
 	pb.RegisterNSRouteServiceServer(server, &nameservers.NSRouteService{})
 	pb.RegisterNSAccessLogServiceServer(server, &nameservers.NSAccessLogService{})
+	pb.RegisterHTTPAuthPolicyServiceServer(server, &services.HTTPAuthPolicyService{})
 }
