@@ -53,7 +53,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 	}
 
 	if oldClusterId != req.NodeClusterId {
-		err = models.SharedServerDAO.UpdateUserServersClusterId(tx, req.UserId, req.NodeClusterId)
+		err = models.SharedServerDAO.UpdateUserServersClusterId(tx, req.UserId, oldClusterId, req.NodeClusterId)
 		if err != nil {
 			return nil, err
 		}

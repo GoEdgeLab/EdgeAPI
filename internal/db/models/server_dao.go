@@ -1205,19 +1205,10 @@ func (this *ServerDAO) CheckUserServer(tx *dbs.Tx, userId int64, serverId int64)
 }
 
 // UpdateUserServersClusterId 设置一个用户下的所有服务的所属集群
-func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, clusterId int64) error {
-	// 之前的cluster
-	oldClusterId, err := SharedUserDAO.FindUserClusterId(tx, userId)
-	if err != nil {
-		return err
-	}
-	if oldClusterId == clusterId {
-		return nil
-	}
-
-	_, err = this.Query(tx).
+func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldClusterId, newClusterId int64) error {
+	_, err := this.Query(tx).
 		Attr("userId", userId).
-		Set("clusterId", clusterId).
+		Set("clusterId", newClusterId).
 		Update()
 	if err != nil {
 		return err
@@ -1232,14 +1223,22 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, clus
 		if err != nil {
 			return err
 		}
-	}
-
-	if clusterId > 0 {
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
+		err = dns.SharedDNSTaskDAO.CreateClusterTask(tx, oldClusterId, dns.DNSTaskTypeClusterChange)
 		if err != nil {
 			return err
 		}
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeIPItemChanged)
+	}
+
+	if newClusterId > 0 {
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, newClusterId, NodeTaskTypeConfigChanged)
+		if err != nil {
+			return err
+		}
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, newClusterId, NodeTaskTypeIPItemChanged)
+		if err != nil {
+			return err
+		}
+		err = dns.SharedDNSTaskDAO.CreateClusterTask(tx, newClusterId, dns.DNSTaskTypeClusterChange)
 		if err != nil {
 			return err
 		}

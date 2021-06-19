@@ -108,7 +108,7 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fu
 }
 
 // UpdateUser 修改用户
-func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, clusterId int64) error {
+func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, nodeClusterId int64) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
@@ -123,8 +123,8 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	op.Tel = tel
 	op.Email = email
 	op.Remark = remark
+	op.ClusterId = nodeClusterId
 	op.IsOn = isOn
-	op.ClusterId = clusterId
 	err := this.Save(tx, op)
 	return err
 }
