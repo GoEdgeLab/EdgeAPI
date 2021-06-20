@@ -13,14 +13,13 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 )
 
 var servicePathReg = regexp.MustCompile(`^/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)$`)
-var servicesMap = map[string]reflect.Value{
+var restServicesMap = map[string]reflect.Value{
 	"APIAccessTokenService": reflect.ValueOf(new(services.APIAccessTokenService)),
-	"HTTPAccessLogService":  reflect.ValueOf(new(services.HTTPAccessLogService)),
-	"IPItemService":         reflect.ValueOf(new(services.IPItemService)),
 }
 
 type RestServer struct{}
@@ -67,12 +66,19 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	serviceName := matches[1]
 	methodName := matches[2]
 
-	serviceType, ok := servicesMap[serviceName]
+	serviceType, ok := restServicesMap[serviceName]
 	if !ok {
 		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	if len(methodName) == 0 {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// 再次查找
+	methodName = strings.ToUpper(string(methodName[0])) + methodName[1:]
 	method := serviceType.MethodByName(methodName)
 	if !method.IsValid() {
 		writer.WriteHeader(http.StatusNotFound)
@@ -90,7 +96,7 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	// 上下文
 	ctx := context.Background()
 
-	if serviceName != "APIAccessTokenService" || methodName != "GetAPIAccessToken" {
+	if serviceName != "APIAccessTokenService" || (methodName != "GetAPIAccessToken" && methodName != "getAPIAccessToken") {
 		// 校验TOKEN
 		token := req.Header.Get("Edge-Access-Token")
 		if len(token) == 0 {
@@ -123,6 +129,8 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 
 		if accessToken.UserId > 0 {
 			ctx = rpcutils.NewPlainContext("user", int64(accessToken.UserId))
+		} else if accessToken.AdminId > 0 {
+			ctx = rpcutils.NewPlainContext("admin", int64(accessToken.AdminId))
 		} else {
 			// TODO 支持更多类型的角色
 			this.writeJSON(writer, maps.Map{

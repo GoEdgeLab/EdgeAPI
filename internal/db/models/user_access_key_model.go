@@ -3,6 +3,7 @@ package models
 // UserAccessKey AccessKey
 type UserAccessKey struct {
 	Id          uint32 `field:"id"`          // ID
+	AdminId     uint32 `field:"adminId"`     // 管理员ID
 	UserId      uint32 `field:"userId"`      // 用户ID
 	SubUserId   uint32 `field:"subUserId"`   // 子用户ID
 	IsOn        uint8  `field:"isOn"`        // 是否启用
@@ -15,6 +16,7 @@ type UserAccessKey struct {
 
 type UserAccessKeyOperator struct {
 	Id          interface{} // ID
+	AdminId     interface{} // 管理员ID
 	UserId      interface{} // 用户ID
 	SubUserId   interface{} // 子用户ID
 	IsOn        interface{} // 是否启用

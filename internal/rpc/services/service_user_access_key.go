@@ -20,7 +20,7 @@ func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	userAccessKeyId, err := models.SharedUserAccessKeyDAO.CreateAccessKey(tx, req.UserId, req.Description)
+	userAccessKeyId, err := models.SharedUserAccessKeyDAO.CreateAccessKey(tx, req.AdminId, req.UserId, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 
 	tx := this.NullTx()
 
-	accessKeys, err := models.SharedUserAccessKeyDAO.FindAllEnabledAccessKeys(tx, req.UserId)
+	accessKeys, err := models.SharedUserAccessKeyDAO.FindAllEnabledAccessKeys(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 	tx := this.NullTx()
 
 	if userId > 0 {
-		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, userId, req.UserAccessKeyId)
+		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, 0, userId, req.UserAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 	tx := this.NullTx()
 
 	if userId > 0 {
-		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, userId, req.UserAccessKeyId)
+		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, 0, userId, req.UserAccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -108,4 +108,19 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 		return nil, err
 	}
 	return this.Success()
+}
+
+// CountAllEnabledUserAccessKeys 计算AccessKey数量
+func (this *UserAccessKeyService) CountAllEnabledUserAccessKeys(ctx context.Context, req *pb.CountAllEnabledUserAccessKeysRequest) (*pb.RPCCountResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	count, err := models.SharedUserAccessKeyDAO.CountAllEnabledAccessKeys(tx, req.AdminId, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
 }

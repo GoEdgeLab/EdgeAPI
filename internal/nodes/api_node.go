@@ -27,16 +27,21 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"sync"
 	"time"
 )
 
 var sharedAPIConfig *configs.APIConfig = nil
 
 type APINode struct {
+	serviceInstanceMap    map[string]interface{}
+	serviceInstanceLocker sync.Mutex
 }
 
 func NewAPINode() *APINode {
-	return &APINode{}
+	return &APINode{
+		serviceInstanceMap: map[string]interface{}{},
+	}
 }
 
 func (this *APINode) Start() {

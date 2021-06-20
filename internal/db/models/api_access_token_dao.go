@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -29,10 +30,23 @@ func init() {
 	})
 }
 
-// 生成AccessToken
-func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, userId int64) (token string, expiresAt int64, err error) {
+// GenerateAccessToken 生成AccessToken
+func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, adminId int64, userId int64) (token string, expiresAt int64, err error) {
+	if adminId <= 0 && userId <= 0 {
+		err = errors.New("either 'adminId' or 'userId' should not be zero")
+		return
+	}
+
+	if adminId > 0 {
+		userId = 0
+	}
+	if userId > 0 {
+		adminId = 0
+	}
+
 	// 查询以前的
 	accessToken, err := this.Query(tx).
+		Attr("adminId", adminId).
 		Attr("userId", userId).
 		Find()
 	if err != nil {
@@ -48,6 +62,7 @@ func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, userId int64) (to
 		op.Id = accessToken.(*APIAccessToken).Id
 	}
 
+	op.AdminId = adminId
 	op.UserId = userId
 	op.Token = token
 	op.CreatedAt = time.Now().Unix()
@@ -56,7 +71,7 @@ func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, userId int64) (to
 	return
 }
 
-// 查找AccessToken
+// FindAccessToken 查找AccessToken
 func (this *APIAccessTokenDAO) FindAccessToken(tx *dbs.Tx, token string) (*APIAccessToken, error) {
 	one, err := this.Query(tx).
 		Attr("token", token).

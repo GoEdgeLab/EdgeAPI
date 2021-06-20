@@ -66,11 +66,12 @@ func (this *UserAccessKeyDAO) FindEnabledUserAccessKey(tx *dbs.Tx, id int64) (*U
 }
 
 // CreateAccessKey 创建Key
-func (this *UserAccessKeyDAO) CreateAccessKey(tx *dbs.Tx, userId int64, description string) (int64, error) {
-	if userId <= 0 {
-		return 0, errors.New("invalid userId")
+func (this *UserAccessKeyDAO) CreateAccessKey(tx *dbs.Tx, adminId int64, userId int64, description string) (int64, error) {
+	if adminId <= 0 && userId <= 0 {
+		return 0, errors.New("invalid adminId or userId")
 	}
 	op := NewUserAccessKeyOperator()
+	op.AdminId = adminId
 	op.UserId = userId
 	op.Description = description
 	op.UniqueId = rands.String(16)
@@ -81,8 +82,9 @@ func (this *UserAccessKeyDAO) CreateAccessKey(tx *dbs.Tx, userId int64, descript
 }
 
 // FindAllEnabledAccessKeys 查找用户所有的Key
-func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(tx *dbs.Tx, userId int64) (result []*UserAccessKey, err error) {
+func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(tx *dbs.Tx, adminId int64, userId int64) (result []*UserAccessKey, err error) {
 	_, err = this.Query(tx).
+		Attr("adminId", adminId).
 		Attr("userId", userId).
 		State(UserAccessKeyStateEnabled).
 		DescPk().
@@ -92,10 +94,11 @@ func (this *UserAccessKeyDAO) FindAllEnabledAccessKeys(tx *dbs.Tx, userId int64)
 }
 
 // CheckUserAccessKey 检查用户的AccessKey
-func (this *UserAccessKeyDAO) CheckUserAccessKey(tx *dbs.Tx, userId int64, accessKeyId int64) (bool, error) {
+func (this *UserAccessKeyDAO) CheckUserAccessKey(tx *dbs.Tx, adminId int64, userId int64, accessKeyId int64) (bool, error) {
 	return this.Query(tx).
 		Pk(accessKeyId).
 		State(UserAccessKeyStateEnabled).
+		Attr("adminId", adminId).
 		Attr("userId", userId).
 		Exist()
 }
@@ -132,4 +135,13 @@ func (this *UserAccessKeyDAO) UpdateAccessKeyAccessedAt(tx *dbs.Tx, accessKeyId 
 		Pk(accessKeyId).
 		Set("accessedAt", time.Now().Unix()).
 		UpdateQuickly()
+}
+
+// CountAllEnabledAccessKeys 计算可用AccessKey数量
+func (this *UserAccessKeyDAO) CountAllEnabledAccessKeys(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
+	return this.Query(tx).
+		Attr("adminId", adminId).
+		Attr("userId", userId).
+		State(UserAccessKeyStateEnabled).
+		Count()
 }

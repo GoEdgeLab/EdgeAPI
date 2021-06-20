@@ -14,7 +14,7 @@ type APIAccessTokenService struct {
 
 // GetAPIAccessToken 获取AccessToken
 func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *pb.GetAPIAccessTokenRequest) (*pb.GetAPIAccessTokenResponse, error) {
-	if req.Type == "user" { // 用户
+	if req.Type == "user" || req.Type == "admin" { // 用户或管理员
 		tx := this.NullTx()
 
 		accessKey, err := models.SharedUserAccessKeyDAO.FindAccessKeyWithUniqueId(tx, req.AccessKeyId)
@@ -28,6 +28,18 @@ func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *p
 			return nil, errors.New("access key not found")
 		}
 
+		// 检查数据
+		switch req.Type {
+		case "user":
+			if accessKey.UserId == 0 {
+				return nil, errors.New("access key not found")
+			}
+		case "admin":
+			if accessKey.AdminId == 0 {
+				return nil, errors.New("access key not found")
+			}
+		}
+
 		// 更新AccessKey访问时间
 		err = models.SharedUserAccessKeyDAO.UpdateAccessKeyAccessedAt(tx, int64(accessKey.Id))
 		if err != nil {
@@ -35,7 +47,7 @@ func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *p
 		}
 
 		// 创建AccessToken
-		token, expiresAt, err := models.SharedAPIAccessTokenDAO.GenerateAccessToken(tx, int64(accessKey.UserId))
+		token, expiresAt, err := models.SharedAPIAccessTokenDAO.GenerateAccessToken(tx, int64(accessKey.AdminId), int64(accessKey.UserId))
 		if err != nil {
 			return nil, err
 		}
