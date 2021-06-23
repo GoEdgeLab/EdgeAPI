@@ -5,16 +5,17 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"net"
 )
 
-// IP条目相关服务
+// IPItemService IP条目相关服务
 type IPItemService struct {
 	BaseService
 }
 
-// 创建IP
+// CreateIPItem 创建IP
 func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPItemRequest) (*pb.CreateIPItemResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -59,7 +60,7 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 	return &pb.CreateIPItemResponse{IpItemId: itemId}, nil
 }
 
-// 修改IP
+// UpdateIPItem 修改IP
 func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPItemRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -93,7 +94,7 @@ func (this *IPItemService) UpdateIPItem(ctx context.Context, req *pb.UpdateIPIte
 	return this.Success()
 }
 
-// 删除IP
+// DeleteIPItem 删除IP
 func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPItemRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -123,7 +124,7 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	return this.Success()
 }
 
-// 计算IP数量
+// CountIPItemsWithListId 计算IP数量
 func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.CountIPItemsWithListIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -147,7 +148,7 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 	return this.SuccessCount(count)
 }
 
-// 列出单页的IP
+// ListIPItemsWithListId 列出单页的IP
 func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.ListIPItemsWithListIdRequest) (*pb.ListIPItemsWithListIdResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -189,7 +190,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 	return &pb.ListIPItemsWithListIdResponse{IpItems: result}, nil
 }
 
-// 查找单个IP
+// FindEnabledIPItem 查找单个IP
 func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEnabledIPItemRequest) (*pb.FindEnabledIPItemResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -230,7 +231,7 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 	}}, nil
 }
 
-// 根据版本列出一组IP
+// ListIPItemsAfterVersion 根据版本列出一组IP
 func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.ListIPItemsAfterVersionRequest) (*pb.ListIPItemsAfterVersionResponse, error) {
 	// 校验请求
 	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
@@ -272,4 +273,83 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 	}
 
 	return &pb.ListIPItemsAfterVersionResponse{IpItems: result}, nil
+}
+
+// CheckIPItemStatus 检查IP状态
+func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckIPItemStatusRequest) (*pb.CheckIPItemStatusResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// 校验IP
+	ip := net.ParseIP(req.Ip)
+	if len(ip) == 0 {
+		return &pb.CheckIPItemStatusResponse{
+			IsOk:  false,
+			Error: "请输入正确的IP",
+		}, nil
+	}
+	ipLong := utils.IP2Long(req.Ip)
+
+	tx := this.NullTx()
+
+	// 名单类型
+	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId)
+	if err != nil {
+		return nil, err
+	}
+	if list == nil {
+		return &pb.CheckIPItemStatusResponse{
+			IsOk:  false,
+			Error: "IP名单不存在",
+		}, nil
+	}
+	var isAllowed = list.Type == "white"
+
+	// 检查IP名单
+	item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, req.IpListId, ipLong)
+	if err != nil {
+		return nil, err
+	}
+	if item != nil {
+		return &pb.CheckIPItemStatusResponse{
+			IsOk:      true,
+			Error:     "",
+			IsFound:   true,
+			IsAllowed: isAllowed,
+			IpItem: &pb.IPItem{
+				Id:         int64(item.Id),
+				IpFrom:     item.IpFrom,
+				IpTo:       item.IpTo,
+				ExpiredAt:  int64(item.ExpiredAt),
+				Reason:     item.Reason,
+				Type:       item.Type,
+				EventLevel: item.EventLevel,
+			},
+		}, nil
+	}
+
+	return &pb.CheckIPItemStatusResponse{
+		IsOk:      true,
+		Error:     "",
+		IsFound:   false,
+		IsAllowed: false,
+		IpItem:    nil,
+	}, nil
+}
+
+// ExistsEnabledIPItem 检查IP是否存在
+func (this *IPItemService) ExistsEnabledIPItem(ctx context.Context, req *pb.ExistsEnabledIPItemRequest) (*pb.ExistsEnabledIPItemResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	b, err := models.SharedIPItemDAO.ExistsEnabledItem(tx, req.IpItemId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExistsEnabledIPItemResponse{Exists: b}, nil
 }

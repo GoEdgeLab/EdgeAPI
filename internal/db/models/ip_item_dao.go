@@ -46,7 +46,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableIPItem 启用条目
 func (this *IPItemDAO) EnableIPItem(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -55,7 +55,7 @@ func (this *IPItemDAO) EnableIPItem(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableIPItem 禁用条目
 func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
@@ -74,7 +74,7 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 	return this.NotifyUpdate(tx, id)
 }
 
-// 查找启用中的条目
+// FindEnabledIPItem 查找启用中的条目
 func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -86,7 +86,7 @@ func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) 
 	return result.(*IPItem), err
 }
 
-// 创建IP
+// CreateIPItem 创建IP
 func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) (int64, error) {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
@@ -121,7 +121,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 	return itemId, nil
 }
 
-// 修改IP
+// UpdateIPItem 修改IP
 func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
@@ -165,7 +165,7 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	return this.NotifyUpdate(tx, itemId)
 }
 
-// 计算IP数量
+// CountIPItemsWithListId 计算IP数量
 func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64) (int64, error) {
 	return this.Query(tx).
 		State(IPItemStateEnabled).
@@ -173,7 +173,7 @@ func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64) (int64, 
 		Count()
 }
 
-// 查找IP列表
+// ListIPItemsWithListId 查找IP列表
 func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, offset int64, size int64) (result []*IPItem, err error) {
 	_, err = this.Query(tx).
 		State(IPItemStateEnabled).
@@ -186,7 +186,7 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, offset in
 	return
 }
 
-// 根据版本号查找IP列表
+// ListIPItemsAfterVersion 根据版本号查找IP列表
 func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
 	_, err = this.Query(tx).
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
@@ -200,7 +200,7 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 	return
 }
 
-// 查找IPItem对应的列表ID
+// FindItemListId 查找IPItem对应的列表ID
 func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(itemId).
@@ -208,7 +208,7 @@ func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 		FindInt64Col(0)
 }
 
-// 查找包含某个IP的Item
+// FindEnabledItemContainsIP 查找包含某个IP的Item
 func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip uint64) (*IPItem, error) {
 	query := this.Query(tx).
 		Attr("listId", listId).
@@ -229,7 +229,15 @@ func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip ui
 	return one.(*IPItem), nil
 }
 
-// 通知更新
+// ExistsEnabledItem 检查IP是否存在
+func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error) {
+	return this.Query(tx).
+		Pk(itemId).
+		State(IPItemStateEnabled).
+		Exist()
+}
+
+// NotifyUpdate 通知更新
 func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 	// 获取ListId
 	listId, err := this.FindItemListId(tx, itemId)

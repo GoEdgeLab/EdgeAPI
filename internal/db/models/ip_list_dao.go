@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableIPList 启用条目
 func (this *IPListDAO) EnableIPList(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -47,7 +47,7 @@ func (this *IPListDAO) EnableIPList(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableIPList 禁用条目
 func (this *IPListDAO) DisableIPList(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -56,7 +56,7 @@ func (this *IPListDAO) DisableIPList(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledIPList 查找启用中的条目
 func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64) (*IPList, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -68,7 +68,7 @@ func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64) (*IPList, error) 
 	return result.(*IPList), err
 }
 
-// 根据主键查找名称
+// FindIPListName 根据主键查找名称
 func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -76,7 +76,7 @@ func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 		FindStringCol("")
 }
 
-// 获取名单类型
+// FindIPListTypeCacheable 获取名单类型
 func (this *IPListDAO) FindIPListTypeCacheable(tx *dbs.Tx, listId int64) (string, error) {
 	// 检查缓存
 	SharedCacheLocker.RLock()
@@ -106,8 +106,8 @@ func (this *IPListDAO) FindIPListTypeCacheable(tx *dbs.Tx, listId int64) (string
 	return listType, nil
 }
 
-// 创建名单
-func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte) (int64, error) {
+// CreateIPList 创建名单
+func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte, description string, isPublic bool) (int64, error) {
 	op := NewIPListOperator()
 	op.IsOn = true
 	op.UserId = userId
@@ -118,6 +118,8 @@ func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs
 	if len(timeoutJSON) > 0 {
 		op.Timeout = timeoutJSON
 	}
+	op.Description = description
+	op.IsPublic = isPublic
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -125,8 +127,8 @@ func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs
 	return types.Int64(op.Id), nil
 }
 
-// 修改名单
-func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code string, timeoutJSON []byte) error {
+// UpdateIPList 修改名单
+func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code string, timeoutJSON []byte, description string) error {
 	if listId <= 0 {
 		return errors.New("invalid listId")
 	}
@@ -139,16 +141,17 @@ func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code 
 	} else {
 		op.Timeout = "null"
 	}
+	op.Description = description
 	err := this.Save(tx, op)
 	return err
 }
 
-// 增加版本
+// IncreaseVersion 增加版本
 func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
 	return SharedSysLockerDAO.Increase(tx, "IP_LIST_VERSION", 1000000)
 }
 
-// 检查用户权限
+// CheckUserIPList 检查用户权限
 func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) error {
 	ok, err := this.Query(tx).
 		Pk(listId).
@@ -163,7 +166,49 @@ func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) e
 	return ErrNotFound
 }
 
-// 通知更新
+// CountAllEnabledIPLists 计算名单数量
+func (this *IPListDAO) CountAllEnabledIPLists(tx *dbs.Tx, listType string, isPublic bool, keyword string) (int64, error) {
+	var query = this.Query(tx).
+		State(IPListStateEnabled).
+		Attr("type", listType).
+		Attr("isPublic", isPublic)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
+}
+
+// ListEnabledIPLists 列出单页名单
+func (this *IPListDAO) ListEnabledIPLists(tx *dbs.Tx, listType string, isPublic bool, keyword string, offset int64, size int64) (result []*IPList, err error) {
+	var query = this.Query(tx).
+		State(IPListStateEnabled).
+		Attr("type", listType).
+		Attr("isPublic", isPublic)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.Offset(offset).
+		Limit(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// ExistsEnabledIPList 检查IP名单是否存在
+func (this *IPListDAO) ExistsEnabledIPList(tx *dbs.Tx, listId int64) (bool, error) {
+	if listId <= 0 {
+		return false, nil
+	}
+	return this.Query(tx).
+		Pk(listId).
+		State(IPListStateEnabled).
+		Exist()
+}
+
+// NotifyUpdate 通知更新
 func (this *IPListDAO) NotifyUpdate(tx *dbs.Tx, listId int64, taskType NodeTaskType) error {
 	httpFirewallPolicyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
 	if err != nil {

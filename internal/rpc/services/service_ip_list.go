@@ -3,16 +3,15 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// IP名单相关服务
+// IPListService IP名单相关服务
 type IPListService struct {
 	BaseService
 }
 
-// 创建IP列表
+// CreateIPList 创建IP列表
 func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPListRequest) (*pb.CreateIPListResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -22,34 +21,34 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 
 	tx := this.NullTx()
 
-	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON)
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CreateIPListResponse{IpListId: listId}, nil
 }
 
-// 修改IP列表
+// UpdateIPList 修改IP列表
 func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPListRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	err = models.SharedIPListDAO.UpdateIPList(tx, req.IpListId, req.Name, req.Code, req.TimeoutJSON)
+	err = models.SharedIPListDAO.UpdateIPList(tx, req.IpListId, req.Name, req.Code, req.TimeoutJSON, req.Description)
 	if err != nil {
 		return nil, err
 	}
 	return this.Success()
 }
 
-// 查找IP列表
+// FindEnabledIPList 查找IP列表
 func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEnabledIPListRequest) (*pb.FindEnabledIPListResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -70,5 +69,79 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 		Name:        list.Name,
 		Code:        list.Code,
 		TimeoutJSON: []byte(list.Timeout),
+		Description: list.Description,
 	}}, nil
+}
+
+// CountAllEnabledIPLists 计算名单数量
+func (this *IPListService) CountAllEnabledIPLists(ctx context.Context, req *pb.CountAllEnabledIPListsRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedIPListDAO.CountAllEnabledIPLists(tx, req.Type, req.IsPublic, req.Keyword)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// ListEnabledIPLists 列出单页名单
+func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListEnabledIPListsRequest) (*pb.ListEnabledIPListsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	lists, err := models.SharedIPListDAO.ListEnabledIPLists(tx, req.Type, req.IsPublic, req.Keyword, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	var pbLists []*pb.IPList
+	for _, list := range lists {
+		pbLists = append(pbLists, &pb.IPList{
+			Id:          int64(list.Id),
+			IsOn:        list.IsOn == 1,
+			Type:        list.Type,
+			Name:        list.Name,
+			Code:        list.Code,
+			TimeoutJSON: []byte(list.Timeout),
+			IsPublic:    list.IsPublic == 1,
+			Description: list.Description,
+		})
+	}
+	return &pb.ListEnabledIPListsResponse{IpLists: pbLists}, nil
+}
+
+// DeleteIPList 删除IP名单
+func (this *IPListService) DeleteIPList(ctx context.Context, req *pb.DeleteIPListRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedIPListDAO.DisableIPList(tx, req.IpListId)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// ExistsEnabledIPList 检查IPList是否存在
+func (this *IPListService) ExistsEnabledIPList(ctx context.Context, req *pb.ExistsEnabledIPListRequest) (*pb.ExistsEnabledIPListResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	b, err := models.SharedIPListDAO.ExistsEnabledIPList(tx, req.IpListId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExistsEnabledIPListResponse{Exists: b}, nil
 }

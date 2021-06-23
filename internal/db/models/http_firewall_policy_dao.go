@@ -330,7 +330,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 	ones, err := this.Query(tx).
 		ResultPk().
 		State(HTTPFirewallPolicyStateEnabled).
-		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') )").
+		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.publicWhiteListRefs')  OR JSON_CONTAINS(inbound, :listQuery, '$.publicBlackListRefs'))").
 		Param("listQuery", maps.Map{"isOn": true, "listId": ipListId}.AsJSON()).
 		FindAll()
 	if err != nil {
