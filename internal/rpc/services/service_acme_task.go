@@ -10,12 +10,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// ACME任务相关服务
+// ACMETaskService ACME任务相关服务
 type ACMETaskService struct {
 	BaseService
 }
 
-// 计算某个ACME用户相关的任务数量
+// CountAllEnabledACMETasksWithACMEUserId 计算某个ACME用户相关的任务数量
 func (this *ACMETaskService) CountAllEnabledACMETasksWithACMEUserId(ctx context.Context, req *pb.CountAllEnabledACMETasksWithACMEUserIdRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -33,7 +33,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasksWithACMEUserId(ctx context.
 	return this.SuccessCount(count)
 }
 
-// 计算跟某个DNS服务商相关的任务数量
+// CountEnabledACMETasksWithDNSProviderId 计算跟某个DNS服务商相关的任务数量
 func (this *ACMETaskService) CountEnabledACMETasksWithDNSProviderId(ctx context.Context, req *pb.CountEnabledACMETasksWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -51,7 +51,7 @@ func (this *ACMETaskService) CountEnabledACMETasksWithDNSProviderId(ctx context.
 	return this.SuccessCount(count)
 }
 
-// 计算所有任务数量
+// CountAllEnabledACMETasks 计算所有任务数量
 func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *pb.CountAllEnabledACMETasksRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -67,7 +67,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *
 	return this.SuccessCount(count)
 }
 
-// 列出单页任务
+// ListEnabledACMETasks 列出单页任务
 func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.ListEnabledACMETasksRequest) (*pb.ListEnabledACMETasksResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -162,13 +162,14 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			SslCert:           pbCert,
 			LatestACMETaskLog: pbTaskLog,
 			AuthType:          task.AuthType,
+			AuthURL:           task.AuthURL,
 		})
 	}
 
 	return &pb.ListEnabledACMETasksResponse{AcmeTasks: result}, nil
 }
 
-// 创建任务
+// CreateACMETask 创建任务
 func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateACMETaskRequest) (*pb.CreateACMETaskResponse, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -180,14 +181,14 @@ func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateA
 	}
 
 	tx := this.NullTx()
-	taskId, err := acmemodels.SharedACMETaskDAO.CreateACMETask(tx, adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
+	taskId, err := acmemodels.SharedACMETaskDAO.CreateACMETask(tx, adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew, req.AuthURL)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CreateACMETaskResponse{AcmeTaskId: taskId}, nil
 }
 
-// 修改任务
+// UpdateACMETask 修改任务
 func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateACMETaskRequest) (*pb.RPCSuccess, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -204,14 +205,14 @@ func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateA
 		return nil, this.PermissionError()
 	}
 
-	err = acmemodels.SharedACMETaskDAO.UpdateACMETask(tx, req.AcmeTaskId, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew)
+	err = acmemodels.SharedACMETaskDAO.UpdateACMETask(tx, req.AcmeTaskId, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew, req.AuthURL)
 	if err != nil {
 		return nil, err
 	}
 	return this.Success()
 }
 
-// 删除任务
+// DeleteACMETask 删除任务
 func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteACMETaskRequest) (*pb.RPCSuccess, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -235,7 +236,7 @@ func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteA
 	return this.Success()
 }
 
-// 运行某个任务
+// RunACMETask 运行某个任务
 func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETaskRequest) (*pb.RunACMETaskResponse, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -261,7 +262,7 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 	}, nil
 }
 
-// 查找单个任务信息
+// FindEnabledACMETask 查找单个任务信息
 func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.FindEnabledACMETaskRequest) (*pb.FindEnabledACMETaskResponse, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -328,5 +329,6 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		DnsProvider: pbProvider,
 		AcmeUser:    pbACMEUser,
 		AuthType:    task.AuthType,
+		AuthURL:     task.AuthURL,
 	}}, nil
 }

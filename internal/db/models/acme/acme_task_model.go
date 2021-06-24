@@ -1,6 +1,6 @@
 package acme
 
-// ACME任务
+// ACMETask ACME任务
 type ACMETask struct {
 	Id            uint64 `field:"id"`            // ID
 	AdminId       uint32 `field:"adminId"`       // 管理员ID
@@ -15,6 +15,7 @@ type ACMETask struct {
 	CertId        uint64 `field:"certId"`        // 生成的证书ID
 	AutoRenew     uint8  `field:"autoRenew"`     // 是否自动更新
 	AuthType      string `field:"authType"`      // 认证类型
+	AuthURL       string `field:"authURL"`       // 认证URL
 }
 
 type ACMETaskOperator struct {
@@ -31,6 +32,7 @@ type ACMETaskOperator struct {
 	CertId        interface{} // 生成的证书ID
 	AutoRenew     interface{} // 是否自动更新
 	AuthType      interface{} // 认证类型
+	AuthURL       interface{} // 认证URL
 }
 
 func NewACMETaskOperator() *ACMETaskOperator {

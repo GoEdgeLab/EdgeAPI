@@ -39,7 +39,7 @@ func TestRequest_Run_DNS(t *testing.T) {
 
 	req := NewRequest(&Task{
 		User:        user,
-		Type:        TaskTypeDNS,
+		AuthType:    AuthTypeDNS,
 		DNSProvider: dnsProvider,
 		DNSDomain:   "yun4s.cn",
 		Domains:     []string{"yun4s.cn"},
@@ -74,9 +74,9 @@ func TestRequest_Run_HTTP(t *testing.T) {
 	}
 
 	req := NewRequest(&Task{
-		User:    user,
-		Type:    TaskTypeHTTP,
-		Domains: []string{"teaos.cn", "www.teaos.cn", "meloy.cn"},
+		User:     user,
+		AuthType: AuthTypeHTTP,
+		Domains:  []string{"teaos.cn", "www.teaos.cn", "meloy.cn"},
 	})
 	certData, keyData, err := req.runHTTP()
 	if err != nil {

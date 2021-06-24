@@ -1,6 +1,7 @@
 package acme
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -8,13 +9,17 @@ import (
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	"github.com/go-acme/lego/v4/registration"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"net/http"
 	"time"
 )
 
@@ -44,7 +49,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableACMETask 启用条目
 func (this *ACMETaskDAO) EnableACMETask(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +58,7 @@ func (this *ACMETaskDAO) EnableACMETask(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableACMETask 禁用条目
 func (this *ACMETaskDAO) DisableACMETask(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -62,7 +67,7 @@ func (this *ACMETaskDAO) DisableACMETask(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledACMETask 查找启用中的条目
 func (this *ACMETaskDAO) FindEnabledACMETask(tx *dbs.Tx, id int64) (*ACMETask, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -74,7 +79,7 @@ func (this *ACMETaskDAO) FindEnabledACMETask(tx *dbs.Tx, id int64) (*ACMETask, e
 	return result.(*ACMETask), err
 }
 
-// 计算某个ACME用户相关的任务数量
+// CountACMETasksWithACMEUserId 计算某个ACME用户相关的任务数量
 func (this *ACMETaskDAO) CountACMETasksWithACMEUserId(tx *dbs.Tx, acmeUserId int64) (int64, error) {
 	return this.Query(tx).
 		State(ACMETaskStateEnabled).
@@ -82,7 +87,7 @@ func (this *ACMETaskDAO) CountACMETasksWithACMEUserId(tx *dbs.Tx, acmeUserId int
 		Count()
 }
 
-// 计算某个DNS服务商相关的任务数量
+// CountACMETasksWithDNSProviderId 计算某个DNS服务商相关的任务数量
 func (this *ACMETaskDAO) CountACMETasksWithDNSProviderId(tx *dbs.Tx, dnsProviderId int64) (int64, error) {
 	return this.Query(tx).
 		State(ACMETaskStateEnabled).
@@ -90,7 +95,7 @@ func (this *ACMETaskDAO) CountACMETasksWithDNSProviderId(tx *dbs.Tx, dnsProvider
 		Count()
 }
 
-// 停止某个证书相关任务
+// DisableAllTasksWithCertId 停止某个证书相关任务
 func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) error {
 	_, err := this.Query(tx).
 		Attr("certId", certId).
@@ -99,7 +104,7 @@ func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) err
 	return err
 }
 
-// 计算所有任务数量
+// CountAllEnabledACMETasks 计算所有任务数量
 func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
 	query := dbutils.NewQuery(tx, this, adminId, userId)
 	if isAvailable || isExpired || expiringDays > 0 {
@@ -130,7 +135,7 @@ func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, use
 		Count()
 }
 
-// 列出单页任务
+// ListEnabledACMETasks 列出单页任务
 func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (result []*ACMETask, err error) {
 	query := dbutils.NewQuery(tx, this, adminId, userId)
 	if isAvailable || isExpired || expiringDays > 0 {
@@ -161,8 +166,8 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId 
 	return
 }
 
-// 创建任务
-func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) (int64, error) {
+// CreateACMETask 创建任务
+func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool, authURL string) (int64, error) {
 	op := NewACMETaskOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -182,6 +187,7 @@ func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64,
 	}
 
 	op.AutoRenew = autoRenew
+	op.AuthURL = authURL
 	op.IsOn = true
 	op.State = ACMETaskStateEnabled
 	err := this.Save(tx, op)
@@ -191,8 +197,8 @@ func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64,
 	return types.Int64(op.Id), nil
 }
 
-// 修改任务
-func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool) error {
+// UpdateACMETask 修改任务
+func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool, authURL string) error {
 	if acmeTaskId <= 0 {
 		return errors.New("invalid acmeTaskId")
 	}
@@ -214,11 +220,12 @@ func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId
 	}
 
 	op.AutoRenew = autoRenew
+	op.AuthURL = authURL
 	err := this.Save(tx, op)
 	return err
 }
 
-// 检查权限
+// CheckACMETask 检查权限
 func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, adminId int64, userId int64, acmeTaskId int64) (bool, error) {
 	return dbutils.NewQuery(tx, this, adminId, userId).
 		State(ACMETaskStateEnabled).
@@ -226,7 +233,7 @@ func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, adminId int64, userId int64, 
 		Exist()
 }
 
-// 设置任务关联的证书
+// UpdateACMETaskCert 设置任务关联的证书
 func (this *ACMETaskDAO) UpdateACMETaskCert(tx *dbs.Tx, taskId int64, certId int64) error {
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
@@ -239,7 +246,7 @@ func (this *ACMETaskDAO) UpdateACMETaskCert(tx *dbs.Tx, taskId int64, certId int
 	return err
 }
 
-// 执行任务并记录日志
+// RunTask 执行任务并记录日志
 func (this *ACMETaskDAO) RunTask(tx *dbs.Tx, taskId int64) (isOk bool, errMsg string, resultCertId int64) {
 	isOk, errMsg, resultCertId = this.runTaskWithoutLog(tx, taskId)
 
@@ -350,7 +357,33 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 	acmeRequest.OnAuth(func(domain, token, keyAuth string) {
 		err := SharedACMEAuthenticationDAO.CreateAuth(tx, taskId, domain, token, keyAuth)
 		if err != nil {
-			logs.Println("[ACME]write authentication to database error: " + err.Error())
+			remotelogs.Error("ACME", "write authentication to database error: "+err.Error())
+		} else {
+			// 调用校验URL
+			if len(task.AuthURL) > 0 {
+				authJSON, err := json.Marshal(maps.Map{
+					"domain": domain,
+					"token":  token,
+					"key":    keyAuth,
+				})
+				if err != nil {
+					remotelogs.Error("ACME", "encode auth data failed: '"+task.AuthURL+"'")
+				} else {
+					client := utils.SharedHttpClient(5 * time.Second)
+					req, err := http.NewRequest(http.MethodPost, task.AuthURL, bytes.NewReader(authJSON))
+					req.Header.Set("Content-Type", "application/json")
+					if err != nil {
+						remotelogs.Error("ACME", "parse auth url failed '"+task.AuthURL+"': "+err.Error())
+					} else {
+						resp, err := client.Do(req)
+						if err != nil {
+							remotelogs.Error("ACME", "call auth url failed '"+task.AuthURL+"': "+err.Error())
+						} else {
+							_ = resp.Body.Close()
+						}
+					}
+				}
+			}
 		}
 	})
 	certData, keyData, err := acmeRequest.Run()
