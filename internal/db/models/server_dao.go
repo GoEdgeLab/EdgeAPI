@@ -18,6 +18,7 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -640,8 +641,14 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 			Param("groupId", numberutils.FormatInt64(groupId))
 	}
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
+			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
+				Param("portRange", maps.Map{"portRange": keyword}.AsJSON()).
+				Param("keyword", "%"+keyword+"%")
+		} else {
+			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
+				Param("keyword", "%"+keyword+"%")
+		}
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
@@ -674,8 +681,13 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 			Param("groupId", numberutils.FormatInt64(groupId))
 	}
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
+			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
+				Param("portRange", string(maps.Map{"portRange": keyword}.AsJSON()))
+		} else {
+			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
+				Param("keyword", "%"+keyword+"%")
+		}
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
