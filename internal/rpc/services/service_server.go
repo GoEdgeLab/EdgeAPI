@@ -1303,7 +1303,6 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return err
 			}
 			if systemId == 0 {
-				// TODO 失败时，需要查询一次确认是否已添加
 				systemId, err = models.SharedClientSystemDAO.CreateSystem(tx, result.Name)
 				if err != nil {
 					return err
@@ -1332,7 +1331,6 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return err
 			}
 			if browserId == 0 {
-				// TODO 失败时，需要查询一次确认是否已添加
 				browserId, err = models.SharedClientBrowserDAO.CreateBrowser(tx, result.Name)
 				if err != nil {
 					return err

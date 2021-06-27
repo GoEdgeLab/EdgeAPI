@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableClientBrowser 启用条目
 func (this *ClientBrowserDAO) EnableClientBrowser(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +44,7 @@ func (this *ClientBrowserDAO) EnableClientBrowser(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 禁用条目
+// DisableClientBrowser 禁用条目
 func (this *ClientBrowserDAO) DisableClientBrowser(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *ClientBrowserDAO) DisableClientBrowser(tx *dbs.Tx, id uint32) error 
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledClientBrowser 查找启用中的条目
 func (this *ClientBrowserDAO) FindEnabledClientBrowser(tx *dbs.Tx, id int64) (*ClientBrowser, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -65,7 +65,7 @@ func (this *ClientBrowserDAO) FindEnabledClientBrowser(tx *dbs.Tx, id int64) (*C
 	return result.(*ClientBrowser), err
 }
 
-// 根据主键查找名称
+// FindClientBrowserName 根据主键查找名称
 func (this *ClientBrowserDAO) FindClientBrowserName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -73,7 +73,7 @@ func (this *ClientBrowserDAO) FindClientBrowserName(tx *dbs.Tx, id uint32) (stri
 		FindStringCol("")
 }
 
-// 根据浏览器名称查找浏览器ID
+// FindBrowserIdWithNameCacheable 根据浏览器名称查找浏览器ID
 func (this *ClientBrowserDAO) FindBrowserIdWithNameCacheable(tx *dbs.Tx, browserName string) (int64, error) {
 	SharedCacheLocker.RLock()
 	browserId, ok := clientBrowserNameAndIdCacheMap[browserName]
@@ -102,8 +102,23 @@ func (this *ClientBrowserDAO) FindBrowserIdWithNameCacheable(tx *dbs.Tx, browser
 	return browserId, nil
 }
 
-// 创建浏览器
+// CreateBrowser 创建浏览器
 func (this *ClientBrowserDAO) CreateBrowser(tx *dbs.Tx, browserName string) (int64, error) {
+	SharedCacheLocker.Lock()
+	defer SharedCacheLocker.Unlock()
+
+	// 检查是否已经创建
+	browserId, err := this.Query(tx).
+		Attr("name", browserName).
+		ResultPk().
+		FindInt64Col(0)
+	if err != nil {
+		return 0, err
+	}
+	if browserId > 0 {
+		return browserId, nil
+	}
+
 	op := NewClientBrowserOperator()
 	op.Name = browserName
 	codes := []string{browserName}

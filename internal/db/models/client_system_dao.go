@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableClientSystem 启用条目
 func (this *ClientSystemDAO) EnableClientSystem(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +44,7 @@ func (this *ClientSystemDAO) EnableClientSystem(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 禁用条目
+// DisableClientSystem 禁用条目
 func (this *ClientSystemDAO) DisableClientSystem(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *ClientSystemDAO) DisableClientSystem(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledClientSystem 查找启用中的条目
 func (this *ClientSystemDAO) FindEnabledClientSystem(tx *dbs.Tx, id int64) (*ClientSystem, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -65,7 +65,7 @@ func (this *ClientSystemDAO) FindEnabledClientSystem(tx *dbs.Tx, id int64) (*Cli
 	return result.(*ClientSystem), err
 }
 
-// 根据主键查找名称
+// FindClientSystemName 根据主键查找名称
 func (this *ClientSystemDAO) FindClientSystemName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -73,7 +73,7 @@ func (this *ClientSystemDAO) FindClientSystemName(tx *dbs.Tx, id uint32) (string
 		FindStringCol("")
 }
 
-// 根据操作系统名称查找系统ID
+// FindSystemIdWithNameCacheable 根据操作系统名称查找系统ID
 func (this *ClientSystemDAO) FindSystemIdWithNameCacheable(tx *dbs.Tx, systemName string) (int64, error) {
 	SharedCacheLocker.RLock()
 	systemId, ok := clientSystemNameAndIdCacheMap[systemName]
@@ -102,8 +102,23 @@ func (this *ClientSystemDAO) FindSystemIdWithNameCacheable(tx *dbs.Tx, systemNam
 	return systemId, nil
 }
 
-// 创建浏览器
+// CreateSystem 创建浏览器
 func (this *ClientSystemDAO) CreateSystem(tx *dbs.Tx, systemName string) (int64, error) {
+	SharedCacheLocker.Lock()
+	defer SharedCacheLocker.Unlock()
+
+	// 检查是否已经创建
+	systemId, err := this.Query(tx).
+		Attr("name", systemName).
+		ResultPk().
+		FindInt64Col(0)
+	if err != nil {
+		return 0, err
+	}
+	if systemId > 0 {
+		return systemId, nil
+	}
+
 	op := NewClientSystemOperator()
 	op.Name = systemName
 
