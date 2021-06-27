@@ -640,6 +640,9 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		}
 	}
 
+	// 指标
+
+
 	return config, nil
 }
 

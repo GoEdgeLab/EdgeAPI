@@ -171,11 +171,12 @@ func (this *NodeThresholdDAO) FindAllEnabledAndOnNodeThresholds(tx *dbs.Tx, role
 }
 
 // CountAllEnabledThresholds 计算阈值的数量
-func (this *NodeThresholdDAO) CountAllEnabledThresholds(tx *dbs.Tx, clusterId int64, nodeId int64) (int64, error) {
+func (this *NodeThresholdDAO) CountAllEnabledThresholds(tx *dbs.Tx, role string, clusterId int64, nodeId int64) (int64, error) {
 	if clusterId <= 0 && nodeId <= 0 {
 		return 0, nil
 	}
 	query := this.Query(tx)
+	query.Attr("role", role)
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	}

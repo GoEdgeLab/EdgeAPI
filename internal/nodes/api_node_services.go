@@ -443,6 +443,16 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		pb.RegisterHTTPAuthPolicyServiceServer(server, instance)
 		this.rest(instance)
 	}
+	{
+		instance := this.serviceInstance(&services.MetricItemService{}).(*services.MetricItemService)
+		pb.RegisterMetricItemServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
+		instance := this.serviceInstance(&services.NodeClusterMetricItemService{}).(*services.NodeClusterMetricItemService)
+		pb.RegisterNodeClusterMetricItemServiceServer(server, instance)
+		this.rest(instance)
+	}
 
 	// TODO check service names
 	for serviceName := range server.GetServiceInfo() {

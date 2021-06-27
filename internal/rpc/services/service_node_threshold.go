@@ -114,7 +114,7 @@ func (this *NodeThresholdService) CountAllEnabledNodeThresholds(ctx context.Cont
 	}
 
 	var tx = this.NullTx()
-	count, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, req.NodeClusterId, req.NodeId)
+	count, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, req.Role, req.NodeClusterId, req.NodeId)
 	if err != nil {
 		return nil, err
 	}

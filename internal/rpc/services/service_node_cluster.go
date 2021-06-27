@@ -9,7 +9,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
@@ -886,4 +888,75 @@ func (this *NodeClusterService) FindLatestNodeClusters(ctx context.Context, req 
 		})
 	}
 	return &pb.FindLatestNodeClustersResponse{NodeClusters: pbClusters}, nil
+}
+
+// FindEnabledNodeClusterConfigInfo 取得集群的配置概要信息
+func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Context, req *pb.FindEnabledNodeClusterConfigInfoRequest) (*pb.FindEnabledNodeClusterConfigInfoResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
+		return &pb.FindEnabledNodeClusterConfigInfoResponse{}, nil
+	}
+
+	var result = &pb.FindEnabledNodeClusterConfigInfoResponse{}
+
+	// health check
+	if len(cluster.HealthCheck) > 0 {
+		healthCheckConfig := &serverconfigs.HealthCheckConfig{}
+		err = json.Unmarshal([]byte(cluster.HealthCheck), healthCheckConfig)
+		if err != nil {
+			return nil, err
+		}
+		result.HealthCheckIsOn = healthCheckConfig.IsOn
+	}
+
+	// firewall actions
+	countFirewallActions, err := models.SharedNodeClusterFirewallActionDAO.CountAllEnabledFirewallActions(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result.HasFirewallActions = countFirewallActions > 0
+
+	// thresholds
+	countThresholds, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, "node", req.NodeClusterId, 0)
+	if err != nil {
+		return nil, err
+	}
+	result.HasThresholds = countThresholds > 0
+
+	// message receivers
+	countReceivers, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, models.MessageTaskTarget{
+		ClusterId: req.NodeClusterId,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+	result.HasMessageReceivers = countReceivers > 0
+
+	// toa
+	if len(cluster.Toa) > 0 {
+		var toaConfig = &nodeconfigs.TOAConfig{}
+		err = json.Unmarshal([]byte(cluster.Toa), toaConfig)
+		if err != nil {
+			return nil, err
+		}
+		result.IsTOAEnabled = toaConfig.IsOn
+	}
+
+	// metric items
+	countMetricItems, err := models.SharedNodeClusterMetricItemDAO.CountAllClusterItems(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	result.HasMetricItems = countMetricItems > 0
+
+	return result, nil
 }

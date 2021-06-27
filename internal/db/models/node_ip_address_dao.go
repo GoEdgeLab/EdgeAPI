@@ -214,6 +214,7 @@ func (this *NodeIPAddressDAO) FindNodeAccessIPAddresses(tx *dbs.Tx, nodeId int64
 		role = nodeconfigs.NodeRoleNode
 	}
 	_, err = this.Query(tx).
+		Attr("role", role).
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
