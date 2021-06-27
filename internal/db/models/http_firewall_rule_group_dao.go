@@ -37,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPFirewallRuleGroupDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPFirewallRuleGroup 启用条目
 func (this *HTTPFirewallRuleGroupDAO) EnableHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *HTTPFirewallRuleGroupDAO) EnableHTTPFirewallRuleGroup(tx *dbs.Tx, id
 	return err
 }
 
-// 禁用条目
+// DisableHTTPFirewallRuleGroup 禁用条目
 func (this *HTTPFirewallRuleGroupDAO) DisableHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -60,7 +60,7 @@ func (this *HTTPFirewallRuleGroupDAO) DisableHTTPFirewallRuleGroup(tx *dbs.Tx, i
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPFirewallRuleGroup 查找启用中的条目
 func (this *HTTPFirewallRuleGroupDAO) FindEnabledHTTPFirewallRuleGroup(tx *dbs.Tx, id int64) (*HTTPFirewallRuleGroup, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -72,7 +72,7 @@ func (this *HTTPFirewallRuleGroupDAO) FindEnabledHTTPFirewallRuleGroup(tx *dbs.T
 	return result.(*HTTPFirewallRuleGroup), err
 }
 
-// 根据主键查找名称
+// FindHTTPFirewallRuleGroupName 根据主键查找名称
 func (this *HTTPFirewallRuleGroupDAO) FindHTTPFirewallRuleGroupName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -80,7 +80,7 @@ func (this *HTTPFirewallRuleGroupDAO) FindHTTPFirewallRuleGroupName(tx *dbs.Tx, 
 		FindStringCol("")
 }
 
-// 组合配置
+// ComposeFirewallRuleGroup 组合配置
 func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, groupId int64) (*firewallconfigs.HTTPFirewallRuleGroup, error) {
 	group, err := this.FindEnabledHTTPFirewallRuleGroup(tx, groupId)
 	if err != nil {
@@ -117,7 +117,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	return config, nil
 }
 
-// 从配置中创建分组
+// CreateGroupFromConfig 从配置中创建分组
 func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(tx *dbs.Tx, groupConfig *firewallconfigs.HTTPFirewallRuleGroup) (int64, error) {
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.IsOn = groupConfig.IsOn
@@ -150,7 +150,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(tx *dbs.Tx, groupCon
 	return types.Int64(op.Id), nil
 }
 
-// 修改开启状态
+// UpdateGroupIsOn 修改开启状态
 func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(tx *dbs.Tx, groupId int64, isOn bool) error {
 	_, err := this.Query(tx).
 		Pk(groupId).
@@ -162,7 +162,7 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(tx *dbs.Tx, groupId int64,
 	return this.NotifyUpdate(tx, groupId)
 }
 
-// 创建分组
+// CreateGroup 创建分组
 func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name string, description string) (int64, error) {
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.State = HTTPFirewallRuleStateEnabled
@@ -176,7 +176,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name st
 	return types.Int64(op.Id), nil
 }
 
-// 修改分组
+// UpdateGroup 修改分组
 func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isOn bool, name string, description string) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
@@ -193,7 +193,7 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isO
 	return this.NotifyUpdate(tx, groupId)
 }
 
-// 修改分组中的规则集
+// UpdateGroupSets 修改分组中的规则集
 func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64, setsJSON []byte) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
@@ -208,7 +208,7 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64,
 	return this.NotifyUpdate(tx, groupId)
 }
 
-// 根据规则集查找规则分组
+// FindRuleGroupIdWithRuleSetId 根据规则集查找规则分组
 func (this *HTTPFirewallRuleGroupDAO) FindRuleGroupIdWithRuleSetId(tx *dbs.Tx, setId int64) (int64, error) {
 	return this.Query(tx).
 		State(HTTPFirewallRuleStateEnabled).
@@ -218,7 +218,7 @@ func (this *HTTPFirewallRuleGroupDAO) FindRuleGroupIdWithRuleSetId(tx *dbs.Tx, s
 		FindInt64Col(0)
 }
 
-// 检查用户所属分组
+// CheckUserRuleGroup 检查用户所属分组
 func (this *HTTPFirewallRuleGroupDAO) CheckUserRuleGroup(tx *dbs.Tx, userId int64, groupId int64) error {
 	policyId, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdWithRuleGroupId(tx, groupId)
 	if err != nil {
@@ -230,7 +230,7 @@ func (this *HTTPFirewallRuleGroupDAO) CheckUserRuleGroup(tx *dbs.Tx, userId int6
 	return SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(tx, userId, policyId)
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPFirewallRuleGroupDAO) NotifyUpdate(tx *dbs.Tx, groupId int64) error {
 	policyId, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdWithRuleGroupId(tx, groupId)
 	if err != nil {

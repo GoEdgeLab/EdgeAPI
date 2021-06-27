@@ -320,7 +320,21 @@ func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId in
 		return nil
 	}
 
-	// TODO 检查是否为用户Server所使用
+	// 检查是否为用户Server所使用
+	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, firewallPolicyId)
+	if err != nil {
+		return err
+	}
+	for _, webId := range webIds {
+		err := SharedHTTPWebDAO.CheckUserWeb(tx, userId, webId)
+		if err != nil {
+			if err != ErrNotFound {
+				return err
+			}
+		} else {
+			return nil
+		}
+	}
 
 	return ErrNotFound
 }
