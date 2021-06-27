@@ -24,6 +24,29 @@ func TestIP2RegionLibrary_Lookup(t *testing.T) {
 	logs.PrintAsJSON(result, t)
 }
 
+func TestIP2RegionLibrary_Lookup_Valid_IP(t *testing.T) {
+	library := &IP2RegionLibrary{}
+	err := library.Load(Tea.Root + "/resources/ipdata/ip2region/ip2region.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	{
+		result, err := library.Lookup("114.240.223")
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.PrintAsJSON(result, t)
+	}
+	{
+		result, err := library.Lookup("abc")
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.PrintAsJSON(result, t)
+	}
+}
+
+
 func TestIP2RegionLibrary_Memory(t *testing.T) {
 	library := &IP2RegionLibrary{}
 	err := library.Load(Tea.Root + "/resources/ipdata/ip2region/ip2region.db")
