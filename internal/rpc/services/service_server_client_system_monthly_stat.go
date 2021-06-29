@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 操作系统统计
+// ServerClientSystemMonthlyStatService 操作系统统计
 type ServerClientSystemMonthlyStatService struct {
 	BaseService
 }
 
-// 查找前N个操作系统
+// FindTopServerClientSystemMonthlyStats 查找前N个操作系统
 func (this *ServerClientSystemMonthlyStatService) FindTopServerClientSystemMonthlyStats(ctx context.Context, req *pb.FindTopServerClientSystemMonthlyStatsRequest) (*pb.FindTopServerClientSystemMonthlyStatsResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {

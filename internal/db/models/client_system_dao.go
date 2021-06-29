@@ -104,6 +104,11 @@ func (this *ClientSystemDAO) FindSystemIdWithNameCacheable(tx *dbs.Tx, systemNam
 
 // CreateSystem 创建浏览器
 func (this *ClientSystemDAO) CreateSystem(tx *dbs.Tx, systemName string) (int64, error) {
+	var maxlength = 50
+	if len(systemName) > maxlength {
+		systemName = systemName[:50]
+	}
+
 	SharedCacheLocker.Lock()
 	defer SharedCacheLocker.Unlock()
 

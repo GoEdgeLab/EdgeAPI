@@ -104,6 +104,11 @@ func (this *ClientBrowserDAO) FindBrowserIdWithNameCacheable(tx *dbs.Tx, browser
 
 // CreateBrowser 创建浏览器
 func (this *ClientBrowserDAO) CreateBrowser(tx *dbs.Tx, browserName string) (int64, error) {
+	var maxlength = 50
+	if len(browserName) > maxlength {
+		browserName = browserName[:50]
+	}
+
 	SharedCacheLocker.Lock()
 	defer SharedCacheLocker.Unlock()
 

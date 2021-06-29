@@ -7,12 +7,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 操作系统统计
+// ServerClientBrowserMonthlyStatService 操作系统统计
 type ServerClientBrowserMonthlyStatService struct {
 	BaseService
 }
 
-// 查找前N个操作系统
+// FindTopServerClientBrowserMonthlyStats 查找前N个操作系统
 func (this *ServerClientBrowserMonthlyStatService) FindTopServerClientBrowserMonthlyStats(ctx context.Context, req *pb.FindTopServerClientBrowserMonthlyStatsRequest) (*pb.FindTopServerClientBrowserMonthlyStatsResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {

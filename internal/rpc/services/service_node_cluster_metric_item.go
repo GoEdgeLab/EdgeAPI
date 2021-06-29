@@ -23,9 +23,15 @@ func (this *NodeClusterMetricItemService) EnableNodeClusterMetricItem(ctx contex
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedNodeClusterMetricItemDAO.EnableClusterItem(tx, req.NodeClusterId, req.MetricItemId)
+	exists, err := models.SharedNodeClusterMetricItemDAO.ExistsClusterItem(tx, req.NodeClusterId, req.MetricItemId)
 	if err != nil {
 		return nil, err
+	}
+	if !exists {
+		err = models.SharedNodeClusterMetricItemDAO.EnableClusterItem(tx, req.NodeClusterId, req.MetricItemId)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return this.Success()
 }
@@ -53,7 +59,7 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 	}
 
 	var tx = this.NullTx()
-	clusterItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, req.NodeClusterId)
+	clusterItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, req.NodeClusterId,  req.Category)
 	if err != nil {
 		return nil, err
 	}
@@ -78,4 +84,19 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 		}
 	}
 	return &pb.FindAllNodeClusterMetricItemsResponse{MetricItems: pbItems}, nil
+}
+
+// ExistsNodeClusterMetricItem 检查是否已添加某个指标
+func (this *NodeClusterMetricItemService) ExistsNodeClusterMetricItem(ctx context.Context, req *pb.ExistsNodeClusterMetricItemRequest) (*pb.RPCExists, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	b, err := models.SharedNodeClusterMetricItemDAO.ExistsClusterItem(tx, req.NodeClusterId, req.MetricItemId)
+	if err != nil {
+		return nil, err
+	}
+	return this.Exists(b)
 }
