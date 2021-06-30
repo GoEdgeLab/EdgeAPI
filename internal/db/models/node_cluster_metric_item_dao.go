@@ -65,12 +65,16 @@ func (this *NodeClusterMetricItemDAO) FindEnabledNodeClusterMetricItem(tx *dbs.T
 
 // DisableClusterItem 禁用某个集群的指标
 func (this *NodeClusterMetricItemDAO) DisableClusterItem(tx *dbs.Tx, clusterId int64, itemId int64) error {
-	return this.Query(tx).
+	err := this.Query(tx).
 		Attr("clusterId", clusterId).
 		Attr("itemId", itemId).
 		State(NodeClusterMetricItemStateEnabled).
 		Set("state", NodeClusterMetricItemStateDisabled).
 		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
 }
 
 // EnableClusterItem 启用某个集群的指标
@@ -82,17 +86,56 @@ func (this *NodeClusterMetricItemDAO) EnableClusterItem(tx *dbs.Tx, clusterId in
 	op.ClusterId = clusterId
 	op.ItemId = itemId
 	op.IsOn = true
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
 }
 
 // FindAllClusterItems 查找某个集群的指标
-func (this *NodeClusterMetricItemDAO) FindAllClusterItems(tx *dbs.Tx, clusterId int64) (result []*NodeClusterMetricItem, err error) {
-	_, err = this.Query(tx).
+// category 不填写即表示获取所有指标
+func (this *NodeClusterMetricItemDAO) FindAllClusterItems(tx *dbs.Tx, clusterId int64, category string) (result []*NodeClusterMetricItem, err error) {
+	var query = this.Query(tx).
 		Attr("clusterId", clusterId).
-		State(NodeClusterMetricItemStateEnabled).
+		State(NodeClusterMetricItemStateEnabled)
+	if len(category) > 0 {
+		query.Where("itemId IN (SELECT id FROM "+SharedMetricItemDAO.Table+" WHERE category=:category)").
+			Param("category", category)
+	}
+	_, err = query.
 		DescPk().
 		Slice(&result).
 		FindAll()
+	return
+}
+
+// FindAllClusterItemIds 查找某个集群的指标Ids
+func (this *NodeClusterMetricItemDAO) FindAllClusterItemIds(tx *dbs.Tx, clusterId int64) (result []int64, err error) {
+	ones, err := this.Query(tx).
+		Attr("clusterId", clusterId).
+		State(NodeClusterMetricItemStateEnabled).
+		Result("itemId").
+		DescPk().
+		FindAll()
+	for _, one := range ones {
+		result = append(result, int64(one.(*NodeClusterMetricItem).ItemId))
+	}
+	return
+}
+
+// FindAllClusterIdsWithItemId 查找使用某个指标的所有集群IDs
+func (this *NodeClusterMetricItemDAO) FindAllClusterIdsWithItemId(tx *dbs.Tx, itemId int64) (clusterIds []int64, err error) {
+	ones, err := this.Query(tx).
+		Attr("itemId", itemId).
+		Result("clusterId").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		clusterIds = append(clusterIds, int64(one.(*NodeClusterMetricItem).ClusterId))
+	}
 	return
 }
 
@@ -102,4 +145,18 @@ func (this *NodeClusterMetricItemDAO) CountAllClusterItems(tx *dbs.Tx, clusterId
 		Attr("clusterId", clusterId).
 		State(NodeClusterMetricItemStateEnabled).
 		Count()
+}
+
+// ExistsClusterItem 是否存在
+func (this *NodeClusterMetricItemDAO) ExistsClusterItem(tx *dbs.Tx, clusterId int64, itemId int64) (bool, error) {
+	return this.Query(tx).
+		Attr("clusterId", clusterId).
+		Attr("itemId", itemId).
+		State(NodeClusterMetricItemStateEnabled).
+		Exist()
+}
+
+// NotifyUpdate 通知更新
+func (this *NodeClusterMetricItemDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
 }

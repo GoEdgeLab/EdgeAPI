@@ -85,9 +85,9 @@ func (this *NodeClusterDAO) FindEnabledClusterIdWithUniqueId(tx *dbs.Tx, uniqueI
 }
 
 // FindNodeClusterName 根据主键查找名称
-func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, id int64) (string, error) {
+func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, clusterId int64) (string, error) {
 	return this.Query(tx).
-		Pk(id).
+		Pk(clusterId).
 		Result("name").
 		FindStringCol("")
 }

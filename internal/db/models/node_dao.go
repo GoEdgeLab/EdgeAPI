@@ -641,7 +641,21 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 
 	// 指标
-
+	metricItemIds, err := SharedNodeClusterMetricItemDAO.FindAllClusterItemIds(tx, int64(node.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+	var metricItems = []*serverconfigs.MetricItemConfig{}
+	for _, itemId := range metricItemIds {
+		itemConfig, err := SharedMetricItemDAO.ComposeItemConfig(tx, itemId)
+		if err != nil {
+			return nil, err
+		}
+		if itemConfig != nil {
+			metricItems = append(metricItems, itemConfig)
+		}
+	}
+	config.MetricItems = metricItems
 
 	return config, nil
 }

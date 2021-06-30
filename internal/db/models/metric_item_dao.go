@@ -1,4 +1,4 @@
-package metrics
+package models
 
 import (
 	"encoding/json"
@@ -8,6 +8,8 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"sort"
+	"strings"
 )
 
 const (
@@ -46,12 +48,27 @@ func (this *MetricItemDAO) EnableMetricItem(tx *dbs.Tx, id int64) error {
 }
 
 // DisableMetricItem 禁用条目
-func (this *MetricItemDAO) DisableMetricItem(tx *dbs.Tx, id int64) error {
+func (this *MetricItemDAO) DisableMetricItem(tx *dbs.Tx, itemId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(itemId).
 		Set("state", MetricItemStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 通知更新
+	err = this.NotifyUpdate(tx, itemId)
+	if err != nil {
+		return err
+	}
+
+	// 删除统计数据
+	err = SharedMetricStatDAO.DeleteItemStats(tx, itemId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // FindEnabledMetricItem 查找启用中的条目
@@ -76,6 +93,8 @@ func (this *MetricItemDAO) FindMetricItemName(tx *dbs.Tx, id int64) (string, err
 
 // CreateItem 创建指标
 func (this *MetricItemDAO) CreateItem(tx *dbs.Tx, code string, category string, name string, keys []string, period int32, periodUnit string, value string) (int64, error) {
+	sort.Strings(keys)
+
 	op := NewMetricItemOperator()
 	op.Code = code
 	op.Category = category
@@ -102,6 +121,23 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
+
+	sort.Strings(keys)
+
+	// 是否有变化
+	oldItem, err := this.FindEnabledMetricItem(tx, itemId)
+	if err != nil {
+		return err
+	}
+	if oldItem == nil {
+		return nil
+	}
+	var versionChanged = false
+	if strings.Join(oldItem.DecodeKeys(), "&") != strings.Join(keys, "&") || types.Int32(oldItem.Period) != period || oldItem.PeriodUnit != periodUnit || oldItem.Value != value {
+		versionChanged = true
+	}
+
+	// 保存
 	op := NewMetricItemOperator()
 	op.Id = itemId
 	op.Name = name
@@ -118,7 +154,31 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	op.PeriodUnit = periodUnit
 	op.Value = value
 	op.IsOn = isOn
-	return this.Save(tx, op)
+	if versionChanged {
+		op.Version = dbs.SQL("version+1")
+	}
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	// 通知更新
+	if versionChanged || (oldItem.IsOn == 0 && isOn) || (oldItem.IsOn == 1 && !isOn) {
+		err := this.NotifyUpdate(tx, itemId)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 删除旧数据
+	if versionChanged {
+		err := SharedMetricStatDAO.DeleteOldItemStats(tx, itemId, types.Int32(oldItem.Version+1))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CountEnabledItems 计算指标的数量
@@ -168,7 +228,35 @@ func (this *MetricItemDAO) ComposeItemConfig(tx *dbs.Tx, itemId int64) (*serverc
 		Category:   item.Category,
 		Value:      item.Value,
 		Keys:       item.DecodeKeys(),
+		Version:    types.Int(item.Version),
 	}
 
 	return config, nil
+}
+
+// FindItemVersion 获取指标的版本号
+func (this *MetricItemDAO) FindItemVersion(tx *dbs.Tx, itemId int64) (int32, error) {
+	version, err := this.Query(tx).
+		Pk(itemId).
+		Result("version").
+		FindIntCol(0)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int32(version), nil
+}
+
+// NotifyUpdate 通知更新
+func (this *MetricItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
+	clusterIds, err := SharedNodeClusterMetricItemDAO.FindAllClusterIdsWithItemId(tx, itemId)
+	if err != nil {
+		return err
+	}
+	for _, clusterId := range clusterIds {
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, clusterId, NodeTaskTypeConfigChanged)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

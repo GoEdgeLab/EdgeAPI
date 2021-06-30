@@ -4,7 +4,7 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/metrics"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -22,7 +22,7 @@ func (this *MetricItemService) CreateMetricItem(ctx context.Context, req *pb.Cre
 	}
 
 	var tx = this.NullTx()
-	itemId, err := metrics.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value)
+	itemId, err := models.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (this *MetricItemService) UpdateMetricItem(ctx context.Context, req *pb.Upd
 	}
 
 	var tx = this.NullTx()
-	err = metrics.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsOn)
+	err = models.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 	}
 
 	var tx = this.NullTx()
-	item, err := metrics.SharedMetricItemDAO.FindEnabledMetricItem(tx, req.MetricItemId)
+	item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, req.MetricItemId)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (this *MetricItemService) CountAllEnabledMetricItems(ctx context.Context, r
 	}
 
 	var tx = this.NullTx()
-	count, err := metrics.SharedMetricItemDAO.CountEnabledItems(tx, req.Category)
+	count, err := models.SharedMetricItemDAO.CountEnabledItems(tx, req.Category)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 	}
 
 	var tx = this.NullTx()
-	items, err := metrics.SharedMetricItemDAO.ListEnabledItems(tx, req.Category, req.Offset, req.Size)
+	items, err := models.SharedMetricItemDAO.ListEnabledItems(tx, req.Category, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (this *MetricItemService) DeleteMetricItem(ctx context.Context, req *pb.Del
 	}
 
 	var tx = this.NullTx()
-	err = metrics.SharedMetricItemDAO.DisableMetricItem(tx, req.MetricItemId)
+	err = models.SharedMetricItemDAO.DisableMetricItem(tx, req.MetricItemId)
 	if err != nil {
 		return nil, err
 	}

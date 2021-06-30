@@ -1,4 +1,4 @@
-package metrics
+package models
 
 // MetricItem 指标定义
 type MetricItem struct {
@@ -14,6 +14,7 @@ type MetricItem struct {
 	PeriodUnit string `field:"periodUnit"` // 周期单位
 	Value      string `field:"value"`      // 值运算
 	State      uint8  `field:"state"`      // 状态
+	Version    uint32 `field:"version"`    // 版本号
 }
 
 type MetricItemOperator struct {
@@ -29,6 +30,7 @@ type MetricItemOperator struct {
 	PeriodUnit interface{} // 周期单位
 	Value      interface{} // 值运算
 	State      interface{} // 状态
+	Version    interface{} // 版本号
 }
 
 func NewMetricItemOperator() *MetricItemOperator {

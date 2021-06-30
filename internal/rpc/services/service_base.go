@@ -207,6 +207,11 @@ func (this *BaseService) SuccessCount(count int64) (*pb.RPCCountResponse, error)
 	return &pb.RPCCountResponse{Count: count}, nil
 }
 
+// Exists 返回是否存在
+func (this *BaseService) Exists(b bool) (*pb.RPCExists, error) {
+	return &pb.RPCExists{Exists: b}, nil
+}
+
 // PermissionError 返回权限错误
 func (this *BaseService) PermissionError() error {
 	return errors.New("Permission Denied")

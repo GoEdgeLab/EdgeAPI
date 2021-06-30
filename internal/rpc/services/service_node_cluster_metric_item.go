@@ -5,7 +5,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/metrics"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -59,13 +58,13 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 	}
 
 	var tx = this.NullTx()
-	clusterItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, req.NodeClusterId,  req.Category)
+	clusterItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, req.NodeClusterId, req.Category)
 	if err != nil {
 		return nil, err
 	}
 	var pbItems = []*pb.MetricItem{}
 	for _, clusterItem := range clusterItems {
-		item, err := metrics.SharedMetricItemDAO.FindEnabledMetricItem(tx, int64(clusterItem.ItemId))
+		item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, int64(clusterItem.ItemId))
 		if err != nil {
 			return nil, err
 		}
