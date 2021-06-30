@@ -41,7 +41,7 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 
 	// 认证
 	methods := []ssh.AuthMethod{}
-	if len(credentials.Password) > 0 {
+	if credentials.Method == "user" {
 		{
 			authMethod := ssh.Password(credentials.Password)
 			methods = append(methods, authMethod)
@@ -56,16 +56,21 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 			})
 			methods = append(methods, authMethod)
 		}
-	} else {
+	} else if credentials.Method == "privateKey" {
 		signer, err := ssh.ParsePrivateKey([]byte(credentials.PrivateKey))
 		if err != nil {
 			return errors.New("parse private key: " + err.Error())
 		}
 		authMethod := ssh.PublicKeys(signer)
 		methods = append(methods, authMethod)
+	} else {
+		return errors.New("invalid method '" + credentials.Method + "'")
 	}
 
 	// SSH客户端
+	if len(credentials.Username) == 0 {
+		credentials.Username = "root"
+	}
 	config := &ssh.ClientConfig{
 		User:            credentials.Username,
 		Auth:            methods,

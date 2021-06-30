@@ -85,6 +85,7 @@ func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, me
 		op.Password = password
 		op.Su = false // TODO 需要做到前端可以配置
 	case "privateKey":
+		op.Username = username
 		op.PrivateKey = privateKey
 	}
 	op.Description = description
@@ -111,6 +112,7 @@ func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, me
 		op.Password = password
 		op.Su = false // TODO 需要做到前端可以配置
 	case "privateKey":
+		op.Username = username
 		op.PrivateKey = privateKey
 	}
 	op.Description = description

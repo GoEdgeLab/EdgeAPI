@@ -184,6 +184,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Method:     grant.Method,
 	})
 	if err != nil {
 		installStatus.ErrorCode = "SSH_LOGIN_FAILED"
@@ -272,6 +273,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Method:     grant.Method,
 	})
 	if err != nil {
 		return err
@@ -376,6 +378,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Method:     grant.Method,
 	})
 	if err != nil {
 		return err

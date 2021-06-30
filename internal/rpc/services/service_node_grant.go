@@ -214,7 +214,7 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 
 	// 认证
 	methods := []ssh.AuthMethod{}
-	if len(grant.Password) > 0 {
+	if grant.Method == "user" {
 		{
 			authMethod := ssh.Password(grant.Password)
 			methods = append(methods, authMethod)
@@ -229,7 +229,7 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 			})
 			methods = append(methods, authMethod)
 		}
-	} else {
+	} else if grant.Method == "privateKey" {
 		signer, err := ssh.ParsePrivateKey([]byte(grant.PrivateKey))
 		if err != nil {
 			resp.Error = "parse private key: " + err.Error()
@@ -237,9 +237,14 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 		}
 		authMethod := ssh.PublicKeys(signer)
 		methods = append(methods, authMethod)
+	} else {
+		return nil, errors.New("invalid method '" + grant.Method + "'")
 	}
 
 	// SSH客户端
+	if len(grant.Username) == 0 {
+		grant.Username = "root"
+	}
 	config := &ssh.ClientConfig{
 		User:            grant.Username,
 		Auth:            methods,
