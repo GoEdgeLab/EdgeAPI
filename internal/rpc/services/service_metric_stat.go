@@ -28,10 +28,16 @@ func (this *MetricStatService) UploadMetricStats(ctx context.Context, req *pb.Up
 	}
 
 	for _, stat := range req.MetricStats {
-		err := models.SharedMetricStatDAO.CreateStat(tx, stat.Hash, clusterId, nodeId, stat.ServerId, stat.ItemId, stat.Keys, float64(stat.Value), stat.Time, int(stat.Version))
+		err := models.SharedMetricStatDAO.CreateStat(tx, stat.Hash, clusterId, nodeId, req.ServerId, req.ItemId, stat.Keys, float64(stat.Value), req.Time, req.Version)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// 保存总和
+	err = models.SharedMetricSumStatDAO.UpdateSum(tx, req.ServerId, req.Time, req.ItemId, req.Version, req.Count, req.Total)
+	if err != nil {
+		return nil, err
 	}
 
 	return this.Success()
@@ -90,6 +96,12 @@ func (this *MetricStatService) ListMetricStats(ctx context.Context, req *pb.List
 			return nil, err
 		}
 
+		// 查找sum值
+		count, total, err := models.SharedMetricSumStatDAO.FindSum(tx, int64(stat.ServerId), stat.Time, int64(stat.ItemId), types.Int32(stat.Version))
+		if err != nil {
+			return nil, err
+		}
+
 		pbStats = append(pbStats, &pb.MetricStat{
 			Id:          int64(stat.Id),
 			Hash:        stat.Hash,
@@ -102,6 +114,8 @@ func (this *MetricStatService) ListMetricStats(ctx context.Context, req *pb.List
 			NodeCluster: &pb.NodeCluster{Id: int64(stat.ClusterId), Name: clusterName},
 			Node:        &pb.Node{Id: int64(stat.NodeId), Name: nodeName},
 			Server:      &pb.Server{Id: int64(stat.ServerId), Name: serverName},
+			SumCount:    count,
+			SumTotal:    total,
 		})
 	}
 	return &pb.ListMetricStatsResponse{MetricStats: pbStats}, nil

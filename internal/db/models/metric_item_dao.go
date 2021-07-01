@@ -228,7 +228,7 @@ func (this *MetricItemDAO) ComposeItemConfig(tx *dbs.Tx, itemId int64) (*serverc
 		Category:   item.Category,
 		Value:      item.Value,
 		Keys:       item.DecodeKeys(),
-		Version:    types.Int(item.Version),
+		Version:    types.Int32(item.Version),
 	}
 
 	return config, nil

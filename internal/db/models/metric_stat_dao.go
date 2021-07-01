@@ -31,7 +31,7 @@ func init() {
 }
 
 // CreateStat 创建统计数据
-func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, nodeId int64, serverId int64, itemId int64, keys []string, value float64, time string, version int) error {
+func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, nodeId int64, serverId int64, itemId int64, keys []string, value float64, time string, version int32) error {
 	hash += "@" + strconv.FormatInt(nodeId, 10)
 	var keysString string
 	if len(keys) > 0 {
@@ -92,7 +92,9 @@ func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32
 		Attr("version", version).
 		Offset(offset).
 		Limit(size).
-		DescPk().
+		Desc("time").
+		Desc("serverId").
+		Desc("value").
 		Slice(&result).
 		FindAll()
 	return
