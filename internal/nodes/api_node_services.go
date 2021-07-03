@@ -458,6 +458,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		pb.RegisterMetricStatServiceServer(server, instance)
 		this.rest(instance)
 	}
+	{
+		instance := this.serviceInstance(&services.MetricChartService{}).(*services.MetricChartService)
+		pb.RegisterMetricChartServiceServer(server, instance)
+		this.rest(instance)
+	}
 
 	// TODO check service names
 	for serviceName := range server.GetServiceInfo() {
