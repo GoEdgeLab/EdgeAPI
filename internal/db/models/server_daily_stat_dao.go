@@ -5,12 +5,29 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
+	"time"
 )
 
 type ServerDailyStatDAO dbs.DAO
+
+func init() {
+	dbs.OnReadyDone(func() {
+		// 清理数据任务
+		var ticker = time.NewTicker(24 * time.Hour)
+		go func() {
+			for range ticker.C {
+				err := SharedServerDailyStatDAO.Clean(nil, 60) // 只保留60天
+				if err != nil {
+					logs.Println("ServerDailyStatDAO", "clean expired data failed: "+err.Error())
+				}
+			}
+		}()
+	})
+}
 
 func NewServerDailyStatDAO() *ServerDailyStatDAO {
 	return dbs.NewDAO(&ServerDailyStatDAO{
@@ -35,6 +52,7 @@ func init() {
 func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailyStat) error {
 	for _, stat := range stats {
 		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
+		hour := timeutil.FormatTime("YmdH", stat.CreatedAt)
 		timeFrom := timeutil.FormatTime("His", stat.CreatedAt)
 		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60-1) // 5分钟
 
@@ -51,6 +69,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 				"countRequests":       dbs.SQL("countRequests+:countRequests"),
 				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
 				"day":                 day,
+				"hour":                hour,
 				"timeFrom":            timeFrom,
 				"timeTo":              timeTo,
 			}, maps.Map{
@@ -216,4 +235,13 @@ func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day str
 	stat.CountRequests = one.GetInt64("countRequests")
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
 	return
+}
+
+// Clean 清理历史数据
+func (this *ServerDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
+	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))
+	_, err := this.Query(tx).
+		Lt("day", day).
+		Delete()
+	return err
 }

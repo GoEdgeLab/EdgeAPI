@@ -156,9 +156,12 @@ func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, 
 }
 
 // CountAllEnabledUsers 计算用户数量
-func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, keyword string) (int64, error) {
+func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string) (int64, error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
@@ -167,9 +170,12 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, keyword string) (int64, er
 }
 
 // ListEnabledUsers 列出单页用户
-func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*User, err error) {
+func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string, offset int64, size int64) (result []*User, err error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")

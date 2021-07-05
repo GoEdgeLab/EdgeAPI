@@ -3,6 +3,7 @@ package models
 // NodeValue 节点监控数据
 type NodeValue struct {
 	Id        uint64 `field:"id"`        // ID
+	ClusterId uint32 `field:"clusterId"` // 集群ID
 	NodeId    uint32 `field:"nodeId"`    // 节点ID
 	Role      string `field:"role"`      // 节点角色
 	Item      string `field:"item"`      // 监控项
@@ -15,6 +16,7 @@ type NodeValue struct {
 
 type NodeValueOperator struct {
 	Id        interface{} // ID
+	ClusterId interface{} // 集群ID
 	NodeId    interface{} // 节点ID
 	Role      interface{} // 节点角色
 	Item      interface{} // 监控项

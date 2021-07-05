@@ -163,6 +163,7 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 		return rpcutils.UserTypeNone, 0, errors.New("authenticate timeout, please check your system clock")
 	}
 
+	role = apiToken.Role
 	switch apiToken.Role {
 	case rpcutils.UserTypeNode:
 		nodeIntId, err = models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)

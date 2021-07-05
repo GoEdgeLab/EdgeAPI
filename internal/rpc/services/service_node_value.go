@@ -5,6 +5,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -15,13 +16,25 @@ type NodeValueService struct {
 
 // CreateNodeValue 记录数据
 func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.CreateNodeValueRequest) (*pb.RPCSuccess, error) {
-	role, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	role, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedNodeValueDAO.CreateValue(tx, role, nodeId, req.Item, req.ValueJSON, req.CreatedAt)
+
+	var clusterId int64
+	switch role {
+	case rpcutils.UserTypeNode:
+		clusterId, err = models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	case rpcutils.UserTypeDNS:
+		clusterId, err = nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeValueDAO.CreateValue(tx, clusterId, role, nodeId, req.Item, req.ValueJSON, req.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

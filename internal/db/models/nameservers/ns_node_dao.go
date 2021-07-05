@@ -379,6 +379,14 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 	return config, nil
 }
 
+// FindNodeClusterId 获取节点的集群ID
+func (this *NSNodeDAO) FindNodeClusterId(tx *dbs.Tx, nodeId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(nodeId).
+		Result("clusterId").
+		FindInt64Col(0)
+}
+
 // NotifyUpdate 通知更新
 func (this *NSNodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 	// TODO 先什么都不做

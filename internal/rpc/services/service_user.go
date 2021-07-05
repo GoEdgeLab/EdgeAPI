@@ -99,7 +99,7 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 
 	tx := this.NullTx()
 
-	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, req.Keyword)
+	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 	tx := this.NullTx()
 
-	users, err := models.SharedUserDAO.ListEnabledUsers(tx, req.Keyword, req.Offset, req.Size)
+	users, err := models.SharedUserDAO.ListEnabledUsers(tx, 0, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

@@ -33,13 +33,14 @@ func init() {
 }
 
 // CreateValue 创建值
-func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, role nodeconfigs.NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
+func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconfigs.NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
 	day := timeutil.FormatTime("Ymd", createdAt)
 	hour := timeutil.FormatTime("YmdH", createdAt)
 	minute := timeutil.FormatTime("YmdHi", createdAt)
 
 	return this.Query(tx).
 		InsertOrUpdateQuickly(maps.Map{
+			"clusterId": clusterId,
 			"role":      role,
 			"nodeId":    nodeId,
 			"item":      item,
@@ -90,6 +91,31 @@ func (this *NodeValueDAO) ListValues(tx *dbs.Tx, role string, nodeId int64, item
 	return
 }
 
+// ListValuesWithClusterId 列出集群最近的的平均数据
+func (this *NodeValueDAO) ListValuesWithClusterId(tx *dbs.Tx, clusterId int64, role string, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
+	query := this.Query(tx).
+		Attr("role", role).
+		Attr("clusterId", clusterId).
+		Attr("item", item).
+		Result("AVG(JSON_EXTRACT(value, '$." + key + "')) AS value, MIN(createdAt) AS createdAt")
+
+	switch timeRange {
+	// TODO 支持更多的时间范围
+	case nodeconfigs.NodeValueRangeMinute:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-3600) // 一个小时之前的
+		query.Gte("minute", fromMinute)
+		query.Result("minute")
+		query.Group("minute")
+	default:
+		err = errors.New("invalid 'range' value: '" + timeRange + "'")
+		return
+	}
+
+	_, err = query.Slice(&result).
+		FindAll()
+	return
+}
+
 // SumValues 计算某项参数值
 func (this *NodeValueDAO) SumValues(tx *dbs.Tx, role string, nodeId int64, item string, param string, method nodeconfigs.NodeValueSumMethod, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit) (float64, error) {
 	if duration <= 0 {
@@ -110,10 +136,10 @@ func (this *NodeValueDAO) SumValues(tx *dbs.Tx, role string, nodeId int64, item 
 	}
 	switch durationUnit {
 	case nodeconfigs.NodeValueDurationUnitMinute:
-		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration * 60))
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration*60))
 		query.Gte("minute", fromMinute)
 	default:
-		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration * 60))
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration*60))
 		query.Gte("minute", fromMinute)
 	}
 	return query.FindFloat64Col(0)
