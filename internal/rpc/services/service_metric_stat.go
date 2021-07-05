@@ -35,7 +35,7 @@ func (this *MetricStatService) UploadMetricStats(ctx context.Context, req *pb.Up
 	}
 
 	// 保存总和
-	err = models.SharedMetricSumStatDAO.UpdateSum(tx, req.ServerId, req.Time, req.ItemId, req.Version, req.Count, req.Total)
+	err = models.SharedMetricSumStatDAO.UpdateSum(tx, clusterId, nodeId, req.ServerId, req.Time, req.ItemId, req.Version, req.Count, req.Total)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (this *MetricStatService) ListMetricStats(ctx context.Context, req *pb.List
 		}
 
 		// 查找sum值
-		count, total, err := models.SharedMetricSumStatDAO.FindSum(tx, int64(stat.ServerId), stat.Time, int64(stat.ItemId), types.Int32(stat.Version))
+		count, total, err := models.SharedMetricSumStatDAO.FindNodeSum(tx, int64(stat.NodeId), int64(stat.ServerId), stat.Time, int64(stat.ItemId), types.Int32(stat.Version))
 		if err != nil {
 			return nil, err
 		}

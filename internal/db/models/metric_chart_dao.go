@@ -141,3 +141,14 @@ func (this *MetricChartDAO) ListEnabledCharts(tx *dbs.Tx, itemId int64, offset i
 		FindAll()
 	return
 }
+
+// FindAllEnabledCharts 查找所有图表
+func (this *MetricChartDAO) FindAllEnabledCharts(tx *dbs.Tx, itemId int64) (result []*MetricChart, err error) {
+	_, err = this.Query(tx).
+		Attr("itemId", itemId).
+		State(MetricChartStateEnabled).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
