@@ -22,5 +22,5 @@ const (
 	UserNodeVersion      = "0.0.9"
 	AuthorityNodeVersion = "0.0.2"
 	MonitorNodeVersion   = "0.0.2"
-	DNSNodeVersion       = "0.0.1"
+	DNSNodeVersion       = "0.0.2"
 )

@@ -335,6 +335,7 @@ func (this NSNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []by
 func (this *NSNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
 		State(NSNodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM "+SharedNSClusterDAO.Table+" WHERE state=1)").
 		Where("status IS NOT NULL").
 		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("version", utils.VersionToLong(version)).
