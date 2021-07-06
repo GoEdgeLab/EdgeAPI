@@ -315,8 +315,20 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 			for _, addr := range listen.Addresses() {
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
-					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
-					continue
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error() + ", we will try to listen port only")
+
+					// 试着只监听端口
+					_, port, err := net.SplitHostPort(addr)
+					if err != nil {
+						continue
+					}
+					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ...")
+					listener, err = net.Listen("tcp", ":"+port)
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening ':"+port+"' failed: "+err.Error())
+						continue
+					}
+					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ok")
 				}
 				go func() {
 					err := this.listenRPC(listener, nil)
@@ -351,8 +363,19 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 			for _, addr := range listen.Addresses() {
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
-					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error())
-					continue
+					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error() + ", we will try to listen port only")
+					// 试着只监听端口
+					_, port, err := net.SplitHostPort(addr)
+					if err != nil {
+						continue
+					}
+					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ...")
+					listener, err = net.Listen("tcp", ":"+port)
+					if err != nil {
+						remotelogs.Error("API_NODE", "listening ':"+port+"' failed: "+err.Error())
+						continue
+					}
+					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ok")
 				}
 				go func() {
 					err := this.listenRPC(listener, &tls.Config{
