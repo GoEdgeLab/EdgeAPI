@@ -92,7 +92,7 @@ func (this *NodeValueDAO) ListValues(tx *dbs.Tx, role string, nodeId int64, item
 }
 
 // ListValuesWithClusterId 列出集群最近的的平均数据
-func (this *NodeValueDAO) ListValuesWithClusterId(tx *dbs.Tx, clusterId int64, role string, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
+func (this *NodeValueDAO) ListValuesWithClusterId(tx *dbs.Tx, role string, clusterId int64, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
 	query := this.Query(tx).
 		Attr("role", role).
 		Attr("clusterId", clusterId).
@@ -143,4 +143,21 @@ func (this *NodeValueDAO) SumValues(tx *dbs.Tx, role string, nodeId int64, item 
 		query.Gte("minute", fromMinute)
 	}
 	return query.FindFloat64Col(0)
+}
+
+// FindLatestNodeValue 获取最近一条数据
+func (this *NodeValueDAO) FindLatestNodeValue(tx *dbs.Tx, role string, nodeId int64, item string) (*NodeValue, error) {
+	one, err := this.Query(tx).
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		Attr("item", item).
+		DescPk().
+		Find()
+	if err != nil {
+		return nil, err
+	}
+	if one == nil {
+		return nil, nil
+	}
+	return one.(*NodeValue), nil
 }

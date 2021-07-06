@@ -79,11 +79,25 @@ func (this *ServerDomainHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, clusterId 
 	return nil
 }
 
-// FindTopDomainStatsWithClusterId 取得一定时间内的节点排行数据
+// FindTopDomainStatsWithClusterId 取得集群上的一定时间内的域名排行数据
 func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.Tx, clusterId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
+		Between("hour", hourFrom, hourTo).
+		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Group("domain").
+		Desc("countRequests").
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindTopDomainStatsWithNodeId 取得节点上的一定时间内的域名排行数据
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, nodeId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+	// TODO 节点如果已经被删除，则忽略
+	_, err = this.Query(tx).
+		Attr("nodeId", nodeId).
 		Between("hour", hourFrom, hourTo).
 		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
 		Group("domain").

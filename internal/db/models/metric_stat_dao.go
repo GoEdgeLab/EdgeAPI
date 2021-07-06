@@ -101,7 +101,7 @@ func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32
 	return
 }
 
-// FindItemStatsWithClusterIdAndLastTime 取得最近一次计时前 N 个数据
+// FindItemStatsWithClusterIdAndLastTime 取得集群最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
 func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clusterId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
@@ -135,11 +135,67 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 	return
 }
 
+// FindItemStatsWithNodeIdAndLastTime 取得节点最近一次计时前 N 个数据
+// 适合每条数据中包含不同的Key的场景
+func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+	// 最近一次时间
+	statOne, err := this.Query(tx).
+		Attr("itemId", itemId).
+		Attr("version", version).
+		DescPk().
+		Find()
+	if err != nil {
+		return nil, err
+	}
+	if statOne == nil {
+		return nil, nil
+	}
+	var lastStat = statOne.(*MetricStat)
+	var lastTime = lastStat.Time
+
+	_, err = this.Query(tx).
+		Attr("nodeId", nodeId).
+		Attr("itemId", itemId).
+		Attr("version", version).
+		Attr("time", lastTime).
+		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+		Result("MIN(time) AS time", "SUM(value) AS value", "keys").
+		Desc("value").
+		Group("keys").
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // FindLatestItemStatsWithClusterId 取得集群最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
 func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
+		Attr("itemId", itemId).
+		Attr("version", version).
+		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+		Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
+		Desc("time").
+		Group("time").
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	lists.Reverse(result)
+	return
+}
+
+// FindLatestItemStatsWithNodeId 取得节点最近 N 个时间的数据
+// 适合同个Key在不同时间段的变化场景
+func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+	_, err = this.Query(tx).
+		Attr("nodeId", nodeId).
 		Attr("itemId", itemId).
 		Attr("version", version).
 		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等

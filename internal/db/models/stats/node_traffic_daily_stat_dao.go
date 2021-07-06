@@ -3,6 +3,7 @@ package stats
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -76,6 +77,37 @@ func (this *NodeTrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, clusterId int
 		return err
 	}
 	return nil
+}
+
+
+// FindDailyStats 获取日期之间统计
+func (this *NodeTrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, role string, nodeId int64, dayFrom string, dayTo string) (result []*NodeTrafficDailyStat, err error) {
+	ones, err := this.Query(tx).
+		Attr("nodeId", nodeId).
+		Attr("role", role).
+		Between("day", dayFrom, dayTo).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	dayMap := map[string]*NodeTrafficDailyStat{} // day => Stat
+	for _, one := range ones {
+		stat := one.(*NodeTrafficDailyStat)
+		dayMap[stat.Day] = stat
+	}
+	days, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range days {
+		stat, ok := dayMap[day]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &NodeTrafficDailyStat{Day: day})
+		}
+	}
+	return result, nil
 }
 
 // Clean 清理历史数据

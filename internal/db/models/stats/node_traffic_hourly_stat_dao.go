@@ -110,10 +110,11 @@ func (this *NodeTrafficHourlyStatDAO) FindHourlyStatsWithClusterId(tx *dbs.Tx, c
 	return result, nil
 }
 
-// FindTopNodeStatsWithClusterId 取得一定时间内的节点排行数据
-func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, clusterId int64, hourFrom string, hourTo string) (result []*NodeTrafficHourlyStat, err error) {
+// FindTopNodeStatsWithClusterId 取得集群一定时间内的节点排行数据
+func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, role string, clusterId int64, hourFrom string, hourTo string) (result []*NodeTrafficHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
+		Attr("role", role).
 		Attr("clusterId", clusterId).
 		Between("hour", hourFrom, hourTo).
 		Result("nodeId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
@@ -122,6 +123,38 @@ func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, 
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindHourlyStatsWithNodeId 获取节点小时之间统计
+func (this *NodeTrafficHourlyStatDAO) FindHourlyStatsWithNodeId(tx *dbs.Tx, role string, nodeId int64, hourFrom string, hourTo string) (result []*NodeTrafficHourlyStat, err error) {
+	ones, err := this.Query(tx).
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		Between("hour", hourFrom, hourTo).
+		Result("hour, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Group("hour").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	hourMap := map[string]*NodeTrafficHourlyStat{} // hour => Stat
+	for _, one := range ones {
+		stat := one.(*NodeTrafficHourlyStat)
+		hourMap[stat.Hour] = stat
+	}
+	hours, err := utils.RangeHours(hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, hour := range hours {
+		stat, ok := hourMap[hour]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &NodeTrafficHourlyStat{Hour: hour})
+		}
+	}
+	return result, nil
 }
 
 // Clean 清理历史数据
