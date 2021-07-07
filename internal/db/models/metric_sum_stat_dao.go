@@ -46,14 +46,32 @@ func (this *MetricSumStatDAO) UpdateSum(tx *dbs.Tx, clusterId int64, nodeId int6
 		})
 }
 
-// FindServerSum 查找某个服务的统计数据
-func (this *MetricSumStatDAO) FindServerSum(tx *dbs.Tx, nodeId int64, serverId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
+// FindNodeServerSum 查找某个服务在某个节点上的统计数据
+func (this *MetricSumStatDAO) FindNodeServerSum(tx *dbs.Tx, nodeId int64, serverId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
 	one, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("serverId", serverId).
 		Attr("time", time).
 		Attr("itemId", itemId).
 		Attr("version", version).
+		Find()
+	if err != nil {
+		return 0, 0, err
+	}
+	if one == nil {
+		return
+	}
+	return int64(one.(*MetricSumStat).Count), float32(one.(*MetricSumStat).Total), nil
+}
+
+// FindServerSum 查找某个服务的统计数据
+func (this *MetricSumStatDAO) FindServerSum(tx *dbs.Tx, serverId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
+	one, err := this.Query(tx).
+		Attr("serverId", serverId).
+		Attr("time", time).
+		Attr("itemId", itemId).
+		Attr("version", version).
+		Result("SUM(count) AS `count`, SUM(total) AS total").
 		Find()
 	if err != nil {
 		return 0, 0, err

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -234,6 +235,72 @@ func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day str
 	stat.CachedBytes = one.GetInt64("cachedBytes")
 	stat.CountRequests = one.GetInt64("countRequests")
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	return
+}
+
+// FindDailyStats 按天统计
+func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
+	ones, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "day").
+		Attr("serverId", serverId).
+		Between("day", dayFrom, dayTo).
+		Group("day").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	dayMap := map[string]*ServerDailyStat{} // day => Stat
+	for _, one := range ones {
+		stat := one.(*ServerDailyStat)
+		dayMap[stat.Day] = stat
+	}
+	days, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range days {
+		stat, ok := dayMap[day]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &ServerDailyStat{Day: day})
+		}
+	}
+
+	return
+}
+
+// FindHourlyStats 按小时统计
+func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
+	ones, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "hour").
+		Attr("serverId", serverId).
+		Between("hour", hourFrom, hourTo).
+		Group("hour").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	hourMap := map[string]*ServerDailyStat{} // hour => Stat
+	for _, one := range ones {
+		stat := one.(*ServerDailyStat)
+		hourMap[stat.Hour] = stat
+	}
+	hours, err := utils.RangeHours(hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, hour := range hours {
+		stat, ok := hourMap[hour]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &ServerDailyStat{Hour: hour})
+		}
+	}
+
 	return
 }
 

@@ -107,6 +107,20 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, 
 	return
 }
 
+// FindTopDomainStatsWithServerId 取得某个服务的一定时间内的域名排行数据
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+	// TODO 节点如果已经被删除，则忽略
+	_, err = this.Query(tx).
+		Attr("serverId", serverId).
+		Between("hour", hourFrom, hourTo).
+		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Group("domain").
+		Desc("countRequests").
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // Clean 清理历史数据
 func (this *ServerDomainHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
 	var hour = timeutil.Format("Ymd00", time.Now().AddDate(0, 0, -days))

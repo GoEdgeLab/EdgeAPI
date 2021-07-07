@@ -97,7 +97,7 @@ func (this *MetricStatService) ListMetricStats(ctx context.Context, req *pb.List
 		}
 
 		// 查找sum值
-		count, total, err := models.SharedMetricSumStatDAO.FindServerSum(tx, int64(stat.NodeId), int64(stat.ServerId), stat.Time, int64(stat.ItemId), types.Int32(stat.Version))
+		count, total, err := models.SharedMetricSumStatDAO.FindNodeServerSum(tx, int64(stat.NodeId), int64(stat.ServerId), stat.Time, int64(stat.ItemId), types.Int32(stat.Version))
 		if err != nil {
 			return nil, err
 		}
