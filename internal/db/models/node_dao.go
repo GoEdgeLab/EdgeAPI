@@ -204,12 +204,20 @@ func (this *NodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
 }
 
 // ListEnabledNodesMatch 列出单页节点
-func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx, offset int64, size int64, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64, regionId int64) (result []*Node, err error) {
+func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
+	clusterId int64,
+	installState configutils.BoolState,
+	activeState configutils.BoolState,
+	keyword string,
+	groupId int64,
+	regionId int64,
+	order string,
+	offset int64,
+	size int64) (result []*Node, err error) {
 	query := this.Query(tx).
 		State(NodeStateEnabled).
 		Offset(offset).
 		Limit(size).
-		DescPk().
 		Slice(&result)
 
 	// 集群
@@ -252,6 +260,27 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx, offset int64, size int64,
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
+
+	// 排序
+	switch order {
+	case "cpuAsc":
+		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.cpuUsage'), 0), 0)")
+	case "cpuDesc":
+		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.cpuUsage'), 0), 0)")
+	case "memoryAsc":
+		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.memoryUsage'), 0), 0)")
+	case "memoryDesc":
+		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.memoryUsage'), 0), 0)")
+	case "trafficInAsc":
+		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficInBytes'), 0), 0)")
+	case "trafficInDesc":
+		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficInBytes'), 0), 0)")
+	case "trafficOutAsc":
+		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
+	case "trafficOutDesc":
+		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
+	}
+	query.DescPk()
 
 	_, err = query.FindAll()
 	return
@@ -345,7 +374,13 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int
 }
 
 // CountAllEnabledNodesMatch 计算节点数量
-func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx, clusterId int64, installState configutils.BoolState, activeState configutils.BoolState, keyword string, groupId int64, regionId int64) (int64, error) {
+func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
+	clusterId int64,
+	installState configutils.BoolState,
+	activeState configutils.BoolState,
+	keyword string,
+	groupId int64,
+	regionId int64) (int64, error) {
 	query := this.Query(tx)
 	query.State(NodeStateEnabled)
 

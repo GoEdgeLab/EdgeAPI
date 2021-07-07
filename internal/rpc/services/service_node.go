@@ -168,7 +168,27 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		}
 	}
 
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.Offset, req.Size, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId)
+	// 排序
+	var order = ""
+	if req.CpuAsc {
+		order = "cpuAsc"
+	} else if req.CpuDesc {
+		order = "cpuDesc"
+	} else if req.MemoryAsc {
+		order = "memoryAsc"
+	} else if req.MemoryDesc {
+		order = "memoryDesc"
+	} else if req.TrafficInAsc {
+		order = "trafficInAsc"
+	} else if req.TrafficInDesc {
+		order = "trafficInDesc"
+	} else if req.TrafficOutAsc {
+		order = "trafficOutAsc"
+	} else if req.TrafficOutDesc {
+		order = "trafficOutDesc"
+	}
+
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, order, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
