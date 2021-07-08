@@ -185,7 +185,11 @@ func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.Heal
 				if err != nil {
 					return nil, err
 				}
-				return net.Dial(network, result.NodeAddr+":"+port)
+				conn, err := net.Dial(network, result.NodeAddr+":"+port)
+				if err == nil {
+					return conn, nil
+				}
+				return net.DialTimeout(network, result.NodeAddr+":"+port, timeout)
 			},
 			MaxIdleConns:          1,
 			MaxIdleConnsPerHost:   1,
