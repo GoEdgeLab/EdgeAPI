@@ -526,6 +526,17 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		})
 	}
 
+	cacheDirValues, err := models.SharedNodeValueDAO.ListValues(tx, "node", req.NodeId, nodeconfigs.NodeValueItemCacheDir, nodeconfigs.NodeValueRangeMinute)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range cacheDirValues {
+		result.CacheDirsValues = append(result.CacheDirsValues, &pb.NodeValue{
+			ValueJSON: []byte(v.Value),
+			CreatedAt: int64(v.CreatedAt),
+		})
+	}
+
 	// 指标
 	var clusterId = int64(node.ClusterId)
 	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, clusterId, serverconfigs.MetricItemCategoryHTTP)
