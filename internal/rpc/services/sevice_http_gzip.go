@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 )
@@ -16,7 +15,7 @@ type HTTPGzipService struct {
 // CreateHTTPGzip 创建Gzip配置
 func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateHTTPGzipRequest) (*pb.CreateHTTPGzipResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +55,7 @@ func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateH
 // FindEnabledHTTPGzipConfig 查找Gzip
 func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req *pb.FindEnabledGzipConfigRequest) (*pb.FindEnabledGzipConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +77,7 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 // UpdateHTTPGzip 修改Gzip配置
 func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateHTTPGzipRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

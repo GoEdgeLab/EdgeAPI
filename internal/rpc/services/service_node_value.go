@@ -16,7 +16,7 @@ type NodeValueService struct {
 
 // CreateNodeValue 记录数据
 func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.CreateNodeValueRequest) (*pb.RPCSuccess, error) {
-	role, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
+	role, nodeId, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeDNS, rpcutils.UserTypeUser)
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +29,7 @@ func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.Creat
 		clusterId, err = models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 	case rpcutils.UserTypeDNS:
 		clusterId, err = nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+	case rpcutils.UserTypeUser:
 	}
 	if err != nil {
 		return nil, err

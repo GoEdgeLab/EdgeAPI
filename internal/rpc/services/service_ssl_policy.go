@@ -13,7 +13,7 @@ type SSLPolicyService struct {
 	BaseService
 }
 
-// 创建Policy
+// CreateSSLPolicy 创建Policy
 func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.CreateSSLPolicyRequest) (*pb.CreateSSLPolicyResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -51,7 +51,7 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 	return &pb.CreateSSLPolicyResponse{SslPolicyId: policyId}, nil
 }
 
-// 修改Policy
+// UpdateSSLPolicy 修改Policy
 func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.UpdateSSLPolicyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -76,11 +76,11 @@ func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
-// 查找Policy
+// FindEnabledSSLPolicyConfig 查找Policy
 func (this *SSLPolicyService) FindEnabledSSLPolicyConfig(ctx context.Context, req *pb.FindEnabledSSLPolicyConfigRequest) (*pb.FindEnabledSSLPolicyConfigResponse, error) {
 	// 校验请求
 	// 这里不使用validateAdminAndUser()，是因为我们允许用户ID为0的时候也可以调用
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return nil, err
 	}

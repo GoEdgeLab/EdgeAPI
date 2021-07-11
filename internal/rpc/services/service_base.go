@@ -25,7 +25,7 @@ type BaseService struct {
 
 // ValidateAdmin 校验管理员
 func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (adminId int64, err error) {
-	_, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, _, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (a
 
 // ValidateAdminAndUser 校验管理员和用户
 func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminId int64, requireUserId int64) (adminId int64, userId int64, err error) {
-	reqUserType, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
+	reqUserType, _, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return
 	}
@@ -74,25 +74,25 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminI
 
 // ValidateNode 校验边缘节点
 func (this *BaseService) ValidateNode(ctx context.Context) (nodeId int64, err error) {
-	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	return
 }
 
 // ValidateUser 校验用户节点
 func (this *BaseService) ValidateUser(ctx context.Context) (userId int64, err error) {
-	_, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
+	_, _, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
 	return
 }
 
 // ValidateMonitor 校验监控节点
 func (this *BaseService) ValidateMonitor(ctx context.Context) (nodeId int64, err error) {
-	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
+	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
 	return
 }
 
 // ValidateAuthority 校验认证节点
 func (this *BaseService) ValidateAuthority(ctx context.Context) (nodeId int64, err error) {
-	_, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
+	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
 	return
 }
 

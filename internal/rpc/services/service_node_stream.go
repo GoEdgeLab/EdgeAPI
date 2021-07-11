@@ -68,7 +68,7 @@ func init() {
 func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
 	// TODO 使用此stream快速通知边缘节点更新
 	// 校验节点
-	_, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
+	_, _, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
 	if err != nil {
 		return err
 	}

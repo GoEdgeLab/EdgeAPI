@@ -3,11 +3,14 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 )
 
 const (
@@ -97,6 +100,7 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fu
 	op.Remark = remark
 	op.Source = source
 	op.ClusterId = clusterId
+	op.Day = timeutil.Format("Ymd")
 
 	op.IsOn = true
 	op.State = UserStateEnabled
@@ -284,6 +288,53 @@ func (this *UserDAO) FindUserFeatures(tx *dbs.Tx, userId int64) ([]*UserFeature,
 			if f != nil {
 				result = append(result, &UserFeature{Name: f.Name, Code: f.Code, Description: f.Description})
 			}
+		}
+	}
+
+	return result, nil
+}
+
+// SumDailyUsers 获取当天用户数量
+func (this *UserDAO) SumDailyUsers(tx *dbs.Tx, dayFrom string, dayTo string) (int64, error) {
+	return this.Query(tx).
+		Between("day", dayFrom, dayTo).
+		State(UserStateEnabled).
+		Count()
+}
+
+// CountDailyUsers 计算每天用户数
+func (this *UserDAO) CountDailyUsers(tx *dbs.Tx, dayFrom string, dayTo string) ([]*pb.ComposeUserGlobalBoardResponse_DailyStat, error) {
+	ones, _, err := this.Query(tx).
+		Result("COUNT(*) AS count", "day").
+		Between("day", dayFrom, dayTo).
+		State(UserStateEnabled).
+		Group("day").
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	var m = map[string]*pb.ComposeUserGlobalBoardResponse_DailyStat{} // day => Stat
+	for _, one := range ones {
+		m[one.GetString("day")] = &pb.ComposeUserGlobalBoardResponse_DailyStat{
+			Day:   one.GetString("day"),
+			Count: one.GetInt64("count"),
+		}
+	}
+
+	var result = []*pb.ComposeUserGlobalBoardResponse_DailyStat{}
+	days, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range days {
+		stat, ok := m[day]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &pb.ComposeUserGlobalBoardResponse_DailyStat{
+				Day:   day,
+				Count: 0,
+			})
 		}
 	}
 

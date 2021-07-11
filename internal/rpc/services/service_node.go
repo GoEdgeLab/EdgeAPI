@@ -66,7 +66,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 // RegisterClusterNode 注册集群节点
 func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.RegisterClusterNodeRequest) (*pb.RegisterClusterNodeResponse, error) {
 	// 校验请求
-	_, clusterId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeCluster)
+	_, _, clusterId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 // CountAllEnabledNodes 计算节点数量
 func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.CountAllEnabledNodesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 
 // CountAllEnabledNodesMatch 计算匹配的节点数量
 func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.CountAllEnabledNodesMatchRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 
 // ListEnabledNodesMatch 列出单页的节点
 func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.ListEnabledNodesMatchRequest) (*pb.ListEnabledNodesMatchResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Contex
 
 // DeleteNode 删除节点
 func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 
 // UpdateNode 修改节点
 func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -558,7 +558,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 	_ = req
 
 	// 校验节点
-	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -590,7 +590,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 // UpdateNodeStatus 更新节点状态
 func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
-	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -614,7 +614,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 
 // UpdateNodeIsInstalled 修改节点安装状态
 func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.UpdateNodeIsInstalledRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -632,7 +632,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 // InstallNode 安装节点
 func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeRequest) (*pb.InstallNodeResponse, error) {
 	// 校验节点
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -650,7 +650,7 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 // UpgradeNode 升级节点
 func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeRequest) (*pb.UpgradeNodeResponse, error) {
 	// 校验节点
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -690,7 +690,7 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 // StartNode 启动节点
 func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest) (*pb.StartNodeResponse, error) {
 	// 校验节点
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -709,7 +709,7 @@ func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest
 // StopNode 停止节点
 func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) (*pb.StopNodeResponse, error) {
 	// 校验节点
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -728,7 +728,7 @@ func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) 
 // UpdateNodeConnectedAPINodes 更改节点连接的API节点信息
 func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNodeConnectedAPINodesRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
-	_, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -746,7 +746,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 // CountAllEnabledNodesWithNodeGrantId 计算使用某个认证的节点数量
 func (this *NodeService) CountAllEnabledNodesWithNodeGrantId(ctx context.Context, req *pb.CountAllEnabledNodesWithNodeGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +763,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGrantId(ctx context.Context
 // FindAllEnabledNodesWithNodeGrantId 查找使用某个认证的所有节点
 func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context, req *pb.FindAllEnabledNodesWithNodeGrantIdRequest) (*pb.FindAllEnabledNodesWithNodeGrantIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1028,7 +1028,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 // FindNodeInstallStatus 读取节点安装状态
 func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.FindNodeInstallStatusRequest) (*pb.FindNodeInstallStatusResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1057,7 +1057,7 @@ func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.Find
 // UpdateNodeLogin 修改节点登录信息
 func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNodeLoginRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1079,7 +1079,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 // CountAllEnabledNodesWithNodeGroupId 计算某个节点分组内的节点数量
 func (this *NodeService) CountAllEnabledNodesWithNodeGroupId(ctx context.Context, req *pb.CountAllEnabledNodesWithNodeGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1096,7 +1096,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGroupId(ctx context.Context
 // FindAllEnabledNodesDNSWithNodeClusterId 取得某个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledNodesDNSWithNodeClusterIdRequest) (*pb.FindAllEnabledNodesDNSWithNodeClusterIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1168,7 +1168,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 // FindEnabledNodeDNS 查找单个节点的域名解析信息
 func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEnabledNodeDNSRequest) (*pb.FindEnabledNodeDNSResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1240,7 +1240,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 // UpdateNodeDNS 修改节点的DNS解析信息
 func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDNSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

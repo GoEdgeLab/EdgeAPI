@@ -12,9 +12,9 @@ type APINodeService struct {
 	BaseService
 }
 
-// 创建API节点
+// CreateAPINode 创建API节点
 func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPINodeRequest) (*pb.CreateAPINodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +29,9 @@ func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPI
 	return &pb.CreateAPINodeResponse{NodeId: nodeId}, nil
 }
 
-// 修改API节点
+// UpdateAPINode 修改API节点
 func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPINodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,9 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 	return this.Success()
 }
 
-// 删除API节点
+// DeleteAPINode 删除API节点
 func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPINodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -63,9 +63,9 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 	return this.Success()
 }
 
-// 列出所有可用API节点
+// FindAllEnabledAPINodes 列出所有可用API节点
 func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.FindAllEnabledAPINodesRequest) (*pb.FindAllEnabledAPINodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeNode, rpcutils.UserTypeMonitor, rpcutils.UserTypeDNS)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeNode, rpcutils.UserTypeMonitor, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +102,9 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 	return &pb.FindAllEnabledAPINodesResponse{Nodes: result}, nil
 }
 
-// 计算API节点数量
+// CountAllEnabledAPINodes 计算API节点数量
 func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb.CountAllEnabledAPINodesRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,9 @@ func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb
 	return this.SuccessCount(count)
 }
 
-// 列出单页的API节点
+// ListEnabledAPINodes 列出单页的API节点
 func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.ListEnabledAPINodesRequest) (*pb.ListEnabledAPINodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -204,9 +204,9 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 	return &pb.FindEnabledAPINodeResponse{Node: result}, nil
 }
 
-// 获取当前API节点的版本
+// FindCurrentAPINodeVersion 获取当前API节点的版本
 func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *pb.FindCurrentAPINodeVersionRequest) (*pb.FindCurrentAPINodeVersionResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	_, _, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
 		return nil, err
 	}

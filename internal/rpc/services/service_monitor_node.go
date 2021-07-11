@@ -13,9 +13,9 @@ type MonitorNodeService struct {
 	BaseService
 }
 
-// 创建监控节点
+// CreateMonitorNode 创建监控节点
 func (this *MonitorNodeService) CreateMonitorNode(ctx context.Context, req *pb.CreateMonitorNodeRequest) (*pb.CreateMonitorNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -30,9 +30,9 @@ func (this *MonitorNodeService) CreateMonitorNode(ctx context.Context, req *pb.C
 	return &pb.CreateMonitorNodeResponse{NodeId: nodeId}, nil
 }
 
-// 修改监控节点
+// UpdateMonitorNode 修改监控节点
 func (this *MonitorNodeService) UpdateMonitorNode(ctx context.Context, req *pb.UpdateMonitorNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +47,9 @@ func (this *MonitorNodeService) UpdateMonitorNode(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// 删除监控节点
+// DeleteMonitorNode 删除监控节点
 func (this *MonitorNodeService) DeleteMonitorNode(ctx context.Context, req *pb.DeleteMonitorNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +64,9 @@ func (this *MonitorNodeService) DeleteMonitorNode(ctx context.Context, req *pb.D
 	return this.Success()
 }
 
-// 列出所有可用监控节点
+// FindAllEnabledMonitorNodes 列出所有可用监控节点
 func (this *MonitorNodeService) FindAllEnabledMonitorNodes(ctx context.Context, req *pb.FindAllEnabledMonitorNodesRequest) (*pb.FindAllEnabledMonitorNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +93,9 @@ func (this *MonitorNodeService) FindAllEnabledMonitorNodes(ctx context.Context, 
 	return &pb.FindAllEnabledMonitorNodesResponse{Nodes: result}, nil
 }
 
-// 计算监控节点数量
+// CountAllEnabledMonitorNodes 计算监控节点数量
 func (this *MonitorNodeService) CountAllEnabledMonitorNodes(ctx context.Context, req *pb.CountAllEnabledMonitorNodesRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -110,9 +110,9 @@ func (this *MonitorNodeService) CountAllEnabledMonitorNodes(ctx context.Context,
 	return this.SuccessCount(count)
 }
 
-// 列出单页的监控节点
+// ListEnabledMonitorNodes 列出单页的监控节点
 func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req *pb.ListEnabledMonitorNodesRequest) (*pb.ListEnabledMonitorNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +140,9 @@ func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req
 	return &pb.ListEnabledMonitorNodesResponse{Nodes: result}, nil
 }
 
-// 根据ID查找节点
+// FindEnabledMonitorNode 根据ID查找节点
 func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req *pb.FindEnabledMonitorNodeRequest) (*pb.FindEnabledMonitorNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 	return &pb.FindEnabledMonitorNodeResponse{Node: result}, nil
 }
 
-// 获取当前监控节点的版本
+// FindCurrentMonitorNode 获取当前监控节点的版本
 func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req *pb.FindCurrentMonitorNodeRequest) (*pb.FindCurrentMonitorNodeResponse, error) {
 	_, err := this.ValidateMonitor(ctx)
 	if err != nil {
@@ -207,7 +207,7 @@ func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req 
 	return &pb.FindCurrentMonitorNodeResponse{Node: result}, nil
 }
 
-// 更新节点状态
+// UpdateMonitorNodeStatus 更新节点状态
 func (this *MonitorNodeService) UpdateMonitorNodeStatus(ctx context.Context, req *pb.UpdateMonitorNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := this.ValidateNodeId(ctx, rpcutils.UserTypeMonitor)

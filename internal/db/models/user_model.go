@@ -1,6 +1,6 @@
 package models
 
-// 用户
+// User 用户
 type User struct {
 	Id           uint32 `field:"id"`           // ID
 	IsOn         uint8  `field:"isOn"`         // 是否启用
@@ -13,6 +13,7 @@ type User struct {
 	Email        string `field:"email"`        // 邮箱地址
 	AvatarFileId uint64 `field:"avatarFileId"` // 头像文件ID
 	CreatedAt    uint64 `field:"createdAt"`    // 创建时间
+	Day          string `field:"day"`          // YYYYMMDD
 	UpdatedAt    uint64 `field:"updatedAt"`    // 修改时间
 	State        uint8  `field:"state"`        // 状态
 	Source       string `field:"source"`       // 来源
@@ -32,6 +33,7 @@ type UserOperator struct {
 	Email        interface{} // 邮箱地址
 	AvatarFileId interface{} // 头像文件ID
 	CreatedAt    interface{} // 创建时间
+	Day          interface{} // YYYYMMDD
 	UpdatedAt    interface{} // 修改时间
 	State        interface{} // 状态
 	Source       interface{} // 来源

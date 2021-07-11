@@ -33,9 +33,12 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.0.10", upgradeV0_0_10,
 	},
+	{
+		"0.2.5", upgradeV0_2_5,
+	},
 }
 
-// 升级SQL数据
+// UpgradeSQLData 升级SQL数据
 func UpgradeSQLData(db *dbs.DB) error {
 	version, err := db.FindCol(0, "SELECT version FROM edgeVersions")
 	if err != nil {
@@ -201,5 +204,14 @@ func upgradeV0_0_10(db *dbs.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// v0.2.5
+func upgradeV0_2_5(db *dbs.DB) error {
+	_, err := db.Exec("UPDATE edgeUsers SET day=FROM_UNIXTIME(createdAt,'%Y%m%d')")
+	if err != nil {
+		return err
+	}
 	return nil
 }

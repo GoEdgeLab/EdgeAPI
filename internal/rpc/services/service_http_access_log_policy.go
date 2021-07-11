@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -11,10 +10,10 @@ type HTTPAccessLogPolicyService struct {
 	BaseService
 }
 
-// 获取所有可用策略
+// FindAllEnabledHTTPAccessLogPolicies 获取所有可用策略
 func (this *HTTPAccessLogPolicyService) FindAllEnabledHTTPAccessLogPolicies(ctx context.Context, req *pb.FindAllEnabledHTTPAccessLogPoliciesRequest) (*pb.FindAllEnabledHTTPAccessLogPoliciesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

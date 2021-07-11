@@ -15,7 +15,7 @@ type HTTPAccessLogService struct {
 // CreateHTTPAccessLogs 创建访问日志
 func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req *pb.CreateHTTPAccessLogsRequest) (*pb.CreateHTTPAccessLogsResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}

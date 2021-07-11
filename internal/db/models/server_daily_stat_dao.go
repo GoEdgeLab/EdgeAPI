@@ -51,11 +51,21 @@ func init() {
 
 // SaveStats 提交数据
 func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailyStat) error {
+	var serverUserMap = map[int64]int64{} // serverId => userId
 	for _, stat := range stats {
 		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
 		hour := timeutil.FormatTime("YmdH", stat.CreatedAt)
 		timeFrom := timeutil.FormatTime("His", stat.CreatedAt)
 		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60-1) // 5分钟
+
+		serverUserId, ok := serverUserMap[stat.ServerId]
+		if !ok {
+			userId, err := SharedServerDAO.FindServerUserId(tx, stat.ServerId)
+			if err != nil {
+				return err
+			}
+			serverUserId = userId
+		}
 
 		_, _, err := this.Query(tx).
 			Param("bytes", stat.Bytes).
@@ -63,6 +73,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 			Param("countRequests", stat.CountRequests).
 			Param("countCachedRequests", stat.CountCachedRequests).
 			InsertOrUpdate(maps.Map{
+				"userId":              serverUserId,
 				"serverId":            stat.ServerId,
 				"regionId":            stat.RegionId,
 				"bytes":               dbs.SQL("bytes+:bytes"),
@@ -94,8 +105,7 @@ func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionI
 		query.Attr("regionId", regionId)
 	}
 	return query.Between("day", month+"01", month+"32").
-		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
-		Param("userId", userId).
+		Attr("userId", userId).
 		SumInt64("bytes", 0)
 }
 
@@ -107,8 +117,7 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, reg
 		query.Attr("regionId", regionId)
 	}
 	max, err := query.Between("day", month+"01", month+"32").
-		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
-		Param("userId", userId).
+		Attr("userId", userId).
 		Max("bytes", 0)
 	if err != nil {
 		return 0, err
@@ -125,8 +134,7 @@ func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId 
 	}
 	return query.
 		Attr("day", day).
-		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
-		Param("userId", userId).
+		Attr("userId", userId).
 		SumInt64("bytes", 0)
 }
 
@@ -139,8 +147,7 @@ func (this *ServerDailyStatDAO) SumUserDailyPeek(tx *dbs.Tx, userId int64, regio
 	}
 	max, err := query.
 		Attr("day", day).
-		Where("serverId IN (SELECT id FROM "+SharedServerDAO.Table+" WHERE userId=:userId)").
-		Param("userId", userId).
+		Attr("userId", userId).
 		Max("bytes", 0)
 	if err != nil {
 		return 0, err
@@ -301,6 +308,18 @@ func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hour
 		}
 	}
 
+	return
+}
+
+// FindTopUserStats 流量排行
+func (this *ServerDailyStatDAO) FindTopUserStats(tx *dbs.Tx, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
+	_, err = this.Query(tx).
+		Result("userId", "SUM(bytes) AS bytes", "SUM(countRequests) AS countRequests").
+		Between("hour", hourFrom, hourTo).
+		Where("userId>0").
+		Group("userId").
+		Slice(&result).
+		FindAll()
 	return
 }
 

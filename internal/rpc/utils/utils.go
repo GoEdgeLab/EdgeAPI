@@ -35,7 +35,7 @@ const (
 )
 
 // ValidateRequest 校验请求
-func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserType, userId int64, err error) {
+func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserType, resultNodeId int64, userId int64, err error) {
 	if ctx == nil {
 		err = errors.New("context should not be nil")
 		return
@@ -63,24 +63,24 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	{
 		mockCtx, isMock := ctx.(*MockNodeContext)
 		if isMock {
-			return UserTypeNode, mockCtx.NodeId, nil
+			return UserTypeNode, 0, mockCtx.NodeId, nil
 		}
 	}
 
 	{
 		mockCtx, isMock := ctx.(*MockAdminNodeContext)
 		if isMock {
-			return UserTypeAdmin, mockCtx.AdminId, nil
+			return UserTypeAdmin, 0, mockCtx.AdminId, nil
 		}
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return UserTypeNone, 0, errors.New("context: need 'nodeId'")
+		return UserTypeNone, 0, 0, errors.New("context: need 'nodeId'")
 	}
 	nodeIds := md.Get("nodeid")
 	if len(nodeIds) == 0 || len(nodeIds[0]) == 0 {
-		return UserTypeNone, 0, errors.New("context: need 'nodeId'")
+		return UserTypeNone, 0, 0, errors.New("context: need 'nodeId'")
 	}
 	nodeId := nodeIds[0]
 
@@ -88,52 +88,52 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	apiToken, err := models.SharedApiTokenDAO.FindEnabledTokenWithNodeCacheable(nil, nodeId)
 	if err != nil {
 		utils.PrintError(err)
-		return UserTypeNone, 0, err
+		return UserTypeNone, 0, 0, err
 	}
 	nodeUserId := int64(0)
 	if apiToken == nil {
-		return UserTypeNode, 0, errors.New("context: can not find api token for node '" + nodeId + "'")
+		return UserTypeNode, 0, 0, errors.New("context: can not find api token for node '" + nodeId + "'")
 	}
 
 	tokens := md.Get("token")
 	if len(tokens) == 0 || len(tokens[0]) == 0 {
-		return UserTypeNone, 0, errors.New("context: need 'token'")
+		return UserTypeNone, 0, 0, errors.New("context: need 'token'")
 	}
 	token := tokens[0]
 
 	data, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		return UserTypeNone, 0, err
+		return UserTypeNone, 0, 0, err
 	}
 
 	method, err := encrypt.NewMethodInstance(teaconst.EncryptMethod, apiToken.Secret, nodeId)
 	if err != nil {
 		utils.PrintError(err)
-		return UserTypeNone, 0, err
+		return UserTypeNone, 0, 0, err
 	}
 	data, err = method.Decrypt(data)
 	if err != nil {
-		return UserTypeNone, 0, err
+		return UserTypeNone, 0, 0, err
 	}
 	if len(data) == 0 {
-		return UserTypeNone, 0, errors.New("invalid token")
+		return UserTypeNone, 0, 0, errors.New("invalid token")
 	}
 
 	m := maps.Map{}
 	err = json.Unmarshal(data, &m)
 	if err != nil {
-		return UserTypeNone, 0, errors.New("decode token error: " + err.Error())
+		return UserTypeNone, 0, 0, errors.New("decode token error: " + err.Error())
 	}
 
 	timestamp := m.GetInt64("timestamp")
 	if time.Now().Unix()-timestamp > 600 {
 		// 请求超过10分钟认为超时
-		return UserTypeNone, 0, errors.New("authenticate timeout, please check your system clock")
+		return UserTypeNone, 0, 0, errors.New("authenticate timeout, please check your system clock")
 	}
 
 	t := m.GetString("type")
 	if len(userTypes) > 0 && !lists.ContainsString(userTypes, t) {
-		return UserTypeNone, 0, errors.New("not supported node type: '" + t + "'")
+		return UserTypeNone, 0, 0, errors.New("not supported node type: '" + t + "'")
 	}
 
 	switch apiToken.Role {
@@ -141,47 +141,67 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		// TODO 需要检查集群是否已经删除
 		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueIdCacheable(nil, nodeId)
 		if err != nil {
-			return UserTypeNode, 0, errors.New("context: " + err.Error())
+			return UserTypeNode, 0, 0, errors.New("context: " + err.Error())
 		}
 		if nodeIntId <= 0 {
-			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+			return UserTypeNode, 0, 0, errors.New("context: not found node with id '" + nodeId + "'")
 		}
 		nodeUserId = nodeIntId
+		resultNodeId = nodeIntId
 	case UserTypeCluster:
 		clusterId, err := models.SharedNodeClusterDAO.FindEnabledClusterIdWithUniqueId(nil, nodeId)
 		if err != nil {
-			return UserTypeCluster, 0, errors.New("context: " + err.Error())
+			return UserTypeCluster, 0, 0, errors.New("context: " + err.Error())
 		}
 		if clusterId <= 0 {
-			return UserTypeCluster, 0, errors.New("context: not found cluster with id '" + nodeId + "'")
+			return UserTypeCluster, 0, 0, errors.New("context: not found cluster with id '" + nodeId + "'")
 		}
 		nodeUserId = clusterId
+		resultNodeId = clusterId
 	case UserTypeUser:
+		nodeIntId, err := models.SharedUserNodeDAO.FindEnabledUserNodeIdWithUniqueId(nil, nodeId)
+		if err != nil {
+			return UserTypeNode, 0, 0, errors.New("context: " + err.Error())
+		}
+		if nodeIntId <= 0 {
+			return UserTypeNode, 0, 0, errors.New("context: not found node with id '" + nodeId + "'")
+		}
+		resultNodeId = nodeIntId
 	case UserTypeMonitor:
+		nodeIntId, err := models.SharedMonitorNodeDAO.FindEnabledMonitorNodeIdWithUniqueId(nil, nodeId)
+		if err != nil {
+			return UserTypeNode, 0, 0, errors.New("context: " + err.Error())
+		}
+		if nodeIntId <= 0 {
+			return UserTypeNode, 0, 0, errors.New("context: not found node with id '" + nodeId + "'")
+		}
+		resultNodeId = nodeIntId
 	case UserTypeAuthority:
 		nodeIntId, err := authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNodeIdWithUniqueId(nil, nodeId)
 		if err != nil {
-			return UserTypeNode, 0, errors.New("context: " + err.Error())
+			return UserTypeNode, 0, 0, errors.New("context: " + err.Error())
 		}
 		if nodeIntId <= 0 {
-			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+			return UserTypeNode, 0, 0, errors.New("context: not found node with id '" + nodeId + "'")
 		}
 		nodeUserId = nodeIntId
+		resultNodeId = nodeIntId
 	case UserTypeDNS:
 		nodeIntId, err := nameservers.SharedNSNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
 		if err != nil {
-			return UserTypeNode, 0, errors.New("context: " + err.Error())
+			return UserTypeNode, nodeIntId, 0, errors.New("context: " + err.Error())
 		}
 		if nodeIntId <= 0 {
-			return UserTypeNode, 0, errors.New("context: not found node with id '" + nodeId + "'")
+			return UserTypeNode, nodeIntId, 0, errors.New("context: not found node with id '" + nodeId + "'")
 		}
 		nodeUserId = nodeIntId
+		resultNodeId = nodeIntId
 	}
 
 	if nodeUserId > 0 {
-		return t, nodeUserId, nil
+		return t, resultNodeId, nodeUserId, nil
 	} else {
-		return t, m.GetInt64("userId"), nil
+		return t, resultNodeId, m.GetInt64("userId"), nil
 	}
 }
 

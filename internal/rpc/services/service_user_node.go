@@ -13,9 +13,9 @@ type UserNodeService struct {
 	BaseService
 }
 
-// 创建用户节点
+// CreateUserNode 创建用户节点
 func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateUserNodeRequest) (*pb.CreateUserNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -30,9 +30,9 @@ func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateU
 	return &pb.CreateUserNodeResponse{NodeId: nodeId}, nil
 }
 
-// 修改用户节点
+// UpdateUserNode 修改用户节点
 func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateUserNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +47,9 @@ func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateU
 	return this.Success()
 }
 
-// 删除用户节点
+// DeleteUserNode 删除用户节点
 func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteUserNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +64,9 @@ func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteU
 	return this.Success()
 }
 
-// 列出所有可用用户节点
+// FindAllEnabledUserNodes 列出所有可用用户节点
 func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *pb.FindAllEnabledUserNodesRequest) (*pb.FindAllEnabledUserNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +102,9 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 	return &pb.FindAllEnabledUserNodesResponse{Nodes: result}, nil
 }
 
-// 计算用户节点数量
+// CountAllEnabledUserNodes 计算用户节点数量
 func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *pb.CountAllEnabledUserNodesRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,9 @@ func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *
 	return this.SuccessCount(count)
 }
 
-// 列出单页的用户节点
+// ListEnabledUserNodes 列出单页的用户节点
 func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.ListEnabledUserNodesRequest) (*pb.ListEnabledUserNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -158,9 +158,9 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 	return &pb.ListEnabledUserNodesResponse{Nodes: result}, nil
 }
 
-// 根据ID查找节点
+// FindEnabledUserNode 根据ID查找节点
 func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.FindEnabledUserNodeRequest) (*pb.FindEnabledUserNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 	return &pb.FindEnabledUserNodeResponse{Node: result}, nil
 }
 
-// 获取当前用户节点的版本
+// FindCurrentUserNode 获取当前用户节点的版本
 func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.FindCurrentUserNodeRequest) (*pb.FindCurrentUserNodeResponse, error) {
 	_, err := this.ValidateUser(ctx)
 	if err != nil {
@@ -243,7 +243,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 	return &pb.FindCurrentUserNodeResponse{Node: result}, nil
 }
 
-// 更新节点状态
+// UpdateUserNodeStatus 更新节点状态
 func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.UpdateUserNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
 	_, nodeId, err := this.ValidateNodeId(ctx, rpcutils.UserTypeUser)

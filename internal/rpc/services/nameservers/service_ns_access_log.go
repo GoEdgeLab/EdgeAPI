@@ -16,7 +16,7 @@ type NSAccessLogService struct {
 // CreateNSAccessLogs 创建访问日志
 func (this *NSAccessLogService) CreateNSAccessLogs(ctx context.Context, req *pb.CreateNSAccessLogsRequest) (*pb.CreateNSAccessLogsResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeDNS)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}

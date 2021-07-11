@@ -234,7 +234,7 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 // ListIPItemsAfterVersion 根据版本列出一组IP
 func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.ListIPItemsAfterVersionRequest) (*pb.ListIPItemsAfterVersionResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}

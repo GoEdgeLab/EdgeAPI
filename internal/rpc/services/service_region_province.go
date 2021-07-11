@@ -7,15 +7,15 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 省份相关服务
+// RegionProvinceService 省份相关服务
 type RegionProvinceService struct {
 	BaseService
 }
 
-// 查找所有省份
+// FindAllEnabledRegionProvincesWithCountryId 查找所有省份
 func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ctx context.Context, req *pb.FindAllEnabledRegionProvincesWithCountryIdRequest) (*pb.FindAllEnabledRegionProvincesWithCountryIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +40,10 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 	}, nil
 }
 
-// 查找单个省份信息
+// FindEnabledRegionProvince 查找单个省份信息
 func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context, req *pb.FindEnabledRegionProvinceRequest) (*pb.FindEnabledRegionProvinceResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}

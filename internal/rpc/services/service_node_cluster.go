@@ -7,7 +7,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -57,7 +56,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 
 // UpdateNodeCluster 修改集群
 func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.UpdateNodeClusterRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +73,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 // DeleteNodeCluster 禁用集群
 func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.DeleteNodeClusterRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +134,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 // FindAPINodesWithNodeCluster 查找集群的API节点信息
 func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context, req *pb.FindAPINodesWithNodeClusterRequest) (*pb.FindAPINodesWithNodeClusterResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +188,7 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 // FindAllEnabledNodeClusters 查找所有可用的集群
 func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, req *pb.FindAllEnabledNodeClustersRequest) (*pb.FindAllEnabledNodeClustersResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +218,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 
 // CountAllEnabledNodeClusters 计算所有集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context, req *pb.CountAllEnabledNodeClustersRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +235,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClusters(ctx context.Context,
 
 // ListEnabledNodeClusters 列出单页集群
 func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req *pb.ListEnabledNodeClustersRequest) (*pb.ListEnabledNodeClustersResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +268,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 // FindNodeClusterHealthCheckConfig 查找集群的健康检查配置
 func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Context, req *pb.FindNodeClusterHealthCheckConfigRequest) (*pb.FindNodeClusterHealthCheckConfigResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +289,7 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 // UpdateNodeClusterHealthCheck 修改集群健康检查设置
 func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context, req *pb.UpdateNodeClusterHealthCheckRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +306,7 @@ func (this *NodeClusterService) UpdateNodeClusterHealthCheck(ctx context.Context
 // ExecuteNodeClusterHealthCheck 执行健康检查
 func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Context, req *pb.ExecuteNodeClusterHealthCheckRequest) (*pb.ExecuteNodeClusterHealthCheckResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +335,7 @@ func (this *NodeClusterService) ExecuteNodeClusterHealthCheck(ctx context.Contex
 // CountAllEnabledNodeClustersWithNodeGrantId 计算使用某个认证的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithNodeGrantId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithNodeGrantIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +352,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithNodeGrantId(ctx c
 // FindAllEnabledNodeClustersWithNodeGrantId 查找使用某个认证的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithNodeGrantIdRequest) (*pb.FindAllEnabledNodeClustersWithNodeGrantIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +458,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 // CountAllEnabledNodeClustersWithDNSProviderId 计算使用某个DNS服务商的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +475,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 // CountAllEnabledNodeClustersWithDNSDomainId 计算使用某个DNS域名的集群数量
 func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.CountAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +492,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 // FindAllEnabledNodeClustersWithDNSDomainId 查找使用某个域名的所有集群
 func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx context.Context, req *pb.FindAllEnabledNodeClustersWithDNSDomainIdRequest) (*pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -520,7 +519,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 // CheckNodeClusterDNSName 检查集群域名是否已经被使用
 func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req *pb.CheckNodeClusterDNSNameRequest) (*pb.CheckNodeClusterDNSNameResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -537,7 +536,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req
 // UpdateNodeClusterDNS 修改集群的域名设置
 func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *pb.UpdateNodeClusterDNSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -554,7 +553,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 // CheckNodeClusterDNSChanges 检查集群的DNS是否有变化
 func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, req *pb.CheckNodeClusterDNSChangesRequest) (*pb.CheckNodeClusterDNSChangesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

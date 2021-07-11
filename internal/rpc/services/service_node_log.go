@@ -16,7 +16,7 @@ type NodeLogService struct {
 
 // CreateNodeLogs 创建日志
 func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNodeLogsRequest) (*pb.CreateNodeLogsResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	_, _, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNo
 
 // CountNodeLogs 查询日志数量
 func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNodeLogsRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 // ListNodeLogs 列出单页日志
 func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLogsRequest) (*pb.ListNodeLogsResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

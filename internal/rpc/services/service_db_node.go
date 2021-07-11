@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -12,15 +11,15 @@ import (
 	"strings"
 )
 
-// 数据库节点相关服务
+// DBNodeService 数据库节点相关服务
 type DBNodeService struct {
 	BaseService
 }
 
-// 创建数据库节点
+// CreateDBNode 创建数据库节点
 func (this *DBNodeService) CreateDBNode(ctx context.Context, req *pb.CreateDBNodeRequest) (*pb.CreateDBNodeResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +33,10 @@ func (this *DBNodeService) CreateDBNode(ctx context.Context, req *pb.CreateDBNod
 	return &pb.CreateDBNodeResponse{DbNodeId: nodeId}, nil
 }
 
-// 修改数据库节点
+// UpdateDBNode 修改数据库节点
 func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNodeRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +50,10 @@ func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNod
 	return this.Success()
 }
 
-// 删除节点
+// DeleteDBNode 删除节点
 func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNodeRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +67,10 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 	return this.Success()
 }
 
-// 计算可用的数据库节点数量
+// CountAllEnabledDBNodes 计算可用的数据库节点数量
 func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.CountAllEnabledDBNodesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +84,10 @@ func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.C
 	return this.SuccessCount(count)
 }
 
-// 列出单页的数据库节点
+// ListEnabledDBNodes 列出单页的数据库节点
 func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListEnabledDBNodesRequest) (*pb.ListEnabledDBNodesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -142,10 +141,10 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 	return &pb.ListEnabledDBNodesResponse{DbNodes: result}, nil
 }
 
-// 根据ID查找可用的数据库节点
+// FindEnabledDBNode 根据ID查找可用的数据库节点
 func (this *DBNodeService) FindEnabledDBNode(ctx context.Context, req *pb.FindEnabledDBNodeRequest) (*pb.FindEnabledDBNodeResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +172,7 @@ func (this *DBNodeService) FindEnabledDBNode(ctx context.Context, req *pb.FindEn
 	}}, nil
 }
 
-// 获取所有表信息
+// FindAllDBNodeTables 获取所有表信息
 func (this *DBNodeService) FindAllDBNodeTables(ctx context.Context, req *pb.FindAllDBNodeTablesRequest) (*pb.FindAllDBNodeTablesResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -231,7 +230,7 @@ func (this *DBNodeService) FindAllDBNodeTables(ctx context.Context, req *pb.Find
 	return &pb.FindAllDBNodeTablesResponse{DbNodeTables: pbTables}, nil
 }
 
-// 删除表
+// DeleteDBNodeTable 删除表
 func (this *DBNodeService) DeleteDBNodeTable(ctx context.Context, req *pb.DeleteDBNodeTableRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -266,7 +265,7 @@ func (this *DBNodeService) DeleteDBNodeTable(ctx context.Context, req *pb.Delete
 	return this.Success()
 }
 
-// 清空表
+// TruncateDBNodeTable 清空表
 func (this *DBNodeService) TruncateDBNodeTable(ctx context.Context, req *pb.TruncateDBNodeTableRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

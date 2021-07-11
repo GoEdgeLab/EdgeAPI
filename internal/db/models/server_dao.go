@@ -1198,6 +1198,18 @@ func (this *ServerDAO) FindServerAdminIdAndUserId(tx *dbs.Tx, serverId int64) (a
 	return int64(one.(*Server).AdminId), int64(one.(*Server).UserId), nil
 }
 
+// FindServerUserId  查找服务的用户ID
+func (this *ServerDAO) FindServerUserId(tx *dbs.Tx, serverId int64) (userId int64, err error) {
+	one, _, err := this.Query(tx).
+		Pk(serverId).
+		Result("userId").
+		FindOne()
+	if err != nil || one == nil {
+		return 0, err
+	}
+	return one.GetInt64("userId"), nil
+}
+
 // CheckUserServer 检查用户服务
 func (this *ServerDAO) CheckUserServer(tx *dbs.Tx, userId int64, serverId int64) error {
 	if serverId <= 0 || userId <= 0 {

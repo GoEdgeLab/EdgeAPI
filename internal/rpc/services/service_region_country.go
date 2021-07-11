@@ -8,15 +8,15 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 国家相关服务
+// RegionCountryService 国家相关服务
 type RegionCountryService struct {
 	BaseService
 }
 
-// 查找所有的国家列表
+// FindAllEnabledRegionCountries 查找所有的国家列表
 func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Context, req *pb.FindAllEnabledRegionCountriesRequest) (*pb.FindAllEnabledRegionCountriesResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +51,10 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 	}, nil
 }
 
-// 查找单个国家信息
+// FindEnabledRegionCountry 查找单个国家信息
 func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, req *pb.FindEnabledRegionCountryRequest) (*pb.FindEnabledRegionCountryResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}

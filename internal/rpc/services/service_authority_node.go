@@ -15,7 +15,7 @@ type AuthorityNodeService struct {
 
 // CreateAuthorityNode 创建认证节点
 func (this *AuthorityNodeService) CreateAuthorityNode(ctx context.Context, req *pb.CreateAuthorityNodeRequest) (*pb.CreateAuthorityNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *AuthorityNodeService) CreateAuthorityNode(ctx context.Context, req *
 
 // UpdateAuthorityNode 修改认证节点
 func (this *AuthorityNodeService) UpdateAuthorityNode(ctx context.Context, req *pb.UpdateAuthorityNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (this *AuthorityNodeService) UpdateAuthorityNode(ctx context.Context, req *
 
 // DeleteAuthorityNode 删除认证节点
 func (this *AuthorityNodeService) DeleteAuthorityNode(ctx context.Context, req *pb.DeleteAuthorityNodeRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (this *AuthorityNodeService) DeleteAuthorityNode(ctx context.Context, req *
 
 // FindAllEnabledAuthorityNodes 列出所有可用认证节点
 func (this *AuthorityNodeService) FindAllEnabledAuthorityNodes(ctx context.Context, req *pb.FindAllEnabledAuthorityNodesRequest) (*pb.FindAllEnabledAuthorityNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (this *AuthorityNodeService) FindAllEnabledAuthorityNodes(ctx context.Conte
 
 // CountAllEnabledAuthorityNodes 计算认证节点数量
 func (this *AuthorityNodeService) CountAllEnabledAuthorityNodes(ctx context.Context, req *pb.CountAllEnabledAuthorityNodesRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (this *AuthorityNodeService) CountAllEnabledAuthorityNodes(ctx context.Cont
 
 // ListEnabledAuthorityNodes 列出单页的认证节点
 func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context, req *pb.ListEnabledAuthorityNodesRequest) (*pb.ListEnabledAuthorityNodesResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context,
 
 // FindEnabledAuthorityNode 根据ID查找节点
 func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, req *pb.FindEnabledAuthorityNodeRequest) (*pb.FindEnabledAuthorityNodeResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}

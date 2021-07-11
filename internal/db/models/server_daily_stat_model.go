@@ -3,6 +3,7 @@ package models
 // ServerDailyStat 计费流量统计
 type ServerDailyStat struct {
 	Id                  uint64 `field:"id"`                  // ID
+	UserId              uint32 `field:"userId"`              // 用户ID
 	ServerId            uint32 `field:"serverId"`            // 服务ID
 	RegionId            uint32 `field:"regionId"`            // 区域ID
 	Bytes               uint64 `field:"bytes"`               // 流量
@@ -18,6 +19,7 @@ type ServerDailyStat struct {
 
 type ServerDailyStatOperator struct {
 	Id                  interface{} // ID
+	UserId              interface{} // 用户ID
 	ServerId            interface{} // 服务ID
 	RegionId            interface{} // 区域ID
 	Bytes               interface{} // 流量

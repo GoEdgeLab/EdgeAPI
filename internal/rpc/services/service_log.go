@@ -7,15 +7,15 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 管理员、用户或者其他系统用户日志
+// LogService 管理员、用户或者其他系统用户日志
 type LogService struct {
 	BaseService
 }
 
-// 创建日志
+// CreateLog 创建日志
 func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest) (*pb.CreateLogResponse, error) {
 	// 校验请求
-	userType, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeProvider)
+	userType, _, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -29,10 +29,10 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 	return &pb.CreateLogResponse{}, nil
 }
 
-// 计算日志数量
+// CountLogs 计算日志数量
 func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +46,10 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 	return this.SuccessCount(count)
 }
 
-// 列出单页日志
+// ListLogs 列出单页日志
 func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (*pb.ListLogsResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (
 	return &pb.ListLogsResponse{Logs: result}, nil
 }
 
-// 删除单条
+// DeleteLogPermanently 删除单条
 func (this *LogService) DeleteLogPermanently(ctx context.Context, req *pb.DeleteLogPermanentlyRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -114,7 +114,7 @@ func (this *LogService) DeleteLogPermanently(ctx context.Context, req *pb.Delete
 	return this.Success()
 }
 
-// 批量删除
+// DeleteLogsPermanently 批量删除
 func (this *LogService) DeleteLogsPermanently(ctx context.Context, req *pb.DeleteLogsPermanentlyRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -136,7 +136,7 @@ func (this *LogService) DeleteLogsPermanently(ctx context.Context, req *pb.Delet
 	return this.Success()
 }
 
-// 清理日志
+// CleanLogsPermanently 清理日志
 func (this *LogService) CleanLogsPermanently(ctx context.Context, req *pb.CleanLogsPermanentlyRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -162,7 +162,7 @@ func (this *LogService) CleanLogsPermanently(ctx context.Context, req *pb.CleanL
 	return this.Success()
 }
 
-// 计算日志容量大小
+// SumLogsSize 计算日志容量大小
 func (this *LogService) SumLogsSize(ctx context.Context, req *pb.SumLogsSizeRequest) (*pb.SumLogsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

@@ -7,7 +7,9 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -198,7 +200,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 
 // CheckUserUsername 检查用户名是否存在
 func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUserUsernameRequest) (*pb.CheckUserUsernameResponse, error) {
-	userType, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
+	userType, _, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +221,7 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 
 // LoginUser 登录
 func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx)
+	_, _, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -448,4 +450,131 @@ func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req 
 		result = append(result, feature.ToPB())
 	}
 	return &pb.FindAllUserFeatureDefinitionsResponse{Features: result}, nil
+}
+
+// ComposeUserGlobalBoard 组合全局的看板数据
+func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.ComposeUserGlobalBoardRequest) (*pb.ComposeUserGlobalBoardResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = &pb.ComposeUserGlobalBoardResponse{}
+	var tx = this.NullTx()
+	totalUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "")
+	if err != nil {
+		return nil, err
+	}
+	result.TotalUsers = totalUsers
+
+	countTodayUsers, err := models.SharedUserDAO.SumDailyUsers(tx, timeutil.Format("Ymd"), timeutil.Format("Ymd"))
+	if err != nil {
+		return nil, err
+	}
+	result.CountTodayUsers = countTodayUsers
+
+	{
+		w := types.Int(timeutil.Format("w"))
+		if w == 0 {
+			w = 7
+		}
+		weekFrom := time.Now().AddDate(0, 0, -w+1)
+		dayFrom := timeutil.Format("Ymd", weekFrom)
+		dayTo := timeutil.Format("Ymd", weekFrom.AddDate(0, 0, 6))
+		countWeeklyUsers, err := models.SharedUserDAO.SumDailyUsers(tx, dayFrom, dayTo)
+		if err != nil {
+			return nil, err
+		}
+		result.CountWeeklyUsers = countWeeklyUsers
+	}
+
+	// 用户节点数量
+	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountUserNodes = countUserNodes
+
+	// 离线用户节点
+	countOfflineUserNodes, err := models.SharedUserNodeDAO.CountOfflineNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountOfflineUserNodes = countOfflineUserNodes
+
+	// 用户增长趋势
+	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
+	dayStats, err := models.SharedUserDAO.CountDailyUsers(tx, dayFrom, timeutil.Format("Ymd"))
+	if err != nil {
+		return nil, err
+	}
+	result.DailyStats = dayStats
+
+	// CPU、内存、负载
+	cpuValues, err := models.SharedNodeValueDAO.ListValuesForUserNodes(tx, nodeconfigs.NodeValueItemCPU, "usage", nodeconfigs.NodeValueRangeMinute)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range cpuValues {
+		valueJSON, err := json.Marshal(types.Float32(v.Value))
+		if err != nil {
+			return nil, err
+		}
+		result.CpuNodeValues = append(result.CpuNodeValues, &pb.NodeValue{
+			ValueJSON: valueJSON,
+			CreatedAt: int64(v.CreatedAt),
+		})
+	}
+
+	memoryValues, err := models.SharedNodeValueDAO.ListValuesForUserNodes(tx, nodeconfigs.NodeValueItemMemory, "usage", nodeconfigs.NodeValueRangeMinute)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range memoryValues {
+		valueJSON, err := json.Marshal(types.Float32(v.Value))
+		if err != nil {
+			return nil, err
+		}
+		result.MemoryNodeValues = append(result.MemoryNodeValues, &pb.NodeValue{
+			ValueJSON: valueJSON,
+			CreatedAt: int64(v.CreatedAt),
+		})
+	}
+
+	loadValues, err := models.SharedNodeValueDAO.ListValuesForUserNodes(tx, nodeconfigs.NodeValueItemLoad, "load5m", nodeconfigs.NodeValueRangeMinute)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range loadValues {
+		valueJSON, err := json.Marshal(types.Float32(v.Value))
+		if err != nil {
+			return nil, err
+		}
+		result.LoadNodeValues = append(result.LoadNodeValues, &pb.NodeValue{
+			ValueJSON: valueJSON,
+			CreatedAt: int64(v.CreatedAt),
+		})
+	}
+
+	// 流量排行
+	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	hourTo := timeutil.Format("YmdH")
+	topUserStats, err := models.SharedServerDailyStatDAO.FindTopUserStats(tx, hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topUserStats {
+		userName, err := models.SharedUserDAO.FindUserFullname(tx, int64(stat.UserId))
+		if err != nil {
+			return nil, err
+		}
+		result.TopTrafficStats = append(result.TopTrafficStats, &pb.ComposeUserGlobalBoardResponse_TrafficStat{
+			UserId:        int64(stat.UserId),
+			UserName:      userName,
+			CountRequests: int64(stat.CountRequests),
+			Bytes:         int64(stat.Bytes),
+		})
+	}
+
+	return result, nil
 }

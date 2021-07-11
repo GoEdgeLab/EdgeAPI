@@ -17,7 +17,7 @@ type AuthorityKeyService struct {
 
 // UpdateAuthorityKey 设置Key
 func (this *AuthorityKeyService) UpdateAuthorityKey(ctx context.Context, req *pb.UpdateAuthorityKeyRequest) (*pb.RPCSuccess, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (this *AuthorityKeyService) UpdateAuthorityKey(ctx context.Context, req *pb
 
 // ReadAuthorityKey 读取Key
 func (this *AuthorityKeyService) ReadAuthorityKey(ctx context.Context, req *pb.ReadAuthorityKeyRequest) (*pb.ReadAuthorityKeyResponse, error) {
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeMonitor, rpcutils.UserTypeProvider, rpcutils.UserTypeDNS)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeMonitor, rpcutils.UserTypeProvider, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -14,7 +13,7 @@ type NodeIPAddressService struct {
 // CreateNodeIPAddress 创建IP地址
 func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *pb.CreateNodeIPAddressRequest) (*pb.CreateNodeIPAddressResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +31,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 // UpdateNodeIPAddress 修改IP地址
 func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *pb.UpdateNodeIPAddressRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +49,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 // UpdateNodeIPAddressNodeId 修改IP地址所属节点
 func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context, req *pb.UpdateNodeIPAddressNodeIdRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +67,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context,
 // DisableNodeIPAddress 禁用单个IP地址
 func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req *pb.DisableNodeIPAddressRequest) (*pb.DisableNodeIPAddressResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +85,7 @@ func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req 
 // DisableAllIPAddressesWithNodeId 禁用某个节点的IP地址
 func (this *NodeIPAddressService) DisableAllIPAddressesWithNodeId(ctx context.Context, req *pb.DisableAllIPAddressesWithNodeIdRequest) (*pb.DisableAllIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +135,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 // FindAllEnabledIPAddressesWithNodeId 查找节点的所有地址
 func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx context.Context, req *pb.FindAllEnabledIPAddressesWithNodeIdRequest) (*pb.FindAllEnabledIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
-	_, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
