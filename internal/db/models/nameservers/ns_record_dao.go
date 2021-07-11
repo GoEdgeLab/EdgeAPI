@@ -112,6 +112,7 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 	return this.SaveInt64(tx, op)
 }
 
+// UpdateRecord 修改记录
 func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64) error {
 	if recordId <= 0 {
 		return errors.New("invalid recordId")
@@ -145,7 +146,8 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 	return this.Save(tx, op)
 }
 
-func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64) (int64, error) {
+// CountAllEnabledDomainRecords 计算域名中记录数量
+func (this *NSRecordDAO) CountAllEnabledDomainRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64) (int64, error) {
 	query := this.Query(tx).
 		Attr("domainId", domainId).
 		State(NSRecordStateEnabled)
@@ -162,6 +164,15 @@ func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx, domainId int64, dnsT
 	return query.Count()
 }
 
+// CountAllEnabledRecords 计算所有记录数量
+func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		Where("domainId IN (SELECT id FROM " + SharedNSDomainDAO.Table + " WHERE state=1)").
+		State(NSRecordStateEnabled).
+		Count()
+}
+
+// ListEnabledRecords 列出单页记录
 func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64, offset int64, size int64) (result []*NSRecord, err error) {
 	query := this.Query(tx).
 		Attr("domainId", domainId).

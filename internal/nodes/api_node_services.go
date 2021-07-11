@@ -439,6 +439,16 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&nameservers.NSRecordHourlyStatService{}).(*nameservers.NSRecordHourlyStatService)
+		pb.RegisterNSRecordHourlyStatServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
+		instance := this.serviceInstance(&nameservers.NSService{}).(*nameservers.NSService)
+		pb.RegisterNSServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.HTTPAuthPolicyService{}).(*services.HTTPAuthPolicyService)
 		pb.RegisterHTTPAuthPolicyServiceServer(server, instance)
 		this.rest(instance)

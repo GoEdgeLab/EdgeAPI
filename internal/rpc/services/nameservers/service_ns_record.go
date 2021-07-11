@@ -69,7 +69,7 @@ func (this *NSRecordService) CountAllEnabledNSRecords(ctx context.Context, req *
 	}
 
 	var tx = this.NullTx()
-	count, err := nameservers.SharedNSRecordDAO.CountAllEnabledRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId)
+	count, err := nameservers.SharedNSRecordDAO.CountAllEnabledDomainRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId)
 	if err != nil {
 		return nil, err
 	}

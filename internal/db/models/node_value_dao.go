@@ -140,6 +140,31 @@ func (this *NodeValueDAO) ListValuesForUserNodes(tx *dbs.Tx, item string, key st
 	return
 }
 
+
+// ListValuesForNSNodes 列出用户节点相关的平均数据
+func (this *NodeValueDAO) ListValuesForNSNodes(tx *dbs.Tx, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
+	query := this.Query(tx).
+		Attr("role", "dns").
+		Attr("item", item).
+		Result("AVG(JSON_EXTRACT(value, '$." + key + "')) AS value, MIN(createdAt) AS createdAt")
+
+	switch timeRange {
+	// TODO 支持更多的时间范围
+	case nodeconfigs.NodeValueRangeMinute:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-3600) // 一个小时之前的
+		query.Gte("minute", fromMinute)
+		query.Result("minute")
+		query.Group("minute")
+	default:
+		err = errors.New("invalid 'range' value: '" + timeRange + "'")
+		return
+	}
+
+	_, err = query.Slice(&result).
+		FindAll()
+	return
+}
+
 // SumValues 计算某项参数值
 func (this *NodeValueDAO) SumValues(tx *dbs.Tx, role string, nodeId int64, item string, param string, method nodeconfigs.NodeValueSumMethod, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit) (float64, error) {
 	if duration <= 0 {

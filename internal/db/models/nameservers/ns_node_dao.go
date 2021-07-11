@@ -75,6 +75,15 @@ func (this *NSNodeDAO) FindEnabledNSNode(tx *dbs.Tx, id int64) (*NSNode, error) 
 	return result.(*NSNode), err
 }
 
+// FindEnabledNSNodeName 查找节点名称
+func (this *NSNodeDAO) FindEnabledNSNodeName(tx *dbs.Tx, nodeId int64) (string, error) {
+	return this.Query(tx).
+		Pk(nodeId).
+		State(NSNodeStateEnabled).
+		Result("name").
+		FindStringCol("")
+}
+
 // FindAllEnabledNodesWithClusterId 查找一个集群下的所有节点
 func (this *NSNodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*NSNode, err error) {
 	_, err = this.Query(tx).
@@ -90,6 +99,15 @@ func (this *NSNodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId in
 func (this *NSNodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(NSNodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM " + SharedNSClusterDAO.Table + " WHERE state=1)").
+		Count()
+}
+
+// CountAllOfflineNodes 计算离线节点数量
+func (this *NSNodeDAO) CountAllOfflineNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(NSNodeStateEnabled).
+		Where("(status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-120)").
 		Where("clusterId IN (SELECT id FROM " + SharedNSClusterDAO.Table + " WHERE state=1)").
 		Count()
 }

@@ -270,6 +270,6 @@ func (this *UserNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (
 func (this *UserNodeDAO) CountOfflineNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(UserNodeStateEnabled).
-		Where("status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-120").
+		Where("(status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-120)").
 		Count()
 }
