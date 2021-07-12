@@ -298,6 +298,7 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 			AdminId:  int64(admin.Id),
 			IsSuper:  admin.IsSuper == 1,
 			Fullname: admin.Fullname,
+			Theme:    admin.Theme,
 			Modules:  pbModules,
 		}
 		result = append(result, list)
@@ -632,4 +633,18 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	return resp, nil
+}
+
+// UpdateAdminTheme 修改管理员使用的界面风格
+func (this *AdminService) UpdateAdminTheme(ctx context.Context, req *pb.UpdateAdminThemeRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, req.AdminId)
+	if err != nil {
+		return nil, err
+	}
+	var tx = this.NullTx()
+	err = models.SharedAdminDAO.UpdateAdminTheme(tx, req.AdminId, req.Theme)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

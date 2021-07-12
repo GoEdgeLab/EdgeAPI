@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableAdmin 启用条目
 func (this *AdminDAO) EnableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -43,7 +43,7 @@ func (this *AdminDAO) EnableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, err
 		Update()
 }
 
-// 禁用条目
+// DisableAdmin 禁用条目
 func (this *AdminDAO) DisableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
 	return this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *AdminDAO) DisableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, er
 		Update()
 }
 
-// 查找启用中的条目
+// FindEnabledAdmin 查找启用中的条目
 func (this *AdminDAO) FindEnabledAdmin(tx *dbs.Tx, id int64) (*Admin, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -63,7 +63,7 @@ func (this *AdminDAO) FindEnabledAdmin(tx *dbs.Tx, id int64) (*Admin, error) {
 	return result.(*Admin), err
 }
 
-// 检查管理员是否存在
+// ExistEnabledAdmin 检查管理员是否存在
 func (this *AdminDAO) ExistEnabledAdmin(tx *dbs.Tx, adminId int64) (bool, error) {
 	return this.Query(tx).
 		Pk(adminId).
@@ -71,7 +71,7 @@ func (this *AdminDAO) ExistEnabledAdmin(tx *dbs.Tx, adminId int64) (bool, error)
 		Exist()
 }
 
-// 获取管理员名称
+// FindAdminFullname 获取管理员名称
 func (this *AdminDAO) FindAdminFullname(tx *dbs.Tx, adminId int64) (string, error) {
 	return this.Query(tx).
 		Pk(adminId).
@@ -79,7 +79,7 @@ func (this *AdminDAO) FindAdminFullname(tx *dbs.Tx, adminId int64) (string, erro
 		FindStringCol("")
 }
 
-// 检查用户名、密码
+// CheckAdminPassword 检查用户名、密码
 func (this *AdminDAO) CheckAdminPassword(tx *dbs.Tx, username string, encryptedPassword string) (int64, error) {
 	if len(username) == 0 || len(encryptedPassword) == 0 {
 		return 0, nil
@@ -94,7 +94,7 @@ func (this *AdminDAO) CheckAdminPassword(tx *dbs.Tx, username string, encryptedP
 		FindInt64Col(0)
 }
 
-// 根据用户名查询管理员ID
+// FindAdminIdWithUsername 根据用户名查询管理员ID
 func (this *AdminDAO) FindAdminIdWithUsername(tx *dbs.Tx, username string) (int64, error) {
 	one, err := this.Query(tx).
 		Attr("username", username).
@@ -110,7 +110,7 @@ func (this *AdminDAO) FindAdminIdWithUsername(tx *dbs.Tx, username string) (int6
 	return int64(one.(*Admin).Id), nil
 }
 
-// 更改管理员密码
+// UpdateAdminPassword 更改管理员密码
 func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password string) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
@@ -122,7 +122,7 @@ func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password st
 	return err
 }
 
-// 创建管理员
+// CreateAdmin 创建管理员
 func (this *AdminDAO) CreateAdmin(tx *dbs.Tx, username string, canLogin bool, password string, fullname string, isSuper bool, modulesJSON []byte) (int64, error) {
 	op := NewAdminOperator()
 	op.IsOn = true
@@ -144,7 +144,7 @@ func (this *AdminDAO) CreateAdmin(tx *dbs.Tx, username string, canLogin bool, pa
 	return types.Int64(op.Id), nil
 }
 
-// 修改管理员个人资料
+// UpdateAdminInfo 修改管理员个人资料
 func (this *AdminDAO) UpdateAdminInfo(tx *dbs.Tx, adminId int64, fullname string) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
@@ -156,7 +156,7 @@ func (this *AdminDAO) UpdateAdminInfo(tx *dbs.Tx, adminId int64, fullname string
 	return err
 }
 
-// 修改管理员详细信息
+// UpdateAdmin 修改管理员详细信息
 func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, canLogin bool, password string, fullname string, isSuper bool, modulesJSON []byte, isOn bool) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
@@ -180,7 +180,7 @@ func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, ca
 	return err
 }
 
-// 检查用户名是否存在
+// CheckAdminUsername 检查用户名是否存在
 func (this *AdminDAO) CheckAdminUsername(tx *dbs.Tx, adminId int64, username string) (bool, error) {
 	query := this.Query(tx).
 		State(AdminStateEnabled).
@@ -193,7 +193,7 @@ func (this *AdminDAO) CheckAdminUsername(tx *dbs.Tx, adminId int64, username str
 	return query.Exist()
 }
 
-// 修改管理员登录信息
+// UpdateAdminLogin 修改管理员登录信息
 func (this *AdminDAO) UpdateAdminLogin(tx *dbs.Tx, adminId int64, username string, password string) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
@@ -208,7 +208,7 @@ func (this *AdminDAO) UpdateAdminLogin(tx *dbs.Tx, adminId int64, username strin
 	return err
 }
 
-// 修改管理员可以管理的模块
+// UpdateAdminModules 修改管理员可以管理的模块
 func (this *AdminDAO) UpdateAdminModules(tx *dbs.Tx, adminId int64, allowModulesJSON []byte) error {
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
@@ -223,25 +223,25 @@ func (this *AdminDAO) UpdateAdminModules(tx *dbs.Tx, adminId int64, allowModules
 	return nil
 }
 
-// 查询所有管理的权限
+// FindAllAdminModules 查询所有管理的权限
 func (this *AdminDAO) FindAllAdminModules(tx *dbs.Tx) (result []*Admin, err error) {
 	_, err = this.Query(tx).
 		State(AdminStateEnabled).
 		Attr("isOn", true).
-		Result("id", "modules", "isSuper", "fullname").
+		Result("id", "modules", "isSuper", "fullname", "theme").
 		Slice(&result).
 		FindAll()
 	return
 }
 
-// 计算所有管理员数量
+// CountAllEnabledAdmins 计算所有管理员数量
 func (this *AdminDAO) CountAllEnabledAdmins(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(AdminStateEnabled).
 		Count()
 }
 
-// 列出单页的管理员
+// ListEnabledAdmins 列出单页的管理员
 func (this *AdminDAO) ListEnabledAdmins(tx *dbs.Tx, offset int64, size int64) (result []*Admin, err error) {
 	_, err = this.Query(tx).
 		State(AdminStateEnabled).
@@ -252,4 +252,12 @@ func (this *AdminDAO) ListEnabledAdmins(tx *dbs.Tx, offset int64, size int64) (r
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// UpdateAdminTheme 设置管理员Theme
+func (this *AdminDAO) UpdateAdminTheme(tx *dbs.Tx, adminId int64, theme string) error {
+	return this.Query(tx).
+		Pk(adminId).
+		Set("theme", theme).
+		UpdateQuickly()
 }

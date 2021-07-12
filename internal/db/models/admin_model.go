@@ -1,6 +1,6 @@
 package models
 
-// 管理员
+// Admin 管理员
 type Admin struct {
 	Id        uint32 `field:"id"`        // ID
 	IsOn      uint8  `field:"isOn"`      // 是否启用
@@ -13,6 +13,7 @@ type Admin struct {
 	State     uint8  `field:"state"`     // 状态
 	Modules   string `field:"modules"`   // 允许的模块
 	CanLogin  uint8  `field:"canLogin"`  // 是否可以登录
+	Theme     string `field:"theme"`     // 模板设置
 }
 
 type AdminOperator struct {
@@ -27,6 +28,7 @@ type AdminOperator struct {
 	State     interface{} // 状态
 	Modules   interface{} // 允许的模块
 	CanLogin  interface{} // 是否可以登录
+	Theme     interface{} // 模板设置
 }
 
 func NewAdminOperator() *AdminOperator {
