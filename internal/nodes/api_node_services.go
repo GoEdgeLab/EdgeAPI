@@ -99,6 +99,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&services.FirewallService{}).(*services.FirewallService)
+		pb.RegisterFirewallServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.HTTPLocationService{}).(*services.HTTPLocationService)
 		pb.RegisterHTTPLocationServiceServer(server, instance)
 		this.rest(instance)

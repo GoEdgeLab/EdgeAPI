@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-// WAF统计
+// ServerHTTPFirewallDailyStatService WAF统计
 type ServerHTTPFirewallDailyStatService struct {
 	BaseService
 }
 
-// 组合Dashboard
+// ComposeServerHTTPFirewallDashboard 组合Dashboard
 func (this *ServerHTTPFirewallDailyStatService) ComposeServerHTTPFirewallDashboard(ctx context.Context, req *pb.ComposeServerHTTPFirewallDashboardRequest) (*pb.ComposeServerHTTPFirewallDashboardResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {

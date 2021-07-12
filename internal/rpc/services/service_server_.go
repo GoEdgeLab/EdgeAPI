@@ -6,6 +6,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strings"
 	"sync"
 	"time"
@@ -163,7 +164,15 @@ func (this *ServerService) dumpServerHTTPStats() error {
 			if len(pieces) != 4 {
 				continue
 			}
+
+			// 按天统计
 			err := stats.SharedServerHTTPFirewallDailyStatDAO.IncreaseDailyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], pieces[3], count)
+			if err != nil {
+				return err
+			}
+
+			// 按小时统计
+			err = stats.SharedServerHTTPFirewallHourlyStatDAO.IncreaseHourlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], pieces[3] + timeutil.Format("H"), count)
 			if err != nil {
 				return err
 			}
