@@ -89,6 +89,12 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 		return err
 	}
 
+	// 检查IP名单
+	err = this.checkIPList(db)
+	if err != nil {
+		return err
+	}
+
 	// 更新版本号
 	err = this.updateVersion(db, teaconst.Version)
 	if err != nil {
@@ -199,6 +205,39 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 
 	// 创建默认集群
 	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, rands.HexString(32), rands.String(32))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 检查IP名单
+func (this *SQLExecutor) checkIPList(db *dbs.DB) error {
+	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeIPLists")
+	if err != nil {
+		return errors.New("query ip lists failed: " + err.Error())
+	}
+	defer func() {
+		_ = stmt.Close()
+	}()
+
+	col, err := stmt.FindCol(0)
+	if err != nil {
+		return errors.New("query ip lists failed: " + err.Error())
+	}
+	count := types.Int(col)
+	if count > 0 {
+		return nil
+	}
+
+	// 创建名单
+	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, createdAt) VALUES (?, ?, ?, ?, ?)", "公共黑名单", "black", "black", 1, time.Now().Unix())
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, createdAt) VALUES (?, ?, ?, ?, ?)", "公共白名单", "white", "white", 1, time.Now().Unix())
 	if err != nil {
 		return err
 	}
