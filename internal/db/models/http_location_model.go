@@ -1,6 +1,6 @@
 package models
 
-// 路径规则配置
+// HTTPLocation 路由规则配置
 type HTTPLocation struct {
 	Id           uint32 `field:"id"`           // ID
 	TemplateId   uint32 `field:"templateId"`   // 模版ID

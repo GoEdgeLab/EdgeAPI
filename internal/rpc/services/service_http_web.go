@@ -376,7 +376,7 @@ func (this *HTTPWebService) UpdateHTTPWebFirewall(ctx context.Context, req *pb.U
 	return this.Success()
 }
 
-// UpdateHTTPWebLocations 更改路径规则设置
+// UpdateHTTPWebLocations 更改路由规则设置
 func (this *HTTPWebService) UpdateHTTPWebLocations(ctx context.Context, req *pb.UpdateHTTPWebLocationsRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)

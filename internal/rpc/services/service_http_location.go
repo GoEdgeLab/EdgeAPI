@@ -9,12 +9,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 )
 
-// HTTPLocationService 路径规则相关服务
+// HTTPLocationService 路由规则相关服务
 type HTTPLocationService struct {
 	BaseService
 }
 
-// CreateHTTPLocation 创建路径规则
+// CreateHTTPLocation 创建路由规则
 func (this *HTTPLocationService) CreateHTTPLocation(ctx context.Context, req *pb.CreateHTTPLocationRequest) (*pb.CreateHTTPLocationResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -32,7 +32,7 @@ func (this *HTTPLocationService) CreateHTTPLocation(ctx context.Context, req *pb
 	return &pb.CreateHTTPLocationResponse{LocationId: locationId}, nil
 }
 
-// UpdateHTTPLocation 修改路径规则
+// UpdateHTTPLocation 修改路由规则
 func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb.UpdateHTTPLocationRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -50,7 +50,7 @@ func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb
 	return this.Success()
 }
 
-// FindEnabledHTTPLocationConfig 查找路径规则配置
+// FindEnabledHTTPLocationConfig 查找路由规则配置
 func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Context, req *pb.FindEnabledHTTPLocationConfigRequest) (*pb.FindEnabledHTTPLocationConfigResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -71,7 +71,7 @@ func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Conte
 	return &pb.FindEnabledHTTPLocationConfigResponse{LocationJSON: configJSON}, nil
 }
 
-// DeleteHTTPLocation 删除路径规则
+// DeleteHTTPLocation 删除路由规则
 func (this *HTTPLocationService) DeleteHTTPLocation(ctx context.Context, req *pb.DeleteHTTPLocationRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)

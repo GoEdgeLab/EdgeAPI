@@ -247,7 +247,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 	}
 
-	// 路径规则
+	// 路由规则
 	if IsNotNull(web.Locations) {
 		refs := []*serverconfigs.HTTPLocationRef{}
 		err = json.Unmarshal([]byte(web.Locations), &refs)
@@ -563,7 +563,7 @@ func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON 
 	return this.NotifyUpdate(tx, webId)
 }
 
-// UpdateWebLocations 更改路径规则配置
+// UpdateWebLocations 更改路由规则配置
 func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSON []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
