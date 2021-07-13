@@ -667,29 +667,53 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 		firewallPolicy.Inbound.AllowListRef != nil &&
 		firewallPolicy.Inbound.AllowListRef.IsOn &&
 		firewallPolicy.Inbound.AllowListRef.ListId > 0 {
-		item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, firewallPolicy.Inbound.AllowListRef.ListId, ipLong)
-		if err != nil {
-			return nil, err
+
+		var listIds = []int64{}
+		if firewallPolicy.Inbound.AllowListRef.ListId > 0 {
+			listIds = append(listIds, firewallPolicy.Inbound.AllowListRef.ListId)
 		}
-		if item != nil {
-			return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
-				IsOk:      true,
-				Error:     "",
-				IsFound:   true,
-				IsAllowed: true,
-				IpList:    &pb.IPList{Name: "白名单", Id: firewallPolicy.Inbound.AllowListRef.ListId},
-				IpItem: &pb.IPItem{
-					Id:         int64(item.Id),
-					IpFrom:     item.IpFrom,
-					IpTo:       item.IpTo,
-					ExpiredAt:  int64(item.ExpiredAt),
-					Reason:     item.Reason,
-					Type:       item.Type,
-					EventLevel: item.EventLevel,
-				},
-				RegionCountry:  nil,
-				RegionProvince: nil,
-			}, nil
+		if len(firewallPolicy.Inbound.PublicAllowListRefs) > 0 {
+			for _, ref := range firewallPolicy.Inbound.PublicAllowListRefs {
+				if !ref.IsOn {
+					continue
+				}
+
+				listIds = append(listIds, ref.ListId)
+			}
+		}
+
+		for _, listId := range listIds {
+			item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, listId, ipLong)
+			if err != nil {
+				return nil, err
+			}
+			if item != nil {
+				listName, err := models.SharedIPListDAO.FindIPListName(tx, listId)
+				if err != nil {
+					return nil, err
+				}
+				if len(listName) == 0 {
+					listName = "白名单"
+				}
+				return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+					IsOk:      true,
+					Error:     "",
+					IsFound:   true,
+					IsAllowed: true,
+					IpList:    &pb.IPList{Name: listName, Id: listId},
+					IpItem: &pb.IPItem{
+						Id:         int64(item.Id),
+						IpFrom:     item.IpFrom,
+						IpTo:       item.IpTo,
+						ExpiredAt:  int64(item.ExpiredAt),
+						Reason:     item.Reason,
+						Type:       item.Type,
+						EventLevel: item.EventLevel,
+					},
+					RegionCountry:  nil,
+					RegionProvince: nil,
+				}, nil
+			}
 		}
 	}
 
@@ -699,29 +723,53 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 		firewallPolicy.Inbound.AllowListRef != nil &&
 		firewallPolicy.Inbound.AllowListRef.IsOn &&
 		firewallPolicy.Inbound.AllowListRef.ListId > 0 {
-		item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, firewallPolicy.Inbound.DenyListRef.ListId, ipLong)
-		if err != nil {
-			return nil, err
+
+		var listIds = []int64{}
+		if firewallPolicy.Inbound.DenyListRef.ListId > 0 {
+			listIds = append(listIds, firewallPolicy.Inbound.DenyListRef.ListId)
 		}
-		if item != nil {
-			return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
-				IsOk:      true,
-				Error:     "",
-				IsFound:   true,
-				IsAllowed: false,
-				IpList:    &pb.IPList{Name: "黑名单", Id: firewallPolicy.Inbound.DenyListRef.ListId},
-				IpItem: &pb.IPItem{
-					Id:         int64(item.Id),
-					IpFrom:     item.IpFrom,
-					IpTo:       item.IpTo,
-					ExpiredAt:  int64(item.ExpiredAt),
-					Reason:     item.Reason,
-					Type:       item.Type,
-					EventLevel: item.EventLevel,
-				},
-				RegionCountry:  nil,
-				RegionProvince: nil,
-			}, nil
+		if len(firewallPolicy.Inbound.PublicDenyListRefs) > 0 {
+			for _, ref := range firewallPolicy.Inbound.PublicDenyListRefs {
+				if !ref.IsOn {
+					continue
+				}
+
+				listIds = append(listIds, ref.ListId)
+			}
+		}
+
+		for _, listId := range listIds {
+			item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, listId, ipLong)
+			if err != nil {
+				return nil, err
+			}
+			if item != nil {
+				listName, err := models.SharedIPListDAO.FindIPListName(tx, listId)
+				if err != nil {
+					return nil, err
+				}
+				if len(listName) == 0 {
+					listName = "黑名单"
+				}
+				return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+					IsOk:      true,
+					Error:     "",
+					IsFound:   true,
+					IsAllowed: false,
+					IpList:    &pb.IPList{Name: listName, Id: listId},
+					IpItem: &pb.IPItem{
+						Id:         int64(item.Id),
+						IpFrom:     item.IpFrom,
+						IpTo:       item.IpTo,
+						ExpiredAt:  int64(item.ExpiredAt),
+						Reason:     item.Reason,
+						Type:       item.Type,
+						EventLevel: item.EventLevel,
+					},
+					RegionCountry:  nil,
+					RegionProvince: nil,
+				}, nil
+			}
 		}
 	}
 
