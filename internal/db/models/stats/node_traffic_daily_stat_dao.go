@@ -49,7 +49,7 @@ func init() {
 }
 
 // IncreaseDailyStat 增加统计数据
-func (this *NodeTrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, clusterId int64, role string, nodeId int64, day string, bytes int64, cachedBytes int64, countRequests int64, countCachedRequests int64) error {
+func (this *NodeTrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, clusterId int64, role string, nodeId int64, day string, bytes int64, cachedBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64, attackBytes int64) error {
 	if len(day) != 8 {
 		return errors.New("invalid day '" + day + "'")
 	}
@@ -58,6 +58,8 @@ func (this *NodeTrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, clusterId int
 		Param("cachedBytes", cachedBytes).
 		Param("countRequests", countRequests).
 		Param("countCachedRequests", countCachedRequests).
+		Param("countAttackRequests", countAttackRequests).
+		Param("attackBytes", attackBytes).
 		InsertOrUpdateQuickly(maps.Map{
 			"clusterId":           clusterId,
 			"role":                role,
@@ -67,18 +69,21 @@ func (this *NodeTrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, clusterId int
 			"cachedBytes":         cachedBytes,
 			"countRequests":       countRequests,
 			"countCachedRequests": countCachedRequests,
+			"countAttackRequests": countAttackRequests,
+			"attackBytes":         attackBytes,
 		}, maps.Map{
 			"bytes":               dbs.SQL("bytes+:bytes"),
 			"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
 			"countRequests":       dbs.SQL("countRequests+:countRequests"),
 			"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+			"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
+			"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
 		})
 	if err != nil {
 		return err
 	}
 	return nil
 }
-
 
 // FindDailyStats 获取日期之间统计
 func (this *NodeTrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, role string, nodeId int64, dayFrom string, dayTo string) (result []*NodeTrafficDailyStat, err error) {

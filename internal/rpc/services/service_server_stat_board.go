@@ -96,6 +96,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -113,6 +115,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -130,10 +134,12 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 			continue
 		}
 		result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeServerStatNodeClusterBoardResponse_NodeStat{
-			NodeId:        int64(stat.NodeId),
-			NodeName:      nodeName,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
+			NodeId:              int64(stat.NodeId),
+			NodeName:            nodeName,
+			CountRequests:       int64(stat.CountRequests),
+			Bytes:               int64(stat.Bytes),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -144,10 +150,12 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 	for _, stat := range topDomainStats {
 		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeServerStatNodeClusterBoardResponse_DomainStat{
-			ServerId:      int64(stat.ServerId),
-			Domain:        stat.Domain,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
+			ServerId:            int64(stat.ServerId),
+			Domain:              stat.Domain,
+			CountRequests:       int64(stat.CountRequests),
+			Bytes:               int64(stat.Bytes),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -446,6 +454,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -463,6 +473,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -681,6 +693,8 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -698,6 +712,8 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -708,10 +724,12 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	}
 	for _, stat := range topDomainStats {
 		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeServerStatBoardResponse_DomainStat{
-			ServerId:      int64(stat.ServerId),
-			Domain:        stat.Domain,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
+			ServerId:            int64(stat.ServerId),
+			Domain:              stat.Domain,
+			CountRequests:       int64(stat.CountRequests),
+			Bytes:               int64(stat.Bytes),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 

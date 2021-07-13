@@ -468,7 +468,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		return nil, err
 	}
 
-	resp := &pb.ComposeAdminDashboardResponse{}
+	result := &pb.ComposeAdminDashboardResponse{}
 
 	var tx = this.NullTx()
 
@@ -477,49 +477,49 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	if err != nil {
 		return nil, err
 	}
-	resp.CountNodeClusters = countClusters
+	result.CountNodeClusters = countClusters
 
 	// 节点数
 	countNodes, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
 		return nil, err
 	}
-	resp.CountNodes = countNodes
+	result.CountNodes = countNodes
 
 	// 服务数
 	countServers, err := models.SharedServerDAO.CountAllEnabledServers(tx)
 	if err != nil {
 		return nil, err
 	}
-	resp.CountServers = countServers
+	result.CountServers = countServers
 
 	// 用户数
 	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "")
 	if err != nil {
 		return nil, err
 	}
-	resp.CountUsers = countUsers
+	result.CountUsers = countUsers
 
 	// API节点数
 	countAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAPINodes(tx)
 	if err != nil {
 		return nil, err
 	}
-	resp.CountAPINodes = countAPINodes
+	result.CountAPINodes = countAPINodes
 
 	// 数据库节点数
 	countDBNodes, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
 		return nil, err
 	}
-	resp.CountDBNodes = countDBNodes
+	result.CountDBNodes = countDBNodes
 
 	// 用户节点数
 	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
 	if err != nil {
 		return nil, err
 	}
-	resp.CountUserNodes = countUserNodes
+	result.CountUserNodes = countUserNodes
 
 	// 按日流量统计
 	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
@@ -528,9 +528,14 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		return nil, err
 	}
 	for _, stat := range dailyTrafficStats {
-		resp.DailyTrafficStats = append(resp.DailyTrafficStats, &pb.ComposeAdminDashboardResponse_DailyTrafficStat{
-			Day:   stat.Day,
-			Bytes: int64(stat.Bytes),
+		result.DailyTrafficStats = append(result.DailyTrafficStats, &pb.ComposeAdminDashboardResponse_DailyTrafficStat{
+			Day:                 stat.Day,
+			Bytes:               int64(stat.Bytes),
+			CachedBytes:         int64(stat.CachedBytes),
+			CountRequests:       int64(stat.CountRequests),
+			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -542,9 +547,14 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		return nil, err
 	}
 	for _, stat := range hourlyTrafficStats {
-		resp.HourlyTrafficStats = append(resp.HourlyTrafficStats, &pb.ComposeAdminDashboardResponse_HourlyTrafficStat{
-			Hour:  stat.Hour,
-			Bytes: int64(stat.Bytes),
+		result.HourlyTrafficStats = append(result.HourlyTrafficStats, &pb.ComposeAdminDashboardResponse_HourlyTrafficStat{
+			Hour:                stat.Hour,
+			Bytes:               int64(stat.Bytes),
+			CachedBytes:         int64(stat.CachedBytes),
+			CountRequests:       int64(stat.CountRequests),
+			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
 
@@ -564,7 +574,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.NodeUpgradeInfo = upgradeInfo
+		result.NodeUpgradeInfo = upgradeInfo
 	}
 
 	// 监控节点升级信息
@@ -577,7 +587,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.MonitorNodeUpgradeInfo = upgradeInfo
+		result.MonitorNodeUpgradeInfo = upgradeInfo
 	}
 
 	// 认证节点升级信息
@@ -590,7 +600,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.AuthorityNodeUpgradeInfo = upgradeInfo
+		result.AuthorityNodeUpgradeInfo = upgradeInfo
 	}
 
 	// 用户节点升级信息
@@ -603,7 +613,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.UserNodeUpgradeInfo = upgradeInfo
+		result.UserNodeUpgradeInfo = upgradeInfo
 	}
 
 	// API节点升级信息
@@ -616,7 +626,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.ApiNodeUpgradeInfo = upgradeInfo
+		result.ApiNodeUpgradeInfo = upgradeInfo
 	}
 
 	// DNS节点升级信息
@@ -629,10 +639,45 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			return nil, err
 		}
 		upgradeInfo.CountNodes = countNodes
-		resp.NsNodeUpgradeInfo = upgradeInfo
+		result.NsNodeUpgradeInfo = upgradeInfo
 	}
 
-	return resp, nil
+	// 域名排行
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topDomainStats {
+		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
+			ServerId:      int64(stat.ServerId),
+			Domain:        stat.Domain,
+			CountRequests: int64(stat.CountRequests),
+			Bytes:         int64(stat.Bytes),
+		})
+	}
+
+	// 节点排行
+	topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topNodeStats {
+		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(stat.NodeId))
+		if err != nil {
+			return nil, err
+		}
+		if len(nodeName) == 0 {
+			continue
+		}
+		result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeAdminDashboardResponse_NodeStat{
+			NodeId:        int64(stat.NodeId),
+			NodeName:      nodeName,
+			CountRequests: int64(stat.CountRequests),
+			Bytes:         int64(stat.Bytes),
+		})
+	}
+
+	return result, nil
 }
 
 // UpdateAdminTheme 修改管理员使用的界面风格

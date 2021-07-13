@@ -10,6 +10,8 @@ type ServerDailyStat struct {
 	CachedBytes         uint64 `field:"cachedBytes"`         // 缓存的流量
 	CountRequests       uint64 `field:"countRequests"`       // 请求数
 	CountCachedRequests uint64 `field:"countCachedRequests"` // 缓存的请求数
+	CountAttackRequests uint64 `field:"countAttackRequests"` // 攻击请求数
+	AttackBytes         uint64 `field:"attackBytes"`         // 攻击流量
 	Day                 string `field:"day"`                 // 日期YYYYMMDD
 	Hour                string `field:"hour"`                // YYYYMMDDHH
 	TimeFrom            string `field:"timeFrom"`            // 开始时间HHMMSS
@@ -26,6 +28,8 @@ type ServerDailyStatOperator struct {
 	CachedBytes         interface{} // 缓存的流量
 	CountRequests       interface{} // 请求数
 	CountCachedRequests interface{} // 缓存的请求数
+	CountAttackRequests interface{} // 攻击请求数
+	AttackBytes         interface{} // 攻击流量
 	Day                 interface{} // 日期YYYYMMDD
 	Hour                interface{} // YYYYMMDDHH
 	TimeFrom            interface{} // 开始时间HHMMSS

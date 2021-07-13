@@ -12,6 +12,8 @@ type ServerDomainHourlyStat struct {
 	CachedBytes         uint64 `field:"cachedBytes"`         // 缓存流量
 	CountRequests       uint64 `field:"countRequests"`       // 请求数
 	CountCachedRequests uint64 `field:"countCachedRequests"` // 缓存请求
+	CountAttackRequests uint64 `field:"countAttackRequests"` // 攻击请求数
+	AttackBytes         uint64 `field:"attackBytes"`         // 攻击流量
 }
 
 type ServerDomainHourlyStatOperator struct {
@@ -25,6 +27,8 @@ type ServerDomainHourlyStatOperator struct {
 	CachedBytes         interface{} // 缓存流量
 	CountRequests       interface{} // 请求数
 	CountCachedRequests interface{} // 缓存请求
+	CountAttackRequests interface{} // 攻击请求数
+	AttackBytes         interface{} // 攻击流量
 }
 
 func NewServerDomainHourlyStatOperator() *ServerDomainHourlyStatOperator {

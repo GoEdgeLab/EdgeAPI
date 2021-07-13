@@ -8,6 +8,8 @@ type TrafficDailyStat struct {
 	Bytes               uint64 `field:"bytes"`               // 流量字节
 	CountRequests       uint64 `field:"countRequests"`       // 请求数
 	CountCachedRequests uint64 `field:"countCachedRequests"` // 缓存请求数
+	CountAttackRequests uint64 `field:"countAttackRequests"` // 攻击量
+	AttackBytes         uint64 `field:"attackBytes"`         // 攻击流量
 }
 
 type TrafficDailyStatOperator struct {
@@ -17,6 +19,8 @@ type TrafficDailyStatOperator struct {
 	Bytes               interface{} // 流量字节
 	CountRequests       interface{} // 请求数
 	CountCachedRequests interface{} // 缓存请求数
+	CountAttackRequests interface{} // 攻击量
+	AttackBytes         interface{} // 攻击流量
 }
 
 func NewTrafficDailyStatOperator() *TrafficDailyStatOperator {

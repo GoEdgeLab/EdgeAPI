@@ -49,7 +49,7 @@ func init() {
 }
 
 // IncreaseHourlyStat 增加流量
-func (this *TrafficHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, hour string, bytes int64, cachedBytes int64, countRequests int64, countCachedRequests int64) error {
+func (this *TrafficHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, hour string, bytes int64, cachedBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64, attackBytes int64) error {
 	if len(hour) != 10 {
 		return errors.New("invalid hour '" + hour + "'")
 	}
@@ -58,17 +58,23 @@ func (this *TrafficHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, hour string, by
 		Param("cachedBytes", cachedBytes).
 		Param("countRequests", countRequests).
 		Param("countCachedRequests", countCachedRequests).
+		Param("countAttackRequests", countAttackRequests).
+		Param("attackBytes", attackBytes).
 		InsertOrUpdateQuickly(maps.Map{
 			"hour":                hour,
 			"bytes":               bytes,
 			"cachedBytes":         cachedBytes,
 			"countRequests":       countRequests,
 			"countCachedRequests": countCachedRequests,
+			"countAttackRequests": countAttackRequests,
+			"attackBytes":         attackBytes,
 		}, maps.Map{
 			"bytes":               dbs.SQL("bytes+:bytes"),
 			"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
 			"countRequests":       dbs.SQL("countRequests+:countRequests"),
 			"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+			"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
+			"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
 		})
 	if err != nil {
 		return err

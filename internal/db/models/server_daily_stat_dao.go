@@ -72,14 +72,18 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 			Param("cachedBytes", stat.CachedBytes).
 			Param("countRequests", stat.CountRequests).
 			Param("countCachedRequests", stat.CountCachedRequests).
+			Param("countAttackRequests", stat.CountAttackRequests).
+			Param("attackBytes", stat.AttackBytes).
 			InsertOrUpdate(maps.Map{
 				"userId":              serverUserId,
 				"serverId":            stat.ServerId,
 				"regionId":            stat.RegionId,
-				"bytes":               dbs.SQL("bytes+:bytes"),
-				"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
-				"countRequests":       dbs.SQL("countRequests+:countRequests"),
-				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+				"bytes":               stat.Bytes,
+				"cachedBytes":         stat.CachedBytes,
+				"countRequests":       stat.CountRequests,
+				"countCachedRequests": stat.CountCachedRequests,
+				"countAttackRequests": stat.CountAttackRequests,
+				"attackBytes":         stat.AttackBytes,
 				"day":                 day,
 				"hour":                hour,
 				"timeFrom":            timeFrom,
@@ -89,6 +93,8 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 				"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
 				"countRequests":       dbs.SQL("countRequests+:countRequests"),
 				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+				"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
+				"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
 			})
 		if err != nil {
 			return err
@@ -165,7 +171,7 @@ func (this *ServerDailyStatDAO) SumMinutelyStat(tx *dbs.Tx, serverId int64, minu
 	}
 
 	one, _, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Attr("serverId", serverId).
 		Attr("day", minute[:8]).
 		Attr("timeFrom", minute[8:]+"00").
@@ -182,6 +188,8 @@ func (this *ServerDailyStatDAO) SumMinutelyStat(tx *dbs.Tx, serverId int64, minu
 	stat.CachedBytes = one.GetInt64("cachedBytes")
 	stat.CountRequests = one.GetInt64("countRequests")
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
+	stat.AttackBytes = one.GetInt64("attackBytes")
 	return
 }
 
@@ -195,7 +203,7 @@ func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour s
 	}
 
 	one, _, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Attr("serverId", serverId).
 		Attr("day", hour[:8]).
 		Gte("timeFrom", hour[8:]+"0000").
@@ -213,6 +221,8 @@ func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour s
 	stat.CachedBytes = one.GetInt64("cachedBytes")
 	stat.CountRequests = one.GetInt64("countRequests")
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
+	stat.AttackBytes = one.GetInt64("attackBytes")
 	return
 }
 
@@ -226,7 +236,7 @@ func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day str
 	}
 
 	one, _, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests").
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Attr("serverId", serverId).
 		Attr("day", day).
 		FindOne()
@@ -242,13 +252,15 @@ func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day str
 	stat.CachedBytes = one.GetInt64("cachedBytes")
 	stat.CountRequests = one.GetInt64("countRequests")
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
+	stat.AttackBytes = one.GetInt64("attackBytes")
 	return
 }
 
 // FindDailyStats 按天统计
 func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "day").
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "day").
 		Attr("serverId", serverId).
 		Between("day", dayFrom, dayTo).
 		Group("day").
@@ -281,7 +293,7 @@ func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFr
 // FindHourlyStats 按小时统计
 func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "hour").
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "hour").
 		Attr("serverId", serverId).
 		Between("hour", hourFrom, hourTo).
 		Group("hour").
@@ -314,7 +326,7 @@ func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hour
 // FindTopUserStats 流量排行
 func (this *ServerDailyStatDAO) FindTopUserStats(tx *dbs.Tx, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
 	_, err = this.Query(tx).
-		Result("userId", "SUM(bytes) AS bytes", "SUM(countRequests) AS countRequests").
+		Result("userId", "SUM(bytes) AS bytes", "SUM(countRequests) AS countRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Between("hour", hourFrom, hourTo).
 		Where("userId>0").
 		Group("userId").
