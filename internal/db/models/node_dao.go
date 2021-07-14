@@ -223,6 +223,8 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	// 集群
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+	} else {
+		query.Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
 	}
 
 	// 安装状态
@@ -330,6 +332,8 @@ func (this *NodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, isOn confi
 	query.State(NodeStateEnabled)
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+	} else {
+		query.Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
 	}
 	if isOn == configutils.BoolStateYes {
 		query.Attr("isOn", true)
@@ -387,6 +391,8 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
 	// 集群
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+	} else {
+		query.Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
 	}
 
 	// 安装状态
