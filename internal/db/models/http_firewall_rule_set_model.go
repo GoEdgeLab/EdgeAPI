@@ -1,6 +1,6 @@
 package models
 
-// 防火墙规则集
+// HTTPFirewallRuleSet 防火墙规则集
 type HTTPFirewallRuleSet struct {
 	Id            uint32 `field:"id"`            // ID
 	IsOn          uint8  `field:"isOn"`          // 是否启用
@@ -13,8 +13,9 @@ type HTTPFirewallRuleSet struct {
 	State         uint8  `field:"state"`         // 状态
 	AdminId       uint32 `field:"adminId"`       // 管理员ID
 	UserId        uint32 `field:"userId"`        // 用户ID
-	Action        string `field:"action"`        // 执行的动作
-	ActionOptions string `field:"actionOptions"` // 动作的选项
+	Action        string `field:"action"`        // 执行的动作（过期）
+	ActionOptions string `field:"actionOptions"` // 动作的选项（过期）
+	Actions       string `field:"actions"`       // 一组动作
 }
 
 type HTTPFirewallRuleSetOperator struct {
@@ -29,8 +30,9 @@ type HTTPFirewallRuleSetOperator struct {
 	State         interface{} // 状态
 	AdminId       interface{} // 管理员ID
 	UserId        interface{} // 用户ID
-	Action        interface{} // 执行的动作
-	ActionOptions interface{} // 动作的选项
+	Action        interface{} // 执行的动作（过期）
+	ActionOptions interface{} // 动作的选项（过期）
+	Actions       interface{} // 一组动作
 }
 
 func NewHTTPFirewallRuleSetOperator() *HTTPFirewallRuleSetOperator {

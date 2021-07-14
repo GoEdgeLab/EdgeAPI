@@ -1,12 +1,15 @@
 package setup
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -209,9 +212,40 @@ func upgradeV0_0_10(db *dbs.DB) error {
 
 // v0.2.5
 func upgradeV0_2_5(db *dbs.DB) error {
-	_, err := db.Exec("UPDATE edgeUsers SET day=FROM_UNIXTIME(createdAt,'%Y%m%d')")
+	// 更新用户
+	_, err := db.Exec("UPDATE edgeUsers SET day=FROM_UNIXTIME(createdAt,'%Y%m%d') WHERE day IS NULL OR LENGTH(day)=0")
 	if err != nil {
 		return err
 	}
+
+	// 更新防火墙规则
+	ones, _, err := db.FindOnes("SELECT id, actions, action, actionOptions FROM edgeHTTPFirewallRuleSets WHERE actions IS NULL OR LENGTH(actions)=0")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		oneId := one.GetInt64("id")
+		action := one.GetString("action")
+		options := one.GetString("actionOptions")
+		var optionsMap = maps.Map{}
+		if len(options) > 0 {
+			_ = json.Unmarshal([]byte(options), &optionsMap)
+		}
+		var actions = []*firewallconfigs.HTTPFirewallActionConfig{
+			{
+				Code:    action,
+				Options: optionsMap,
+			},
+		}
+		actionsJSON, err := json.Marshal(actions)
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("UPDATE edgeHTTPFirewallRuleSets SET actions=? WHERE id=?", string(actionsJSON), oneId)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
