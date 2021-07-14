@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"net"
 	"net/http"
 	"regexp"
 	"sort"
@@ -69,7 +70,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 
 	for _, accessLog := range accessLogs {
 		day := timeutil.Format("Ymd", time.Unix(accessLog.Timestamp, 0))
-		table, err := findHTTPAccessLogTable(dao.Instance, day, false)
+		tableDef, err := findHTTPAccessLogTable(dao.Instance, day, false)
 		if err != nil {
 			return err
 		}
@@ -85,6 +86,11 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		fields["firewallRuleSetId"] = accessLog.FirewallRuleSetId
 		fields["firewallRuleId"] = accessLog.FirewallRuleId
 
+		// TODO 根据集群、服务设置获取IP
+		if tableDef.HasRemoteAddr {
+			fields["remoteAddr"] = accessLog.RawRemoteAddr
+		}
+
 		content, err := json.Marshal(accessLog)
 		if err != nil {
 			return err
@@ -92,23 +98,25 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		fields["content"] = content
 
 		_, err = dao.Query(tx).
-			Table(table).
+			Table(tableDef.Name).
 			Sets(fields).
 			Insert()
 		if err != nil {
 			// 是否为 Error 1146: Table 'xxx.xxx' doesn't exist  如果是，则创建表之后重试
 			if strings.Contains(err.Error(), "1146") {
-				table, err = findHTTPAccessLogTable(dao.Instance, day, true)
+				tableDef, err = findHTTPAccessLogTable(dao.Instance, day, true)
 				if err != nil {
 					return err
 				}
 				_, err = dao.Query(tx).
-					Table(table).
+					Table(tableDef.Name).
 					Sets(fields).
 					Insert()
 				if err != nil {
 					return err
 				}
+			} else {
+				logs.Println("HTTP_ACCESS_LOG", err.Error())
 			}
 		}
 	}
@@ -179,7 +187,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 			dao := daoWrapper.DAO
 
-			tableName, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, hasRemoteAddr, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
 			if !exists {
 				// 表格不存在则跳过
 				return
@@ -216,41 +224,47 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 			// keyword
 			if len(keyword) > 0 {
-				useOriginKeyword := false
+				// remoteAddr
+				if hasRemoteAddr && net.ParseIP(keyword) != nil {
+					query.Attr("remoteAddr", keyword)
+				} else {
 
-				where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
+					useOriginKeyword := false
 
-				// 请求方法
-				if keyword == http.MethodGet ||
-					keyword == http.MethodPost ||
-					keyword == http.MethodHead ||
-					keyword == http.MethodConnect ||
-					keyword == http.MethodPut ||
-					keyword == http.MethodTrace ||
-					keyword == http.MethodOptions ||
-					keyword == http.MethodDelete ||
-					keyword == http.MethodPatch {
-					where += " OR JSON_EXTRACT(content, '$.requestMethod')=:originKeyword"
-					useOriginKeyword = true
-				}
+					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
 
-				// 响应状态码
-				if regexp.MustCompile(`^\d{3}$`).MatchString(keyword) {
-					where += " OR JSON_EXTRACT(content, '$.status')=:intKeyword"
-					query.Param("intKeyword", types.Int(keyword))
-				}
+					// 请求方法
+					if keyword == http.MethodGet ||
+						keyword == http.MethodPost ||
+						keyword == http.MethodHead ||
+						keyword == http.MethodConnect ||
+						keyword == http.MethodPut ||
+						keyword == http.MethodTrace ||
+						keyword == http.MethodOptions ||
+						keyword == http.MethodDelete ||
+						keyword == http.MethodPatch {
+						where += " OR JSON_EXTRACT(content, '$.requestMethod')=:originKeyword"
+						useOriginKeyword = true
+					}
 
-				if regexp.MustCompile(`^\d{3}-\d{3}$`).MatchString(keyword) {
-					pieces := strings.Split(keyword, "-")
-					where += " OR JSON_EXTRACT(content, '$.status') BETWEEN :intKeyword1 AND :intKeyword2"
-					query.Param("intKeyword1", types.Int(pieces[0]))
-					query.Param("intKeyword2", types.Int(pieces[1]))
-				}
+					// 响应状态码
+					if regexp.MustCompile(`^\d{3}$`).MatchString(keyword) {
+						where += " OR JSON_EXTRACT(content, '$.status')=:intKeyword"
+						query.Param("intKeyword", types.Int(keyword))
+					}
 
-				query.Where("("+where+")").
-					Param("keyword", "%"+keyword+"%")
-				if useOriginKeyword {
-					query.Param("originKeyword", keyword)
+					if regexp.MustCompile(`^\d{3}-\d{3}$`).MatchString(keyword) {
+						pieces := strings.Split(keyword, "-")
+						where += " OR JSON_EXTRACT(content, '$.status') BETWEEN :intKeyword1 AND :intKeyword2"
+						query.Param("intKeyword1", types.Int(pieces[0]))
+						query.Param("intKeyword2", types.Int(pieces[1]))
+					}
+
+					query.Where("("+where+")").
+						Param("keyword", "%"+keyword+"%")
+					if useOriginKeyword {
+						query.Param("originKeyword", keyword)
+					}
 				}
 			}
 
@@ -350,7 +364,7 @@ func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId s
 
 			dao := daoWrapper.DAO
 
-			tableName, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, _, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
 			if err != nil {
 				logs.Println("[DB_NODE]" + err.Error())
 				return

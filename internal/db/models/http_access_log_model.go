@@ -1,6 +1,6 @@
 package models
 
-//
+// HTTPAccessLog 访问日志
 type HTTPAccessLog struct {
 	Id                  uint64 `field:"id"`                  // ID
 	ServerId            uint32 `field:"serverId"`            // 服务ID
@@ -13,6 +13,7 @@ type HTTPAccessLog struct {
 	FirewallRuleGroupId uint32 `field:"firewallRuleGroupId"` // WAF分组ID
 	FirewallRuleSetId   uint32 `field:"firewallRuleSetId"`   // WAF集ID
 	FirewallRuleId      uint32 `field:"firewallRuleId"`      // WAF规则ID
+	RemoteAddr          string `field:"remoteAddr"`          // IP地址
 }
 
 type HTTPAccessLogOperator struct {
@@ -27,6 +28,7 @@ type HTTPAccessLogOperator struct {
 	FirewallRuleGroupId interface{} // WAF分组ID
 	FirewallRuleSetId   interface{} // WAF集ID
 	FirewallRuleId      interface{} // WAF规则ID
+	RemoteAddr          interface{} // IP地址
 }
 
 func NewHTTPAccessLogOperator() *HTTPAccessLogOperator {
