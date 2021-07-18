@@ -9,12 +9,12 @@ import (
 	"github.com/iwind/TeaGo/types"
 )
 
-// 消息发送任务服务
+// MessageTaskService 消息发送任务服务
 type MessageTaskService struct {
 	BaseService
 }
 
-// 创建任务
+// CreateMessageTask 创建任务
 func (this *MessageTaskService) CreateMessageTask(ctx context.Context, req *pb.CreateMessageTaskRequest) (*pb.CreateMessageTaskResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -29,7 +29,7 @@ func (this *MessageTaskService) CreateMessageTask(ctx context.Context, req *pb.C
 	return &pb.CreateMessageTaskResponse{MessageTaskId: taskId}, nil
 }
 
-// 查找要发送的任务
+// FindSendingMessageTasks 查找要发送的任务
 func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req *pb.FindSendingMessageTasksRequest) (*pb.FindSendingMessageTasksResponse, error) {
 	_, err := this.ValidateMonitor(ctx)
 	if err != nil {
@@ -126,7 +126,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 	return &pb.FindSendingMessageTasksResponse{MessageTasks: pbTasks}, nil
 }
 
-// 修改任务状态
+// UpdateMessageTaskStatus 修改任务状态
 func (this *MessageTaskService) UpdateMessageTaskStatus(ctx context.Context, req *pb.UpdateMessageTaskStatusRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateMonitor(ctx)
 	if err != nil {
@@ -162,7 +162,7 @@ func (this *MessageTaskService) UpdateMessageTaskStatus(ctx context.Context, req
 	return this.Success()
 }
 
-// 删除消息任务
+// DeleteMessageTask 删除消息任务
 func (this *MessageTaskService) DeleteMessageTask(ctx context.Context, req *pb.DeleteMessageTaskRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -178,7 +178,7 @@ func (this *MessageTaskService) DeleteMessageTask(ctx context.Context, req *pb.D
 	return this.Success()
 }
 
-// 读取消息任务状态
+// FindEnabledMessageTask 读取消息任务状态
 func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req *pb.FindEnabledMessageTaskRequest) (*pb.FindEnabledMessageTaskResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

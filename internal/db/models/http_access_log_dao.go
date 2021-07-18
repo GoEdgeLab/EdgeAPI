@@ -233,6 +233,12 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
 
+					jsonKeyword, err := json.Marshal(keyword)
+					if err == nil {
+						where += " OR JSON_CONTAINS(content, :jsonKeyword, '$.tags')"
+						query.Param("jsonKeyword", jsonKeyword)
+					}
+
 					// 请求方法
 					if keyword == http.MethodGet ||
 						keyword == http.MethodPost ||

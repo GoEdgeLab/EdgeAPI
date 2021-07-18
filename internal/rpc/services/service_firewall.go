@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"strconv"
 	"time"
 )
 
@@ -175,4 +176,61 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 	}
 
 	return result, nil
+}
+
+// NotifyHTTPFirewallEvent 发送告警(notify)消息
+func (this *FirewallService) NotifyHTTPFirewallEvent(ctx context.Context, req *pb.NotifyHTTPFirewallEventRequest) (*pb.RPCSuccess, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if clusterId <= 0 {
+		return this.Success()
+	}
+	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeName, err := models.SharedNodeDAO.FindNodeName(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverName, err := models.SharedServerDAO.FindEnabledServerName(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	ruleGroupName, err := models.SharedHTTPFirewallRuleGroupDAO.FindHTTPFirewallRuleGroupName(tx, req.HttpFirewallRuleGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	ruleSetName, err := models.SharedHTTPFirewallRuleSetDAO.FindHTTPFirewallRuleSetName(tx, req.HttpFirewallRuleSetId)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := "集群：" + clusterName + "（ID：" + strconv.FormatInt(clusterId, 10) + "）" +
+		"\n节点：" + nodeName + "（ID：" + strconv.FormatInt(nodeId, 10) + "）" +
+		"\n服务：" + serverName + "（ID：" + strconv.FormatInt(req.ServerId, 10) + "）" +
+		"\n规则分组：" + ruleGroupName +
+		"\n规则集：" + ruleSetName +
+		"\n时间：" + timeutil.FormatTime("Y-m-d H:i:s", req.CreatedAt)
+	err = models.SharedMessageTaskDAO.CreateMessageTasks(tx, models.MessageTaskTarget{
+		ClusterId: clusterId,
+		NodeId:    nodeId,
+		ServerId:  req.ServerId,
+	}, models.MessageTypeFirewallEvent, "发生防火墙事件", msg)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

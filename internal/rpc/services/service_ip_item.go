@@ -18,7 +18,7 @@ type IPItemService struct {
 // CreateIPItem 创建IP
 func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPItemRequest) (*pb.CreateIPItemResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	userType, _, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -41,15 +41,25 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 
 	tx := this.NullTx()
 
-	if userId > 0 {
-		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
-		if err != nil {
-			return nil, err
+	if userType == rpcutils.UserTypeUser {
+		if userId <= 0 {
+			return nil, errors.New("invalid userId")
+		} else {
+			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	if len(req.Type) == 0 {
 		req.Type = models.IPItemTypeIPv4
+	}
+
+	// 删除以前的
+	err = models.SharedIPItemDAO.DisableOldIPItem(tx, req.IpListId, req.IpFrom, req.IpTo)
+	if err != nil {
+		return nil, err
 	}
 
 	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel)

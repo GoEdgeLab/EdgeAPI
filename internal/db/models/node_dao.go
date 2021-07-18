@@ -554,6 +554,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	config := &nodeconfigs.NodeConfig{
 		Id:       int64(node.Id),
 		NodeId:   node.UniqueId,
+		Secret:   node.Secret,
 		IsOn:     node.IsOn == 1,
 		Servers:  nil,
 		Version:  int64(node.Version),

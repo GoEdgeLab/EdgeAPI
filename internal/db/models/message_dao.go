@@ -38,6 +38,7 @@ const (
 	MessageTypeServerNamesAuditingSuccess MessageType = "ServerNamesAuditingSuccess" // 服务域名审核成功
 	MessageTypeServerNamesAuditingFailed  MessageType = "ServerNamesAuditingFailed"  // 服务域名审核失败
 	MessageTypeThresholdSatisfied         MessageType = "ThresholdSatisfied"         // 满足阈值
+	MessageTypeFirewallEvent              MessageType = "FirewallEvent"              // 防火墙事件
 )
 
 type MessageDAO dbs.DAO

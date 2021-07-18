@@ -111,6 +111,37 @@ func (this *MessageReceiverDAO) FindAllEnabledReceivers(tx *dbs.Tx, target Messa
 		AscPk().
 		Slice(&result).
 		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) == 0 {
+		// 去掉类型再试试
+		query := this.Query(tx)
+		_, err = query.
+			Attr("clusterId", target.ClusterId).
+			Attr("nodeId", target.NodeId).
+			Attr("serverId", target.ServerId).
+			State(MessageReceiverStateEnabled).
+			AscPk().
+			Slice(&result).
+			FindAll()
+		if err != nil {
+			return nil, err
+		}
+
+		// 去掉服务和节点再试试
+		if len(result) == 0 {
+			query := this.Query(tx)
+			_, err = query.
+				Attr("clusterId", target.ClusterId).
+				State(MessageReceiverStateEnabled).
+				AscPk().
+				Slice(&result).
+				FindAll()
+		}
+	}
+
 	return
 }
 
