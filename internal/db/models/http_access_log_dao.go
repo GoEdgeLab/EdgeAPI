@@ -227,8 +227,15 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 				// remoteAddr
 				if hasRemoteAddr && net.ParseIP(keyword) != nil {
 					query.Attr("remoteAddr", keyword)
+				} else if hasRemoteAddr && regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
+					keyword = keyword[3:]
+					pieces := strings.SplitN(keyword, ",", 2)
+					if len(pieces) == 1 || len(pieces[1]) == 0 {
+						query.Attr("remoteAddr", pieces[0])
+					} else {
+						query.Between("remoteAddr", pieces[0], pieces[1])
+					}
 				} else {
-
 					useOriginKeyword := false
 
 					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
