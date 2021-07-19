@@ -14,6 +14,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
@@ -682,7 +683,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		}
 	}
 
-	// 指标
+	// 集群指标
 	metricItemIds, err := SharedNodeClusterMetricItemDAO.FindAllClusterItemIds(tx, int64(node.ClusterId))
 	if err != nil {
 		return nil, err
@@ -697,6 +698,19 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 			metricItems = append(metricItems, itemConfig)
 		}
 	}
+
+	// 公用指标
+	publicMetricItems, err := SharedMetricItemDAO.FindAllPublicItems(tx)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range publicMetricItems {
+		itemConfig := SharedMetricItemDAO.ComposeItemConfigWithItem(item)
+		if itemConfig != nil && !lists.ContainsInt64(metricItemIds, itemConfig.Id) {
+			metricItems = append(metricItems, itemConfig)
+		}
+	}
+
 	config.MetricItems = metricItems
 
 	return config, nil

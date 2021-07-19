@@ -79,6 +79,7 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 				Period:     types.Int32(item.Period),
 				PeriodUnit: item.PeriodUnit,
 				Value:      item.Value,
+				IsPublic:   item.IsPublic == 1,
 			})
 		}
 	}
@@ -98,4 +99,34 @@ func (this *NodeClusterMetricItemService) ExistsNodeClusterMetricItem(ctx contex
 		return nil, err
 	}
 	return this.Exists(b)
+}
+
+// FindAllNodeClustersWithMetricItemId 查找使用指标的集群
+func (this *NodeClusterMetricItemService) FindAllNodeClustersWithMetricItemId(ctx context.Context, req *pb.FindAllNodeClustersWithMetricItemIdRequest) (*pb.FindAllNodeClustersWithMetricItemIdResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterIds, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterIdsWithItemId(tx, req.MetricItemId)
+	if err != nil {
+		return nil, err
+	}
+	var pbClusters []*pb.NodeCluster
+	for _, clusterId := range clusterIds {
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, clusterId)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			continue
+		}
+		pbClusters = append(pbClusters, &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			Name: cluster.Name,
+		})
+	}
+
+	return &pb.FindAllNodeClustersWithMetricItemIdResponse{NodeClusters: pbClusters}, nil
 }

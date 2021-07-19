@@ -22,7 +22,7 @@ func (this *MetricItemService) CreateMetricItem(ctx context.Context, req *pb.Cre
 	}
 
 	var tx = this.NullTx()
-	itemId, err := models.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value)
+	itemId, err := models.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (this *MetricItemService) UpdateMetricItem(ctx context.Context, req *pb.Upd
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsOn)
+	err = models.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsOn, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +69,7 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 		Period:     types.Int32(item.Period),
 		PeriodUnit: item.PeriodUnit,
 		Value:      item.Value,
+		IsPublic:   item.IsPublic == 1,
 	}}, nil
 }
 
@@ -111,8 +112,10 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 			Period:     types.Int32(item.Period),
 			PeriodUnit: item.PeriodUnit,
 			Value:      item.Value,
+			IsPublic:   item.IsPublic == 1,
 		})
 	}
+
 	return &pb.ListEnabledMetricItemsResponse{MetricItems: pbItems}, nil
 }
 

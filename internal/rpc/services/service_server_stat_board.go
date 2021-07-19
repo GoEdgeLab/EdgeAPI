@@ -12,6 +12,8 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -205,122 +207,11 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 		})
 	}
 
-	// 指标
-	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, req.NodeClusterId, serverconfigs.MetricItemCategoryHTTP)
+	charts, err := this.findNodeClusterMetricDataCharts(tx, req.NodeClusterId, 0, 0, serverconfigs.MetricItemCategoryHTTP)
 	if err != nil {
 		return nil, err
 	}
-	var pbMetricCharts = []*pb.ComposeServerStatNodeClusterBoardResponse_MetricData{}
-	for _, clusterMetricItem := range clusterMetricItems {
-		if clusterMetricItem.IsOn != 1 {
-			continue
-		}
-		var itemId = int64(clusterMetricItem.ItemId)
-		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-
-		item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-		if item == nil || item.IsOn == 0 {
-			continue
-		}
-
-		for _, chart := range charts {
-			if chart.IsOn == 0 {
-				continue
-			}
-
-			var pbChart = &pb.MetricChart{
-				Id:         int64(chart.Id),
-				Name:       chart.Name,
-				Type:       chart.Type,
-				WidthDiv:   chart.WidthDiv,
-				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
-				MaxItems:   types.Int32(chart.MaxItems),
-				MetricItem: &pb.MetricItem{
-					Id:         itemId,
-					PeriodUnit: item.PeriodUnit,
-					Period:     types.Int32(item.Period),
-					Name:       item.Name,
-					Value:      item.Value,
-					Category:   item.Category,
-					Keys:       item.DecodeKeys(),
-					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
-				},
-			}
-			var pbStats = []*pb.MetricStat{}
-			switch chart.Type {
-			case serverconfigs.MetricChartTypeTimeLine:
-				itemStats, err := models.SharedMetricStatDAO.FindLatestItemStatsWithClusterId(tx, req.NodeClusterId, itemId, types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, stat := range itemStats {
-					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindClusterSum(tx, req.NodeClusterId, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			default:
-				itemStats, err := models.SharedMetricStatDAO.FindItemStatsWithClusterIdAndLastTime(tx, req.NodeClusterId, itemId, types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-				for _, stat := range itemStats {
-					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindClusterSum(tx, req.NodeClusterId, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			}
-			pbMetricCharts = append(pbMetricCharts, &pb.ComposeServerStatNodeClusterBoardResponse_MetricData{
-				MetricChart: pbChart,
-				MetricStats: pbStats,
-			})
-		}
-	}
-	result.MetricCharts = pbMetricCharts
+	result.MetricDataCharts = charts
 
 	return result, nil
 }
@@ -551,121 +442,11 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 
 	// 指标
 	var clusterId = int64(node.ClusterId)
-	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, clusterId, serverconfigs.MetricItemCategoryHTTP)
+	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, req.NodeId, 0, serverconfigs.MetricItemCategoryHTTP)
 	if err != nil {
 		return nil, err
 	}
-	var pbMetricCharts = []*pb.ComposeServerStatNodeBoardResponse_MetricData{}
-	for _, clusterMetricItem := range clusterMetricItems {
-		if clusterMetricItem.IsOn != 1 {
-			continue
-		}
-		var itemId = int64(clusterMetricItem.ItemId)
-		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-
-		item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-		if item == nil || item.IsOn == 0 {
-			continue
-		}
-
-		for _, chart := range charts {
-			if chart.IsOn == 0 {
-				continue
-			}
-
-			var pbChart = &pb.MetricChart{
-				Id:         int64(chart.Id),
-				Name:       chart.Name,
-				Type:       chart.Type,
-				WidthDiv:   chart.WidthDiv,
-				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
-				MaxItems:   types.Int32(chart.MaxItems),
-				MetricItem: &pb.MetricItem{
-					Id:         itemId,
-					PeriodUnit: item.PeriodUnit,
-					Period:     types.Int32(item.Period),
-					Name:       item.Name,
-					Value:      item.Value,
-					Category:   item.Category,
-					Keys:       item.DecodeKeys(),
-					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
-				},
-			}
-			var pbStats = []*pb.MetricStat{}
-			switch chart.Type {
-			case serverconfigs.MetricChartTypeTimeLine:
-				itemStats, err := models.SharedMetricStatDAO.FindLatestItemStatsWithNodeId(tx, req.NodeId, itemId, types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, stat := range itemStats {
-					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindNodeSum(tx, req.NodeId, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			default:
-				itemStats, err := models.SharedMetricStatDAO.FindItemStatsWithNodeIdAndLastTime(tx, req.NodeId, itemId, types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-				for _, stat := range itemStats {
-					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindNodeSum(tx, req.NodeId, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			}
-			pbMetricCharts = append(pbMetricCharts, &pb.ComposeServerStatNodeBoardResponse_MetricData{
-				MetricChart: pbChart,
-				MetricStats: pbStats,
-			})
-		}
-	}
-	result.MetricCharts = pbMetricCharts
+	result.MetricDataCharts = charts
 
 	return result, nil
 }
@@ -738,27 +519,60 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, clusterId, serverconfigs.MetricItemCategoryHTTP)
+	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, 0, req.ServerId, serverconfigs.MetricItemCategoryHTTP)
 	if err != nil {
 		return nil, err
 	}
-	var pbMetricCharts = []*pb.ComposeServerStatBoardResponse_MetricData{}
+	result.MetricDataCharts = charts
+
+	return result, nil
+}
+
+// 查找集群、节点和服务的指标数据
+func (this *ServerStatBoardService) findNodeClusterMetricDataCharts(tx *dbs.Tx, clusterId int64, nodeId int64, serverId int64, category string) (result []*pb.MetricDataChart, err error) {
+	// 集群指标
+	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, clusterId, category)
+	if err != nil {
+		return nil, err
+	}
+	var pbMetricCharts = []*pb.MetricDataChart{}
+	var metricItemIds = []int64{}
+	var items = []*models.MetricItem{}
 	for _, clusterMetricItem := range clusterMetricItems {
 		if clusterMetricItem.IsOn != 1 {
 			continue
 		}
 		var itemId = int64(clusterMetricItem.ItemId)
-		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-
 		item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, itemId)
 		if err != nil {
 			return nil, err
 		}
 		if item == nil || item.IsOn == 0 {
 			continue
+		}
+		items = append(items, item)
+		metricItemIds = append(metricItemIds, itemId)
+	}
+
+	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range publicMetricItems {
+		if item.IsOn != 1 {
+			continue
+		}
+		if lists.ContainsInt64(metricItemIds, int64(item.Id)) {
+			continue
+		}
+		items = append(items, item)
+	}
+
+	for _, item := range items {
+		var itemId = int64(item.Id)
+		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, chart := range charts {
@@ -789,14 +603,29 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			var pbStats = []*pb.MetricStat{}
 			switch chart.Type {
 			case serverconfigs.MetricChartTypeTimeLine:
-				itemStats, err := models.SharedMetricStatDAO.FindLatestItemStatsWithServerId(tx, req.ServerId, itemId, types.Int32(item.Version), 10)
+				var itemStats []*models.MetricStat
+				if serverId > 0 {
+					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithServerId(tx, serverId, itemId, types.Int32(item.Version), 10)
+				} else if nodeId > 0 {
+					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithNodeId(tx, nodeId, itemId, types.Int32(item.Version), 10)
+				} else {
+					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithClusterId(tx, clusterId, itemId, types.Int32(item.Version), 10)
+				}
 				if err != nil {
 					return nil, err
 				}
 
 				for _, stat := range itemStats {
 					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindServerSum(tx, req.ServerId, stat.Time, itemId, types.Int32(item.Version))
+					var count int64
+					var total float32
+					if serverId > 0 {
+						count, total, err = models.SharedMetricSumStatDAO.FindServerSum(tx, serverId, stat.Time, itemId, types.Int32(item.Version))
+					} else if nodeId > 0 {
+						count, total, err = models.SharedMetricSumStatDAO.FindNodeSum(tx, nodeId, stat.Time, itemId, types.Int32(item.Version))
+					} else {
+						count, total, err = models.SharedMetricSumStatDAO.FindClusterSum(tx, clusterId, stat.Time, itemId, types.Int32(item.Version))
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -818,13 +647,28 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 					})
 				}
 			default:
-				itemStats, err := models.SharedMetricStatDAO.FindItemStatsWithServerIdAndLastTime(tx, req.ServerId, itemId, types.Int32(item.Version), 10)
+				var itemStats []*models.MetricStat
+				if serverId > 0 {
+					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithServerIdAndLastTime(tx, serverId, itemId, types.Int32(item.Version), 10)
+				} else if nodeId > 0 {
+					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithNodeIdAndLastTime(tx, nodeId, itemId, types.Int32(item.Version), 10)
+				} else {
+					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithClusterIdAndLastTime(tx, clusterId, itemId, types.Int32(item.Version), 10)
+				}
 				if err != nil {
 					return nil, err
 				}
 				for _, stat := range itemStats {
 					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindServerSum(tx, req.ServerId, stat.Time, itemId, types.Int32(item.Version))
+					var count int64
+					var total float32
+					if serverId > 0 {
+						count, total, err = models.SharedMetricSumStatDAO.FindServerSum(tx, serverId, stat.Time, itemId, types.Int32(item.Version))
+					} else if nodeId > 0 {
+						count, total, err = models.SharedMetricSumStatDAO.FindNodeSum(tx, nodeId, stat.Time, itemId, types.Int32(item.Version))
+					} else {
+						count, total, err = models.SharedMetricSumStatDAO.FindClusterSum(tx, clusterId, stat.Time, itemId, types.Int32(item.Version))
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -846,13 +690,11 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 					})
 				}
 			}
-			pbMetricCharts = append(pbMetricCharts, &pb.ComposeServerStatBoardResponse_MetricData{
+			pbMetricCharts = append(pbMetricCharts, &pb.MetricDataChart{
 				MetricChart: pbChart,
 				MetricStats: pbStats,
 			})
 		}
 	}
-	result.MetricCharts = pbMetricCharts
-
-	return result, nil
+	return pbMetricCharts, nil
 }

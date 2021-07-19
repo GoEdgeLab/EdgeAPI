@@ -12,7 +12,10 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
+	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -643,39 +646,50 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range topDomainStats {
-		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
-			ServerId:      int64(stat.ServerId),
-			Domain:        stat.Domain,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
-		})
-	}
-
-	// 节点排行
-	topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range topNodeStats {
-		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(stat.NodeId))
+	if isPlus {
+		topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo)
 		if err != nil {
 			return nil, err
 		}
-		if len(nodeName) == 0 {
-			continue
+		for _, stat := range topDomainStats {
+			result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
+				ServerId:      int64(stat.ServerId),
+				Domain:        stat.Domain,
+				CountRequests: int64(stat.CountRequests),
+				Bytes:         int64(stat.Bytes),
+			})
 		}
-		result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeAdminDashboardResponse_NodeStat{
-			NodeId:        int64(stat.NodeId),
-			NodeName:      nodeName,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
-		})
 	}
+
+	// 节点排行
+	if isPlus {
+		topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo)
+		if err != nil {
+			return nil, err
+		}
+		for _, stat := range topNodeStats {
+			nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(stat.NodeId))
+			if err != nil {
+				return nil, err
+			}
+			if len(nodeName) == 0 {
+				continue
+			}
+			result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeAdminDashboardResponse_NodeStat{
+				NodeId:        int64(stat.NodeId),
+				NodeName:      nodeName,
+				CountRequests: int64(stat.CountRequests),
+				Bytes:         int64(stat.Bytes),
+			})
+		}
+	}
+
+	// 指标数据
+	pbCharts, err := this.findMetricDataCharts(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.MetricDataCharts = pbCharts
 
 	return result, nil
 }
@@ -692,4 +706,112 @@ func (this *AdminService) UpdateAdminTheme(ctx context.Context, req *pb.UpdateAd
 		return nil, err
 	}
 	return this.Success()
+}
+
+// 查找集群、节点和服务的指标数据
+func (this *AdminService) findMetricDataCharts(tx *dbs.Tx) (result []*pb.MetricDataChart, err error) {
+	// 集群指标
+	items, err := models.SharedMetricItemDAO.FindAllPublicItems(tx)
+	if err != nil {
+		return nil, err
+	}
+	var pbMetricCharts = []*pb.MetricDataChart{}
+	for _, item := range items {
+		var itemId = int64(item.Id)
+		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, chart := range charts {
+			if chart.IsOn == 0 {
+				continue
+			}
+
+			var pbChart = &pb.MetricChart{
+				Id:         int64(chart.Id),
+				Name:       chart.Name,
+				Type:       chart.Type,
+				WidthDiv:   chart.WidthDiv,
+				ParamsJSON: nil,
+				IsOn:       chart.IsOn == 1,
+				MaxItems:   types.Int32(chart.MaxItems),
+				MetricItem: &pb.MetricItem{
+					Id:         itemId,
+					PeriodUnit: item.PeriodUnit,
+					Period:     types.Int32(item.Period),
+					Name:       item.Name,
+					Value:      item.Value,
+					Category:   item.Category,
+					Keys:       item.DecodeKeys(),
+					Code:       item.Code,
+					IsOn:       item.IsOn == 1,
+				},
+			}
+			var pbStats = []*pb.MetricStat{}
+			switch chart.Type {
+			case serverconfigs.MetricChartTypeTimeLine:
+				itemStats, err := models.SharedMetricStatDAO.FindLatestItemStats(tx, itemId, types.Int32(item.Version), 10)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, stat := range itemStats {
+					// 当前时间总和
+					count, total, err := models.SharedMetricSumStatDAO.FindSumAtTime(tx, stat.Time, itemId, types.Int32(item.Version))
+					if err != nil {
+						return nil, err
+					}
+
+					pbStats = append(pbStats, &pb.MetricStat{
+						Id:          int64(stat.Id),
+						Hash:        stat.Hash,
+						ServerId:    0,
+						ItemId:      0,
+						Keys:        stat.DecodeKeys(),
+						Value:       types.Float32(stat.Value),
+						Time:        stat.Time,
+						Version:     0,
+						NodeCluster: nil,
+						Node:        nil,
+						Server:      nil,
+						SumCount:    count,
+						SumTotal:    total,
+					})
+				}
+			default:
+				itemStats, err := models.SharedMetricStatDAO.FindItemStatsAtLastTime(tx, itemId, types.Int32(item.Version), 10)
+				if err != nil {
+					return nil, err
+				}
+				for _, stat := range itemStats {
+					count, total, err := models.SharedMetricSumStatDAO.FindSumAtTime(tx, stat.Time, itemId, types.Int32(item.Version))
+					if err != nil {
+						return nil, err
+					}
+
+					pbStats = append(pbStats, &pb.MetricStat{
+						Id:          int64(stat.Id),
+						Hash:        stat.Hash,
+						ServerId:    0,
+						ItemId:      0,
+						Keys:        stat.DecodeKeys(),
+						Value:       types.Float32(stat.Value),
+						Time:        stat.Time,
+						Version:     0,
+						NodeCluster: nil,
+						Node:        nil,
+						Server:      nil,
+						SumCount:    count,
+						SumTotal:    total,
+					})
+				}
+			}
+			pbMetricCharts = append(pbMetricCharts, &pb.MetricDataChart{
+				MetricChart: pbChart,
+				MetricStats: pbStats,
+			})
+		}
+	}
+	return pbMetricCharts, nil
 }

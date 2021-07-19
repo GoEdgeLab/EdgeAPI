@@ -64,6 +64,23 @@ func (this *MetricSumStatDAO) FindNodeServerSum(tx *dbs.Tx, nodeId int64, server
 	return int64(one.(*MetricSumStat).Count), float32(one.(*MetricSumStat).Total), nil
 }
 
+// FindSumAtTime 查找某个时间的统计数据
+func (this *MetricSumStatDAO) FindSumAtTime(tx *dbs.Tx, time string, itemId int64, version int32) (count int64, total float32, err error) {
+	one, err := this.Query(tx).
+		Attr("time", time).
+		Attr("itemId", itemId).
+		Attr("version", version).
+		Result("SUM(count) AS `count`, SUM(total) AS total").
+		Find()
+	if err != nil {
+		return 0, 0, err
+	}
+	if one == nil {
+		return
+	}
+	return int64(one.(*MetricSumStat).Count), float32(one.(*MetricSumStat).Total), nil
+}
+
 // FindServerSum 查找某个服务的统计数据
 func (this *MetricSumStatDAO) FindServerSum(tx *dbs.Tx, serverId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
 	one, err := this.Query(tx).
