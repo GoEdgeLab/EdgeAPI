@@ -1,12 +1,15 @@
 package setup
 
 import (
+	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-yaml/yaml"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -91,6 +94,12 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 
 	// 检查IP名单
 	err = this.checkIPList(db)
+	if err != nil {
+		return err
+	}
+
+	// 检查指标设置
+	err = this.checkMetricItems(db)
 	if err != nil {
 		return err
 	}
@@ -240,6 +249,134 @@ func (this *SQLExecutor) checkIPList(db *dbs.DB) error {
 	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, createdAt) VALUES (?, ?, ?, ?, ?)", "公共白名单", "white", "white", 1, time.Now().Unix())
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// 检查统计指标
+func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
+	var createMetricItem = func(code string,
+		category string,
+		name string,
+		keys []string,
+		period int,
+		periodUnit string,
+		value string,
+		chartMaps []maps.Map,
+	) error {
+		// 检查是否已创建
+		itemMap, err := db.FindOne("SELECT id FROM edgeMetricItems WHERE code=? LIMIT 1", code)
+		if err != nil {
+			return err
+		}
+
+		var itemId int64 = 0
+		if len(itemMap) == 0 {
+			keysJSON, err := json.Marshal(keys)
+			if err != nil {
+				return err
+			}
+			_, err = db.Exec("INSERT INTO edgeMetricItems (isOn, code, category, name, `keys`, period, periodUnit, value, state, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1, code, category, name, keysJSON, period, periodUnit, value, 1, 1)
+			if err != nil {
+				return err
+			}
+
+			// 再次查询
+			itemMap, err = db.FindOne("SELECT id FROM edgeMetricItems WHERE code=? LIMIT 1", code)
+			if err != nil {
+				return err
+			}
+		}
+
+		itemId = itemMap.GetInt64("id")
+
+		// chart
+		for _, chartMap := range chartMaps {
+			chartCode := chartMap.GetString("code")
+			one, err := db.FindOne("SELECT id FROM edgeMetricCharts WHERE itemId=? AND code=? LIMIT 1", itemId, chartCode)
+			if err != nil {
+				return err
+			}
+			if len(one) == 0 {
+				_, err = db.Exec("INSERT INTO edgeMetricCharts (itemId, name, code, type, widthDiv, params, isOn, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", itemId, chartMap.GetString("name"), chartCode, chartMap.GetString("type"), chartMap.GetInt("widthDiv"), "{}", 1, 1)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
+
+	{
+		err := createMetricItem("ip_requests", serverconfigs.MetricItemCategoryHTTP, "独立IP请求数", []string{"${remoteAddr}"}, 1, "day", "${countRequest}", []maps.Map{
+			{
+				"name":     "独立IP排行",
+				"type":     "bar",
+				"widthDiv": 0,
+				"code":     "ip_requests_bar",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := createMetricItem("ip_traffic_out", serverconfigs.MetricItemCategoryHTTP, "独立IP下行流量", []string{"${remoteAddr}"}, 1, "day", "${countTrafficOut}", []maps.Map{
+			{
+				"name":     "独立IP排行",
+				"type":     "bar",
+				"widthDiv": 0,
+				"code":     "ip_traffic_out_bar",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := createMetricItem("request_path", serverconfigs.MetricItemCategoryHTTP, "请求路径统计", []string{"${requestPath}"}, 1, "day", "${countRequest}", []maps.Map{
+			{
+				"name":     "请求路径排行",
+				"type":     "bar",
+				"widthDiv": 0,
+				"code":     "request_path_bar",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := createMetricItem("request_method", serverconfigs.MetricItemCategoryHTTP, "请求方法统计", []string{"${requestMethod}"}, 1, "day", "${countRequest}", []maps.Map{
+			{
+				"name":     "请求方法分布",
+				"type":     "pie",
+				"widthDiv": 2,
+				"code":     "request_method_pie",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := createMetricItem("status", serverconfigs.MetricItemCategoryHTTP, "状态码统计", []string{"${status}"}, 1, "day", "${countRequest}", []maps.Map{
+			{
+				"name":     "状态码分布",
+				"type":     "pie",
+				"widthDiv": 2,
+				"code":     "status_pie",
+			},
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

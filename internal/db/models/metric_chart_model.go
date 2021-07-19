@@ -5,6 +5,7 @@ type MetricChart struct {
 	Id       uint32 `field:"id"`       // ID
 	ItemId   uint32 `field:"itemId"`   // 指标ID
 	Name     string `field:"name"`     // 名称
+	Code     string `field:"code"`     // 代号
 	Type     string `field:"type"`     // 图形类型
 	WidthDiv int32  `field:"widthDiv"` // 宽度划分
 	Params   string `field:"params"`   // 图形参数
@@ -18,6 +19,7 @@ type MetricChartOperator struct {
 	Id       interface{} // ID
 	ItemId   interface{} // 指标ID
 	Name     interface{} // 名称
+	Code     interface{} // 代号
 	Type     interface{} // 图形类型
 	WidthDiv interface{} // 宽度划分
 	Params   interface{} // 图形参数
