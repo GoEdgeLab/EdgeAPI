@@ -8,6 +8,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 	"time"
@@ -18,7 +19,7 @@ type ServerDailyStatDAO dbs.DAO
 func init() {
 	dbs.OnReadyDone(func() {
 		// 清理数据任务
-		var ticker = time.NewTicker(24 * time.Hour)
+		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		go func() {
 			for range ticker.C {
 				err := SharedServerDailyStatDAO.Clean(nil, 60) // 只保留60天

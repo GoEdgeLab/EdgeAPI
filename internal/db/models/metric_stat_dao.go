@@ -6,11 +6,30 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/rands"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strconv"
+	"time"
 )
 
 type MetricStatDAO dbs.DAO
+
+func init() {
+	dbs.OnReadyDone(func() {
+		// 清理数据任务
+		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
+		go func() {
+			for range ticker.C {
+				err := SharedMetricStatDAO.Clean(nil, 120) // 只保留120天
+				if err != nil {
+					logs.Println("SharedMetricStatDAO: clean expired data failed: " + err.Error())
+				}
+			}
+		}()
+	})
+}
 
 func NewMetricStatDAO() *MetricStatDAO {
 	return dbs.NewDAO(&MetricStatDAO{
@@ -47,15 +66,16 @@ func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, 
 	return this.Query(tx).
 		Param("value", value).
 		InsertOrUpdateQuickly(maps.Map{
-			"hash":      hash,
-			"clusterId": clusterId,
-			"nodeId":    nodeId,
-			"serverId":  serverId,
-			"itemId":    itemId,
-			"value":     value,
-			"time":      time,
-			"version":   version,
-			"keys":      keysString,
+			"hash":       hash,
+			"clusterId":  clusterId,
+			"nodeId":     nodeId,
+			"serverId":   serverId,
+			"itemId":     itemId,
+			"value":      value,
+			"time":       time,
+			"version":    version,
+			"keys":       keysString,
+			"createdDay": timeutil.Format("Ymd"),
 		}, maps.Map{
 			"value": value,
 		})
@@ -321,4 +341,15 @@ func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId 
 	}
 	lists.Reverse(result)
 	return
+}
+
+// Clean 清理数据
+func (this *MetricStatDAO) Clean(tx *dbs.Tx, days int64) error {
+	_, err := this.Query(tx).
+		Lt("createdDay", timeutil.FormatTime("Ymd", time.Now().Unix()-days*86400)).
+		Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }
