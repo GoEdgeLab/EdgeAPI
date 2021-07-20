@@ -39,7 +39,7 @@ func (this *NSRecordService) UpdateNSRecord(ctx context.Context, req *pb.UpdateN
 	}
 
 	var tx = this.NullTx()
-	err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, req.NsRecordId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteIds)
+	err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, req.NsRecordId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteIds, req.IsOn)
 	if err != nil {
 		return nil, err
 	}

@@ -113,7 +113,7 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 }
 
 // UpdateRecord 修改记录
-func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64) error {
+func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64, isOn bool) error {
 	if recordId <= 0 {
 		return errors.New("invalid recordId")
 	}
@@ -130,6 +130,7 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 	op.Type = dnsType
 	op.Value = value
 	op.Ttl = ttl
+	op.IsOn = isOn
 
 	if len(routeIds) == 0 {
 		op.RouteIds = "[]"

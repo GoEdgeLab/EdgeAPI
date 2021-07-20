@@ -188,7 +188,7 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 	}
 
 	if len(record.Id) > 0 {
-		err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(record.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds)
+		err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(record.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds, true)
 		if err != nil {
 			return err
 		}
@@ -198,7 +198,7 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 			return err
 		}
 		if realRecord != nil {
-			err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(realRecord.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds)
+			err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(realRecord.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds, true)
 			if err != nil {
 				return err
 			}
