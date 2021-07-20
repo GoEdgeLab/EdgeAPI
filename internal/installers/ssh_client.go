@@ -30,7 +30,7 @@ func NewSSHClient(raw *ssh.Client) (*SSHClient, error) {
 	return c, nil
 }
 
-// 执行shell命令
+// Exec 执行shell命令
 func (this *SSHClient) Exec(cmd string) (stdout string, stderr string, err error) {
 	session, err := this.raw.NewSession()
 	if err != nil {
@@ -86,7 +86,7 @@ func (this *SSHClient) Chmod(path string, mode os.FileMode) error {
 	return this.sftp.Chmod(path, mode)
 }
 
-// 拷贝文件
+// Copy 拷贝文件
 func (this *SSHClient) Copy(localPath string, remotePath string, mode os.FileMode) error {
 	localFp, err := os.Open(localPath)
 	if err != nil {
@@ -110,12 +110,12 @@ func (this *SSHClient) Copy(localPath string, remotePath string, mode os.FileMod
 	return this.Chmod(remotePath, mode)
 }
 
-// 获取新Session
+// NewSession 获取新Session
 func (this *SSHClient) NewSession() (*ssh.Session, error) {
 	return this.raw.NewSession()
 }
 
-// 读取文件内容
+// ReadFile 读取文件内容
 func (this *SSHClient) ReadFile(path string) ([]byte, error) {
 	fp, err := this.sftp.OpenFile(path, 0444)
 	if err != nil {
@@ -134,7 +134,7 @@ func (this *SSHClient) ReadFile(path string) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// 写入文件内容
+// WriteFile 写入文件内容
 func (this *SSHClient) WriteFile(path string, data []byte) (n int, err error) {
 	fp, err := this.sftp.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
 	if err != nil {
@@ -148,7 +148,7 @@ func (this *SSHClient) WriteFile(path string, data []byte) (n int, err error) {
 	return
 }
 
-// 删除文件
+// Remove 删除文件
 func (this *SSHClient) Remove(path string) error {
 	return this.sftp.Remove(path)
 }

@@ -2,6 +2,7 @@ package installers
 
 import (
 	"errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/iwind/TeaGo/Tea"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"golang.org/x/crypto/ssh"
@@ -17,7 +18,7 @@ type BaseInstaller struct {
 	client *SSHClient
 }
 
-// 登录SSH服务
+// Login 登录SSH服务
 func (this *BaseInstaller) Login(credentials *Credentials) error {
 	var hostKeyCallback ssh.HostKeyCallback = nil
 
@@ -78,7 +79,7 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 		Timeout:         5 * time.Second, // TODO 后期可以设置这个超时时间
 	}
 
-	sshClient, err := ssh.Dial("tcp", credentials.Host+":"+strconv.Itoa(credentials.Port), config)
+	sshClient, err := ssh.Dial("tcp", configutils.QuoteIP(credentials.Host)+":"+strconv.Itoa(credentials.Port), config)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 	return nil
 }
 
-// 关闭SSH服务
+// Close 关闭SSH服务
 func (this *BaseInstaller) Close() error {
 	if this.client != nil {
 		return this.client.Close()
@@ -99,7 +100,7 @@ func (this *BaseInstaller) Close() error {
 	return nil
 }
 
-// 查找最新的版本的文件
+// LookupLatestInstaller 查找最新的版本的文件
 func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, error) {
 	matches, err := filepath.Glob(Tea.Root + Tea.DS + "deploy" + Tea.DS + "*.zip")
 	if err != nil {
@@ -131,7 +132,7 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 	return result, nil
 }
 
-// 上传安装助手
+// InstallHelper 上传安装助手
 func (this *BaseInstaller) InstallHelper(targetDir string) (env *Env, err error) {
 	uname, _, err := this.client.Exec("uname -a")
 	if err != nil {

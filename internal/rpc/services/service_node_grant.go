@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"golang.org/x/crypto/ssh"
 	"net"
@@ -252,7 +253,7 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 		Timeout:         5 * time.Second, // TODO 后期可以设置这个超时时间
 	}
 
-	sshClient, err := ssh.Dial("tcp", req.Host+":"+fmt.Sprintf("%d", req.Port), config)
+	sshClient, err := ssh.Dial("tcp", configutils.QuoteIP(req.Host)+":"+fmt.Sprintf("%d", req.Port), config)
 	if err != nil {
 		resp.Error = "connect failed: " + err.Error()
 		return resp, nil
