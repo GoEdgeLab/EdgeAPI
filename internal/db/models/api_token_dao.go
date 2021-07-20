@@ -120,3 +120,13 @@ func (this *ApiTokenDAO) CreateAPIToken(tx *dbs.Tx, nodeId string, secret string
 	err := this.Save(tx, op)
 	return err
 }
+
+// FindAllEnabledAPITokens 读取API令牌
+func (this *ApiTokenDAO) FindAllEnabledAPITokens(tx *dbs.Tx, role string) (result []*ApiToken, err error) {
+	_, err = this.Query(tx).
+		Attr("role", role).
+		State(ApiTokenStateEnabled).
+		Slice(&result).
+		FindAll()
+	return
+}

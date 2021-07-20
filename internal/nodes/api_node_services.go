@@ -14,6 +14,11 @@ import (
 // 注册服务
 func (this *APINode) registerServices(server *grpc.Server) {
 	{
+		instance := this.serviceInstance(&services.APITokenService{}).(*services.APITokenService)
+		pb.RegisterAPITokenServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.AdminService{}).(*services.AdminService)
 		pb.RegisterAdminServiceServer(server, instance)
 		this.rest(instance)
