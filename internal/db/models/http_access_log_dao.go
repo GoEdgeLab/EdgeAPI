@@ -236,6 +236,10 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 						query.Between("remoteAddr", pieces[0], pieces[1])
 					}
 				} else {
+					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
+						keyword = keyword[3:]
+					}
+
 					useOriginKeyword := false
 
 					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
