@@ -105,7 +105,7 @@ func (this *ServerAccessLogCleaner) cleanDB(db *dbs.DB, endDay string) error {
 		if len(tableName) == 0 {
 			continue
 		}
-		ok, err := regexp.MatchString(`^(?i)edgeHTTPAccessLogs_(\d{8})$`, tableName)
+		ok, err := regexp.MatchString(`^(?i)(edgeHTTPAccessLogs|edgeNSAccessLogs)_(\d{8})$`, tableName)
 		if err != nil {
 			return err
 		}
