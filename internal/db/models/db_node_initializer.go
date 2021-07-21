@@ -22,6 +22,7 @@ var accessLogLocker = &sync.RWMutex{}
 type httpAccessLogDefinition struct {
 	Name          string
 	HasRemoteAddr bool
+	Exists        bool
 }
 
 // HTTP服务访问
@@ -102,12 +103,12 @@ func findHTTPAccessLogTableName(db *dbs.DB, day string) (tableName string, hasRe
 		return tableName, def.HasRemoteAddr, true, nil
 	}
 
-	tableNames, err := db.TableNames()
+	def, err = findHTTPAccessLogTable(db, day, false)
 	if err != nil {
 		return tableName, false, false, err
 	}
 
-	return tableName, false, lists.ContainsString(tableNames, tableName), nil
+	return tableName, def.HasRemoteAddr, def.Exists, nil
 }
 
 func findNSAccessLogTableName(db *dbs.DB, day string) (tableName string, ok bool, err error) {
@@ -173,10 +174,15 @@ func findHTTPAccessLogTable(db *dbs.DB, day string, force bool) (*httpAccessLogD
 		var definition = &httpAccessLogDefinition{
 			Name:          tableName,
 			HasRemoteAddr: table.FindFieldWithName("remoteAddr") != nil,
+			Exists:        true,
 		}
 		httpAccessLogTableMapping[cacheKey] = definition
 		accessLogLocker.Unlock()
 		return definition, nil
+	}
+
+	if !force {
+		return &httpAccessLogDefinition{Name: tableName, HasRemoteAddr: true, Exists: false}, nil
 	}
 
 	// 创建表格
@@ -189,6 +195,7 @@ func findHTTPAccessLogTable(db *dbs.DB, day string, force bool) (*httpAccessLogD
 	var definition = &httpAccessLogDefinition{
 		Name:          tableName,
 		HasRemoteAddr: true,
+		Exists:        true,
 	}
 	httpAccessLogTableMapping[cacheKey] = definition
 	accessLogLocker.Unlock()
@@ -333,7 +340,7 @@ func (this *DBNodeInitializer) loop() error {
 			// 检查表是否存在
 			// httpAccessLog
 			{
-				tableDef, err := findHTTPAccessLogTable(db, timeutil.Format("Ymd"), false)
+				tableDef, err := findHTTPAccessLogTable(db, timeutil.Format("Ymd"), true)
 				if err != nil {
 					if !strings.Contains(err.Error(), "1050") { // 非表格已存在错误
 						logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
