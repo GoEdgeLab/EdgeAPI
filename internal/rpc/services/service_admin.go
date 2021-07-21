@@ -647,7 +647,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 域名排行
 	if isPlus {
-		topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo)
+		topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)
 		if err != nil {
 			return nil, err
 		}

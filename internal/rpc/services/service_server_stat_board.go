@@ -146,7 +146,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 
 	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithClusterId(tx, req.NodeClusterId, hourFrom, hourTo)
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithClusterId(tx, req.NodeClusterId, hourFrom, hourTo, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 	}
 
 	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithNodeId(tx, req.NodeId, hourFrom, hourTo)
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithNodeId(tx, req.NodeId, hourFrom, hourTo, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +499,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	}
 
 	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithServerId(tx, req.ServerId, hourFrom, hourTo)
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithServerId(tx, req.ServerId, hourFrom, hourTo, 10)
 	if err != nil {
 		return nil, err
 	}

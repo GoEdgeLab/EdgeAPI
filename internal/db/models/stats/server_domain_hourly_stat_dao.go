@@ -87,20 +87,21 @@ func (this *ServerDomainHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, clusterId 
 }
 
 // FindTopDomainStats 取得一定时间内的域名排行数据
-func (this *ServerDomainHourlyStatDAO) FindTopDomainStats(tx *dbs.Tx, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStats(tx *dbs.Tx, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Between("hour", hourFrom, hourTo).
 		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("domain").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
 // FindTopDomainStatsWithClusterId 取得集群上的一定时间内的域名排行数据
-func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.Tx, clusterId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.Tx, clusterId int64, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
@@ -108,13 +109,14 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.T
 		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("domain").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
 // FindTopDomainStatsWithNodeId 取得节点上的一定时间内的域名排行数据
-func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, nodeId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, nodeId int64, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("nodeId", nodeId).
@@ -122,13 +124,14 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, 
 		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("domain").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
 // FindTopDomainStatsWithServerId 取得某个服务的一定时间内的域名排行数据
-func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDomainHourlyStat, err error) {
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("serverId", serverId).
@@ -136,6 +139,7 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx
 		Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("domain").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
