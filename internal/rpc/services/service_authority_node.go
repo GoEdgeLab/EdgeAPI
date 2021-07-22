@@ -171,7 +171,7 @@ func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, 
 
 // FindCurrentAuthorityNode 获取当前认证节点的版本
 func (this *AuthorityNodeService) FindCurrentAuthorityNode(ctx context.Context, req *pb.FindCurrentAuthorityNodeRequest) (*pb.FindCurrentAuthorityNodeResponse, error) {
-	_, err := this.ValidateAuthority(ctx)
+	_, err := this.ValidateAuthorityNode(ctx)
 	if err != nil {
 		return nil, err
 	}

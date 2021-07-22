@@ -7,12 +7,12 @@ import (
 	"github.com/iwind/TeaGo/maps"
 )
 
-// 消息媒介服务
+// MessageMediaService 消息媒介服务
 type MessageMediaService struct {
 	BaseService
 }
 
-// 获取所有支持的媒介
+// FindAllMessageMedias 获取所有支持的媒介
 func (this *MessageMediaService) FindAllMessageMedias(ctx context.Context, req *pb.FindAllMessageMediasRequest) (*pb.FindAllMessageMediasResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -37,9 +37,9 @@ func (this *MessageMediaService) FindAllMessageMedias(ctx context.Context, req *
 	return &pb.FindAllMessageMediasResponse{MessageMedias: pbMedias}, nil
 }
 
-// 设置所有支持的媒介
+// UpdateMessageMedias 设置所有支持的媒介
 func (this *MessageMediaService) UpdateMessageMedias(ctx context.Context, req *pb.UpdateMessageMediasRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateMonitor(ctx)
+	_, err := this.ValidateMonitorNode(ctx)
 	if err != nil {
 		return nil, err
 	}

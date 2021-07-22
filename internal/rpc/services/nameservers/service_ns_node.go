@@ -13,6 +13,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"path/filepath"
 )
 
 // NSNodeService 域名服务器节点服务
@@ -369,7 +370,7 @@ func (this *NSNodeService) FindCurrentNSNodeConfig(ctx context.Context, req *pb.
 
 // CheckNSNodeLatestVersion 检查新版本
 func (this *NSNodeService) CheckNSNodeLatestVersion(ctx context.Context, req *pb.CheckNSNodeLatestVersionRequest) (*pb.CheckNSNodeLatestVersionResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -384,4 +385,32 @@ func (this *NSNodeService) CheckNSNodeLatestVersion(ctx context.Context, req *pb
 		}
 	}
 	return &pb.CheckNSNodeLatestVersionResponse{HasNewVersion: false}, nil
+}
+
+// DownloadNSNodeInstallationFile 下载最新DNS节点安装文件
+func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, req *pb.DownloadNSNodeInstallationFileRequest) (*pb.DownloadNSNodeInstallationFileResponse, error) {
+	_, err := this.ValidateNSNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	file := installers.SharedDeployManager.FindNSNodeFile(req.Os, req.Arch)
+	if file == nil {
+		return &pb.DownloadNSNodeInstallationFileResponse{}, nil
+	}
+
+	sum, err := file.Sum()
+	if err != nil {
+		return nil, err
+	}
+
+	data, offset, err := file.Read(req.ChunkOffset)
+
+	return &pb.DownloadNSNodeInstallationFileResponse{
+		Sum:       sum,
+		Offset:    offset,
+		ChunkData: data,
+		Version:   file.Version,
+		Filename:  filepath.Base(file.Path),
+	}, nil
 }

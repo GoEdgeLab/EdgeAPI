@@ -171,7 +171,7 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 
 // FindCurrentMonitorNode 获取当前监控节点的版本
 func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req *pb.FindCurrentMonitorNodeRequest) (*pb.FindCurrentMonitorNodeResponse, error) {
-	_, err := this.ValidateMonitor(ctx)
+	_, err := this.ValidateMonitorNode(ctx)
 	if err != nil {
 		return nil, err
 	}

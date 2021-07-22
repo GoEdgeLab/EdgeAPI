@@ -198,7 +198,7 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 
 // FindCurrentUserNode 获取当前用户节点的版本
 func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.FindCurrentUserNodeRequest) (*pb.FindCurrentUserNodeResponse, error) {
-	_, err := this.ValidateUser(ctx)
+	_, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
 	}

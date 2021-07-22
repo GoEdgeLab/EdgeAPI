@@ -1080,7 +1080,7 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 
 // CheckUserServer 检查服务是否属于某个用户
 func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUserServerRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUser(ctx)
+	userId, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
 	}

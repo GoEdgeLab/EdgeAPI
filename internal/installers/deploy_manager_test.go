@@ -16,3 +16,9 @@ func TestDeployManager_LoadNSNodeFiles(t *testing.T) {
 		t.Logf("%#v", file)
 	}
 }
+
+func TestDeployManager_FindNSNodeFile(t *testing.T) {
+	file := NewDeployManager().FindNSNodeFile("linux", "amd64")
+	t.Log(file)
+
+}

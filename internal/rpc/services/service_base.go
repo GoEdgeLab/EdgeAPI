@@ -78,20 +78,26 @@ func (this *BaseService) ValidateNode(ctx context.Context) (nodeId int64, err er
 	return
 }
 
-// ValidateUser 校验用户节点
-func (this *BaseService) ValidateUser(ctx context.Context) (userId int64, err error) {
+// ValidateNSNode 校验DNS节点
+func (this *BaseService) ValidateNSNode(ctx context.Context) (nodeId int64, err error) {
+	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeDNS)
+	return
+}
+
+// ValidateUserNode 校验用户节点
+func (this *BaseService) ValidateUserNode(ctx context.Context) (userId int64, err error) {
 	_, _, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
 	return
 }
 
-// ValidateMonitor 校验监控节点
-func (this *BaseService) ValidateMonitor(ctx context.Context) (nodeId int64, err error) {
+// ValidateMonitorNode 校验监控节点
+func (this *BaseService) ValidateMonitorNode(ctx context.Context) (nodeId int64, err error) {
 	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
 	return
 }
 
-// ValidateAuthority 校验认证节点
-func (this *BaseService) ValidateAuthority(ctx context.Context) (nodeId int64, err error) {
+// ValidateAuthorityNode 校验认证节点
+func (this *BaseService) ValidateAuthorityNode(ctx context.Context) (nodeId int64, err error) {
 	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
 	return
 }

@@ -65,7 +65,7 @@ func (this *DeployManager) FindNodeFile(os string, arch string) *DeployFile {
 	return nil
 }
 
-// LoadNSNodeFiles 加载所有文件
+// LoadNSNodeFiles 加载所有NS节点安装文件
 func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
 	keyMap := map[string]*DeployFile{} // key => File
 
@@ -98,4 +98,14 @@ func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
 		result = append(result, v)
 	}
 	return result
+}
+
+// FindNSNodeFile 查找特别平台的NS节点安装文件
+func (this *DeployManager) FindNSNodeFile(os string, arch string) *DeployFile {
+	for _, file := range this.LoadNSNodeFiles() {
+		if file.OS == os && file.Arch == arch {
+			return file
+		}
+	}
+	return nil
 }

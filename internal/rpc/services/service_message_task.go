@@ -31,7 +31,7 @@ func (this *MessageTaskService) CreateMessageTask(ctx context.Context, req *pb.C
 
 // FindSendingMessageTasks 查找要发送的任务
 func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req *pb.FindSendingMessageTasksRequest) (*pb.FindSendingMessageTasksResponse, error) {
-	_, err := this.ValidateMonitor(ctx)
+	_, err := this.ValidateMonitorNode(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 
 // UpdateMessageTaskStatus 修改任务状态
 func (this *MessageTaskService) UpdateMessageTaskStatus(ctx context.Context, req *pb.UpdateMessageTaskStatusRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateMonitor(ctx)
+	_, err := this.ValidateMonitorNode(ctx)
 	if err != nil {
 		return nil, err
 	}

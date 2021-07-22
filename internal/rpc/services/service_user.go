@@ -258,7 +258,7 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 
 // UpdateUserInfo 修改用户基本信息
 func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserInfoRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUser(ctx)
+	userId, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 
 // UpdateUserLogin 修改用户登录信息
 func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUserLoginRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUser(ctx)
+	userId, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 
 // ComposeUserDashboard 取得用户Dashboard数据
 func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
-	userId, err := this.ValidateUser(ctx)
+	userId, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
 	}
