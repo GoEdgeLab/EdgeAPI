@@ -383,6 +383,7 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 
 	config := &dnsconfigs.NSNodeConfig{
 		Id:        int64(node.Id),
+		NodeId:    node.UniqueId,
 		ClusterId: int64(node.ClusterId),
 	}
 
