@@ -108,6 +108,7 @@ func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.Fi
 			Id:        int64(domain.Id),
 			Name:      domain.Name,
 			IsOn:      domain.IsOn == 1,
+			TsigJSON:  []byte(domain.Tsig),
 			CreatedAt: int64(domain.CreatedAt),
 			NsCluster: &pb.NSCluster{
 				Id:   int64(cluster.Id),
@@ -179,6 +180,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 			Name:      domain.Name,
 			IsOn:      domain.IsOn == 1,
 			CreatedAt: int64(domain.CreatedAt),
+			TsigJSON:  []byte(domain.Tsig),
 			NsCluster: &pb.NSCluster{
 				Id:   int64(cluster.Id),
 				IsOn: cluster.IsOn == 1,
@@ -200,7 +202,10 @@ func (this *NSDomainService) ListNSDomainsAfterVersion(ctx context.Context, req 
 
 	// 集群ID
 	var tx = this.NullTx()
-	domains, err := nameservers.SharedNSDomainDAO.ListDomainsAfterVersion(tx, req.Version, 2000)
+	if req.Size <= 0 {
+		req.Size = 2000
+	}
+	domains, err := nameservers.SharedNSDomainDAO.ListDomainsAfterVersion(tx, req.Version, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -213,9 +218,40 @@ func (this *NSDomainService) ListNSDomainsAfterVersion(ctx context.Context, req 
 			IsOn:      domain.IsOn == 1,
 			IsDeleted: domain.State == nameservers.NSDomainStateDisabled,
 			Version:   int64(domain.Version),
+			TsigJSON:  []byte(domain.Tsig),
 			NsCluster: &pb.NSCluster{Id: int64(domain.ClusterId)},
 			User:      nil,
 		})
 	}
 	return &pb.ListNSDomainsAfterVersionResponse{NsDomains: pbDomains}, nil
+}
+
+// FindEnabledNSDomainTSIG 查找TSIG配置
+func (this *NSDomainService) FindEnabledNSDomainTSIG(ctx context.Context, req *pb.FindEnabledNSDomainTSIGRequest) (*pb.FindEnabledNSDomainTSIGResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	tsig, err := nameservers.SharedNSDomainDAO.FindEnabledDomainTSIG(tx, req.NsDomainId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledNSDomainTSIGResponse{TsigJSON: tsig}, nil
+}
+
+// UpdateNSDomainTSIG 修改TSIG配置
+func (this *NSDomainService) UpdateNSDomainTSIG(ctx context.Context, req *pb.UpdateNSDomainTSIGRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = nameservers.SharedNSDomainDAO.UpdateDomainTSIG(tx, req.NsDomainId, req.TsigJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

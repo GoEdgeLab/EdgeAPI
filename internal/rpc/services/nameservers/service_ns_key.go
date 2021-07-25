@@ -125,3 +125,46 @@ func (this *NSKeyService) ListEnabledNSKeys(ctx context.Context, req *pb.ListEna
 	}
 	return &pb.ListEnabledNSKeysResponse{NsKeys: pbKeys}, nil
 }
+
+// ListNSKeysAfterVersion 根据版本列出一组密钥
+func (this *NSKeyService) ListNSKeysAfterVersion(ctx context.Context, req *pb.ListNSKeysAfterVersionRequest) (*pb.ListNSKeysAfterVersionResponse, error) {
+	_, err := this.ValidateNSNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if req.Size <= 0 {
+		req.Size = 2000
+	}
+	keys, err := nameservers.SharedNSKeyDAO.ListKeysAfterVersion(tx, req.Version, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	var pbKeys = []*pb.NSKey{}
+	for _, key := range keys {
+		var pbDomain *pb.NSDomain
+		var pbZone *pb.NSZone
+
+		if key.DomainId > 0 {
+			pbDomain = &pb.NSDomain{Id: int64(key.DomainId)}
+		}
+		if key.ZoneId > 0 {
+			pbZone = &pb.NSZone{Id: int64(key.ZoneId)}
+		}
+
+		pbKeys = append(pbKeys, &pb.NSKey{
+			Id:         int64(key.Id),
+			IsOn:       key.IsOn == 1,
+			Name:       "",
+			Algo:       key.Algo,
+			Secret:     key.Secret,
+			SecretType: key.SecretType,
+			IsDeleted:  key.State == nameservers.NSKeyStateDisabled,
+			Version:    int64(key.Version),
+			NsDomain:   pbDomain,
+			NsZone:     pbZone,
+		})
+	}
+	return &pb.ListNSKeysAfterVersionResponse{NsKeys: pbKeys}, nil
+}

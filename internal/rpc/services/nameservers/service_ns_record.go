@@ -193,7 +193,10 @@ func (this *NSRecordService) ListNSRecordsAfterVersion(ctx context.Context, req 
 
 	// 集群ID
 	var tx = this.NullTx()
-	records, err := nameservers.SharedNSRecordDAO.ListRecordsAfterVersion(tx, req.Version, 2000)
+	if req.Size <= 0 {
+		req.Size = 2000
+	}
+	records, err := nameservers.SharedNSRecordDAO.ListRecordsAfterVersion(tx, req.Version, req.Size)
 	if err != nil {
 		return nil, err
 	}

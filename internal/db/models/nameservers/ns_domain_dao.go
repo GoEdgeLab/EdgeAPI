@@ -194,3 +194,42 @@ func (this *NSDomainDAO) FindDomainIdWithName(tx *dbs.Tx, clusterId int64, name 
 		ResultPk().
 		FindInt64Col(0)
 }
+
+// FindEnabledDomainTSIG 获取TSIG配置
+func (this *NSDomainDAO) FindEnabledDomainTSIG(tx *dbs.Tx, domainId int64) ([]byte, error) {
+	tsig, err := this.Query(tx).
+		Pk(domainId).
+		Result("tsig").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(tsig), nil
+}
+
+// UpdateDomainTSIG 修改TSIG配置
+func (this *NSDomainDAO) UpdateDomainTSIG(tx *dbs.Tx, domainId int64, tsigJSON []byte) error {
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
+	return this.Query(tx).
+		Pk(domainId).
+		Set("tsig", tsigJSON).
+		Set("version", version).
+		UpdateQuickly()
+}
+
+// NotifyUpdate 通知更改
+func (this *NSDomainDAO) NotifyUpdate(tx *dbs.Tx, domainId int64) error {
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
+	return this.Query(tx).
+		Pk(domainId).
+		Set("version", version).
+		UpdateQuickly()
+}

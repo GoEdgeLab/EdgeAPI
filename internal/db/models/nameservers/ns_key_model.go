@@ -10,6 +10,7 @@ type NSKey struct {
 	Algo       string `field:"algo"`       // 算法
 	Secret     string `field:"secret"`     // 密码
 	SecretType string `field:"secretType"` // 密码类型
+	Version    uint64 `field:"version"`    // 版本号
 	State      uint8  `field:"state"`      // 状态
 }
 
@@ -22,6 +23,7 @@ type NSKeyOperator struct {
 	Algo       interface{} // 算法
 	Secret     interface{} // 密码
 	SecretType interface{} // 密码类型
+	Version    interface{} // 版本号
 	State      interface{} // 状态
 }
 

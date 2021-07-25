@@ -1,6 +1,7 @@
 package nameservers
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -44,12 +45,15 @@ func (this *NSKeyDAO) EnableNSKey(tx *dbs.Tx, id int64) error {
 }
 
 // DisableNSKey 禁用条目
-func (this *NSKeyDAO) DisableNSKey(tx *dbs.Tx, id int64) error {
+func (this *NSKeyDAO) DisableNSKey(tx *dbs.Tx, keyId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(keyId).
 		Set("state", NSKeyStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, keyId)
 }
 
 // FindEnabledNSKey 查找启用中的条目
@@ -82,7 +86,17 @@ func (this *NSKeyDAO) CreateKey(tx *dbs.Tx, domainId int64, zoneId int64, name s
 	op.Secret = secret
 	op.SecretType = secretType
 	op.State = NSKeyStateEnabled
-	return this.SaveInt64(tx, op)
+	keyId, err := this.SaveInt64(tx, op)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.NotifyUpdate(tx, keyId)
+	if err != nil {
+		return keyId, err
+	}
+
+	return keyId, nil
 }
 
 // UpdateKey 修改Key
@@ -97,7 +111,11 @@ func (this *NSKeyDAO) UpdateKey(tx *dbs.Tx, keyId int64, name string, algo dnsco
 	op.Secret = secret
 	op.SecretType = secretType
 	op.IsOn = isOn
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, keyId)
 }
 
 // CountEnabledKeys 计算Key的数量
@@ -125,6 +143,28 @@ func (this *NSKeyDAO) ListEnabledKeys(tx *dbs.Tx, domainId int64, zoneId int64, 
 	}
 	_, err = query.
 		DescPk().
+		Offset(offset).
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// IncreaseVersion 增加版本
+func (this *NSKeyDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
+	return models.SharedSysLockerDAO.Increase(tx, "NS_KEY_VERSION", 1)
+}
+
+// ListKeysAfterVersion 列出某个版本后的密钥
+func (this *NSKeyDAO) ListKeysAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*NSKey, err error) {
+	if size <= 0 {
+		size = 10000
+	}
+
+	_, err = this.Query(tx).
+		Gte("version", version).
+		Limit(size).
+		Asc("version").
 		Slice(&result).
 		FindAll()
 	return
@@ -132,6 +172,12 @@ func (this *NSKeyDAO) ListEnabledKeys(tx *dbs.Tx, domainId int64, zoneId int64, 
 
 // NotifyUpdate 通知更新
 func (this *NSKeyDAO) NotifyUpdate(tx *dbs.Tx, keyId int64) error {
-	// TODO 需要实现
-	return nil
+	version, err := this.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+	return this.Query(tx).
+		Pk(keyId).
+		Set("version", version).
+		UpdateQuickly()
 }
