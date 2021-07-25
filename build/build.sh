@@ -6,6 +6,7 @@ function build() {
 	DIST=$ROOT/"../dist/${NAME}"
 	OS=${1}
 	ARCH=${2}
+	TAG=${3}
 
 	if [ -z $OS ]; then
 		echo "usage: build.sh OS ARCH"
@@ -15,9 +16,12 @@ function build() {
 		echo "usage: build.sh OS ARCH"
 		exit
 	fi
+	if [ -z $TAG ]; then
+		TAG="community"
+	fi
 
 	VERSION=$(lookup-version $ROOT/../internal/const/const.go)
-	ZIP="${NAME}-${OS}-${ARCH}-v${VERSION}.zip"
+	ZIP="${NAME}-${OS}-${ARCH}-${TAG}-v${VERSION}.zip"
 
 	# check edge-node
 	NodeVersion=$(lookup-version $ROOT"/../../EdgeNode/internal/const/const.go")
@@ -31,14 +35,14 @@ function build() {
 	echo "=============================="
 	architects=("amd64" "386" "arm64" "mips64" "mips64le")
 	for arch in "${architects[@]}"; do
-		./build.sh linux $arch
+		./build.sh linux $arch $TAG
 	done
 	echo "=============================="
 	cd -
 
 	rm -f $ROOT/deploy/*.zip
 	for arch in "${architects[@]}"; do
-		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-v${NodeVersion}.zip" $ROOT/deploy/
+		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-${TAG}-v${NodeVersion}.zip" $ROOT/deploy/edge-node-linux-${arch}-v${NodeVersion}.zip
 	done
 
 	# build sql
@@ -67,11 +71,11 @@ function build() {
 	architects=("amd64" "386" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
-		env GOOS=linux GOARCH=${arch} go build --ldflags="-s -w" -o $ROOT/installers/edge-installer-helper-linux-${arch} $ROOT/../cmd/installer-helper/main.go
+		env GOOS=linux GOARCH=${arch} go build -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-helper-linux-${arch} $ROOT/../cmd/installer-helper/main.go
 	done
 
 	# building api node
-	env GOOS=$OS GOARCH=$ARCH go build --ldflags="-s -w" -o $DIST/bin/edge-api $ROOT/../cmd/edge-api/main.go
+	env GOOS=$OS GOARCH=$ARCH go build -tags $TAG --ldflags="-s -w" -o $DIST/bin/edge-api $ROOT/../cmd/edge-api/main.go
 
 	# delete hidden files
 	find $DIST -name ".DS_Store" -delete
@@ -102,4 +106,4 @@ function lookup-version() {
 	fi
 }
 
-build $1 $2
+build $1 $2 $3
