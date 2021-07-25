@@ -16,8 +16,10 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"github.com/iwind/gosock/pkg/gosock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
@@ -36,11 +38,14 @@ var sharedAPIConfig *configs.APIConfig = nil
 type APINode struct {
 	serviceInstanceMap    map[string]interface{}
 	serviceInstanceLocker sync.Mutex
+
+	sock *gosock.Sock
 }
 
 func NewAPINode() *APINode {
 	return &APINode{
 		serviceInstanceMap: map[string]interface{}{},
+		sock:               gosock.NewTmpSock(teaconst.ProcessName),
 	}
 }
 
@@ -469,37 +474,46 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 
 // 监听本地sock
 func (this *APINode) listenSock() error {
-	path := os.TempDir() + "/edge-api.sock"
-
-	// 检查是否已经存在
-	_, err := os.Stat(path)
-	if err == nil {
-		conn, err := net.Dial("unix", path)
-		if err != nil {
-			_ = os.Remove(path)
+	// 检查是否在运行
+	if this.sock.IsListening() {
+		reply, err := this.sock.Send(&gosock.Command{Code: "pid"})
+		if err == nil {
+			return errors.New("error: the process is already running, pid: " + maps.NewMap(reply.Params).GetString("pid"))
 		} else {
-			_ = conn.Close()
+			return errors.New("error: the process is already running")
 		}
 	}
 
-	// 新的监听任务
-	listener, err := net.Listen("unix", path)
-	if err != nil {
-		return err
-	}
-	events.On(events.EventQuit, func() {
-		remotelogs.Println("API_NODE", "quit unix sock")
-		_ = listener.Close()
-	})
-
+	// 启动监听
 	go func() {
-		for {
-			_, err := listener.Accept()
-			if err != nil {
-				return
+		this.sock.OnCommand(func(cmd *gosock.Command) {
+			switch cmd.Code {
+			case "pid":
+				_ = cmd.Reply(&gosock.Command{
+					Code: "pid",
+					Params: map[string]interface{}{
+						"pid": os.Getpid(),
+					},
+				})
+			case "stop":
+				_ = cmd.ReplyOk()
+
+				// 退出主进程
+				events.Notify(events.EventQuit)
+				os.Exit(0)
 			}
+		})
+
+		err := this.sock.Listen()
+		if err != nil {
+			logs.Println("NODE", err.Error())
 		}
 	}()
+
+	events.On(events.EventQuit, func() {
+		logs.Println("NODE", "quit unix sock")
+		_ = this.sock.Close()
+	})
 
 	return nil
 }
