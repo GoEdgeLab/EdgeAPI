@@ -10,6 +10,7 @@ type NSDomain struct {
 	CreatedAt uint64 `field:"createdAt"` // 创建时间
 	Version   uint64 `field:"version"`   // 版本
 	State     uint8  `field:"state"`     // 状态
+	Tsig      string `field:"tsig"`      // TSIG配置
 }
 
 type NSDomainOperator struct {
@@ -21,6 +22,7 @@ type NSDomainOperator struct {
 	CreatedAt interface{} // 创建时间
 	Version   interface{} // 版本
 	State     interface{} // 状态
+	Tsig      interface{} // TSIG配置
 }
 
 func NewNSDomainOperator() *NSDomainOperator {

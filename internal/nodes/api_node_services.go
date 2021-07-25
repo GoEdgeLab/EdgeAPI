@@ -444,6 +444,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&nameservers.NSKeyService{}).(*nameservers.NSKeyService)
+		pb.RegisterNSKeyServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&nameservers.NSAccessLogService{}).(*nameservers.NSAccessLogService)
 		pb.RegisterNSAccessLogServiceServer(server, instance)
 		this.rest(instance)
