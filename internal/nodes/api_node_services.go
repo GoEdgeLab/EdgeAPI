@@ -394,11 +394,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		instance := this.serviceInstance(&services.AuthorityKeyService{}).(*services.AuthorityKeyService)
-		pb.RegisterAuthorityKeyServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		instance := this.serviceInstance(&services.AuthorityNodeService{}).(*services.AuthorityNodeService)
 		pb.RegisterAuthorityNodeServiceServer(server, instance)
 		this.rest(instance)
@@ -500,6 +495,8 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		pb.RegisterServerStatBoardChartServiceServer(server, instance)
 		this.rest(instance)
 	}
+
+	APINodeServicesRegister(this, server)
 
 	// TODO check service names
 	for serviceName := range server.GetServiceInfo() {
