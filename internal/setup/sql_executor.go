@@ -20,7 +20,7 @@ import (
 
 var LatestSQLResult = &SQLDumpResult{}
 
-// 安装或升级SQL执行器
+// SQLExecutor 安装或升级SQL执行器
 type SQLExecutor struct {
 	dbConfig *dbs.DBConfig
 }
@@ -372,6 +372,20 @@ func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
 				"type":     "pie",
 				"widthDiv": 2,
 				"code":     "status_pie",
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := createMetricItem("request_referer_host", serverconfigs.MetricItemCategoryHTTP, "请求来源统计", []string{"${referer.host}"}, 1, "day", "${countRequest}", []maps.Map{
+			{
+				"name":     "请求来源排行",
+				"type":     "bar",
+				"widthDiv": 0,
+				"code":     "request_referer_host_bar",
 			},
 		})
 		if err != nil {
