@@ -31,7 +31,7 @@ func (this *MetricChartService) CreateMetricChart(ctx context.Context, req *pb.C
 			return nil, err
 		}
 	}
-	chartId, err := models.SharedMetricChartDAO.CreateChart(tx, req.MetricItemId, req.Name, req.Type, req.WidthDiv, req.MaxItems, params)
+	chartId, err := models.SharedMetricChartDAO.CreateChart(tx, req.MetricItemId, req.Name, req.Type, req.WidthDiv, req.MaxItems, params, req.IgnoreEmptyKeys, req.IgnoredKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (this *MetricChartService) UpdateMetricChart(ctx context.Context, req *pb.U
 			return nil, err
 		}
 	}
-	err = models.SharedMetricChartDAO.UpdateChart(tx, req.MetricChartId, req.Name, req.Type, req.WidthDiv, req.MaxItems, params, req.IsOn)
+	err = models.SharedMetricChartDAO.UpdateChart(tx, req.MetricChartId, req.Name, req.Type, req.WidthDiv, req.MaxItems, params, req.IgnoreEmptyKeys, req.IgnoredKeys, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +77,16 @@ func (this *MetricChartService) FindEnabledMetricChart(ctx context.Context, req 
 	}
 	return &pb.FindEnabledMetricChartResponse{
 		MetricChart: &pb.MetricChart{
-			Id:         int64(chart.Id),
-			Name:       chart.Name,
-			Type:       chart.Type,
-			WidthDiv:   types.Int32(chart.WidthDiv),
-			MaxItems:   types.Int32(chart.MaxItems),
-			ParamsJSON: []byte(chart.Params),
-			IsOn:       chart.IsOn == 1,
-			MetricItem: &pb.MetricItem{Id: int64(chart.ItemId)},
+			Id:              int64(chart.Id),
+			Name:            chart.Name,
+			Type:            chart.Type,
+			WidthDiv:        types.Int32(chart.WidthDiv),
+			MaxItems:        types.Int32(chart.MaxItems),
+			ParamsJSON:      []byte(chart.Params),
+			IgnoreEmptyKeys: chart.IgnoreEmptyKeys == 1,
+			IgnoredKeys:     chart.DecodeIgnoredKeys(),
+			IsOn:            chart.IsOn == 1,
+			MetricItem:      &pb.MetricItem{Id: int64(chart.ItemId)},
 		},
 	}, nil
 }
@@ -119,13 +121,15 @@ func (this *MetricChartService) ListEnabledMetricCharts(ctx context.Context, req
 	var pbCharts []*pb.MetricChart
 	for _, chart := range charts {
 		pbCharts = append(pbCharts, &pb.MetricChart{
-			Id:         int64(chart.Id),
-			Name:       chart.Name,
-			Type:       chart.Type,
-			WidthDiv:   types.Int32(chart.WidthDiv),
-			MaxItems:   types.Int32(chart.MaxItems),
-			ParamsJSON: []byte(chart.Params),
-			IsOn:       chart.IsOn == 1,
+			Id:              int64(chart.Id),
+			Name:            chart.Name,
+			Type:            chart.Type,
+			WidthDiv:        types.Int32(chart.WidthDiv),
+			MaxItems:        types.Int32(chart.MaxItems),
+			ParamsJSON:      []byte(chart.Params),
+			IgnoreEmptyKeys: chart.IgnoreEmptyKeys == 1,
+			IgnoredKeys:     chart.DecodeIgnoredKeys(),
+			IsOn:            chart.IsOn == 1,
 		})
 	}
 	return &pb.ListEnabledMetricChartsResponse{MetricCharts: pbCharts}, nil

@@ -86,6 +86,7 @@ func (this *MetricStatDAO) DeleteOldItemStats(tx *dbs.Tx, itemId int64, version 
 	_, err := this.Query(tx).
 		Attr("itemId", itemId).
 		Where("version<:version").
+		Param("version", version).
 		Delete()
 	return err
 }
@@ -123,7 +124,7 @@ func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32
 
 // FindItemStatsAtLastTime 取得所有集群最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
-func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
 	statOne, err := this.Query(tx).
 		Attr("itemId", itemId).
@@ -138,8 +139,7 @@ func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ver
 	}
 	var lastStat = statOne.(*MetricStat)
 	var lastTime = lastStat.Time
-
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("itemId", itemId).
 		Attr("version", version).
 		Attr("time", lastTime).
@@ -149,14 +149,26 @@ func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ver
 		Desc("value").
 		Group("keys").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+	_, err = query.
 		FindAll()
 	return
 }
 
 // FindItemStatsWithClusterIdAndLastTime 取得集群最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
-func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clusterId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clusterId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
 	statOne, err := this.Query(tx).
 		Attr("itemId", itemId).
@@ -172,7 +184,7 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 	var lastStat = statOne.(*MetricStat)
 	var lastTime = lastStat.Time
 
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("clusterId", clusterId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -183,14 +195,27 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 		Desc("value").
 		Group("keys").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	return
 }
 
 // FindItemStatsWithNodeIdAndLastTime 取得节点最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
-func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
 	statOne, err := this.Query(tx).
 		Attr("itemId", itemId).
@@ -205,8 +230,7 @@ func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId
 	}
 	var lastStat = statOne.(*MetricStat)
 	var lastTime = lastStat.Time
-
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -217,14 +241,27 @@ func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId
 		Desc("value").
 		Group("keys").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	return
 }
 
 // FindItemStatsWithServerIdAndLastTime 取得节点最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
-func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serverId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
+func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serverId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
 	statOne, err := this.Query(tx).
 		Attr("itemId", itemId).
@@ -240,7 +277,7 @@ func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serv
 	var lastStat = statOne.(*MetricStat)
 	var lastTime = lastStat.Time
 
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("serverId", serverId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -251,15 +288,28 @@ func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serv
 		Desc("value").
 		Group("keys").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	return
 }
 
 // FindLatestItemStats 取得所有集群上最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
-func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
-	_, err = this.Query(tx).
+func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
+	var query = this.Query(tx).
 		Attr("itemId", itemId).
 		Attr("version", version).
 		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
@@ -268,7 +318,20 @@ func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, version
 		Desc("time").
 		Group("time").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	if err != nil {
 		return nil, err
@@ -279,8 +342,8 @@ func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, version
 
 // FindLatestItemStatsWithClusterId 取得集群最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
-func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
-	_, err = this.Query(tx).
+func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
+	var query = this.Query(tx).
 		Attr("clusterId", clusterId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -290,7 +353,20 @@ func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterI
 		Desc("time").
 		Group("time").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	if err != nil {
 		return nil, err
@@ -301,8 +377,8 @@ func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterI
 
 // FindLatestItemStatsWithNodeId 取得节点最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
-func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
-	_, err = this.Query(tx).
+func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
+	var query = this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -312,7 +388,20 @@ func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int6
 		Desc("time").
 		Group("time").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	if err != nil {
 		return nil, err
@@ -323,8 +412,8 @@ func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int6
 
 // FindLatestItemStatsWithServerId 取得服务最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
-func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId int64, itemId int64, version int32, size int64) (result []*MetricStat, err error) {
-	_, err = this.Query(tx).
+func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
+	var query = this.Query(tx).
 		Attr("serverId", serverId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -334,7 +423,20 @@ func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId 
 		Desc("time").
 		Group("time").
 		Limit(size).
-		Slice(&result).
+		Slice(&result)
+	if ignoreEmptyKeys {
+		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+	}
+	if len(ignoreKeys) > 0 {
+		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+		if err != nil {
+			return nil, err
+		}
+		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	}
+
+	_, err = query.
 		FindAll()
 	if err != nil {
 		return nil, err

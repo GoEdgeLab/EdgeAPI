@@ -74,7 +74,7 @@ func (this *MetricChartDAO) FindMetricChartName(tx *dbs.Tx, chartId int64) (stri
 }
 
 // CreateChart 创建图表
-func (this *MetricChartDAO) CreateChart(tx *dbs.Tx, itemId int64, name string, chartType string, widthDiv int32, maxItems int32, params maps.Map) (int64, error) {
+func (this *MetricChartDAO) CreateChart(tx *dbs.Tx, itemId int64, name string, chartType string, widthDiv int32, maxItems int32, params maps.Map, ignoreEmptyKeys bool, ignoredKeys []string) (int64, error) {
 	op := NewMetricChartOperator()
 	op.ItemId = itemId
 	op.Name = name
@@ -90,13 +90,25 @@ func (this *MetricChartDAO) CreateChart(tx *dbs.Tx, itemId int64, name string, c
 		return 0, err
 	}
 	op.Params = paramsJSON
+	op.IgnoreEmptyKeys = ignoreEmptyKeys
+
+	if len(ignoredKeys) == 0 {
+		op.IgnoredKeys = "[]"
+	} else {
+		ignoredKeysJSON, err := json.Marshal(ignoredKeys)
+		if err != nil {
+			return 0, err
+		}
+		op.IgnoredKeys = ignoredKeysJSON
+	}
+
 	op.IsOn = true
 	op.State = MetricChartStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdateChart 修改图表
-func (this *MetricChartDAO) UpdateChart(tx *dbs.Tx, chartId int64, name string, chartType string, widthDiv int32, maxItems int32, params maps.Map, isOn bool) error {
+func (this *MetricChartDAO) UpdateChart(tx *dbs.Tx, chartId int64, name string, chartType string, widthDiv int32, maxItems int32, params maps.Map, ignoreEmptyKeys bool, ignoredKeys []string, isOn bool) error {
 	if chartId <= 0 {
 		return errors.New("invalid chartId")
 	}
@@ -115,6 +127,17 @@ func (this *MetricChartDAO) UpdateChart(tx *dbs.Tx, chartId int64, name string, 
 		return err
 	}
 	op.Params = paramsJSON
+	op.IgnoreEmptyKeys = ignoreEmptyKeys
+
+	if len(ignoredKeys) == 0 {
+		op.IgnoredKeys = "[]"
+	} else {
+		ignoredKeysJSON, err := json.Marshal(ignoredKeys)
+		if err != nil {
+			return err
+		}
+		op.IgnoredKeys = ignoredKeysJSON
+	}
 
 	op.IsOn = isOn
 
