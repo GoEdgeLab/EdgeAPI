@@ -506,12 +506,12 @@ func (this *APINode) listenSock() error {
 
 		err := this.sock.Listen()
 		if err != nil {
-			logs.Println("NODE", err.Error())
+			logs.Println("API_NODE", err.Error())
 		}
 	}()
 
 	events.On(events.EventQuit, func() {
-		logs.Println("NODE", "quit unix sock")
+		logs.Println("API_NODE", "quit unix sock")
 		_ = this.sock.Close()
 	})
 
