@@ -195,7 +195,7 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 
 	// 删除旧数据
 	if versionChanged {
-		err := SharedMetricStatDAO.DeleteOldItemStats(tx, itemId, types.Int32(oldItem.Version+1))
+		err := SharedMetricStatDAO.DeleteOldVersionItemStats(tx, itemId, types.Int32(oldItem.Version+1))
 		if err != nil {
 			return err
 		}

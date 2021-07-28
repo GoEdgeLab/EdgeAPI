@@ -27,6 +27,12 @@ func (this *MetricStatService) UploadMetricStats(ctx context.Context, req *pb.Up
 		return nil, err
 	}
 
+	// 删除旧的数据
+	err = models.SharedMetricStatDAO.DeleteNodeItemStats(tx, nodeId, req.ServerId, req.ItemId, req.Time)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, stat := range req.MetricStats {
 		err := models.SharedMetricStatDAO.CreateStat(tx, stat.Hash, clusterId, nodeId, req.ServerId, req.ItemId, stat.Keys, float64(stat.Value), req.Time, req.Version)
 		if err != nil {

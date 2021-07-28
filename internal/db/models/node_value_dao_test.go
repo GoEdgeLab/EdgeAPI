@@ -14,7 +14,7 @@ func TestNodeValueDAO_CreateValue(t *testing.T) {
 	m := maps.Map{
 		"hello": "world12344",
 	}
-	err := dao.CreateValue(nil, nodeconfigs.NodeRoleNode, 1, "test", m.AsJSON(), time.Now().Unix())
+	err := dao.CreateValue(nil, 1, nodeconfigs.NodeRoleNode, 1, "test", m.AsJSON(), time.Now().Unix())
 	if err != nil {
 		t.Fatal(err)
 	}

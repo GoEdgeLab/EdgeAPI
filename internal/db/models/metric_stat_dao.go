@@ -81,8 +81,8 @@ func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, 
 		})
 }
 
-// DeleteOldItemStats 删除以前版本的统计数据
-func (this *MetricStatDAO) DeleteOldItemStats(tx *dbs.Tx, itemId int64, version int32) error {
+// DeleteOldVersionItemStats 删除以前版本的统计数据
+func (this *MetricStatDAO) DeleteOldVersionItemStats(tx *dbs.Tx, itemId int64, version int32) error {
 	_, err := this.Query(tx).
 		Attr("itemId", itemId).
 		Where("version<:version").
@@ -95,6 +95,17 @@ func (this *MetricStatDAO) DeleteOldItemStats(tx *dbs.Tx, itemId int64, version 
 func (this *MetricStatDAO) DeleteItemStats(tx *dbs.Tx, itemId int64) error {
 	_, err := this.Query(tx).
 		Attr("itemId", itemId).
+		Delete()
+	return err
+}
+
+// DeleteNodeItemStats 删除某个节点的统计数据
+func (this *MetricStatDAO) DeleteNodeItemStats(tx *dbs.Tx, nodeId int64, serverId int64, itemId int64, time string) error {
+	_, err := this.Query(tx).
+		Attr("nodeId", nodeId).
+		Attr("serverId", serverId).
+		Attr("itemId", itemId).
+		Attr("time", time).
 		Delete()
 	return err
 }
@@ -134,6 +145,7 @@ func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ign
 	if err != nil {
 		return nil, err
 	}
+
 	if statOne == nil {
 		return nil, nil
 	}
