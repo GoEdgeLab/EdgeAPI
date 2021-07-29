@@ -6,14 +6,16 @@ import (
 	"errors"
 	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/iwind/TeaGo/logs"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -55,27 +57,31 @@ func (this *ESStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 		return nil
 	}
 
+	var requestId int64 = 1_0000_0000_0000_0000
+
 	bulk := &strings.Builder{}
-	id := time.Now().UnixNano()
 	indexName := this.FormatVariables(this.config.Index)
 	typeName := this.FormatVariables(this.config.MappingType)
 	for _, accessLog := range accessLogs {
-		id++
+		if len(accessLog.RequestId) == 0 {
+			accessLog.RequestId = strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.FormatInt(atomic.AddInt64(&requestId, 1), 10) + fmt.Sprintf("%08d", 1)
+		}
+
 		opData, err := json.Marshal(map[string]interface{}{
 			"index": map[string]interface{}{
 				"_index": indexName,
 				"_type":  typeName,
-				"_id":    fmt.Sprintf("%d", id),
+				"_id":    accessLog.RequestId,
 			},
 		})
 		if err != nil {
-			logs.Error(err)
+			remotelogs.Error("ACCESS_LOG_ES_STORAGE", "write failed: "+err.Error())
 			continue
 		}
 
 		data, err := this.Marshal(accessLog)
 		if err != nil {
-			logs.Error(err)
+			remotelogs.Error("ACCESS_LOG_ES_STORAGE", "marshal data failed: "+err.Error())
 			continue
 		}
 
