@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -109,6 +110,9 @@ func (this *APINode) Start() {
 
 	// 状态变更计时器
 	go NewNodeStatusExecutor().Listen()
+
+	// 访问日志存储管理器
+	go accesslogs.SharedStorageManager.Start()
 
 	// 监听RPC服务
 	remotelogs.Println("API_NODE", "starting RPC server ...")

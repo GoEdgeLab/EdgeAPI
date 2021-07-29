@@ -1,12 +1,13 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 )
 
 const (
@@ -35,12 +36,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPAccessLogPolicyDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPAccessLogPolicy 启用条目
 func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -49,7 +50,7 @@ func (this *HTTPAccessLogPolicyDAO) EnableHTTPAccessLogPolicy(tx *dbs.Tx, id int
 	return err
 }
 
-// 禁用条目
+// DisableHTTPAccessLogPolicy 禁用条目
 func (this *HTTPAccessLogPolicyDAO) DisableHTTPAccessLogPolicy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -58,7 +59,7 @@ func (this *HTTPAccessLogPolicyDAO) DisableHTTPAccessLogPolicy(tx *dbs.Tx, id in
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPAccessLogPolicy 查找启用中的条目
 func (this *HTTPAccessLogPolicyDAO) FindEnabledHTTPAccessLogPolicy(tx *dbs.Tx, id int64) (*HTTPAccessLogPolicy, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -70,7 +71,7 @@ func (this *HTTPAccessLogPolicyDAO) FindEnabledHTTPAccessLogPolicy(tx *dbs.Tx, i
 	return result.(*HTTPAccessLogPolicy), err
 }
 
-// 根据主键查找名称
+// FindHTTPAccessLogPolicyName 根据主键查找名称
 func (this *HTTPAccessLogPolicyDAO) FindHTTPAccessLogPolicyName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -78,51 +79,116 @@ func (this *HTTPAccessLogPolicyDAO) FindHTTPAccessLogPolicyName(tx *dbs.Tx, id i
 		FindStringCol("")
 }
 
-// 查找所有可用策略信息
-func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAccessLogPolicies(tx *dbs.Tx) (result []*HTTPAccessLogPolicy, err error) {
+// CountAllEnabledPolicies 计算策略数量
+func (this *HTTPAccessLogPolicyDAO) CountAllEnabledPolicies(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(HTTPAccessLogPolicyStateEnabled).
+		Count()
+}
+
+// ListEnabledPolicies 查找所有可用策略信息
+func (this *HTTPAccessLogPolicyDAO) ListEnabledPolicies(tx *dbs.Tx, offset int64, size int64) (result []*HTTPAccessLogPolicy, err error) {
 	_, err = this.Query(tx).
 		State(HTTPAccessLogPolicyStateEnabled).
 		DescPk().
+		Offset(offset).
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
-// 组合配置
-func (this *HTTPAccessLogPolicyDAO) ComposeAccessLogPolicyConfig(tx *dbs.Tx, policyId int64) (*serverconfigs.HTTPAccessLogStoragePolicy, error) {
-	policy, err := this.FindEnabledHTTPAccessLogPolicy(tx, policyId)
+// FindAllEnabledAndOnPolicies 获取所有的策略信息
+func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAndOnPolicies(tx *dbs.Tx) (result []*HTTPAccessLogPolicy, err error) {
+	_, err = this.Query(tx).
+		State(HTTPAccessLogPolicyStateEnabled).
+		Attr("isOn", true).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// CreatePolicy 创建策略
+func (this *HTTPAccessLogPolicyDAO) CreatePolicy(tx *dbs.Tx, name string, policyType string, optionsJSON []byte, condsJSON []byte, isPublic bool) (policyId int64, err error) {
+	var op = NewHTTPAccessLogPolicyOperator()
+	op.Name = name
+	op.Type = policyType
+	if len(optionsJSON) > 0 {
+		op.Options = optionsJSON
+	}
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	}
+	op.IsPublic = isPublic
+	op.IsOn = true
+	op.State = HTTPAccessLogPolicyStateEnabled
+	return this.SaveInt64(tx, op)
+}
+
+// UpdatePolicy 修改策略
+func (this *HTTPAccessLogPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, name string, optionsJSON []byte, condsJSON []byte, isPublic bool, isOn bool) error {
+	if policyId <= 0 {
+		return errors.New("invalid policyId")
+	}
+
+	oldOne, err := this.Query(tx).
+		Pk(policyId).
+		Find()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if policy == nil {
-		return nil, nil
+	if oldOne == nil {
+		return nil
+	}
+	var oldPolicy = oldOne.(*HTTPAccessLogPolicy)
+
+	var op = NewHTTPAccessLogPolicyOperator()
+	op.Id = policyId
+	op.Name = name
+	if len(optionsJSON) > 0 {
+		op.Options = optionsJSON
+	} else {
+		op.Options = "{}"
+	}
+	if len(condsJSON) > 0 {
+		op.Conds = condsJSON
+	} else {
+		op.Conds = "{}"
 	}
 
-	config := &serverconfigs.HTTPAccessLogStoragePolicy{}
-	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
-	config.Name = policy.Name
-	config.Type = policy.Type
+	// 版本号
+	if len(oldPolicy.Options) == 0 || len(optionsJSON) == 0 {
+		op.Version = dbs.SQL("version+1")
+	} else {
+		var m1 = maps.Map{}
+		_ = json.Unmarshal([]byte(oldPolicy.Options), &m1)
 
-	// 选项
-	if IsNotNull(policy.Options) {
-		m := map[string]interface{}{}
-		err = json.Unmarshal([]byte(policy.Options), &m)
-		if err != nil {
-			return nil, err
+		var m2 = maps.Map{}
+		_ = json.Unmarshal(optionsJSON, &m2)
+
+		if bytes.Compare(m1.AsJSON(), m2.AsJSON()) != 0 {
+			op.Version = dbs.SQL("version+1")
 		}
-		config.Options = m
 	}
 
-	// 条件
-	if IsNotNull(policy.Conds) {
-		condsConfig := &shared.HTTPRequestCondsConfig{}
-		err = json.Unmarshal([]byte(policy.Conds), condsConfig)
-		if err != nil {
-			return nil, err
-		}
-		config.Conds = condsConfig
-	}
+	op.IsPublic = isPublic
+	op.IsOn = isOn
+	return this.Save(tx, op)
+}
 
-	return config, nil
+// CancelAllPublicPolicies 取消别的公用的策略
+func (this *HTTPAccessLogPolicyDAO) CancelAllPublicPolicies(tx *dbs.Tx) error {
+	return this.Query(tx).
+		State(HTTPAccessLogPolicyStateEnabled).
+		Set("isPublic", 0).
+		UpdateQuickly()
+}
+
+// FindCurrentPublicPolicyId 取得当前的公用策略
+func (this *HTTPAccessLogPolicyDAO) FindCurrentPublicPolicyId(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(HTTPAccessLogPolicyStateEnabled).
+		Attr("isPublic", 1).
+		ResultPk().
+		FindInt64Col(0)
 }

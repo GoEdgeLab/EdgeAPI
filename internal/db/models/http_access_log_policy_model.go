@@ -1,6 +1,6 @@
 package models
 
-// 访问日志策略
+// HTTPAccessLogPolicy 访问日志策略
 type HTTPAccessLogPolicy struct {
 	Id         uint32 `field:"id"`         // ID
 	TemplateId uint32 `field:"templateId"` // 模版ID
@@ -13,6 +13,8 @@ type HTTPAccessLogPolicy struct {
 	Type       string `field:"type"`       // 存储类型
 	Options    string `field:"options"`    // 存储选项
 	Conds      string `field:"conds"`      // 请求条件
+	IsPublic   uint8  `field:"isPublic"`   // 是否为公用
+	Version    uint32 `field:"version"`    // 版本号
 }
 
 type HTTPAccessLogPolicyOperator struct {
@@ -27,6 +29,8 @@ type HTTPAccessLogPolicyOperator struct {
 	Type       interface{} // 存储类型
 	Options    interface{} // 存储选项
 	Conds      interface{} // 请求条件
+	IsPublic   interface{} // 是否为公用
+	Version    interface{} // 版本号
 }
 
 func NewHTTPAccessLogPolicyOperator() *HTTPAccessLogPolicyOperator {
