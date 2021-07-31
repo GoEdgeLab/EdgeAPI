@@ -19,6 +19,7 @@ import (
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"net"
 	"path/filepath"
+	"strings"
 )
 
 // NodeService 边缘节点相关服务
@@ -49,10 +50,23 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 	}
 
 	// 保存DNS相关
-	if req.DnsDomainId > 0 && len(req.DnsRoutes) > 0 {
-		err = models.SharedNodeDAO.UpdateNodeDNS(tx, nodeId, map[int64][]string{
-			req.DnsDomainId: req.DnsRoutes,
-		})
+	if len(req.DnsRoutes) > 0 {
+		var routesMap = map[int64][]string{}
+		var m = map[int64][]string{} // domainId => codes
+		for _, route := range req.DnsRoutes {
+			var pieces = strings.SplitN(route, "@", 2)
+			if len(pieces) != 2 {
+				continue
+			}
+			var code = pieces[0]
+			var domainId = types.Int64(pieces[1])
+			m[domainId] = append(m[domainId], code)
+		}
+		for domainId, codes := range m {
+			routesMap[domainId] = codes
+		}
+
+		err = models.SharedNodeDAO.UpdateNodeDNS(tx, nodeId, routesMap)
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +149,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, true)
 	if err != nil {
 		return nil, err
 	}
@@ -188,16 +202,30 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		order = "trafficOutDesc"
 	}
 
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, order, req.Offset, req.Size)
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, true, order, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	result := []*pb.Node{}
 	for _, node := range nodes {
-		// 集群信息
+		// 主集群信息
 		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(node.ClusterId))
 		if err != nil {
 			return nil, err
+		}
+
+		// 从集群
+		secondaryClusters, err := models.SharedNodeClusterDAO.FindEnabledNodeClustersWithIds(tx, node.DecodeSecondaryClusterIds())
+		if err != nil {
+			return nil, err
+		}
+		var pbSecondaryClusters = []*pb.NodeCluster{}
+		for _, secondaryCluster := range secondaryClusters {
+			pbSecondaryClusters = append(pbSecondaryClusters, &pb.NodeCluster{
+				Id:   int64(secondaryCluster.Id),
+				IsOn: secondaryCluster.IsOn == 1,
+				Name: secondaryCluster.Name,
+			})
 		}
 
 		// 安装信息
@@ -276,13 +304,14 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
 			},
-			InstallStatus: installStatusResult,
-			MaxCPU:        types.Int32(node.MaxCPU),
-			IsOn:          node.IsOn == 1,
-			IsUp:          node.IsUp == 1,
-			NodeGroup:     pbGroup,
-			NodeRegion:    pbRegion,
-			DnsRoutes:     pbRoutes,
+			SecondaryNodeClusters: pbSecondaryClusters,
+			InstallStatus:         installStatusResult,
+			MaxCPU:                types.Int32(node.MaxCPU),
+			IsOn:                  node.IsOn == 1,
+			IsUp:                  node.IsUp == 1,
+			NodeGroup:             pbGroup,
+			NodeRegion:            pbRegion,
+			DnsRoutes:             pbRoutes,
 		})
 	}
 
@@ -354,6 +383,22 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 	return this.Success()
 }
 
+// DeleteNodeFromNodeCluster 从集群中删除节点
+func (this *NodeService) DeleteNodeFromNodeCluster(ctx context.Context, req *pb.DeleteNodeFromNodeClusterRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	err = models.SharedNodeDAO.DeleteNodeFromCluster(tx, req.NodeId, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // UpdateNode 修改节点
 func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -385,7 +430,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		}
 	}
 
-	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.NodeGroupId, req.NodeRegionId, req.MaxCPU, req.IsOn, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
+	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.MaxCPU, req.IsOn, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -410,10 +455,26 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 	}
 
 	// 保存DNS相关
-	if req.DnsDomainId > 0 && len(req.DnsRoutes) > 0 {
-		err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, map[int64][]string{
-			req.DnsDomainId: req.DnsRoutes,
-		})
+	nodeDNS, err := models.SharedNodeDAO.FindEnabledNodeDNS(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if nodeDNS != nil {
+		var routesMap = nodeDNS.DNSRouteCodes()
+		var m = map[int64][]string{} // domainId => codes
+		for _, route := range req.DnsRoutes {
+			var pieces = strings.SplitN(route, "@", 2)
+			if len(pieces) != 2 {
+				continue
+			}
+			var code = pieces[0]
+			var domainId = types.Int64(pieces[1])
+			m[domainId] = append(m[domainId], code)
+		}
+		for domainId, codes := range m {
+			routesMap[domainId] = codes
+		}
+		err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, routesMap)
 		if err != nil {
 			return nil, err
 		}
@@ -439,10 +500,27 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		return &pb.FindEnabledNodeResponse{Node: nil}, nil
 	}
 
-	// 集群信息
+	// 主集群信息
 	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(node.ClusterId))
 	if err != nil {
 		return nil, err
+	}
+
+	// 从集群信息
+	var secondaryPBClusters []*pb.NodeCluster
+	for _, secondaryClusterId := range node.DecodeSecondaryClusterIds() {
+		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, secondaryClusterId)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			continue
+		}
+		secondaryPBClusters = append(secondaryPBClusters, &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			IsOn: cluster.IsOn == 1,
+			Name: cluster.Name,
+		})
 	}
 
 	// 认证信息
@@ -542,6 +620,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
 		},
+		SecondaryNodeClusters:  secondaryPBClusters,
 		Login:                  respLogin,
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
@@ -1117,7 +1196,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		return nil, err
 	}
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1155,10 +1234,11 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 				continue
 			}
 			result = append(result, &pb.NodeDNSInfo{
-				Id:     int64(node.Id),
-				Name:   node.Name,
-				IpAddr: ip,
-				Routes: pbRoutes,
+				Id:            int64(node.Id),
+				Name:          node.Name,
+				IpAddr:        ip,
+				Routes:        pbRoutes,
+				NodeClusterId: req.NodeClusterId,
 			})
 		}
 	}
@@ -1189,7 +1269,11 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return nil, err
 	}
 
-	clusterId := int64(node.ClusterId)
+	var clusterId = int64(node.ClusterId)
+	if req.NodeClusterId > 0 {
+		clusterId = req.NodeClusterId
+	}
+
 	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
 	if err != nil {
 		return nil, err
@@ -1256,13 +1340,25 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 		return nil, errors.New("node not found")
 	}
 
-	routeCodeMap, err := node.DNSRouteCodes()
-	if err != nil {
-		return nil, err
-	}
+	routeCodeMap := node.DNSRouteCodes()
 	if req.DnsDomainId > 0 && len(req.Routes) > 0 {
-		routeCodeMap[req.DnsDomainId] = req.Routes
+		var m = map[int64][]string{} // domainId => codes
+		for _, route := range req.Routes {
+			var pieces = strings.SplitN(route, "@", 2)
+			if len(pieces) != 2 {
+				continue
+			}
+			var code = pieces[0]
+			var domainId = types.Int64(pieces[1])
+			m[domainId] = append(m[domainId], code)
+		}
+		for domainId, codes := range m {
+			routeCodeMap[domainId] = codes
+		}
+	} else {
+		delete(routeCodeMap, req.DnsDomainId)
 	}
+
 
 	err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, routeCodeMap)
 	if err != nil {

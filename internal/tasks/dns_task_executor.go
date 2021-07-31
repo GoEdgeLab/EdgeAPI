@@ -234,15 +234,16 @@ func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
 		return nil
 	}
 
-	if node.ClusterId == 0 {
-		isOk = true
-		return nil
-	}
-
 	// 转交给cluster统一处理
-	err = dnsmodels.SharedDNSTaskDAO.CreateClusterTask(tx, int64(node.ClusterId), dnsmodels.DNSTaskTypeClusterChange)
+	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
 	if err != nil {
 		return err
+	}
+	for _, clusterId := range clusterIds {
+		err = dnsmodels.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dnsmodels.DNSTaskTypeClusterChange)
+		if err != nil {
+			return err
+		}
 	}
 
 	isOk = true
@@ -287,7 +288,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 
 	// 当前的节点记录
 	newRecordKeys := []string{}
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
 	if err != nil {
 		return err
 	}

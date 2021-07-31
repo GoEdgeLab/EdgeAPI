@@ -380,7 +380,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, dn
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
 		Attr("dnsDomainId", dnsDomainId).
-		Result("id", "name", "dnsName", "dnsDomainId").
+		Result("id", "name", "dnsName", "dnsDomainId", "isOn").
 		Slice(&result).
 		FindAll()
 	return
@@ -391,7 +391,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersHaveDNSDomain(tx *dbs.Tx) (res
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
 		Gt("dnsDomainId", 0).
-		Result("id", "name", "dnsName", "dnsDomainId").
+		Result("id", "name", "dnsName", "dnsDomainId", "isOn").
 		Slice(&result).
 		FindAll()
 	return
@@ -409,7 +409,7 @@ func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int
 func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64) (*NodeCluster, error) {
 	one, err := this.Query(tx).
 		Pk(clusterId).
-		Result("id", "name", "dnsName", "dnsDomainId", "dns").
+		Result("id", "name", "dnsName", "dnsDomainId", "dns", "isOn").
 		Find()
 	if err != nil {
 		return nil, err
@@ -499,7 +499,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 	// TODO 检查域名是否已解析
 
 	// 检查节点
-	nodes, err := SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId)
+	nodes, err := SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
 	if err != nil {
 		return nil, err
 	}
@@ -834,6 +834,36 @@ func (this *NodeClusterDAO) FindLatestNodeClusters(tx *dbs.Tx, size int64) (resu
 		Limit(size).
 		Slice(&result).
 		FindAll()
+	return
+}
+
+// CheckNodeClusterIsOn 获取集群是否正在启用状态
+func (this *NodeClusterDAO) CheckNodeClusterIsOn(tx *dbs.Tx, clusterId int64) (bool, error) {
+	return this.Query(tx).
+		Pk(clusterId).
+		State(NodeClusterStateEnabled).
+		Attr("isOn", true).
+		Exist()
+}
+
+// FindEnabledNodeClustersWithIds 查找一组集群
+func (this *NodeClusterDAO) FindEnabledNodeClustersWithIds(tx *dbs.Tx, clusterIds []int64) (result []*NodeCluster, err error) {
+	if len(clusterIds) == 0 {
+		return
+	}
+	for _, clusterId := range clusterIds {
+		cluster, err := this.Query(tx).
+			Pk(clusterId).
+			State(NodeClusterStateEnabled).
+			Find()
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			continue
+		}
+		result = append(result, cluster.(*NodeCluster))
+	}
 	return
 }
 

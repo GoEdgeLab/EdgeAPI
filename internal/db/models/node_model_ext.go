@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// 安装状态
+// DecodeInstallStatus 安装状态
 func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 	if len(this.InstallStatus) == 0 || this.InstallStatus == "null" {
 		return NewNodeInstallStatus(), nil
@@ -27,7 +27,7 @@ func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 	return status, nil
 }
 
-// 节点状态
+// DecodeStatus 节点状态
 func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 	if len(this.Status) == 0 || this.Status == "null" {
 		return nil, nil
@@ -40,20 +40,21 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 	return status, nil
 }
 
-// 所有的DNS线路
-func (this *Node) DNSRouteCodes() (map[int64][]string, error) {
+// DNSRouteCodes 所有的DNS线路
+func (this *Node) DNSRouteCodes() map[int64][]string {
 	routes := map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 || this.DnsRoutes == "null" {
-		return routes, nil
+		return routes
 	}
 	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
 	if err != nil {
-		return map[int64][]string{}, err
+		// 忽略错误
+		return routes
 	}
-	return routes, nil
+	return routes
 }
 
-// DNS线路
+// DNSRouteCodesForDomainId DNS线路
 func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) {
 	routes := map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 || this.DnsRoutes == "null" {
@@ -67,7 +68,7 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 	return domainRoutes, nil
 }
 
-// 连接的API
+// DecodeConnectedAPINodeIds 连接的API
 func (this *Node) DecodeConnectedAPINodeIds() ([]int64, error) {
 	apiNodeIds := []int64{}
 	if IsNotNull(this.ConnectedAPINodes) {
@@ -77,4 +78,15 @@ func (this *Node) DecodeConnectedAPINodeIds() ([]int64, error) {
 		}
 	}
 	return apiNodeIds, nil
+}
+
+// DecodeSecondaryClusterIds 从集群IDs
+func (this *Node) DecodeSecondaryClusterIds() []int64 {
+	if len(this.SecondaryClusterIds) == 0 {
+		return []int64{}
+	}
+	var result = []int64{}
+	// 不需要处理错误
+	_ = json.Unmarshal([]byte(this.SecondaryClusterIds), &result)
+	return result
 }

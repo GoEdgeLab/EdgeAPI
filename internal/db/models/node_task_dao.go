@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"time"
 )
 
@@ -39,7 +40,7 @@ func init() {
 	})
 }
 
-// 创建单个节点任务
+// CreateNodeTask 创建单个节点任务
 func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, clusterId int64, nodeId int64, taskType NodeTaskType) error {
 	if clusterId <= 0 || nodeId <= 0 {
 		return nil
@@ -66,7 +67,7 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, clusterId int64, nodeId int6
 	return err
 }
 
-// 创建集群任务
+// CreateClusterTask 创建集群任务
 func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, clusterId int64, taskType NodeTaskType) error {
 	if clusterId <= 0 {
 		return nil
@@ -95,15 +96,16 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, clusterId int64, taskType
 	return err
 }
 
-// 分解集群任务
+// ExtractClusterTask 分解集群任务
 func (this *NodeTaskDAO) ExtractClusterTask(tx *dbs.Tx, clusterId int64, taskType NodeTaskType) error {
-	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(tx, clusterId, configutils.BoolStateYes)
+	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(tx, clusterId, true, configutils.BoolStateYes)
 	if err != nil {
 		return err
 	}
 
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
+		Param("clusterIdString", types.String(clusterId)).
 		Where("nodeId> 0").
 		Attr("type", taskType).
 		Delete()
@@ -130,7 +132,7 @@ func (this *NodeTaskDAO) ExtractClusterTask(tx *dbs.Tx, clusterId int64, taskTyp
 	return nil
 }
 
-// 分解所有集群任务
+// ExtractAllClusterTasks 分解所有集群任务
 func (this *NodeTaskDAO) ExtractAllClusterTasks(tx *dbs.Tx) error {
 	ones, err := this.Query(tx).
 		Attr("nodeId", 0).
@@ -148,7 +150,7 @@ func (this *NodeTaskDAO) ExtractAllClusterTasks(tx *dbs.Tx) error {
 	return nil
 }
 
-// 删除集群所有相关任务
+// DeleteAllClusterTasks 删除集群所有相关任务
 func (this *NodeTaskDAO) DeleteAllClusterTasks(tx *dbs.Tx, clusterId int64) error {
 	_, err := this.Query(tx).
 		Attr("clusterId", clusterId).
@@ -156,7 +158,7 @@ func (this *NodeTaskDAO) DeleteAllClusterTasks(tx *dbs.Tx, clusterId int64) erro
 	return err
 }
 
-// 删除节点相关任务
+// DeleteNodeTasks 删除节点相关任务
 func (this *NodeTaskDAO) DeleteNodeTasks(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
 		Attr("nodeId", nodeId).
@@ -164,7 +166,7 @@ func (this *NodeTaskDAO) DeleteNodeTasks(tx *dbs.Tx, nodeId int64) error {
 	return err
 }
 
-// 查询一个节点的所有任务
+// FindDoingNodeTasks 查询一个节点的所有任务
 func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, nodeId int64) (result []*NodeTask, err error) {
 	if nodeId <= 0 {
 		return
@@ -177,7 +179,7 @@ func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, nodeId int64) (result []
 	return
 }
 
-// 修改节点任务的完成状态
+// UpdateNodeTaskDone 修改节点任务的完成状态
 func (this *NodeTaskDAO) UpdateNodeTaskDone(tx *dbs.Tx, taskId int64, isOk bool, errorMessage string) error {
 	_, err := this.Query(tx).
 		Pk(taskId).
@@ -188,7 +190,7 @@ func (this *NodeTaskDAO) UpdateNodeTaskDone(tx *dbs.Tx, taskId int64, isOk bool,
 	return err
 }
 
-// 查找正在更新的集群IDs
+// FindAllDoingTaskClusterIds 查找正在更新的集群IDs
 func (this *NodeTaskDAO) FindAllDoingTaskClusterIds(tx *dbs.Tx) ([]int64, error) {
 	ones, _, err := this.Query(tx).
 		Result("DISTINCT(clusterId) AS clusterId").
@@ -204,7 +206,7 @@ func (this *NodeTaskDAO) FindAllDoingTaskClusterIds(tx *dbs.Tx) ([]int64, error)
 	return result, nil
 }
 
-// 查询某个集群下所有的任务
+// FindAllDoingNodeTasksWithClusterId 查询某个集群下所有的任务
 func (this *NodeTaskDAO) FindAllDoingNodeTasksWithClusterId(tx *dbs.Tx, clusterId int64) (result []*NodeTask, err error) {
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
@@ -218,7 +220,7 @@ func (this *NodeTaskDAO) FindAllDoingNodeTasksWithClusterId(tx *dbs.Tx, clusterI
 	return
 }
 
-// 检查是否有正在执行的任务
+// ExistsDoingNodeTasks 检查是否有正在执行的任务
 func (this *NodeTaskDAO) ExistsDoingNodeTasks(tx *dbs.Tx) (bool, error) {
 	return this.Query(tx).
 		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
@@ -226,14 +228,14 @@ func (this *NodeTaskDAO) ExistsDoingNodeTasks(tx *dbs.Tx) (bool, error) {
 		Exist()
 }
 
-// 是否有错误的任务
+// ExistsErrorNodeTasks 是否有错误的任务
 func (this *NodeTaskDAO) ExistsErrorNodeTasks(tx *dbs.Tx) (bool, error) {
 	return this.Query(tx).
 		Where("(isDone=1 AND isOk=0)").
 		Exist()
 }
 
-// 删除任务
+// DeleteNodeTask 删除任务
 func (this *NodeTaskDAO) DeleteNodeTask(tx *dbs.Tx, taskId int64) error {
 	_, err := this.Query(tx).
 		Pk(taskId).
@@ -241,7 +243,7 @@ func (this *NodeTaskDAO) DeleteNodeTask(tx *dbs.Tx, taskId int64) error {
 	return err
 }
 
-// 计算正在执行的任务
+// CountDoingNodeTasks 计算正在执行的任务
 func (this *NodeTaskDAO) CountDoingNodeTasks(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		Attr("isDone", 0).
@@ -249,7 +251,7 @@ func (this *NodeTaskDAO) CountDoingNodeTasks(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
-// 查找需要通知的任务
+// FindNotifyingNodeTasks 查找需要通知的任务
 func (this *NodeTaskDAO) FindNotifyingNodeTasks(tx *dbs.Tx, size int64) (result []*NodeTask, err error) {
 	_, err = this.Query(tx).
 		Gt("nodeId", 0).
@@ -261,7 +263,7 @@ func (this *NodeTaskDAO) FindNotifyingNodeTasks(tx *dbs.Tx, size int64) (result 
 	return
 }
 
-// 设置任务已通知
+// UpdateTasksNotified 设置任务已通知
 func (this *NodeTaskDAO) UpdateTasksNotified(tx *dbs.Tx, taskIds []int64) error {
 	if len(taskIds) == 0 {
 		return nil

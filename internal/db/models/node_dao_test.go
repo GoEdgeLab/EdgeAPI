@@ -24,3 +24,13 @@ func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+func TestNodeDAO_FindEnabledNodeClusterIds(t *testing.T) {
+	dbs.NotifyReady()
+	var tx *dbs.Tx
+	clusterIds, err := NewNodeDAO().FindEnabledAndOnNodeClusterIds(tx, 48)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(clusterIds)
+}

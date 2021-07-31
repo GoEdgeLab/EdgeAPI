@@ -134,5 +134,16 @@ func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
 		}
 		t.Log(exist)
 	}
+}
 
+func TestServerDAO_FindAllEnabledServersWithNode(t *testing.T) {
+	dbs.NotifyReady()
+
+	servers, err := SharedServerDAO.FindAllEnabledServersWithNode(nil, 48)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, server := range servers {
+		t.Log("serverId:", server.Id, "clusterId:", server.ClusterId)
+	}
 }

@@ -78,8 +78,19 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
+	if req.NodeClusterId <= 0 {
+		return this.Success()
+	}
+
 	tx := this.NullTx()
 
+	// 转移节点
+	err = models.SharedNodeDAO.TransferPrimaryClusterNodes(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 删除集群
 	err = models.SharedNodeClusterDAO.DisableNodeCluster(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
@@ -128,6 +139,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		HttpFirewallPolicyId: int64(cluster.HttpFirewallPolicyId),
 		DnsName:              cluster.DnsName,
 		DnsDomainId:          int64(cluster.DnsDomainId),
+		IsOn:                 cluster.IsOn == 1,
 	}}, nil
 }
 
@@ -208,6 +220,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 			CreatedAt: int64(cluster.CreatedAt),
 			UniqueId:  cluster.UniqueId,
 			Secret:    cluster.Secret,
+			IsOn:      cluster.IsOn == 1,
 		})
 	}
 
@@ -259,6 +272,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			Secret:      cluster.Secret,
 			DnsName:     cluster.DnsName,
 			DnsDomainId: int64(cluster.DnsDomainId),
+			IsOn:        cluster.IsOn == 1,
 		})
 	}
 
@@ -372,6 +386,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx co
 			CreatedAt: int64(cluster.CreatedAt),
 			UniqueId:  cluster.UniqueId,
 			Secret:    cluster.Secret,
+			IsOn:      cluster.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithNodeGrantIdResponse{NodeClusters: result}, nil
@@ -511,6 +526,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 			Name:        cluster.Name,
 			DnsName:     cluster.DnsName,
 			DnsDomainId: int64(cluster.DnsDomainId),
+			IsOn:        cluster.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse{NodeClusters: result}, nil
@@ -666,6 +682,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(
 		result = append(result, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
+			IsOn: cluster.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdResponse{
@@ -707,6 +724,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicy
 		result = append(result, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
+			IsOn: cluster.IsOn == 1,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdResponse{
@@ -884,6 +902,7 @@ func (this *NodeClusterService) FindLatestNodeClusters(ctx context.Context, req 
 		pbClusters = append(pbClusters, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
+			IsOn: cluster.IsOn == 1,
 		})
 	}
 	return &pb.FindLatestNodeClustersResponse{NodeClusters: pbClusters}, nil

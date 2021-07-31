@@ -710,21 +710,24 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 
 // FindAllEnabledServersWithNode 获取节点中的所有服务
 func (this *ServerDAO) FindAllEnabledServersWithNode(tx *dbs.Tx, nodeId int64) (result []*Server, err error) {
-	// 节点所在集群
-	clusterId, err := SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	// 节点所在主集群
+	clusterIds, err := SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}
-	if clusterId <= 0 {
-		return nil, nil
+	for _, clusterId := range clusterIds {
+		ones, err := this.Query(tx).
+			Attr("clusterId", clusterId).
+			State(ServerStateEnabled).
+			AscPk().
+			FindAll()
+		if err != nil {
+			return nil, err
+		}
+		for _, one := range ones {
+			result = append(result, one.(*Server))
+		}
 	}
-
-	_, err = this.Query(tx).
-		Attr("clusterId", clusterId).
-		State(ServerStateEnabled).
-		AscPk().
-		Slice(&result).
-		FindAll()
 	return
 }
 
