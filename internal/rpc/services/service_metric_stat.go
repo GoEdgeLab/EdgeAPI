@@ -22,7 +22,7 @@ func (this *MetricStatService) UploadMetricStats(ctx context.Context, req *pb.Up
 	}
 
 	var tx = this.NullTx()
-	clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
 	if err != nil {
 		return nil, err
 	}

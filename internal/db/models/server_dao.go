@@ -787,6 +787,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 
 	config := &serverconfigs.ServerConfig{}
 	config.Id = serverId
+	config.ClusterId = int64(server.ClusterId)
 	config.Type = server.Type
 	config.IsOn = server.IsOn == 1
 	config.Name = server.Name

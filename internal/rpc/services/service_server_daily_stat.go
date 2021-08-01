@@ -33,11 +33,6 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 
 	var clusterId int64
 	switch role {
-	case rpcutils.UserTypeNode:
-		clusterId, err = models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
-		if err != nil {
-			return nil, err
-		}
 	case rpcutils.UserTypeDNS:
 		clusterId, err = nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 		if err != nil {
@@ -48,6 +43,13 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 	// 写入其他统计表
 	// TODO 将来改成每小时入库一次
 	for _, stat := range req.Stats {
+		if role == rpcutils.UserTypeNode {
+			clusterId, err = models.SharedServerDAO.FindServerClusterId(tx, stat.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// 总体流量（按天）
 		err = stats.SharedTrafficDailyStatDAO.IncreaseDailyStat(tx, timeutil.FormatTime("Ymd", stat.CreatedAt), stat.Bytes, stat.CachedBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests, stat.AttackBytes)
 		if err != nil {
@@ -84,6 +86,13 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 
 	// 域名统计
 	for _, stat := range req.DomainStats {
+		if role == rpcutils.UserTypeNode {
+			clusterId, err = models.SharedServerDAO.FindServerClusterId(tx, stat.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		err := stats.SharedServerDomainHourlyStatDAO.IncreaseHourlyStat(tx, clusterId, nodeId, stat.ServerId, stat.Domain, timeutil.FormatTime("YmdH", stat.CreatedAt), stat.Bytes, stat.CachedBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests, stat.AttackBytes)
 		if err != nil {
 			return nil, err

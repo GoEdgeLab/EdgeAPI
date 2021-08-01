@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -95,9 +96,17 @@ func (this *NodeValueDAO) ListValues(tx *dbs.Tx, role string, nodeId int64, item
 func (this *NodeValueDAO) ListValuesWithClusterId(tx *dbs.Tx, role string, clusterId int64, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
 	query := this.Query(tx).
 		Attr("role", role).
-		Attr("clusterId", clusterId).
 		Attr("item", item).
 		Result("AVG(JSON_EXTRACT(value, '$." + key + "')) AS value, MIN(createdAt) AS createdAt")
+
+	switch role {
+	case nodeconfigs.NodeRoleNode:
+		query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE (clusterId=:clusterId OR JSON_CONTAINS(secondaryClusterIds, :clusterIdString)) AND state=1)")
+		query.Param("clusterId", clusterId).
+			Param("clusterIdString", types.String(clusterId))
+	default:
+		query.Attr("clusterId", clusterId)
+	}
 
 	switch timeRange {
 	// TODO 支持更多的时间范围
@@ -139,7 +148,6 @@ func (this *NodeValueDAO) ListValuesForUserNodes(tx *dbs.Tx, item string, key st
 		FindAll()
 	return
 }
-
 
 // ListValuesForNSNodes 列出用户节点相关的平均数据
 func (this *NodeValueDAO) ListValuesForNSNodes(tx *dbs.Tx, item string, key string, timeRange nodeconfigs.NodeValueRange) (result []*NodeValue, err error) {
