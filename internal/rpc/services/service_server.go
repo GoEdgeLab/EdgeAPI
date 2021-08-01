@@ -733,7 +733,7 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 		}
 	}
 
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, req.ServerId)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId)
 	if err != nil {
 		return nil, err
 	}

@@ -646,10 +646,12 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 			continue
 		}
 
-		serverConfig := &serverconfigs.ServerConfig{}
-		err = json.Unmarshal([]byte(server.Config), serverConfig)
+		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server)
 		if err != nil {
 			return nil, err
+		}
+		if serverConfig == nil {
+			continue
 		}
 		config.Servers = append(config.Servers, serverConfig)
 	}
@@ -669,34 +671,37 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		config.GlobalConfig = globalConfig
 	}
 
-	// WAF
-	clusterId := int64(node.ClusterId)
-	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId)
-	if err != nil {
-		return nil, err
-	}
-	if httpFirewallPolicyId > 0 {
-		firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId)
+	var primaryClusterId = int64(node.ClusterId)
+	var clusterIds = []int64{primaryClusterId}
+	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
+	for _, clusterId := range clusterIds {
+		httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId)
 		if err != nil {
 			return nil, err
 		}
-		if firewallPolicy != nil {
-			config.HTTPFirewallPolicy = firewallPolicy
+		if httpFirewallPolicyId > 0 {
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if firewallPolicy != nil {
+				config.HTTPFirewallPolicies = append(config.HTTPFirewallPolicies, firewallPolicy)
+			}
 		}
-	}
 
-	// 缓存策略
-	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId)
-	if err != nil {
-		return nil, err
-	}
-	if httpCachePolicyId > 0 {
-		cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId)
+		// 缓存策略
+		httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId)
 		if err != nil {
 			return nil, err
 		}
-		if cachePolicy != nil {
-			config.HTTPCachePolicy = cachePolicy
+		if httpCachePolicyId > 0 {
+			cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId)
+			if err != nil {
+				return nil, err
+			}
+			if cachePolicy != nil {
+				config.HTTPCachePolicies = append(config.HTTPCachePolicies, cachePolicy)
+			}
 		}
 	}
 
@@ -724,14 +729,14 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 
 	// TOA
-	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(tx, clusterId)
+	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(tx, primaryClusterId)
 	if err != nil {
 		return nil, err
 	}
 	config.TOA = toaConfig
 
 	// 系统服务
-	services, err := SharedNodeClusterDAO.FindNodeClusterSystemServices(tx, clusterId)
+	services, err := SharedNodeClusterDAO.FindNodeClusterSystemServices(tx, primaryClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -740,7 +745,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 
 	// 防火墙动作
-	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, clusterId)
+	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, primaryClusterId)
 	if err != nil {
 		return nil, err
 	}

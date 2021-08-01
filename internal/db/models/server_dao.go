@@ -775,8 +775,8 @@ func (this *ServerDAO) FindServerNodeFilters(tx *dbs.Tx, serverId int64) (isOk b
 	return true, int64(server.ClusterId), nil
 }
 
-// ComposeServerConfig 构造服务的Config
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverconfigs.ServerConfig, error) {
+// ComposeServerConfigWithServerId 构造服务的Config
+func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int64) (*serverconfigs.ServerConfig, error) {
 	server, err := this.FindEnabledServer(tx, serverId)
 	if err != nil {
 		return nil, err
@@ -784,9 +784,17 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	if server == nil {
 		return nil, ErrNotFound
 	}
+	return this.ComposeServerConfig(tx, server)
+}
+
+// ComposeServerConfig 构造服务的Config
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverconfigs.ServerConfig, error) {
+	if server == nil {
+		return nil, ErrNotFound
+	}
 
 	config := &serverconfigs.ServerConfig{}
-	config.Id = serverId
+	config.Id = int64(server.Id)
 	config.ClusterId = int64(server.ClusterId)
 	config.Type = server.Type
 	config.IsOn = server.IsOn == 1
@@ -796,7 +804,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// ServerNames
 	if len(server.ServerNames) > 0 && server.ServerNames != "null" {
 		serverNames := []*serverconfigs.ServerNameConfig{}
-		err = json.Unmarshal([]byte(server.ServerNames), &serverNames)
+		err := json.Unmarshal([]byte(server.ServerNames), &serverNames)
 		if err != nil {
 			return nil, err
 		}
@@ -824,7 +832,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// HTTP
 	if len(server.Http) > 0 && server.Http != "null" {
 		httpConfig := &serverconfigs.HTTPProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Http), httpConfig)
+		err := json.Unmarshal([]byte(server.Http), httpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -834,7 +842,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// HTTPS
 	if len(server.Https) > 0 && server.Https != "null" {
 		httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Https), httpsConfig)
+		err := json.Unmarshal([]byte(server.Https), httpsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -856,7 +864,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// TCP
 	if len(server.Tcp) > 0 && server.Tcp != "null" {
 		tcpConfig := &serverconfigs.TCPProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Tcp), tcpConfig)
+		err := json.Unmarshal([]byte(server.Tcp), tcpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -866,7 +874,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// TLS
 	if len(server.Tls) > 0 && server.Tls != "null" {
 		tlsConfig := &serverconfigs.TLSProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Tls), tlsConfig)
+		err := json.Unmarshal([]byte(server.Tls), tlsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -888,7 +896,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// Unix
 	if len(server.Unix) > 0 && server.Unix != "null" {
 		unixConfig := &serverconfigs.UnixProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Unix), unixConfig)
+		err := json.Unmarshal([]byte(server.Unix), unixConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -898,7 +906,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// UDP
 	if len(server.Udp) > 0 && server.Udp != "null" {
 		udpConfig := &serverconfigs.UDPProtocolConfig{}
-		err = json.Unmarshal([]byte(server.Udp), udpConfig)
+		err := json.Unmarshal([]byte(server.Udp), udpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -919,7 +927,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 	// ReverseProxy
 	if IsNotNull(server.ReverseProxy) {
 		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err = json.Unmarshal([]byte(server.ReverseProxy), reverseProxyRef)
+		err := json.Unmarshal([]byte(server.ReverseProxy), reverseProxyRef)
 		if err != nil {
 			return nil, err
 		}
@@ -934,12 +942,31 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, serverId int64) (*serverc
 		}
 	}
 
+	// WAF策略
+	clusterId := int64(server.ClusterId)
+	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if httpFirewallPolicyId > 0 {
+		config.HTTPFirewallPolicyId = httpFirewallPolicyId
+	}
+
+	// 缓存策略
+	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if httpCachePolicyId > 0 {
+		config.HTTPCachePolicyId = httpCachePolicyId
+	}
+
 	return config, nil
 }
 
 // RenewServerConfig 更新服务的Config配置
 func (this *ServerDAO) RenewServerConfig(tx *dbs.Tx, serverId int64, updateMd5 bool) (isChanged bool, err error) {
-	serverConfig, err := this.ComposeServerConfig(tx, serverId)
+	serverConfig, err := this.ComposeServerConfigWithServerId(tx, serverId)
 	if err != nil {
 		return false, err
 	}
