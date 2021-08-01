@@ -38,12 +38,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *OriginDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableOrigin 启用条目
 func (this *OriginDAO) EnableOrigin(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -52,7 +52,7 @@ func (this *OriginDAO) EnableOrigin(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableOrigin 禁用条目
 func (this *OriginDAO) DisableOrigin(tx *dbs.Tx, originId int64) error {
 	_, err := this.Query(tx).
 		Pk(originId).
@@ -65,7 +65,7 @@ func (this *OriginDAO) DisableOrigin(tx *dbs.Tx, originId int64) error {
 	return this.NotifyUpdate(tx, originId)
 }
 
-// 查找启用中的条目
+// FindEnabledOrigin 查找启用中的条目
 func (this *OriginDAO) FindEnabledOrigin(tx *dbs.Tx, id int64) (*Origin, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -77,7 +77,7 @@ func (this *OriginDAO) FindEnabledOrigin(tx *dbs.Tx, id int64) (*Origin, error) 
 	return result.(*Origin), err
 }
 
-// 根据主键查找名称
+// FindOriginName 根据主键查找名称
 func (this *OriginDAO) FindOriginName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -85,7 +85,7 @@ func (this *OriginDAO) FindOriginName(tx *dbs.Tx, id int64) (string, error) {
 		FindStringCol("")
 }
 
-// 创建源站
+// CreateOrigin 创建源站
 func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) (originId int64, err error) {
 	op := NewOriginOperator()
 	op.AdminId = adminId
@@ -139,7 +139,7 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, nam
 	return types.Int64(op.Id), nil
 }
 
-// 修改源站
+// UpdateOrigin 修改源站
 func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
@@ -196,7 +196,7 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 	return this.NotifyUpdate(tx, originId)
 }
 
-// 将源站信息转换为配置
+// ComposeOriginConfig 将源站信息转换为配置
 func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverconfigs.OriginConfig, error) {
 	origin, err := this.FindEnabledOrigin(tx, originId)
 	if err != nil {
@@ -328,7 +328,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverc
 	return config, nil
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *OriginDAO) NotifyUpdate(tx *dbs.Tx, originId int64) error {
 	reverseProxyId, err := SharedReverseProxyDAO.FindReverseProxyContainsOriginId(tx, originId)
 	if err != nil {

@@ -346,7 +346,7 @@ func (this *DBNodeInitializer) loop() error {
 						logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
 
 						// 创建节点日志
-						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
+						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
 						if createLogErr != nil {
 							logs.Println("[NODE_LOG]" + createLogErr.Error())
 						}
@@ -390,7 +390,7 @@ func (this *DBNodeInitializer) loop() error {
 						logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
 
 						// 创建节点日志
-						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
+						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
 						if createLogErr != nil {
 							logs.Println("[NODE_LOG]" + createLogErr.Error())
 						}

@@ -11,6 +11,7 @@ type NodeLog struct {
 	NodeId      uint32 `field:"nodeId"`      // 节点ID
 	Day         string `field:"day"`         // 日期
 	ServerId    uint32 `field:"serverId"`    // 服务ID
+	OriginId    uint32 `field:"originId"`    // 源站ID
 	Hash        string `field:"hash"`        // 信息内容Hash
 	Count       uint32 `field:"count"`       // 重复次数
 	IsFixed     uint8  `field:"isFixed"`     // 是否已处理
@@ -26,6 +27,7 @@ type NodeLogOperator struct {
 	NodeId      interface{} // 节点ID
 	Day         interface{} // 日期
 	ServerId    interface{} // 服务ID
+	OriginId    interface{} // 源站ID
 	Hash        interface{} // 信息内容Hash
 	Count       interface{} // 重复次数
 	IsFixed     interface{} // 是否已处理

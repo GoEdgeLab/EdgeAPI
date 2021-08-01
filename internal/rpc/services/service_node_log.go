@@ -24,7 +24,7 @@ func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNo
 	tx := this.NullTx()
 
 	for _, nodeLog := range req.NodeLogs {
-		err := models.SharedNodeLogDAO.CreateLog(tx, nodeLog.Role, nodeLog.NodeId, nodeLog.ServerId, nodeLog.Level, nodeLog.Tag, nodeLog.Description, nodeLog.CreatedAt)
+		err := models.SharedNodeLogDAO.CreateLog(tx, nodeLog.Role, nodeLog.NodeId, nodeLog.ServerId, nodeLog.OriginId, nodeLog.Level, nodeLog.Tag, nodeLog.Description, nodeLog.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
+	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 
 	tx := this.NullTx()
 
-	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.Offset, req.Size)
+	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

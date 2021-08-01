@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -274,6 +275,17 @@ func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(tx *dbs.Tx, webId in
 		ResultPk().
 		FindInt64Col(0)
 }
+
+// FindEnabledLocationIdWithReverseProxyId 查找包含某个反向代理的Server
+func (this *HTTPLocationDAO) FindEnabledLocationIdWithReverseProxyId(tx *dbs.Tx, reverseProxyId int64) (serverId int64, err error) {
+	return this.Query(tx).
+		State(ServerStateEnabled).
+		Where("JSON_CONTAINS(reverseProxy, :jsonQuery)").
+		Param("jsonQuery", maps.Map{"reverseProxyId": reverseProxyId}.AsJSON()).
+		ResultPk().
+		FindInt64Col(0)
+}
+
 
 // NotifyUpdate 通知更新
 func (this *HTTPLocationDAO) NotifyUpdate(tx *dbs.Tx, locationId int64) error {

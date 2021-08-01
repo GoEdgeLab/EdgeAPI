@@ -12,7 +12,7 @@ import (
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfig(tx, 1)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestServerDAO_ComposeServerConfig(t *testing.T) {
 func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfig(tx, 14)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 14)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 func TestServerDAO_UpdateServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfig(tx, 1)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}

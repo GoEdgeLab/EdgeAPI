@@ -100,7 +100,7 @@ Loop:
 	for {
 		select {
 		case log := <-logChan:
-			err := models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, 0, log.Level, log.Tag, log.Description, log.CreatedAt)
+			err := models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt)
 			if err != nil {
 				return err
 			}
