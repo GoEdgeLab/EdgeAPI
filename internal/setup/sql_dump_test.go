@@ -64,7 +64,7 @@ func TestSQLDump_Apply(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ops, err := dump.Apply(db2, result)
+	ops, err := dump.Apply(db2, result, false)
 	if err != nil {
 		t.Fatal(err)
 	}

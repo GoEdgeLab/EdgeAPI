@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
@@ -108,7 +109,7 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 }
 
 // Apply 应用数据
-func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, err error) {
+func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (ops []string, err error) {
 	currentResult, err := this.Dump(db)
 	if err != nil {
 		return nil, err
@@ -119,6 +120,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 		oldTable := currentResult.FindTable(newTable.Name)
 		if oldTable == nil {
 			ops = append(ops, "+ table "+newTable.Name)
+			if showLog {
+				fmt.Println("+ table " + newTable.Name)
+			}
 			_, err = db.Exec(newTable.Definition)
 			if err != nil {
 				return nil, err
@@ -130,12 +134,18 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				oldField := oldTable.FindField(newField.Name)
 				if oldField == nil {
 					ops = append(ops, "+ "+newTable.Name+" "+newField.Name)
+					if showLog {
+						fmt.Println("+ " + newTable.Name + " " + newField.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
 						return nil, err
 					}
 				} else if !newField.EqualDefinition(oldField.Definition) {
 					ops = append(ops, "* "+newTable.Name+" "+newField.Name)
+					if showLog {
+						fmt.Println("* " + newTable.Name + " " + newField.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " MODIFY `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
 						return nil, err
@@ -149,12 +159,18 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				oldIndex := oldTable.FindIndex(newIndex.Name)
 				if oldIndex == nil {
 					ops = append(ops, "+ index "+newTable.Name+" "+newIndex.Name)
+					if showLog {
+						fmt.Println("+ index " + newTable.Name + " " + newIndex.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
 						return nil, err
 					}
 				} else if oldIndex.Definition != newIndex.Definition {
 					ops = append(ops, "* index "+newTable.Name+" "+newIndex.Name)
+					if showLog {
+						fmt.Println("* index " + newTable.Name + " " + newIndex.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " DROP KEY " + newIndex.Name)
 					if err != nil {
 						return nil, err
@@ -171,6 +187,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				newIndex := newTable.FindIndex(oldIndex.Name)
 				if newIndex == nil {
 					ops = append(ops, "- index "+oldTable.Name+" "+oldIndex.Name)
+					if showLog {
+						fmt.Println("- index " + oldTable.Name + " " + oldIndex.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP KEY " + oldIndex.Name)
 					if err != nil {
 						return nil, err
@@ -184,6 +203,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				newField := newTable.FindField(oldField.Name)
 				if newField == nil {
 					ops = append(ops, "- field "+oldTable.Name+" "+oldField.Name)
+					if showLog {
+						fmt.Println("- field " + oldTable.Name + " " + oldField.Name)
+					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP COLUMN `" + oldField.Name + "`")
 					if err != nil {
 						return nil, err
@@ -209,6 +231,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 			}
 			if one == nil {
 				ops = append(ops, "+ record "+newTable.Name+" "+strings.Join(valueStrings, ", "))
+				if showLog {
+					fmt.Println("+ record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
+				}
 				params := []string{}
 				args := []string{}
 				values := []interface{}{}
@@ -224,6 +249,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult) (ops []string, 
 				}
 			} else if !record.ValuesEquals(one) {
 				ops = append(ops, "* record "+newTable.Name+" "+strings.Join(valueStrings, ", "))
+				if showLog {
+					fmt.Println("* record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
+				}
 				args := []string{}
 				values := []interface{}{}
 				for k, v := range record.Values {

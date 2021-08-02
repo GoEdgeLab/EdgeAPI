@@ -52,7 +52,7 @@ func (this *SQLExecutor) Run() error {
 	}
 
 	sqlDump := NewSQLDump()
-	_, err = sqlDump.Apply(db, LatestSQLResult)
+	_, err = sqlDump.Apply(db, LatestSQLResult, true)
 	if err != nil {
 		return err
 	}
