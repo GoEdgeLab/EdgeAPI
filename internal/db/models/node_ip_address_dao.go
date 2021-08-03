@@ -63,6 +63,7 @@ func (this *NodeIPAddressDAO) DisableAllAddressesWithNodeId(tx *dbs.Tx, nodeId i
 	}
 	_, err := this.Query(tx).
 		Attr("nodeId", nodeId).
+		Attr("role", role).
 		Set("state", NodeIPAddressStateDisabled).
 		Update()
 	return err
