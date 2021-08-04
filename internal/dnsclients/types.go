@@ -11,6 +11,7 @@ type ProviderType = string
 const (
 	ProviderTypeDNSPod       ProviderType = "dnspod"       // DNSPod
 	ProviderTypeAliDNS       ProviderType = "alidns"       // 阿里云DNS
+	ProviderTypeHuaweiDNS    ProviderType = "huaweiDNS"    // 华为DNS
 	ProviderTypeDNSCom       ProviderType = "dnscom"       // dns.com
 	ProviderTypeCloudFlare   ProviderType = "cloudFlare"   // CloudFlare DNS
 	ProviderTypeLocalEdgeDNS ProviderType = "localEdgeDNS" // 和当前系统集成的EdgeDNS
@@ -30,6 +31,11 @@ func FindAllProviderTypes() []maps.Map {
 			"name":        "DNSPod",
 			"code":        ProviderTypeDNSPod,
 			"description": "DNSPod提供的DNS服务。",
+		},
+		{
+			"name":        "华为云DNS",
+			"code":        ProviderTypeHuaweiDNS,
+			"description": "华为云解析DNS。",
 		},
 		/**{
 			"name": "帝恩思DNS.COM",
@@ -74,6 +80,8 @@ func FindProvider(providerType ProviderType) ProviderInterface {
 		return &DNSPodProvider{}
 	case ProviderTypeAliDNS:
 		return &AliDNSProvider{}
+	case ProviderTypeHuaweiDNS:
+		return &HuaweiDNSProvider{}
 	case ProviderTypeCloudFlare:
 		return &CloudFlareProvider{}
 	case ProviderTypeLocalEdgeDNS:
