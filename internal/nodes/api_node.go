@@ -274,7 +274,7 @@ func (this *APINode) autoUpgrade() error {
 
 	// 不使用remotelog()，因为此时还没有启动完成
 	logs.Println("[API_NODE]upgrade database starting ...")
-	err = setup.NewSQLExecutor(dbConfig).Run()
+	err = setup.NewSQLExecutor(dbConfig).Run(false)
 	if err != nil {
 		return errors.New("execute sql failed: " + err.Error())
 	}

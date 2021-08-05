@@ -47,14 +47,14 @@ func NewSQLExecutorFromCmd() (*SQLExecutor, error) {
 	return NewSQLExecutor(config.DBs[Tea.Env]), nil
 }
 
-func (this *SQLExecutor) Run() error {
+func (this *SQLExecutor) Run(showLog bool) error {
 	db, err := dbs.NewInstanceFromConfig(this.dbConfig)
 	if err != nil {
 		return err
 	}
 
 	sqlDump := NewSQLDump()
-	_, err = sqlDump.Apply(db, LatestSQLResult, true)
+	_, err = sqlDump.Apply(db, LatestSQLResult, showLog)
 	if err != nil {
 		return err
 	}

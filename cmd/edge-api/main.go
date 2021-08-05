@@ -50,7 +50,7 @@ func main() {
 			fmt.Println("ERROR: " + err.Error())
 			return
 		}
-		err = executor.Run()
+		err = executor.Run(true)
 		if err != nil {
 			fmt.Println("ERROR: " + err.Error())
 			return

@@ -93,7 +93,7 @@ func (this *Setup) Run() error {
 	}
 
 	executor := NewSQLExecutor(dbConfig)
-	err = executor.Run()
+	err = executor.Run(false)
 	if err != nil {
 		return err
 	}
