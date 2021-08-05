@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -387,13 +388,33 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 		ClusterId: int64(node.ClusterId),
 	}
 
-	if len(cluster.AccessLog) > 0 {
-		ref := &dnsconfigs.AccessLogRef{}
-		err = json.Unmarshal([]byte(cluster.AccessLog), ref)
+	// 访问日志
+	// 全局配置
+	{
+		globalValue, err := models.SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeNSAccessLogSetting)
 		if err != nil {
 			return nil, err
 		}
-		config.AccessLogRef = ref
+		if len(globalValue) > 0 {
+			var ref = &dnsconfigs.NSAccessLogRef{}
+			err = json.Unmarshal(globalValue, ref)
+			if err != nil {
+				return nil, err
+			}
+			config.AccessLogRef = ref
+		}
+
+		// 集群配置
+		if len(cluster.AccessLog) > 0 {
+			ref := &dnsconfigs.NSAccessLogRef{}
+			err = json.Unmarshal([]byte(cluster.AccessLog), ref)
+			if err != nil {
+				return nil, err
+			}
+			if ref.IsPrior {
+				config.AccessLogRef = ref
+			}
+		}
 	}
 
 	return config, nil
