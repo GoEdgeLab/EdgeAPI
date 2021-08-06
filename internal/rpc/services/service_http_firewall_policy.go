@@ -720,10 +720,9 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 	// 检查黑名单
 	if firewallPolicy.Inbound != nil &&
 		firewallPolicy.Inbound.IsOn &&
-		firewallPolicy.Inbound.AllowListRef != nil &&
-		firewallPolicy.Inbound.AllowListRef.IsOn &&
-		firewallPolicy.Inbound.AllowListRef.ListId > 0 {
-
+		firewallPolicy.Inbound.DenyListRef != nil &&
+		firewallPolicy.Inbound.DenyListRef.IsOn &&
+		firewallPolicy.Inbound.DenyListRef.ListId > 0 {
 		var listIds = []int64{}
 		if firewallPolicy.Inbound.DenyListRef.ListId > 0 {
 			listIds = append(listIds, firewallPolicy.Inbound.DenyListRef.ListId)
