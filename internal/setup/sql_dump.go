@@ -164,7 +164,10 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
-						return nil, err
+						err = this.tryCreateIndex(err, db, newTable.Name, newIndex.Definition)
+						if err != nil {
+							return nil, err
+						}
 					}
 				} else if oldIndex.Definition != newIndex.Definition {
 					ops = append(ops, "* index "+newTable.Name+" "+newIndex.Name)
@@ -177,7 +180,10 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
-						return nil, err
+						err = this.tryCreateIndex(err, db, newTable.Name, newIndex.Definition)
+						if err != nil {
+							return nil, err
+						}
 					}
 				}
 			}
@@ -290,4 +296,35 @@ func (this *SQLDump) findRecordsTable(tableName string) *SQLRecordsTable {
 		}
 	}
 	return nil
+}
+
+// 创建索引
+func (this *SQLDump) tryCreateIndex(err error, db *dbs.DB, tableName string, indexDefinition string) error {
+	if err == nil {
+		return nil
+	}
+
+	// 处理Duplicate entry
+	if strings.Index(err.Error(), "Error 1062: Duplicate entry") >= 0 && (strings.HasSuffix(tableName, "Stats") || strings.HasSuffix(tableName, "Values")) {
+		var tries = 5 // 尝试次数
+		for i := 0; i < tries; i++ {
+			_, err = db.Exec("TRUNCATE TABLE " + tableName)
+			if err != nil {
+				if i == tries-1 {
+					return err
+				}
+				continue
+			}
+			_, err = db.Exec("ALTER TABLE " + tableName + " ADD " + indexDefinition)
+			if err != nil {
+				if i == tries-1 {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
+	}
+
+	return err
 }

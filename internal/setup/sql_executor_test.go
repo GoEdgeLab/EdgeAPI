@@ -11,7 +11,7 @@ func TestSQLExecutor_Run(t *testing.T) {
 		Prefix: "edge",
 		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge_new?charset=utf8mb4&multiStatements=true",
 	})
-	err := executor.Run()
+	err := executor.Run(false)
 	if err != nil {
 		t.Fatal(err)
 	}

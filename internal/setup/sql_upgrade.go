@@ -6,7 +6,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
@@ -38,6 +40,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.2.5", upgradeV0_2_5,
+	},
+	{
+		"0.2.9", upgradeV0_2_9,
 	},
 }
 
@@ -247,5 +252,32 @@ func upgradeV0_2_5(db *dbs.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// v0.2.9
+func upgradeV0_2_9(db *dbs.DB) error {
+	// 访问日志
+	{
+		one, err := db.FindOne("SELECT id FROM edgeSysSettings WHERE code=? LIMIT 1", systemconfigs.SettingCodeNSAccessLogSetting)
+		if err != nil {
+			return err
+		}
+		if len(one) == 0 {
+			ref := &dnsconfigs.NSAccessLogRef{
+				IsPrior:           false,
+				IsOn:              true,
+				LogMissingDomains: false,
+			}
+			refJSON, err := json.Marshal(ref)
+			if err != nil {
+				return err
+			}
+			_, err = db.Exec("INSERT edgeSysSettings (code, value) VALUES (?, ?)", systemconfigs.SettingCodeNSAccessLogSetting, refJSON)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
