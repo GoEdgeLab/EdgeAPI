@@ -1238,6 +1238,11 @@ func (this *NodeDAO) DeleteNodeFromCluster(tx *dbs.Tx, nodeId int64, clusterId i
 	op.Id = nodeId
 	op.ClusterId = newClusterId
 	op.SecondaryClusterIds = secondaryClusterIdsJSON
+
+	if newClusterId == 0 {
+		op.State = NodeStateDisabled
+	}
+
 	return this.Save(tx, op)
 }
 
