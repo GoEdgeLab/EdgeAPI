@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -90,6 +92,9 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		if tableDef.HasRemoteAddr {
 			fields["remoteAddr"] = accessLog.RawRemoteAddr
 		}
+		if tableDef.HasDomain {
+			fields["domain"] = accessLog.Host
+		}
 
 		content, err := json.Marshal(accessLog)
 		if err != nil {
@@ -125,7 +130,20 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
+	size int64,
+	day string,
+	serverId int64,
+	reverse bool,
+	hasError bool,
+	firewallPolicyId int64,
+	firewallRuleGroupId int64,
+	firewallRuleSetId int64,
+	hasFirewallPolicy bool,
+	userId int64,
+	keyword string,
+	ip string,
+	domain string) (result []*HTTPAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -135,18 +153,18 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, s
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string, ip string, domain string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -187,7 +205,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 			dao := daoWrapper.DAO
 
-			tableName, hasRemoteAddr, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, hasRemoteAddrField, hasDomainField, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
 			if !exists {
 				// 表格不存在则跳过
 				return
@@ -223,17 +241,51 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			}
 
 			// keyword
+			if len(ip) > 0 {
+				// TODO 支持IP范围
+				if hasRemoteAddrField {
+					// IP格式
+					if strings.Contains(ip, ",") || strings.Contains(ip, "-") {
+						rangeConfig, err := shared.ParseIPRange(ip)
+						if err == nil {
+							if len(rangeConfig.IPFrom) > 0 && len(rangeConfig.IPTo) > 0 {
+								query.Between("INET_ATON(remoteAddr)", utils.IP2Long(rangeConfig.IPFrom), utils.IP2Long(rangeConfig.IPTo))
+							}
+						}
+					} else {
+						query.Attr("remoteAddr", ip)
+					}
+				} else {
+					query.Where("JSON_EXTRACT(content, '$.remoteAddr')=:ip1").
+						Param("ip1", ip)
+				}
+			}
+			if len(domain) > 0 {
+				if hasDomainField {
+					if strings.Contains(domain, "*") {
+						domain = strings.ReplaceAll(domain, "*", "%")
+						domain = regexp.MustCompile(`[^a-zA-Z0-9-.%]`).ReplaceAllString(domain, "")
+						query.Where("domain LIKE :host2").
+							Param("host2", domain)
+					} else {
+						query.Attr("domain", domain)
+					}
+				} else {
+					query.Where("JSON_EXTRACT(content, '$.host')=:host1").
+						Param("host1", domain)
+				}
+			}
 			if len(keyword) > 0 {
 				// remoteAddr
-				if hasRemoteAddr && net.ParseIP(keyword) != nil {
+				if hasRemoteAddrField && net.ParseIP(keyword) != nil {
 					query.Attr("remoteAddr", keyword)
-				} else if hasRemoteAddr && regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
+				} else if hasRemoteAddrField && regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
 					keyword = keyword[3:]
 					pieces := strings.SplitN(keyword, ",", 2)
 					if len(pieces) == 1 || len(pieces[1]) == 0 {
 						query.Attr("remoteAddr", pieces[0])
 					} else {
-						query.Between("remoteAddr", pieces[0], pieces[1])
+						query.Between("INET_ATON(remoteAddr)", utils.IP2Long(pieces[0]), utils.IP2Long(pieces[1]))
 					}
 				} else {
 					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
@@ -242,7 +294,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 					useOriginKeyword := false
 
-					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword"
+					where := "JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.requestURI') LIKE :keyword OR JSON_EXTRACT(content, '$.host') LIKE :keyword OR JSON_EXTRACT(content, '$.userAgent') LIKE :keyword"
 
 					jsonKeyword, err := json.Marshal(keyword)
 					if err == nil {
@@ -381,7 +433,7 @@ func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId s
 
 			dao := daoWrapper.DAO
 
-			tableName, _, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
+			tableName, _, _, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
 			if err != nil {
 				logs.Println("[DB_NODE]" + err.Error())
 				return

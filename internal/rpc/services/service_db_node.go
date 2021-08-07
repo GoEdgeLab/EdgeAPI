@@ -204,7 +204,7 @@ func (this *DBNodeService) FindAllDBNodeTables(ctx context.Context, req *pb.Find
 		lowerTableName := strings.ToLower(one.GetString("TABLE_NAME"))
 		canDelete := false
 		canClean := false
-		if strings.HasPrefix(lowerTableName, "edgehttpaccesslogs_") {
+		if strings.HasPrefix(lowerTableName, "edgehttpaccesslogs_") || strings.HasPrefix(lowerTableName, "edgensaccesslogs_") {
 			canDelete = true
 			canClean = true
 		} else if lists.ContainsString([]string{"edgemessages", "edgelogs", "edgenodelogs"}, lowerTableName) {
@@ -254,8 +254,8 @@ func (this *DBNodeService) DeleteDBNodeTable(ctx context.Context, req *pb.Delete
 	}()
 
 	// 检查是否能够删除
-	if !strings.HasPrefix(strings.ToLower(req.DbNodeTable), "edgehttpaccesslogs_") {
-		return nil, errors.New("forbidden to delete the table")
+	if !strings.HasPrefix(strings.ToLower(req.DbNodeTable), "edgehttpaccesslogs_") && !strings.HasPrefix(strings.ToLower(req.DbNodeTable), "edgensaccesslogs_") {
+		return nil, errors.New("unable to delete the table")
 	}
 
 	_, err = db.Exec("DROP TABLE `" + req.DbNodeTable + "`")
