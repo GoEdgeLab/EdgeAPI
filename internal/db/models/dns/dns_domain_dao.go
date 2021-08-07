@@ -218,6 +218,8 @@ func (this *DNSDomainDAO) ExistAvailableDomains(tx *dbs.Tx) (bool, error) {
 
 // ExistDomainRecord 检查域名解析记录是否存在
 func (this *DNSDomainDAO) ExistDomainRecord(tx *dbs.Tx, domainId int64, recordName string, recordType string, recordRoute string, recordValue string) (bool, error) {
+	recordType = strings.ToUpper(recordType)
+
 	query := maps.Map{
 		"name": recordName,
 		"type": recordType,
@@ -239,7 +241,6 @@ func (this *DNSDomainDAO) ExistDomainRecord(tx *dbs.Tx, domainId int64, recordNa
 			}
 		}
 	}
-	recordType = strings.ToUpper(recordType)
 	return this.Query(tx).
 		Pk(domainId).
 		Where("JSON_CONTAINS(records, :query)").

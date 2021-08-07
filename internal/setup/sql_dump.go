@@ -305,7 +305,7 @@ func (this *SQLDump) tryCreateIndex(err error, db *dbs.DB, tableName string, ind
 	}
 
 	// 处理Duplicate entry
-	if strings.Index(err.Error(), "Error 1062: Duplicate entry") >= 0 && (strings.HasSuffix(tableName, "Stats") || strings.HasSuffix(tableName, "Values")) {
+	if strings.Contains(err.Error(), "Error 1062: Duplicate entry") && (strings.HasSuffix(tableName, "Stats") || strings.HasSuffix(tableName, "Values")) {
 		var tries = 5 // 尝试次数
 		for i := 0; i < tries; i++ {
 			_, err = db.Exec("TRUNCATE TABLE " + tableName)

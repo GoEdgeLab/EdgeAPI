@@ -33,7 +33,7 @@ func TestDB_Instance(t *testing.T) {
 					if err == driver.ErrBadConn {
 						return
 					}
-					t.Fatal(i, "exec:", err)
+					t.Error(i, "exec:", err)
 				}
 				time.Sleep(1 * time.Second)
 			}

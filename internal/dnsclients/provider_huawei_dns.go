@@ -1453,7 +1453,7 @@ func (this *HuaweiDNSProvider) doAPI(method string, apiPath string, args map[str
 	req.Header.Set("x-sdk-date", datetime)
 	req.Header.Set("Authorization", "SDK-HMAC-SHA256 Access="+this.accessKeyId+", SignedHeaders=content-type;host;x-sdk-date, Signature="+signString)
 
-	resp, err := cloudFlareHTTPClient.Do(req)
+	resp, err := huaweiDNSHTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

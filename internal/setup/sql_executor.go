@@ -16,7 +16,6 @@ import (
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"io/ioutil"
-	"strings"
 	"time"
 )
 
@@ -279,7 +278,6 @@ func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
 			return err
 		}
 
-		var itemId int64 = 0
 		if len(itemMap) == 0 {
 			keysJSON, err := json.Marshal(keys)
 			if err != nil {
@@ -297,7 +295,7 @@ func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
 			}
 		}
 
-		itemId = itemMap.GetInt64("id")
+		var itemId = itemMap.GetInt64("id")
 
 		// chart
 		for _, chartMap := range chartMaps {
@@ -460,18 +458,4 @@ func (this *SQLExecutor) updateVersion(db *dbs.DB, version string) error {
 	}
 
 	return nil
-}
-
-// 判断某个错误是否可以忽略
-func (this *SQLExecutor) canIgnoreError(err error) bool {
-	if err == nil {
-		return true
-	}
-
-	// Error 1050: Table 'xxx' already exists
-	if strings.Contains(err.Error(), "Error 1050") {
-		return true
-	}
-
-	return false
 }

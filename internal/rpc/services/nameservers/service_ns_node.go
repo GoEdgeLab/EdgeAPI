@@ -91,6 +91,9 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 
 	var tx = this.NullTx()
 	nodes, err := nameservers.SharedNSNodeDAO.ListAllEnabledNodesMatch(tx, req.NsClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
 	pbNodes := []*pb.NSNode{}
 	for _, node := range nodes {
 		// 安装信息
@@ -405,6 +408,9 @@ func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, r
 	}
 
 	data, offset, err := file.Read(req.ChunkOffset)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.DownloadNSNodeInstallationFileResponse{
 		Sum:       sum,
