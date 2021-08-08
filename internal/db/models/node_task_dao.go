@@ -67,11 +67,12 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 			"isOk":      0,
 			"error":     "",
 		}, maps.Map{
-			"clusterId": clusterId,
-			"updatedAt": updatedAt,
-			"isDone":    0,
-			"isOk":      0,
-			"error":     "",
+			"clusterId":  clusterId,
+			"updatedAt":  updatedAt,
+			"isDone":     0,
+			"isOk":       0,
+			"error":      "",
+			"isNotified": 0,
 		})
 	return err
 }
@@ -291,6 +292,7 @@ func (this *NodeTaskDAO) FindAllDoingNodeIds(tx *dbs.Tx, role string) ([]int64, 
 		Attr("role", role).
 		Gt("nodeId", 0).
 		Attr("isDone", false).
+		Attr("isNotified", 0).
 		FindAll()
 	if err != nil {
 		return nil, err

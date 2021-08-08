@@ -170,6 +170,12 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 	}
 	nodeLocker.Unlock()
 
+	defer func() {
+		nodeLocker.Lock()
+		delete(requestChanMap, nodeId)
+		nodeLocker.Unlock()
+	}()
+
 	// 发送请求
 	go func() {
 		for {
