@@ -119,6 +119,7 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 			IsOn:          node.IsOn == 1,
 			UniqueId:      node.UniqueId,
 			Secret:        node.Secret,
+			IsActive:      node.IsActive == 1,
 			IsInstalled:   node.IsInstalled == 1,
 			InstallDir:    node.InstallDir,
 			IsUp:          node.IsUp == 1,
@@ -419,4 +420,22 @@ func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, r
 		Version:   file.Version,
 		Filename:  filepath.Base(file.Path),
 	}, nil
+}
+
+// UpdateNSNodeConnectedAPINodes 更改节点连接的API节点信息
+func (this *NSNodeService) UpdateNSNodeConnectedAPINodes(ctx context.Context, req *pb.UpdateNSNodeConnectedAPINodesRequest) (*pb.RPCSuccess, error) {
+	// 校验节点
+	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	err = nameservers.SharedNSNodeDAO.UpdateNodeConnectedAPINodes(tx, nodeId, req.ApiNodeIds)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return this.Success()
 }

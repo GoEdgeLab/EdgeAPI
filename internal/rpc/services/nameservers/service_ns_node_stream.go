@@ -1,4 +1,4 @@
-package services
+package nameservers
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
@@ -18,7 +19,7 @@ import (
 	"time"
 )
 
-// 命令请求相关
+// CommandRequest 命令请求相关
 type CommandRequest struct {
 	Id          int64
 	Code        string
@@ -27,7 +28,7 @@ type CommandRequest struct {
 
 type CommandRequestWaiting struct {
 	Timestamp int64
-	Chan      chan *pb.NodeStreamMessage
+	Chan      chan *pb.NSNodeStreamMessage
 }
 
 func (this *CommandRequestWaiting) Close() {
@@ -65,11 +66,11 @@ func init() {
 	}()
 }
 
-// NodeStream 节点stream
-func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) error {
-	// TODO 使用此stream快速通知边缘节点更新
+// NsNodeStream 节点stream
+func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServer) error {
+	// TODO 使用此stream快速通知NS节点更新
 	// 校验节点
-	_, _, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeNode)
+	_, _, nodeId, err := rpcutils.ValidateRequest(server.Context(), rpcutils.UserTypeDNS)
 	if err != nil {
 		return err
 	}
@@ -80,13 +81,13 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		if err != nil {
 			return err
 		}
-		connectedMessage := &messageconfigs.ConnectedAPINodeMessage{APINodeId: apiConfig.NumberId()}
+		connectedMessage := &messageconfigs.NSConnectedAPINodeMessage{APINodeId: apiConfig.NumberId()}
 		connectedMessageJSON, err := json.Marshal(connectedMessage)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		err = server.Send(&pb.NodeStreamMessage{
-			Code:     messageconfigs.MessageCodeConnectedAPINode,
+		err = server.Send(&pb.NSNodeStreamMessage{
+			Code:     messageconfigs.NSMessageCodeConnectedAPINode,
 			DataJSON: connectedMessageJSON,
 		})
 		if err != nil {
@@ -94,33 +95,33 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		}
 	}
 
-	//logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
+	//logs.Println("[RPC]accepted ns node '" + types.String(nodeId) + "' connection")
 
 	tx := this.NullTx()
 
 	// 标记为活跃状态
-	oldIsActive, err := models.SharedNodeDAO.FindNodeActive(tx, nodeId)
+	oldIsActive, err := nameservers.SharedNSNodeDAO.FindNodeActive(tx, nodeId)
 	if err != nil {
 		return err
 	}
 	if !oldIsActive {
-		err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
+		err = nameservers.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, true)
 		if err != nil {
 			return err
 		}
 
 		// 发送恢复消息
-		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+		clusterId, err := nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 		if err != nil {
 			return err
 		}
-		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, nodeId)
+		nodeName, err := nameservers.SharedNSNodeDAO.FindEnabledNSNodeName(tx, nodeId)
 		if err != nil {
 			return err
 		}
-		subject := "节点\"" + nodeName + "\"已经恢复在线"
-		msg := "节点\"" + nodeName + "\"已经恢复在线"
-		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil)
+		subject := "DNS节点\"" + nodeName + "\"已经恢复在线"
+		msg := "DNS节点\"" + nodeName + "\"已经恢复在线"
+		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, models.MessageTypeNSNodeActive, models.MessageLevelSuccess, subject, msg, nil)
 		if err != nil {
 			return err
 		}
@@ -144,7 +145,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 				// logs.Println("[RPC]sending command '" + commandRequest.Code + "' to node '" + strconv.FormatInt(nodeId, 10) + "'")
 				retries := 3 // 错误重试次数
 				for i := 0; i < retries; i++ {
-					err := server.Send(&pb.NodeStreamMessage{
+					err := server.Send(&pb.NSNodeStreamMessage{
 						RequestId: commandRequest.Id,
 						Code:      commandRequest.Code,
 						DataJSON:  commandRequest.CommandJSON,
@@ -168,7 +169,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		req, err := server.Recv()
 		if err != nil {
 			// 修改节点状态
-			err1 := models.SharedNodeDAO.UpdateNodeIsActive(tx, nodeId, false)
+			err1 := nameservers.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, false)
 			if err1 != nil {
 				logs.Println(err1.Error())
 			}
@@ -176,7 +177,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 			return err
 		}
 
-		func(req *pb.NodeStreamMessage) {
+		func(req *pb.NSNodeStreamMessage) {
 			// 因为 responseChan.Chan 有被关闭的风险，所以我们使用recover防止panic
 			defer func() {
 				recover()
@@ -196,15 +197,15 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	}
 }
 
-// SendCommandToNode 向节点发送命令
-func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStreamMessage) (*pb.NodeStreamMessage, error) {
+// SendCommandToNSNode 向节点发送命令
+func (this *NSNodeService) SendCommandToNSNode(ctx context.Context, req *pb.NSNodeStreamMessage) (*pb.NSNodeStreamMessage, error) {
 	// 校验请求
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	nodeId := req.NodeId
+	nodeId := req.NsNodeId
 	if nodeId <= 0 {
 		return nil, errors.New("node id should not be less than 0")
 	}
@@ -214,7 +215,7 @@ func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStre
 	nodeLocker.Unlock()
 
 	if !ok {
-		return &pb.NodeStreamMessage{
+		return &pb.NSNodeStreamMessage{
 			RequestId: req.RequestId,
 			IsOk:      false,
 			Message:   "node '" + strconv.FormatInt(nodeId, 10) + "' not connected yet",
@@ -230,7 +231,7 @@ func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStre
 		CommandJSON: req.DataJSON,
 	}:
 		// 加入到等待队列中
-		respChan := make(chan *pb.NodeStreamMessage, 1)
+		respChan := make(chan *pb.NSNodeStreamMessage, 1)
 		waiting := &CommandRequestWaiting{
 			Timestamp: time.Now().Unix(),
 			Chan:      respChan,
@@ -255,7 +256,7 @@ func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStre
 			nodeLocker.Unlock()
 
 			if resp == nil {
-				return &pb.NodeStreamMessage{
+				return &pb.NSNodeStreamMessage{
 					RequestId: req.RequestId,
 					Code:      req.Code,
 					Message:   "response timeout",
@@ -271,7 +272,7 @@ func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStre
 			waiting.Close()
 			nodeLocker.Unlock()
 
-			return &pb.NodeStreamMessage{
+			return &pb.NSNodeStreamMessage{
 				RequestId: req.RequestId,
 				Code:      req.Code,
 				Message:   "response timeout over " + fmt.Sprintf("%d", timeoutSeconds) + " seconds",
@@ -279,7 +280,7 @@ func (this *NodeService) SendCommandToNode(ctx context.Context, req *pb.NodeStre
 			}, nil
 		}
 	default:
-		return &pb.NodeStreamMessage{
+		return &pb.NSNodeStreamMessage{
 			RequestId: req.RequestId,
 			Code:      req.Code,
 			Message:   "command queue is full over " + strconv.Itoa(len(requestChan)),

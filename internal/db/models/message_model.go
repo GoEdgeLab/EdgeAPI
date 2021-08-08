@@ -5,6 +5,7 @@ type Message struct {
 	Id        uint64 `field:"id"`        // ID
 	AdminId   uint32 `field:"adminId"`   // 管理员ID
 	UserId    uint32 `field:"userId"`    // 用户ID
+	Role      string `field:"role"`      // 角色
 	ClusterId uint32 `field:"clusterId"` // 集群ID
 	NodeId    uint32 `field:"nodeId"`    // 节点ID
 	Level     string `field:"level"`     // 级别
@@ -23,6 +24,7 @@ type MessageOperator struct {
 	Id        interface{} // ID
 	AdminId   interface{} // 管理员ID
 	UserId    interface{} // 用户ID
+	Role      interface{} // 角色
 	ClusterId interface{} // 集群ID
 	NodeId    interface{} // 节点ID
 	Level     interface{} // 级别

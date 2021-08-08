@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -12,37 +13,37 @@ import (
 
 func init() {
 	dbs.OnReady(func() {
-		task := NewNodeMonitorTask(60)
+		task := NewNSNodeMonitorTask(60)
 		ticker := time.NewTicker(60 * time.Second)
 		go func() {
 			for range ticker.C {
 				err := task.loop()
 				if err != nil {
-					logs.Println("[TASK][NODE_MONITOR]" + err.Error())
+					logs.Println("[TASK][NS_NODE_MONITOR]" + err.Error())
 				}
 			}
 		}()
 	})
 }
 
-// NodeMonitorTask 边缘节点监控任务
-type NodeMonitorTask struct {
+// NSNodeMonitorTask 边缘节点监控任务
+type NSNodeMonitorTask struct {
 	intervalSeconds int
 }
 
-func NewNodeMonitorTask(intervalSeconds int) *NodeMonitorTask {
-	return &NodeMonitorTask{
+func NewNSNodeMonitorTask(intervalSeconds int) *NSNodeMonitorTask {
+	return &NSNodeMonitorTask{
 		intervalSeconds: intervalSeconds,
 	}
 }
 
-func (this *NodeMonitorTask) Run() {
+func (this *NSNodeMonitorTask) Run() {
 
 }
 
-func (this *NodeMonitorTask) loop() error {
+func (this *NSNodeMonitorTask) loop() error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := systemconfigs.SettingCodeNodeMonitor + "Loop"
+	settingKey := systemconfigs.SettingCodeNSNodeMonitor + "Loop"
 	timestamp := time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-int64(this.intervalSeconds))
 	if err != nil {
@@ -58,7 +59,7 @@ func (this *NodeMonitorTask) loop() error {
 		return err
 	}
 
-	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters(nil)
+	clusters, err := nameservers.SharedNSClusterDAO.FindAllEnabledClusters(nil)
 	if err != nil {
 		return err
 	}
@@ -72,24 +73,24 @@ func (this *NodeMonitorTask) loop() error {
 	return nil
 }
 
-func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
+func (this *NSNodeMonitorTask) monitorCluster(cluster *nameservers.NSCluster) error {
 	clusterId := int64(cluster.Id)
 
 	// 检查离线节点
-	inactiveNodes, err := models.SharedNodeDAO.FindAllInactiveNodesWithClusterId(nil, clusterId)
+	inactiveNodes, err := nameservers.SharedNSNodeDAO.FindAllNotifyingInactiveNodesWithClusterId(nil, clusterId)
 	if err != nil {
 		return err
 	}
 	for _, node := range inactiveNodes {
-		subject := "节点\"" + node.Name + "\"已处于离线状态"
-		msg := "节点\"" + node.Name + "\"已处于离线状态"
-		err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, subject, msg, nil)
+		subject := "DNS节点\"" + node.Name + "\"已处于离线状态"
+		msg := "DNS节点\"" + node.Name + "\"已处于离线状态"
+		err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleDNS, clusterId, int64(node.Id), models.MessageTypeNSNodeInactive, models.LevelError, subject, msg, nil)
 		if err != nil {
 			return err
 		}
 
 		// 修改在线状态
-		err = models.SharedNodeDAO.UpdateNodeActive(nil, int64(node.Id), false)
+		err = nameservers.SharedNSNodeDAO.UpdateNodeStatusIsNotified(nil, int64(node.Id))
 		if err != nil {
 			return err
 		}
@@ -99,6 +100,8 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 
 	// 检查CPU、内存、磁盘不足节点，而且离线的节点不再重复提示
 	// TODO 需要实现
+
+	// TODO 检查53/tcp、53/udp是否能够访问
 
 	return nil
 }

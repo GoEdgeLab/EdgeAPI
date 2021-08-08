@@ -252,7 +252,7 @@ func (this *NodeThresholdDAO) FireNodeThreshold(tx *dbs.Tx, role string, nodeId 
 					body = strings.Replace(body, "${item.name}", itemName, -1)
 					body = strings.Replace(body, "${value}", fmt.Sprintf("%.2f", paramValue), -1)
 				}
-				err = SharedMessageDAO.CreateNodeMessage(tx, clusterId, nodeId, MessageTypeThresholdSatisfied, MessageLevelWarning, subject, body, maps.Map{}.AsJSON())
+				err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeThresholdSatisfied, MessageLevelWarning, subject, body, maps.Map{}.AsJSON())
 				if err != nil {
 					return err
 				}

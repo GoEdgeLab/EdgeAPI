@@ -134,9 +134,9 @@ func (this *NSNodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx, clusterId int64, in
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
+		query.Where("(isActive=1 AND JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60)")
 	case configutils.BoolStateNo:
-		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
+		query.Where("(isActive=0 OR status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
@@ -167,9 +167,9 @@ func (this *NSNodeDAO) ListAllEnabledNodesMatch(tx *dbs.Tx, clusterId int64, ins
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
+		query.Where("(isActive=1 AND JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60)")
 	case configutils.BoolStateNo:
-		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
+		query.Where("(isActive=0 OR status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
 
 	if clusterId > 0 {
@@ -426,6 +426,76 @@ func (this *NSNodeDAO) FindNodeClusterId(tx *dbs.Tx, nodeId int64) (int64, error
 		Pk(nodeId).
 		Result("clusterId").
 		FindInt64Col(0)
+}
+
+// FindNodeActive 检查节点活跃状态
+func (this *NSNodeDAO) FindNodeActive(tx *dbs.Tx, nodeId int64) (bool, error) {
+	isActive, err := this.Query(tx).
+		Pk(nodeId).
+		Result("isActive").
+		FindIntCol(0)
+	if err != nil {
+		return false, err
+	}
+	return isActive == 1, nil
+}
+
+// UpdateNodeActive 修改节点活跃状态
+func (this *NSNodeDAO) UpdateNodeActive(tx *dbs.Tx, nodeId int64, isActive bool) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	_, err := this.Query(tx).
+		Pk(nodeId).
+		Set("isActive", isActive).
+		Set("statusIsNotified", false).
+		Update()
+	return err
+}
+
+// UpdateNodeConnectedAPINodes 修改当前连接的API节点
+func (this *NSNodeDAO) UpdateNodeConnectedAPINodes(tx *dbs.Tx, nodeId int64, apiNodeIds []int64) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+
+	op := NewNSNodeOperator()
+	op.Id = nodeId
+
+	if len(apiNodeIds) > 0 {
+		apiNodeIdsJSON, err := json.Marshal(apiNodeIds)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		op.ConnectedAPINodes = apiNodeIdsJSON
+	} else {
+		op.ConnectedAPINodes = "[]"
+	}
+	err := this.Save(tx, op)
+	return err
+}
+
+// FindAllNotifyingInactiveNodesWithClusterId 取得某个集群所有等待通知离线离线的节点
+func (this *NSNodeDAO) FindAllNotifyingInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*NSNode, err error) {
+	_, err = this.Query(tx).
+		State(NSNodeStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("isOn", true).        // 只监控启用的节点
+		Attr("isInstalled", true). // 只监控已经安装的节点
+		Attr("isActive", false).   // 当前已经离线的
+		Attr("statusIsNotified", false).
+		Result("id", "name").
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// UpdateNodeStatusIsNotified 设置状态已经通知
+func (this *NSNodeDAO) UpdateNodeStatusIsNotified(tx *dbs.Tx, nodeId int64) error {
+	return this.Query(tx).
+		Pk(nodeId).
+		Set("statusIsNotified", true).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 通知更新
