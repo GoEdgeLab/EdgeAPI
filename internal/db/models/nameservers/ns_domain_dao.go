@@ -3,6 +3,7 @@ package nameservers
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -35,12 +36,15 @@ func init() {
 }
 
 // EnableNSDomain 启用条目
-func (this *NSDomainDAO) EnableNSDomain(tx *dbs.Tx, id int64) error {
+func (this *NSDomainDAO) EnableNSDomain(tx *dbs.Tx, domainId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(domainId).
 		Set("state", NSDomainStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, domainId)
 }
 
 // DisableNSDomain 禁用条目
@@ -55,7 +59,10 @@ func (this *NSDomainDAO) DisableNSDomain(tx *dbs.Tx, domainId int64) error {
 		Set("state", NSDomainStateDisabled).
 		Set("version", version).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, domainId)
 }
 
 // FindEnabledNSDomain 查找启用中的条目
@@ -92,13 +99,30 @@ func (this *NSDomainDAO) CreateDomain(tx *dbs.Tx, clusterId int64, userId int64,
 	op.Version = version
 	op.IsOn = true
 	op.State = NSDomainStateEnabled
-	return this.SaveInt64(tx, op)
+	domainId, err := this.SaveInt64(tx, op)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.NotifyUpdate(tx, domainId)
+	if err != nil {
+		return domainId, err
+	}
+	return domainId, nil
 }
 
 // UpdateDomain 修改域名
 func (this *NSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, clusterId int64, userId int64, isOn bool) error {
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
+	}
+
+	oldClusterId, err := this.Query(tx).
+		Pk(domainId).
+		Result("clusterId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
 	}
 
 	version, err := this.IncreaseVersion(tx)
@@ -112,7 +136,20 @@ func (this *NSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, clusterId int6
 	op.UserId = userId
 	op.IsOn = isOn
 	op.Version = version
-	return this.Save(tx, op)
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	// 通知更新
+	if oldClusterId > 0 && oldClusterId != clusterId {
+		err = models.SharedNSClusterDAO.NotifyUpdate(tx, oldClusterId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return this.NotifyUpdate(tx, domainId)
 }
 
 // CountAllEnabledDomains 计算域名数量
@@ -121,7 +158,7 @@ func (this *NSDomainDAO) CountAllEnabledDomains(tx *dbs.Tx, clusterId int64, use
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	} else {
-		query.Where("clusterId IN (SELECT id FROM " + SharedNSClusterDAO.Table + " WHERE state=1)")
+		query.Where("clusterId IN (SELECT id FROM " + models.SharedNSClusterDAO.Table + " WHERE state=1)")
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
@@ -144,7 +181,7 @@ func (this *NSDomainDAO) ListEnabledDomains(tx *dbs.Tx, clusterId int64, userId 
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	} else {
-		query.Where("clusterId IN (SELECT id FROM " + SharedNSClusterDAO.Table + " WHERE state=1)")
+		query.Where("clusterId IN (SELECT id FROM " + models.SharedNSClusterDAO.Table + " WHERE state=1)")
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
@@ -214,22 +251,39 @@ func (this *NSDomainDAO) UpdateDomainTSIG(tx *dbs.Tx, domainId int64, tsigJSON [
 		return err
 	}
 
-	return this.Query(tx).
+	err = this.Query(tx).
 		Pk(domainId).
 		Set("tsig", tsigJSON).
 		Set("version", version).
 		UpdateQuickly()
-}
-
-// NotifyUpdate 通知更改
-func (this *NSDomainDAO) NotifyUpdate(tx *dbs.Tx, domainId int64) error {
-	version, err := this.IncreaseVersion(tx)
 	if err != nil {
 		return err
 	}
 
+	return this.NotifyUpdate(tx, domainId)
+}
+
+// FindEnabledDomainClusterId 获取域名的集群ID
+func (this *NSDomainDAO) FindEnabledDomainClusterId(tx *dbs.Tx, domainId int64) (int64, error) {
 	return this.Query(tx).
 		Pk(domainId).
-		Set("version", version).
-		UpdateQuickly()
+		State(NSDomainStateEnabled).
+		Result("clusterId").
+		FindInt64Col(0)
+}
+
+// NotifyUpdate 通知更改
+func (this *NSDomainDAO) NotifyUpdate(tx *dbs.Tx, domainId int64) error {
+	clusterId, err := this.Query(tx).
+		Result("clusterId").
+		Pk(domainId).
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+	if clusterId > 0 {
+		return models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeDomainChanged)
+	}
+
+	return nil
 }

@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -63,7 +62,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 					}
 				}
 			case nodeconfigs.NodeRoleDNS:
-				cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(message.ClusterId))
+				cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(message.ClusterId))
 				if err != nil {
 					return nil, err
 				}
@@ -90,7 +89,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 					}
 				}
 			case nodeconfigs.NodeRoleDNS:
-				node, err := nameservers.SharedNSNodeDAO.FindEnabledNSNode(tx, int64(message.NodeId))
+				node, err := models.SharedNSNodeDAO.FindEnabledNSNode(tx, int64(message.NodeId))
 				if err != nil {
 					return nil, err
 				}

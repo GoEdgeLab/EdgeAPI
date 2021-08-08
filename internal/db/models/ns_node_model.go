@@ -1,4 +1,4 @@
-package nameservers
+package models
 
 // NSNode 域名服务器节点
 type NSNode struct {

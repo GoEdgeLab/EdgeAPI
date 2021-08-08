@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -59,7 +58,7 @@ func (this *NSNodeMonitorTask) loop() error {
 		return err
 	}
 
-	clusters, err := nameservers.SharedNSClusterDAO.FindAllEnabledClusters(nil)
+	clusters, err := models.SharedNSClusterDAO.FindAllEnabledClusters(nil)
 	if err != nil {
 		return err
 	}
@@ -73,11 +72,11 @@ func (this *NSNodeMonitorTask) loop() error {
 	return nil
 }
 
-func (this *NSNodeMonitorTask) monitorCluster(cluster *nameservers.NSCluster) error {
+func (this *NSNodeMonitorTask) monitorCluster(cluster *models.NSCluster) error {
 	clusterId := int64(cluster.Id)
 
 	// 检查离线节点
-	inactiveNodes, err := nameservers.SharedNSNodeDAO.FindAllNotifyingInactiveNodesWithClusterId(nil, clusterId)
+	inactiveNodes, err := models.SharedNSNodeDAO.FindAllNotifyingInactiveNodesWithClusterId(nil, clusterId)
 	if err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ func (this *NSNodeMonitorTask) monitorCluster(cluster *nameservers.NSCluster) er
 		}
 
 		// 修改在线状态
-		err = nameservers.SharedNSNodeDAO.UpdateNodeStatusIsNotified(nil, int64(node.Id))
+		err = models.SharedNSNodeDAO.UpdateNodeStatusIsNotified(nil, int64(node.Id))
 		if err != nil {
 			return err
 		}

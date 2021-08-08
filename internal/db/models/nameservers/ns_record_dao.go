@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -38,27 +39,33 @@ func init() {
 }
 
 // EnableNSRecord 启用条目
-func (this *NSRecordDAO) EnableNSRecord(tx *dbs.Tx, id uint64) error {
+func (this *NSRecordDAO) EnableNSRecord(tx *dbs.Tx, recordId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(recordId).
 		Set("state", NSRecordStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, recordId)
 }
 
 // DisableNSRecord 禁用条目
-func (this *NSRecordDAO) DisableNSRecord(tx *dbs.Tx, id int64) error {
+func (this *NSRecordDAO) DisableNSRecord(tx *dbs.Tx, recordId int64) error {
 	version, err := this.IncreaseVersion(tx)
 	if err != nil {
 		return err
 	}
 
 	_, err = this.Query(tx).
-		Pk(id).
+		Pk(recordId).
 		Set("state", NSRecordStateDisabled).
 		Set("version", version).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, recordId)
 }
 
 // FindEnabledNSRecord 查找启用中的条目
@@ -109,7 +116,16 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 	op.IsOn = true
 	op.State = NSRecordStateEnabled
 	op.Version = version
-	return this.SaveInt64(tx, op)
+	recordId, err := this.SaveInt64(tx, op)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.NotifyUpdate(tx, recordId)
+	if err != nil {
+		return 0, err
+	}
+	return recordId, nil
 }
 
 // UpdateRecord 修改记录
@@ -144,7 +160,12 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 
 	op.Version = version
 
-	return this.Save(tx, op)
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, recordId)
 }
 
 // CountAllEnabledDomainRecords 计算域名中记录数量
@@ -229,4 +250,32 @@ func (this *NSRecordDAO) FindEnabledRecordWithName(tx *dbs.Tx, domainId int64, r
 		return nil, err
 	}
 	return record.(*NSRecord), nil
+}
+
+// NotifyUpdate 通知更新
+func (this *NSRecordDAO) NotifyUpdate(tx *dbs.Tx, recordId int64) error {
+	domainId, err := this.Query(tx).
+		Pk(recordId).
+		Result("domainId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+
+	if domainId == 0 {
+		return nil
+	}
+
+	clusterId, err := SharedNSDomainDAO.FindEnabledDomainClusterId(tx, domainId)
+	if err != nil {
+		return err
+	}
+
+	if clusterId > 0 {
+		err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeRecordChanged)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

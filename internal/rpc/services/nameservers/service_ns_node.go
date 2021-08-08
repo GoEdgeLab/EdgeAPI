@@ -5,12 +5,13 @@ package nameservers
 import (
 	"context"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"path/filepath"
@@ -30,7 +31,7 @@ func (this *NSNodeService) FindAllEnabledNSNodesWithNSClusterId(ctx context.Cont
 
 	var tx = this.NullTx()
 
-	nodes, err := nameservers.SharedNSNodeDAO.FindAllEnabledNodesWithClusterId(tx, req.NsClusterId)
+	nodes, err := models.SharedNSNodeDAO.FindAllEnabledNodesWithClusterId(tx, req.NsClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (this *NSNodeService) CountAllEnabledNSNodes(ctx context.Context, req *pb.C
 	}
 
 	var tx = this.NullTx()
-	count, err := nameservers.SharedNSNodeDAO.CountAllEnabledNodes(tx)
+	count, err := models.SharedNSNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func (this *NSNodeService) CountAllEnabledNSNodesMatch(ctx context.Context, req 
 	}
 
 	var tx = this.NullTx()
-	count, err := nameservers.SharedNSNodeDAO.CountAllEnabledNodesMatch(tx, req.NsClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword)
+	count, err := models.SharedNSNodeDAO.CountAllEnabledNodesMatch(tx, req.NsClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 	}
 
 	var tx = this.NullTx()
-	nodes, err := nameservers.SharedNSNodeDAO.ListAllEnabledNodesMatch(tx, req.NsClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.Offset, req.Size)
+	nodes, err := models.SharedNSNodeDAO.ListAllEnabledNodesMatch(tx, req.NsClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +145,7 @@ func (this *NSNodeService) CountAllUpgradeNSNodesWithNSClusterId(ctx context.Con
 	deployFiles := installers.SharedDeployManager.LoadNSNodeFiles()
 	total := int64(0)
 	for _, deployFile := range deployFiles {
-		count, err := nameservers.SharedNSNodeDAO.CountAllLowerVersionNodesWithClusterId(tx, req.NsClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
+		count, err := models.SharedNSNodeDAO.CountAllLowerVersionNodesWithClusterId(tx, req.NsClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +164,7 @@ func (this *NSNodeService) CreateNSNode(ctx context.Context, req *pb.CreateNSNod
 
 	tx := this.NullTx()
 
-	nodeId, err := nameservers.SharedNSNodeDAO.CreateNode(tx, adminId, req.Name, req.NodeClusterId)
+	nodeId, err := models.SharedNSNodeDAO.CreateNode(tx, adminId, req.Name, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +183,13 @@ func (this *NSNodeService) DeleteNSNode(ctx context.Context, req *pb.DeleteNSNod
 
 	tx := this.NullTx()
 
-	err = nameservers.SharedNSNodeDAO.DisableNSNode(tx, req.NsNodeId)
+	err = models.SharedNSNodeDAO.DisableNSNode(tx, req.NsNodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 删除任务
+	err = models.SharedNodeTaskDAO.DeleteNodeTasks(tx, nodeconfigs.NodeRoleDNS, req.NsNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +206,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 
 	tx := this.NullTx()
 
-	node, err := nameservers.SharedNSNodeDAO.FindEnabledNSNode(tx, req.NsNodeId)
+	node, err := models.SharedNSNodeDAO.FindEnabledNSNode(tx, req.NsNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +215,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 	}
 
 	// 集群信息
-	clusterName, err := nameservers.SharedNSClusterDAO.FindEnabledNSClusterName(tx, int64(node.ClusterId))
+	clusterName, err := models.SharedNSClusterDAO.FindEnabledNSClusterName(tx, int64(node.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +263,7 @@ func (this *NSNodeService) UpdateNSNode(ctx context.Context, req *pb.UpdateNSNod
 
 	tx := this.NullTx()
 
-	err = nameservers.SharedNSNodeDAO.UpdateNode(tx, req.NsNodeId, req.Name, req.NsClusterId, req.IsOn)
+	err = models.SharedNSNodeDAO.UpdateNode(tx, req.NsNodeId, req.Name, req.NsClusterId, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +294,7 @@ func (this *NSNodeService) FindNSNodeInstallStatus(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	installStatus, err := nameservers.SharedNSNodeDAO.FindNodeInstallStatus(tx, req.NsNodeId)
+	installStatus, err := models.SharedNSNodeDAO.FindNodeInstallStatus(tx, req.NsNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +322,7 @@ func (this *NSNodeService) UpdateNSNodeIsInstalled(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	err = nameservers.SharedNSNodeDAO.UpdateNodeIsInstalled(tx, req.NsNodeId, req.IsInstalled)
+	err = models.SharedNSNodeDAO.UpdateNodeIsInstalled(tx, req.NsNodeId, req.IsInstalled)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +348,7 @@ func (this *NSNodeService) UpdateNSNodeStatus(ctx context.Context, req *pb.Updat
 
 	tx := this.NullTx()
 
-	err = nameservers.SharedNSNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
+	err = models.SharedNSNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +364,7 @@ func (this *NSNodeService) FindCurrentNSNodeConfig(ctx context.Context, req *pb.
 	}
 
 	var tx = this.NullTx()
-	config, err := nameservers.SharedNSNodeDAO.ComposeNodeConfig(tx, nodeId)
+	config, err := models.SharedNSNodeDAO.ComposeNodeConfig(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +439,7 @@ func (this *NSNodeService) UpdateNSNodeConnectedAPINodes(ctx context.Context, re
 
 	tx := this.NullTx()
 
-	err = nameservers.SharedNSNodeDAO.UpdateNodeConnectedAPINodes(tx, nodeId, req.ApiNodeIds)
+	err = models.SharedNSNodeDAO.UpdateNodeConnectedAPINodes(tx, nodeId, req.ApiNodeIds)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

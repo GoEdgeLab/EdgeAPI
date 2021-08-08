@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -34,7 +33,7 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 	var clusterId int64
 	switch role {
 	case rpcutils.UserTypeDNS:
-		clusterId, err = nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+		clusterId, err = models.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 		if err != nil {
 			return nil, err
 		}

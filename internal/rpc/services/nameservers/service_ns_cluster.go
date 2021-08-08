@@ -4,8 +4,9 @@ package nameservers
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -21,7 +22,7 @@ func (this *NSClusterService) CreateNSCluster(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusterId, err := nameservers.SharedNSClusterDAO.CreateCluster(tx, req.Name, req.AccessLogJSON)
+	clusterId, err := models.SharedNSClusterDAO.CreateCluster(tx, req.Name, req.AccessLogJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func (this *NSClusterService) UpdateNSCluster(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 	var tx = this.NullTx()
-	err = nameservers.SharedNSClusterDAO.UpdateCluster(tx, req.NsClusterId, req.Name, req.IsOn)
+	err = models.SharedNSClusterDAO.UpdateCluster(tx, req.NsClusterId, req.Name, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func (this *NSClusterService) FindNSClusterAccessLog(ctx context.Context, req *p
 	}
 
 	var tx = this.NullTx()
-	accessLogJSON, err := nameservers.SharedNSClusterDAO.FindClusterAccessLog(tx, req.NsClusterId)
+	accessLogJSON, err := models.SharedNSClusterDAO.FindClusterAccessLog(tx, req.NsClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (this *NSClusterService) UpdateNSClusterAccessLog(ctx context.Context, req 
 	}
 
 	var tx = this.NullTx()
-	err = nameservers.SharedNSClusterDAO.UpdateClusterAccessLog(tx, req.NsClusterId, req.AccessLogJSON)
+	err = models.SharedNSClusterDAO.UpdateClusterAccessLog(tx, req.NsClusterId, req.AccessLogJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +80,17 @@ func (this *NSClusterService) DeleteNSCluster(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 	var tx = this.NullTx()
-	err = nameservers.SharedNSClusterDAO.DisableNSCluster(tx, req.NsClusterId)
+	err = models.SharedNSClusterDAO.DisableNSCluster(tx, req.NsClusterId)
 	if err != nil {
 		return nil, err
 	}
+
+	// 删除任务
+	err = models.SharedNodeTaskDAO.DeleteAllClusterTasks(tx, nodeconfigs.NodeRoleDNS, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 
@@ -93,7 +101,7 @@ func (this *NSClusterService) FindEnabledNSCluster(ctx context.Context, req *pb.
 		return nil, err
 	}
 	var tx = this.NullTx()
-	cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, req.NsClusterId)
+	cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, req.NsClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +123,7 @@ func (this *NSClusterService) CountAllEnabledNSClusters(ctx context.Context, req
 		return nil, err
 	}
 	var tx = this.NullTx()
-	count, err := nameservers.SharedNSClusterDAO.CountAllEnabledClusters(tx)
+	count, err := models.SharedNSClusterDAO.CountAllEnabledClusters(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +137,7 @@ func (this *NSClusterService) ListEnabledNSClusters(ctx context.Context, req *pb
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusters, err := nameservers.SharedNSClusterDAO.ListEnabledClusters(tx, req.Offset, req.Size)
+	clusters, err := models.SharedNSClusterDAO.ListEnabledClusters(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +160,7 @@ func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req 
 		return nil, err
 	}
 	var tx = this.NullTx()
-	clusters, err := nameservers.SharedNSClusterDAO.FindAllEnabledClusters(tx)
+	clusters, err := models.SharedNSClusterDAO.FindAllEnabledClusters(tx)
 	if err != nil {
 		return nil, err
 	}

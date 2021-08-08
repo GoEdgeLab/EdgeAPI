@@ -97,7 +97,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 	}
 
 	// 删除相关任务
-	err = models.SharedNodeTaskDAO.DeleteAllClusterTasks(tx, req.NodeClusterId)
+	err = models.SharedNodeTaskDAO.DeleteAllClusterTasks(tx, nodeconfigs.NodeRoleNode, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}

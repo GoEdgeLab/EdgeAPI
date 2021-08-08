@@ -1,8 +1,7 @@
-package nameservers
+package models
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -214,7 +213,7 @@ func (this *NSNodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, cluste
 	secret := rands.String(32)
 
 	// 保存API Token
-	err = models.SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleDNS)
+	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleDNS)
 	if err != nil {
 		return
 	}
@@ -281,7 +280,7 @@ func (this *NSNodeDAO) FindEnabledNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string
 }
 
 // FindNodeInstallStatus 查询节点的安装状态
-func (this *NSNodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*models.NodeInstallStatus, error) {
+func (this *NSNodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*NodeInstallStatus, error) {
 	node, err := this.Query(tx).
 		Pk(nodeId).
 		Result("installStatus", "isInstalled").
@@ -296,10 +295,10 @@ func (this *NSNodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*models.
 	installStatus := node.(*NSNode).InstallStatus
 	isInstalled := node.(*NSNode).IsInstalled == 1
 	if len(installStatus) == 0 {
-		return models.NewNodeInstallStatus(), nil
+		return NewNodeInstallStatus(), nil
 	}
 
-	status := &models.NodeInstallStatus{}
+	status := &NodeInstallStatus{}
 	err = json.Unmarshal([]byte(installStatus), status)
 	if err != nil {
 		return nil, err
@@ -391,7 +390,7 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 	// 访问日志
 	// 全局配置
 	{
-		globalValue, err := models.SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeNSAccessLogSetting)
+		globalValue, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeNSAccessLogSetting)
 		if err != nil {
 			return nil, err
 		}
@@ -496,6 +495,29 @@ func (this *NSNodeDAO) UpdateNodeStatusIsNotified(tx *dbs.Tx, nodeId int64) erro
 		Pk(nodeId).
 		Set("statusIsNotified", true).
 		UpdateQuickly()
+}
+
+// FindAllNodeIdsMatch 匹配节点并返回节点ID
+func (this *NSNodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, isOn configutils.BoolState) (result []int64, err error) {
+	query := this.Query(tx)
+	query.State(NSNodeStateEnabled)
+	if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+	if isOn == configutils.BoolStateYes {
+		query.Attr("isOn", true)
+	} else if isOn == configutils.BoolStateNo {
+		query.Attr("isOn", false)
+	}
+	query.Result("id")
+	ones, _, err := query.FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		result = append(result, one.GetInt64("id"))
+	}
+	return
 }
 
 // NotifyUpdate 通知更新

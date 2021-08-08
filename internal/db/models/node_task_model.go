@@ -1,8 +1,9 @@
 package models
 
-// 节点同步任务
+// NodeTask 节点同步任务
 type NodeTask struct {
 	Id         uint64 `field:"id"`         // ID
+	Role       string `field:"role"`       // 节点角色
 	NodeId     uint32 `field:"nodeId"`     // 节点ID
 	ClusterId  uint32 `field:"clusterId"`  // 集群ID
 	Type       string `field:"type"`       // 任务类型
@@ -16,6 +17,7 @@ type NodeTask struct {
 
 type NodeTaskOperator struct {
 	Id         interface{} // ID
+	Role       interface{} // 节点角色
 	NodeId     interface{} // 节点ID
 	ClusterId  interface{} // 集群ID
 	Type       interface{} // 任务类型

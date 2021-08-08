@@ -375,7 +375,7 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 	}
 
 	// 删除节点相关任务
-	err = models.SharedNodeTaskDAO.DeleteNodeTasks(tx, req.NodeId)
+	err = models.SharedNodeTaskDAO.DeleteNodeTasks(tx, nodeconfigs.NodeRoleNode, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -1358,7 +1358,6 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 	} else {
 		delete(routeCodeMap, req.DnsDomainId)
 	}
-
 
 	err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, routeCodeMap)
 	if err != nil {

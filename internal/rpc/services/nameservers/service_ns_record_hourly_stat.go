@@ -4,6 +4,7 @@ package nameservers
 
 import (
 	"context"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
@@ -31,7 +32,7 @@ func (this *NSRecordHourlyStatService) UploadNSRecordHourlyStats(ctx context.Con
 	}
 
 	var tx = this.NullTx()
-	clusterId, err := nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+	clusterId, err := models.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 	if err != nil {
 		return nil, err
 	}

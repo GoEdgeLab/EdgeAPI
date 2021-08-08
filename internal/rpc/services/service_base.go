@@ -7,7 +7,6 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -194,7 +193,7 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 	case rpcutils.UserTypeMonitor:
 		nodeIntId, err = models.SharedMonitorNodeDAO.FindEnabledMonitorNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeDNS:
-		nodeIntId, err = nameservers.SharedNSNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
+		nodeIntId, err = models.SharedNSNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeAuthority:
 		nodeIntId, err = authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNodeIdWithUniqueId(nil, nodeId)
 	default:

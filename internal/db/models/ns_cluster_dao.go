@@ -1,7 +1,8 @@
-package nameservers
+package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -127,6 +128,22 @@ func (this *NSClusterDAO) FindAllEnabledClusters(tx *dbs.Tx) (result []*NSCluste
 	return
 }
 
+// FindAllEnabledClusterIds 获取所有集群IDs
+func (this *NSClusterDAO) FindAllEnabledClusterIds(tx *dbs.Tx) ([]int64, error) {
+	ones, err := this.Query(tx).
+		State(NSClusterStateEnabled).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*NSCluster).Id))
+	}
+	return result, nil
+}
+
 // UpdateClusterAccessLog 设置访问日志
 func (this *NSClusterDAO) UpdateClusterAccessLog(tx *dbs.Tx, clusterId int64, accessLogJSON []byte) error {
 	return this.Query(tx).
@@ -142,4 +159,9 @@ func (this *NSClusterDAO) FindClusterAccessLog(tx *dbs.Tx, clusterId int64) ([]b
 		Result("accessLog").
 		FindStringCol("")
 	return []byte(accessLog), err
+}
+
+// NotifyUpdate 通知更改
+func (this *NSClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, NSNodeTaskTypeConfigChanged)
 }

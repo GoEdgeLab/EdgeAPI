@@ -78,7 +78,7 @@ func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.Fi
 	}
 
 	// 集群
-	cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))
+	cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 	pbDomains := []*pb.NSDomain{}
 	for _, domain := range domains {
 		// 集群
-		cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))
 		if err != nil {
 			return nil, err
 		}

@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"strconv"
 	"sync"
@@ -48,22 +49,56 @@ var requestChanMap = map[int64]chan *CommandRequest{} // node id => chan
 func NextCommandRequestId() int64 {
 	return atomic.AddInt64(&commandRequestId, 1)
 }
-
 func init() {
-	// 清理WaitingChannelMap
-	ticker := time.NewTicker(30 * time.Second)
-	go func() {
-		for range ticker.C {
-			nodeLocker.Lock()
-			for requestId, request := range responseChanMap {
-				if time.Now().Unix()-request.Timestamp > 3600 {
-					responseChanMap[requestId].Close()
-					delete(responseChanMap, requestId)
+	dbs.OnReadyDone(func() {
+		// 清理WaitingChannelMap
+		go func() {
+			ticker := time.NewTicker(30 * time.Second)
+			for range ticker.C {
+				nodeLocker.Lock()
+				for requestId, request := range responseChanMap {
+					if time.Now().Unix()-request.Timestamp > 3600 {
+						responseChanMap[requestId].Close()
+						delete(responseChanMap, requestId)
+					}
 				}
+				nodeLocker.Unlock()
 			}
-			nodeLocker.Unlock()
-		}
-	}()
+		}()
+
+		// 自动同步连接到本API节点的NS节点任务
+		go func() {
+			defer func() {
+				_ = recover()
+			}()
+
+			// TODO 未来支持同步边缘节点
+			var ticker = time.NewTicker(3 * time.Second)
+			for range ticker.C {
+				nodeIds, err := models.SharedNodeTaskDAO.FindAllDoingNodeIds(nil, nodeconfigs.NodeRoleDNS)
+				if err != nil {
+					remotelogs.Error("NSNodeService_SYNC", err.Error())
+					continue
+				}
+				nodeLocker.Lock()
+				for _, nodeId := range nodeIds {
+					c, ok := requestChanMap[nodeId]
+					if ok {
+						select {
+						case c <- &CommandRequest{
+							Id:          NextCommandRequestId(),
+							Code:        messageconfigs.NSMessageCodeNewNodeTask,
+							CommandJSON: nil,
+						}:
+						default:
+
+						}
+					}
+				}
+				nodeLocker.Unlock()
+			}
+		}()
+	})
 }
 
 // NsNodeStream 节点stream
@@ -100,22 +135,22 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 	tx := this.NullTx()
 
 	// 标记为活跃状态
-	oldIsActive, err := nameservers.SharedNSNodeDAO.FindNodeActive(tx, nodeId)
+	oldIsActive, err := models.SharedNSNodeDAO.FindNodeActive(tx, nodeId)
 	if err != nil {
 		return err
 	}
 	if !oldIsActive {
-		err = nameservers.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, true)
+		err = models.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, true)
 		if err != nil {
 			return err
 		}
 
 		// 发送恢复消息
-		clusterId, err := nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+		clusterId, err := models.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 		if err != nil {
 			return err
 		}
-		nodeName, err := nameservers.SharedNSNodeDAO.FindEnabledNSNodeName(tx, nodeId)
+		nodeName, err := models.SharedNSNodeDAO.FindEnabledNSNodeName(tx, nodeId)
 		if err != nil {
 			return err
 		}
@@ -169,7 +204,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 		req, err := server.Recv()
 		if err != nil {
 			// 修改节点状态
-			err1 := nameservers.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, false)
+			err1 := models.SharedNSNodeDAO.UpdateNodeActive(tx, nodeId, false)
 			if err1 != nil {
 				logs.Println(err1.Error())
 			}

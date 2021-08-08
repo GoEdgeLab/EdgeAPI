@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
@@ -42,9 +43,11 @@ func (this *NodeTaskExtractor) Loop() error {
 
 	// 这里不解锁，是为了让任务N秒钟之内只运行一次
 
-	err = models.SharedNodeTaskDAO.ExtractAllClusterTasks(nil)
-	if err != nil {
-		return err
+	for _, role := range []string{nodeconfigs.NodeRoleNode, nodeconfigs.NodeRoleDNS} {
+		err = models.SharedNodeTaskDAO.ExtractAllClusterTasks(nil, role)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

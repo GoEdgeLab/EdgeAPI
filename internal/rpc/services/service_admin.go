@@ -6,7 +6,6 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -637,7 +636,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.DNSNodeVersion,
 		}
-		countNodes, err := nameservers.SharedNSNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		countNodes, err := models.SharedNSNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
 		if err != nil {
 			return nil, err
 		}

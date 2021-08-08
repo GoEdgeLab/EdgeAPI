@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -176,8 +177,33 @@ func (this *NSKeyDAO) NotifyUpdate(tx *dbs.Tx, keyId int64) error {
 	if err != nil {
 		return err
 	}
-	return this.Query(tx).
+	err = this.Query(tx).
 		Pk(keyId).
 		Set("version", version).
 		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	// 通知集群
+	domainId, err := this.Query(tx).
+		Pk(keyId).
+		Result("domainId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+	if domainId > 0 {
+		clusterId, err := SharedNSDomainDAO.FindEnabledDomainClusterId(tx, domainId)
+		if err != nil {
+			return err
+		}
+		if clusterId > 0 {
+			err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeKeyChanged)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

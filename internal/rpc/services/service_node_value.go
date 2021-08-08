@@ -5,7 +5,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -28,7 +27,7 @@ func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.Creat
 	case rpcutils.UserTypeNode:
 		clusterId, err = models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 	case rpcutils.UserTypeDNS:
-		clusterId, err = nameservers.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
+		clusterId, err = models.SharedNSNodeDAO.FindNodeClusterId(tx, nodeId)
 	case rpcutils.UserTypeUser:
 	}
 	if err != nil {

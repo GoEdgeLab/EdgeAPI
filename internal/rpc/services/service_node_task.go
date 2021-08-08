@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -17,7 +19,7 @@ type NodeTaskService struct {
 
 // FindNodeTasks 获取单节点同步任务
 func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNodeTasksRequest) (*pb.FindNodeTasksResponse, error) {
-	nodeId, err := this.ValidateNode(ctx)
+	nodeType, nodeId, err := this.ValidateNodeId(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +27,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 	_ = req
 
 	var tx = this.NullTx()
-	tasks, err := models.SharedNodeTaskDAO.FindDoingNodeTasks(tx, nodeId)
+	tasks, err := models.SharedNodeTaskDAO.FindDoingNodeTasks(tx, nodeType, nodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,18 +40,20 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 		})
 	}
 
-	// 版本更新任务
-	status, err := models.SharedNodeDAO.FindNodeStatus(tx, nodeId)
-	if err != nil {
-		return nil, err
-	}
-	if status != nil && len(status.OS) > 0 && len(status.Arch) > 0 && len(status.BuildVersion) > 0 {
-		deployFile := installers.SharedDeployManager.FindNodeFile(status.OS, status.Arch)
-		if deployFile != nil {
-			if stringutil.VersionCompare(deployFile.Version, status.BuildVersion) > 0 {
-				pbTasks = append(pbTasks, &pb.NodeTask{
-					Type: models.NodeTaskTypeNodeVersionChanged,
-				})
+	// 边缘节点版本更新任务
+	if nodeType == rpcutils.UserTypeNode {
+		status, err := models.SharedNodeDAO.FindNodeStatus(tx, nodeId)
+		if err != nil {
+			return nil, err
+		}
+		if status != nil && len(status.OS) > 0 && len(status.Arch) > 0 && len(status.BuildVersion) > 0 {
+			deployFile := installers.SharedDeployManager.FindNodeFile(status.OS, status.Arch)
+			if deployFile != nil {
+				if stringutil.VersionCompare(deployFile.Version, status.BuildVersion) > 0 {
+					pbTasks = append(pbTasks, &pb.NodeTask{
+						Type: models.NodeTaskTypeNodeVersionChanged,
+					})
+				}
 			}
 		}
 	}
@@ -59,7 +63,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 
 // ReportNodeTaskDone 报告同步任务结果
 func (this *NodeTaskService) ReportNodeTaskDone(ctx context.Context, req *pb.ReportNodeTaskDoneRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateNode(ctx)
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +87,8 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 	_ = req
 
 	var tx = this.NullTx()
-	clusterIds, err := models.SharedNodeTaskDAO.FindAllDoingTaskClusterIds(tx)
+	// TODO 支持NS节点
+	clusterIds, err := models.SharedNodeTaskDAO.FindAllDoingTaskClusterIds(tx, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +109,8 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 		// 错误的节点任务
 		pbNodeTasks := []*pb.NodeTask{}
 		// TODO 考虑节点特别多的情形，比如只显示前100个
-		tasks, err := models.SharedNodeTaskDAO.FindAllDoingNodeTasksWithClusterId(tx, clusterId)
+		// TODO 支持NS节点
+		tasks, err := models.SharedNodeTaskDAO.FindAllDoingNodeTasksWithClusterId(tx, nodeconfigs.NodeRoleNode, clusterId)
 		if err != nil {
 			return nil, err
 		}
@@ -155,13 +161,13 @@ func (this *NodeTaskService) ExistsNodeTasks(ctx context.Context, req *pb.Exists
 	var tx = this.NullTx()
 
 	// 是否有任务
-	existTask, err := models.SharedNodeTaskDAO.ExistsDoingNodeTasks(tx)
+	existTask, err := models.SharedNodeTaskDAO.ExistsDoingNodeTasks(tx, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}
 
 	// 是否有错误
-	existError, err := models.SharedNodeTaskDAO.ExistsErrorNodeTasks(tx)
+	existError, err := models.SharedNodeTaskDAO.ExistsErrorNodeTasks(tx, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +222,7 @@ func (this *NodeTaskService) CountDoingNodeTasks(ctx context.Context, req *pb.Co
 	_ = req
 
 	var tx = this.NullTx()
-	count, err := models.SharedNodeTaskDAO.CountDoingNodeTasks(tx)
+	count, err := models.SharedNodeTaskDAO.CountDoingNodeTasks(tx, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +244,7 @@ func (this *NodeTaskService) FindNotifyingNodeTasks(ctx context.Context, req *pb
 	}
 
 	var tx = this.NullTx()
-	tasks, err := models.SharedNodeTaskDAO.FindNotifyingNodeTasks(tx, req.Size)
+	tasks, err := models.SharedNodeTaskDAO.FindNotifyingNodeTasks(tx, nodeconfigs.NodeRoleNode, req.Size)
 	if err != nil {
 		return nil, err
 	}

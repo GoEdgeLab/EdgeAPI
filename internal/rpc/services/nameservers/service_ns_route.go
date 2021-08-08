@@ -4,6 +4,7 @@ package nameservers
 
 import (
 	"context"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -75,7 +76,7 @@ func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.Find
 	// 集群
 	var pbCluster *pb.NSCluster
 	if route.ClusterId > 0 {
-		cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(route.ClusterId))
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(route.ClusterId))
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +131,7 @@ func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.
 		// 集群
 		var pbCluster *pb.NSCluster
 		if route.ClusterId > 0 {
-			cluster, err := nameservers.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(route.ClusterId))
+			cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(route.ClusterId))
 			if err != nil {
 				return nil, err
 			}

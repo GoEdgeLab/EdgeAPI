@@ -1,21 +1,20 @@
-package nameservers
+package models
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"time"
 )
 
 // DecodeInstallStatus 安装状态
-func (this *NSNode) DecodeInstallStatus() (*models.NodeInstallStatus, error) {
+func (this *NSNode) DecodeInstallStatus() (*NodeInstallStatus, error) {
 	if len(this.InstallStatus) == 0 || this.InstallStatus == "null" {
-		return models.NewNodeInstallStatus(), nil
+		return NewNodeInstallStatus(), nil
 	}
-	status := &models.NodeInstallStatus{}
+	status := &NodeInstallStatus{}
 	err := json.Unmarshal([]byte(this.InstallStatus), status)
 	if err != nil {
-		return models.NewNodeInstallStatus(), err
+		return NewNodeInstallStatus(), err
 	}
 
 	// 如果N秒钟没有更新状态，则认为不在运行

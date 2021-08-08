@@ -45,21 +45,21 @@ func (this *NSService) ComposeNSBoard(ctx context.Context, req *pb.ComposeNSBoar
 	result.CountNSRecords = countRecords
 
 	// 集群数
-	countClusters, err := nameservers.SharedNSClusterDAO.CountAllEnabledClusters(tx)
+	countClusters, err := models.SharedNSClusterDAO.CountAllEnabledClusters(tx)
 	if err != nil {
 		return nil, err
 	}
 	result.CountNSClusters = countClusters
 
 	// 节点数
-	countNodes, err := nameservers.SharedNSNodeDAO.CountAllEnabledNodes(tx)
+	countNodes, err := models.SharedNSNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
 		return nil, err
 	}
 	result.CountNSNodes = countNodes
 
 	// 离线节点数
-	countOfflineNodes, err := nameservers.SharedNSNodeDAO.CountAllOfflineNodes(tx)
+	countOfflineNodes, err := models.SharedNSNodeDAO.CountAllOfflineNodes(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (this *NSService) ComposeNSBoard(ctx context.Context, req *pb.ComposeNSBoar
 		return nil, err
 	}
 	for _, stat := range topNodeStats {
-		nodeName, err := nameservers.SharedNSNodeDAO.FindEnabledNSNodeName(tx, int64(stat.NodeId))
+		nodeName, err := models.SharedNSNodeDAO.FindEnabledNSNodeName(tx, int64(stat.NodeId))
 		if err != nil {
 			return nil, err
 		}

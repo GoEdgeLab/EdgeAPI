@@ -1,4 +1,4 @@
-package nameservers
+package models
 
 // NSCluster 域名服务器集群
 type NSCluster struct {
