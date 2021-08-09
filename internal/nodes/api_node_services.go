@@ -454,6 +454,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&nameservers.NSQuestionOptionService{}).(*nameservers.NSQuestionOptionService)
+		pb.RegisterNSQuestionOptionServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&nameservers.NSService{}).(*nameservers.NSService)
 		pb.RegisterNSServiceServer(server, instance)
 		this.rest(instance)
