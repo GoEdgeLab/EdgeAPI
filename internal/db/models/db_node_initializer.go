@@ -241,7 +241,7 @@ func findNSAccessLogTable(db *dbs.DB, day string, force bool) (string, error) {
 	}
 
 	// 创建表格
-	_, err = db.Exec("CREATE TABLE `" + tableName + "` (\n  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',\n  `nodeId` int(11) unsigned DEFAULT '0' COMMENT '节点ID',\n  `domainId` int(11) unsigned DEFAULT '0' COMMENT '域名ID',\n  `recordId` int(11) unsigned DEFAULT '0' COMMENT '记录ID',\n  `content` json DEFAULT NULL COMMENT '访问数据',\n  `requestId` varchar(128) DEFAULT NULL COMMENT '请求ID',\n  `createdAt` bigint(11) unsigned DEFAULT '0' COMMENT '创建时间',\n  PRIMARY KEY (`id`),\n  KEY `nodeId` (`nodeId`),\n  KEY `domainId` (`domainId`),\n  KEY `recordId` (`recordId`),\n  KEY `requestId` (`requestId`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='域名服务访问日志';")
+	_, err = db.Exec("CREATE TABLE `" + tableName + "` (\n  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',\n  `nodeId` int(11) unsigned DEFAULT '0' COMMENT '节点ID',\n  `domainId` int(11) unsigned DEFAULT '0' COMMENT '域名ID',\n  `recordId` int(11) unsigned DEFAULT '0' COMMENT '记录ID',\n  `content` json DEFAULT NULL COMMENT '访问数据',\n  `requestId` varchar(128) DEFAULT NULL COMMENT '请求ID',\n  `createdAt` bigint(11) unsigned DEFAULT '0' COMMENT '创建时间',\n  `remoteAddr` varchar(128) DEFAULT NULL COMMENT 'IP',\n  PRIMARY KEY (`id`),\n  KEY `nodeId` (`nodeId`),\n  KEY `domainId` (`domainId`),\n  KEY `recordId` (`recordId`),\n  KEY `requestId` (`requestId`),\n  KEY `remoteAddr` (`remoteAddr`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='域名服务访问日志';")
 	if err != nil {
 		return tableName, err
 	}
