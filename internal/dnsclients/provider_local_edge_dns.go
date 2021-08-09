@@ -7,10 +7,10 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
-	"regexp"
 	"strings"
 )
 
@@ -48,7 +48,7 @@ func (this *LocalEdgeDNSProvider) GetRecords(domain string) (records []*dnstypes
 	offset := int64(0)
 	size := int64(1000)
 	for {
-		result, err := nameservers.SharedNSRecordDAO.ListEnabledRecords(tx, domainId, "", "", 0, offset, size)
+		result, err := nameservers.SharedNSRecordDAO.ListEnabledRecords(tx, domainId, "", "", "", offset, size)
 		if err != nil {
 			return nil, err
 		}
@@ -61,17 +61,15 @@ func (this *LocalEdgeDNSProvider) GetRecords(domain string) (records []*dnstypes
 			}
 
 			routeIds := record.DecodeRouteIds()
-			var routeIdString = ""
-			if len(routeIds) > 0 {
-				routeIdString = fmt.Sprintf("%d", routeIds[0])
+			if len(routeIds) == 0 {
+				routeIds = []string{dnsconfigs.DefaultRouteCode}
 			}
-
 			records = append(records, &dnstypes.Record{
 				Id:    fmt.Sprintf("%d", record.Id),
 				Name:  record.Name,
 				Type:  record.Type,
 				Value: record.Value,
-				Route: routeIdString,
+				Route: routeIds[0],
 			})
 		}
 
@@ -92,7 +90,15 @@ func (this *LocalEdgeDNSProvider) GetRoutes(domain string) (routes []*dnstypes.R
 		return nil, errors.New("can not find domain '" + domain + "'")
 	}
 
-	// TODO 将来支持集群、域名、用户自定义线路
+	// 默认线路
+	for _, route := range dnsconfigs.AllDefaultRoutes {
+		routes = append(routes, &dnstypes.Route{
+			Name: route.Name,
+			Code: route.Code,
+		})
+	}
+
+	// 自定义线路
 	result, err := nameservers.SharedNSRouteDAO.FindAllEnabledRoutes(tx, 0, 0, 0)
 	if err != nil {
 		return nil, err
@@ -100,7 +106,31 @@ func (this *LocalEdgeDNSProvider) GetRoutes(domain string) (routes []*dnstypes.R
 	for _, route := range result {
 		routes = append(routes, &dnstypes.Route{
 			Name: route.Name,
-			Code: fmt.Sprintf("%d", route.Id),
+			Code: "id:" + types.String(route.Id),
+		})
+	}
+
+	// 默认ISP
+	for _, route := range dnsconfigs.AllDefaultISPRoutes {
+		routes = append(routes, &dnstypes.Route{
+			Name: route.Name,
+			Code: route.Code,
+		})
+	}
+
+	// 默认中国省份
+	for _, route := range dnsconfigs.AllDefaultChinaProvinceRoutes {
+		routes = append(routes, &dnstypes.Route{
+			Name: route.Name,
+			Code: route.Code,
+		})
+	}
+
+	// 默认全球国家/地区
+	for _, route := range dnsconfigs.AllDefaultWorldRegionRoutes {
+		routes = append(routes, &dnstypes.Route{
+			Name: route.Name,
+			Code: route.Code,
 		})
 	}
 
@@ -129,7 +159,9 @@ func (this *LocalEdgeDNSProvider) QueryRecord(domain string, name string, record
 	routeIds := record.DecodeRouteIds()
 	var routeIdString = ""
 	if len(routeIds) > 0 {
-		routeIdString = fmt.Sprintf("%d", routeIds[0])
+		routeIdString = routeIds[0]
+	} else {
+		routeIdString = dnsconfigs.DefaultRouteCode
 	}
 
 	return &dnstypes.Record{
@@ -152,12 +184,9 @@ func (this *LocalEdgeDNSProvider) AddRecord(domain string, newRecord *dnstypes.R
 		return errors.New("can not find domain '" + domain + "'")
 	}
 
-	var routeIds []int64
-	if len(newRecord.Route) > 0 && regexp.MustCompile(`^\d+$`).MatchString(newRecord.Route) {
-		routeId := types.Int64(newRecord.Route)
-		if routeId > 0 {
-			routeIds = append(routeIds, routeId)
-		}
+	var routeIds = []string{}
+	if len(newRecord.Route) > 0 {
+		routeIds = append(routeIds, newRecord.Route)
 	}
 
 	_, err = nameservers.SharedNSRecordDAO.CreateRecord(tx, domainId, "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds)
@@ -179,12 +208,9 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 		return errors.New("can not find domain '" + domain + "'")
 	}
 
-	var routeIds []int64
-	if len(newRecord.Route) > 0 && regexp.MustCompile(`^\d+$`).MatchString(newRecord.Route) {
-		routeId := types.Int64(newRecord.Route)
-		if routeId > 0 {
-			routeIds = append(routeIds, routeId)
-		}
+	var routeIds []string
+	if len(newRecord.Route) > 0 {
+		routeIds = append(routeIds, newRecord.Route)
 	}
 
 	if len(record.Id) > 0 {
@@ -242,5 +268,5 @@ func (this *LocalEdgeDNSProvider) DeleteRecord(domain string, record *dnstypes.R
 
 // DefaultRoute 默认线路
 func (this *LocalEdgeDNSProvider) DefaultRoute() string {
-	return ""
+	return "default"
 }

@@ -9,7 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"strconv"
 )
 
 const (
@@ -89,7 +88,7 @@ func (this *NSRecordDAO) FindNSRecordName(tx *dbs.Tx, id int64) (string, error) 
 }
 
 // CreateRecord 创建记录
-func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64) (int64, error) {
+func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []string) (int64, error) {
 	version, err := this.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -104,7 +103,7 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 	op.Ttl = ttl
 
 	if len(routeIds) == 0 {
-		op.RouteIds = "[]"
+		op.RouteIds = `["default"]`
 	} else {
 		routeIds, err := json.Marshal(routeIds)
 		if err != nil {
@@ -129,7 +128,7 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 }
 
 // UpdateRecord 修改记录
-func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []int64, isOn bool) error {
+func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description string, name string, dnsType dnsconfigs.RecordType, value string, ttl int32, routeIds []string, isOn bool) error {
 	if recordId <= 0 {
 		return errors.New("invalid recordId")
 	}
@@ -149,7 +148,7 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 	op.IsOn = isOn
 
 	if len(routeIds) == 0 {
-		op.RouteIds = "[]"
+		op.RouteIds = `["default"]`
 	} else {
 		routeIds, err := json.Marshal(routeIds)
 		if err != nil {
@@ -169,7 +168,7 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 }
 
 // CountAllEnabledDomainRecords 计算域名中记录数量
-func (this *NSRecordDAO) CountAllEnabledDomainRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64) (int64, error) {
+func (this *NSRecordDAO) CountAllEnabledDomainRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeCode string) (int64, error) {
 	query := this.Query(tx).
 		Attr("domainId", domainId).
 		State(NSRecordStateEnabled)
@@ -180,8 +179,12 @@ func (this *NSRecordDAO) CountAllEnabledDomainRecords(tx *dbs.Tx, domainId int64
 		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
 	}
-	if routeId > 0 {
-		query.JSONContains("routeIds", strconv.FormatInt(routeId, 10))
+	if len(routeCode) > 0 {
+		routeCodeJSON, err := json.Marshal(routeCode)
+		if err != nil {
+			return 0, err
+		}
+		query.JSONContains("routeIds", string(routeCodeJSON))
 	}
 	return query.Count()
 }
@@ -195,7 +198,7 @@ func (this *NSRecordDAO) CountAllEnabledRecords(tx *dbs.Tx) (int64, error) {
 }
 
 // ListEnabledRecords 列出单页记录
-func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeId int64, offset int64, size int64) (result []*NSRecord, err error) {
+func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType dnsconfigs.RecordType, keyword string, routeCode string, offset int64, size int64) (result []*NSRecord, err error) {
 	query := this.Query(tx).
 		Attr("domainId", domainId).
 		State(NSRecordStateEnabled)
@@ -206,8 +209,12 @@ func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType 
 		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
 	}
-	if routeId > 0 {
-		query.JSONContains("routeIds", strconv.FormatInt(routeId, 10))
+	if len(routeCode) > 0 {
+		routeCodeJSON, err := json.Marshal(routeCode)
+		if err != nil {
+			return nil, err
+		}
+		query.JSONContains("routeIds", string(routeCodeJSON))
 	}
 	_, err = query.
 		DescPk().

@@ -9,6 +9,8 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
+	"regexp"
+	"strings"
 )
 
 // NSRecordService 域名记录相关服务
@@ -24,7 +26,7 @@ func (this *NSRecordService) CreateNSRecord(ctx context.Context, req *pb.CreateN
 	}
 
 	var tx = this.NullTx()
-	recordId, err := nameservers.SharedNSRecordDAO.CreateRecord(tx, req.NsDomainId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteIds)
+	recordId, err := nameservers.SharedNSRecordDAO.CreateRecord(tx, req.NsDomainId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteCodes)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,7 @@ func (this *NSRecordService) UpdateNSRecord(ctx context.Context, req *pb.UpdateN
 	}
 
 	var tx = this.NullTx()
-	err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, req.NsRecordId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteIds, req.IsOn)
+	err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, req.NsRecordId, req.Description, req.Name, req.Type, req.Value, req.Ttl, req.NsRouteCodes, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +71,7 @@ func (this *NSRecordService) CountAllEnabledNSRecords(ctx context.Context, req *
 	}
 
 	var tx = this.NullTx()
-	count, err := nameservers.SharedNSRecordDAO.CountAllEnabledDomainRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId)
+	count, err := nameservers.SharedNSRecordDAO.CountAllEnabledDomainRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteCode)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +86,7 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 	}
 
 	var tx = this.NullTx()
-	records, err := nameservers.SharedNSRecordDAO.ListEnabledRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteId, req.Offset, req.Size)
+	records, err := nameservers.SharedNSRecordDAO.ListEnabledRecords(tx, req.NsDomainId, req.Type, req.Keyword, req.NsRouteCode, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +94,8 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 	for _, record := range records {
 		// 线路
 		var pbRoutes = []*pb.NSRoute{}
-		for _, recordId := range record.DecodeRouteIds() {
-			route, err := nameservers.SharedNSRouteDAO.FindEnabledNSRoute(tx, recordId)
+		for _, routeCode := range record.DecodeRouteIds() {
+			route, err := nameservers.SharedNSRouteDAO.FindEnabledRouteWithCode(tx, routeCode)
 			if err != nil {
 				return nil, err
 			}
@@ -103,7 +105,10 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 			pbRoutes = append(pbRoutes, &pb.NSRoute{
 				Id:   int64(route.Id),
 				Name: route.Name,
+				Code: route.Code,
 			})
+
+			// TODO 读取其他线路
 		}
 
 		pbRecords = append(pbRecords, &pb.NSRecord{
@@ -155,8 +160,8 @@ func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.Fi
 
 	// 线路
 	var pbRoutes = []*pb.NSRoute{}
-	for _, recordId := range record.DecodeRouteIds() {
-		route, err := nameservers.SharedNSRouteDAO.FindEnabledNSRoute(tx, recordId)
+	for _, routeCode := range record.DecodeRouteIds() {
+		route, err := nameservers.SharedNSRouteDAO.FindEnabledRouteWithCode(tx, routeCode)
 		if err != nil {
 			return nil, err
 		}
@@ -166,8 +171,11 @@ func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.Fi
 		pbRoutes = append(pbRoutes, &pb.NSRoute{
 			Id:   int64(route.Id),
 			Name: route.Name,
+			Code: route.Code,
 		})
 	}
+
+	// TODO 读取其他线路
 
 	return &pb.FindEnabledNSRecordResponse{NsRecord: &pb.NSRecord{
 		Id:          int64(record.Id),
@@ -207,8 +215,18 @@ func (this *NSRecordService) ListNSRecordsAfterVersion(ctx context.Context, req 
 		pbRoutes := []*pb.NSRoute{}
 		routeIds := record.DecodeRouteIds()
 		for _, routeId := range routeIds {
-			pbRoutes = append(pbRoutes, &pb.NSRoute{Id: routeId})
+			var routeIdInt int64 = 0
+			if regexp.MustCompile(`^id:\d+$`).MatchString(routeId) {
+				routeIdInt = types.Int64(routeId[strings.Index(routeId, ":")+1:])
+			}
+
+			pbRoutes = append(pbRoutes, &pb.NSRoute{
+				Id:   routeIdInt,
+				Code: routeId,
+			})
 		}
+
+		// TODO 读取其他线路
 
 		pbRecords = append(pbRecords, &pb.NSRecord{
 			Id:          int64(record.Id),

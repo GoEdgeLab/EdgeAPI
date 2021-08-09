@@ -3,10 +3,14 @@ package nameservers
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
+	"regexp"
+	"strings"
 )
 
 const (
@@ -81,6 +85,33 @@ func (this *NSRouteDAO) FindEnabledNSRoute(tx *dbs.Tx, id int64) (*NSRoute, erro
 		return nil, err
 	}
 	return result.(*NSRoute), err
+}
+
+// FindEnabledRouteWithCode 根据代号获取线路信息
+func (this *NSRouteDAO) FindEnabledRouteWithCode(tx *dbs.Tx, code string) (*NSRoute, error) {
+	if regexp.MustCompile(`^id:\d+$`).MatchString(code) {
+		var routeId = types.Int64(code[strings.Index(code, ":")+1:])
+		route, err := this.FindEnabledNSRoute(tx, routeId)
+		if route == nil || err != nil {
+			return nil, err
+		}
+
+		route.Code = "id:" + types.String(routeId)
+		return route, nil
+	}
+
+	route := dnsconfigs.FindDefaultRoute(code)
+	if route == nil {
+		return nil, nil
+	}
+
+	return &NSRoute{
+		Id:    0,
+		IsOn:  1,
+		Name:  route.Name,
+		Code:  route.Code,
+		State: NSRouteStateEnabled,
+	}, nil
 }
 
 // FindNSRouteName 根据主键查找名称

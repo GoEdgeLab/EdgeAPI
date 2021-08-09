@@ -15,6 +15,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"regexp"
 )
 
 type upgradeVersion struct {
@@ -42,7 +43,7 @@ var upgradeFuncs = []*upgradeVersion{
 		"0.2.5", upgradeV0_2_5,
 	},
 	{
-		"0.2.9", upgradeV0_2_9,
+		"0.2.8.1", upgradeV0_2_8_1,
 	},
 }
 
@@ -255,9 +256,9 @@ func upgradeV0_2_5(db *dbs.DB) error {
 	return nil
 }
 
-// v0.2.9
-func upgradeV0_2_9(db *dbs.DB) error {
-	// 访问日志
+// v0.2.8.1
+func upgradeV0_2_8_1(db *dbs.DB) error {
+	// 访问日志设置
 	{
 		one, err := db.FindOne("SELECT id FROM edgeSysSettings WHERE code=? LIMIT 1", systemconfigs.SettingCodeNSAccessLogSetting)
 		if err != nil {
@@ -279,5 +280,47 @@ func upgradeV0_2_9(db *dbs.DB) error {
 			}
 		}
 	}
+
+	// 升级EdgeDNS线路
+	ones, _, err := db.FindOnes("SELECT id, dnsRoutes FROM edgeNodes WHERE dnsRoutes IS NOT NULL")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var nodeId = one.GetInt64("id")
+		var dnsRoutes = one.GetString("dnsRoutes")
+		if len(dnsRoutes) == 0 {
+			continue
+		}
+		var m = map[string][]string{}
+		err = json.Unmarshal([]byte(dnsRoutes), &m)
+		if err != nil {
+			continue
+		}
+		var isChanged = false
+		var reg = regexp.MustCompile(`^\d+$`)
+		for k, routes := range m {
+			for index, route := range routes {
+				if reg.MatchString(route) {
+					route = "id:" + route
+					isChanged = true
+				}
+				routes[index] = route
+			}
+			m[k] = routes
+		}
+
+		if isChanged {
+			mJSON, err := json.Marshal(m)
+			if err != nil {
+				return err
+			}
+			_, err = db.Exec("UPDATE edgeNodes SET dnsRoutes=? WHERE id=? LIMIT 1", string(mJSON), nodeId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

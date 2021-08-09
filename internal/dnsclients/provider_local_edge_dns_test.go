@@ -1,8 +1,9 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 
-package dnsclients
+package dnsclients_test
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -10,12 +11,14 @@ import (
 	"testing"
 )
 
+const testClusterId = 7
+
 func TestLocalEdgeDNSProvider_GetRecords(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -31,9 +34,9 @@ func TestLocalEdgeDNSProvider_GetRecords(t *testing.T) {
 func TestLocalEdgeDNSProvider_GetRoutes(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -49,9 +52,9 @@ func TestLocalEdgeDNSProvider_GetRoutes(t *testing.T) {
 func TestLocalEdgeDNSProvider_QueryRecord(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -66,9 +69,9 @@ func TestLocalEdgeDNSProvider_QueryRecord(t *testing.T) {
 func TestLocalEdgeDNSProvider_AddRecord(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -79,7 +82,7 @@ func TestLocalEdgeDNSProvider_AddRecord(t *testing.T) {
 		Name:  "example",
 		Type:  dnstypes.RecordTypeA,
 		Value: "10.0.0.1",
-		Route: "7",
+		Route: "id:7",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -90,9 +93,9 @@ func TestLocalEdgeDNSProvider_AddRecord(t *testing.T) {
 func TestLocalEdgeDNSProvider_UpdateRecord(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -124,9 +127,9 @@ func TestLocalEdgeDNSProvider_UpdateRecord(t *testing.T) {
 func TestLocalEdgeDNSProvider_DeleteRecord(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -148,9 +151,9 @@ func TestLocalEdgeDNSProvider_DeleteRecord(t *testing.T) {
 func TestLocalEdgeDNSProvider_DefaultRoute(t *testing.T) {
 	dbs.NotifyReady()
 
-	provider := &LocalEdgeDNSProvider{}
+	provider := &dnsclients.LocalEdgeDNSProvider{}
 	err := provider.Auth(maps.Map{
-		"clusterId": 1,
+		"clusterId": testClusterId,
 	})
 	if err != nil {
 		t.Fatal(err)
