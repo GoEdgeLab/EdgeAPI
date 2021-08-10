@@ -78,11 +78,50 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 	}
 
 	result := []*pb.HTTPAccessLog{}
+	var pbNodeMap = map[int64]*pb.Node{}
+	var pbClusterMap = map[int64]*pb.NodeCluster{}
 	for _, accessLog := range accessLogs {
 		a, err := accessLog.ToPB()
 		if err != nil {
 			return nil, err
 		}
+
+		// 节点 & 集群
+		pbNode, ok := pbNodeMap[a.NodeId]
+		if ok {
+			a.Node = pbNode
+		} else {
+			node, err := models.SharedNodeDAO.FindEnabledNode(tx, a.NodeId)
+			if err != nil {
+				return nil, err
+			}
+			if node != nil {
+				pbNode = &pb.Node{Id: int64(node.Id), Name: node.Name}
+
+				var clusterId = int64(node.ClusterId)
+				pbCluster, ok := pbClusterMap[clusterId]
+				if ok {
+					pbNode.NodeCluster = pbCluster
+				} else {
+					cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, clusterId)
+					if err != nil {
+						return nil, err
+					}
+					if cluster != nil {
+						pbCluster = &pb.NodeCluster{
+							Id:   int64(cluster.Id),
+							Name: cluster.Name,
+						}
+						pbNode.NodeCluster = pbCluster
+						pbClusterMap[clusterId] = pbCluster
+					}
+				}
+
+				pbNodeMap[a.NodeId] = pbNode
+				a.Node = pbNode
+			}
+		}
+
 		result = append(result, a)
 	}
 
