@@ -23,7 +23,7 @@ function build() {
 	VERSION=$(lookup-version $ROOT/../internal/const/const.go)
 	ZIP="${NAME}-${OS}-${ARCH}-${TAG}-v${VERSION}.zip"
 
-	# check edge-node
+	# build edge-node
 	NodeVersion=$(lookup-version $ROOT"/../../EdgeNode/internal/const/const.go")
 	echo "building edge-node v${NodeVersion} ..."
 	EDGE_NODE_BUILD_SCRIPT=$ROOT"/../../EdgeNode/build/build.sh"
@@ -35,7 +35,11 @@ function build() {
 	echo "=============================="
 	architects=("amd64" "386" "arm64" "mips64" "mips64le")
 	for arch in "${architects[@]}"; do
-		./build.sh linux $arch $TAG
+		if [ ! -f $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-${TAG}-v${NodeVersion}.zip" ]; then
+			./build.sh linux $arch $TAG
+		else
+			echo "use built node linux/$arch/v${NodeVersion}"
+		fi
 	done
 	echo "=============================="
 	cd -
@@ -44,6 +48,30 @@ function build() {
 	for arch in "${architects[@]}"; do
 		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-${TAG}-v${NodeVersion}.zip" $ROOT/deploy/edge-node-linux-${arch}-v${NodeVersion}.zip
 	done
+
+	# build edge-dns
+	DNS_ROOT=$ROOT"/../../EdgeDNS"
+	if [ -d $DNS_ROOT  ]; then
+		DNSNodeVersion=$(lookup-version $ROOT"/../../EdgeDNS/internal/const/const.go")
+		echo "building edge-dns ${DNSNodeVersion} ..."
+		EDGE_DNS_NODE_BUILD_SCRIPT=$ROOT"/../../EdgeDNS/build/build.sh"
+		if [ ! -f $EDGE_DNS_NODE_BUILD_SCRIPT ]; then
+			echo "unable to find edge-dns build script 'EdgeDNS/build/build.sh'"
+			exit
+		fi
+		cd $ROOT"/../../EdgeDNS/build"
+		echo "=============================="
+		architects=("amd64")
+		for arch in "${architects[@]}"; do
+			./build.sh linux $arch $TAG
+		done
+		echo "=============================="
+		cd -
+
+		for arch in "${architects[@]}"; do
+			cp $ROOT"/../../EdgeDNS/dist/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip" $ROOT/deploy/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip
+		done
+	fi
 
 	# build sql
 	echo "building sql ..."
