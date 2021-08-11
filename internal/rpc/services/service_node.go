@@ -43,7 +43,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 
 	// 增加认证相关
 	if req.NodeLogin != nil {
-		_, err = models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
+		_, err = models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeconfigs.NodeRoleNode, nodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
 		if err != nil {
 			return nil, err
 		}
@@ -435,8 +435,9 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
+	// 登录信息
 	if req.NodeLogin == nil {
-		err = models.SharedNodeLoginDAO.DisableNodeLogins(tx, req.NodeId)
+		err = models.SharedNodeLoginDAO.DisableNodeLogins(tx, nodeconfigs.NodeRoleNode, req.NodeId)
 		if err != nil {
 			return nil, err
 		}
@@ -447,7 +448,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 				return nil, err
 			}
 		} else {
-			_, err = models.SharedNodeLoginDAO.CreateNodeLogin(tx, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
+			_, err = models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeconfigs.NodeRoleNode, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
 			if err != nil {
 				return nil, err
 			}
@@ -524,7 +525,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	}
 
 	// 认证信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, req.NodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, nodeconfigs.NodeRoleNode, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -621,7 +622,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			Name: clusterName,
 		},
 		SecondaryNodeClusters:  secondaryPBClusters,
-		Login:                  respLogin,
+		NodeLogin:              respLogin,
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
 		IsOn:                   node.IsOn == 1,
@@ -717,7 +718,7 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	}
 
 	go func() {
-		err = installers.SharedQueue().InstallNodeProcess(req.NodeId, false)
+		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, false)
 		if err != nil {
 			logs.Println("[RPC]install node:" + err.Error())
 		}
@@ -757,7 +758,7 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 	}
 
 	go func() {
-		err = installers.SharedQueue().InstallNodeProcess(req.NodeId, true)
+		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, true)
 		if err != nil {
 			logs.Println("[RPC]install node:" + err.Error())
 		}
@@ -774,7 +775,7 @@ func (this *NodeService) StartNode(ctx context.Context, req *pb.StartNodeRequest
 		return nil, err
 	}
 
-	err = installers.SharedQueue().StartNode(req.NodeId)
+	err = installers.SharedNodeQueue().StartNode(req.NodeId)
 	if err != nil {
 		return &pb.StartNodeResponse{
 			IsOk:  false,
@@ -793,7 +794,7 @@ func (this *NodeService) StopNode(ctx context.Context, req *pb.StopNodeRequest) 
 		return nil, err
 	}
 
-	err = installers.SharedQueue().StopNode(req.NodeId)
+	err = installers.SharedNodeQueue().StopNode(req.NodeId)
 	if err != nil {
 		return &pb.StopNodeResponse{
 			IsOk:  false,
@@ -909,7 +910,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 	result := []*pb.Node{}
 	for _, node := range nodes {
 		// 认证信息
-		login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, int64(node.Id))
+		login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, nodeconfigs.NodeRoleNode, int64(node.Id))
 		if err != nil {
 			return nil, err
 		}
@@ -967,7 +968,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 			IsInstalled:   node.IsInstalled == 1,
 			StatusJSON:    []byte(node.Status),
 			IsOn:          node.IsOn == 1,
-			Login:         pbLogin,
+			NodeLogin:     pbLogin,
 			IpAddresses:   pbAddresses,
 			InstallStatus: pbInstallStatus,
 		})
@@ -1018,7 +1019,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 		}
 		for _, node := range nodes {
 			// 认证信息
-			login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, int64(node.Id))
+			login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, nodeconfigs.NodeRoleNode, int64(node.Id))
 			if err != nil {
 				return nil, err
 			}
@@ -1086,7 +1087,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 				StatusJSON:    []byte(node.Status),
 				IsOn:          node.IsOn == 1,
 				IpAddresses:   pbAddresses,
-				Login:         pbLogin,
+				NodeLogin:     pbLogin,
 				InstallStatus: pbInstallStatus,
 			}
 
@@ -1144,7 +1145,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 	tx := this.NullTx()
 
 	if req.NodeLogin.Id <= 0 {
-		_, err := models.SharedNodeLoginDAO.CreateNodeLogin(tx, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
+		_, err := models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeconfigs.NodeRoleNode, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
 		if err != nil {
 			return nil, err
 		}

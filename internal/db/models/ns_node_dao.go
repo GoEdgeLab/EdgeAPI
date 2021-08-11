@@ -521,6 +521,27 @@ func (this *NSNodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, includeS
 	return
 }
 
+// UpdateNodeInstallStatus 修改节点的安装状态
+func (this *NSNodeDAO) UpdateNodeInstallStatus(tx *dbs.Tx, nodeId int64, status *NodeInstallStatus) error {
+	if status == nil {
+		_, err := this.Query(tx).
+			Pk(nodeId).
+			Set("installStatus", "null").
+			Update()
+		return err
+	}
+
+	data, err := json.Marshal(status)
+	if err != nil {
+		return err
+	}
+	_, err = this.Query(tx).
+		Pk(nodeId).
+		Set("installStatus", string(data)).
+		Update()
+	return err
+}
+
 // NotifyUpdate 通知更新
 func (this *NSNodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 	// TODO 先什么都不做

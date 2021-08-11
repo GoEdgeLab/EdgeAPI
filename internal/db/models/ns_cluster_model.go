@@ -8,6 +8,7 @@ type NSCluster struct {
 	InstallDir string `field:"installDir"` // 安装目录
 	State      uint8  `field:"state"`      // 状态
 	AccessLog  string `field:"accessLog"`  // 访问日志配置
+	GrantId    uint32 `field:"grantId"`    // 授权ID
 }
 
 type NSClusterOperator struct {
@@ -17,6 +18,7 @@ type NSClusterOperator struct {
 	InstallDir interface{} // 安装目录
 	State      interface{} // 状态
 	AccessLog  interface{} // 访问日志配置
+	GrantId    interface{} // 授权ID
 }
 
 func NewNSClusterOperator() *NSClusterOperator {

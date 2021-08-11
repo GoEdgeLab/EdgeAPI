@@ -161,6 +161,14 @@ func (this *NSClusterDAO) FindClusterAccessLog(tx *dbs.Tx, clusterId int64) ([]b
 	return []byte(accessLog), err
 }
 
+// FindClusterGrantId 查找集群的认证ID
+func (this *NSClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(clusterId).
+		Result("grantId").
+		FindInt64Col(0)
+}
+
 // NotifyUpdate 通知更改
 func (this *NSClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, NSNodeTaskTypeConfigChanged)

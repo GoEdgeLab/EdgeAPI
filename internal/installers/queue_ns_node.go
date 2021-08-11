@@ -6,30 +6,31 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
-var sharedQueue = NewQueue()
+var sharedNSNodeQueue = NewNSNodeQueue()
 
-type Queue struct {
+type NSNodeQueue struct {
 }
 
-func NewQueue() *Queue {
-	return &Queue{}
+func NewNSNodeQueue() *NSNodeQueue {
+	return &NSNodeQueue{}
 }
 
-func SharedQueue() *Queue {
-	return sharedQueue
+func SharedNSNodeQueue() *NSNodeQueue {
+	return sharedNSNodeQueue
 }
 
-// 安装边缘节点流程控制
-func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
+// InstallNodeProcess 安装边缘节点流程控制
+func (this *NSNodeQueue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	installStatus := models.NewNodeInstallStatus()
 	installStatus.IsRunning = true
 	installStatus.UpdatedAt = time.Now().Unix()
 
-	err := models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
+	err := models.SharedNSNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	go func() {
 		for ticker.Wait() {
 			installStatus.UpdatedAt = time.Now().Unix()
-			err := models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
+			err := models.SharedNSNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 			if err != nil {
 				logs.Println("[INSTALL]" + err.Error())
 				continue
@@ -61,14 +62,14 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	} else {
 		installStatus.IsOk = true
 	}
-	err = models.SharedNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
+	err = models.SharedNSNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
 	if err != nil {
 		return err
 	}
 
 	// 修改为已安装
 	if installStatus.IsOk {
-		err = models.SharedNodeDAO.UpdateNodeIsInstalled(nil, nodeId, true)
+		err = models.SharedNSNodeDAO.UpdateNodeIsInstalled(nil, nodeId, true)
 		if err != nil {
 			return err
 		}
@@ -77,9 +78,9 @@ func (this *Queue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
 	return nil
 }
 
-// 安装边缘节点
-func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus, isUpgrading bool) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
+// InstallNode 安装边缘节点
+func (this *NSNodeQueue) InstallNode(nodeId int64, installStatus *models.NodeInstallStatus, isUpgrading bool) error {
+	node, err := models.SharedNSNodeDAO.FindEnabledNSNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeconfigs.NodeRoleDNS, nodeId)
 	if err != nil {
 		return err
 	}
@@ -113,7 +114,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
+		grantId, err := models.SharedNSClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -136,7 +137,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}
@@ -145,8 +146,8 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		}
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
-			// 默认是 $登录用户/edge-node
-			installDir = "/" + grant.Username + "/edge-node"
+			// 默认是 $登录用户/edge-dns
+			installDir = "/" + grant.Username + "/edge-dns"
 		}
 	}
 
@@ -177,7 +178,7 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 		IsUpgrading: isUpgrading,
 	}
 
-	installer := &NodeInstaller{}
+	installer := &NSNodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,
@@ -198,9 +199,9 @@ func (this *Queue) InstallNode(nodeId int64, installStatus *models.NodeInstallSt
 	return err
 }
 
-// 启动边缘节点
-func (this *Queue) StartNode(nodeId int64) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
+// StartNode 启动边缘节点
+func (this *NSNodeQueue) StartNode(nodeId int64) error {
+	node, err := models.SharedNSNodeDAO.FindEnabledNSNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -209,7 +210,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeconfigs.NodeRoleDNS, nodeId)
 	if err != nil {
 		return err
 	}
@@ -231,7 +232,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
+		grantId, err := models.SharedNSClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -252,7 +253,7 @@ func (this *Queue) StartNode(nodeId int64) error {
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}
@@ -261,12 +262,12 @@ func (this *Queue) StartNode(nodeId int64) error {
 		}
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
-			// 默认是 $登录用户/edge-node
-			installDir = "/" + grant.Username + "/edge-node"
+			// 默认是 $登录用户/edge-dns
+			installDir = "/" + grant.Username + "/edge-dns"
 		}
 	}
 
-	installer := &NodeInstaller{}
+	installer := &NSNodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,
@@ -283,14 +284,14 @@ func (this *Queue) StartNode(nodeId int64) error {
 	}()
 
 	// 检查命令是否存在
-	exeFile := installDir + "/edge-node/bin/edge-node"
+	exeFile := installDir + "/edge-dns/bin/edge-dns"
 	_, err = installer.client.Stat(exeFile)
 	if err != nil {
 		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
 	}
 
 	// 我们先尝试Systemd启动
-	_, _, _ = installer.client.Exec("systemctl start edge-node")
+	_, _, _ = installer.client.Exec("systemctl start edge-dns")
 
 	_, stderr, err := installer.client.Exec(exeFile + " start")
 	if err != nil {
@@ -303,9 +304,9 @@ func (this *Queue) StartNode(nodeId int64) error {
 	return nil
 }
 
-// 停止节点
-func (this *Queue) StopNode(nodeId int64) error {
-	node, err := models.SharedNodeDAO.FindEnabledNode(nil, nodeId)
+// StopNode 停止节点
+func (this *NSNodeQueue) StopNode(nodeId int64) error {
+	node, err := models.SharedNSNodeDAO.FindEnabledNSNode(nil, nodeId)
 	if err != nil {
 		return err
 	}
@@ -314,7 +315,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 	}
 
 	// 登录信息
-	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeId)
+	login, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(nil, nodeconfigs.NodeRoleDNS, nodeId)
 	if err != nil {
 		return err
 	}
@@ -336,7 +337,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 
 	if loginParams.GrantId == 0 {
 		// 从集群中读取
-		grantId, err := models.SharedNodeClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
+		grantId, err := models.SharedNSClusterDAO.FindClusterGrantId(nil, int64(node.ClusterId))
 		if err != nil {
 			return err
 		}
@@ -357,7 +358,7 @@ func (this *Queue) StopNode(nodeId int64) error {
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
 		clusterId := node.ClusterId
-		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(nil, int64(clusterId))
 		if err != nil {
 			return err
 		}
@@ -366,12 +367,12 @@ func (this *Queue) StopNode(nodeId int64) error {
 		}
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
-			// 默认是 $登录用户/edge-node
-			installDir = "/" + grant.Username + "/edge-node"
+			// 默认是 $登录用户/edge-dns
+			installDir = "/" + grant.Username + "/edge-dns"
 		}
 	}
 
-	installer := &NodeInstaller{}
+	installer := &NSNodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,
@@ -388,14 +389,14 @@ func (this *Queue) StopNode(nodeId int64) error {
 	}()
 
 	// 检查命令是否存在
-	exeFile := installDir + "/edge-node/bin/edge-node"
+	exeFile := installDir + "/edge-dns/bin/edge-dns"
 	_, err = installer.client.Stat(exeFile)
 	if err != nil {
 		return errors.New("edge node is not installed correctly, can not find executable file: " + exeFile)
 	}
 
 	// 我们先尝试Systemd停止
-	_, _, _ = installer.client.Exec("systemctl stop edge-node")
+	_, _, _ = installer.client.Exec("systemctl stop edge-dns")
 
 	_, stderr, err := installer.client.Exec(exeFile + " stop")
 	if err != nil {

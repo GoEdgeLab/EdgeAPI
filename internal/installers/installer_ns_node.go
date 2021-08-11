@@ -8,11 +8,11 @@ import (
 	"regexp"
 )
 
-type NodeInstaller struct {
+type NSNodeInstaller struct {
 	BaseInstaller
 }
 
-func (this *NodeInstaller) Install(dir string, params interface{}, installStatus *models.NodeInstallStatus) error {
+func (this *NSNodeInstaller) Install(dir string, params interface{}, installStatus *models.NodeInstallStatus) error {
 	if params == nil {
 		return errors.New("'params' required for node installation")
 	}
@@ -43,7 +43,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 上传安装文件
-	filePrefix := "edge-node-" + env.OS + "-" + env.Arch
+	filePrefix := "edge-dns-" + env.OS + "-" + env.Arch
 	zipFile, err := this.LookupLatestInstaller(filePrefix)
 	if err != nil {
 		return err
@@ -70,11 +70,11 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 如果是升级则优雅停止先前的进程
-	exePath := dir + "/edge-node/bin/edge-node"
+	exePath := dir + "/edge-dns/bin/edge-dns"
 	if nodeParams.IsUpgrading {
 		_, err = this.client.Stat(exePath)
 		if err == nil {
-			_, _, _ = this.client.Exec(exePath + " quit")
+			_, _, _ = this.client.Exec(exePath + " stop")
 		}
 
 		// 删除可执行文件防止冲突
@@ -95,7 +95,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 
 	// 修改配置文件
 	{
-		configFile := dir + "/edge-node/configs/api.yaml"
+		configFile := dir + "/edge-dns/configs/api.yaml"
 		var data = []byte(`rpc:
   endpoints: [ ${endpoints} ]
 nodeId: "${nodeId}"
@@ -112,7 +112,7 @@ secret: "${nodeSecret}"`)
 	}
 
 	// 测试
-	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node test")
+	_, stderr, err = this.client.Exec(dir + "/edge-dns/bin/edge-dns test")
 	if err != nil {
 		installStatus.ErrorCode = "TEST_FAILED"
 		return errors.New("test edge node failed: " + err.Error())
@@ -122,17 +122,17 @@ secret: "${nodeSecret}"`)
 			installStatus.ErrorCode = "RPC_TEST_FAILED"
 		}
 
-		return errors.New("test edge node failed: " + stderr)
+		return errors.New("test edge dns node failed: " + stderr)
 	}
 
 	// 启动
-	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node start")
+	_, stderr, err = this.client.Exec(dir + "/edge-dns/bin/edge-dns start")
 	if err != nil {
-		return errors.New("start edge node failed: " + err.Error())
+		return errors.New("start edge dns failed: " + err.Error())
 	}
 
 	if len(stderr) > 0 {
-		return errors.New("start edge node failed: " + stderr)
+		return errors.New("start edge dns failed: " + stderr)
 	}
 
 	return nil

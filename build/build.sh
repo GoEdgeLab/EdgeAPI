@@ -50,27 +50,29 @@ function build() {
 	done
 
 	# build edge-dns
-	DNS_ROOT=$ROOT"/../../EdgeDNS"
-	if [ -d $DNS_ROOT  ]; then
-		DNSNodeVersion=$(lookup-version $ROOT"/../../EdgeDNS/internal/const/const.go")
-		echo "building edge-dns ${DNSNodeVersion} ..."
-		EDGE_DNS_NODE_BUILD_SCRIPT=$ROOT"/../../EdgeDNS/build/build.sh"
-		if [ ! -f $EDGE_DNS_NODE_BUILD_SCRIPT ]; then
-			echo "unable to find edge-dns build script 'EdgeDNS/build/build.sh'"
-			exit
-		fi
-		cd $ROOT"/../../EdgeDNS/build"
-		echo "=============================="
-		architects=("amd64")
-		for arch in "${architects[@]}"; do
-			./build.sh linux $arch $TAG
-		done
-		echo "=============================="
-		cd -
+	if [ "$TAG" = "plus" ]; then
+		DNS_ROOT=$ROOT"/../../EdgeDNS"
+		if [ -d $DNS_ROOT  ]; then
+			DNSNodeVersion=$(lookup-version $ROOT"/../../EdgeDNS/internal/const/const.go")
+			echo "building edge-dns ${DNSNodeVersion} ..."
+			EDGE_DNS_NODE_BUILD_SCRIPT=$ROOT"/../../EdgeDNS/build/build.sh"
+			if [ ! -f $EDGE_DNS_NODE_BUILD_SCRIPT ]; then
+				echo "unable to find edge-dns build script 'EdgeDNS/build/build.sh'"
+				exit
+			fi
+			cd $ROOT"/../../EdgeDNS/build"
+			echo "=============================="
+			architects=("amd64")
+			for arch in "${architects[@]}"; do
+				./build.sh linux $arch $TAG
+			done
+			echo "=============================="
+			cd -
 
-		for arch in "${architects[@]}"; do
-			cp $ROOT"/../../EdgeDNS/dist/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip" $ROOT/deploy/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip
-		done
+			for arch in "${architects[@]}"; do
+				cp $ROOT"/../../EdgeDNS/dist/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip" $ROOT/deploy/edge-dns-linux-${arch}-v${DNSNodeVersion}.zip
+			done
+		fi
 	fi
 
 	# build sql
@@ -94,12 +96,20 @@ function build() {
 	rm -f $DIST/resources/ipdata/ip2region/global_region.csv
 	rm -f $DIST/resources/ipdata/ip2region/ip.merge.txt
 
-	# building installer
-	echo "building installer ..."
+	# building edge installer
+	echo "building node installer ..."
 	architects=("amd64" "386" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
 		env GOOS=linux GOARCH=${arch} go build -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-helper-linux-${arch} $ROOT/../cmd/installer-helper/main.go
+	done
+
+	# building edge dns installer
+	echo "building dns node installer ..."
+	architects=("amd64" "386" "arm64")
+	for arch in "${architects[@]}"; do
+		# TODO support arm, mips ...
+		env GOOS=linux GOARCH=${arch} go build -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-dns-helper-linux-${arch} $ROOT/../cmd/installer-dns-helper/main.go
 	done
 
 	# building api node
