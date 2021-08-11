@@ -3,6 +3,7 @@ package installers
 import (
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/Tea"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"golang.org/x/crypto/ssh"
@@ -133,7 +134,7 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 }
 
 // InstallHelper 上传安装助手
-func (this *BaseInstaller) InstallHelper(targetDir string) (env *Env, err error) {
+func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
 	uname, _, err := this.client.Exec("uname -a")
 	if err != nil {
 		return env, err
@@ -164,7 +165,11 @@ func (this *BaseInstaller) InstallHelper(targetDir string) (env *Env, err error)
 		archName = "386"
 	}
 
-	exeName := "edge-installer-dns-helper-" + osName + "-" + archName
+	exeName := "edge-installer-helper-" + osName + "-" + archName
+	switch role {
+	case nodeconfigs.NodeRoleDNS:
+		exeName = "edge-installer-dns-helper-" + osName + "-" + archName
+	}
 	exePath := Tea.Root + "/installers/" + exeName
 
 	err = this.client.Copy(exePath, targetDir+"/"+exeName, 0777)

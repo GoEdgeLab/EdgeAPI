@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"path/filepath"
 	"regexp"
 )
@@ -36,7 +37,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 安装助手
-	env, err := this.InstallHelper(dir)
+	env, err := this.InstallHelper(dir, nodeconfigs.NodeRoleNode)
 	if err != nil {
 		installStatus.ErrorCode = "INSTALL_HELPER_FAILED"
 		return err
