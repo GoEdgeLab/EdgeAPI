@@ -136,3 +136,22 @@ func (this *NodeLoginDAO) DisableNodeLogins(tx *dbs.Tx, role nodeconfigs.NodeRol
 		Update()
 	return err
 }
+
+func (this *NodeLoginDAO) FindFrequentPorts(tx *dbs.Tx) ([]int32, error) {
+	ones, _, err := this.Query(tx).
+		Attr("state", NodeLoginStateEnabled).
+		Result("JSON_EXTRACT(params, '$.port') as `port`", "COUNT(*) AS c").
+		Having("port>0").
+		Desc("c").
+		Limit(10).
+		Group("port").
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	var ports = []int32{}
+	for _, one := range ones {
+		ports = append(ports, one.GetInt32("port"))
+	}
+	return ports, nil
+}

@@ -159,6 +159,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&services.NodeLoginService{}).(*services.NodeLoginService)
+		pb.RegisterNodeLoginServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.HTTPAccessLogService{}).(*services.HTTPAccessLogService)
 		pb.RegisterHTTPAccessLogServiceServer(server, instance)
 		this.rest(instance)
