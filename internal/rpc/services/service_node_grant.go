@@ -265,3 +265,35 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 	resp.IsOk = true
 	return resp, nil
 }
+
+// FindSuggestNodeGrants 查找集群推荐的认证
+func (this *NodeGrantService) FindSuggestNodeGrants(ctx context.Context, req *pb.FindSuggestNodeGrantsRequest) (*pb.FindSuggestNodeGrantsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbGrants = []*pb.NodeGrant{}
+	var tx = this.NullTx()
+	grantIds, err := models.SharedNodeLoginDAO.FindFrequentGrantIds(tx, req.NodeClusterId, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+	for _, grantId := range grantIds {
+		grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(tx, grantId)
+		if err != nil {
+			return nil, err
+		}
+		if grant != nil {
+			pbGrants = append(pbGrants, &pb.NodeGrant{
+				Id:          int64(grant.Id),
+				Name:        grant.Name,
+				Method:      grant.Method,
+				Username:    grant.Username,
+				Su:          grant.Su == 1,
+				Description: grant.Description,
+			})
+		}
+	}
+	return &pb.FindSuggestNodeGrantsResponse{NodeGrants: pbGrants}, nil
+}
