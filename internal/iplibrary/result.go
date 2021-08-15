@@ -22,7 +22,7 @@ func (this *Result) Summary() string {
 	if len(this.Province) > 0 && !lists.ContainsString(pieces, this.Province) {
 		pieces = append(pieces, this.Province)
 	}
-	if len(this.City) > 0 && !lists.ContainsString(pieces, this.City) && !lists.ContainsString(pieces, strings.TrimSuffix(this.Province, "市")) {
+	if len(this.City) > 0 && !lists.ContainsString(pieces, this.City) && !lists.ContainsString(pieces, strings.TrimSuffix(this.City, "市")) {
 		pieces = append(pieces, this.City)
 	}
 	return strings.Join(pieces, " ")
