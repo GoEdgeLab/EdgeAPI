@@ -90,7 +90,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 
 		// TODO 根据集群、服务设置获取IP
 		if tableDef.HasRemoteAddr {
-			fields["remoteAddr"] = accessLog.RawRemoteAddr
+			fields["remoteAddr"] = accessLog.RemoteAddr
 		}
 		if tableDef.HasDomain {
 			fields["domain"] = accessLog.Host

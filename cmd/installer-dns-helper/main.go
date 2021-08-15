@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
-	"net"
+	"github.com/iwind/gosock/pkg/gosock"
 	"os"
+	"os/exec"
 )
 
 func main() {
@@ -24,11 +25,21 @@ func main() {
 		stderr("need '-cmd=COMMAND' argument")
 	} else if cmd == "test" {
 		// 检查是否正在运行
-		path := os.TempDir() + "/edge-dns.sock"
-		conn, err := net.Dial("unix", path)
-		if err == nil {
-			_ = conn.Close()
-			stderr("test dns node status: edge dns node is running now, can not install again")
+		var sock = gosock.NewTmpSock("edge-dns")
+		if sock.IsListening() {
+			// 从systemd中停止
+			systemctl, _ := exec.LookPath("systemctl")
+			if len(systemctl) > 0 {
+				systemctlCmd := exec.Command(systemctl, "stop", "edge-dns")
+				_ = systemctlCmd.Run()
+			}
+
+			// 从进程中停止
+			if sock.IsListening() {
+				_, _ = sock.Send(&gosock.Command{
+					Code: "stop",
+				})
+			}
 		}
 	} else if cmd == "unzip" { // 解压
 		if len(zipPath) == 0 {
