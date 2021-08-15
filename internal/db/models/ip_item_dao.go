@@ -240,6 +240,20 @@ func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip ui
 	return one.(*IPItem), nil
 }
 
+// FindEnabledItemsWithIP 根据IP查找Item
+func (this *IPItemDAO) FindEnabledItemsWithIP(tx *dbs.Tx, ip string) (result []*IPItem, err error) {
+	_, err = this.Query(tx).
+		Attr("ipFrom", ip).
+		Attr("ipTo", "").
+		Where("(expiredAt=0 OR expiredAt>:nowTime)").
+		Param("nowTime", time.Now().Unix()).
+		Where("listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1)").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // ExistsEnabledItem 检查IP是否存在
 func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error) {
 	return this.Query(tx).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/lists"
 )
 
 // IPListService IP名单相关服务
@@ -144,4 +145,49 @@ func (this *IPListService) ExistsEnabledIPList(ctx context.Context, req *pb.Exis
 		return nil, err
 	}
 	return &pb.ExistsEnabledIPListResponse{Exists: b}, nil
+}
+
+// FindEnabledIPListContainsIP 根据IP来搜索IP名单
+func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req *pb.FindEnabledIPListContainsIPRequest) (*pb.FindEnabledIPListContainsIPResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	items, err := models.SharedIPItemDAO.FindEnabledItemsWithIP(tx, req.Ip)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbLists = []*pb.IPList{}
+	var listIds = []int64{}
+	for _, item := range items {
+		if lists.ContainsInt64(listIds, int64(item.ListId)) {
+			continue
+		}
+
+		list, err := models.SharedIPListDAO.FindEnabledIPList(tx, int64(item.ListId))
+		if err != nil {
+			return nil, err
+		}
+		if list == nil {
+			continue
+		}
+		if list.IsPublic != 1 {
+			continue
+		}
+		pbLists = append(pbLists, &pb.IPList{
+			Id:          int64(list.Id),
+			IsOn:        list.IsOn == 1,
+			Type:        list.Type,
+			Name:        list.Name,
+			Code:        list.Code,
+			IsPublic:    list.IsPublic == 1,
+			Description: "",
+		})
+
+		listIds = append(listIds, int64(item.ListId))
+	}
+	return &pb.FindEnabledIPListContainsIPResponse{IpLists: pbLists}, nil
 }
