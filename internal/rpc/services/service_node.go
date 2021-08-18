@@ -1203,7 +1203,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 	}
 	result := []*pb.NodeDNSInfo{}
 	for _, node := range nodes {
-		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}

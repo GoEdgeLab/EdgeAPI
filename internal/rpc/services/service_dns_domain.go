@@ -413,7 +413,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 新增的节点域名
 	nodeKeys := []string{}
 	for _, node := range nodes {
-		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, nil, nil, 0, 0, false, false, err
 		}

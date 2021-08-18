@@ -11,6 +11,9 @@ type NodeIPAddress struct {
 	State       uint8  `field:"state"`       // 状态
 	Order       uint32 `field:"order"`       // 排序
 	CanAccess   uint8  `field:"canAccess"`   // 是否可以访问
+	IsOn        uint8  `field:"isOn"`        // 是否启用
+	IsUp        uint8  `field:"isUp"`        // 是否上线
+	Thresholds  string `field:"thresholds"`  // 上线阈值
 }
 
 type NodeIPAddressOperator struct {
@@ -23,6 +26,9 @@ type NodeIPAddressOperator struct {
 	State       interface{} // 状态
 	Order       interface{} // 排序
 	CanAccess   interface{} // 是否可以访问
+	IsOn        interface{} // 是否启用
+	IsUp        interface{} // 是否上线
+	Thresholds  interface{} // 上线阈值
 }
 
 func NewNodeIPAddressOperator() *NodeIPAddressOperator {

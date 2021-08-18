@@ -38,7 +38,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, req.AddressId, req.Name, req.Ip, req.CanAccess)
+	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, req.AddressId, req.Name, req.Ip, req.CanAccess, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -118,14 +118,17 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 	var result *pb.NodeIPAddress = nil
 	if address != nil {
 		result = &pb.NodeIPAddress{
-			Id:          int64(address.Id),
-			NodeId:      int64(address.NodeId),
-			Name:        address.Name,
-			Ip:          address.Ip,
-			Description: address.Description,
-			State:       int64(address.State),
-			Order:       int64(address.Order),
-			CanAccess:   address.CanAccess == 1,
+			Id:             int64(address.Id),
+			NodeId:         int64(address.NodeId),
+			Name:           address.Name,
+			Ip:             address.Ip,
+			Description:    address.Description,
+			State:          int64(address.State),
+			Order:          int64(address.Order),
+			CanAccess:      address.CanAccess == 1,
+			IsOn:           address.IsOn == 1,
+			IsUp:           address.IsUp == 1,
+			ThresholdsJSON: []byte(address.Thresholds),
 		}
 	}
 
@@ -150,14 +153,17 @@ func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx contex
 	result := []*pb.NodeIPAddress{}
 	for _, address := range addresses {
 		result = append(result, &pb.NodeIPAddress{
-			Id:          int64(address.Id),
-			NodeId:      int64(address.NodeId),
-			Name:        address.Name,
-			Ip:          address.Ip,
-			Description: address.Description,
-			State:       int64(address.State),
-			Order:       int64(address.Order),
-			CanAccess:   address.CanAccess == 1,
+			Id:             int64(address.Id),
+			NodeId:         int64(address.NodeId),
+			Name:           address.Name,
+			Ip:             address.Ip,
+			Description:    address.Description,
+			State:          int64(address.State),
+			Order:          int64(address.Order),
+			CanAccess:      address.CanAccess == 1,
+			IsOn:           address.IsOn == 1,
+			IsUp:           address.IsUp == 1,
+			ThresholdsJSON: []byte(address.Thresholds),
 		})
 	}
 

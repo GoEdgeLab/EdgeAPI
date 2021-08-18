@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -36,21 +37,27 @@ func init() {
 }
 
 // EnableAddress 启用条目
-func (this *NodeIPAddressDAO) EnableAddress(tx *dbs.Tx, id int64) (err error) {
+func (this *NodeIPAddressDAO) EnableAddress(tx *dbs.Tx, addressId int64) (err error) {
 	_, err = this.Query(tx).
-		Pk(id).
+		Pk(addressId).
 		Set("state", NodeIPAddressStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, addressId)
 }
 
 // DisableAddress 禁用IP地址
-func (this *NodeIPAddressDAO) DisableAddress(tx *dbs.Tx, id int64) (err error) {
+func (this *NodeIPAddressDAO) DisableAddress(tx *dbs.Tx, addressId int64) (err error) {
 	_, err = this.Query(tx).
-		Pk(id).
+		Pk(addressId).
 		Set("state", NodeIPAddressStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, addressId)
 }
 
 // DisableAllAddressesWithNodeId 禁用节点的所有的IP地址
@@ -66,7 +73,11 @@ func (this *NodeIPAddressDAO) DisableAllAddressesWithNodeId(tx *dbs.Tx, nodeId i
 		Attr("role", role).
 		Set("state", NodeIPAddressStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return SharedNodeDAO.NotifyDNSUpdate(tx, nodeId)
 }
 
 // FindEnabledAddress 查找启用中的IP地址
@@ -116,7 +127,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, role nodec
 }
 
 // UpdateAddress 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name string, ip string, canAccess bool) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name string, ip string, canAccess bool, isOn bool) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -126,9 +137,13 @@ func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name st
 	op.Name = name
 	op.Ip = ip
 	op.CanAccess = canAccess
+	op.IsOn = isOn
 	op.State = NodeIPAddressStateEnabled // 恢复状态
 	err = this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, addressId)
 }
 
 // UpdateAddressIP 修改IP地址中的IP
@@ -140,7 +155,11 @@ func (this *NodeIPAddressDAO) UpdateAddressIP(tx *dbs.Tx, addressId int64, ip st
 	op.Id = addressId
 	op.Ip = ip
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, addressId)
 }
 
 // UpdateAddressNodeId 修改IP地址所属节点
@@ -209,8 +228,8 @@ func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId 
 		FindInt64Col(0)
 }
 
-// FindNodeAccessIPAddresses 查找节点所有的可访问的IP地址
-func (this *NodeIPAddressDAO) FindNodeAccessIPAddresses(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (result []*NodeIPAddress, err error) {
+// FindNodeAccessAndUpIPAddresses 查找节点所有的可访问的IP地址
+func (this *NodeIPAddressDAO) FindNodeAccessAndUpIPAddresses(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (result []*NodeIPAddress, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
@@ -219,9 +238,38 @@ func (this *NodeIPAddressDAO) FindNodeAccessIPAddresses(tx *dbs.Tx, nodeId int64
 		Attr("nodeId", nodeId).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
+		Attr("isOn", true).
+		Attr("isUp", true).
 		Desc("order").
 		AscPk().
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// NotifyUpdate 通知更新
+func (this *NodeIPAddressDAO) NotifyUpdate(tx *dbs.Tx, addressId int64) error {
+	address, err := this.Query(tx).
+		Pk(addressId).
+		Result("nodeId", "role").
+		Find()
+	if err != nil {
+		return err
+	}
+	if address == nil {
+		return nil
+	}
+	var nodeId = int64(address.(*NodeIPAddress).NodeId)
+	if nodeId == 0 {
+		return nil
+	}
+	var role = address.(*NodeIPAddress).Role
+	switch role {
+	case nodeconfigs.NodeRoleNode:
+		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, nodeId, dns.DNSTaskTypeNodeChange)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }

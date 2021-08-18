@@ -312,7 +312,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		}
 		for _, ipAddress := range ipAddresses {
 			ip := ipAddress.Ip
-			if len(ip) == 0 || ipAddress.CanAccess == 0 {
+			if len(ip) == 0 || ipAddress.CanAccess == 0 || ipAddress.IsUp == 0 || ipAddress.IsOn == 0 {
 				continue
 			}
 			if net.ParseIP(ip) == nil {
