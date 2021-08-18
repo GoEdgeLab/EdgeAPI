@@ -20,7 +20,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess)
+	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.ThresholdsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, req.AddressId, req.Name, req.Ip, req.CanAccess, req.IsOn)
+	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, req.AddressId, req.Name, req.Ip, req.CanAccess, req.IsOn, req.ThresholdsJSON)
 	if err != nil {
 		return nil, err
 	}

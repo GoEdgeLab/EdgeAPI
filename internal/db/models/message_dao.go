@@ -40,6 +40,8 @@ const (
 	MessageTypeServerNamesAuditingFailed  MessageType = "ServerNamesAuditingFailed"  // 服务域名审核失败
 	MessageTypeThresholdSatisfied         MessageType = "ThresholdSatisfied"         // 满足阈值
 	MessageTypeFirewallEvent              MessageType = "FirewallEvent"              // 防火墙事件
+	MessageTypeIPAddrUp                   MessageType = "IPAddrUp"                   // IP地址上线
+	MessageTypeIPAddrDown                 MessageType = "IPAddrDown"                 // IP地址下线
 
 	MessageTypeNSNodeInactive MessageType = "NSNodeInactive" // 边缘节点不活跃
 	MessageTypeNSNodeActive   MessageType = "NSNodeActive"   // 边缘节点活跃
