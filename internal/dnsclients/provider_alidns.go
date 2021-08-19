@@ -31,6 +31,34 @@ func (this *AliDNSProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *AliDNSProvider) GetDomains() (domains []string, err error) {
+	pageNumber := 1
+	size := 100
+
+	for {
+		req := alidns.CreateDescribeDomainsRequest()
+		req.PageNumber = requests.NewInteger(pageNumber)
+		req.PageSize = requests.NewInteger(size)
+		resp := alidns.CreateDescribeDomainsResponse()
+		err = this.doAPI(req, resp)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, domain := range resp.Domains.Domain {
+			domains = append(domains, domain.DomainName)
+		}
+
+		pageNumber++
+		if int64((pageNumber-1)*size) >= resp.TotalCount {
+			break
+		}
+	}
+
+	return
+}
+
 // GetRecords 获取域名列表
 func (this *AliDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	pageNumber := 1

@@ -12,6 +12,14 @@ import (
 	"testing"
 )
 
+func TestCloudFlareProvider_GetDomains(t *testing.T) {
+	provider, err := testCloudFlareProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(provider.GetDomains())
+}
+
 func TestCloudFlareProvider_GetRecords(t *testing.T) {
 	provider, err := testCloudFlareProvider()
 	if err != nil {

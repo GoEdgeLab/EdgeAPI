@@ -16,6 +16,12 @@ func (this *UserEdgeDNSProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *UserEdgeDNSProvider) GetDomains() (domains []string, err error) {
+	// TODO
+	return
+}
+
 // GetRecords 获取域名解析记录列表
 func (this *UserEdgeDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	// TODO

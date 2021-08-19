@@ -59,6 +59,21 @@ func (this *CloudFlareProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *CloudFlareProvider) GetDomains() (domains []string, err error) {
+	resp := new(cloudflare.ZonesResponse)
+	err = this.doAPI(http.MethodGet, "zones", map[string]string{}, nil, resp)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, zone := range resp.Result {
+		domains = append(domains, zone.Name)
+	}
+
+	return
+}
+
 // GetRecords 获取域名解析记录列表
 func (this *CloudFlareProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	zoneId, err := this.findZoneIdWithDomain(domain)

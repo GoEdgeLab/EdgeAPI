@@ -10,6 +10,9 @@ type ProviderInterface interface {
 	// Auth 认证
 	Auth(params maps.Map) error
 
+	// GetDomains 获取所有域名列表
+	GetDomains() (domains []string, err error)
+
 	// GetRecords 获取域名解析记录列表
 	GetRecords(domain string) (records []*dnstypes.Record, err error)
 

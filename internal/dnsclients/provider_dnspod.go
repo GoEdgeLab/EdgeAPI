@@ -35,6 +35,40 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
+	offset := 0
+	size := 100
+	for {
+		domainsResp, err := this.post("/Domain.list", map[string]string{
+			"offset": numberutils.FormatInt(offset),
+			"length": numberutils.FormatInt(size),
+		})
+		if err != nil {
+			return nil, err
+		}
+		offset += size
+
+		domainsSlice := domainsResp.GetSlice("domains")
+		if len(domainsSlice) == 0 {
+			break
+		}
+
+		for _, domain := range domainsSlice {
+			domainMap := maps.NewMap(domain)
+			domains = append(domains, domainMap.GetString("name"))
+		}
+
+		// 检查是否到头
+		info := domainsResp.GetMap("info")
+		recordTotal := info.GetInt("record_total")
+		if offset >= recordTotal {
+			break
+		}
+	}
+	return
+}
+
 // GetRecords 获取域名列表
 func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	offset := 0

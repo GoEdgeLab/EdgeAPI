@@ -11,6 +11,14 @@ import (
 	"testing"
 )
 
+func TestAliDNSProvider_GetDomains(t *testing.T) {
+	provider, err := testAliDNSProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(provider.GetDomains())
+}
+
 func TestAliDNSProvider_GetRecords(t *testing.T) {
 	provider, err := testAliDNSProvider()
 	if err != nil {

@@ -11,6 +11,18 @@ import (
 	"testing"
 )
 
+func TestHuaweiDNSProvider_GetDomains(t *testing.T) {
+	provider, err := testHuaweiDNSProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	domains, err := provider.GetDomains()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("domains:", domains)
+}
+
 func TestHuaweiDNSProvider_GetRecords(t *testing.T) {
 	provider, err := testHuaweiDNSProvider()
 	if err != nil {

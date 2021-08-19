@@ -364,6 +364,7 @@ func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSD
 		ProviderId:         int64(domain.ProviderId),
 		Name:               domain.Name,
 		IsOn:               domain.IsOn == 1,
+		IsUp:               domain.IsUp == 1,
 		DataUpdatedAt:      int64(domain.DataUpdatedAt),
 		CountNodeRecords:   int64(countNodeRecords),
 		NodesChanged:       nodesChanged,
@@ -693,7 +694,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}, nil
 }
 
-// 检查域名是否在记录中
+// ExistDNSDomainRecord 检查域名是否在记录中
 func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.ExistDNSDomainRecordRequest) (*pb.ExistDNSDomainRecordResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -707,4 +708,85 @@ func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.
 		return nil, err
 	}
 	return &pb.ExistDNSDomainRecordResponse{IsOk: isOk}, nil
+}
+
+// SyncDNSDomainsFromProvider 从服务商同步域名
+func (this *DNSDomainService) SyncDNSDomainsFromProvider(ctx context.Context, req *pb.SyncDNSDomainsFromProviderRequest) (*pb.SyncDNSDomainsFromProviderResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
+	if err != nil {
+		return nil, err
+	}
+	if provider == nil {
+		return nil, errors.New("can not find provider")
+	}
+
+	// 下线不存在的域名
+	oldDomains, err := dns.SharedDNSDomainDAO.FindAllEnabledDomainsWithProviderId(tx, req.DnsProviderId)
+	if err != nil {
+		return nil, err
+	}
+
+	dnsProvider := dnsclients.FindProvider(provider.Type)
+	if dnsProvider == nil {
+		return nil, errors.New("provider type '" + provider.Type + "' is not supported yet")
+	}
+
+	params, err := provider.DecodeAPIParams()
+	if err != nil {
+		return nil, errors.New("decode params failed: " + err.Error())
+	}
+	err = dnsProvider.Auth(params)
+	if err != nil {
+		return nil, errors.New("auth failed: " + err.Error())
+	}
+
+	domainNames, err := dnsProvider.GetDomains()
+	if err != nil {
+		return nil, err
+	}
+
+	var hasChanges = false
+
+	// 创建或上线域名
+	for _, domainName := range domainNames {
+		domain, err := dns.SharedDNSDomainDAO.FindEnabledDomainWithName(tx, req.DnsProviderId, domainName)
+		if err != nil {
+			return nil, err
+		}
+		if domain == nil {
+			_, err = dns.SharedDNSDomainDAO.CreateDomain(tx, 0, 0, req.DnsProviderId, domainName)
+			if err != nil {
+				return nil, err
+			}
+			hasChanges = true
+		} else if domain.IsUp == 0 {
+			err = dns.SharedDNSDomainDAO.UpdateDomainIsUp(tx, int64(domain.Id), true)
+			if err != nil {
+				return nil, err
+			}
+			hasChanges = true
+		}
+	}
+
+	// 将老的域名置为下线
+	for _, oldDomain := range oldDomains {
+		var domainName = oldDomain.Name
+		if oldDomain.IsUp == 1 && !lists.ContainsString(domainNames, domainName) {
+			err = dns.SharedDNSDomainDAO.UpdateDomainIsUp(tx, int64(oldDomain.Id), false)
+			if err != nil {
+				return nil, err
+			}
+			hasChanges = true
+		}
+	}
+
+	return &pb.SyncDNSDomainsFromProviderResponse{
+		HasChanges: hasChanges,
+	}, nil
 }

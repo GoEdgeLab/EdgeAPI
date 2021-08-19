@@ -86,6 +86,7 @@ func (this *DNSDomainDAO) CreateDomain(tx *dbs.Tx, adminId int64, userId int64, 
 	op.Name = name
 	op.State = DNSDomainStateEnabled
 	op.IsOn = true
+	op.IsUp = true
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -246,4 +247,26 @@ func (this *DNSDomainDAO) ExistDomainRecord(tx *dbs.Tx, domainId int64, recordNa
 		Where("JSON_CONTAINS(records, :query)").
 		Param("query", query.AsJSON()).
 		Exist()
+}
+
+// FindEnabledDomainWithName 根据名称查找某个域名
+func (this *DNSDomainDAO) FindEnabledDomainWithName(tx *dbs.Tx, providerId int64, domainName string) (*DNSDomain, error) {
+	one, err := this.Query(tx).
+		State(DNSDomainStateEnabled).
+		Attr("isOn", true).
+		Attr("providerId", providerId).
+		Attr("name", domainName).
+		Find()
+	if one != nil {
+		return one.(*DNSDomain), nil
+	}
+	return nil, err
+}
+
+// UpdateDomainIsUp 设置是否在线
+func (this *DNSDomainDAO) UpdateDomainIsUp(tx *dbs.Tx, domainId int64, isUp bool) error {
+	return this.Query(tx).
+		Pk(domainId).
+		Set("isUp", isUp).
+		UpdateQuickly()
 }

@@ -1,6 +1,6 @@
 package dns
 
-// 管理的域名
+// DNSDomain 管理的域名
 type DNSDomain struct {
 	Id            uint32 `field:"id"`            // ID
 	AdminId       uint32 `field:"adminId"`       // 管理员ID
@@ -14,6 +14,7 @@ type DNSDomain struct {
 	Data          string `field:"data"`          // 原始数据信息
 	Records       string `field:"records"`       // 所有解析记录
 	Routes        string `field:"routes"`        // 线路数据
+	IsUp          uint8  `field:"isUp"`          // 是否在线
 	State         uint8  `field:"state"`         // 状态
 }
 
@@ -30,6 +31,7 @@ type DNSDomainOperator struct {
 	Data          interface{} // 原始数据信息
 	Records       interface{} // 所有解析记录
 	Routes        interface{} // 线路数据
+	IsUp          interface{} // 是否在线
 	State         interface{} // 状态
 }
 

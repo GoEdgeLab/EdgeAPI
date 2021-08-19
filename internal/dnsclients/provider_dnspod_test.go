@@ -9,6 +9,18 @@ import (
 	"testing"
 )
 
+func TestDNSPodProvider_GetDomains(t *testing.T) {
+	provider, err := testDNSPodProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	domains, err := provider.GetDomains()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(domains)
+}
+
 func TestDNSPodProvider_GetRoutes(t *testing.T) {
 	provider, err := testDNSPodProvider()
 	if err != nil {

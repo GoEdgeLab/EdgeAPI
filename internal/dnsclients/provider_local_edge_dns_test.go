@@ -13,6 +13,24 @@ import (
 
 const testClusterId = 7
 
+func TestLocalEdgeDNSProvider_GetDomains(t *testing.T) {
+	dbs.NotifyReady()
+
+	provider := &dnsclients.LocalEdgeDNSProvider{}
+	err := provider.Auth(maps.Map{
+		"clusterId": testClusterId,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	domains, err := provider.GetDomains()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("domains:", domains)
+}
+
 func TestLocalEdgeDNSProvider_GetRecords(t *testing.T) {
 	dbs.NotifyReady()
 

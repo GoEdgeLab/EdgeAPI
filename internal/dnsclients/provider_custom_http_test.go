@@ -7,6 +7,22 @@ import (
 	"testing"
 )
 
+func TestCustomHTTPProvider_GetDomains(t *testing.T) {
+	provider := CustomHTTPProvider{}
+	err := provider.Auth(maps.Map{
+		"url":    "http://127.0.0.1:2345/dns",
+		"secret": "123456",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	domains, err := provider.GetDomains()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(domains)
+}
+
 func TestCustomHTTPProvider_AddRecord(t *testing.T) {
 	provider := CustomHTTPProvider{}
 	err := provider.Auth(maps.Map{

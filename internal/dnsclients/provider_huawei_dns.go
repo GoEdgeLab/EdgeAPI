@@ -55,6 +55,21 @@ func (this *HuaweiDNSProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *HuaweiDNSProvider) GetDomains() (domains []string, err error) {
+	var resp = new(huaweidns.ZonesResponse)
+	err = this.doAPI(http.MethodGet, "/v2/zones", map[string]string{}, nil, resp)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, zone := range resp.Zones {
+		zone.Name = strings.TrimSuffix(zone.Name, ".")
+		domains = append(domains, zone.Name)
+	}
+	return
+}
+
 // GetRecords 获取域名解析记录列表
 func (this *HuaweiDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	zoneId, err := this.findZoneIdWithDomain(domain)

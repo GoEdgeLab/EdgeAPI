@@ -34,6 +34,19 @@ func (this *LocalEdgeDNSProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *LocalEdgeDNSProvider) GetDomains() (domains []string, err error) {
+	var tx *dbs.Tx
+	domainOnes, err := nameservers.SharedNSDomainDAO.ListEnabledDomains(tx, this.clusterId, 0, "", 0, 1000)
+	if err != nil {
+		return nil, err
+	}
+	for _, domain := range domainOnes {
+		domains = append(domains, domain.Name)
+	}
+	return
+}
+
 // GetRecords 获取域名解析记录列表
 func (this *LocalEdgeDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	var tx *dbs.Tx

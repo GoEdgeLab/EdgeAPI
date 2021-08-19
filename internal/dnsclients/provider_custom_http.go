@@ -49,6 +49,16 @@ func (this *CustomHTTPProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// GetDomains 获取所有域名列表
+func (this *CustomHTTPProvider) GetDomains() (domains []string, err error) {
+	resp, err := this.post(maps.Map{})
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(resp, &domains)
+	return
+}
+
 // GetRecords 获取域名解析记录列表
 func (this *CustomHTTPProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	resp, err := this.post(maps.Map{
