@@ -118,7 +118,7 @@ func (this *NodeTrafficHourlyStatDAO) FindHourlyStatsWithClusterId(tx *dbs.Tx, c
 }
 
 // FindTopNodeStats 取得一定时间内的节点排行数据
-func (this *NodeTrafficHourlyStatDAO) FindTopNodeStats(tx *dbs.Tx, role string, hourFrom string, hourTo string) (result []*NodeTrafficHourlyStat, err error) {
+func (this *NodeTrafficHourlyStatDAO) FindTopNodeStats(tx *dbs.Tx, role string, hourFrom string, hourTo string, size int64) (result []*NodeTrafficHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("role", role).
@@ -126,13 +126,14 @@ func (this *NodeTrafficHourlyStatDAO) FindTopNodeStats(tx *dbs.Tx, role string, 
 		Result("nodeId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("nodeId").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
 // FindTopNodeStatsWithClusterId 取得集群一定时间内的节点排行数据
-func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, role string, clusterId int64, hourFrom string, hourTo string) (result []*NodeTrafficHourlyStat, err error) {
+func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, role string, clusterId int64, hourFrom string, hourTo string, size int64) (result []*NodeTrafficHourlyStat, err error) {
 	// TODO 节点如果已经被删除，则忽略
 	_, err = this.Query(tx).
 		Attr("role", role).
@@ -141,6 +142,7 @@ func (this *NodeTrafficHourlyStatDAO) FindTopNodeStatsWithClusterId(tx *dbs.Tx, 
 		Result("nodeId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 		Group("nodeId").
 		Desc("countRequests").
+		Limit(size).
 		Slice(&result).
 		FindAll()
 	return

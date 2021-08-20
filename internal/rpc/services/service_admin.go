@@ -662,7 +662,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 节点排行
 	if isPlus {
-		topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo)
+		topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo, 10)
 		if err != nil {
 			return nil, err
 		}

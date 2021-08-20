@@ -123,7 +123,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 
 	// 节点排行
-	topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStatsWithClusterId(tx, "node", req.NodeClusterId, hourFrom, hourTo)
+	topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStatsWithClusterId(tx, "node", req.NodeClusterId, hourFrom, hourTo, 10)
 	if err != nil {
 		return nil, err
 	}
