@@ -3,9 +3,11 @@ package nameservers
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/types"
 )
 
 // NSAccessLogService 访问日志相关服务
@@ -61,6 +63,27 @@ func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.Li
 		if err != nil {
 			return nil, err
 		}
+
+		// 线路
+		if len(a.NsRouteCodes) > 0 {
+			for _, routeCode := range a.NsRouteCodes {
+				route, err := nameservers.SharedNSRouteDAO.FindEnabledRouteWithCode(nil, routeCode)
+				if err != nil {
+					return nil, err
+				}
+				if route != nil {
+					a.NsRoutes = append(a.NsRoutes, &pb.NSRoute{
+						Id:        types.Int64(route.Id),
+						IsOn:      route.IsOn == 1,
+						Name:      route.Name,
+						Code:      routeCode,
+						NsCluster: nil,
+						NsDomain:  nil,
+					})
+				}
+			}
+		}
+
 		result = append(result, a)
 	}
 
