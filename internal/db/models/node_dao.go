@@ -642,10 +642,6 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 
 	for _, server := range servers {
-		if len(server.Config) == 0 {
-			continue
-		}
-
 		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server)
 		if err != nil {
 			return nil, err

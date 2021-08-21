@@ -554,11 +554,21 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			auditingResult.IsOk = true
 		}
 
+		// 配置
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server)
+		if err != nil {
+			return nil, err
+		}
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.Server{
 			Id:                      int64(server.Id),
 			IsOn:                    server.IsOn == 1,
 			Type:                    server.Type,
-			Config:                  []byte(server.Config),
+			Config:                  configJSON,
 			Name:                    server.Name,
 			Description:             server.Description,
 			HttpJSON:                []byte(server.Http),
@@ -685,6 +695,16 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		}
 	}
 
+	// 配置
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server)
+	if err != nil {
+		return nil, err
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
 		Id:               int64(server.Id),
 		IsOn:             server.IsOn == 1,
@@ -692,7 +712,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		Name:             server.Name,
 		Description:      server.Description,
 		DnsName:          server.DnsName,
-		Config:           []byte(server.Config),
+		Config:           configJSON,
 		ServerNamesJSON:  []byte(server.ServerNames),
 		HttpJSON:         []byte(server.Http),
 		HttpsJSON:        []byte(server.Https),

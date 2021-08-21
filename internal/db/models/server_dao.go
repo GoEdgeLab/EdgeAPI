@@ -1,17 +1,14 @@
 package models
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -308,49 +305,6 @@ func (this *ServerDAO) UpdateServerIsOn(tx *dbs.Tx, serverId int64, isOn bool) e
 	}
 
 	return nil
-}
-
-// UpdateServerConfig 修改服务配置
-func (this *ServerDAO) UpdateServerConfig(tx *dbs.Tx, serverId int64, configJSON []byte, updateMd5 bool) (isChanged bool, err error) {
-	if serverId <= 0 {
-		return false, errors.New("serverId should not be smaller than 0")
-	}
-
-	// 查询以前的md5
-	oldConfigMd5, err := this.Query(tx).
-		Pk(serverId).
-		Result("configMd5").
-		FindStringCol("")
-	if err != nil {
-		return false, err
-	}
-
-	globalConfig, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
-	if err != nil {
-		return false, err
-	}
-
-	m := md5.New()
-	_, _ = m.Write(configJSON)   // 当前服务配置
-	_, _ = m.Write(globalConfig) // 全局配置
-	h := m.Sum(nil)
-	newConfigMd5 := fmt.Sprintf("%x", h)
-
-	// 如果配置相同则不更改
-	if oldConfigMd5 == newConfigMd5 {
-		return false, nil
-	}
-
-	op := NewServerOperator()
-	op.Id = serverId
-	op.Config = JSONBytes(configJSON)
-	op.Version = dbs.SQL("version+1")
-
-	if updateMd5 {
-		op.ConfigMd5 = newConfigMd5
-	}
-	err = this.Save(tx, op)
-	return true, err
 }
 
 // UpdateServerHTTP 修改HTTP配置
@@ -965,19 +919,6 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 	return config, nil
 }
 
-// RenewServerConfig 更新服务的Config配置
-func (this *ServerDAO) RenewServerConfig(tx *dbs.Tx, serverId int64, updateMd5 bool) (isChanged bool, err error) {
-	serverConfig, err := this.ComposeServerConfigWithServerId(tx, serverId)
-	if err != nil {
-		return false, err
-	}
-	data, err := json.Marshal(serverConfig)
-	if err != nil {
-		return false, err
-	}
-	return this.UpdateServerConfig(tx, serverId, data, updateMd5)
-}
-
 // FindReverseProxyRef 根据条件获取反向代理配置
 func (this *ServerDAO) FindReverseProxyRef(tx *dbs.Tx, serverId int64) (*serverconfigs.ReverseProxyRef, error) {
 	reverseProxy, err := this.Query(tx).
@@ -1424,12 +1365,6 @@ func (this *ServerDAO) FindLatestServers(tx *dbs.Tx, size int64) (result []*Serv
 
 // NotifyUpdate 同步集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
-	// 更新配置
-	_, err := this.RenewServerConfig(tx, serverId, true)
-	if err != nil && err != ErrNotFound {
-		return err
-	}
-
 	// 创建任务
 	clusterId, err := this.FindServerClusterId(tx, serverId)
 	if err != nil {
