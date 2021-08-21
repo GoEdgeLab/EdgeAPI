@@ -620,8 +620,12 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// API节点升级信息
 	{
+		var apiVersion = req.ApiVersion
+		if len(apiVersion) == 0 {
+			apiVersion = teaconst.Version
+		}
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.Version,
+			NewVersion: apiVersion,
 		}
 		countNodes, err := models.SharedAPINodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
 		if err != nil {
