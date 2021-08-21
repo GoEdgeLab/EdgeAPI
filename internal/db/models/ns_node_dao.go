@@ -417,6 +417,20 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 		}
 	}
 
+	// 递归DNS配置
+	recursionJSON, err := SharedNSClusterDAO.FindClusterRecursion(tx, int64(node.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+	if len(recursionJSON) > 0 {
+		var recursionConfig = &dnsconfigs.RecursionConfig{}
+		err = json.Unmarshal(recursionJSON, recursionConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.RecursionConfig = recursionConfig
+	}
+
 	return config, nil
 }
 

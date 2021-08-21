@@ -9,6 +9,7 @@ type NSCluster struct {
 	State      uint8  `field:"state"`      // 状态
 	AccessLog  string `field:"accessLog"`  // 访问日志配置
 	GrantId    uint32 `field:"grantId"`    // 授权ID
+	Recursion  string `field:"recursion"`  // 递归DNS设置
 }
 
 type NSClusterOperator struct {
@@ -19,6 +20,7 @@ type NSClusterOperator struct {
 	State      interface{} // 状态
 	AccessLog  interface{} // 访问日志配置
 	GrantId    interface{} // 授权ID
+	Recursion  interface{} // 递归DNS设置
 }
 
 func NewNSClusterOperator() *NSClusterOperator {

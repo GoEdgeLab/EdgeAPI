@@ -169,6 +169,30 @@ func (this *NSClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int64
 		FindInt64Col(0)
 }
 
+// UpdateRecursion 设置递归DNS
+func (this *NSClusterDAO) UpdateRecursion(tx *dbs.Tx, clusterId int64, recursionJSON []byte) error {
+	err := this.Query(tx).
+		Pk(clusterId).
+		Set("recursion", recursionJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
+}
+
+// FindClusterRecursion 读取递归DNS配置
+func (this *NSClusterDAO) FindClusterRecursion(tx *dbs.Tx, clusterId int64) ([]byte, error) {
+	recursion, err := this.Query(tx).
+		Result("recursion").
+		Pk(clusterId).
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	return []byte(recursion), nil
+}
+
 // NotifyUpdate 通知更改
 func (this *NSClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, NSNodeTaskTypeConfigChanged)

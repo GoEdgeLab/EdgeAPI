@@ -4,8 +4,10 @@ package nameservers
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
@@ -174,4 +176,43 @@ func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req 
 		})
 	}
 	return &pb.FindAllEnabledNSClustersResponse{NsClusters: pbClusters}, nil
+}
+
+// UpdateNSClusterRecursionConfig 设置递归DNS配置
+func (this *NSClusterService) UpdateNSClusterRecursionConfig(ctx context.Context, req *pb.UpdateNSClusterRecursionConfigRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// 校验配置
+	var config = &dnsconfigs.RecursionConfig{}
+	err = json.Unmarshal(req.RecursionJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNSClusterDAO.UpdateRecursion(tx, req.NsClusterId, req.RecursionJSON)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// FindNSClusterRecursionConfig 读取递归DNS配置
+func (this *NSClusterService) FindNSClusterRecursionConfig(ctx context.Context, req *pb.FindNSClusterRecursionConfigRequest) (*pb.FindNSClusterRecursionConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	recursion, err := models.SharedNSClusterDAO.FindClusterRecursion(tx, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNSClusterRecursionConfigResponse{
+		RecursionJSON: recursion,
+	}, nil
 }
