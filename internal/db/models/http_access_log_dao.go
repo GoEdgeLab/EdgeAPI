@@ -255,6 +255,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 						}
 					} else {
 						query.Attr("remoteAddr", ip)
+						query.UseIndex("remoteAddr")
 					}
 				} else {
 					query.Where("JSON_EXTRACT(content, '$.remoteAddr')=:ip1").
@@ -270,6 +271,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 							Param("host2", domain)
 					} else {
 						query.Attr("domain", domain)
+						query.UseIndex("domain")
 					}
 				} else {
 					query.Where("JSON_EXTRACT(content, '$.host')=:host1").
