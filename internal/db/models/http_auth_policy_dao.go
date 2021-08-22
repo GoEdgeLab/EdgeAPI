@@ -7,6 +7,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -94,7 +96,16 @@ func (this *HTTPAuthPolicyDAO) UpdateHTTPAuthPolicy(tx *dbs.Tx, policyId int64, 
 }
 
 // ComposePolicyConfig 组合配置
-func (this *HTTPAuthPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64) (*serverconfigs.HTTPAuthPolicy, error) {
+func (this *HTTPAuthPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheMap maps.Map) (*serverconfigs.HTTPAuthPolicy, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(policyId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*serverconfigs.HTTPAuthPolicy), nil
+	}
+
 	policy, err := this.FindEnabledHTTPAuthPolicy(tx, policyId)
 	if err != nil {
 		return nil, err
@@ -118,6 +129,8 @@ func (this *HTTPAuthPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64) (
 		config.Params = params
 	}
 	config.Params = params
+
+	cacheMap[cacheKey] = config
 
 	return config, nil
 }

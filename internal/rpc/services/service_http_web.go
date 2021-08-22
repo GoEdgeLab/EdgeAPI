@@ -83,7 +83,7 @@ func (this *HTTPWebService) FindEnabledHTTPWebConfig(ctx context.Context, req *p
 
 	tx := this.NullTx()
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, req.WebId)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, req.WebId, nil)
 	if err != nil {
 		return nil, err
 	}

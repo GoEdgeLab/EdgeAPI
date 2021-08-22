@@ -356,7 +356,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	}
 
 	// HTTPS
-	httpsConfig, err := apiNode.DecodeHTTPS(nil)
+	httpsConfig, err := apiNode.DecodeHTTPS(nil, nil)
 	if err != nil {
 		remotelogs.Error("API_NODE", "decode https config: "+err.Error())
 		return
@@ -433,7 +433,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	}
 
 	// Rest HTTPS
-	restHTTPSConfig, err := apiNode.DecodeRestHTTPS(nil)
+	restHTTPSConfig, err := apiNode.DecodeRestHTTPS(nil, nil)
 	if err != nil {
 		remotelogs.Error("API_NODE", "decode REST https config: "+err.Error())
 		return

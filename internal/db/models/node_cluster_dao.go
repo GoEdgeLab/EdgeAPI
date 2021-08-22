@@ -406,7 +406,16 @@ func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int
 }
 
 // FindClusterDNSInfo 查找DNS信息
-func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64) (*NodeCluster, error) {
+func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (*NodeCluster, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":record:" + types.String(clusterId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*NodeCluster), nil
+	}
+
 	one, err := this.Query(tx).
 		Pk(clusterId).
 		Result("id", "name", "dnsName", "dnsDomainId", "dns", "isOn").
@@ -417,6 +426,7 @@ func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64) (*No
 	if one == nil {
 		return nil, nil
 	}
+	cacheMap[cacheKey] = one
 	return one.(*NodeCluster), nil
 }
 
@@ -467,7 +477,7 @@ func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (i
 	domainId := int64(cluster.DnsDomainId)
 
 	// 检查域名
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -682,11 +692,27 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithCachePolicyId(tx *db
 }
 
 // FindClusterHTTPFirewallPolicyId 获取集群的WAF策略ID
-func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64) (int64, error) {
-	return this.Query(tx).
+func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (int64, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":FindClusterHTTPFirewallPolicyId:" + types.String(clusterId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(int64), nil
+	}
+
+	firewallPolicyId, err := this.Query(tx).
 		Pk(clusterId).
 		Result("httpFirewallPolicyId").
 		FindInt64Col(0)
+	if err != nil {
+		return 0, err
+	}
+
+	cacheMap[cacheKey] = firewallPolicyId
+
+	return firewallPolicyId, nil
 }
 
 // UpdateNodeClusterHTTPCachePolicyId 设置集群的缓存策略
@@ -702,11 +728,27 @@ func (this *NodeClusterDAO) UpdateNodeClusterHTTPCachePolicyId(tx *dbs.Tx, clust
 }
 
 // FindClusterHTTPCachePolicyId 获取集群的缓存策略ID
-func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64) (int64, error) {
-	return this.Query(tx).
+func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (int64, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":FindClusterHTTPCachePolicyId:" + types.String(clusterId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(int64), nil
+	}
+
+	cachePolicyId, err := this.Query(tx).
 		Pk(clusterId).
 		Result("cachePolicyId").
 		FindInt64Col(0)
+	if err != nil {
+		return 0, err
+	}
+
+	cacheMap[cacheKey] = cachePolicyId
+
+	return cachePolicyId, nil
 }
 
 // UpdateNodeClusterHTTPFirewallPolicyId 设置集群的WAF策略

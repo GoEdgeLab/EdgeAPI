@@ -87,7 +87,7 @@ func (this *SSLPolicyService) FindEnabledSSLPolicyConfig(ctx context.Context, re
 
 	tx := this.NullTx()
 
-	config, err := models.SharedSSLPolicyDAO.ComposePolicyConfig(tx, req.SslPolicyId)
+	config, err := models.SharedSSLPolicyDAO.ComposePolicyConfig(tx, req.SslPolicyId, nil)
 	if err != nil {
 		return nil, err
 	}

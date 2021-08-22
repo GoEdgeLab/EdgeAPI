@@ -165,7 +165,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 
 	tx := this.NullTx()
 
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -654,7 +654,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return &pb.FindCurrentNodeConfigResponse{IsChanged: false}, nil
 	}
 
-	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId)
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1183,7 +1183,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 
 	tx := this.NullTx()
 
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1275,7 +1275,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		clusterId = req.NodeClusterId
 	}
 
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return nil, err
 	}

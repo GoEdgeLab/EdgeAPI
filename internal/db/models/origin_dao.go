@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -197,7 +198,16 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 }
 
 // ComposeOriginConfig 将源站信息转换为配置
-func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverconfigs.OriginConfig, error) {
+func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap maps.Map) (*serverconfigs.OriginConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(originId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*serverconfigs.OriginConfig), nil
+	}
+
 	origin, err := this.FindEnabledOrigin(tx, originId)
 	if err != nil {
 		return nil, err
@@ -313,7 +323,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverc
 		}
 		config.CertRef = ref
 		if ref.CertId > 0 {
-			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId)
+			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -324,6 +334,8 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64) (*serverc
 	if IsNotNull(origin.Ftp) {
 		// TODO
 	}
+
+	cacheMap[cacheKey] = config
 
 	return config, nil
 }

@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 )
 
-// 解析HTTP配置
+// DecodeHTTP 解析HTTP配置
 func (this *APINode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 	if !IsNotNull(this.Http) {
 		return nil, nil
@@ -25,8 +26,12 @@ func (this *APINode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 	return config, nil
 }
 
-// 解析HTTPS配置
-func (this *APINode) DecodeHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig, error) {
+// DecodeHTTPS 解析HTTPS配置
+func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+
 	if !IsNotNull(this.Https) {
 		return nil, nil
 	}
@@ -44,7 +49,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -62,7 +67,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig
 	return config, nil
 }
 
-// 解析访问地址
+// DecodeAccessAddrs 解析访问地址
 func (this *APINode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig, error) {
 	if !IsNotNull(this.AccessAddrs) {
 		return nil, nil
@@ -82,7 +87,7 @@ func (this *APINode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig,
 	return addrConfigs, nil
 }
 
-// 解析访问地址，并返回字符串形式
+// DecodeAccessAddrStrings 解析访问地址，并返回字符串形式
 func (this *APINode) DecodeAccessAddrStrings() ([]string, error) {
 	addrs, err := this.DecodeAccessAddrs()
 	if err != nil {
@@ -95,7 +100,7 @@ func (this *APINode) DecodeAccessAddrStrings() ([]string, error) {
 	return result, nil
 }
 
-// 解析Rest HTTP配置
+// DecodeRestHTTP 解析Rest HTTP配置
 func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 	if this.RestIsOn != 1 {
 		return nil, nil
@@ -117,8 +122,11 @@ func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error)
 	return config, nil
 }
 
-// 解析HTTPS配置
-func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolConfig, error) {
+// DecodeRestHTTPS 解析HTTPS配置
+func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
 	if this.RestIsOn != 1 {
 		return nil, nil
 	}
@@ -139,7 +147,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx) (*serverconfigs.HTTPSProtocolCo
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}

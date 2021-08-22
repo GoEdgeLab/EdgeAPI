@@ -555,7 +555,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -696,7 +696,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -829,7 +829,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -876,7 +876,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1071,14 +1071,14 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 	}
 	var pbDomain *pb.DNSDomain = nil
 	if clusterId > 0 {
-		clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+		clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 		if err != nil {
 			return nil, err
 		}
 		if clusterDNS != nil {
 			domainId := int64(clusterDNS.DnsDomainId)
 			if domainId > 0 {
-				domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+				domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
 				if err != nil {
 					return nil, err
 				}

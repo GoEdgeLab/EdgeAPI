@@ -58,7 +58,7 @@ func (this *HTTPPageService) FindEnabledHTTPPageConfig(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	config, err := models.SharedHTTPPageDAO.ComposePageConfig(tx, req.PageId)
+	config, err := models.SharedHTTPPageDAO.ComposePageConfig(tx, req.PageId, nil)
 	if err != nil {
 		return nil, err
 	}

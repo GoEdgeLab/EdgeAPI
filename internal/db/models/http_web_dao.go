@@ -75,7 +75,16 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, erro
 }
 
 // ComposeWebConfig 组合配置
-func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPWebConfig, error) {
+func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap maps.Map) (*serverconfigs.HTTPWebConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(webId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*serverconfigs.HTTPWebConfig), nil
+	}
+
 	web, err := SharedHTTPWebDAO.FindEnabledHTTPWeb(tx, webId)
 	if err != nil {
 		return nil, err
@@ -181,7 +190,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 			return nil, err
 		}
 		for index, page := range pages {
-			pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(tx, page.Id)
+			pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(tx, page.Id, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -235,7 +244,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 
 		// 自定义防火墙设置
 		if firewallRef.FirewallPolicyId > 0 {
-			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId)
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -257,7 +266,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		if len(refs) > 0 {
 			config.LocationRefs = refs
 
-			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs)
+			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -302,7 +311,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 			return nil, err
 		}
 		for _, ref := range refs {
-			rewriteRule, err := SharedHTTPRewriteRuleDAO.ComposeRewriteRule(tx, ref.RewriteRuleId)
+			rewriteRule, err := SharedHTTPRewriteRuleDAO.ComposeRewriteRule(tx, ref.RewriteRuleId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -356,7 +365,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 		var newRefs []*serverconfigs.HTTPAuthPolicyRef
 		for _, ref := range authConfig.PolicyRefs {
-			policyConfig, err := SharedHTTPAuthPolicyDAO.ComposePolicyConfig(tx, ref.AuthPolicyId)
+			policyConfig, err := SharedHTTPAuthPolicyDAO.ComposePolicyConfig(tx, ref.AuthPolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -367,6 +376,8 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64) (*serverconfig
 		}
 		config.Auth = authConfig
 	}
+
+	cacheMap[cacheKey] = config
 
 	return config, nil
 }

@@ -223,7 +223,16 @@ func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, keywo
 }
 
 // ComposeFirewallPolicy 组合策略配置
-func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId int64) (*firewallconfigs.HTTPFirewallPolicy, error) {
+func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId int64, cacheMap maps.Map) (*firewallconfigs.HTTPFirewallPolicy, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(policyId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*firewallconfigs.HTTPFirewallPolicy), nil
+	}
+
 	policy, err := this.FindEnabledHTTPFirewallPolicy(tx, policyId)
 	if err != nil {
 		return nil, err
@@ -303,6 +312,8 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 		}
 		config.BlockOptions = blockAction
 	}
+
+	cacheMap[cacheKey] = config
 
 	return config, nil
 }

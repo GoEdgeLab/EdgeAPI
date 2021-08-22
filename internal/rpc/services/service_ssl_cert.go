@@ -76,7 +76,7 @@ func (this *SSLCertService) FindEnabledSSLCertConfig(ctx context.Context, req *p
 		}
 	}
 
-	config, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, req.SslCertId)
+	config, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, req.SslCertId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 
 	certConfigs := []*sslconfigs.SSLCertConfig{}
 	for _, certId := range certIds {
-		certConfig, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, certId)
+		certConfig, err := models.SharedSSLCertDAO.ComposeCertConfig(tx, certId, nil)
 		if err != nil {
 			return nil, err
 		}

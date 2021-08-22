@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -185,7 +186,16 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 }
 
 // ComposeCachePolicy 组合配置
-func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64) (*serverconfigs.HTTPCachePolicy, error) {
+func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, cacheMap maps.Map) (*serverconfigs.HTTPCachePolicy, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(policyId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*serverconfigs.HTTPCachePolicy), nil
+	}
+
 	policy, err := this.FindEnabledHTTPCachePolicy(tx, policyId)
 	if err != nil {
 		return nil, err
@@ -243,6 +253,8 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64) (
 		config.CacheRefs = refs
 	}
 
+	cacheMap[cacheKey] = config
+
 	return config, nil
 }
 
@@ -284,7 +296,7 @@ func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, keyword
 
 	cachePolicies := []*serverconfigs.HTTPCachePolicy{}
 	for _, policyId := range cachePolicyIds {
-		cachePolicyConfig, err := this.ComposeCachePolicy(tx, policyId)
+		cachePolicyConfig, err := this.ComposeCachePolicy(tx, policyId, nil)
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}

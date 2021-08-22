@@ -137,7 +137,7 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context
 
 	tx := this.NullTx()
 
-	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, req.HttpCachePolicyId)
+	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, req.HttpCachePolicyId, nil)
 	if err != nil {
 		return nil, err
 	}

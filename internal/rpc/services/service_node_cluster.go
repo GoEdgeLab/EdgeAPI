@@ -402,7 +402,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 
 	tx := this.NullTx()
 
-	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		}, nil
 	}
 
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(dnsInfo.DnsDomainId))
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(dnsInfo.DnsDomainId), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -576,7 +576,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 
 	tx := this.NullTx()
 
-	cluster, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId)
+	cluster, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -586,7 +586,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 	}
 
 	domainId := int64(cluster.DnsDomainId)
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
 	if err != nil {
 		return nil, err
 	}

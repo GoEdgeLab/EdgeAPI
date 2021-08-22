@@ -3,9 +3,10 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/maps"
 )
 
-// 解析HTTP配置
+// DecodeHTTP 解析HTTP配置
 func (this *UserNode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 	if !IsNotNull(this.Http) {
 		return nil, nil
@@ -24,8 +25,8 @@ func (this *UserNode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 	return config, nil
 }
 
-// 解析HTTPS配置
-func (this *UserNode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) {
+// DecodeHTTPS 解析HTTPS配置
+func (this *UserNode) DecodeHTTPS(cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if !IsNotNull(this.Https) {
 		return nil, nil
 	}
@@ -43,7 +44,7 @@ func (this *UserNode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) 
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(nil, policyId)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(nil, policyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -61,7 +62,7 @@ func (this *UserNode) DecodeHTTPS() (*serverconfigs.HTTPSProtocolConfig, error) 
 	return config, nil
 }
 
-// 解析访问地址
+// DecodeAccessAddrs 解析访问地址
 func (this *UserNode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig, error) {
 	if !IsNotNull(this.AccessAddrs) {
 		return nil, nil
@@ -81,7 +82,7 @@ func (this *UserNode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig
 	return addrConfigs, nil
 }
 
-// 解析访问地址，并返回字符串形式
+// DecodeAccessAddrStrings 解析访问地址，并返回字符串形式
 func (this *UserNode) DecodeAccessAddrStrings() ([]string, error) {
 	addrs, err := this.DecodeAccessAddrs()
 	if err != nil {

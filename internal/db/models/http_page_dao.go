@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -36,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPPageDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPPage 启用条目
 func (this *HTTPPageDAO) EnableHTTPPage(tx *dbs.Tx, pageId int64) error {
 	_, err := this.Query(tx).
 		Pk(pageId).
@@ -53,7 +54,7 @@ func (this *HTTPPageDAO) EnableHTTPPage(tx *dbs.Tx, pageId int64) error {
 	return this.NotifyUpdate(tx, pageId)
 }
 
-// 禁用条目
+// DisableHTTPPage 禁用条目
 func (this *HTTPPageDAO) DisableHTTPPage(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -62,7 +63,7 @@ func (this *HTTPPageDAO) DisableHTTPPage(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPPage 查找启用中的条目
 func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -74,7 +75,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 	return result.(*HTTPPage), err
 }
 
-// 创建Page
+// CreatePage 创建Page
 func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string, newStatus int) (pageId int64, err error) {
 	op := NewHTTPPageOperator()
 	op.IsOn = true
@@ -97,7 +98,7 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string,
 	return types.Int64(op.Id), nil
 }
 
-// 修改Page
+// UpdatePage 修改Page
 func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, url string, newStatus int) error {
 	if pageId <= 0 {
 		return errors.New("invalid pageId")
@@ -126,8 +127,17 @@ func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []strin
 	return this.NotifyUpdate(tx, pageId)
 }
 
-// 组合配置
-func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64) (*serverconfigs.HTTPPageConfig, error) {
+// ComposePageConfig 组合配置
+func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap maps.Map) (*serverconfigs.HTTPPageConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":config:" + types.String(pageId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*serverconfigs.HTTPPageConfig), nil
+	}
+
 	page, err := this.FindEnabledHTTPPage(tx, pageId)
 	if err != nil {
 		return nil, err
@@ -154,10 +164,12 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64) (*servercon
 		}
 	}
 
+	cacheMap[cacheKey] = config
+
 	return config, nil
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPPageDAO) NotifyUpdate(tx *dbs.Tx, pageId int64) error {
 	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithPageId(tx, pageId)
 	if err != nil {

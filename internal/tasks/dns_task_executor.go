@@ -383,7 +383,7 @@ func (this *DNSTaskExecutor) doDomain(taskId int64, domainId int64) error {
 		}
 	}()
 
-	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId)
+	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
 	if err != nil {
 		return err
 	}
@@ -437,7 +437,7 @@ func (this *DNSTaskExecutor) doDomain(taskId int64, domainId int64) error {
 }
 
 func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manager dnsclients.ProviderInterface, domainId int64, domain string, clusterDNSName string, err error) {
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return nil, 0, "", "", err
 	}
@@ -445,7 +445,7 @@ func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manage
 		return nil, 0, "", "", nil
 	}
 
-	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId))
+	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), nil)
 	if err != nil {
 		return nil, 0, "", "", err
 	}

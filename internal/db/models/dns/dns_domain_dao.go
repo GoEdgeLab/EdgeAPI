@@ -58,14 +58,24 @@ func (this *DNSDomainDAO) DisableDNSDomain(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledDNSDomain 查找启用中的条目
-func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, id int64) (*DNSDomain, error) {
+func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, domainId int64, cacheMap maps.Map) (*DNSDomain, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":record:" + types.String(domainId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*DNSDomain), nil
+	}
+
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(domainId).
 		Attr("state", DNSDomainStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
+	cacheMap[cacheKey] = result
 	return result.(*DNSDomain), err
 }
 

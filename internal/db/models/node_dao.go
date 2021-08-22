@@ -614,7 +614,7 @@ func (this *NodeDAO) UpdateNodeInstallStatus(tx *dbs.Tx, nodeId int64, status *N
 
 // ComposeNodeConfig 组合配置
 // TODO 提升运行速度
-func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.NodeConfig, error) {
+func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.Map) (*nodeconfigs.NodeConfig, error) {
 	node, err := this.FindEnabledNode(tx, nodeId)
 	if err != nil {
 		return nil, err
@@ -642,7 +642,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	}
 
 	for _, server := range servers {
-		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server)
+		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -671,12 +671,12 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 	var clusterIds = []int64{primaryClusterId}
 	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
 	for _, clusterId := range clusterIds {
-		httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId)
+		httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
 		if httpFirewallPolicyId > 0 {
-			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId)
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -686,12 +686,12 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*nodeconfigs.N
 		}
 
 		// 缓存策略
-		httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId)
+		httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
 		if httpCachePolicyId > 0 {
-			cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId)
+			cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -1298,7 +1298,7 @@ func (this *NodeDAO) NotifyDNSUpdate(tx *dbs.Tx, nodeId int64) error {
 		return err
 	}
 	for _, clusterId := range clusterIds {
-		dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+		dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 		if err != nil {
 			return err
 		}

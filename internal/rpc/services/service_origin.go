@@ -174,7 +174,7 @@ func (this *OriginService) FindEnabledOriginConfig(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	config, err := models.SharedOriginDAO.ComposeOriginConfig(tx, req.OriginId)
+	config, err := models.SharedOriginDAO.ComposeOriginConfig(tx, req.OriginId, nil)
 	if err != nil {
 		return nil, err
 	}

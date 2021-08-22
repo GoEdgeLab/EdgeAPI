@@ -739,13 +739,17 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 	if server == nil {
 		return nil, ErrNotFound
 	}
-	return this.ComposeServerConfig(tx, server)
+	return this.ComposeServerConfig(tx, server, nil)
 }
 
 // ComposeServerConfig 构造服务的Config
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap maps.Map) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
+	}
+
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
 	}
 
 	config := &serverconfigs.ServerConfig{}
@@ -768,12 +772,12 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 
 	// CNAME
 	if server.ClusterId > 0 && len(server.DnsName) > 0 {
-		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId))
+		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
 		if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
-			domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId))
+			domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -804,7 +808,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 
 		// SSL
 		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -836,7 +840,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 
 		// SSL
 		if tlsConfig.SSLPolicyRef != nil {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -870,7 +874,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 
 	// Web
 	if server.WebId > 0 {
-		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId))
+		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -888,7 +892,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 		}
 		config.ReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId)
+		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -899,7 +903,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 
 	// WAF策略
 	clusterId := int64(server.ClusterId)
-	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId)
+	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -908,7 +912,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server) (*serverc
 	}
 
 	// 缓存策略
-	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId)
+	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -1388,7 +1392,7 @@ func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
 	if clusterId <= 0 {
 		return nil
 	}
-	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId)
+	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return err
 	}

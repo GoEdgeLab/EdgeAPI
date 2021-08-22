@@ -8,7 +8,7 @@ import (
 
 func TestReverseProxyDAO_ComposeReverseProxyConfig(t *testing.T) {
 	var tx *dbs.Tx
-	config, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, 1)
+	config, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, 1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

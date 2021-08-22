@@ -137,7 +137,7 @@ func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 
 	tx := this.NullTx()
 
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +565,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}
 
 	// 域名信息
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId)
+	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, req.DnsDomainId, nil)
 	if err != nil {
 		return nil, err
 	}
