@@ -238,6 +238,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			}
 			if hasFirewallPolicy {
 				query.Where("firewallPolicyId>0")
+				query.UseIndex("firewallPolicyId")
 			}
 
 			// keyword
