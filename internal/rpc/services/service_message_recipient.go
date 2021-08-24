@@ -20,7 +20,7 @@ func (this *MessageRecipientService) CreateMessageRecipient(ctx context.Context,
 	}
 
 	var tx = this.NullTx()
-	recipientId, err := models.SharedMessageRecipientDAO.CreateRecipient(tx, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description)
+	recipientId, err := models.SharedMessageRecipientDAO.CreateRecipient(tx, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description, req.TimeFrom, req.TimeTo)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (this *MessageRecipientService) UpdateMessageRecipient(ctx context.Context,
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMessageRecipientDAO.UpdateRecipient(tx, req.MessageRecipientId, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description, req.IsOn)
+	err = models.SharedMessageRecipientDAO.UpdateRecipient(tx, req.MessageRecipientId, req.AdminId, req.MessageMediaInstanceId, req.User, req.MessageRecipientGroupIds, req.Description, req.TimeFrom, req.TimeTo, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +147,8 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 			IsOn:                   recipient.IsOn == 1,
 			MessageRecipientGroups: pbGroups,
 			Description:            recipient.Description,
+			TimeFrom:               recipient.TimeFrom,
+			TimeTo:                 recipient.TimeTo,
 		})
 	}
 
@@ -227,5 +229,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 		IsOn:                   recipient.IsOn == 1,
 		MessageRecipientGroups: pbGroups,
 		Description:            recipient.Description,
+		TimeFrom:               recipient.TimeFrom,
+		TimeTo:                 recipient.TimeTo,
 	}}, nil
 }

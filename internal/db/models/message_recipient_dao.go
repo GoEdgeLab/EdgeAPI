@@ -9,6 +9,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"regexp"
 )
 
 const (
@@ -81,7 +82,7 @@ func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, recipie
 }
 
 // CreateRecipient 创建接收人
-func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, instanceId int64, user string, groupIds []int64, description string) (int64, error) {
+func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, instanceId int64, user string, groupIds []int64, description string, timeFrom string, timeTo string) (int64, error) {
 	op := NewMessageRecipientOperator()
 	op.AdminId = adminId
 	op.InstanceId = instanceId
@@ -98,13 +99,22 @@ func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, inst
 	}
 	op.GroupIds = groupIdsJSON
 
+	// 判断格式
+	var timeReg = regexp.MustCompile(`^\d+:\d+:\d+$`)
+	if timeReg.MatchString(timeFrom) {
+		op.TimeFrom = timeFrom
+	}
+	if timeReg.MatchString(timeTo) {
+		op.TimeTo = timeTo
+	}
+
 	op.IsOn = true
 	op.State = MessageRecipientStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdateRecipient 修改接收人
-func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, adminId int64, instanceId int64, user string, groupIds []int64, description string, isOn bool) error {
+func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, adminId int64, instanceId int64, user string, groupIds []int64, description string, timeFrom string, timeTo string, isOn bool) error {
 	if recipientId <= 0 {
 		return errors.New("invalid recipientId")
 	}
@@ -126,6 +136,20 @@ func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, 
 	op.GroupIds = groupIdsJSON
 
 	op.Description = description
+
+	// 判断格式
+	var timeReg = regexp.MustCompile(`^\d+:\d+:\d+$`)
+	if timeReg.MatchString(timeFrom) {
+		op.TimeFrom = timeFrom
+	} else {
+		op.TimeFrom = dbs.SQL("NULL")
+	}
+	if timeReg.MatchString(timeTo) {
+		op.TimeTo = timeTo
+	} else {
+		op.TimeTo = dbs.SQL("NULL")
+	}
+
 	op.IsOn = isOn
 	return this.Save(tx, op)
 }

@@ -1,6 +1,6 @@
 package models
 
-// 消息媒介接收人
+// MessageRecipient 消息媒介接收人
 type MessageRecipient struct {
 	Id          uint32 `field:"id"`          // ID
 	AdminId     uint32 `field:"adminId"`     // 管理员ID
@@ -9,6 +9,8 @@ type MessageRecipient struct {
 	User        string `field:"user"`        // 接收人信息
 	GroupIds    string `field:"groupIds"`    // 分组ID
 	State       uint8  `field:"state"`       // 状态
+	TimeFrom    string `field:"timeFrom"`    // 开始时间
+	TimeTo      string `field:"timeTo"`      // 结束时间
 	Description string `field:"description"` // 备注
 }
 
@@ -20,6 +22,8 @@ type MessageRecipientOperator struct {
 	User        interface{} // 接收人信息
 	GroupIds    interface{} // 分组ID
 	State       interface{} // 状态
+	TimeFrom    interface{} // 开始时间
+	TimeTo      interface{} // 结束时间
 	Description interface{} // 备注
 }
 

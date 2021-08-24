@@ -113,6 +113,8 @@ func (this *MessageTaskDAO) FindSendingMessageTasks(tx *dbs.Tx, size int64) (res
 	_, err = this.Query(tx).
 		State(MessageTaskStateEnabled).
 		Attr("status", MessageTaskStatusNone).
+		Where("(recipientId=0 OR recipientId IN (SELECT id FROM "+SharedMessageRecipientDAO.Table+" WHERE state=1 AND isOn=1 AND (timeFrom IS NULL OR timeTo IS NULL OR :time BETWEEN timeFrom AND timeTo)))").
+		Param("time", timeutil.Format("H:i:s")).
 		Desc("isPrimary").
 		AscPk().
 		Limit(size).
