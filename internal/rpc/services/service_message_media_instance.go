@@ -30,7 +30,7 @@ func (this *MessageMediaInstanceService) CreateMessageMediaInstance(ctx context.
 		}
 	}
 
-	instanceId, err := models.SharedMessageMediaInstanceDAO.CreateMediaInstance(tx, req.Name, req.MediaType, params, req.Description)
+	instanceId, err := models.SharedMessageMediaInstanceDAO.CreateMediaInstance(tx, req.Name, req.MediaType, params, req.Description, req.RateJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (this *MessageMediaInstanceService) UpdateMessageMediaInstance(ctx context.
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMessageMediaInstanceDAO.UpdateMediaInstance(tx, req.MessageMediaInstanceId, req.Name, req.MediaType, params, req.Description, req.IsOn)
+	err = models.SharedMessageMediaInstanceDAO.UpdateMediaInstance(tx, req.MessageMediaInstanceId, req.Name, req.MediaType, params, req.Description, req.RateJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +131,7 @@ func (this *MessageMediaInstanceService) ListEnabledMessageMediaInstances(ctx co
 			MessageMedia: pbMedia,
 			ParamsJSON:   []byte(instance.Params),
 			Description:  instance.Description,
+			RateJSON:     []byte(instance.Rate),
 		})
 	}
 
@@ -178,5 +179,6 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 		MessageMedia: pbMedia,
 		ParamsJSON:   []byte(instance.Params),
 		Description:  instance.Description,
+		RateJSON:     []byte(instance.Rate),
 	}}, nil
 }

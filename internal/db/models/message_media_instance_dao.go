@@ -79,7 +79,7 @@ func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx,
 }
 
 // CreateMediaInstance 创建媒介实例
-func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string) (int64, error) {
+func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string, rateJSON []byte) (int64, error) {
 	op := NewMessageMediaInstanceOperator()
 	op.Name = name
 	op.MediaType = mediaType
@@ -96,13 +96,17 @@ func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string
 
 	op.Description = description
 
+	if len(rateJSON) > 0 {
+		op.Rate = rateJSON
+	}
+
 	op.IsOn = true
 	op.State = MessageMediaInstanceStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdateMediaInstance 修改媒介实例
-func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId int64, name string, mediaType string, params maps.Map, description string, isOn bool) error {
+func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId int64, name string, mediaType string, params maps.Map, description string, rateJSON []byte, isOn bool) error {
 	if instanceId <= 0 {
 		return errors.New("invalid instanceId")
 	}
@@ -121,6 +125,10 @@ func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId 
 		return err
 	}
 	op.Params = paramsJSON
+
+	if len(rateJSON) > 0 {
+		op.Rate = rateJSON
+	}
 
 	op.Description = description
 	op.IsOn = isOn

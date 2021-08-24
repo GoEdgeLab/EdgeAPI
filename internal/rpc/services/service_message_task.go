@@ -82,6 +82,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 						Type: instance.MediaType,
 					},
 					ParamsJSON: []byte(instance.Params),
+					RateJSON:   []byte(instance.Rate),
 				},
 			}
 		} else { // 没有指定既定的接收人
@@ -106,6 +107,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 						Type: instance.MediaType,
 					},
 					ParamsJSON: []byte(instance.Params),
+					RateJSON:   []byte(instance.Rate),
 				},
 			}
 		}
@@ -350,6 +352,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 						Type: instance.MediaType,
 					},
 					ParamsJSON: []byte(instance.Params),
+					RateJSON:   []byte(instance.Rate),
 				},
 			}
 		} else { // 没有指定既定的接收人
@@ -375,6 +378,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 						Type: instance.MediaType,
 					},
 					ParamsJSON: []byte(instance.Params),
+					RateJSON:   []byte(instance.Rate),
 				},
 			}
 		}
