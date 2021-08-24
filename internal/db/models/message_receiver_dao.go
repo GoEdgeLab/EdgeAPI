@@ -75,11 +75,12 @@ func (this *MessageReceiverDAO) DisableReceivers(tx *dbs.Tx, clusterId int64, no
 }
 
 // CreateReceiver 创建接收人
-func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, target MessageTaskTarget, messageType MessageType, params maps.Map, recipientId int64, recipientGroupId int64) (int64, error) {
+func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType MessageType, params maps.Map, recipientId int64, recipientGroupId int64) (int64, error) {
 	op := NewMessageReceiverOperator()
-	op.ClusterId = target.ClusterId
-	op.NodeId = target.NodeId
-	op.ServerId = target.ServerId
+	op.Role = role
+	op.ClusterId = clusterId
+	op.NodeId = nodeId
+	op.ServerId = serverId
 	op.Type = messageType
 
 	if params == nil {
@@ -98,63 +99,120 @@ func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, target MessageTaskTar
 }
 
 // FindAllEnabledReceivers 查询接收人
-func (this *MessageReceiverDAO) FindAllEnabledReceivers(tx *dbs.Tx, target MessageTaskTarget, messageType string) (result []*MessageReceiver, err error) {
+func (this *MessageReceiverDAO) FindAllEnabledReceivers(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType string) (result []*MessageReceiver, err error) {
 	query := this.Query(tx)
 	if len(messageType) > 0 {
 		query.Attr("type", []string{"*", messageType}) // *表示所有的
 	}
 	_, err = query.
-		Attr("clusterId", target.ClusterId).
-		Attr("nodeId", target.NodeId).
-		Attr("serverId", target.ServerId).
+		Attr("role", role).
+		Attr("clusterId", clusterId).
+		Attr("nodeId", nodeId).
+		Attr("serverId", serverId).
 		State(MessageReceiverStateEnabled).
 		AscPk().
 		Slice(&result).
 		FindAll()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result) == 0 {
-		// 去掉类型再试试
-		query := this.Query(tx)
-		_, err = query.
-			Attr("clusterId", target.ClusterId).
-			Attr("nodeId", target.NodeId).
-			Attr("serverId", target.ServerId).
-			State(MessageReceiverStateEnabled).
-			AscPk().
-			Slice(&result).
-			FindAll()
-		if err != nil {
-			return nil, err
-		}
-
-		// 去掉服务和节点再试试
-		if len(result) == 0 {
-			query := this.Query(tx)
-			_, err = query.
-				Attr("clusterId", target.ClusterId).
-				State(MessageReceiverStateEnabled).
-				AscPk().
-				Slice(&result).
-				FindAll()
-		}
-	}
-
 	return
 }
 
 // CountAllEnabledReceivers 计算接收人数量
-func (this *MessageReceiverDAO) CountAllEnabledReceivers(tx *dbs.Tx, target MessageTaskTarget, messageType string) (int64, error) {
+func (this *MessageReceiverDAO) CountAllEnabledReceivers(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType string) (int64, error) {
 	query := this.Query(tx)
 	if len(messageType) > 0 {
 		query.Attr("type", []string{"*", messageType}) // *表示所有的
 	}
 	return query.
-		Attr("clusterId", target.ClusterId).
-		Attr("nodeId", target.NodeId).
-		Attr("serverId", target.ServerId).
+		Attr("role", role).
+		Attr("clusterId", clusterId).
+		Attr("nodeId", nodeId).
+		Attr("serverId", serverId).
 		State(MessageReceiverStateEnabled).
 		Count()
+}
+
+// FindEnabledBestFitReceivers 查询最适合的接收人
+func (this *MessageReceiverDAO) FindEnabledBestFitReceivers(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType string) (result []*MessageReceiver, err error) {
+	// serverId优先
+	query := this.Query(tx)
+	if len(messageType) > 0 {
+		query.Attr("type", []string{"*", messageType}) // *表示所有的
+	}
+	if len(role) > 0 {
+		query.Attr("role", role)
+	}
+	if serverId > 0 {
+		query.Attr("serverId", serverId)
+	} else if nodeId > 0 {
+		query.Attr("nodeId", nodeId)
+	} else if clusterId > 0 {
+		query.Attr("clusterId", clusterId)
+	}
+	_, err = query.
+		State(MessageReceiverStateEnabled).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	if err != nil || len(result) > 0 {
+		return
+	}
+
+	// nodeId优先
+	if serverId > 0 && nodeId > 0 {
+		query = this.Query(tx)
+		if len(messageType) > 0 {
+			query.Attr("type", []string{"*", messageType}) // *表示所有的
+		}
+		if len(role) > 0 {
+			query.Attr("role", role)
+		}
+		query.Attr("nodeId", nodeId)
+		_, err = query.
+			State(MessageReceiverStateEnabled).
+			AscPk().
+			Slice(&result).
+			FindAll()
+		if err != nil || len(result) > 0 {
+			return
+		}
+	}
+
+	// clusterId优先
+	if (serverId > 0 || nodeId > 0) && clusterId > 0 {
+		query = this.Query(tx)
+		if len(messageType) > 0 {
+			query.Attr("type", []string{"*", messageType}) // *表示所有的
+		}
+		if len(role) > 0 {
+			query.Attr("role", role)
+		}
+		query.Attr("clusterId", clusterId)
+		_, err = query.
+			State(MessageReceiverStateEnabled).
+			AscPk().
+			Slice(&result).
+			FindAll()
+		if err != nil || len(result) > 0 {
+			return
+		}
+	}
+
+	// 去掉集群ID
+	query = this.Query(tx)
+	if len(messageType) > 0 {
+		query.Attr("type", []string{"*", messageType}) // *表示所有的
+	}
+	if len(role) > 0 {
+		query.Attr("role", role)
+	}
+	_, err = query.
+		State(MessageReceiverStateEnabled).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	if err != nil || len(result) > 0 {
+		return
+	}
+
+	return
 }

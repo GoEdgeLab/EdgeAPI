@@ -3,7 +3,6 @@ package remotelogs
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
@@ -11,6 +10,7 @@ import (
 )
 
 var logChan = make(chan *pb.NodeLog, 1024)
+var sharedDAO DAOInterface
 
 func init() {
 	// 定期上传日志
@@ -25,7 +25,7 @@ func init() {
 	}()
 }
 
-// 打印普通信息
+// Println 打印普通信息
 func Println(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
@@ -48,7 +48,7 @@ func Println(tag string, description string) {
 	}
 }
 
-// 打印警告信息
+// Warn 打印警告信息
 func Warn(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
@@ -71,7 +71,7 @@ func Warn(tag string, description string) {
 	}
 }
 
-// 打印错误信息
+// Error 打印错误信息
 func Error(tag string, description string) {
 	logs.Println("[" + tag + "]" + description)
 
@@ -94,13 +94,22 @@ func Error(tag string, description string) {
 	}
 }
 
+// SetDAO 设置存储接口
+func SetDAO(dao DAOInterface) {
+	sharedDAO = dao
+}
+
 // 上传日志
 func uploadLogs() error {
+	if sharedDAO == nil {
+		return nil
+	}
+
 Loop:
 	for {
 		select {
 		case log := <-logChan:
-			err := models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt)
+			err := sharedDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt)
 			if err != nil {
 				return err
 			}

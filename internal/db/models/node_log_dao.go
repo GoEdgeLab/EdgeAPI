@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -33,6 +34,9 @@ var SharedNodeLogDAO *NodeLogDAO
 func init() {
 	dbs.OnReady(func() {
 		SharedNodeLogDAO = NewNodeLogDAO()
+
+		// 设置日志存储
+		remotelogs.SetDAO(SharedNodeLogDAO)
 	})
 }
 

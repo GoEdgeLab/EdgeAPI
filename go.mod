@@ -4,6 +4,8 @@ go 1.15
 
 replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 
+
+
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
@@ -14,7 +16,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.5.2
-	github.com/iwind/TeaGo v0.0.0-20210809112119-a57ed0e84e34
+	github.com/iwind/TeaGo v0.0.0-20210824034952-1a56ad7d0b5e
 	github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/lionsoul2014/ip2region v2.2.0-release+incompatible

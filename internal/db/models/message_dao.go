@@ -106,11 +106,7 @@ func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, role string, clusterId 
 	}
 
 	// 发送给媒介接收人
-	err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
-		ClusterId: clusterId,
-		NodeId:    0,
-		ServerId:  0,
-	}, messageType, subject, body)
+	err = SharedMessageTaskDAO.CreateMessageTasks(tx, role, 0, 0, 0, messageType, subject, body)
 	if err != nil {
 		return err
 	}
@@ -138,29 +134,10 @@ func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int
 		return err
 	}
 
-	// TODO 目前只支持边缘节点发送消息，将来要支持NS节点
-	if role == nodeconfigs.NodeRoleNode {
-		// 发送给媒介接收人 - 集群
-		err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
-			ClusterId: clusterId,
-			NodeId:    0,
-			ServerId:  0,
-		}, messageType, subject, body)
-		if err != nil {
-			return err
-		}
-
-		// 发送给媒介接收人 - 节点
-		if nodeId > 0 {
-			err = SharedMessageTaskDAO.CreateMessageTasks(tx, MessageTaskTarget{
-				ClusterId: clusterId,
-				NodeId:    nodeId,
-				ServerId:  0,
-			}, messageType, subject, body)
-			if err != nil {
-				return err
-			}
-		}
+	// 发送给媒介接收人 - 集群
+	err = SharedMessageTaskDAO.CreateMessageTasks(tx, role, clusterId, nodeId, 0, messageType, subject, body)
+	if err != nil {
+		return err
 	}
 
 	return nil

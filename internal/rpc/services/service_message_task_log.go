@@ -4,14 +4,15 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/maps"
 )
 
-// 消息发送日志相关服务
+// MessageTaskLogService 消息发送日志相关服务
 type MessageTaskLogService struct {
 	BaseService
 }
 
-// 计算日志数量
+// CountMessageTaskLogs 计算日志数量
 func (this *MessageTaskLogService) CountMessageTaskLogs(ctx context.Context, req *pb.CountMessageTaskLogsRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -32,6 +33,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 		return nil, err
 	}
 	var tx = this.NullTx()
+	var cacheMap = maps.Map{}
 	logs, err := models.SharedMessageTaskLogDAO.ListLogs(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 
 		var pbRecipient *pb.MessageRecipient
 		if task.RecipientId > 0 {
-			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId))
+			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -62,7 +64,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 			}
 		}
 
-		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId))
+		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId), cacheMap)
 		if err != nil {
 			return nil, err
 		}

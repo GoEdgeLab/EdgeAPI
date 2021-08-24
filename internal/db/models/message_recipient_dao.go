@@ -7,6 +7,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -54,14 +56,27 @@ func (this *MessageRecipientDAO) DisableMessageRecipient(tx *dbs.Tx, id int64) e
 }
 
 // FindEnabledMessageRecipient 查找启用中的条目
-func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, id int64) (*MessageRecipient, error) {
+func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, recipientId int64, cacheMap maps.Map,
+) (*MessageRecipient, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":record:" + types.String(recipientId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*MessageRecipient), nil
+	}
+
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(recipientId).
 		Attr("state", MessageRecipientStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
+
+	cacheMap[cacheKey] = result
+
 	return result.(*MessageRecipient), err
 }
 

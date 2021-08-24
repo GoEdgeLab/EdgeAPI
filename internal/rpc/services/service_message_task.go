@@ -37,6 +37,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 	}
 
 	var tx = this.NullTx()
+	var cacheMap = maps.Map{}
 	tasks, err := models.SharedMessageTaskDAO.FindSendingMessageTasks(tx, req.Size)
 	if err != nil {
 		return nil, err
@@ -45,8 +46,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 	for _, task := range tasks {
 		var pbRecipient *pb.MessageRecipient
 		if task.RecipientId > 0 {
-			// TODO 需要缓存以提升性能
-			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId))
+			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -60,8 +60,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 			}
 
 			// 媒介
-			// TODO 需要缓存以提升性能
-			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId))
+			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -87,8 +86,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 			}
 		} else { // 没有指定既定的接收人
 			// 媒介
-			// TODO 需要缓存以提升性能
-			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId))
+			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -186,6 +184,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 	}
 
 	var tx = this.NullTx()
+	var cacheMap = maps.Map{}
 	task, err := models.SharedMessageTaskDAO.FindEnabledMessageTask(tx, req.MessageTaskId)
 	if err != nil {
 		return nil, err
@@ -194,10 +193,9 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		return &pb.FindEnabledMessageTaskResponse{MessageTask: nil}, nil
 	}
 
-	// TODO 需要缓存以提升性能
 	var pbRecipient *pb.MessageRecipient
 	if task.RecipientId > 0 {
-		recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId))
+		recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -211,8 +209,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		}
 
 		// 媒介
-		// TODO 需要缓存以提升性能
-		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId))
+		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -237,8 +234,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		}
 	} else { // 没有指定既定的接收人
 		// 媒介
-		// TODO 需要缓存以提升性能
-		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId))
+		instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -281,4 +277,128 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		SentAt:           int64(task.SentAt),
 		Result:           result,
 	}}, nil
+}
+
+// CountMessageTasksWithStatus 计算某个状态的消息任务数量
+func (this *MessageTaskService) CountMessageTasksWithStatus(ctx context.Context, req *pb.CountMessageTasksWithStatusRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedMessageTaskDAO.CountMessageTasksWithStatus(tx, types.Int(req.Status))
+	if err != nil {
+		return nil, err
+	}
+
+	return this.SuccessCount(count)
+}
+
+// ListMessageTasksWithStatus 根据状态列出某页任务
+func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, req *pb.ListMessageTasksWithStatusRequest) (*pb.ListMessageTasksWithStatusResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var cacheMap = maps.Map{}
+	tasks, err := models.SharedMessageTaskDAO.ListMessageTasksWithStatus(tx, types.Int(req.Status), req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbTasks = []*pb.MessageTask{}
+	for _, task := range tasks {
+		var pbRecipient *pb.MessageRecipient
+		if task.RecipientId > 0 {
+			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(task.RecipientId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if recipient == nil || recipient.IsOn == 0 {
+				// 如果发送人已经删除或者禁用，则删除此消息
+				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+
+			// 媒介
+			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if instance == nil || instance.IsOn == 0 {
+				// 如果媒介实例已经删除或者禁用，则删除此消息
+				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+
+			pbRecipient = &pb.MessageRecipient{
+				Id:   int64(recipient.Id),
+				User: recipient.User,
+				MessageMediaInstance: &pb.MessageMediaInstance{
+					Id:   int64(instance.Id),
+					Name: instance.Name,
+					MessageMedia: &pb.MessageMedia{
+						Type: instance.MediaType,
+					},
+					ParamsJSON: []byte(instance.Params),
+				},
+			}
+		} else { // 没有指定既定的接收人
+			// 媒介
+			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(task.InstanceId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if instance == nil || instance.IsOn == 0 {
+				// 如果媒介实例已经删除或者禁用，则删除此消息
+				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+			pbRecipient = &pb.MessageRecipient{
+				Id: 0,
+				MessageMediaInstance: &pb.MessageMediaInstance{
+					Id:   int64(instance.Id),
+					Name: instance.Name,
+					MessageMedia: &pb.MessageMedia{
+						Type: instance.MediaType,
+					},
+					ParamsJSON: []byte(instance.Params),
+				},
+			}
+		}
+
+		var result = &pb.MessageTaskResult{}
+		if len(task.Result) > 0 {
+			err = json.Unmarshal([]byte(task.Result), result)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		pbTasks = append(pbTasks, &pb.MessageTask{
+			Id:               int64(task.Id),
+			MessageRecipient: pbRecipient,
+			User:             task.User,
+			Subject:          task.Subject,
+			Body:             task.Body,
+			CreatedAt:        int64(task.CreatedAt),
+			Status:           types.Int32(task.Status),
+			SentAt:           int64(task.SentAt),
+			Result:           result,
+		})
+	}
+
+	return &pb.ListMessageTasksWithStatusResponse{MessageTasks: pbTasks}, nil
 }

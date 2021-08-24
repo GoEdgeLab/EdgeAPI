@@ -3,6 +3,7 @@ package models
 // MessageReceiver 消息通知接收人
 type MessageReceiver struct {
 	Id               uint32 `field:"id"`               // ID
+	Role             string `field:"role"`             // 节点角色
 	ClusterId        uint32 `field:"clusterId"`        // 集群ID
 	NodeId           uint32 `field:"nodeId"`           // 节点ID
 	ServerId         uint32 `field:"serverId"`         // 服务ID
@@ -15,6 +16,7 @@ type MessageReceiver struct {
 
 type MessageReceiverOperator struct {
 	Id               interface{} // ID
+	Role             interface{} // 节点角色
 	ClusterId        interface{} // 集群ID
 	NodeId           interface{} // 节点ID
 	ServerId         interface{} // 服务ID

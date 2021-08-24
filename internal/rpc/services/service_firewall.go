@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -224,11 +225,7 @@ func (this *FirewallService) NotifyHTTPFirewallEvent(ctx context.Context, req *p
 		"\n规则分组：" + ruleGroupName +
 		"\n规则集：" + ruleSetName +
 		"\n时间：" + timeutil.FormatTime("Y-m-d H:i:s", req.CreatedAt)
-	err = models.SharedMessageTaskDAO.CreateMessageTasks(tx, models.MessageTaskTarget{
-		ClusterId: clusterId,
-		NodeId:    nodeId,
-		ServerId:  req.ServerId,
-	}, models.MessageTypeFirewallEvent, "发生防火墙事件", msg)
+	err = models.SharedMessageTaskDAO.CreateMessageTasks(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, req.ServerId, models.MessageTypeFirewallEvent, "触发防火墙事件", msg)
 	if err != nil {
 		return nil, err
 	}

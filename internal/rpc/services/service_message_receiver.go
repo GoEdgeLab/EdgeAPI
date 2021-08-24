@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
@@ -19,6 +20,10 @@ func (this *MessageReceiverService) UpdateMessageReceivers(ctx context.Context, 
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(req.Role) == 0 {
+		req.Role = nodeconfigs.NodeRoleNode
 	}
 
 	params := maps.Map{}
@@ -37,11 +42,7 @@ func (this *MessageReceiverService) UpdateMessageReceivers(ctx context.Context, 
 
 		for messageType, options := range req.RecipientOptions {
 			for _, option := range options.RecipientOptions {
-				_, err := models.SharedMessageReceiverDAO.CreateReceiver(tx, models.MessageTaskTarget{
-					ClusterId: req.NodeClusterId,
-					NodeId:    req.NodeId,
-					ServerId:  req.ServerId,
-				}, messageType, params, option.MessageRecipientId, option.MessageRecipientGroupId)
+				_, err := models.SharedMessageReceiverDAO.CreateReceiver(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, messageType, params, option.MessageRecipientId, option.MessageRecipientGroupId)
 				if err != nil {
 					return err
 				}
@@ -63,12 +64,13 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 		return nil, err
 	}
 
+	if len(req.Role) == 0 {
+		req.Role = nodeconfigs.NodeRoleNode
+	}
+
 	var tx = this.NullTx()
-	receivers, err := models.SharedMessageReceiverDAO.FindAllEnabledReceivers(tx, models.MessageTaskTarget{
-		ClusterId: req.NodeClusterId,
-		NodeId:    req.NodeId,
-		ServerId:  req.ServerId,
-	}, "")
+	var cacheMap = maps.Map{}
+	receivers, err := models.SharedMessageReceiverDAO.FindAllEnabledReceivers(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, "")
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +80,7 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 
 		// 接收人
 		if receiver.RecipientId > 0 {
-			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(receiver.RecipientId))
+			recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, int64(receiver.RecipientId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -96,7 +98,7 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 			}
 
 			// 接收人
-			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId))
+			instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, int64(recipient.InstanceId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -177,12 +179,12 @@ func (this *MessageReceiverService) CountAllEnabledMessageReceivers(ctx context.
 		return nil, err
 	}
 
+	if len(req.Role) == 0 {
+		req.Role = nodeconfigs.NodeRoleNode
+	}
+
 	var tx = this.NullTx()
-	count, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, models.MessageTaskTarget{
-		ClusterId: req.NodeClusterId,
-		NodeId:    req.NodeId,
-		ServerId:  req.ServerId,
-	}, "")
+	count, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, "")
 	if err != nil {
 		return nil, err
 	}

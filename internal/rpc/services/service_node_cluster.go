@@ -951,9 +951,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	result.HasThresholds = countThresholds > 0
 
 	// message receivers
-	countReceivers, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, models.MessageTaskTarget{
-		ClusterId: req.NodeClusterId,
-	}, "")
+	countReceivers, err := models.SharedMessageReceiverDAO.CountAllEnabledReceivers(tx, nodeconfigs.NodeRoleNode, req.NodeClusterId, 0, 0, "")
 	if err != nil {
 		return nil, err
 	}

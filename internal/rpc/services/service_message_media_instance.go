@@ -8,12 +8,12 @@ import (
 	"github.com/iwind/TeaGo/maps"
 )
 
-// 消息媒介实例服务
+// MessageMediaInstanceService 消息媒介实例服务
 type MessageMediaInstanceService struct {
 	BaseService
 }
 
-// 创建消息媒介实例
+// CreateMessageMediaInstance 创建消息媒介实例
 func (this *MessageMediaInstanceService) CreateMessageMediaInstance(ctx context.Context, req *pb.CreateMessageMediaInstanceRequest) (*pb.CreateMessageMediaInstanceResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -38,7 +38,7 @@ func (this *MessageMediaInstanceService) CreateMessageMediaInstance(ctx context.
 	return &pb.CreateMessageMediaInstanceResponse{MessageMediaInstanceId: instanceId}, nil
 }
 
-// 修改消息实例
+// UpdateMessageMediaInstance 修改消息实例
 func (this *MessageMediaInstanceService) UpdateMessageMediaInstance(ctx context.Context, req *pb.UpdateMessageMediaInstanceRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -62,7 +62,7 @@ func (this *MessageMediaInstanceService) UpdateMessageMediaInstance(ctx context.
 	return this.Success()
 }
 
-// 删除媒介实例
+// DeleteMessageMediaInstance 删除媒介实例
 func (this *MessageMediaInstanceService) DeleteMessageMediaInstance(ctx context.Context, req *pb.DeleteMessageMediaInstanceRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -77,7 +77,7 @@ func (this *MessageMediaInstanceService) DeleteMessageMediaInstance(ctx context.
 	return this.Success()
 }
 
-// 计算媒介实例数量
+// CountAllEnabledMessageMediaInstances 计算媒介实例数量
 func (this *MessageMediaInstanceService) CountAllEnabledMessageMediaInstances(ctx context.Context, req *pb.CountAllEnabledMessageMediaInstancesRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -93,7 +93,7 @@ func (this *MessageMediaInstanceService) CountAllEnabledMessageMediaInstances(ct
 	return this.SuccessCount(count)
 }
 
-// 列出单页媒介实例
+// ListEnabledMessageMediaInstances 列出单页媒介实例
 func (this *MessageMediaInstanceService) ListEnabledMessageMediaInstances(ctx context.Context, req *pb.ListEnabledMessageMediaInstancesRequest) (*pb.ListEnabledMessageMediaInstancesResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -137,7 +137,7 @@ func (this *MessageMediaInstanceService) ListEnabledMessageMediaInstances(ctx co
 	return &pb.ListEnabledMessageMediaInstancesResponse{MessageMediaInstances: pbInstances}, nil
 }
 
-// 查找单个媒介实例信息
+// FindEnabledMessageMediaInstance 查找单个媒介实例信息
 func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx context.Context, req *pb.FindEnabledMessageMediaInstanceRequest) (*pb.FindEnabledMessageMediaInstanceResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -145,7 +145,8 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 	}
 
 	var tx = this.NullTx()
-	instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, req.MessageMediaInstanceId)
+	var cacheMap = maps.Map{}
+	instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, req.MessageMediaInstanceId, cacheMap)
 	if err != nil {
 		return nil, err
 	}

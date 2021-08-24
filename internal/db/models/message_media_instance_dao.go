@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -35,7 +36,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMessageMediaInstance 启用条目
 func (this *MessageMediaInstanceDAO) EnableMessageMediaInstance(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +45,7 @@ func (this *MessageMediaInstanceDAO) EnableMessageMediaInstance(tx *dbs.Tx, id i
 	return err
 }
 
-// 禁用条目
+// DisableMessageMediaInstance 禁用条目
 func (this *MessageMediaInstanceDAO) DisableMessageMediaInstance(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,19 +54,31 @@ func (this *MessageMediaInstanceDAO) DisableMessageMediaInstance(tx *dbs.Tx, id 
 	return err
 }
 
-// 查找启用中的条目
-func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx, id int64) (*MessageMediaInstance, error) {
+// FindEnabledMessageMediaInstance 查找启用中的条目
+func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx, instanceId int64, cacheMap maps.Map) (*MessageMediaInstance, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":record:" + types.String(instanceId)
+	var cache = cacheMap.Get(cacheKey)
+	if cache != nil {
+		return cache.(*MessageMediaInstance), nil
+	}
+
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(instanceId).
 		Attr("state", MessageMediaInstanceStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
+
+	cacheMap[cacheKey] = result
+
 	return result.(*MessageMediaInstance), err
 }
 
-// 创建媒介实例
+// CreateMediaInstance 创建媒介实例
 func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string) (int64, error) {
 	op := NewMessageMediaInstanceOperator()
 	op.Name = name
@@ -88,7 +101,7 @@ func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string
 	return this.SaveInt64(tx, op)
 }
 
-// 修改媒介实例
+// UpdateMediaInstance 修改媒介实例
 func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId int64, name string, mediaType string, params maps.Map, description string, isOn bool) error {
 	if instanceId <= 0 {
 		return errors.New("invalid instanceId")
@@ -114,7 +127,7 @@ func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId 
 	return this.Save(tx, op)
 }
 
-// 计算接收人数量
+// CountAllEnabledMediaInstances 计算接收人数量
 func (this *MessageMediaInstanceDAO) CountAllEnabledMediaInstances(tx *dbs.Tx, mediaType string, keyword string) (int64, error) {
 	query := this.Query(tx)
 	if len(mediaType) > 0 {
@@ -130,7 +143,7 @@ func (this *MessageMediaInstanceDAO) CountAllEnabledMediaInstances(tx *dbs.Tx, m
 		Count()
 }
 
-// 列出单页接收人
+// ListAllEnabledMediaInstances 列出单页接收人
 func (this *MessageMediaInstanceDAO) ListAllEnabledMediaInstances(tx *dbs.Tx, mediaType string, keyword string, offset int64, size int64) (result []*MessageMediaInstance, err error) {
 	query := this.Query(tx)
 	if len(mediaType) > 0 {
