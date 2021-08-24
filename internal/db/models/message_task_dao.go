@@ -8,6 +8,8 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
+	"github.com/iwind/TeaGo/types"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -92,9 +94,41 @@ func (this *MessageTaskDAO) FindEnabledMessageTask(tx *dbs.Tx, id int64) (*Messa
 
 // CreateMessageTask 创建任务
 func (this *MessageTaskDAO) CreateMessageTask(tx *dbs.Tx, recipientId int64, instanceId int64, user string, subject string, body string, isPrimary bool) (int64, error) {
+	var hash = stringutil.Md5(types.String(recipientId) + "@" + types.String(instanceId) + "@" + user + "@" + subject + "@" + types.String(isPrimary))
+	recipientInstanceId, err := SharedMessageRecipientDAO.FindRecipientInstanceId(tx, recipientId)
+	if err != nil {
+		return 0, err
+	}
+	if recipientInstanceId > 0 {
+		hashLifeSeconds, err := SharedMessageMediaInstanceDAO.FindInstanceHashLifeSeconds(tx, recipientInstanceId)
+		if err != nil {
+			return 0, err
+		}
+
+		if hashLifeSeconds >= 0 { // 意味着此值如果小于0，则不做判断
+			lastMessageAt, err := this.Query(tx).
+				Attr("hash", hash).
+				Result("createdAt").
+				DescPk().
+				FindInt64Col(0)
+			if err != nil {
+				return 0, err
+			}
+
+			// 对于同一个人N分钟内消息不重复发送
+			if hashLifeSeconds <= 0 {
+				hashLifeSeconds = 60
+			}
+			if lastMessageAt > 0 && time.Now().Unix()-lastMessageAt < int64(hashLifeSeconds) {
+				return 0, nil
+			}
+		}
+	}
+
 	op := NewMessageTaskOperator()
 	op.RecipientId = recipientId
 	op.InstanceId = instanceId
+	op.Hash = hash
 	op.User = user
 	op.Subject = subject
 	op.Body = body

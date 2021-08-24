@@ -4,6 +4,7 @@ package models
 type MessageTask struct {
 	Id          uint64 `field:"id"`          // ID
 	RecipientId uint32 `field:"recipientId"` // 接收人ID
+	Hash        string `field:"hash"`        // SUM标识
 	InstanceId  uint32 `field:"instanceId"`  // 媒介实例ID
 	User        string `field:"user"`        // 接收用户标识
 	Subject     string `field:"subject"`     // 标题
@@ -20,6 +21,7 @@ type MessageTask struct {
 type MessageTaskOperator struct {
 	Id          interface{} // ID
 	RecipientId interface{} // 接收人ID
+	Hash        interface{} // SUM标识
 	InstanceId  interface{} // 媒介实例ID
 	User        interface{} // 接收用户标识
 	Subject     interface{} // 标题

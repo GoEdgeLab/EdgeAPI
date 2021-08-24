@@ -226,3 +226,11 @@ func (this *MessageRecipientDAO) FindAllEnabledAndOnRecipientIdsWithGroup(tx *db
 	}
 	return result, nil
 }
+
+// FindRecipientInstanceId 查找接收人的媒介
+func (this *MessageRecipientDAO) FindRecipientInstanceId(tx *dbs.Tx, recipientId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(recipientId).
+		Result("instanceId").
+		FindInt64Col(0)
+}

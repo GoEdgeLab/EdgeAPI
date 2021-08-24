@@ -79,7 +79,7 @@ func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx,
 }
 
 // CreateMediaInstance 创建媒介实例
-func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string, rateJSON []byte) (int64, error) {
+func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string, rateJSON []byte, hashLifeSeconds int32) (int64, error) {
 	op := NewMessageMediaInstanceOperator()
 	op.Name = name
 	op.MediaType = mediaType
@@ -99,6 +99,7 @@ func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string
 	if len(rateJSON) > 0 {
 		op.Rate = rateJSON
 	}
+	op.HashLife = hashLifeSeconds
 
 	op.IsOn = true
 	op.State = MessageMediaInstanceStateEnabled
@@ -106,7 +107,7 @@ func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string
 }
 
 // UpdateMediaInstance 修改媒介实例
-func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId int64, name string, mediaType string, params maps.Map, description string, rateJSON []byte, isOn bool) error {
+func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId int64, name string, mediaType string, params maps.Map, description string, rateJSON []byte, hashLifeSeconds int32, isOn bool) error {
 	if instanceId <= 0 {
 		return errors.New("invalid instanceId")
 	}
@@ -129,8 +130,10 @@ func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId 
 	if len(rateJSON) > 0 {
 		op.Rate = rateJSON
 	}
+	op.HashLife = hashLifeSeconds
 
 	op.Description = description
+
 	op.IsOn = isOn
 	return this.Save(tx, op)
 }
@@ -170,4 +173,16 @@ func (this *MessageMediaInstanceDAO) ListAllEnabledMediaInstances(tx *dbs.Tx, me
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindInstanceHashLifeSeconds 获取单个实例的HashLife
+func (this *MessageMediaInstanceDAO) FindInstanceHashLifeSeconds(tx *dbs.Tx, instanceId int64) (int32, error) {
+	hashLife, err := this.Query(tx).
+		Pk(instanceId).
+		Result("hashLife").
+		FindIntCol(0)
+	if err != nil {
+		return 0, err
+	}
+	return types.Int32(hashLife), nil
 }

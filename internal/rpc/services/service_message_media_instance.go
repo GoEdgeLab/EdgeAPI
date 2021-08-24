@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 // MessageMediaInstanceService 消息媒介实例服务
@@ -30,7 +31,7 @@ func (this *MessageMediaInstanceService) CreateMessageMediaInstance(ctx context.
 		}
 	}
 
-	instanceId, err := models.SharedMessageMediaInstanceDAO.CreateMediaInstance(tx, req.Name, req.MediaType, params, req.Description, req.RateJSON)
+	instanceId, err := models.SharedMessageMediaInstanceDAO.CreateMediaInstance(tx, req.Name, req.MediaType, params, req.Description, req.RateJSON, req.HashLife)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (this *MessageMediaInstanceService) UpdateMessageMediaInstance(ctx context.
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMessageMediaInstanceDAO.UpdateMediaInstance(tx, req.MessageMediaInstanceId, req.Name, req.MediaType, params, req.Description, req.RateJSON, req.IsOn)
+	err = models.SharedMessageMediaInstanceDAO.UpdateMediaInstance(tx, req.MessageMediaInstanceId, req.Name, req.MediaType, params, req.Description, req.RateJSON, req.HashLife, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -180,5 +181,6 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 		ParamsJSON:   []byte(instance.Params),
 		Description:  instance.Description,
 		RateJSON:     []byte(instance.Rate),
+		HashLife:     types.Int32(instance.HashLife),
 	}}, nil
 }
