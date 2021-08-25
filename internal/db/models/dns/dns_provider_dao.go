@@ -36,7 +36,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableDNSProvider 启用条目
 func (this *DNSProviderDAO) EnableDNSProvider(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -45,7 +45,7 @@ func (this *DNSProviderDAO) EnableDNSProvider(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableDNSProvider 禁用条目
 func (this *DNSProviderDAO) DisableDNSProvider(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -54,7 +54,7 @@ func (this *DNSProviderDAO) DisableDNSProvider(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledDNSProvider 查找启用中的条目
 func (this *DNSProviderDAO) FindEnabledDNSProvider(tx *dbs.Tx, id int64) (*DNSProvider, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -66,7 +66,7 @@ func (this *DNSProviderDAO) FindEnabledDNSProvider(tx *dbs.Tx, id int64) (*DNSPr
 	return result.(*DNSProvider), err
 }
 
-// 创建服务商
+// CreateDNSProvider 创建服务商
 func (this *DNSProviderDAO) CreateDNSProvider(tx *dbs.Tx, adminId int64, userId int64, providerType string, name string, apiParamsJSON []byte) (int64, error) {
 	op := NewDNSProviderOperator()
 	op.AdminId = adminId
@@ -84,7 +84,7 @@ func (this *DNSProviderDAO) CreateDNSProvider(tx *dbs.Tx, adminId int64, userId 
 	return types.Int64(op.Id), nil
 }
 
-// 修改服务商
+// UpdateDNSProvider 修改服务商
 func (this *DNSProviderDAO) UpdateDNSProvider(tx *dbs.Tx, dnsProviderId int64, name string, apiParamsJSON []byte) error {
 	if dnsProviderId <= 0 {
 		return errors.New("invalid dnsProviderId")
@@ -106,16 +106,25 @@ func (this *DNSProviderDAO) UpdateDNSProvider(tx *dbs.Tx, dnsProviderId int64, n
 	return nil
 }
 
-// 计算服务商数量
-func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
-	return dbutils.NewQuery(tx, this, adminId, userId).
-		State(DNSProviderStateEnabled).
+// CountAllEnabledDNSProviders 计算服务商数量
+func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string) (int64, error) {
+	var query = dbutils.NewQuery(tx, this, adminId, userId)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.State(DNSProviderStateEnabled).
 		Count()
 }
 
-// 列出单页服务商
-func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*DNSProvider, err error) {
-	_, err = dbutils.NewQuery(tx, this, adminId, userId).
+// ListEnabledDNSProviders 列出单页服务商
+func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string, offset int64, size int64) (result []*DNSProvider, err error) {
+	var query = dbutils.NewQuery(tx, this, adminId, userId)
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
 		State(DNSProviderStateEnabled).
 		Offset(offset).
 		Limit(size).
@@ -125,7 +134,7 @@ func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, u
 	return
 }
 
-// 列出所有服务商
+// FindAllEnabledDNSProviders 列出所有服务商
 func (this *DNSProviderDAO) FindAllEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64) (result []*DNSProvider, err error) {
 	_, err = dbutils.NewQuery(tx, this, adminId, userId).
 		State(DNSProviderStateEnabled).
@@ -135,7 +144,7 @@ func (this *DNSProviderDAO) FindAllEnabledDNSProviders(tx *dbs.Tx, adminId int64
 	return
 }
 
-// 查询某个类型下的所有服务商
+// FindAllEnabledDNSProvidersWithType 查询某个类型下的所有服务商
 func (this *DNSProviderDAO) FindAllEnabledDNSProvidersWithType(tx *dbs.Tx, providerType string) (result []*DNSProvider, err error) {
 	_, err = this.Query(tx).
 		State(DNSProviderStateEnabled).
@@ -146,7 +155,7 @@ func (this *DNSProviderDAO) FindAllEnabledDNSProvidersWithType(tx *dbs.Tx, provi
 	return
 }
 
-// 更新数据更新时间
+// UpdateProviderDataUpdatedTime 更新数据更新时间
 func (this *DNSProviderDAO) UpdateProviderDataUpdatedTime(tx *dbs.Tx, providerId int64) error {
 	_, err := this.Query(tx).
 		Pk(providerId).
