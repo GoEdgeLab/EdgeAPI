@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns/dnsutils"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
@@ -470,6 +471,8 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		return nil, err
 	}
 
+	var defaultRoute = ""
+
 	var pbProvider *pb.DNSProvider = nil
 	if provider != nil {
 		pbProvider = &pb.DNSProvider{
@@ -477,6 +480,19 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			Name:     provider.Name,
 			Type:     provider.Type,
 			TypeName: dnsclients.FindProviderTypeName(provider.Type),
+		}
+
+		manager := dnsclients.FindProvider(provider.Type)
+		if manager != nil {
+			apiParams, err := provider.DecodeAPIParams()
+			if err != nil {
+				return nil, err
+			}
+			err = manager.Auth(apiParams)
+			if err != nil {
+				return nil, err
+			}
+			defaultRoute = manager.DefaultRoute()
 		}
 	}
 
@@ -486,6 +502,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		Provider:        pbProvider,
 		NodesAutoSync:   dnsConfig.NodesAutoSync,
 		ServersAutoSync: dnsConfig.ServersAutoSync,
+		DefaultRoute:    defaultRoute,
 	}, nil
 }
 
@@ -617,8 +634,13 @@ func (this *NodeClusterService) CheckNodeClusterDNSChanges(ctx context.Context, 
 		return nil, err
 	}
 
+	defaultRoute, err := dnsutils.FindDefaultDomainRoute(tx, domain)
+	if err != nil {
+		return nil, err
+	}
+
 	service := &DNSDomainService{}
-	changes, _, _, _, _, _, _, err := service.findClusterDNSChanges(cluster, records, domain.Name)
+	changes, _, _, _, _, _, _, err := service.findClusterDNSChanges(cluster, records, domain.Name, defaultRoute)
 	if err != nil {
 		return nil, err
 	}

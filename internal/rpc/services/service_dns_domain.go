@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns/dnsutils"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
@@ -12,6 +13,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"net"
@@ -145,7 +147,7 @@ func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.
 		return &pb.FindEnabledDNSDomainResponse{DnsDomain: nil}, nil
 	}
 
-	pbDomain, err := this.convertDomainToPB(domain)
+	pbDomain, err := this.convertDomainToPB(tx, domain)
 	return &pb.FindEnabledDNSDomainResponse{DnsDomain: pbDomain}, nil
 }
 
@@ -209,7 +211,7 @@ func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx cont
 
 	result := []*pb.DNSDomain{}
 	for _, domain := range domains {
-		pbDomain, err := this.convertDomainToPB(domain)
+		pbDomain, err := this.convertDomainToPB(tx, domain)
 		if err != nil {
 			return nil, err
 		}
@@ -300,8 +302,13 @@ func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb
 }
 
 // 转换域名信息
-func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSDomain, error) {
+func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomain) (*pb.DNSDomain, error) {
 	domainId := int64(domain.Id)
+
+	defaultRoute, err := dnsutils.FindDefaultDomainRoute(tx, domain)
+	if err != nil {
+		return nil, err
+	}
 
 	records := []*dnstypes.Record{}
 	if len(domain.Records) > 0 && domain.Records != "null" {
@@ -319,8 +326,6 @@ func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSD
 	countServerRecords := 0
 	serversChanged := false
 
-	tx := this.NullTx()
-
 	// 检查是否所有的集群都已经被解析
 	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(tx, domainId)
 	if err != nil {
@@ -330,7 +335,8 @@ func (this *DNSDomainService) convertDomainToPB(domain *dns.DNSDomain) (*pb.DNSD
 	countAllNodes1 := int64(0)
 	countAllServers1 := int64(0)
 	for _, cluster := range clusters {
-		_, nodeRecords, serverRecords, countAllNodes, countAllServers, nodesChanged2, serversChanged2, err := this.findClusterDNSChanges(cluster, records, domain.Name)
+
+		_, nodeRecords, serverRecords, countAllNodes, countAllServers, nodesChanged2, serversChanged2, err := this.findClusterDNSChanges(cluster, records, domain.Name, defaultRoute)
 		if err != nil {
 			return nil, err
 		}
@@ -389,7 +395,7 @@ func (this *DNSDomainService) convertRecordToPB(record *dnstypes.Record) *pb.DNS
 }
 
 // 检查集群节点变化
-func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnstypes.Record, domainName string) (result []maps.Map, doneNodeRecords []*dnstypes.Record, doneServerRecords []*dnstypes.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
+func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnstypes.Record, domainName string, defaultRoute string) (result []maps.Map, doneNodeRecords []*dnstypes.Record, doneServerRecords []*dnstypes.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
 	clusterId := int64(cluster.Id)
 	clusterDnsName := cluster.DnsName
 	clusterDomain := clusterDnsName + "." + domainName
@@ -426,7 +432,12 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 			return nil, nil, nil, 0, 0, false, false, err
 		}
 		if len(routeCodes) == 0 {
-			continue
+			// 默认线路
+			if len(defaultRoute) > 0 {
+				routeCodes = []string{defaultRoute}
+			} else {
+				continue
+			}
 		}
 		for _, route := range routeCodes {
 			for _, ipAddress := range ipAddresses {
@@ -617,7 +628,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 
 	// 检查集群设置
 	for _, cluster := range clusters {
-		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(tx, cluster)
+		issues, err := dnsutils.CheckClusterDNS(tx, cluster)
 		if err != nil {
 			return nil, err
 		}
@@ -643,7 +654,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	// 对比变化
 	allChanges := []maps.Map{}
 	for _, cluster := range clusters {
-		changes, _, _, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName)
+		changes, _, _, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName, manager.DefaultRoute())
 		if err != nil {
 			return nil, err
 		}

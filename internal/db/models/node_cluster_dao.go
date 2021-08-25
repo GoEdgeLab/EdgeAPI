@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -471,117 +469,7 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	return this.NotifyDNSUpdate(tx, clusterId)
 }
 
-// CheckClusterDNS 检查集群的DNS问题
-func (this *NodeClusterDAO) CheckClusterDNS(tx *dbs.Tx, cluster *NodeCluster) (issues []*pb.DNSIssue, err error) {
-	clusterId := int64(cluster.Id)
-	domainId := int64(cluster.DnsDomainId)
 
-	// 检查域名
-	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
-	if err != nil {
-		return nil, err
-	}
-	if domain == nil {
-		issues = append(issues, &pb.DNSIssue{
-			Target:      cluster.Name,
-			TargetId:    clusterId,
-			Type:        "cluster",
-			Description: "域名选择错误，需要重新选择",
-			Params:      nil,
-		})
-		return
-	}
-
-	// 检查二级域名
-	if len(cluster.DnsName) == 0 {
-		issues = append(issues, &pb.DNSIssue{
-			Target:      cluster.Name,
-			TargetId:    clusterId,
-			Type:        "cluster",
-			Description: "没有设置二级域名",
-			Params:      nil,
-		})
-		return
-	}
-
-	// TODO 检查域名格式
-
-	// TODO 检查域名是否已解析
-
-	// 检查节点
-	nodes, err := SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO 检查节点数量不能为0
-
-	for _, node := range nodes {
-		nodeId := int64(node.Id)
-
-		routeCodes, err := node.DNSRouteCodesForDomainId(domainId)
-		if err != nil {
-			return nil, err
-		}
-		if len(routeCodes) == 0 {
-			issues = append(issues, &pb.DNSIssue{
-				Target:      node.Name,
-				TargetId:    nodeId,
-				Type:        "node",
-				Description: "没有选择节点所属线路",
-				Params: map[string]string{
-					"clusterName": cluster.Name,
-					"clusterId":   numberutils.FormatInt64(clusterId),
-				},
-			})
-			continue
-		}
-
-		// 检查线路是否在已有线路中
-		for _, routeCode := range routeCodes {
-			routeOk, err := domain.ContainsRouteCode(routeCode)
-			if err != nil {
-				return nil, err
-			}
-			if !routeOk {
-				issues = append(issues, &pb.DNSIssue{
-					Target:      node.Name,
-					TargetId:    nodeId,
-					Type:        "node",
-					Description: "线路已经失效，请重新选择",
-					Params: map[string]string{
-						"clusterName": cluster.Name,
-						"clusterId":   numberutils.FormatInt64(clusterId),
-					},
-				})
-				continue
-			}
-		}
-
-		// 检查IP地址
-		ipAddr, err := SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, nodeconfigs.NodeRoleNode)
-		if err != nil {
-			return nil, err
-		}
-		if len(ipAddr) == 0 {
-			issues = append(issues, &pb.DNSIssue{
-				Target:      node.Name,
-				TargetId:    nodeId,
-				Type:        "node",
-				Description: "没有设置IP地址",
-				Params: map[string]string{
-					"clusterName": cluster.Name,
-					"clusterId":   numberutils.FormatInt64(clusterId),
-				},
-			})
-			continue
-		}
-
-		// TODO 检查是否有解析记录
-	}
-
-	return
-}
 
 // FindClusterAdminId 查找集群所属管理员
 func (this *NodeClusterDAO) FindClusterAdminId(tx *dbs.Tx, clusterId int64) (int64, error) {

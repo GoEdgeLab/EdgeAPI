@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns/dnsutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -39,7 +40,7 @@ func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNS
 		clusters = []*models.NodeCluster{cluster}
 	}
 	for _, cluster := range clusters {
-		issues, err := models.SharedNodeClusterDAO.CheckClusterDNS(tx, cluster)
+		issues, err := dnsutils.CheckClusterDNS(tx, cluster)
 		if err != nil {
 			return nil, err
 		}
