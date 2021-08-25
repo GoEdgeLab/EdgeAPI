@@ -30,6 +30,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
+	// 系统服务
 	systemServices := map[string]maps.Map{}
 	if len(req.SystemServicesJSON) > 0 {
 		err = json.Unmarshal(req.SystemServicesJSON, &systemServices)
@@ -40,6 +41,24 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 
 	var clusterId int64
 	err = this.RunTx(func(tx *dbs.Tx) error {
+		// 缓存策略
+		if req.HttpCachePolicyId <= 0 {
+			policyId, err := models.SharedHTTPCachePolicyDAO.CreateDefaultCachePolicy(tx, req.Name)
+			if err != nil {
+				return err
+			}
+			req.HttpCachePolicyId = policyId
+		}
+
+		// WAF策略
+		if req.HttpFirewallPolicyId <= 0 {
+			policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateDefaultFirewallPolicy(tx, req.Name)
+			if err != nil {
+				return err
+			}
+			req.HttpFirewallPolicyId = policyId
+		}
+
 		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
 		if err != nil {
 			return err

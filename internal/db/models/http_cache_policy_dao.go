@@ -156,6 +156,44 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 	return types.Int64(op.Id), nil
 }
 
+// CreateDefaultCachePolicy 创建默认的缓存策略
+func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string) (int64, error) {
+	var capacity = &shared.SizeCapacity{
+		Count: 64,
+		Unit:  shared.SizeCapacityUnitGB,
+	}
+	capacityJSON, err := capacity.AsJSON()
+	if err != nil {
+		return 0, err
+	}
+
+	var maxSize = &shared.SizeCapacity{
+		Count: 256,
+		Unit:  shared.SizeCapacityUnitMB,
+	}
+	if err != nil {
+		return 0, err
+	}
+	maxSizeJSON, err := maxSize.AsJSON()
+	if err != nil {
+		return 0, err
+	}
+
+	var storageOptions = &serverconfigs.HTTPFileCacheStorage{
+		Dir: "/opt/cache",
+	}
+	storageOptionsJSON, err := json.Marshal(storageOptions)
+	if err != nil {
+		return 0, err
+	}
+
+	policyId, err := this.CreateCachePolicy(tx, true, "\""+name+"\"缓存策略", "默认创建的缓存策略", capacityJSON, 0, maxSizeJSON, serverconfigs.CachePolicyStorageFile, storageOptionsJSON)
+	if err != nil {
+		return 0, err
+	}
+	return policyId, nil
+}
+
 // UpdateCachePolicy 修改缓存策略
 func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte) error {
 	if policyId <= 0 {

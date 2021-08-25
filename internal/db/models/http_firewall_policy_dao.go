@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
@@ -113,8 +114,73 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 	return types.Int64(op.Id), err
 }
 
+// CreateDefaultFirewallPolicy 创建默认的WAF策略
+func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name string) (int64, error) {
+	policyId, err := this.CreateFirewallPolicy(tx, 0, 0, true, "\""+name+"\"WAF策略", "默认创建的WAF策略", nil, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	// 初始化
+	var groupCodes = []string{}
+
+	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
+	for _, group := range templatePolicy.AllRuleGroups() {
+		groupCodes = append(groupCodes, group.Code)
+	}
+
+	inboundConfig := &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	outboundConfig := &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
+	if templatePolicy.Inbound != nil {
+		for _, group := range templatePolicy.Inbound.Groups {
+			isOn := lists.ContainsString(groupCodes, group.Code)
+			group.IsOn = isOn
+
+			groupId, err := SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, group)
+			if err != nil {
+				return 0, err
+			}
+			inboundConfig.GroupRefs = append(inboundConfig.GroupRefs, &firewallconfigs.HTTPFirewallRuleGroupRef{
+				IsOn:    true,
+				GroupId: groupId,
+			})
+		}
+	}
+	if templatePolicy.Outbound != nil {
+		for _, group := range templatePolicy.Outbound.Groups {
+			isOn := lists.ContainsString(groupCodes, group.Code)
+			group.IsOn = isOn
+
+			groupId, err := SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, group)
+			if err != nil {
+				return 0, err
+			}
+			outboundConfig.GroupRefs = append(outboundConfig.GroupRefs, &firewallconfigs.HTTPFirewallRuleGroupRef{
+				IsOn:    true,
+				GroupId: groupId,
+			})
+		}
+	}
+
+	inboundConfigJSON, err := json.Marshal(inboundConfig)
+	if err != nil {
+		return 0, err
+	}
+
+	outboundConfigJSON, err := json.Marshal(outboundConfig)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, inboundConfigJSON, outboundConfigJSON, false)
+	if err != nil {
+		return 0, err
+	}
+	return policyId, nil
+}
+
 // UpdateFirewallPolicyInboundAndOutbound 修改策略的Inbound和Outbound
-func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *dbs.Tx, policyId int64, inboundJSON []byte, outboundJSON []byte) error {
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *dbs.Tx, policyId int64, inboundJSON []byte, outboundJSON []byte, shouldNotify bool) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -135,7 +201,11 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *db
 		return err
 	}
 
-	return this.NotifyUpdate(tx, policyId)
+	if shouldNotify {
+		return this.NotifyUpdate(tx, policyId)
+	}
+
+	return nil
 }
 
 // UpdateFirewallPolicyInbound 修改策略的Inbound

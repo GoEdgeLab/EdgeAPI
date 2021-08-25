@@ -3,6 +3,7 @@ package setup
 import (
 	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -221,6 +222,40 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 
 	// 创建默认集群
 	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, rands.HexString(32), rands.String(32))
+	if err != nil {
+		return err
+	}
+
+	// 默认缓存策略
+	models.SharedHTTPCachePolicyDAO = models.NewHTTPCachePolicyDAO()
+	models.SharedHTTPCachePolicyDAO.Instance = db
+	policyId, err := models.SharedHTTPCachePolicyDAO.CreateDefaultCachePolicy(nil, "默认集群")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE edgeNodeClusters SET cachePolicyId=?", policyId)
+	if err != nil {
+		return err
+	}
+
+	// 默认WAf策略
+	models.SharedHTTPFirewallPolicyDAO = models.NewHTTPFirewallPolicyDAO()
+	models.SharedHTTPFirewallPolicyDAO.Instance = db
+
+	models.SharedHTTPFirewallRuleGroupDAO = models.NewHTTPFirewallRuleGroupDAO()
+	models.SharedHTTPFirewallRuleGroupDAO.Instance = db
+
+	models.SharedHTTPFirewallRuleSetDAO = models.NewHTTPFirewallRuleSetDAO()
+	models.SharedHTTPFirewallRuleSetDAO.Instance = db
+
+	models.SharedHTTPFirewallRuleDAO = models.NewHTTPFirewallRuleDAO()
+	models.SharedHTTPFirewallRuleDAO.Instance = db
+
+	policyId, err = models.SharedHTTPFirewallPolicyDAO.CreateDefaultFirewallPolicy(nil, "默认集群")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE edgeNodeClusters SET httpFirewallPolicyId=?", policyId)
 	if err != nil {
 		return err
 	}
