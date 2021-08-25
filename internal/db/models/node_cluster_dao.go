@@ -193,7 +193,7 @@ func (this *NodeClusterDAO) CountAllEnabledClusters(tx *dbs.Tx, keyword string) 
 	query := this.Query(tx).
 		State(NodeClusterStateEnabled)
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR dnsName like :keyword)").
+		query.Where("(name LIKE :keyword OR dnsName like :keyword OR (dnsDomainId > 0 AND dnsDomainId IN (SELECT id FROM "+dns.SharedDNSDomainDAO.Table+" WHERE name LIKE :keyword AND state=1)))").
 			Param("keyword", "%"+keyword+"%")
 	}
 	return query.Count()
@@ -204,7 +204,7 @@ func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offs
 	query := this.Query(tx).
 		State(NodeClusterStateEnabled)
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR dnsName like :keyword)").
+		query.Where("(name LIKE :keyword OR dnsName like :keyword OR (dnsDomainId > 0 AND dnsDomainId IN (SELECT id FROM "+dns.SharedDNSDomainDAO.Table+" WHERE name LIKE :keyword AND state=1)))").
 			Param("keyword", "%"+keyword+"%")
 	}
 	_, err = query.
@@ -468,8 +468,6 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	}
 	return this.NotifyDNSUpdate(tx, clusterId)
 }
-
-
 
 // FindClusterAdminId 查找集群所属管理员
 func (this *NodeClusterDAO) FindClusterAdminId(tx *dbs.Tx, clusterId int64) (int64, error) {
