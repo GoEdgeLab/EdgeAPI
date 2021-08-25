@@ -474,6 +474,15 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	var tx = this.NullTx()
 
+	// 默认集群
+	nodeClusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, "", 0, 1)
+	if err != nil {
+		return nil, err
+	}
+	if len(nodeClusters) > 0 {
+		result.DefaultNodeClusterId = int64(nodeClusters[0].Id)
+	}
+
 	// 集群数
 	countClusters, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(tx, "")
 	if err != nil {
