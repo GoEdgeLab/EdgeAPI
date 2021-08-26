@@ -7,6 +7,7 @@ function build() {
 	OS=${1}
 	ARCH=${2}
 	TAG=${3}
+	NODE_ARCHITECTS=("amd64" "386" "arm64" "mips64" "mips64le")
 
 	if [ -z $OS ]; then
 		echo "usage: build.sh OS ARCH"
@@ -33,8 +34,7 @@ function build() {
 	fi
 	cd $ROOT"/../../EdgeNode/build"
 	echo "=============================="
-	architects=("amd64" "386" "arm64" "mips64" "mips64le")
-	for arch in "${architects[@]}"; do
+	for arch in "${NODE_ARCHITECTS[@]}"; do
 		if [ ! -f $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-${TAG}-v${NodeVersion}.zip" ]; then
 			./build.sh linux $arch $TAG
 		else
@@ -45,7 +45,7 @@ function build() {
 	cd -
 
 	rm -f $ROOT/deploy/*.zip
-	for arch in "${architects[@]}"; do
+	for arch in "${NODE_ARCHITECTS[@]}"; do
 		cp $ROOT"/../../EdgeNode/dist/edge-node-linux-${arch}-${TAG}-v${NodeVersion}.zip" $ROOT/deploy/edge-node-linux-${arch}-v${NodeVersion}.zip
 	done
 
