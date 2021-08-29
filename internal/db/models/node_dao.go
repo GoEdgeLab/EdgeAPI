@@ -167,6 +167,13 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
+
+	// 老的集群
+	oldClusterIds, err := this.FindEnabledNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
 	op := NewNodeOperator()
 	op.Id = nodeId
 	op.Name = name
@@ -208,6 +215,16 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 	err = this.NotifyUpdate(tx, nodeId)
 	if err != nil {
 		return err
+	}
+
+	// 通知老的集群更新
+	for _, oldClusterId := range oldClusterIds {
+		if oldClusterId != clusterId && !lists.ContainsInt64(secondaryClusterIds, oldClusterId) {
+			err = dns.SharedDNSTaskDAO.CreateClusterTask(tx, oldClusterId, dns.DNSTaskTypeClusterChange)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return this.NotifyDNSUpdate(tx, nodeId)
@@ -377,6 +394,30 @@ func (this *NodeDAO) FindEnabledAndOnNodeClusterIds(tx *dbs.Tx, nodeId int64) (r
 			return nil, err
 		}
 		if !isOn {
+			continue
+		}
+
+		result = append(result, clusterId)
+	}
+	return
+}
+
+// FindEnabledNodeClusterIds 获取节点所属所有可用的集群ID
+func (this *NodeDAO) FindEnabledNodeClusterIds(tx *dbs.Tx, nodeId int64) (result []int64, err error) {
+	one, err := this.Query(tx).
+		Pk(nodeId).
+		Result("clusterId", "secondaryClusterIds").
+		Find()
+	if one == nil {
+		return nil, err
+	}
+	var clusterId = int64(one.(*Node).ClusterId)
+	if clusterId > 0 {
+		result = append(result, clusterId)
+	}
+
+	for _, clusterId := range one.(*Node).DecodeSecondaryClusterIds() {
+		if lists.ContainsInt64(result, clusterId) {
 			continue
 		}
 
