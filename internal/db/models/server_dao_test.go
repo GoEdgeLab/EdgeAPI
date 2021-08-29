@@ -144,3 +144,15 @@ func TestServerDAO_FindAllEnabledServersWithNode(t *testing.T) {
 		t.Log("serverId:", server.Id, "clusterId:", server.ClusterId)
 	}
 }
+
+func BenchmarkServerDAO_CountAllEnabledServers(b *testing.B) {
+	SharedServerDAO = NewServerDAO()
+
+	for i := 0; i < b.N; i++ {
+		result, err := SharedServerDAO.CountAllEnabledServers(nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+		_ = result
+	}
+}
