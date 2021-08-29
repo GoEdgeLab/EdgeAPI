@@ -626,6 +626,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
 		IsOn:                   node.IsOn == 1,
+		IsUp:                   node.IsUp == 1,
 		NodeGroup:              pbGroup,
 		NodeRegion:             pbRegion,
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
