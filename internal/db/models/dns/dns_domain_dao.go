@@ -214,7 +214,8 @@ func (this *DNSDomainDAO) FindDomainRouteName(tx *dbs.Tx, domainId int64, routeC
 // ExistAvailableDomains 判断是否有域名可选
 func (this *DNSDomainDAO) ExistAvailableDomains(tx *dbs.Tx) (bool, error) {
 	subQuery, err := SharedDNSProviderDAO.Query(tx).
-		Where("state=1"). // 这里要使用非变量
+		Where("state=1").                   // 这里要使用非变量
+		SQLCache(dbs.QuerySqlCacheDefault). // 子查询不能使用SQL_CACHE
 		ResultPk().
 		AsSQL()
 	if err != nil {
