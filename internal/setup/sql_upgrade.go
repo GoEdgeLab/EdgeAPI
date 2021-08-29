@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
@@ -44,6 +45,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.2.8.1", upgradeV0_2_8_1,
+	},
+	{
+		"0.3.0", upgradeV0_3_0,
 	},
 }
 
@@ -322,5 +326,38 @@ func upgradeV0_2_8_1(db *dbs.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// v0.3.0
+func upgradeV0_3_0(db *dbs.DB) error {
+	// 升级健康检查
+	ones, _, err := db.FindOnes("SELECT id,healthCheck FROM edgeNodeClusters WHERE state=1")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var clusterId = one.GetInt64("id")
+		var healthCheck = one.GetString("healthCheck")
+		if len(healthCheck) == 0 {
+			continue
+		}
+		var config = &serverconfigs.HealthCheckConfig{}
+		err = json.Unmarshal([]byte(healthCheck), config)
+		if err != nil {
+			continue
+		}
+		if config.CountDown <= 1 {
+			config.CountDown = 3
+			configJSON, err := json.Marshal(config)
+			if err != nil {
+				continue
+			}
+			_, err = db.Exec("UPDATE edgeNodeClusters SET healthCheck=? WHERE id=?", string(configJSON), clusterId)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

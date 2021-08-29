@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	"net"
 	"net/http"
@@ -95,7 +95,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		countTries = 10
 	}
 	if countTries < 1 {
-		countTries = 1
+		countTries = 3
 	}
 
 	tryDelay := 1 * time.Second
@@ -134,7 +134,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 					if healthCheckConfig.AutoDown {
 						isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
 						if err != nil {
-							logs.Println("[HEALTH_CHECK]" + err.Error())
+							remotelogs.Error("HEALTH_CHECK", err.Error())
 						} else if isChanged {
 							// 通知恢复或下线
 							if result.IsOk {

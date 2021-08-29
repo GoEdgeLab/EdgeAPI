@@ -301,11 +301,8 @@ func (this *NodeClusterDAO) UpdateClusterHealthCheck(tx *dbs.Tx, clusterId int64
 	op := NewNodeClusterOperator()
 	op.Id = clusterId
 	op.HealthCheck = healthCheckJSON
-	err := this.Save(tx, op)
-	if err != nil {
-		return err
-	}
-	return this.NotifyUpdate(tx, clusterId)
+	// 不需要通知更新
+	return this.Save(tx, op)
 }
 
 // CountAllEnabledClustersWithGrantId 计算使用某个认证的集群数量

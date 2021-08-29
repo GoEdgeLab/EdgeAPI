@@ -1098,9 +1098,11 @@ func (this *NodeDAO) UpdateNodeUpCount(tx *dbs.Tx, nodeId int64, isUp bool, maxU
 		return false, err
 	}
 
-	err = this.NotifyDNSUpdate(tx, nodeId)
-	if err != nil {
-		return false, err
+	if changed {
+		err = this.NotifyDNSUpdate(tx, nodeId)
+		if err != nil {
+			return true, err
+		}
 	}
 
 	return
