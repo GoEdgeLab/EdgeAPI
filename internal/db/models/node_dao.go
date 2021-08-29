@@ -1154,15 +1154,19 @@ func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
+
 	op := NewNodeOperator()
 	op.Id = nodeId
 	op.IsUp = isUp
-	op.CountDown = 0
+	op.CountUp = 0
 	op.CountDown = 0
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
+
+	// TODO 只有前后状态不一致的时候才需要更新DNS
+
 	return this.NotifyDNSUpdate(tx, nodeId)
 }
 
