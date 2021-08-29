@@ -4,10 +4,12 @@ go 1.15
 
 replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 
+replace github.com/TeaOSLab/EdgePlus => ../EdgePlus
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
+	github.com/TeaOSLab/EdgePlus v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.641
 	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/go-acme/lego/v4 v4.1.2
