@@ -197,6 +197,7 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 	var lastTime = lastStat.Time
 
 	var query = this.Query(tx).
+		UseIndex("cluster_item_time").
 		Attr("clusterId", clusterId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -243,6 +244,7 @@ func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId
 	var lastStat = statOne.(*MetricStat)
 	var lastTime = lastStat.Time
 	var query = this.Query(tx).
+		UseIndex("node_item_time").
 		Attr("nodeId", nodeId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -290,6 +292,7 @@ func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serv
 	var lastTime = lastStat.Time
 
 	var query = this.Query(tx).
+		UseIndex("server_item_time").
 		Attr("serverId", serverId).
 		Attr("itemId", itemId).
 		Attr("version", version).
