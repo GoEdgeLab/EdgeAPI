@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -118,6 +119,19 @@ func (this *NodeDAO) FindNodeName(tx *dbs.Tx, id int64) (string, error) {
 
 // CreateNode 创建节点
 func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterId int64, groupId int64, regionId int64) (nodeId int64, err error) {
+	// 检查节点数量
+	if teaconst.MaxNodes > 0 {
+		count, err := this.Query(tx).
+			State(NodeStateEnabled).
+			Count()
+		if err != nil {
+			return 0, err
+		}
+		if int64(teaconst.MaxNodes) <= count {
+			return 0, errors.New("[企业版]超出最大节点数限制：" + types.String(teaconst.MaxNodes) + "，请购买更多配额")
+		}
+	}
+
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
