@@ -3,10 +3,10 @@ package models
 import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
-	"github.com/iwind/TeaGo/logs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"hash/crc32"
 	"regexp"
@@ -266,7 +266,7 @@ func (this *DBNodeInitializer) Start() {
 	// 初始运行
 	err := this.loop()
 	if err != nil {
-		logs.Println("[DB_NODE]" + err.Error())
+		remotelogs.Error("DB_NODE", err.Error())
 	}
 
 	// 定时运行
@@ -274,7 +274,7 @@ func (this *DBNodeInitializer) Start() {
 	for range ticker.C {
 		err := this.loop()
 		if err != nil {
-			logs.Println("[DB_NODE]" + err.Error())
+			remotelogs.Error("DB_NODE", err.Error())
 		}
 	}
 }
@@ -300,7 +300,7 @@ func (this *DBNodeInitializer) loop() error {
 			delete(accessLogDBMapping, nodeId)
 			delete(httpAccessLogDAOMapping, nodeId)
 			delete(nsAccessLogDAOMapping, nodeId)
-			logs.Println("[DB_NODE]close db node '" + strconv.FormatInt(nodeId, 10) + "'")
+			remotelogs.Error("DB_NODE", "close db node '"+strconv.FormatInt(nodeId, 10)+"'")
 		}
 	}
 	accessLogLocker.Unlock()
@@ -321,7 +321,7 @@ func (this *DBNodeInitializer) loop() error {
 			// 检查配置是否有变化
 			oldConfig, err := db.Config()
 			if err != nil {
-				logs.Println("[DB_NODE]read database old config failed: " + err.Error())
+				remotelogs.Error("DB_NODE", "read database old config failed: "+err.Error())
 				continue
 			}
 
@@ -340,7 +340,7 @@ func (this *DBNodeInitializer) loop() error {
 			}
 			db, err := dbs.NewInstanceFromConfig(config)
 			if err != nil {
-				logs.Println("[DB_NODE]initialize database config failed: " + err.Error())
+				remotelogs.Error("DB_NODE", "initialize database config failed: "+err.Error())
 				continue
 			}
 
@@ -350,12 +350,12 @@ func (this *DBNodeInitializer) loop() error {
 				tableDef, err := findHTTPAccessLogTable(db, timeutil.Format("Ymd"), true)
 				if err != nil {
 					if !strings.Contains(err.Error(), "1050") { // 非表格已存在错误
-						logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
+						remotelogs.Error("DB_NODE", "create first table in database node failed: "+err.Error())
 
 						// 创建节点日志
 						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
 						if createLogErr != nil {
-							logs.Println("[NODE_LOG]" + createLogErr.Error())
+							remotelogs.Error("NODE_LOG", createLogErr.Error())
 						}
 
 						continue
@@ -373,7 +373,7 @@ func (this *DBNodeInitializer) loop() error {
 				}
 				err = daoObject.Init()
 				if err != nil {
-					logs.Println("[DB_NODE]initialize dao failed: " + err.Error())
+					remotelogs.Error("DB_NODE", "initialize dao failed: "+err.Error())
 					continue
 				}
 
@@ -394,12 +394,12 @@ func (this *DBNodeInitializer) loop() error {
 				tableName, err := findNSAccessLogTable(db, timeutil.Format("Ymd"), false)
 				if err != nil {
 					if !strings.Contains(err.Error(), "1050") { // 非表格已存在错误
-						logs.Println("[DB_NODE]create first table in database node failed: " + err.Error())
+						remotelogs.Error("DB_NODE", "create first table in database node failed: "+err.Error())
 
 						// 创建节点日志
 						createLogErr := SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleDatabase, nodeId, 0, 0, "error", "ACCESS_LOG", "can not create access log table: "+err.Error(), time.Now().Unix())
 						if createLogErr != nil {
-							logs.Println("[NODE_LOG]" + createLogErr.Error())
+							remotelogs.Error("NODE_LOG", createLogErr.Error())
 						}
 
 						continue
@@ -417,7 +417,7 @@ func (this *DBNodeInitializer) loop() error {
 				}
 				err = daoObject.Init()
 				if err != nil {
-					logs.Println("[DB_NODE]initialize dao failed: " + err.Error())
+					remotelogs.Error("DB_NODE", "initialize dao failed: "+err.Error())
 					continue
 				}
 

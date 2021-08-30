@@ -109,6 +109,10 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 			if err != nil {
 				status.Error = err.Error()
 			} else {
+				// 版本
+				version, _ := db.FindCol(0, "SELECT VERSION()")
+				status.Version = types.String(version)
+
 				one, err := db.FindOne("SELECT SUM(DATA_LENGTH+INDEX_LENGTH) AS size FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
 				if err != nil {
 					status.Error = err.Error()
@@ -293,4 +297,50 @@ func (this *DBNodeService) TruncateDBNodeTable(ctx context.Context, req *pb.Trun
 		return nil, err
 	}
 	return this.Success()
+}
+
+// CheckDBNodeStatus 检查数据库节点状态
+func (this *DBNodeService) CheckDBNodeStatus(ctx context.Context, req *pb.CheckDBNodeStatusRequest) (*pb.CheckDBNodeStatusResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	node, err := models.SharedDBNodeDAO.FindEnabledDBNode(tx, req.DbNodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return &pb.CheckDBNodeStatusResponse{DbNodeStatus: nil}, nil
+	}
+
+	status := &pb.DBNodeStatus{}
+
+	// 是否能够连接
+	if node.IsOn == 1 {
+		db, err := dbs.NewInstanceFromConfig(node.DBConfig())
+		if err != nil {
+			status.Error = err.Error()
+		} else {
+			// 版本
+			version, _ := db.FindCol(0, "SELECT VERSION()")
+			status.Version = types.String(version)
+
+			one, err := db.FindOne("SELECT SUM(DATA_LENGTH+INDEX_LENGTH) AS size FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
+			if err != nil {
+				status.Error = err.Error()
+				_ = db.Close()
+			} else if one == nil {
+				status.Error = "unable to read size from database server"
+				_ = db.Close()
+			} else {
+				status.IsOk = true
+				status.Size = one.GetInt64("size")
+				_ = db.Close()
+			}
+		}
+	}
+
+	return &pb.CheckDBNodeStatusResponse{DbNodeStatus: status}, nil
 }

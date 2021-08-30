@@ -176,3 +176,15 @@ func (this *DBNodeDAO) DecodePassword(password string) string {
 	}
 	return string(encrypt.MagicKeyDecode(data))
 }
+
+// CheckNodeIsOn 检查节点是否已经启用
+func (this *DBNodeDAO) CheckNodeIsOn(tx *dbs.Tx, nodeId int64) (bool, error) {
+	isOn, err := this.Query(tx).
+		Pk(nodeId).
+		Result("isOn").
+		FindIntCol(0)
+	if err != nil {
+		return false, err
+	}
+	return isOn == 1, nil
+}

@@ -15,6 +15,8 @@ type HTTPAccessLog struct {
 	FirewallRuleId      uint32 `field:"firewallRuleId"`      // WAF规则ID
 	RemoteAddr          string `field:"remoteAddr"`          // IP地址
 	Domain              string `field:"domain"`              // 域名
+	RequestBody         string `field:"requestBody"`         // 请求内容
+	ResponseBody        string `field:"responseBody"`        // 响应内容
 }
 
 type HTTPAccessLogOperator struct {
@@ -31,6 +33,8 @@ type HTTPAccessLogOperator struct {
 	FirewallRuleId      interface{} // WAF规则ID
 	RemoteAddr          interface{} // IP地址
 	Domain              interface{} // 域名
+	RequestBody         interface{} // 请求内容
+	ResponseBody        interface{} // 响应内容
 }
 
 func NewHTTPAccessLogOperator() *HTTPAccessLogOperator {
