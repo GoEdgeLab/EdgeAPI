@@ -14,14 +14,16 @@ import (
 	"time"
 )
 
-// 单个集群的健康检查任务
+// HealthCheckClusterTask 单个集群的健康检查任务
 type HealthCheckClusterTask struct {
 	clusterId int64
 	config    *serverconfigs.HealthCheckConfig
 	ticker    *utils.Ticker
+
+	notifiedTime time.Time
 }
 
-// 创建新任务
+// NewHealthCheckClusterTask 创建新任务
 func NewHealthCheckClusterTask(clusterId int64, config *serverconfigs.HealthCheckConfig) *HealthCheckClusterTask {
 	return &HealthCheckClusterTask{
 		clusterId: clusterId,
@@ -29,7 +31,7 @@ func NewHealthCheckClusterTask(clusterId int64, config *serverconfigs.HealthChec
 	}
 }
 
-// 重置配置
+// Reset 重置配置
 func (this *HealthCheckClusterTask) Reset(config *serverconfigs.HealthCheckConfig) {
 	// 检查是否有变化
 	oldJSON, err := json.Marshal(this.config)
@@ -48,7 +50,7 @@ func (this *HealthCheckClusterTask) Reset(config *serverconfigs.HealthCheckConfi
 	}
 }
 
-// 执行
+// Run 执行
 func (this *HealthCheckClusterTask) Run() {
 	this.Stop()
 
@@ -77,7 +79,7 @@ func (this *HealthCheckClusterTask) Run() {
 	this.ticker = ticker
 }
 
-// 停止
+// Stop 停止
 func (this *HealthCheckClusterTask) Stop() {
 	if this.ticker == nil {
 		return
@@ -128,14 +130,19 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 	}
 
 	if len(failedResults) > 0 {
-		failedResultsJSON, err := json.Marshal(failedResults)
-		if err != nil {
-			return err
-		}
-		message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
-		err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
-		if err != nil {
-			return err
+		// 10分钟内不重复提醒
+		if time.Since(this.notifiedTime) > 10*time.Minute {
+			this.notifiedTime = time.Now()
+
+			failedResultsJSON, err := json.Marshal(failedResults)
+			if err != nil {
+				return err
+			}
+			message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
+			err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
