@@ -15,6 +15,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"io"
 	"path/filepath"
 )
 
@@ -466,7 +467,7 @@ func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, r
 	}
 
 	data, offset, err := file.Read(req.ChunkOffset)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, err
 	}
 

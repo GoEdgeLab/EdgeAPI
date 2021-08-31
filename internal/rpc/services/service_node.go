@@ -17,6 +17,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"io"
 	"net"
 	"path/filepath"
 	"strings"
@@ -1519,6 +1520,9 @@ func (this *NodeService) DownloadNodeInstallationFile(ctx context.Context, req *
 	}
 
 	data, offset, err := file.Read(req.ChunkOffset)
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
 
 	return &pb.DownloadNodeInstallationFileResponse{
 		Sum:       sum,
