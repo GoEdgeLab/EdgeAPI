@@ -634,6 +634,39 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	}}, nil
 }
 
+// FindEnabledBasicNode 获取单个节点基本信息
+func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindEnabledBasicNodeRequest) (*pb.FindEnabledBasicNodeResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	node, err := models.SharedNodeDAO.FindEnabledBasicNode(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return &pb.FindEnabledBasicNodeResponse{Node: nil}, nil
+	}
+
+	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(node.ClusterId))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindEnabledBasicNodeResponse{Node: &pb.BasicNode{
+		Id:   int64(node.Id),
+		Name: node.Name,
+		IsOn: node.IsOn == 1,
+		IsUp: node.IsUp == 1,
+		NodeCluster: &pb.NodeCluster{
+			Id:   int64(node.ClusterId),
+			Name: clusterName,
+		},
+	}}, nil
+}
+
 // FindCurrentNodeConfig 组合节点配置
 func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.FindCurrentNodeConfigRequest) (*pb.FindCurrentNodeConfigResponse, error) {
 	_ = req
@@ -1326,7 +1359,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 // UpdateNodeDNS 修改节点的DNS解析信息
 func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDNSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1378,7 +1411,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 				return nil, err
 			}
 		} else {
-			_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, nil)
+			_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, nil)
 			if err != nil {
 				return nil, err
 			}

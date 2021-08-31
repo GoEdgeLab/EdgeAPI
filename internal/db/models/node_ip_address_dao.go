@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -104,7 +105,7 @@ func (this *NodeIPAddressDAO) FindAddressName(tx *dbs.Tx, id int64) (string, err
 }
 
 // CreateAddress 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, thresholdsJSON []byte) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, thresholdsJSON []byte) (addressId int64, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
@@ -123,7 +124,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, role nodec
 	}
 
 	op.State = NodeIPAddressStateEnabled
-	err = this.Save(tx, op)
+	addressId, err = this.SaveInt64(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -133,11 +134,17 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, nodeId int64, role nodec
 		return 0, err
 	}
 
-	return types.Int64(op.Id), nil
+	// 创建日志
+	err = SharedNodeIPAddressLogDAO.CreateLog(tx, adminId, addressId, "创建IP")
+	if err != nil {
+		return 0, err
+	}
+
+	return addressId, nil
 }
 
 // UpdateAddress 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name string, ip string, canAccess bool, isOn bool, thresholdsJSON []byte) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId int64, name string, ip string, canAccess bool, isOn bool, thresholdsJSON []byte) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -160,6 +167,13 @@ func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, addressId int64, name st
 	if err != nil {
 		return err
 	}
+
+	// 创建日志
+	err = SharedNodeIPAddressLogDAO.CreateLog(tx, adminId, addressId, "修改IP")
+	if err != nil {
+		return err
+	}
+
 	return this.NotifyUpdate(tx, addressId)
 }
 
@@ -284,26 +298,29 @@ func (this *NodeIPAddressDAO) FireThresholds(tx *dbs.Tx, role nodeconfigs.NodeRo
 			continue
 		}
 		var isOk = true
-		var summary = []string{}
+		var positiveSummarys = []string{}
+		var negativeSummarys = []string{}
 		for _, threshold := range thresholds {
 			if threshold.Value <= 0 || threshold.Duration <= 0 {
 				continue
 			}
 
 			var value = float64(0)
+			var summary = ""
+			var op = nodeconfigs.FindNodeValueOperatorName(threshold.Operator)
 			switch threshold.Item {
 			case "avgRequests":
 				value, err = SharedNodeValueDAO.SumValues(tx, role, nodeId, nodeconfigs.NodeValueItemRequests, "total", nodeconfigs.NodeValueSumMethodAvg, types.Int32(threshold.Duration), threshold.DurationUnit)
 				value = math.Round(value / 60)
-				summary = append(summary, "平均请求数："+types.String(value)+"/s")
+				summary = "平均请求数：" + types.String(value) + "/s，阈值：" + op + " " + types.String(threshold.Value) + "/s"
 			case "avgTrafficOut":
 				value, err = SharedNodeValueDAO.SumValues(tx, role, nodeId, nodeconfigs.NodeValueItemTrafficOut, "total", nodeconfigs.NodeValueSumMethodAvg, types.Int32(threshold.Duration), threshold.DurationUnit)
 				value = math.Round(value*100/1024/1024/60) / 100 // 100 = 两位小数
-				summary = append(summary, "平均下行流量："+types.String(value)+"MB/s")
+				summary = "平均下行流量：" + types.String(value) + "MB/s，阈值：" + op + " " + types.String(threshold.Value) + "MB/s"
 			case "avgTrafficIn":
 				value, err = SharedNodeValueDAO.SumValues(tx, role, nodeId, nodeconfigs.NodeValueItemTrafficIn, "total", nodeconfigs.NodeValueSumMethodAvg, types.Int32(threshold.Duration), threshold.DurationUnit)
 				value = math.Round(value*100/1024/1024/60) / 100 // 100 = 两位小数
-				summary = append(summary, "平均上行流量："+types.String(value)+"MB/s")
+				summary = "平均上行流量：" + types.String(value) + "MB/s，阈值：" + op + " " + types.String(threshold.Value) + "MB/s"
 			default:
 				// TODO 支持更多
 				err = errors.New("threshold item '" + threshold.Item + "' not supported")
@@ -313,6 +330,9 @@ func (this *NodeIPAddressDAO) FireThresholds(tx *dbs.Tx, role nodeconfigs.NodeRo
 			}
 			if !nodeconfigs.CompareNodeValue(threshold.Operator, value, float64(threshold.Value)) {
 				isOk = false
+				negativeSummarys = append(negativeSummarys, summary)
+			} else {
+				positiveSummarys = append(positiveSummarys, summary)
 			}
 		}
 		if isOk && addr.IsUp == 0 { // 新上线
@@ -324,11 +344,24 @@ func (this *NodeIPAddressDAO) FireThresholds(tx *dbs.Tx, role nodeconfigs.NodeRo
 				return err
 			}
 
+			// 增加日志
+			var description = ""
+			if len(negativeSummarys) > 0 {
+				description = "触发阈值：" + strings.Join(negativeSummarys, "，")
+			} else {
+				description = "触发阈值：" + strings.Join(positiveSummarys, "，")
+			}
+
+			err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, int64(addr.Id), description)
+			if err != nil {
+				return err
+			}
+
 			clusterId, err := SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 			if err != nil {
 				return err
 			}
-			err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeIPAddrUp, MessageLevelSuccess, "节点IP'"+addr.Ip+"'因为达到阈值而上线", "节点IP'"+addr.Ip+"'因为达到阈值而上线。"+strings.Join(summary, "，") + "。", maps.Map{
+			err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeIPAddrUp, MessageLevelSuccess, "节点IP'"+addr.Ip+"'因为达到阈值而上线", "节点IP'"+addr.Ip+"'因为达到阈值而上线。"+description+"。", maps.Map{
 				"addrId": addr.Id,
 			}.AsJSON())
 			if err != nil {
@@ -348,11 +381,24 @@ func (this *NodeIPAddressDAO) FireThresholds(tx *dbs.Tx, role nodeconfigs.NodeRo
 				return err
 			}
 
+			// 增加日志
+			var description = ""
+			if len(negativeSummarys) > 0 {
+				description = "触发阈值：" + strings.Join(negativeSummarys, "；")
+			} else {
+				description = "触发阈值：" + strings.Join(positiveSummarys, "；")
+			}
+
+			err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, int64(addr.Id), description)
+			if err != nil {
+				return err
+			}
+
 			clusterId, err := SharedNodeDAO.FindNodeClusterId(tx, nodeId)
 			if err != nil {
 				return err
 			}
-			err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeIPAddrDown, MessageLevelWarning, "节点IP'"+addr.Ip+"'因为达到阈值而下线", "节点IP'"+addr.Ip+"'因为达到阈值而下线。"+strings.Join(summary, "，") + "。", maps.Map{
+			err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeIPAddrDown, MessageLevelWarning, "节点IP'"+addr.Ip+"'因为达到阈值而下线", "节点IP'"+addr.Ip+"'因为达到阈值而下线。"+description+"。", maps.Map{
 				"addrId": addr.Id,
 			}.AsJSON())
 			if err != nil {
@@ -367,6 +413,77 @@ func (this *NodeIPAddressDAO) FireThresholds(tx *dbs.Tx, role nodeconfigs.NodeRo
 	}
 
 	return nil
+}
+
+// CountAllEnabledIPAddresses 计算IP地址数量
+// TODO 目前支持边缘节点，将来支持NS节点
+func (this *NodeIPAddressDAO) CountAllEnabledIPAddresses(tx *dbs.Tx, role string, nodeClusterId int64, upState configutils.BoolState, keyword string) (int64, error) {
+	var query = this.Query(tx).
+		State(NodeIPAddressStateEnabled).
+		Attr("role", role)
+
+	// 集群
+	if nodeClusterId > 0 {
+		query.Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE (clusterId=:clusterId OR JSON_CONTAINS(secondaryClusterIds, :clusterIdString)) AND state=1)").
+			Param("clusterId", nodeClusterId).
+			Param("clusterIdString", types.String(nodeClusterId))
+	} else {
+		query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1))")
+	}
+
+	// 在线状态
+	switch upState {
+	case configutils.BoolStateYes:
+		query.Attr("isUp", 1)
+	case configutils.BoolStateNo:
+		query.Attr("isUp", 0)
+	}
+
+	// 关键词
+	if len(keyword) > 0 {
+		query.Where("(ip LIKE :keyword OR name LIKE :keyword OR description LIKE :keyword OR nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND name LIKE :keyword))").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	return query.Count()
+}
+
+// ListEnabledIPAddresses 列出单页的IP地址
+func (this *NodeIPAddressDAO) ListEnabledIPAddresses(tx *dbs.Tx, role string, nodeClusterId int64, upState configutils.BoolState, keyword string, offset int64, size int64) (result []*NodeIPAddress, err error) {
+	var query = this.Query(tx).
+		State(NodeIPAddressStateEnabled).
+		Attr("role", role)
+
+	// 集群
+	if nodeClusterId > 0 {
+		query.Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE (clusterId=:clusterId OR JSON_CONTAINS(secondaryClusterIds, :clusterIdString)) AND state=1)").
+			Param("clusterId", nodeClusterId).
+			Param("clusterIdString", types.String(nodeClusterId))
+	} else {
+		query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1))")
+	}
+
+	// 在线状态
+	switch upState {
+	case configutils.BoolStateYes:
+		query.Attr("isUp", 1)
+	case configutils.BoolStateNo:
+		query.Attr("isUp", 0)
+	}
+
+	// 关键词
+	if len(keyword) > 0 {
+		query.Where("(ip LIKE :keyword OR name LIKE :keyword OR description LIKE :keyword OR nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND name LIKE :keyword))").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	_, err = query.Offset(offset).
+		Limit(size).
+		Asc("isUp").
+		Desc("nodeId").
+		Slice(&result).
+		FindAll()
+	return
 }
 
 // NotifyUpdate 通知更新

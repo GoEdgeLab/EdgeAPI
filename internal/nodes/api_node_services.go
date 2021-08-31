@@ -49,6 +49,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&services.NodeIPAddressLogService{}).(*services.NodeIPAddressLogService)
+		pb.RegisterNodeIPAddressLogServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.APINodeService{}).(*services.APINodeService)
 		pb.RegisterAPINodeServiceServer(server, instance)
 		this.rest(instance)

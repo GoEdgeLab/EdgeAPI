@@ -108,6 +108,19 @@ func (this *NodeDAO) FindEnabledNode(tx *dbs.Tx, id int64) (*Node, error) {
 	return result.(*Node), err
 }
 
+// FindEnabledBasicNode 获取节点的基本信息
+func (this *NodeDAO) FindEnabledBasicNode(tx *dbs.Tx, nodeId int64) (*Node, error) {
+	one, err := this.Query(tx).
+		State(NodeStateEnabled).
+		Pk(nodeId).
+		Result("id", "name", "clusterId", "isOn", "isUp").
+		Find()
+	if one == nil {
+		return nil, err
+	}
+	return one.(*Node), nil
+}
+
 // FindNodeName 根据主键查找名称
 func (this *NodeDAO) FindNodeName(tx *dbs.Tx, id int64) (string, error) {
 	name, err := this.Query(tx).
