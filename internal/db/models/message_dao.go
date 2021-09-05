@@ -43,8 +43,11 @@ const (
 	MessageTypeIPAddrUp                   MessageType = "IPAddrUp"                   // IP地址上线
 	MessageTypeIPAddrDown                 MessageType = "IPAddrDown"                 // IP地址下线
 
-	MessageTypeNSNodeInactive MessageType = "NSNodeInactive" // 边缘节点不活跃
-	MessageTypeNSNodeActive   MessageType = "NSNodeActive"   // 边缘节点活跃
+	MessageTypeNSNodeInactive MessageType = "NSNodeInactive" // NS节点不活跃
+	MessageTypeNSNodeActive   MessageType = "NSNodeActive"   // NS节点活跃
+
+	MessageTypeReportNodeInactive MessageType = "ReportNodeInactive" // 区域监控节点节点不活跃
+	MessageTypeReportNodeActive   MessageType = "ReportNodeActive"   // 区域监控节点活跃
 )
 
 type MessageDAO dbs.DAO

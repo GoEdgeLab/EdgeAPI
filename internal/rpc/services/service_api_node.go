@@ -162,7 +162,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 	return &pb.ListEnabledAPINodesResponse{Nodes: result}, nil
 }
 
-// 根据ID查找节点
+// FindEnabledAPINode 根据ID查找节点
 func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.FindEnabledAPINodeRequest) (*pb.FindEnabledAPINodeResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
