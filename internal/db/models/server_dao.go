@@ -1367,6 +1367,46 @@ func (this *ServerDAO) FindLatestServers(tx *dbs.Tx, size int64) (result []*Serv
 	return
 }
 
+// FindFirstHTTPOrHTTPSPortWithClusterId 获取集群中第一个HTTP或者HTTPS端口
+func (this *ServerDAO) FindFirstHTTPOrHTTPSPortWithClusterId(tx *dbs.Tx, clusterId int64) (int, error) {
+	one, _, err := this.Query(tx).
+		Result("JSON_EXTRACT(http, '$.listen[*].portRange') AS httpPort, JSON_EXTRACT(https, '$.listen[*].portRange') AS httpsPort").
+		Attr("clusterId", clusterId).
+		State(ServerStateEnabled).
+		Attr("isOn", 1).
+		Where("((JSON_CONTAINS(http, :queryJSON) AND JSON_EXTRACT(http, '$.listen[*].portRange') IS NOT NULL) OR (JSON_CONTAINS(https, :queryJSON) AND JSON_EXTRACT(https, '$.listen[*].portRange') IS NOT NULL))").
+		Param("queryJSON", "{\"isOn\":true}").
+		FindOne()
+	if err != nil {
+		return 0, err
+	}
+	httpPortString := one.GetString("httpPort")
+	if len(httpPortString) > 0 {
+		var ports = []string{}
+		err = json.Unmarshal([]byte(httpPortString), &ports)
+		if err != nil {
+			return 0, err
+		}
+		if len(ports) > 0 {
+			return types.Int(ports[0]), nil
+		}
+	}
+
+	httpsPortString := one.GetString("httpsPort")
+	if len(httpsPortString) > 0 {
+		var ports = []string{}
+		err = json.Unmarshal([]byte(httpsPortString), &ports)
+		if err != nil {
+			return 0, err
+		}
+		if len(ports) > 0 {
+			return types.Int(ports[0]), nil
+		}
+	}
+
+	return 0, nil
+}
+
 // NotifyUpdate 同步集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	// 创建任务

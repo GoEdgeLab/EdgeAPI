@@ -346,6 +346,19 @@ func (this *NodeIPAddressDAO) ListEnabledIPAddresses(tx *dbs.Tx, role string, no
 	return
 }
 
+// FindAllEnabledAndOnIPAddressesWithClusterId 列出所有的正在启用的IP地址
+func (this *NodeIPAddressDAO) FindAllEnabledAndOnIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64) (result []*NodeIPAddress, err error) {
+	_, err = this.Query(tx).
+		State(NodeIPAddressStateEnabled).
+		Attr("role", role).
+		Attr("isOn", true).
+		Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId)").
+		Param("clusterId", clusterId).
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // NotifyUpdate 通知更新
 func (this *NodeIPAddressDAO) NotifyUpdate(tx *dbs.Tx, addressId int64) error {
 	address, err := this.Query(tx).
