@@ -12,7 +12,7 @@ func TestTrafficHourlyStatDAO_IncreaseDayBytes(t *testing.T) {
 	dbs.NotifyReady()
 
 	now := time.Now()
-	err := SharedTrafficHourlyStatDAO.IncreaseHourlyBytes(nil, timeutil.Format("YmdH"), 1)
+	err := SharedTrafficHourlyStatDAO.IncreaseHourlyStat(nil, timeutil.Format("YmdH"), 1, 1, 1, 1, 1, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
