@@ -42,7 +42,7 @@ func TestRequest_Run_DNS(t *testing.T) {
 		AuthType:    AuthTypeDNS,
 		DNSProvider: dnsProvider,
 		DNSDomain:   "yun4s.cn",
-		Domains:     []string{"yun4s.cn"},
+		Domains:     []string{"www.yun4s.cn"},
 	})
 	certData, keyData, err := req.Run()
 	if err != nil {

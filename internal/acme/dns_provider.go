@@ -9,28 +9,32 @@ import (
 )
 
 type DNSProvider struct {
-	raw dnsclients.ProviderInterface
+	raw       dnsclients.ProviderInterface
+	dnsDomain string
 }
 
-func NewDNSProvider(raw dnsclients.ProviderInterface) *DNSProvider {
-	return &DNSProvider{raw: raw}
+func NewDNSProvider(raw dnsclients.ProviderInterface, dnsDomain string) *DNSProvider {
+	return &DNSProvider{
+		raw:       raw,
+		dnsDomain: dnsDomain,
+	}
 }
 
 func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
 	// 设置记录
-	index := strings.Index(fqdn, "."+domain)
+	index := strings.Index(fqdn, "."+this.dnsDomain)
 	if index < 0 {
 		return errors.New("invalid fqdn value")
 	}
 	recordName := fqdn[:index]
-	record, err := this.raw.QueryRecord(domain, recordName, dnstypes.RecordTypeTXT)
+	record, err := this.raw.QueryRecord(this.dnsDomain, recordName, dnstypes.RecordTypeTXT)
 	if err != nil {
 		return errors.New("query DNS record failed: " + err.Error())
 	}
 	if record == nil {
-		err = this.raw.AddRecord(domain, &dnstypes.Record{
+		err = this.raw.AddRecord(this.dnsDomain, &dnstypes.Record{
 			Id:    "",
 			Name:  recordName,
 			Type:  dnstypes.RecordTypeTXT,
@@ -41,7 +45,7 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 			return errors.New("create DNS record failed: " + err.Error())
 		}
 	} else {
-		err = this.raw.UpdateRecord(domain, record, &dnstypes.Record{
+		err = this.raw.UpdateRecord(this.dnsDomain, record, &dnstypes.Record{
 			Name:  recordName,
 			Type:  dnstypes.RecordTypeTXT,
 			Value: value,

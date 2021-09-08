@@ -92,7 +92,7 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 		}
 	}
 
-	err = client.Challenge.SetDNS01Provider(NewDNSProvider(this.task.DNSProvider))
+	err = client.Challenge.SetDNS01Provider(NewDNSProvider(this.task.DNSProvider, this.task.DNSDomain))
 	if err != nil {
 		return nil, nil, err
 	}
