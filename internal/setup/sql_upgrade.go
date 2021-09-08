@@ -49,6 +49,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.3.0", upgradeV0_3_0,
 	},
+	{
+		"0.3.1", upgradeV0_3_1,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -359,5 +362,13 @@ func upgradeV0_3_0(db *dbs.DB) error {
 			}
 		}
 	}
+	return nil
+}
+
+// v0.3.1
+func upgradeV0_3_1(db *dbs.DB) error {
+	// 忽略错误
+	_, _ = db.Exec("TRUNCATE table edgeServerDomainHourlyStats")
+
 	return nil
 }
