@@ -3,12 +3,14 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/reporterconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -76,7 +78,7 @@ func (this *ReportNodeDAO) FindReportNodeName(tx *dbs.Tx, id int64) (string, err
 }
 
 // CreateReportNode 创建终端
-func (this *ReportNodeDAO) CreateReportNode(tx *dbs.Tx, name string, location string, isp string, allowIPs []string) (int64, error) {
+func (this *ReportNodeDAO) CreateReportNode(tx *dbs.Tx, name string, location string, isp string, allowIPs []string, groupIds []int64) (int64, error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
@@ -107,13 +109,23 @@ func (this *ReportNodeDAO) CreateReportNode(tx *dbs.Tx, name string, location st
 		op.AllowIPs = "[]"
 	}
 
+	if len(groupIds) > 0 {
+		groupIdsJSON, err := json.Marshal(groupIds)
+		if err != nil {
+			return 0, err
+		}
+		op.GroupIds = groupIdsJSON
+	} else {
+		op.GroupIds = "[]"
+	}
+
 	op.IsOn = true
 	op.State = ReportNodeStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdateReportNode 修改终端
-func (this *ReportNodeDAO) UpdateReportNode(tx *dbs.Tx, nodeId int64, name string, location string, isp string, allowIPs []string, isOn bool) error {
+func (this *ReportNodeDAO) UpdateReportNode(tx *dbs.Tx, nodeId int64, name string, location string, isp string, allowIPs []string, groupIds []int64, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -134,14 +146,27 @@ func (this *ReportNodeDAO) UpdateReportNode(tx *dbs.Tx, nodeId int64, name strin
 		op.AllowIPs = "[]"
 	}
 
+	if len(groupIds) > 0 {
+		groupIdsJSON, err := json.Marshal(groupIds)
+		if err != nil {
+			return err
+		}
+		op.GroupIds = groupIdsJSON
+	} else {
+		op.GroupIds = "[]"
+	}
+
 	op.IsOn = isOn
 	return this.Save(tx, op)
 }
 
 // CountAllEnabledReportNodes 计算终端数量
-func (this *ReportNodeDAO) CountAllEnabledReportNodes(tx *dbs.Tx, keyword string) (int64, error) {
+func (this *ReportNodeDAO) CountAllEnabledReportNodes(tx *dbs.Tx, groupId int64, keyword string) (int64, error) {
 	var query = this.Query(tx).
 		State(ReportNodeStateEnabled)
+	if groupId > 0 {
+		query.JSONContains("groupIds", types.String(groupId))
+	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR location LIKE :keyword OR isp LIKE :keyword OR allowIPs LIKE :keyword OR (status IS NOT NULL AND JSON_EXTRACT(status, 'ip') LIKE :keyword))")
 		query.Param("keyword", "%"+keyword+"%")
@@ -149,10 +174,21 @@ func (this *ReportNodeDAO) CountAllEnabledReportNodes(tx *dbs.Tx, keyword string
 	return query.Count()
 }
 
+// CountAllEnabledAndOnReportNodes 计算可用的终端数量
+func (this *ReportNodeDAO) CountAllEnabledAndOnReportNodes(tx *dbs.Tx) (int64, error) {
+	var query = this.Query(tx).
+		Attr("isOn", true).
+		State(ReportNodeStateEnabled)
+	return query.Count()
+}
+
 // ListEnabledReportNodes 列出单页终端
-func (this *ReportNodeDAO) ListEnabledReportNodes(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*ReportNode, err error) {
+func (this *ReportNodeDAO) ListEnabledReportNodes(tx *dbs.Tx, groupId int64, keyword string, offset int64, size int64) (result []*ReportNode, err error) {
 	var query = this.Query(tx).
 		State(ReportNodeStateEnabled)
+	if groupId > 0 {
+		query.JSONContains("groupIds", types.String(groupId))
+	}
 	if len(keyword) > 0 {
 		query.Where(`(
 	name LIKE :keyword 
@@ -266,4 +302,14 @@ func (this *ReportNodeDAO) FindNodeAllowIPs(tx *dbs.Tx, nodeId int64) ([]string,
 		return nil, nil
 	}
 	return node.(*ReportNode).DecodeAllowIPs(), nil
+}
+
+// CountAllLowerVersionNodes 计算所有节点中低于某个版本的节点数量
+func (this *ReportNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
+	return this.Query(tx).
+		State(ReportNodeStateEnabled).
+		Where("status IS NOT NULL").
+		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
+		Param("version", utils.VersionToLong(version)).
+		Count()
 }

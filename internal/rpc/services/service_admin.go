@@ -657,6 +657,19 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		result.NsNodeUpgradeInfo = upgradeInfo
 	}
 
+	// Report节点升级信息
+	if isPlus {
+		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
+			NewVersion: teaconst.ReportNodeVersion,
+		}
+		countNodes, err := models.SharedReportNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		if err != nil {
+			return nil, err
+		}
+		upgradeInfo.CountNodes = countNodes
+		result.ReportNodeUpgradeInfo = upgradeInfo
+	}
+
 	// 域名排行
 	if isPlus {
 		topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)

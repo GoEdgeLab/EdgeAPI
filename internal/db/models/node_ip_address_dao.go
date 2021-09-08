@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -346,17 +347,58 @@ func (this *NodeIPAddressDAO) ListEnabledIPAddresses(tx *dbs.Tx, role string, no
 	return
 }
 
-// FindAllEnabledAndOnIPAddressesWithClusterId 列出所有的正在启用的IP地址
-func (this *NodeIPAddressDAO) FindAllEnabledAndOnIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64) (result []*NodeIPAddress, err error) {
+// FindAllAccessibleIPAddressesWithClusterId 列出所有的正在启用的IP地址
+func (this *NodeIPAddressDAO) FindAllAccessibleIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64) (result []*NodeIPAddress, err error) {
 	_, err = this.Query(tx).
 		State(NodeIPAddressStateEnabled).
 		Attr("role", role).
 		Attr("isOn", true).
+		Attr("canAccess", true).
 		Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId)").
 		Param("clusterId", clusterId).
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// CountAllAccessibleIPAddressesWithClusterId 计算集群中的可用IP地址数量
+func (this *NodeIPAddressDAO) CountAllAccessibleIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64) (count int64, err error) {
+	return this.Query(tx).
+		State(NodeIPAddressStateEnabled).
+		Attr("role", role).
+		Attr("isOn", true).
+		Attr("canAccess", true).
+		Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId)").
+		Param("clusterId", clusterId).
+		Count()
+}
+
+// ListAccessibleIPAddressesWithClusterId 列出单页集群中的可用IP地址
+func (this *NodeIPAddressDAO) ListAccessibleIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64, offset int64, size int64) (result []*NodeIPAddress, err error) {
+	_, err = this.Query(tx).
+		State(NodeIPAddressStateEnabled).
+		Attr("role", role).
+		Attr("isOn", true).
+		Attr("canAccess", true).
+		Where("nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId)").
+		Param("clusterId", clusterId).
+		Offset(offset).
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// UpdateAddressConnectivity 设置连通性数据
+func (this *NodeIPAddressDAO) UpdateAddressConnectivity(tx *dbs.Tx, addrId int64, connectivity *nodeconfigs.Connectivity) error {
+	connectivityJSON, err := json.Marshal(connectivity)
+	if err != nil {
+		return err
+	}
+	return this.Query(tx).
+		Pk(addrId).
+		Set("connectivity", connectivityJSON).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 通知更新

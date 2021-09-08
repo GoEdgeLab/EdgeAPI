@@ -14,6 +14,7 @@ type ReportNode struct {
 	Status    string `field:"status"`    // 状态
 	State     uint8  `field:"state"`     // 状态
 	CreatedAt uint64 `field:"createdAt"` // 创建时间
+	GroupIds  string `field:"groupIds"`  // 分组ID
 }
 
 type ReportNodeOperator struct {
@@ -29,6 +30,7 @@ type ReportNodeOperator struct {
 	Status    interface{} // 状态
 	State     interface{} // 状态
 	CreatedAt interface{} // 创建时间
+	GroupIds  interface{} // 分组ID
 }
 
 func NewReportNodeOperator() *ReportNodeOperator {
