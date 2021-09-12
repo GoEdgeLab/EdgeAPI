@@ -367,8 +367,7 @@ func upgradeV0_3_0(db *dbs.DB) error {
 
 // v0.3.1
 func upgradeV0_3_1(db *dbs.DB) error {
-	// 忽略错误
+	// 清空域名统计，已使用分表代替
 	_, _ = db.Exec("TRUNCATE table edgeServerDomainHourlyStats")
-
 	return nil
 }

@@ -21,7 +21,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.ThresholdsJSON)
+	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, adminId, req.NodeIPAddressId, req.Name, req.Ip, req.CanAccess, req.IsOn, req.ThresholdsJSON)
+	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, adminId, req.NodeIPAddressId, req.Name, req.Ip, req.CanAccess, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -119,18 +119,17 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 	var result *pb.NodeIPAddress = nil
 	if address != nil {
 		result = &pb.NodeIPAddress{
-			Id:             int64(address.Id),
-			NodeId:         int64(address.NodeId),
-			Role:           address.Role,
-			Name:           address.Name,
-			Ip:             address.Ip,
-			Description:    address.Description,
-			State:          int64(address.State),
-			Order:          int64(address.Order),
-			CanAccess:      address.CanAccess == 1,
-			IsOn:           address.IsOn == 1,
-			IsUp:           address.IsUp == 1,
-			ThresholdsJSON: []byte(address.Thresholds),
+			Id:          int64(address.Id),
+			NodeId:      int64(address.NodeId),
+			Role:        address.Role,
+			Name:        address.Name,
+			Ip:          address.Ip,
+			Description: address.Description,
+			State:       int64(address.State),
+			Order:       int64(address.Order),
+			CanAccess:   address.CanAccess == 1,
+			IsOn:        address.IsOn == 1,
+			IsUp:        address.IsUp == 1,
 		}
 	}
 
@@ -155,18 +154,17 @@ func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx contex
 	result := []*pb.NodeIPAddress{}
 	for _, address := range addresses {
 		result = append(result, &pb.NodeIPAddress{
-			Id:             int64(address.Id),
-			NodeId:         int64(address.NodeId),
-			Role:           address.Role,
-			Name:           address.Name,
-			Ip:             address.Ip,
-			Description:    address.Description,
-			State:          int64(address.State),
-			Order:          int64(address.Order),
-			CanAccess:      address.CanAccess == 1,
-			IsOn:           address.IsOn == 1,
-			IsUp:           address.IsUp == 1,
-			ThresholdsJSON: []byte(address.Thresholds),
+			Id:          int64(address.Id),
+			NodeId:      int64(address.NodeId),
+			Role:        address.Role,
+			Name:        address.Name,
+			Ip:          address.Ip,
+			Description: address.Description,
+			State:       int64(address.State),
+			Order:       int64(address.Order),
+			CanAccess:   address.CanAccess == 1,
+			IsOn:        address.IsOn == 1,
+			IsUp:        address.IsUp == 1,
 		})
 	}
 
@@ -207,16 +205,15 @@ func (this *NodeIPAddressService) ListEnabledIPAddresses(ctx context.Context, re
 	var pbAddrs = []*pb.NodeIPAddress{}
 	for _, addr := range addresses {
 		pbAddrs = append(pbAddrs, &pb.NodeIPAddress{
-			Id:             int64(addr.Id),
-			NodeId:         int64(addr.NodeId),
-			Role:           addr.Role,
-			Name:           addr.Name,
-			Ip:             addr.Ip,
-			Description:    addr.Description,
-			CanAccess:      addr.CanAccess == 1,
-			IsOn:           addr.IsOn == 1,
-			IsUp:           addr.IsUp == 1,
-			ThresholdsJSON: []byte(addr.Thresholds),
+			Id:          int64(addr.Id),
+			NodeId:      int64(addr.NodeId),
+			Role:        addr.Role,
+			Name:        addr.Name,
+			Ip:          addr.Ip,
+			Description: addr.Description,
+			CanAccess:   addr.CanAccess == 1,
+			IsOn:        addr.IsOn == 1,
+			IsUp:        addr.IsUp == 1,
 		})
 	}
 	return &pb.ListEnabledIPAddressesResponse{NodeIPAddresses: pbAddrs}, nil

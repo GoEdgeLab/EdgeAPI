@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"time"
 )
 
@@ -163,26 +164,41 @@ func (this *ReportResultDAO) FindAvgLevelWithTarget(tx *dbs.Tx, taskType reporte
 }
 
 // FindConnectivityWithTarget 获取某个对象的连通率
-func (this *ReportResultDAO) FindConnectivityWithTarget(tx *dbs.Tx, taskType reporterconfigs.TaskType, targetId int64) (float64, error) {
-	// 已汇报数据的数量
-	total, err := this.Query(tx).
+func (this *ReportResultDAO) FindConnectivityWithTarget(tx *dbs.Tx, taskType reporterconfigs.TaskType, targetId int64, groupId int64) (float64, error) {
+	var query = this.Query(tx).
 		Attr("type", taskType).
-		Attr("targetId", targetId).
-		Where("reportNodeId IN (SELECT id FROM "+SharedReportNodeDAO.Table+" WHERE state=1 AND isOn=1)").
+		Attr("targetId", targetId)
+	if groupId > 0 {
+		query.Where("reportNodeId IN (SELECT id FROM "+SharedReportNodeDAO.Table+" WHERE state=1 AND isOn=1 AND JSON_CONTAINS(groupIds, :groupIdString))").
+			Param("groupIdString", types.String(groupId))
+	} else {
+		query.Where("reportNodeId IN (SELECT id FROM " + SharedReportNodeDAO.Table + " WHERE state=1 AND isOn=1)")
+	}
+
+	// 已汇报数据的数量
+	total, err := query.
 		Gt("updatedAt", time.Now().Unix()-600).
 		Count()
 	if err != nil {
 		return 0, err
 	}
 	if total == 0 {
-		return 0, nil
+		return 1, nil
 	}
 
 	// 连通的数量
-	countConnected, err := this.Query(tx).
+	var connectedQuery = this.Query(tx).
 		Attr("type", taskType).
-		Attr("targetId", targetId).
-		Where("reportNodeId IN (SELECT id FROM "+SharedReportNodeDAO.Table+" WHERE state=1 AND isOn=1)").
+		Attr("targetId", targetId)
+
+	if groupId > 0 {
+		connectedQuery.Where("reportNodeId IN (SELECT id FROM "+SharedReportNodeDAO.Table+" WHERE state=1 AND isOn=1 AND JSON_CONTAINS(groupIds, :groupIdString))").
+			Param("groupIdString", types.String(groupId))
+	} else {
+		connectedQuery.Where("reportNodeId IN (SELECT id FROM " + SharedReportNodeDAO.Table + " WHERE state=1 AND isOn=1)")
+	}
+
+	countConnected, err := connectedQuery.
 		Attr("isOk", true).
 		Gt("updatedAt", time.Now().Unix()-600).
 		Count()

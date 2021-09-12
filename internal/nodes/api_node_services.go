@@ -54,6 +54,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&services.NodeIPAddressThresholdService{}).(*services.NodeIPAddressThresholdService)
+		pb.RegisterNodeIPAddressThresholdServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.APINodeService{}).(*services.APINodeService)
 		pb.RegisterAPINodeServiceServer(server, instance)
 		this.rest(instance)
