@@ -409,77 +409,9 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 
 	tx := this.NullTx()
 
-	var maxCacheDiskCapacityJSON []byte
-	if req.MaxCacheDiskCapacity != nil {
-		maxCacheDiskCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
-			Count: req.MaxCacheDiskCapacity.Count,
-			Unit:  req.MaxCacheDiskCapacity.Unit,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var maxCacheMemoryCapacityJSON []byte
-	if req.MaxCacheMemoryCapacity != nil {
-		maxCacheMemoryCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
-			Count: req.MaxCacheMemoryCapacity.Count,
-			Unit:  req.MaxCacheMemoryCapacity.Unit,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.MaxCPU, req.IsOn, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
+	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn)
 	if err != nil {
 		return nil, err
-	}
-
-	// 登录信息
-	if req.NodeLogin == nil {
-		err = models.SharedNodeLoginDAO.DisableNodeLogins(tx, nodeconfigs.NodeRoleNode, req.NodeId)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if req.NodeLogin.Id > 0 {
-			err = models.SharedNodeLoginDAO.UpdateNodeLogin(tx, req.NodeLogin.Id, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			_, err = models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeconfigs.NodeRoleNode, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	// 保存DNS相关
-	nodeDNS, err := models.SharedNodeDAO.FindEnabledNodeDNS(tx, req.NodeId)
-	if err != nil {
-		return nil, err
-	}
-	if nodeDNS != nil {
-		var routesMap = nodeDNS.DNSRouteCodes()
-		var m = map[int64][]string{} // domainId => codes
-		for _, route := range req.DnsRoutes {
-			var pieces = strings.SplitN(route, "@", 2)
-			if len(pieces) != 2 {
-				continue
-			}
-			var code = pieces[0]
-			var domainId = types.Int64(pieces[1])
-			m[domainId] = append(m[domainId], code)
-		}
-		for domainId, codes := range m {
-			routesMap[domainId] = codes
-		}
-		err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, routesMap)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return this.Success()
@@ -1377,22 +1309,43 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 	}
 
 	routeCodeMap := node.DNSRouteCodes()
-	if req.DnsDomainId > 0 && len(req.Routes) > 0 {
-		var m = map[int64][]string{} // domainId => codes
-		for _, route := range req.Routes {
-			var pieces = strings.SplitN(route, "@", 2)
-			if len(pieces) != 2 {
-				continue
+	if req.DnsDomainId > 0 {
+		if len(req.Routes) > 0 {
+			var m = map[int64][]string{} // domainId => codes
+			for _, route := range req.Routes {
+				var pieces = strings.SplitN(route, "@", 2)
+				if len(pieces) != 2 {
+					continue
+				}
+				var code = pieces[0]
+				var domainId = types.Int64(pieces[1])
+				m[domainId] = append(m[domainId], code)
 			}
-			var code = pieces[0]
-			var domainId = types.Int64(pieces[1])
-			m[domainId] = append(m[domainId], code)
-		}
-		for domainId, codes := range m {
-			routeCodeMap[domainId] = codes
+			for domainId, codes := range m {
+				routeCodeMap[domainId] = codes
+			}
+		} else {
+			delete(routeCodeMap, req.DnsDomainId)
 		}
 	} else {
-		delete(routeCodeMap, req.DnsDomainId)
+		if len(req.Routes) > 0 {
+			var m = map[int64][]string{} // domainId => codes
+			for _, route := range req.Routes {
+				var pieces = strings.SplitN(route, "@", 2)
+				if len(pieces) != 2 {
+					continue
+				}
+				var code = pieces[0]
+				var domainId = types.Int64(pieces[1])
+				m[domainId] = append(m[domainId], code)
+			}
+			for domainId, codes := range m {
+				routeCodeMap[domainId] = codes
+			}
+		} else {
+			// 清空
+			routeCodeMap = map[int64][]string{}
+		}
 	}
 
 	err = models.SharedNodeDAO.UpdateNodeDNS(tx, req.NodeId, routeCodeMap)
@@ -1531,4 +1484,58 @@ func (this *NodeService) DownloadNodeInstallationFile(ctx context.Context, req *
 		Version:   file.Version,
 		Filename:  filepath.Base(file.Path),
 	}, nil
+}
+
+// UpdateNodeSystem 修改节点系统信息
+func (this *NodeService) UpdateNodeSystem(ctx context.Context, req *pb.UpdateNodeSystemRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeDAO.UpdateNodeSystem(tx, req.NodeId, req.MaxCPU)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// UpdateNodeCache 修改节点缓存设置
+func (this *NodeService) UpdateNodeCache(ctx context.Context, req *pb.UpdateNodeCacheRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	var maxCacheDiskCapacityJSON []byte
+	if req.MaxCacheDiskCapacity != nil {
+		maxCacheDiskCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
+			Count: req.MaxCacheDiskCapacity.Count,
+			Unit:  req.MaxCacheDiskCapacity.Unit,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var maxCacheMemoryCapacityJSON []byte
+	if req.MaxCacheMemoryCapacity != nil {
+		maxCacheMemoryCapacityJSON, err = json.Marshal(&shared.SizeCapacity{
+			Count: req.MaxCacheMemoryCapacity.Count,
+			Unit:  req.MaxCacheMemoryCapacity.Unit,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeCache(tx, req.NodeId, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

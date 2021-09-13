@@ -190,7 +190,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 }
 
 // UpdateNode 修改节点
-func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, maxCPU int32, isOn bool, maxCacheDiskCapacityJSON []byte, maxCacheMemoryCapacityJSON []byte) error {
+func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, isOn bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -226,14 +226,7 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 	op.GroupId = groupId
 	op.RegionId = regionId
 	op.LatestVersion = dbs.SQL("latestVersion+1")
-	op.MaxCPU = maxCPU
 	op.IsOn = isOn
-	if len(maxCacheDiskCapacityJSON) > 0 {
-		op.MaxCacheDiskCapacity = maxCacheDiskCapacityJSON
-	}
-	if len(maxCacheMemoryCapacityJSON) > 0 {
-		op.MaxCacheMemoryCapacity = maxCacheMemoryCapacityJSON
-	}
 	err = this.Save(tx, op)
 	if err != nil {
 		return err
@@ -500,9 +493,9 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
-		Attr("isOn", true).        // 只监控启用的节点
+		Attr("isOn", true). // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
-		Attr("isActive", true).    // 当前已经在线的
+		Attr("isActive", true). // 当前已经在线的
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
 		Result("id", "name").
 		Slice(&result).
@@ -1111,6 +1104,41 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 	}
 
 	return nil
+}
+
+// UpdateNodeSystem 设置系统信息
+func (this *NodeDAO) UpdateNodeSystem(tx *dbs.Tx, nodeId int64, maxCPU int32) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	var op = NewNodeOperator()
+	op.Id = nodeId
+	op.MaxCPU = maxCPU
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, nodeId)
+}
+
+// UpdateNodeCache 设置缓存相关
+func (this *NodeDAO) UpdateNodeCache(tx *dbs.Tx, nodeId int64, maxCacheDiskCapacityJSON []byte, maxCacheMemoryCapacityJSON []byte) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	var op = NewNodeOperator()
+	op.Id = nodeId
+	if len(maxCacheDiskCapacityJSON) > 0 {
+		op.MaxCacheDiskCapacity = maxCacheDiskCapacityJSON
+	}
+	if len(maxCacheMemoryCapacityJSON) > 0 {
+		op.MaxCacheMemoryCapacity = maxCacheMemoryCapacityJSON
+	}
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // UpdateNodeUpCount 计算节点上线|下线状态
