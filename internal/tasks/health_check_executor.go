@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
@@ -185,11 +186,11 @@ func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.Heal
 				if err != nil {
 					return nil, err
 				}
-				conn, err := net.Dial(network, result.NodeAddr+":"+port)
+				conn, err := net.Dial(network, configutils.QuoteIP(result.NodeAddr)+":"+port)
 				if err == nil {
 					return conn, nil
 				}
-				return net.DialTimeout(network, result.NodeAddr+":"+port, timeout)
+				return net.DialTimeout(network, configutils.QuoteIP(result.NodeAddr)+":"+port, timeout)
 			},
 			MaxIdleConns:          1,
 			MaxIdleConnsPerHost:   1,
