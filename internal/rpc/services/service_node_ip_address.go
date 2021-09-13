@@ -83,8 +83,8 @@ func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req 
 	return &pb.DisableNodeIPAddressResponse{}, nil
 }
 
-// DisableAllIPAddressesWithNodeId 禁用某个节点的IP地址
-func (this *NodeIPAddressService) DisableAllIPAddressesWithNodeId(ctx context.Context, req *pb.DisableAllIPAddressesWithNodeIdRequest) (*pb.DisableAllIPAddressesWithNodeIdResponse, error) {
+// DisableAllNodeIPAddressesWithNodeId 禁用某个节点的IP地址
+func (this *NodeIPAddressService) DisableAllNodeIPAddressesWithNodeId(ctx context.Context, req *pb.DisableAllNodeIPAddressesWithNodeIdRequest) (*pb.DisableAllNodeIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -98,7 +98,7 @@ func (this *NodeIPAddressService) DisableAllIPAddressesWithNodeId(ctx context.Co
 		return nil, err
 	}
 
-	return &pb.DisableAllIPAddressesWithNodeIdResponse{}, nil
+	return &pb.DisableAllNodeIPAddressesWithNodeIdResponse{}, nil
 }
 
 // FindEnabledNodeIPAddress 查找单个IP地址
@@ -137,8 +137,8 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 	return &pb.FindEnabledNodeIPAddressResponse{NodeIPAddress: result}, nil
 }
 
-// FindAllEnabledIPAddressesWithNodeId 查找节点的所有地址
-func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx context.Context, req *pb.FindAllEnabledIPAddressesWithNodeIdRequest) (*pb.FindAllEnabledIPAddressesWithNodeIdResponse, error) {
+// FindAllEnabledNodeIPAddressesWithNodeId 查找节点的所有地址
+func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx context.Context, req *pb.FindAllEnabledNodeIPAddressesWithNodeIdRequest) (*pb.FindAllEnabledNodeIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -170,11 +170,11 @@ func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx contex
 		})
 	}
 
-	return &pb.FindAllEnabledIPAddressesWithNodeIdResponse{Addresses: result}, nil
+	return &pb.FindAllEnabledNodeIPAddressesWithNodeIdResponse{NodeIPAddresses: result}, nil
 }
 
-// CountAllEnabledIPAddresses 计算IP地址数量
-func (this *NodeIPAddressService) CountAllEnabledIPAddresses(ctx context.Context, req *pb.CountAllEnabledIPAddressesRequest) (*pb.RPCCountResponse, error) {
+// CountAllEnabledNodeIPAddresses 计算IP地址数量
+func (this *NodeIPAddressService) CountAllEnabledNodeIPAddresses(ctx context.Context, req *pb.CountAllEnabledNodeIPAddressesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -191,7 +191,7 @@ func (this *NodeIPAddressService) CountAllEnabledIPAddresses(ctx context.Context
 }
 
 // ListEnabledIPAddresses 列出单页IP地址
-func (this *NodeIPAddressService) ListEnabledIPAddresses(ctx context.Context, req *pb.ListEnabledIPAddressesRequest) (*pb.ListEnabledIPAddressesResponse, error) {
+func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context, req *pb.ListEnabledNodeIPAddressesRequest) (*pb.ListEnabledNodeIPAddressesResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -219,5 +219,55 @@ func (this *NodeIPAddressService) ListEnabledIPAddresses(ctx context.Context, re
 			BackupIP:    addr.DecodeBackupIP(),
 		})
 	}
-	return &pb.ListEnabledIPAddressesResponse{NodeIPAddresses: pbAddrs}, nil
+	return &pb.ListEnabledNodeIPAddressesResponse{NodeIPAddresses: pbAddrs}, nil
+}
+
+// UpdateNodeIPAddressIsUp 设置上下线状态
+func (this *NodeIPAddressService) UpdateNodeIPAddressIsUp(ctx context.Context, req *pb.UpdateNodeIPAddressIsUpRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeIPAddressDAO.UpdateAddressIsUp(tx, req.NodeIPAddressId, req.IsUp)
+	if err != nil {
+		return nil, err
+	}
+
+	// 增加日志
+	if req.IsUp {
+		err = models.SharedNodeIPAddressLogDAO.CreateLog(tx, adminId, req.NodeIPAddressId, "手动上线")
+	} else {
+		err = models.SharedNodeIPAddressLogDAO.CreateLog(tx, adminId, req.NodeIPAddressId, "手动下线")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// RestoreNodeIPAddressBackupIP 还原备用IP状态
+func (this *NodeIPAddressService) RestoreNodeIPAddressBackupIP(ctx context.Context, req *pb.RestoreNodeIPAddressBackupIPRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeIPAddressDAO.UpdateAddressBackupIP(tx, req.NodeIPAddressId, 0, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// 增加日志
+	err = models.SharedNodeIPAddressLogDAO.CreateLog(tx, adminId, req.NodeIPAddressId, "恢复IP状态")
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }
