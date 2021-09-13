@@ -792,6 +792,17 @@ func (this *NodeClusterDAO) FindEnabledNodeClustersWithIds(tx *dbs.Tx, clusterId
 	return
 }
 
+// ExistsEnabledCluster 检查集群是否存在
+func (this *NodeClusterDAO) ExistsEnabledCluster(tx *dbs.Tx, clusterId int64) (bool, error) {
+	if clusterId <= 0 {
+		return false, nil
+	}
+	return this.Query(tx).
+		Pk(clusterId).
+		State(NodeClusterStateEnabled).
+		Exist()
+}
+
 // NotifyUpdate 通知更新
 func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeConfigChanged)

@@ -401,6 +401,22 @@ func (this *NodeIPAddressDAO) UpdateAddressIsUp(tx *dbs.Tx, addressId int64, isU
 	return this.NotifyUpdate(tx, addressId)
 }
 
+// UpdateAddressBackupIP 设置备用IP
+func (this *NodeIPAddressDAO) UpdateAddressBackupIP(tx *dbs.Tx, addressId int64, thresholdId int64, ip string) error {
+	if addressId <= 0 {
+		return errors.New("invalid addressId")
+	}
+	var op = NewNodeIPAddressOperator()
+	op.Id = addressId
+	op.BackupThresholdId = thresholdId
+	op.BackupIP = ip
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, addressId)
+}
+
 // NotifyUpdate 通知更新
 func (this *NodeIPAddressDAO) NotifyUpdate(tx *dbs.Tx, addressId int64) error {
 	address, err := this.Query(tx).

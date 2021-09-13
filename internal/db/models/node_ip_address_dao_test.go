@@ -29,3 +29,14 @@ func TestNodeIPAddressDAO_FireThresholds(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+func TestNodeIPAddressDAO_LoopTasks(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	err := SharedNodeIPAddressDAO.loopTask(tx, nodeconfigs.NodeRoleNode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+}

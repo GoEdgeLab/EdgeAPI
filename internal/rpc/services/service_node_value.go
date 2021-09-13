@@ -4,7 +4,6 @@ package services
 
 import (
 	"context"
-	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -44,15 +43,6 @@ func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.Creat
 	err = models.SharedNodeThresholdDAO.FireNodeThreshold(tx, role, nodeId, req.Item)
 	if err != nil {
 		return nil, err
-	}
-
-	// 触发IP阈值
-	// 企业版专有
-	if teaconst.IsPlus {
-		err = models.SharedNodeIPAddressDAO.FireThresholds(tx, role, nodeId)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return this.Success()

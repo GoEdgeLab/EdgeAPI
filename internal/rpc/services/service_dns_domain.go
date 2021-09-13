@@ -441,7 +441,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		}
 		for _, route := range routeCodes {
 			for _, ipAddress := range ipAddresses {
-				ip := ipAddress.Ip
+				ip := ipAddress.DNSIP()
 				if len(ip) == 0 {
 					continue
 				}

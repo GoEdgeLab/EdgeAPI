@@ -11,6 +11,7 @@ type NodeIPAddressLog struct {
 	IsOn        uint8  `field:"isOn"`        // 是否启用
 	CanAccess   uint8  `field:"canAccess"`   // 是否可访问
 	Day         string `field:"day"`         // YYYYMMDD，用来清理
+	BackupIP    string `field:"backupIP"`    // 备用IP
 }
 
 type NodeIPAddressLogOperator struct {
@@ -23,6 +24,7 @@ type NodeIPAddressLogOperator struct {
 	IsOn        interface{} // 是否启用
 	CanAccess   interface{} // 是否可访问
 	Day         interface{} // YYYYMMDD，用来清理
+	BackupIP    interface{} // 备用IP
 }
 
 func NewNodeIPAddressLogOperator() *NodeIPAddressLogOperator {

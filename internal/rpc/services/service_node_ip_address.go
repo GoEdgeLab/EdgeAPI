@@ -130,6 +130,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 			CanAccess:   address.CanAccess == 1,
 			IsOn:        address.IsOn == 1,
 			IsUp:        address.IsUp == 1,
+			BackupIP:    address.DecodeBackupIP(),
 		}
 	}
 
@@ -165,6 +166,7 @@ func (this *NodeIPAddressService) FindAllEnabledIPAddressesWithNodeId(ctx contex
 			CanAccess:   address.CanAccess == 1,
 			IsOn:        address.IsOn == 1,
 			IsUp:        address.IsUp == 1,
+			BackupIP:    address.DecodeBackupIP(),
 		})
 	}
 
@@ -214,6 +216,7 @@ func (this *NodeIPAddressService) ListEnabledIPAddresses(ctx context.Context, re
 			CanAccess:   addr.CanAccess == 1,
 			IsOn:        addr.IsOn == 1,
 			IsUp:        addr.IsUp == 1,
+			BackupIP:    addr.DecodeBackupIP(),
 		})
 	}
 	return &pb.ListEnabledIPAddressesResponse{NodeIPAddresses: pbAddrs}, nil

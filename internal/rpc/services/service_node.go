@@ -1262,7 +1262,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		}
 
 		for _, ipAddress := range ipAddresses {
-			ip := ipAddress.Ip
+			ip := ipAddress.DNSIP()
 			if len(ip) == 0 {
 				continue
 			}

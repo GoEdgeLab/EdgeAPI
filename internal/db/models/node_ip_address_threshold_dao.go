@@ -234,3 +234,11 @@ func (this *NodeIPAddressThresholdDAO) formatThreshold(tx *dbs.Tx, threshold *No
 
 	return nil
 }
+
+// ExistsEnabledThreshold 检查阈值是否可以使用
+func (this *NodeIPAddressThresholdDAO) ExistsEnabledThreshold(tx *dbs.Tx, thresholdId int64) (bool, error) {
+	return this.Query(tx).
+		Pk(thresholdId).
+		State(NodeIPAddressThresholdStateEnabled).
+		Exist()
+}

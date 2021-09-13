@@ -81,6 +81,7 @@ func (this *NodeIPAddressLogService) ListNodeIPAddressLogs(ctx context.Context, 
 			IsOn:          log.IsOn == 1,
 			IsUp:          log.IsUp == 1,
 			CanAccess:     log.CanAccess == 1,
+			BackupIP:      log.BackupIP,
 			NodeIPAddress: pbAddr,
 			Admin:         pbAdmin,
 		})

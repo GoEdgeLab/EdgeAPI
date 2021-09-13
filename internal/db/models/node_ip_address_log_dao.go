@@ -45,6 +45,7 @@ func (this *NodeIPAddressLogDAO) CreateLog(tx *dbs.Tx, adminId int64, addrId int
 	op.CanAccess = addr.CanAccess
 	op.IsOn = addr.IsOn
 	op.IsUp = addr.IsUp
+	op.BackupIP = addr.BackupIP
 	op.Day = timeutil.Format("Ymd")
 	return this.Save(tx, op)
 }

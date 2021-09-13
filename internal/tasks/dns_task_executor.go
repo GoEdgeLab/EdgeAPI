@@ -311,7 +311,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 			continue
 		}
 		for _, ipAddress := range ipAddresses {
-			ip := ipAddress.Ip
+			ip := ipAddress.DNSIP()
 			if len(ip) == 0 || ipAddress.CanAccess == 0 || ipAddress.IsUp == 0 || ipAddress.IsOn == 0 {
 				continue
 			}
