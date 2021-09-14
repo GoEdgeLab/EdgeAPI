@@ -118,21 +118,23 @@ func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, role string, clusterId 
 }
 
 // CreateNodeMessage 创建节点消息
-func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
+func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int64, nodeId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte, force bool) error {
 	// 检查N分钟内是否已经发送过
 	hash := this.calHash(role, clusterId, nodeId, subject, body, paramsJSON)
-	exists, err := this.Query(tx).
-		Attr("hash", hash).
-		Gt("createdAt", time.Now().Unix()-10*60). // 10分钟
-		Exist()
-	if err != nil {
-		return err
-	}
-	if exists {
-		return nil
+	if !force {
+		exists, err := this.Query(tx).
+			Attr("hash", hash).
+			Gt("createdAt", time.Now().Unix()-10*60). // 10分钟
+			Exist()
+		if err != nil {
+			return err
+		}
+		if exists {
+			return nil
+		}
 	}
 
-	_, err = this.createMessage(tx, role, clusterId, nodeId, messageType, level, subject, body, paramsJSON)
+	_, err := this.createMessage(tx, role, clusterId, nodeId, messageType, level, subject, body, paramsJSON)
 	if err != nil {
 		return err
 	}

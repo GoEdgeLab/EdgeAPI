@@ -221,7 +221,7 @@ func (this *NodeThresholdDAO) FireNodeThreshold(tx *dbs.Tx, role string, nodeId 
 			if len(threshold.Param) == 0 || threshold.Duration <= 0 {
 				continue
 			}
-			paramValue, err := SharedNodeValueDAO.SumValues(tx, role, nodeId, item, threshold.Param, threshold.SumMethod, types.Int32(threshold.Duration), threshold.DurationUnit)
+			paramValue, err := SharedNodeValueDAO.SumNodeValues(tx, role, nodeId, item, threshold.Param, threshold.SumMethod, types.Int32(threshold.Duration), threshold.DurationUnit)
 			if err != nil {
 				return err
 			}
@@ -252,7 +252,7 @@ func (this *NodeThresholdDAO) FireNodeThreshold(tx *dbs.Tx, role string, nodeId 
 					body = strings.Replace(body, "${item.name}", itemName, -1)
 					body = strings.Replace(body, "${value}", fmt.Sprintf("%.2f", paramValue), -1)
 				}
-				err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeThresholdSatisfied, MessageLevelWarning, subject, body, maps.Map{}.AsJSON())
+				err = SharedMessageDAO.CreateNodeMessage(tx, role, clusterId, nodeId, MessageTypeThresholdSatisfied, MessageLevelWarning, subject, body, maps.Map{}.AsJSON(), true)
 				if err != nil {
 					return err
 				}

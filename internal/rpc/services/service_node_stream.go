@@ -120,7 +120,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		}
 		subject := "节点\"" + nodeName + "\"已经恢复在线"
 		msg := "节点\"" + nodeName + "\"已经恢复在线"
-		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil)
+		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil, false)
 		if err != nil {
 			return err
 		}

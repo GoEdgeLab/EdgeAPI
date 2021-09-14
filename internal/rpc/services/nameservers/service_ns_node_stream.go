@@ -156,7 +156,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 		}
 		subject := "DNS节点\"" + nodeName + "\"已经恢复在线"
 		msg := "DNS节点\"" + nodeName + "\"已经恢复在线"
-		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, models.MessageTypeNSNodeActive, models.MessageLevelSuccess, subject, msg, nil)
+		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, models.MessageTypeNSNodeActive, models.MessageLevelSuccess, subject, msg, nil, false)
 		if err != nil {
 			return err
 		}

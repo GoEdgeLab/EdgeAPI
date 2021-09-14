@@ -83,7 +83,7 @@ func (this *NSNodeMonitorTask) monitorCluster(cluster *models.NSCluster) error {
 	for _, node := range inactiveNodes {
 		subject := "DNS节点\"" + node.Name + "\"已处于离线状态"
 		msg := "DNS节点\"" + node.Name + "\"已处于离线状态"
-		err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleDNS, clusterId, int64(node.Id), models.MessageTypeNSNodeInactive, models.LevelError, subject, msg, nil)
+		err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleDNS, clusterId, int64(node.Id), models.MessageTypeNSNodeInactive, models.LevelError, subject, msg, nil, false)
 		if err != nil {
 			return err
 		}

@@ -113,7 +113,7 @@ func (this *NodeDAO) FindEnabledBasicNode(tx *dbs.Tx, nodeId int64) (*Node, erro
 	one, err := this.Query(tx).
 		State(NodeStateEnabled).
 		Pk(nodeId).
-		Result("id", "name", "clusterId", "isOn", "isUp").
+		Result("id", "name", "clusterId", "groupId", "isOn", "isUp").
 		Find()
 	if one == nil {
 		return nil, err
