@@ -24,7 +24,7 @@ func (this *NodeIPAddressThresholdService) CreateNodeIPAddressThreshold(ctx cont
 	}
 
 	var tx = this.NullTx()
-	var items = []*nodeconfigs.NodeValueThresholdItemConfig{}
+	var items = []*nodeconfigs.IPAddressThresholdItemConfig{}
 	if len(req.ItemsJSON) > 0 {
 		err = json.Unmarshal(req.ItemsJSON, &items)
 		if err != nil {
@@ -32,7 +32,7 @@ func (this *NodeIPAddressThresholdService) CreateNodeIPAddressThreshold(ctx cont
 		}
 	}
 
-	var actions = []*nodeconfigs.NodeValueThresholdActionConfig{}
+	var actions = []*nodeconfigs.IPAddressThresholdActionConfig{}
 	if len(req.ActionsJSON) > 0 {
 		err = json.Unmarshal(req.ActionsJSON, &actions)
 		if err != nil {
@@ -55,7 +55,7 @@ func (this *NodeIPAddressThresholdService) UpdateNodeIPAddressThreshold(ctx cont
 	}
 
 	var tx = this.NullTx()
-	var items = []*nodeconfigs.NodeValueThresholdItemConfig{}
+	var items = []*nodeconfigs.IPAddressThresholdItemConfig{}
 	if len(req.ItemsJSON) > 0 {
 		err = json.Unmarshal(req.ItemsJSON, &items)
 		if err != nil {
@@ -63,7 +63,7 @@ func (this *NodeIPAddressThresholdService) UpdateNodeIPAddressThreshold(ctx cont
 		}
 	}
 
-	var actions = []*nodeconfigs.NodeValueThresholdActionConfig{}
+	var actions = []*nodeconfigs.IPAddressThresholdActionConfig{}
 	if len(req.ActionsJSON) > 0 {
 		err = json.Unmarshal(req.ActionsJSON, &actions)
 		if err != nil {
@@ -140,7 +140,7 @@ func (this *NodeIPAddressThresholdService) UpdateAllNodeIPAddressThresholds(ctx 
 
 	var tx = this.NullTx()
 
-	var thresholds = []*nodeconfigs.NodeValueThresholdConfig{}
+	var thresholds = []*nodeconfigs.IPAddressThresholdConfig{}
 	err = json.Unmarshal(req.NodeIPAddressThresholdsJSON, &thresholds)
 	if err != nil {
 		return nil, errors.New("decode thresholds failed: " + err.Error())

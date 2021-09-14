@@ -115,7 +115,7 @@ func (this *NodeIPAddressThresholdDAO) UpdateThresholdNotifiedAt(tx *dbs.Tx, thr
 }
 
 // CreateThreshold 创建阈值
-func (this *NodeIPAddressThresholdDAO) CreateThreshold(tx *dbs.Tx, addressId int64, items []*nodeconfigs.NodeValueThresholdItemConfig, actions []*nodeconfigs.NodeValueThresholdActionConfig, order int) (int64, error) {
+func (this *NodeIPAddressThresholdDAO) CreateThreshold(tx *dbs.Tx, addressId int64, items []*nodeconfigs.IPAddressThresholdItemConfig, actions []*nodeconfigs.IPAddressThresholdActionConfig, order int) (int64, error) {
 	if addressId <= 0 {
 		return 0, errors.New("invalid addressId")
 	}
@@ -148,7 +148,7 @@ func (this *NodeIPAddressThresholdDAO) CreateThreshold(tx *dbs.Tx, addressId int
 }
 
 // UpdateThreshold 修改阈值
-func (this *NodeIPAddressThresholdDAO) UpdateThreshold(tx *dbs.Tx, thresholdId int64, items []*nodeconfigs.NodeValueThresholdItemConfig, actions []*nodeconfigs.NodeValueThresholdActionConfig, order int) error {
+func (this *NodeIPAddressThresholdDAO) UpdateThreshold(tx *dbs.Tx, thresholdId int64, items []*nodeconfigs.IPAddressThresholdItemConfig, actions []*nodeconfigs.IPAddressThresholdActionConfig, order int) error {
 	if thresholdId <= 0 {
 		return errors.New("invalid thresholdId")
 	}

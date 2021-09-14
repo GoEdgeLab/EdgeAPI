@@ -6,7 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 )
 
-func (this *NodeIPAddressThreshold) DecodeItems() (result []*nodeconfigs.NodeValueThresholdItemConfig) {
+func (this *NodeIPAddressThreshold) DecodeItems() (result []*nodeconfigs.IPAddressThresholdItemConfig) {
 	if len(this.Items) == 0 {
 		return
 	}
@@ -18,7 +18,7 @@ func (this *NodeIPAddressThreshold) DecodeItems() (result []*nodeconfigs.NodeVal
 	return
 }
 
-func (this *NodeIPAddressThreshold) DecodeActions() (result []*nodeconfigs.NodeValueThresholdActionConfig) {
+func (this *NodeIPAddressThreshold) DecodeActions() (result []*nodeconfigs.IPAddressThresholdActionConfig) {
 	if len(this.Actions) == 0 {
 		return
 	}
