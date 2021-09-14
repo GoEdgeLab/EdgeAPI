@@ -242,3 +242,11 @@ func (this *NodeIPAddressThresholdDAO) ExistsEnabledThreshold(tx *dbs.Tx, thresh
 		State(NodeIPAddressThresholdStateEnabled).
 		Exist()
 }
+
+// UpdateThresholdIsMatched 设置是否匹配
+func (this *NodeIPAddressThresholdDAO) UpdateThresholdIsMatched(tx *dbs.Tx, thresholdId int64, isMatched bool) error {
+	return this.Query(tx).
+		Pk(thresholdId).
+		Set("isMatched", isMatched).
+		UpdateQuickly()
+}
