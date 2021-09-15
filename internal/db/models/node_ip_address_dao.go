@@ -223,6 +223,8 @@ func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId in
 		Attr("role", role).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
+		Attr("isOn", true).
+		Attr("isUp", true).
 		Desc("order").
 		AscPk().
 		Result("ip").
@@ -239,6 +241,8 @@ func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId 
 		Attr("role", role).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
+		Attr("isOn", true).
+		Attr("isUp", true).
 		Desc("order").
 		AscPk().
 		Result("id").
