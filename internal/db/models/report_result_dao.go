@@ -99,11 +99,23 @@ func (this *ReportResultDAO) ListResults(tx *dbs.Tx, reportNodeId int64, okState
 		query.Attr("level", level)
 	}
 	_, err = query.
-		Attr("reportNodeId", reportNodeId).
 		Gt("updatedAt", time.Now().Unix()-600).
 		Offset(offset).
 		Limit(size).
 		Desc("targetId").
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindAllResults 列出所有结果
+func (this *ReportResultDAO) FindAllResults(tx *dbs.Tx, taskType string, targetId int64) (result []*ReportResult, err error) {
+	_, err = this.Query(tx).
+		Attr("type", taskType).
+		Attr("targetId", targetId).
+		Gt("updatedAt", time.Now().Unix()-600).
+		Desc("isOk").
+		Asc("costMs").
 		Slice(&result).
 		FindAll()
 	return
