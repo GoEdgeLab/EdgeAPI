@@ -103,7 +103,7 @@ func (this *NodeIPAddressDAO) FindAddressName(tx *dbs.Tx, id int64) (string, err
 }
 
 // CreateAddress 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, isUp bool) (addressId int64, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
@@ -114,6 +114,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 	op.Name = name
 	op.Ip = ip
 	op.CanAccess = canAccess
+	op.IsUp = isUp
 
 	op.State = NodeIPAddressStateEnabled
 	addressId, err = this.SaveInt64(tx, op)
@@ -136,7 +137,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 }
 
 // UpdateAddress 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId int64, name string, ip string, canAccess bool, isOn bool) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId int64, name string, ip string, canAccess bool, isOn bool, isUp bool) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -147,6 +148,7 @@ func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.IsOn = isOn
+	op.IsUp = isUp
 
 	op.State = NodeIPAddressStateEnabled // 恢复状态
 	err = this.Save(tx, op)
