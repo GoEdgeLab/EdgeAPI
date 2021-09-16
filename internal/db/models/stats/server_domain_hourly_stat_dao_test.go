@@ -38,6 +38,9 @@ func TestServerDomainHourlyStatDAO_IncreaseHourlyStat(t *testing.T) {
 
 	for i := 0; i < 1_000_000; i++ {
 		var f = string([]rune{int32(rands.Int('0', '9'))})
+		if i % 30 > 0 {
+			f = string([]rune{int32(rands.Int('a', 'z'))})
+		}
 
 		err := NewServerDomainHourlyStatDAO().IncreaseHourlyStat(nil, 18, 48, 23, f+"rand"+types.String(i%500_000)+".com", timeutil.Format("Ymd")+fmt.Sprintf("%02d", rands.Int(0, 23)), 1, 1, 1, 1, 1, 1)
 		if err != nil {

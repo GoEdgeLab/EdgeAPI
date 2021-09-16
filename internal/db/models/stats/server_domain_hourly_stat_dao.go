@@ -184,6 +184,7 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.T
 				Table(table).
 				Attr("clusterId", clusterId).
 				Between("hour", hourFrom, hourTo).
+				UseIndex("hour").
 				Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 				Group("domain").
 				Desc("countRequests").
@@ -233,6 +234,7 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithNodeId(tx *dbs.Tx, 
 				Table(table).
 				Attr("nodeId", nodeId).
 				Between("hour", hourFrom, hourTo).
+				UseIndex("hour").
 				Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 				Group("domain").
 				Desc("countRequests").
@@ -282,6 +284,7 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx
 				Table(table).
 				Attr("serverId", serverId).
 				Between("hour", hourFrom, hourTo).
+				UseIndex("hour").
 				Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 				Group("domain").
 				Desc("countRequests").
