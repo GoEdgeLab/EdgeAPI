@@ -221,7 +221,15 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 	}
 
 	// 创建默认集群
-	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, rands.HexString(32), rands.String(32))
+	var uniqueId = rands.HexString(32)
+	var secret = rands.String(32)
+	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, uniqueId, secret)
+	if err != nil {
+		return err
+	}
+
+	// 创建APIToken
+	_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role, state) VALUES (?, ?, 'cluster', 1)", uniqueId, secret)
 	if err != nil {
 		return err
 	}

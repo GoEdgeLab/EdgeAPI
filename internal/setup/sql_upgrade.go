@@ -368,6 +368,28 @@ func upgradeV0_3_0(db *dbs.DB) error {
 // v0.3.1
 func upgradeV0_3_1(db *dbs.DB) error {
 	// 清空域名统计，已使用分表代替
+	// 因为可能有权限问题，所以我们忽略错误
 	_, _ = db.Exec("TRUNCATE table edgeServerDomainHourlyStats")
+
+	// 升级APIToken
+	ones, _, err := db.FindOnes("SELECT uniqueId,secret FROM edgeNodeClusters")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var uniqueId = one.GetString("uniqueId")
+		var secret = one.GetString("secret")
+		tokenOne, err := db.FindOne("SELECT id FROM edgeAPITokens WHERE nodeId=? LIMIT 1", uniqueId)
+		if err != nil {
+			return err
+		}
+		if len(tokenOne) == 0 {
+			_, err = db.Exec("INSERT INTO edgeAPITokens (nodeId, secret, role, state) VALUES (?, ?, 'cluster', 1)", uniqueId, secret)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
