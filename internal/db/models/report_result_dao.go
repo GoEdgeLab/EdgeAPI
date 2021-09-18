@@ -175,8 +175,9 @@ func (this *ReportResultDAO) FindAvgLevelWithTarget(tx *dbs.Tx, taskType reporte
 	return "", nil
 }
 
-// FindConnectivityWithTarget 获取某个对象的连通率
-func (this *ReportResultDAO) FindConnectivityWithTarget(tx *dbs.Tx, taskType reporterconfigs.TaskType, targetId int64, groupId int64) (float64, error) {
+// FindConnectivityWithTargetPercent 获取某个对象的连通率
+// 返回值在0-100
+func (this *ReportResultDAO) FindConnectivityWithTargetPercent(tx *dbs.Tx, taskType reporterconfigs.TaskType, targetId int64, groupId int64) (float64, error) {
 	var query = this.Query(tx).
 		Attr("type", taskType).
 		Attr("targetId", targetId)
@@ -195,7 +196,7 @@ func (this *ReportResultDAO) FindConnectivityWithTarget(tx *dbs.Tx, taskType rep
 		return 0, err
 	}
 	if total == 0 {
-		return 1, nil
+		return 100, nil
 	}
 
 	// 连通的数量
@@ -217,5 +218,5 @@ func (this *ReportResultDAO) FindConnectivityWithTarget(tx *dbs.Tx, taskType rep
 	if err != nil {
 		return 0, err
 	}
-	return float64(countConnected) / float64(total), nil
+	return float64(countConnected) * 100 / float64(total), nil
 }
