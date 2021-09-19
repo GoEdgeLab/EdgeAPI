@@ -569,7 +569,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		})
 	}
 
-	// 是否是企业版
+	// 是否是商业版
 	isPlus, err := authority.SharedAuthorityKeyDAO.IsPlus(tx)
 	if err != nil {
 		return nil, err
@@ -671,19 +671,17 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 域名排行
-	if isPlus {
-		topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)
-		if err != nil {
-			return nil, err
-		}
-		for _, stat := range topDomainStats {
-			result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
-				ServerId:      int64(stat.ServerId),
-				Domain:        stat.Domain,
-				CountRequests: int64(stat.CountRequests),
-				Bytes:         int64(stat.Bytes),
-			})
-		}
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topDomainStats {
+		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
+			ServerId:      int64(stat.ServerId),
+			Domain:        stat.Domain,
+			CountRequests: int64(stat.CountRequests),
+			Bytes:         int64(stat.Bytes),
+		})
 	}
 
 	// 节点排行
