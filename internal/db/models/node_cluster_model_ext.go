@@ -5,7 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 )
 
-// 解析DNS配置
+// DecodeDNSConfig 解析DNS配置
 func (this *NodeCluster) DecodeDNSConfig() (*dnsconfigs.ClusterDNSConfig, error) {
 	if len(this.Dns) == 0 || this.Dns == "null" {
 		// 一定要返回一个默认的值，防止产生nil

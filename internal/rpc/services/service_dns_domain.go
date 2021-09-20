@@ -402,6 +402,15 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 
 	tx := this.NullTx()
 
+	// 自动设置的cname记录
+	var cnameRecords = []string{}
+	if len(cluster.Dns) > 0 {
+		dnsConfig, _ := cluster.DecodeDNSConfig()
+		if dnsConfig != nil {
+			cnameRecords = dnsConfig.CNameRecords
+		}
+	}
+
 	// 节点域名
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
 	if err != nil {
@@ -517,6 +526,27 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				"record": &dnstypes.Record{
 					Id:    "",
 					Name:  dnsName,
+					Type:  dnstypes.RecordTypeCNAME,
+					Value: clusterDomain + ".",
+					Route: "", // 注意这里为空，需要在执行过程中获取默认值
+				},
+			})
+		} else {
+			doneServerRecords = append(doneServerRecords, record)
+		}
+	}
+
+	// 自动设置的CNAME
+	for _, cnameRecord := range cnameRecords {
+		serverDNSNames = append(serverDNSNames, cnameRecord)
+		record, ok := serverRecordsMap[cnameRecord]
+		if !ok {
+			serversChanged = true
+			result = append(result, maps.Map{
+				"action": "create",
+				"record": &dnstypes.Record{
+					Id:    "",
+					Name:  cnameRecord,
 					Type:  dnstypes.RecordTypeCNAME,
 					Value: clusterDomain + ".",
 					Route: "", // 注意这里为空，需要在执行过程中获取默认值
