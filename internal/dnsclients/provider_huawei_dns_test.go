@@ -71,6 +71,7 @@ func TestHuaweiDNSProvider_AddRecord(t *testing.T) {
 		Type:  "A",
 		Value: "192.168.2.40",
 		Route: "Beijing",
+		TTL: 120,
 	}
 	err = provider.AddRecord("yun4s.cn", record)
 	if err != nil {

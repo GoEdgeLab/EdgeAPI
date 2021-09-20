@@ -15,4 +15,5 @@ type Record struct {
 	Type  RecordType `json:"type"`
 	Value string     `json:"value"`
 	Route string     `json:"route"`
+	TTL   int32      `json:"ttl"`
 }

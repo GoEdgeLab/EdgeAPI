@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -125,13 +126,17 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 		return nil
 	}
 
-	manager, domainId, domain, clusterDNSName, _, err := this.findDNSManager(tx, int64(serverDNS.ClusterId))
+	manager, domainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, int64(serverDNS.ClusterId))
 	if err != nil {
 		return err
 	}
 	if manager == nil {
 		isOk = true
 		return nil
+	}
+	var ttl int32 = 0
+	if dnsConfig != nil {
+		ttl = dnsConfig.TTL
 	}
 
 	recordName := serverDNS.DnsName
@@ -196,6 +201,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 			Type:  recordType,
 			Value: recordValue,
 			Route: recordRoute,
+			TTL:   ttl,
 		})
 		if err != nil {
 			return err
@@ -264,7 +270,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}()
 
 	var tx *dbs.Tx
-	manager, domainId, domain, clusterDNSName, cnameRecords, err := this.findDNSManager(tx, clusterId)
+	manager, domainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, clusterId)
 	if err != nil {
 		return err
 	}
@@ -274,6 +280,11 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}
 
 	var clusterDomain = clusterDNSName + "." + domain
+
+	var ttl int32 = 0
+	if dnsConfig != nil {
+		ttl = dnsConfig.TTL
+	}
 
 	// 以前的节点记录
 	records, err := manager.GetRecords(domain)
@@ -343,6 +354,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 					Type:  recordType,
 					Value: ip,
 					Route: route,
+					TTL:   ttl,
 				})
 				if err != nil {
 					return err
@@ -395,6 +407,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 				Type:  dnstypes.RecordTypeCNAME,
 				Value: clusterDomain + ".",
 				Route: "", // 注意这里为空，需要在执行过程中获取默认值
+				TTL:   ttl,
 			})
 			if err != nil {
 				return err
@@ -403,6 +416,10 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}
 
 	// 自动设置的CNAME
+	var cnameRecords = []string{}
+	if dnsConfig != nil {
+		cnameRecords = dnsConfig.CNameRecords
+	}
 	for _, cnameRecord := range cnameRecords {
 		serverDNSNames = append(serverDNSNames, cnameRecord)
 		_, ok := serverRecordsMap[cnameRecord]
@@ -414,6 +431,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 				Type:  dnstypes.RecordTypeCNAME,
 				Value: clusterDomain + ".",
 				Route: "", // 注意这里为空，需要在执行过程中获取默认值
+				TTL:   ttl,
 			})
 			if err != nil {
 				return err
@@ -511,7 +529,7 @@ func (this *DNSTaskExecutor) doDomain(taskId int64, domainId int64) error {
 	return nil
 }
 
-func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manager dnsclients.ProviderInterface, domainId int64, domain string, clusterDNSName string, cnameRecords []string, err error) {
+func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manager dnsclients.ProviderInterface, domainId int64, domain string, clusterDNSName string, dnsConfig *dnsconfigs.ClusterDNSConfig, err error) {
 	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return nil, 0, "", "", nil, err
@@ -520,7 +538,7 @@ func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manage
 		return nil, 0, "", "", nil, nil
 	}
 
-	dnsConfig, err := clusterDNS.DecodeDNSConfig()
+	dnsConfig, err = clusterDNS.DecodeDNSConfig()
 	if err != nil {
 		return nil, 0, "", "", nil, err
 	}
@@ -559,5 +577,5 @@ func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manage
 		return nil, 0, "", "", nil, err
 	}
 
-	return manager, int64(dnsDomain.Id), dnsDomain.Name, clusterDNS.DnsName, dnsConfig.CNameRecords, nil
+	return manager, int64(dnsDomain.Id), dnsDomain.Name, clusterDNS.DnsName, dnsConfig, nil
 }

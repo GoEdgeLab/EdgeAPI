@@ -58,6 +58,7 @@ func TestDNSPodProvider_AddRecord(t *testing.T) {
 		Name:  "hello-forward",
 		Value: "hello.yun4s.cn",
 		Route: "联通",
+		TTL:   300,
 	})
 	if err != nil {
 		t.Fatal(err)

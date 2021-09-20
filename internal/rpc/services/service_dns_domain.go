@@ -404,10 +404,14 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 
 	// 自动设置的cname记录
 	var cnameRecords = []string{}
+	var ttl int32
 	if len(cluster.Dns) > 0 {
 		dnsConfig, _ := cluster.DecodeDNSConfig()
 		if dnsConfig != nil {
 			cnameRecords = dnsConfig.CNameRecords
+			if dnsConfig.TTL > 0 {
+				ttl = dnsConfig.TTL
+			}
 		}
 	}
 
@@ -473,6 +477,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 							Type:  recordType,
 							Value: ip,
 							Route: route,
+							TTL:   ttl,
 						},
 					})
 					nodesChanged = true
@@ -529,6 +534,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 					Type:  dnstypes.RecordTypeCNAME,
 					Value: clusterDomain + ".",
 					Route: "", // 注意这里为空，需要在执行过程中获取默认值
+					TTL:   ttl,
 				},
 			})
 		} else {
@@ -550,6 +556,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 					Type:  dnstypes.RecordTypeCNAME,
 					Value: clusterDomain + ".",
 					Route: "", // 注意这里为空，需要在执行过程中获取默认值
+					TTL:   ttl,
 				},
 			})
 		} else {

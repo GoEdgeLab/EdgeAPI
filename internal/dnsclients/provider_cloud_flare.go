@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -158,6 +159,7 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 		Name:  record.Name,
 		Type:  record.Type,
 		Value: record.Content,
+		TTL:   types.Int32(record.Ttl),
 		Route: CloudFlareDefaultRoute,
 	}, nil
 }
@@ -170,11 +172,17 @@ func (this *CloudFlareProvider) AddRecord(domain string, newRecord *dnstypes.Rec
 	}
 
 	resp := new(cloudflare.CreateDNSRecordResponse)
+
+	var ttl = newRecord.TTL
+	if ttl <= 0 {
+		ttl = 1 // 自动默认
+	}
+
 	err = this.doAPI(http.MethodPost, "zones/"+zoneId+"/dns_records", nil, maps.Map{
 		"type":    newRecord.Type,
 		"name":    newRecord.Name + "." + domain,
 		"content": newRecord.Value,
-		"ttl":     1,
+		"ttl":     ttl,
 	}, resp)
 	if err != nil {
 		return err
@@ -189,12 +197,17 @@ func (this *CloudFlareProvider) UpdateRecord(domain string, record *dnstypes.Rec
 		return err
 	}
 
+	var ttl = newRecord.TTL
+	if ttl <= 0 {
+		ttl = 1 // 自动默认
+	}
+
 	resp := new(cloudflare.UpdateDNSRecordResponse)
 	return this.doAPI(http.MethodPut, "zones/"+zoneId+"/dns_records/"+record.Id, nil, maps.Map{
 		"type":    newRecord.Type,
 		"name":    newRecord.Name + "." + domain,
 		"content": newRecord.Value,
-		"ttl":     1,
+		"ttl":     ttl,
 	}, resp)
 }
 

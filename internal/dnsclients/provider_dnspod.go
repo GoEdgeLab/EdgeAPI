@@ -13,6 +13,10 @@ import (
 	"strings"
 )
 
+const (
+	DNSPodMaxTTL int32 = 604800
+)
+
 // DNSPodProvider DNSPod服务商
 type DNSPodProvider struct {
 	BaseProvider
@@ -94,6 +98,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 				Type:  recordMap.GetString("type"),
 				Value: recordMap.GetString("value"),
 				Route: recordMap.GetString("line"),
+				TTL:   recordMap.GetInt32("ttl"),
 			})
 		}
 
@@ -165,13 +170,18 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 	if newRecord.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(newRecord.Value, ".") {
 		newRecord.Value += "."
 	}
-	_, err := this.post("/Record.Create", map[string]string{
+
+	var args = map[string]string{
 		"domain":      domain,
 		"sub_domain":  newRecord.Name,
 		"record_type": newRecord.Type,
 		"value":       newRecord.Value,
 		"record_line": newRecord.Route,
-	})
+	}
+	if newRecord.TTL > 0 && newRecord.TTL <= DNSPodMaxTTL {
+		args["ttl"] = types.String(newRecord.TTL)
+	}
+	_, err := this.post("/Record.Create", args)
 	return err
 }
 
@@ -188,14 +198,19 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record,
 	if newRecord.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(newRecord.Value, ".") {
 		newRecord.Value += "."
 	}
-	_, err := this.post("/Record.Modify", map[string]string{
+
+	var args = map[string]string{
 		"domain":      domain,
 		"record_id":   record.Id,
 		"sub_domain":  newRecord.Name,
 		"record_type": newRecord.Type,
 		"value":       newRecord.Value,
 		"record_line": newRecord.Route,
-	})
+	}
+	if newRecord.TTL > 0 && newRecord.TTL <= DNSPodMaxTTL {
+		args["ttl"] = types.String(newRecord.TTL)
+	}
+	_, err := this.post("/Record.Modify", args)
 	return err
 }
 

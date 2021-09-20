@@ -7,6 +7,7 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/responses"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"strings"
 )
 
@@ -87,6 +88,7 @@ func (this *AliDNSProvider) GetRecords(domain string) (records []*dnstypes.Recor
 				Type:  record.Type,
 				Value: record.Value,
 				Route: record.Line,
+				TTL:   types.Int32(record.TTL),
 			})
 		}
 
@@ -141,6 +143,10 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 	req.DomainName = domain
 	req.Line = newRecord.Route
 
+	if newRecord.TTL > 0 {
+		req.TTL = requests.NewInteger(types.Int(newRecord.TTL))
+	}
+
 	resp := alidns.CreateAddDomainRecordResponse()
 	err := this.doAPI(req, resp)
 	if err != nil {
@@ -161,6 +167,10 @@ func (this *AliDNSProvider) UpdateRecord(domain string, record *dnstypes.Record,
 	req.Type = newRecord.Type
 	req.Value = newRecord.Value
 	req.Line = newRecord.Route
+
+	if newRecord.TTL > 0 {
+		req.TTL = requests.NewInteger(types.Int(newRecord.TTL))
+	}
 
 	resp := alidns.CreateUpdateDomainRecordResponse()
 	err := this.doAPI(req, resp)

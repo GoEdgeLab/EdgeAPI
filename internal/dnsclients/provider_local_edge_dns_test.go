@@ -101,6 +101,7 @@ func TestLocalEdgeDNSProvider_AddRecord(t *testing.T) {
 		Type:  dnstypes.RecordTypeA,
 		Value: "10.0.0.1",
 		Route: "id:7",
+		TTL:   300,
 	})
 	if err != nil {
 		t.Fatal(err)

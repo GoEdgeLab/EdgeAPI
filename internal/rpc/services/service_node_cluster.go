@@ -447,6 +447,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			NodesAutoSync:   dnsConfig.NodesAutoSync,
 			ServersAutoSync: dnsConfig.ServersAutoSync,
 			CnameRecords:    dnsConfig.CNameRecords,
+			Ttl:             dnsConfig.TTL,
 		}, nil
 	}
 
@@ -504,6 +505,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		NodesAutoSync:   dnsConfig.NodesAutoSync,
 		ServersAutoSync: dnsConfig.ServersAutoSync,
 		CnameRecords:    dnsConfig.CNameRecords,
+		Ttl:             dnsConfig.TTL,
 		DefaultRoute:    defaultRoute,
 	}, nil
 }
@@ -597,7 +599,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords)
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords, req.Ttl)
 	if err != nil {
 		return nil, err
 	}

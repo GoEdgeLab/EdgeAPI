@@ -98,6 +98,7 @@ func TestCloudFlareProvider_AddRecord(t *testing.T) {
 			Type:  dnstypes.RecordTypeA,
 			Value: "182.92.212.46",
 			Route: "",
+			TTL:   300,
 		})
 		if err != nil {
 			t.Fatal(err)

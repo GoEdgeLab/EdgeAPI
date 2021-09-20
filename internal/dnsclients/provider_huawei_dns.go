@@ -35,6 +35,8 @@ var huaweiDNSHTTPClient = &http.Client{
 	},
 }
 
+// HuaweiDNSProvider 华为云DNS
+// 相关文档链接：https://support.huaweicloud.com/api-dns/dns_api_62001.html
 type HuaweiDNSProvider struct {
 	BaseProvider
 
@@ -100,6 +102,7 @@ func (this *HuaweiDNSProvider) GetRecords(domain string) (records []*dnstypes.Re
 					Type:  recordSet.Type,
 					Value: value,
 					Route: recordSet.Line,
+					TTL:   types.Int32(recordSet.Ttl),
 				})
 			}
 		}
@@ -1320,6 +1323,7 @@ func (this *HuaweiDNSProvider) QueryRecord(domain string, name string, recordTyp
 		Type:  recordType,
 		Value: recordSet.Records[0],
 		Route: recordSet.Line,
+		TTL:   types.Int32(recordSet.Ttl),
 	}, nil
 }
 
@@ -1331,12 +1335,17 @@ func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Reco
 	}
 
 	var resp = new(huaweidns.ZonesCreateRecordSetResponse)
+	var ttl = newRecord.TTL
+	if ttl <= 0 {
+		ttl = 300
+	}
 	err = this.doAPI(http.MethodPost, "/v2.1/zones/"+zoneId+"/recordsets", map[string]string{}, maps.Map{
 		"name":        newRecord.Name + "." + domain + ".",
 		"description": "CDN系统自动创建",
 		"type":        newRecord.Type,
 		"records":     []string{newRecord.Value},
 		"line":        newRecord.Route,
+		"ttl":         ttl,
 	}, resp)
 	if err != nil {
 		return err
@@ -1362,6 +1371,11 @@ func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Reco
 		recordId = record.Id
 	}
 
+	var ttl = newRecord.TTL
+	if ttl <= 0 {
+		ttl = 300
+	}
+
 	var resp = new(huaweidns.ZonesUpdateRecordSetResponse)
 	err = this.doAPI(http.MethodPut, "/v2.1/zones/"+zoneId+"/recordsets/"+recordId, map[string]string{}, maps.Map{
 		"name":        newRecord.Name + "." + domain + ".",
@@ -1369,6 +1383,7 @@ func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Reco
 		"type":        newRecord.Type,
 		"records":     []string{newRecord.Value},
 		"line":        newRecord.Route, // TODO 华为云此API无法修改线路，API地址：https://support.huaweicloud.com/api-dns/dns_api_65006.html
+		"ttl":         ttl,
 	}, resp)
 	if err != nil {
 		return err

@@ -83,6 +83,7 @@ func (this *LocalEdgeDNSProvider) GetRecords(domain string) (records []*dnstypes
 				Type:  record.Type,
 				Value: record.Value,
 				Route: routeIds[0],
+				TTL:   types.Int32(record.Ttl),
 			})
 		}
 
@@ -183,6 +184,7 @@ func (this *LocalEdgeDNSProvider) QueryRecord(domain string, name string, record
 		Type:  record.Type,
 		Value: record.Value,
 		Route: routeIdString,
+		TTL:   types.Int32(record.Ttl),
 	}, nil
 }
 
@@ -202,7 +204,10 @@ func (this *LocalEdgeDNSProvider) AddRecord(domain string, newRecord *dnstypes.R
 		routeIds = append(routeIds, newRecord.Route)
 	}
 
-	_, err = nameservers.SharedNSRecordDAO.CreateRecord(tx, domainId, "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds)
+	if newRecord.TTL <= 0 {
+		newRecord.TTL = this.ttl
+	}
+	_, err = nameservers.SharedNSRecordDAO.CreateRecord(tx, domainId, "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds)
 	if err != nil {
 		return err
 	}
@@ -226,8 +231,12 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 		routeIds = append(routeIds, newRecord.Route)
 	}
 
+	if newRecord.TTL <= 0 {
+		newRecord.TTL = this.ttl
+	}
+
 	if len(record.Id) > 0 {
-		err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(record.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds, true)
+		err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(record.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds, true)
 		if err != nil {
 			return err
 		}
@@ -237,7 +246,7 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 			return err
 		}
 		if realRecord != nil {
-			err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(realRecord.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, this.ttl, routeIds, true)
+			err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(realRecord.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds, true)
 			if err != nil {
 				return err
 			}
