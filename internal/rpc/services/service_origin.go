@@ -10,12 +10,12 @@ import (
 	"github.com/iwind/TeaGo/maps"
 )
 
-// 源站相关管理
+// OriginService 源站相关管理
 type OriginService struct {
 	BaseService
 }
 
-// 创建源站
+// CreateOrigin 创建源站
 func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOriginRequest) (*pb.CreateOriginResponse, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -58,7 +58,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		}
 	}
 
-	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns)
+	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.Domains)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 	return &pb.CreateOriginResponse{OriginId: originId}, nil
 }
 
-// 修改源站
+// UpdateOrigin 修改源站
 func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOriginRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -112,7 +112,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		}
 	}
 
-	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns)
+	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.Domains)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 	return this.Success()
 }
 
-// 查找单个源站信息
+// FindEnabledOrigin 查找单个源站信息
 func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEnabledOriginRequest) (*pb.FindEnabledOriginResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -157,11 +157,12 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 			PortRange: addr.PortRange,
 		},
 		Description: origin.Description,
+		Domains:     origin.DecodeDomains(),
 	}
 	return &pb.FindEnabledOriginResponse{Origin: result}, nil
 }
 
-// 查找源站配置
+// FindEnabledOriginConfig 查找源站配置
 func (this *OriginService) FindEnabledOriginConfig(ctx context.Context, req *pb.FindEnabledOriginConfigRequest) (*pb.FindEnabledOriginConfigResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {

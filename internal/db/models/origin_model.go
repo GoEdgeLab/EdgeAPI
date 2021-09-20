@@ -1,6 +1,6 @@
 package models
 
-// 源站
+// Origin 源站
 type Origin struct {
 	Id                 uint32 `field:"id"`                 // ID
 	AdminId            uint32 `field:"adminId"`            // 管理员ID
@@ -26,6 +26,7 @@ type Origin struct {
 	Cert               string `field:"cert"`               // 证书设置
 	Ftp                string `field:"ftp"`                // FTP相关设置
 	CreatedAt          uint64 `field:"createdAt"`          // 创建时间
+	Domains            string `field:"domains"`            // 所属域名
 	State              uint8  `field:"state"`              // 状态
 }
 
@@ -54,6 +55,7 @@ type OriginOperator struct {
 	Cert               interface{} // 证书设置
 	Ftp                interface{} // FTP相关设置
 	CreatedAt          interface{} // 创建时间
+	Domains            interface{} // 所属域名
 	State              interface{} // 状态
 }
 
