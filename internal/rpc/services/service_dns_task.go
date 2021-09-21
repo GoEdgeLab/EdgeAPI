@@ -8,12 +8,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// DNS同步相关任务
+// DNSTaskService DNS同步相关任务
 type DNSTaskService struct {
 	BaseService
 }
 
-// 检查是否有正在执行的任务
+// ExistsDNSTasks 检查是否有正在执行的任务
 func (this *DNSTaskService) ExistsDNSTasks(ctx context.Context, req *pb.ExistsDNSTasksRequest) (*pb.ExistsDNSTasksResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -37,7 +37,7 @@ func (this *DNSTaskService) ExistsDNSTasks(ctx context.Context, req *pb.ExistsDN
 	}, nil
 }
 
-// 查找正在执行的所有任务
+// FindAllDoingDNSTasks 查找正在执行的所有任务
 func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.FindAllDoingDNSTasksRequest) (*pb.FindAllDoingDNSTasksResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -45,7 +45,7 @@ func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.Fi
 	}
 
 	var tx = this.NullTx()
-	tasks, err := dns.SharedDNSTaskDAO.FindAllDoingOrErrorTasks(tx)
+	tasks, err := dns.SharedDNSTaskDAO.FindAllDoingOrErrorTasks(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.Fi
 	return &pb.FindAllDoingDNSTasksResponse{DnsTasks: pbTasks}, nil
 }
 
-// 删除任务
+// DeleteDNSTask 删除任务
 func (this *DNSTaskService) DeleteDNSTask(ctx context.Context, req *pb.DeleteDNSTaskRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

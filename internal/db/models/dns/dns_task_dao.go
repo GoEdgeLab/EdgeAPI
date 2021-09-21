@@ -94,8 +94,12 @@ func (this *DNSTaskDAO) FindAllDoingTasks(tx *dbs.Tx) (result []*DNSTask, err er
 }
 
 // FindAllDoingOrErrorTasks 查找正在执行的和错误的任务
-func (this *DNSTaskDAO) FindAllDoingOrErrorTasks(tx *dbs.Tx) (result []*DNSTask, err error) {
-	_, err = this.Query(tx).
+func (this *DNSTaskDAO) FindAllDoingOrErrorTasks(tx *dbs.Tx, nodeClusterId int64) (result []*DNSTask, err error) {
+	var query = this.Query(tx)
+	if nodeClusterId > 0 {
+		query.Attr("clusterId", nodeClusterId)
+	}
+	_, err = query.
 		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
 		AscPk().
 		Slice(&result).
