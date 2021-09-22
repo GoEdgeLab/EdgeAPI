@@ -713,6 +713,44 @@ func (this *ServerDAO) FindAllEnabledServerIdsWithUserId(tx *dbs.Tx, userId int6
 	return
 }
 
+// FindAllEnabledServerIdsWithGroupId 获取某个分组下的所有的服务ID
+func (this *ServerDAO) FindAllEnabledServerIdsWithGroupId(tx *dbs.Tx, groupId int64) (serverIds []int64, err error) {
+	ones, err := this.Query(tx).
+		State(ServerStateEnabled).
+		Where("JSON_CONTAINS(groupIds, :groupId)").
+		Param("groupId", numberutils.FormatInt64(groupId)).
+		AscPk().
+		ResultPk().
+		FindAll()
+	for _, one := range ones {
+		serverIds = append(serverIds, int64(one.(*Server).Id))
+	}
+	return
+}
+
+// FindServerGroupIds 获取服务的分组ID
+func (this *ServerDAO) FindServerGroupIds(tx *dbs.Tx, serverId int64) ([]int64, error) {
+	if serverId <= 0 {
+		return nil, nil
+	}
+	groupIdsString, err := this.Query(tx).
+		Pk(serverId).
+		Result("groupIds").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(groupIdsString) == 0 {
+		return nil, nil
+	}
+	var result = []int64{}
+	err = json.Unmarshal([]byte(groupIdsString), &result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 // FindServerNodeFilters 查找服务的搜索条件
 func (this *ServerDAO) FindServerNodeFilters(tx *dbs.Tx, serverId int64) (isOk bool, clusterId int64, err error) {
 	one, err := this.Query(tx).
@@ -759,6 +797,20 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	config.IsOn = server.IsOn == 1
 	config.Name = server.Name
 	config.Description = server.Description
+
+	var groupConfig *serverconfigs.ServerGroupConfig
+	for _, groupId := range server.DecodeGroupIds() {
+		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if groupConfig1 == nil {
+			continue
+		}
+		groupConfig = groupConfig1
+		break
+	}
+	config.Group = groupConfig
 
 	// ServerNames
 	if len(server.ServerNames) > 0 && server.ServerNames != "null" {

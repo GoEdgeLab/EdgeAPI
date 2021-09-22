@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 )
 
 // ServerGroupService 服务分组相关服务
@@ -131,4 +133,294 @@ func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req 
 			Name: group.Name,
 		},
 	}, nil
+}
+
+// FindAndInitServerGroupHTTPReverseProxyConfig 查找HTTP反向代理设置
+func (this *ServerGroupService) FindAndInitServerGroupHTTPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupHTTPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupHTTPReverseProxyConfigResponse, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	reverseProxyRef, err := models.SharedServerGroupDAO.FindHTTPReverseProxyRef(tx, req.ServerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if reverseProxyRef == nil {
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, 0, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		reverseProxyRef = &serverconfigs.ReverseProxyRef{
+			IsOn:           false,
+			ReverseProxyId: reverseProxyId,
+		}
+		refJSON, err := json.Marshal(reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerGroupDAO.UpdateHTTPReverseProxy(tx, req.ServerGroupId, refJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(reverseProxyConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	refJSON, err := json.Marshal(reverseProxyRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindAndInitServerGroupHTTPReverseProxyConfigResponse{ReverseProxyJSON: configJSON, ReverseProxyRefJSON: refJSON}, nil
+}
+
+// FindAndInitServerGroupTCPReverseProxyConfig 查找反向代理设置
+func (this *ServerGroupService) FindAndInitServerGroupTCPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupTCPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupTCPReverseProxyConfigResponse, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	reverseProxyRef, err := models.SharedServerGroupDAO.FindTCPReverseProxyRef(tx, req.ServerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if reverseProxyRef == nil {
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, 0, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		reverseProxyRef = &serverconfigs.ReverseProxyRef{
+			IsOn:           false,
+			ReverseProxyId: reverseProxyId,
+		}
+		refJSON, err := json.Marshal(reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerGroupDAO.UpdateTCPReverseProxy(tx, req.ServerGroupId, refJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(reverseProxyConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	refJSON, err := json.Marshal(reverseProxyRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindAndInitServerGroupTCPReverseProxyConfigResponse{ReverseProxyJSON: configJSON, ReverseProxyRefJSON: refJSON}, nil
+}
+
+// FindAndInitServerGroupUDPReverseProxyConfig 查找反向代理设置
+func (this *ServerGroupService) FindAndInitServerGroupUDPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupUDPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupUDPReverseProxyConfigResponse, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	reverseProxyRef, err := models.SharedServerGroupDAO.FindUDPReverseProxyRef(tx, req.ServerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if reverseProxyRef == nil {
+		reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, 0, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		reverseProxyRef = &serverconfigs.ReverseProxyRef{
+			IsOn:           false,
+			ReverseProxyId: reverseProxyId,
+		}
+		refJSON, err := json.Marshal(reverseProxyRef)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedServerGroupDAO.UpdateUDPReverseProxy(tx, req.ServerGroupId, refJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(reverseProxyConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	refJSON, err := json.Marshal(reverseProxyRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindAndInitServerGroupUDPReverseProxyConfigResponse{ReverseProxyJSON: configJSON, ReverseProxyRefJSON: refJSON}, nil
+}
+
+// UpdateServerGroupHTTPReverseProxy 修改服务的反向代理设置
+func (this *ServerGroupService) UpdateServerGroupHTTPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupHTTPReverseProxyRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	// 修改配置
+	err = models.SharedServerGroupDAO.UpdateHTTPReverseProxy(tx, req.ServerGroupId, req.ReverseProxyJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// UpdateServerGroupTCPReverseProxy 修改服务的反向代理设置
+func (this *ServerGroupService) UpdateServerGroupTCPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupTCPReverseProxyRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	// 修改配置
+	err = models.SharedServerGroupDAO.UpdateTCPReverseProxy(tx, req.ServerGroupId, req.ReverseProxyJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// UpdateServerGroupUDPReverseProxy 修改服务的反向代理设置
+func (this *ServerGroupService) UpdateServerGroupUDPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupUDPReverseProxyRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	// 修改配置
+	err = models.SharedServerGroupDAO.UpdateUDPReverseProxy(tx, req.ServerGroupId, req.ReverseProxyJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindEnabledServerGroupConfigInfo 取得分组的配置概要信息
+func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Context, req *pb.FindEnabledServerGroupConfigInfoRequest) (*pb.FindEnabledServerGroupConfigInfoResponse, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	var group *models.ServerGroup
+	if req.ServerGroupId > 0 {
+		group, err = models.SharedServerGroupDAO.FindEnabledServerGroup(tx, req.ServerGroupId)
+		if err != nil {
+			return nil, err
+		}
+	} else if req.ServerId > 0 {
+		groupIds, err := models.SharedServerDAO.FindServerGroupIds(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		if len(groupIds) > 0 {
+			for _, groupId := range groupIds {
+				group, err = models.SharedServerGroupDAO.FindEnabledServerGroup(tx, groupId)
+				if err != nil {
+					return nil, err
+				}
+				if group != nil {
+					break
+				}
+			}
+		}
+	}
+
+	if group == nil {
+		return &pb.FindEnabledServerGroupConfigInfoResponse{
+			HasHTTPReverseProxy: false,
+			HasTCPReverseProxy:  false,
+			HasUDPReverseProxy:  false,
+		}, nil
+	}
+
+	var result = &pb.FindEnabledServerGroupConfigInfoResponse{}
+
+	if len(group.HttpReverseProxy) > 0 {
+		var ref = &serverconfigs.ReverseProxyRef{}
+		err = json.Unmarshal([]byte(group.HttpReverseProxy), ref)
+		if err != nil {
+			return nil, err
+		}
+		result.HasHTTPReverseProxy = ref.IsPrior
+	}
+
+	if len(group.TcpReverseProxy) > 0 {
+		var ref = &serverconfigs.ReverseProxyRef{}
+		err = json.Unmarshal([]byte(group.TcpReverseProxy), ref)
+		if err != nil {
+			return nil, err
+		}
+		result.HasTCPReverseProxy = ref.IsPrior
+	}
+
+	if len(group.UdpReverseProxy) > 0 {
+		var ref = &serverconfigs.ReverseProxyRef{}
+		err = json.Unmarshal([]byte(group.UdpReverseProxy), ref)
+		if err != nil {
+			return nil, err
+		}
+		result.HasUDPReverseProxy = ref.IsPrior
+	}
+
+	return result, nil
 }

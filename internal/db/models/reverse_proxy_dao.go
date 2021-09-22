@@ -406,5 +406,14 @@ func (this *ReverseProxyDAO) NotifyUpdate(tx *dbs.Tx, reverseProxyId int64) erro
 		return SharedHTTPLocationDAO.NotifyUpdate(tx, locationId)
 	}
 
+	// group
+	groupId, err := SharedServerGroupDAO.FindEnabledGroupIdWithReverseProxyId(tx, reverseProxyId)
+	if err != nil {
+		return err
+	}
+	if groupId > 0 {
+		return SharedServerGroupDAO.NotifyUpdate(tx, groupId)
+	}
+
 	return nil
 }

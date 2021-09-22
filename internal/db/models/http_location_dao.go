@@ -287,7 +287,7 @@ func (this *HTTPLocationDAO) FindEnabledLocationIdWithWebId(tx *dbs.Tx, webId in
 		FindInt64Col(0)
 }
 
-// FindEnabledLocationIdWithReverseProxyId 查找包含某个反向代理的Server
+// FindEnabledLocationIdWithReverseProxyId 查找包含某个反向代理的路由规则
 func (this *HTTPLocationDAO) FindEnabledLocationIdWithReverseProxyId(tx *dbs.Tx, reverseProxyId int64) (serverId int64, err error) {
 	return this.Query(tx).
 		State(ServerStateEnabled).
