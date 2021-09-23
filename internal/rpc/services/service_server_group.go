@@ -393,7 +393,9 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 		}, nil
 	}
 
-	var result = &pb.FindEnabledServerGroupConfigInfoResponse{}
+	var result = &pb.FindEnabledServerGroupConfigInfoResponse{
+		ServerGroupId: int64(group.Id),
+	}
 
 	if len(group.HttpReverseProxy) > 0 {
 		var ref = &serverconfigs.ReverseProxyRef{}
