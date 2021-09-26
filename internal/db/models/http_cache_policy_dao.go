@@ -120,6 +120,7 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 		Life:                  &shared.TimeDuration{Count: 2, Unit: shared.TimeDurationUnitHour},
 		Status:                []int{200},
 		MaxSize:               &shared.SizeCapacity{Count: 32, Unit: shared.SizeCapacityUnitMB},
+		MinSize:               &shared.SizeCapacity{Count: 0, Unit: shared.SizeCapacityUnitKB},
 		SkipResponseSetCookie: true,
 		AllowChunkedEncoding:  true,
 		Conds: &shared.HTTPRequestCondsConfig{
