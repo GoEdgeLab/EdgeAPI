@@ -496,7 +496,7 @@ func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.Com
 	result.CountUserNodes = countUserNodes
 
 	// 离线用户节点
-	countOfflineUserNodes, err := models.SharedUserNodeDAO.CountOfflineNodes(tx)
+	countOfflineUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledAndOnOfflineNodes(tx)
 	if err != nil {
 		return nil, err
 	}

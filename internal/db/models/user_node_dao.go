@@ -96,6 +96,14 @@ func (this *UserNodeDAO) CountAllEnabledUserNodes(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
+// CountAllEnabledAndOnUserNodes 计算启用的用户节点数量
+func (this *UserNodeDAO) CountAllEnabledAndOnUserNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(UserNodeStateEnabled).
+		Attr("isOn", true).
+		Count()
+}
+
 // ListEnabledUserNodes 列出单页的用户节点
 func (this *UserNodeDAO) ListEnabledUserNodes(tx *dbs.Tx, offset int64, size int64) (result []*UserNode, err error) {
 	_, err = this.Query(tx).
@@ -266,10 +274,11 @@ func (this *UserNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (
 		Count()
 }
 
-// CountOfflineNodes 计算离线节点数量
-func (this *UserNodeDAO) CountOfflineNodes(tx *dbs.Tx) (int64, error) {
+// CountAllEnabledAndOnOfflineNodes 计算离线节点数量
+func (this *UserNodeDAO) CountAllEnabledAndOnOfflineNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(UserNodeStateEnabled).
-		Where("(status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-120)").
+		Attr("isOn", true).
+		Where("(status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-60)").
 		Count()
 }

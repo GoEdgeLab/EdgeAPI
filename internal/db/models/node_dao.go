@@ -259,6 +259,16 @@ func (this *NodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
+// CountAllEnabledOfflineNodes 计算所有离线节点数量
+func (this *NodeDAO) CountAllEnabledOfflineNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM "+SharedNodeClusterDAO.Table+" WHERE state=:clusterState)").
+		Param("clusterState", NodeClusterStateEnabled).
+		Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)").
+		Count()
+}
+
 // ListEnabledNodesMatch 列出单页节点
 func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	clusterId int64,
@@ -493,9 +503,9 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
-		Attr("isOn", true). // 只监控启用的节点
+		Attr("isOn", true).        // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
-		Attr("isActive", true). // 当前已经在线的
+		Attr("isActive", true).    // 当前已经在线的
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
 		Result("id", "name").
 		Slice(&result).

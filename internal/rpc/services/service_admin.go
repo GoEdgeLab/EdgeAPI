@@ -497,6 +497,13 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 	result.CountNodes = countNodes
 
+	// 离线节点
+	countOfflineNodes, err := models.SharedNodeDAO.CountAllEnabledOfflineNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountOfflineNodes = countOfflineNodes
+
 	// 服务数
 	countServers, err := models.SharedServerDAO.CountAllEnabledServers(tx)
 	if err != nil {
@@ -512,11 +519,18 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	result.CountUsers = countUsers
 
 	// API节点数
-	countAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAPINodes(tx)
+	countAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAndOnAPINodes(tx)
 	if err != nil {
 		return nil, err
 	}
 	result.CountAPINodes = countAPINodes
+
+	// 离线API节点
+	countOfflineAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAndOnOfflineAPINodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountOfflineAPINodes = countOfflineAPINodes
 
 	// 数据库节点数
 	countDBNodes, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
@@ -526,11 +540,18 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	result.CountDBNodes = countDBNodes
 
 	// 用户节点数
-	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
+	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledAndOnUserNodes(tx)
 	if err != nil {
 		return nil, err
 	}
 	result.CountUserNodes = countUserNodes
+
+	// 离线用户节点数
+	countOfflineUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledAndOnOfflineNodes(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountOfflineUserNodes = countOfflineUserNodes
 
 	// 按日流量统计
 	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))

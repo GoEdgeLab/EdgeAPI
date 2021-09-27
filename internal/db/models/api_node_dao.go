@@ -211,6 +211,24 @@ func (this *APINodeDAO) CountAllEnabledAPINodes(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
+// CountAllEnabledAndOnAPINodes 计算启用中的API节点数量
+func (this *APINodeDAO) CountAllEnabledAndOnAPINodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(APINodeStateEnabled).
+		Attr("isOn", true).
+		Count()
+}
+
+
+// CountAllEnabledAndOnOfflineAPINodes 计算API节点数量
+func (this *APINodeDAO) CountAllEnabledAndOnOfflineAPINodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(APINodeStateEnabled).
+		Attr("isOn", true).
+		Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)").
+		Count()
+}
+
 // ListEnabledAPINodes 列出单页的API节点
 func (this *APINodeDAO) ListEnabledAPINodes(tx *dbs.Tx, offset int64, size int64) (result []*APINode, err error) {
 	_, err = this.Query(tx).
