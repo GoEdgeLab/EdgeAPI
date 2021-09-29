@@ -182,14 +182,6 @@ github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:
 github.com/iij/doapi v0.0.0-20190504054126-0bbf12d6d7df/go.mod h1:QMZY7/J/KSQEhKWFeDesPjMj+wCHReeknARU3wqlyN4=
 github.com/iwind/TeaGo v0.0.0-20210411134150-ddf57e240c2f/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/TeaGo v0.0.0-20210628135026-38575a4ab060/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
-github.com/iwind/TeaGo v0.0.0-20210806054428-5534da0db9d1 h1:AZKkwTNEZYrpyv62zIkxpLJsWhfOS7OEFovAcwd0aco=
-github.com/iwind/TeaGo v0.0.0-20210806054428-5534da0db9d1/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
-github.com/iwind/TeaGo v0.0.0-20210809112119-a57ed0e84e34 h1:ZCNQXLiGF5Z1cV3Pi03zCWzwwjPfsI5XhcrNhTvCFIU=
-github.com/iwind/TeaGo v0.0.0-20210809112119-a57ed0e84e34/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
-github.com/iwind/TeaGo v0.0.0-20210824034952-1a56ad7d0b5e h1:GDCU57lQD6W9u5KT2834MmK022FSeAbskb7H0p2eaJY=
-github.com/iwind/TeaGo v0.0.0-20210824034952-1a56ad7d0b5e/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
-github.com/iwind/TeaGo v0.0.0-20210829020150-9c36d31301a5 h1:ybjIXGT3E/ZbfkRhIb903WMfLyt2Uv5p4niAqi8jwvM=
-github.com/iwind/TeaGo v0.0.0-20210829020150-9c36d31301a5/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/TeaGo v0.0.0-20210831140440-a2a442471b13 h1:HuEJ5xJfujW1Q6rNDhOu5LQXEBB2qLPah3jYslT8Gz4=
 github.com/iwind/TeaGo v0.0.0-20210831140440-a2a442471b13/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3 h1:aBSonas7vFcgTj9u96/bWGILGv1ZbUSTLiOzcI1ZT6c=

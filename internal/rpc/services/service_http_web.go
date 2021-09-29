@@ -121,8 +121,8 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 	return this.Success()
 }
 
-// UpdateHTTPWebGzip 修改Gzip配置
-func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.UpdateHTTPWebGzipRequest) (*pb.RPCSuccess, error) {
+// UpdateHTTPWebCompression 修改压缩配置
+func (this *HTTPWebService) UpdateHTTPWebCompression(ctx context.Context, req *pb.UpdateHTTPWebCompressionRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -139,7 +139,7 @@ func (this *HTTPWebService) UpdateHTTPWebGzip(ctx context.Context, req *pb.Updat
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPWebDAO.UpdateWebGzip(tx, req.WebId, req.GzipJSON)
+	err = models.SharedHTTPWebDAO.UpdateWebCompression(tx, req.WebId, req.CompressionJSON)
 	if err != nil {
 		return nil, err
 	}

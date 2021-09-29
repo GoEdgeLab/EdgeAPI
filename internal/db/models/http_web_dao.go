@@ -107,20 +107,41 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap maps.
 		config.Root = rootConfig
 	}
 
-	// gzip
-	if IsNotNull(web.Gzip) {
-		gzipRef := &serverconfigs.HTTPGzipRef{}
-		err = json.Unmarshal([]byte(web.Gzip), gzipRef)
+	// compression
+	if IsNotNull(web.Compression) {
+		compression := &serverconfigs.HTTPCompressionConfig{}
+		err = json.Unmarshal([]byte(web.Compression), compression)
 		if err != nil {
 			return nil, err
 		}
-		config.GzipRef = gzipRef
+		config.Compression = compression
 
-		gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(tx, gzipRef.GzipId)
-		if err != nil {
-			return nil, err
+		// gzip
+		if compression.GzipRef != nil && compression.GzipRef.Id > 0 {
+			gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(tx, compression.GzipRef.Id)
+			if err != nil {
+				return nil, err
+			}
+			compression.Gzip = gzipConfig
 		}
-		config.Gzip = gzipConfig
+
+		// brotli
+		if compression.BrotliRef != nil && compression.BrotliRef.Id > 0 {
+			brotliConfig, err := SharedHTTPBrotliPolicyDAO.ComposeBrotliConfig(tx, compression.BrotliRef.Id)
+			if err != nil {
+				return nil, err
+			}
+			compression.Brotli = brotliConfig
+		}
+
+		// deflate
+		if compression.DeflateRef != nil && compression.DeflateRef.Id > 0 {
+			deflateConfig, err := SharedHTTPDeflatePolicyDAO.ComposeDeflateConfig(tx, compression.DeflateRef.Id)
+			if err != nil {
+				return nil, err
+			}
+			compression.Deflate = deflateConfig
+		}
 	}
 
 	// charset
@@ -414,14 +435,14 @@ func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) erro
 	return this.NotifyUpdate(tx, webId)
 }
 
-// UpdateWebGzip 修改Gzip配置
-func (this *HTTPWebDAO) UpdateWebGzip(tx *dbs.Tx, webId int64, gzipJSON []byte) error {
+// UpdateWebCompression 修改压缩配置
+func (this *HTTPWebDAO) UpdateWebCompression(tx *dbs.Tx, webId int64, compressionConfig []byte) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
 	op := NewHTTPWebOperator()
 	op.Id = webId
-	op.Gzip = JSONBytes(gzipJSON)
+	op.Compression = JSONBytes(compressionConfig)
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -806,8 +827,28 @@ func (this *HTTPWebDAO) FindEnabledWebIdWithGzipId(tx *dbs.Tx, gzipId int64) (we
 	return this.Query(tx).
 		State(HTTPWebStateEnabled).
 		ResultPk().
-		Where("JSON_CONTAINS(gzip, :jsonQuery)").
-		Param("jsonQuery", maps.Map{"gzipId": gzipId}.AsJSON()).
+		Where("JSON_CONTAINS(compression, :jsonQuery, '$.gzipRef')").
+		Param("jsonQuery", maps.Map{"id": gzipId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// FindEnabledWebIdWithBrotliPolicyId 查找包含某个Brotli配置的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithBrotliPolicyId(tx *dbs.Tx, brotliPolicyId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(compression, :jsonQuery, '$.brotliRef')").
+		Param("jsonQuery", maps.Map{"id": brotliPolicyId}.AsJSON()).
+		FindInt64Col(0)
+}
+
+// FindEnabledWebIdWithDeflatePolicyId 查找包含某个Deflate配置的Web
+func (this *HTTPWebDAO) FindEnabledWebIdWithDeflatePolicyId(tx *dbs.Tx, deflatePolicyId int64) (webId int64, err error) {
+	return this.Query(tx).
+		State(HTTPWebStateEnabled).
+		ResultPk().
+		Where("JSON_CONTAINS(compression, :jsonQuery, '$.deflateRef')").
+		Param("jsonQuery", maps.Map{"id": deflatePolicyId}.AsJSON()).
 		FindInt64Col(0)
 }
 

@@ -20,7 +20,8 @@ type HTTPWeb struct {
 	ResponseHeader     string `field:"responseHeader"`     // 响应Header配置
 	AccessLog          string `field:"accessLog"`          // 访问日志配置
 	Stat               string `field:"stat"`               // 统计配置
-	Gzip               string `field:"gzip"`               // Gzip配置
+	Gzip               string `field:"gzip"`               // Gzip配置（v0.3.2启用）
+	Compression        string `field:"compression"`        // 压缩配置
 	Cache              string `field:"cache"`              // 缓存配置
 	Firewall           string `field:"firewall"`           // 防火墙设置
 	Locations          string `field:"locations"`          // 路由规则配置
@@ -50,7 +51,8 @@ type HTTPWebOperator struct {
 	ResponseHeader     interface{} // 响应Header配置
 	AccessLog          interface{} // 访问日志配置
 	Stat               interface{} // 统计配置
-	Gzip               interface{} // Gzip配置
+	Gzip               interface{} // Gzip配置（v0.3.2弃用）
+	Compression        interface{} // 压缩配置
 	Cache              interface{} // 缓存配置
 	Firewall           interface{} // 防火墙设置
 	Locations          interface{} // 路由规则配置
