@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -51,6 +52,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.3.1", upgradeV0_3_1,
+	},
+	{
+		"0.3.2", upgradeV0_3_2,
 	},
 }
 
@@ -388,6 +392,104 @@ func upgradeV0_3_1(db *dbs.DB) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// v0.3.2
+func upgradeV0_3_2(db *dbs.DB) error {
+	// gzip => compression
+
+	type HTTPGzipRef struct {
+		IsPrior bool  `yaml:"isPrior" json:"isPrior"` // 是否覆盖
+		IsOn    bool  `yaml:"isOn" json:"isOn"`       // 是否开启
+		GzipId  int64 `yaml:"gzipId" json:"gzipId"`   // 使用的配置ID
+	}
+
+	webOnes, _, err := db.FindOnes("SELECT id, gzip FROM edgeHTTPWebs WHERE gzip IS NOT NULL")
+	if err != nil {
+		return err
+	}
+	for _, webOne := range webOnes {
+		var gzipRef = &HTTPGzipRef{}
+		err = json.Unmarshal([]byte(webOne.GetString("gzip")), gzipRef)
+		if err != nil {
+			continue
+		}
+		if gzipRef == nil || gzipRef.GzipId <= 0 {
+			continue
+		}
+		var webId = webOne.GetInt("id")
+
+		var compressionConfig = &serverconfigs.HTTPCompressionConfig{
+			UseDefaultTypes: true,
+		}
+		compressionConfig.IsPrior = gzipRef.IsPrior
+		compressionConfig.IsOn = gzipRef.IsOn
+
+		gzipOne, err := db.FindOne("SELECT * FROM edgeHTTPGzips WHERE id=?", gzipRef.GzipId)
+		if err != nil {
+			return err
+		}
+		if len(gzipOne) == 0 {
+			continue
+		}
+
+		level := gzipOne.GetInt("level")
+		if level <= 0 {
+			continue
+		}
+		if level > 0 && level <= 10 {
+			compressionConfig.Level = types.Int8(level)
+		} else if level > 10 {
+			compressionConfig.Level = 10
+		}
+
+		var minLengthBytes = []byte(gzipOne.GetString("minLength"))
+		if len(minLengthBytes) > 0 {
+			var sizeCapacity = &shared.SizeCapacity{}
+			err = json.Unmarshal(minLengthBytes, sizeCapacity)
+			if err != nil {
+				continue
+			}
+			if sizeCapacity != nil {
+				compressionConfig.MinLength = sizeCapacity
+			}
+		}
+
+		var maxLengthBytes = []byte(gzipOne.GetString("maxLength"))
+		if len(maxLengthBytes) > 0 {
+			var sizeCapacity = &shared.SizeCapacity{}
+			err = json.Unmarshal(maxLengthBytes, sizeCapacity)
+			if err != nil {
+				continue
+			}
+			if sizeCapacity != nil {
+				compressionConfig.MaxLength = sizeCapacity
+			}
+		}
+
+		var condsBytes = []byte(gzipOne.GetString("conds"))
+		if len(condsBytes) > 0 {
+			var conds = &shared.HTTPRequestCondsConfig{}
+			err = json.Unmarshal(condsBytes, conds)
+			if err != nil {
+				continue
+			}
+			if conds != nil {
+				compressionConfig.Conds = conds
+			}
+		}
+
+		configJSON, err := json.Marshal(compressionConfig)
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("UPDATE edgeHTTPWebs SET compression=? WHERE id=?", string(configJSON), webId)
+		if err != nil {
+			return err
 		}
 	}
 
