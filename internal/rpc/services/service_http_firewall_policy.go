@@ -43,6 +43,7 @@ func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx co
 			IsOn:         p.IsOn == 1,
 			InboundJSON:  []byte(p.Inbound),
 			OutboundJSON: []byte(p.Outbound),
+			Mode:         p.Mode,
 		})
 	}
 
@@ -283,7 +284,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode)
 	if err != nil {
 		return nil, err
 	}
@@ -382,6 +383,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 			IsOn:         p.IsOn == 1,
 			InboundJSON:  []byte(p.Inbound),
 			OutboundJSON: []byte(p.Outbound),
+			Mode:         p.Mode,
 		})
 	}
 
@@ -471,6 +473,7 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context
 		IsOn:         policy.IsOn == 1,
 		InboundJSON:  []byte(policy.Inbound),
 		OutboundJSON: []byte(policy.Outbound),
+		Mode:         policy.Mode,
 	}}, nil
 }
 

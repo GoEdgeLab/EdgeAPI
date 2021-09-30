@@ -1,6 +1,6 @@
 package models
 
-// HTTP防火墙
+// HTTPFirewallPolicy HTTP防火墙
 type HTTPFirewallPolicy struct {
 	Id           uint32 `field:"id"`           // ID
 	TemplateId   uint32 `field:"templateId"`   // 模版ID
@@ -15,6 +15,7 @@ type HTTPFirewallPolicy struct {
 	Inbound      string `field:"inbound"`      // 入站规则
 	Outbound     string `field:"outbound"`     // 出站规则
 	BlockOptions string `field:"blockOptions"` // BLOCK选项
+	Mode         string `field:"mode"`         // 模式
 }
 
 type HTTPFirewallPolicyOperator struct {
@@ -31,6 +32,7 @@ type HTTPFirewallPolicyOperator struct {
 	Inbound      interface{} // 入站规则
 	Outbound     interface{} // 出站规则
 	BlockOptions interface{} // BLOCK选项
+	Mode         interface{} // 模式
 }
 
 func NewHTTPFirewallPolicyOperator() *HTTPFirewallPolicyOperator {

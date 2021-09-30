@@ -229,7 +229,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 }
 
 // UpdateFirewallPolicy 修改策略
-func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte) error {
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte, mode firewallconfigs.FirewallMode) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -238,6 +238,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 	op.IsOn = isOn
 	op.Name = name
 	op.Description = description
+	op.Mode = mode
 	if len(inboundJSON) > 0 {
 		op.Inbound = inboundJSON
 	} else {
@@ -316,6 +317,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	config.IsOn = policy.IsOn == 1
 	config.Name = policy.Name
 	config.Description = policy.Description
+	config.Mode = policy.Mode
 
 	// Inbound
 	inbound := &firewallconfigs.HTTPFirewallInboundConfig{}
