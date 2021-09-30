@@ -52,9 +52,9 @@ func FindAllProviderTypes() []maps.Map {
 	if teaconst.IsPlus {
 		typeMaps = append(typeMaps, []maps.Map{
 			{
-				"name":        "自建EdgeDNS",
+				"name":        "EdgeDNS",
 				"code":        ProviderTypeLocalEdgeDNS,
-				"description": "当前企业版提供的自建DNS服务。",
+				"description": "GoEdge商业版提供的智能DNS服务。",
 			},
 			// TODO 需要实现用户使用AccessId/AccessKey来连接DNS服务
 			/**{
