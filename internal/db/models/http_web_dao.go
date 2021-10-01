@@ -398,6 +398,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap maps.
 		config.Auth = authConfig
 	}
 
+	// WebP
+	if IsNotNull(web.Webp) {
+		var webpConfig = &serverconfigs.WebPImageConfig{}
+		err = json.Unmarshal([]byte(web.Webp), webpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.WebP = webpConfig
+	}
+
 	cacheMap[cacheKey] = config
 
 	return config, nil
@@ -443,6 +453,22 @@ func (this *HTTPWebDAO) UpdateWebCompression(tx *dbs.Tx, webId int64, compressio
 	op := NewHTTPWebOperator()
 	op.Id = webId
 	op.Compression = JSONBytes(compressionConfig)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateWebWebP 修改WebP配置
+func (this *HTTPWebDAO) UpdateWebWebP(tx *dbs.Tx, webId int64, webpConfig []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	op := NewHTTPWebOperator()
+	op.Id = webId
+	op.Webp = JSONBytes(webpConfig)
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
