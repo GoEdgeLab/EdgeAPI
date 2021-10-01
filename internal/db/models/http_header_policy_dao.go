@@ -37,12 +37,12 @@ func init() {
 	})
 }
 
-// 初始化
+// Init 初始化
 func (this *HTTPHeaderPolicyDAO) Init() {
 	_ = this.DAOObject.Init()
 }
 
-// 启用条目
+// EnableHTTPHeaderPolicy 启用条目
 func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *HTTPHeaderPolicyDAO) EnableHTTPHeaderPolicy(tx *dbs.Tx, id int64) er
 	return err
 }
 
-// 禁用条目
+// DisableHTTPHeaderPolicy 禁用条目
 func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(tx *dbs.Tx, policyId int64) error {
 	_, err := this.Query(tx).
 		Pk(policyId).
@@ -63,7 +63,7 @@ func (this *HTTPHeaderPolicyDAO) DisableHTTPHeaderPolicy(tx *dbs.Tx, policyId in
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 查找启用中的条目
+// FindEnabledHTTPHeaderPolicy 查找启用中的条目
 func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(tx *dbs.Tx, id int64) (*HTTPHeaderPolicy, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -75,7 +75,7 @@ func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(tx *dbs.Tx, id int6
 	return result.(*HTTPHeaderPolicy), err
 }
 
-// 创建策略
+// CreateHeaderPolicy 创建策略
 func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy(tx *dbs.Tx) (int64, error) {
 	op := NewHTTPHeaderPolicyOperator()
 	op.IsOn = true
@@ -87,7 +87,7 @@ func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy(tx *dbs.Tx) (int64, error) {
 	return types.Int64(op.Id), nil
 }
 
-// 修改AddHeaders
+// UpdateAddingHeaders 修改AddHeaders
 func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -103,7 +103,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(tx *dbs.Tx, policyId int64,
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改SetHeaders
+// UpdateSettingHeaders 修改SetHeaders
 func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -119,7 +119,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(tx *dbs.Tx, policyId int64
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改ReplaceHeaders
+// UpdateReplacingHeaders 修改ReplaceHeaders
 func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -135,7 +135,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(tx *dbs.Tx, policyId int
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改AddTrailers
+// UpdateAddingTrailers 修改AddTrailers
 func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(tx *dbs.Tx, policyId int64, headersJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -151,7 +151,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(tx *dbs.Tx, policyId int64
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 修改DeleteHeaders
+// UpdateDeletingHeaders 修改DeleteHeaders
 func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int64, headerNames []string) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
@@ -172,7 +172,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int6
 	return this.NotifyUpdate(tx, policyId)
 }
 
-// 组合配置
+// ComposeHeaderPolicyConfig 组合配置
 func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPolicyId int64) (*shared.HTTPHeaderPolicy, error) {
 	policy, err := this.FindEnabledHTTPHeaderPolicy(tx, headerPolicyId)
 	if err != nil {
@@ -292,16 +292,16 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 	return config, nil
 }
 
-// 查找Header所在Policy
+// FindHeaderPolicyIdWithHeaderId 查找Header所在Policy
 func (this *HTTPHeaderPolicyDAO) FindHeaderPolicyIdWithHeaderId(tx *dbs.Tx, headerId int64) (int64, error) {
 	return this.Query(tx).
 		Where("(JSON_CONTAINS(addHeaders, :jsonQuery) OR JSON_CONTAINS(addTrailers, :jsonQuery) OR JSON_CONTAINS(setHeaders, :jsonQuery) OR JSON_CONTAINS(replaceHeaders, :jsonQuery))").
-		Param("jsonQuery", maps.Map{"id": headerId}.AsJSON()).
+		Param("jsonQuery", maps.Map{"headerId": headerId}.AsJSON()).
 		ResultPk().
 		FindInt64Col(0)
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *HTTPHeaderPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
 	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithHeaderPolicyId(tx, policyId)
 	if err != nil {

@@ -20,7 +20,7 @@ type HTTPWeb struct {
 	ResponseHeader     string `field:"responseHeader"`     // 响应Header配置
 	AccessLog          string `field:"accessLog"`          // 访问日志配置
 	Stat               string `field:"stat"`               // 统计配置
-	Gzip               string `field:"gzip"`               // Gzip配置（v0.3.2启用）
+	Gzip               string `field:"gzip"`               // Gzip配置（v0.3.2弃用）
 	Compression        string `field:"compression"`        // 压缩配置
 	Cache              string `field:"cache"`              // 缓存配置
 	Firewall           string `field:"firewall"`           // 防火墙设置
@@ -30,6 +30,7 @@ type HTTPWeb struct {
 	HostRedirects      string `field:"hostRedirects"`      // 域名跳转
 	Fastcgi            string `field:"fastcgi"`            // Fastcgi配置
 	Auth               string `field:"auth"`               // 认证策略配置
+	Webp               string `field:"webp"`               // WebP配置
 }
 
 type HTTPWebOperator struct {
@@ -61,6 +62,7 @@ type HTTPWebOperator struct {
 	HostRedirects      interface{} // 域名跳转
 	Fastcgi            interface{} // Fastcgi配置
 	Auth               interface{} // 认证策略配置
+	Webp               interface{} // WebP配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {
