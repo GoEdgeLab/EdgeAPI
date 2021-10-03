@@ -91,7 +91,7 @@ func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAc
 
 	tx := this.NullTx()
 
-	count, err := acmemodels.SharedACMEUserDAO.CountACMEUsersWithAdminId(tx, adminId, userId)
+	count, err := acmemodels.SharedACMEUserDAO.CountACMEUsersWithAdminId(tx, adminId, userId, req.AcmeProviderAccountId)
 	if err != nil {
 		return nil, err
 	}

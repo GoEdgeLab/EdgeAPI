@@ -124,13 +124,16 @@ func (this *ACMEUserDAO) UpdateACMEUserRegistration(tx *dbs.Tx, acmeUserId int64
 }
 
 // CountACMEUsersWithAdminId 计算用户数量
-func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
+func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, userId int64, accountId int64) (int64, error) {
 	query := this.Query(tx)
 	if adminId > 0 {
 		query.Attr("adminId", adminId)
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+	}
+	if accountId > 0 {
+		query.Attr("accountId", accountId)
 	}
 
 	return query.
