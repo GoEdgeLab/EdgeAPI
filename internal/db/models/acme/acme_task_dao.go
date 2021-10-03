@@ -3,7 +3,7 @@ package acme
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/acme"
+	acmeutils "github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
@@ -167,7 +167,7 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId 
 }
 
 // CreateACMETask 创建任务
-func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acme.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool, authURL string) (int64, error) {
+func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acmeutils.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool, authURL string) (int64, error) {
 	op := NewACMETaskOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -286,13 +286,39 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 		return
 	}
 
-	privateKey, err := acme.ParsePrivateKeyFromBase64(user.PrivateKey)
+	// 服务商
+	if len(user.ProviderCode) == 0 {
+		user.ProviderCode = acmeutils.DefaultProviderCode
+	}
+	var acmeProvider = acmeutils.FindProviderWithCode(user.ProviderCode)
+	if acmeProvider == nil {
+		errMsg = "服务商已不可用"
+		return
+	}
+
+	// 账号
+	var acmeAccount *acmeutils.Account
+	if user.AccountId > 0 {
+		account, err := SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, int64(user.AccountId))
+		if err != nil {
+			errMsg = "查询ACME账号时出错：" + err.Error()
+			return
+		}
+		if account != nil {
+			acmeAccount = &acmeutils.Account{
+				EABKid: account.EabKid,
+				EABKey: account.EabKey,
+			}
+		}
+	}
+
+	privateKey, err := acmeutils.ParsePrivateKeyFromBase64(user.PrivateKey)
 	if err != nil {
 		errMsg = "解析私钥时出错：" + err.Error()
 		return
 	}
 
-	remoteUser := acme.NewUser(user.Email, privateKey, func(resource *registration.Resource) error {
+	remoteUser := acmeutils.NewUser(user.Email, privateKey, func(resource *registration.Resource) error {
 		resourceJSON, err := json.Marshal(resource)
 		if err != nil {
 			return err
@@ -310,8 +336,8 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 		}
 	}
 
-	var acmeTask *acme.Task = nil
-	if task.AuthType == acme.AuthTypeDNS {
+	var acmeTask *acmeutils.Task = nil
+	if task.AuthType == acmeutils.AuthTypeDNS {
 		// DNS服务商
 		dnsProvider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(task.DnsProviderId))
 		if err != nil {
@@ -338,22 +364,24 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 			return
 		}
 
-		acmeTask = &acme.Task{
+		acmeTask = &acmeutils.Task{
 			User:        remoteUser,
-			AuthType:    acme.AuthTypeDNS,
+			AuthType:    acmeutils.AuthTypeDNS,
 			DNSProvider: providerInterface,
 			DNSDomain:   task.DnsDomain,
 			Domains:     task.DecodeDomains(),
 		}
-	} else if task.AuthType == acme.AuthTypeHTTP {
-		acmeTask = &acme.Task{
+	} else if task.AuthType == acmeutils.AuthTypeHTTP {
+		acmeTask = &acmeutils.Task{
 			User:     remoteUser,
-			AuthType: acme.AuthTypeHTTP,
+			AuthType: acmeutils.AuthTypeHTTP,
 			Domains:  task.DecodeDomains(),
 		}
 	}
+	acmeTask.Provider = acmeProvider
+	acmeTask.Account = acmeAccount
 
-	acmeRequest := acme.NewRequest(acmeTask)
+	acmeRequest := acmeutils.NewRequest(acmeTask)
 	acmeRequest.OnAuth(func(domain, token, keyAuth string) {
 		err := SharedACMEAuthenticationDAO.CreateAuth(tx, taskId, domain, token, keyAuth)
 		if err != nil {

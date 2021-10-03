@@ -1,6 +1,7 @@
 package acme
 
 import (
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -33,6 +34,14 @@ func (this *Request) OnAuth(onAuth AuthCallback) {
 }
 
 func (this *Request) Run() (certData []byte, keyData []byte, err error) {
+	if this.task.Provider == nil {
+		err = errors.New("provider should not be nil")
+		return
+	}
+	if this.task.Provider.RequireEAB && this.task.Account == nil {
+		err = errors.New("account should not be nil when provider require EAB")
+	}
+
 	switch this.task.AuthType {
 	case AuthTypeDNS:
 		return this.runDNS()
@@ -68,6 +77,8 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 
 	config := lego.NewConfig(this.task.User)
 	config.Certificate.KeyType = certcrypto.RSA2048
+	config.CADirURL = this.task.Provider.APIURL
+	config.UserAgent = teaconst.ProductName + "/" + teaconst.Version
 
 	client, err := lego.NewClient(config)
 	if err != nil {
@@ -82,13 +93,28 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 			return nil, nil, err
 		}
 	} else {
-		resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
-		if err != nil {
-			return nil, nil, err
-		}
-		err = this.task.User.Register(resource)
-		if err != nil {
-			return nil, nil, err
+		if this.task.Provider.RequireEAB {
+			resource, err := client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
+				TermsOfServiceAgreed: true,
+				Kid:                  this.task.Account.EABKid,
+				HmacEncoded:          this.task.Account.EABKey,
+			})
+			if err != nil {
+				return nil, nil, errors.New("register user failed: " + err.Error())
+			}
+			err = this.task.User.Register(resource)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+			if err != nil {
+				return nil, nil, err
+			}
+			err = this.task.User.Register(resource)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
@@ -104,7 +130,7 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 	}
 	certResource, err := client.Certificate.Obtain(request)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("obtain cert failed: " + err.Error())
 	}
 
 	return certResource.Certificate, certResource.PrivateKey, nil
@@ -122,6 +148,8 @@ func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 
 	config := lego.NewConfig(this.task.User)
 	config.Certificate.KeyType = certcrypto.RSA2048
+	config.CADirURL = this.task.Provider.APIURL
+	config.UserAgent = teaconst.ProductName + "/" + teaconst.Version
 
 	client, err := lego.NewClient(config)
 	if err != nil {
@@ -136,13 +164,28 @@ func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 			return nil, nil, err
 		}
 	} else {
-		resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
-		if err != nil {
-			return nil, nil, err
-		}
-		err = this.task.User.Register(resource)
-		if err != nil {
-			return nil, nil, err
+		if this.task.Provider.RequireEAB {
+			resource, err := client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
+				TermsOfServiceAgreed: true,
+				Kid:                  this.task.Account.EABKid,
+				HmacEncoded:          this.task.Account.EABKey,
+			})
+			if err != nil {
+				return nil, nil, errors.New("register user failed: " + err.Error())
+			}
+			err = this.task.User.Register(resource)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+			if err != nil {
+				return nil, nil, err
+			}
+			err = this.task.User.Register(resource)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 

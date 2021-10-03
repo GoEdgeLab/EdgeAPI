@@ -98,7 +98,50 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			CreatedAt:   int64(acmeUser.CreatedAt),
 		}
 
-		var pbProvider *pb.DNSProvider
+		// 服务商
+		if len(acmeUser.ProviderCode) == 0 {
+			acmeUser.ProviderCode = acme.DefaultProviderCode
+		}
+		var provider = acme.FindProviderWithCode(acmeUser.ProviderCode)
+		if provider != nil {
+			pbACMEUser.AcmeProvider = &pb.ACMEProvider{
+				Name:           provider.Name,
+				Code:           provider.Code,
+				Description:    provider.Description,
+				RequireEAB:     provider.RequireEAB,
+				EabDescription: provider.EABDescription,
+			}
+		}
+
+		// 账号
+		if acmeUser.AccountId > 0 {
+			account, err := acmemodels.SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, int64(acmeUser.AccountId))
+			if err != nil {
+				return nil, err
+			}
+			if account != nil {
+				pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
+					Id:           int64(account.Id),
+					Name:         account.Name,
+					IsOn:         account.IsOn == 1,
+					ProviderCode: account.ProviderCode,
+					AcmeProvider: nil,
+				}
+
+				var provider = acme.FindProviderWithCode(account.ProviderCode)
+				if provider != nil {
+					pbACMEUser.AcmeProviderAccount.AcmeProvider = &pb.ACMEProvider{
+						Name:           provider.Name,
+						Code:           provider.Code,
+						Description:    provider.Description,
+						RequireEAB:     provider.RequireEAB,
+						EabDescription: provider.EABDescription,
+					}
+				}
+			}
+		}
+
+		var pbDNSProvider *pb.DNSProvider
 		if task.AuthType == acme.AuthTypeDNS {
 			// DNS
 			provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(task.DnsProviderId))
@@ -108,7 +151,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			if provider == nil {
 				continue
 			}
-			pbProvider = &pb.DNSProvider{
+			pbDNSProvider = &pb.DNSProvider{
 				Id:       int64(provider.Id),
 				Name:     provider.Name,
 				Type:     provider.Type,
@@ -158,7 +201,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			CreatedAt:         int64(task.CreatedAt),
 			AutoRenew:         task.AutoRenew == 1,
 			AcmeUser:          pbACMEUser,
-			DnsProvider:       pbProvider,
+			DnsProvider:       pbDNSProvider,
 			SslCert:           pbCert,
 			LatestACMETaskLog: pbTaskLog,
 			AuthType:          task.AuthType,
@@ -300,6 +343,49 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 				Email:       acmeUser.Email,
 				Description: acmeUser.Description,
 				CreatedAt:   int64(acmeUser.CreatedAt),
+			}
+
+			// 服务商
+			if len(acmeUser.ProviderCode) == 0 {
+				acmeUser.ProviderCode = acme.DefaultProviderCode
+			}
+			var provider = acme.FindProviderWithCode(acmeUser.ProviderCode)
+			if provider != nil {
+				pbACMEUser.AcmeProvider = &pb.ACMEProvider{
+					Name:           provider.Name,
+					Code:           provider.Code,
+					Description:    provider.Description,
+					RequireEAB:     provider.RequireEAB,
+					EabDescription: provider.EABDescription,
+				}
+			}
+
+			// 账号
+			if acmeUser.AccountId > 0 {
+				account, err := acmemodels.SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, int64(acmeUser.AccountId))
+				if err != nil {
+					return nil, err
+				}
+				if account != nil {
+					pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
+						Id:           int64(account.Id),
+						Name:         account.Name,
+						IsOn:         account.IsOn == 1,
+						ProviderCode: account.ProviderCode,
+						AcmeProvider: nil,
+					}
+
+					var provider = acme.FindProviderWithCode(account.ProviderCode)
+					if provider != nil {
+						pbACMEUser.AcmeProviderAccount.AcmeProvider = &pb.ACMEProvider{
+							Name:           provider.Name,
+							Code:           provider.Code,
+							Description:    provider.Description,
+							RequireEAB:     provider.RequireEAB,
+							EabDescription: provider.EABDescription,
+						}
+					}
+				}
 			}
 		}
 	}

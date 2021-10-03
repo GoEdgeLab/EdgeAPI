@@ -63,6 +63,7 @@ func TestGenerate(t *testing.T) {
 	}
 
 	config := lego.NewConfig(myUser)
+	config.CADirURL = "https://acme.zerossl.com/v2/DV90"
 	config.Certificate.KeyType = certcrypto.RSA2048
 
 	client, err := lego.NewClient(config)
@@ -83,6 +84,56 @@ func TestGenerate(t *testing.T) {
 
 	request := certificate.ObtainRequest{
 		Domains: []string{"teaos.com"},
+		Bundle:  true,
+	}
+	certificates, err := client.Certificate.Obtain(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(certificates)
+}
+
+func TestGenerate_EAB(t *testing.T) {
+	acmelog.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+
+	// 生成私钥
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	myUser := &MyUser{
+		Email: "test1@teaos.cn",
+		key:   privateKey,
+	}
+
+	config := lego.NewConfig(myUser)
+	config.CADirURL = "https://acme.zerossl.com/v2/DV90"
+	config.Certificate.KeyType = certcrypto.RSA2048
+
+	client, err := lego.NewClient(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = client.Challenge.SetDNS01Provider(&MyProvider{t: t})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// New users will need to register
+	var reg *registration.Resource
+	if client.GetExternalAccountRequired() {
+		reg, err = client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
+			TermsOfServiceAgreed: true,
+			Kid:                  "KID",
+			HmacEncoded:          "HAMC KEY",
+		})
+	} else {
+		reg, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+	}
+	myUser.Registration = reg
+
+	request := certificate.ObtainRequest{
+		Domains: []string{"teaos.cn"},
 		Bundle:  true,
 	}
 	certificates, err := client.Certificate.Obtain(request)

@@ -10,6 +10,8 @@ const (
 )
 
 type Task struct {
+	Provider *Provider
+	Account  *Account
 	User     *User
 	AuthType AuthType
 	Domains  []string

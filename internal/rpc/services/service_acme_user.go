@@ -2,16 +2,17 @@ package services
 
 import (
 	"context"
+	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	acmemodels "github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 用户服务
+// ACMEUserService 用户服务
 type ACMEUserService struct {
 	BaseService
 }
 
-// 创建用户
+// CreateACMEUser 创建用户
 func (this *ACMEUserService) CreateACMEUser(ctx context.Context, req *pb.CreateACMEUserRequest) (*pb.CreateACMEUserResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -21,14 +22,14 @@ func (this *ACMEUserService) CreateACMEUser(ctx context.Context, req *pb.CreateA
 
 	tx := this.NullTx()
 
-	acmeUserId, err := acmemodels.SharedACMEUserDAO.CreateACMEUser(tx, adminId, userId, req.Email, req.Description)
+	acmeUserId, err := acmemodels.SharedACMEUserDAO.CreateACMEUser(tx, adminId, userId, req.AcmeProviderCode, req.AcmeProviderAccountId, req.Email, req.Description)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CreateACMEUserResponse{AcmeUserId: acmeUserId}, nil
 }
 
-// 修改用户
+// UpdateACMEUser 修改用户
 func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateACMEUserRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -54,7 +55,7 @@ func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateA
 	return this.Success()
 }
 
-// 删除用户
+// DeleteACMEUser 删除用户
 func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteACMEUserRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -80,7 +81,7 @@ func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteA
 	return this.Success()
 }
 
-// 计算用户数量
+// CountACMEUsers 计算用户数量
 func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAcmeUsersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -97,7 +98,7 @@ func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAc
 	return this.SuccessCount(count)
 }
 
-// 列出单页用户
+// ListACMEUsers 列出单页用户
 func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACMEUsersRequest) (*pb.ListACMEUsersResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -113,17 +114,63 @@ func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACME
 	}
 	result := []*pb.ACMEUser{}
 	for _, user := range acmeUsers {
-		result = append(result, &pb.ACMEUser{
-			Id:          int64(user.Id),
-			Email:       user.Email,
-			Description: user.Description,
-			CreatedAt:   int64(user.CreatedAt),
-		})
+		var pbUser = &pb.ACMEUser{
+			Id:               int64(user.Id),
+			Email:            user.Email,
+			Description:      user.Description,
+			CreatedAt:        int64(user.CreatedAt),
+			AcmeProviderCode: user.ProviderCode,
+		}
+
+		// 服务商
+		if len(user.ProviderCode) == 0 {
+			user.ProviderCode = acme.DefaultProviderCode
+		}
+		var provider = acme.FindProviderWithCode(user.ProviderCode)
+		if provider != nil {
+			pbUser.AcmeProvider = &pb.ACMEProvider{
+				Name:           provider.Name,
+				Code:           provider.Code,
+				Description:    provider.Description,
+				RequireEAB:     provider.RequireEAB,
+				EabDescription: provider.EABDescription,
+			}
+		}
+
+		// 账号
+		if user.AccountId > 0 {
+			account, err := acmemodels.SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, int64(user.AccountId))
+			if err != nil {
+				return nil, err
+			}
+			if account != nil {
+				pbUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
+					Id:           int64(account.Id),
+					Name:         account.Name,
+					IsOn:         account.IsOn == 1,
+					ProviderCode: account.ProviderCode,
+					AcmeProvider: nil,
+				}
+
+				var provider = acme.FindProviderWithCode(account.ProviderCode)
+				if provider != nil {
+					pbUser.AcmeProviderAccount.AcmeProvider = &pb.ACMEProvider{
+						Name:           provider.Name,
+						Code:           provider.Code,
+						Description:    provider.Description,
+						RequireEAB:     provider.RequireEAB,
+						EabDescription: provider.EABDescription,
+					}
+				}
+			}
+		}
+
+		result = append(result, pbUser)
 	}
 	return &pb.ListACMEUsersResponse{AcmeUsers: result}, nil
 }
 
-// 查找单个用户
+// FindEnabledACMEUser 查找单个用户
 func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.FindEnabledACMEUserRequest) (*pb.FindEnabledACMEUserResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -149,15 +196,61 @@ func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.Fi
 	if acmeUser == nil {
 		return &pb.FindEnabledACMEUserResponse{AcmeUser: nil}, nil
 	}
-	return &pb.FindEnabledACMEUserResponse{AcmeUser: &pb.ACMEUser{
-		Id:          int64(acmeUser.Id),
-		Email:       acmeUser.Email,
-		Description: acmeUser.Description,
-		CreatedAt:   int64(acmeUser.CreatedAt),
-	}}, nil
+
+	// 服务商
+	var pbACMEUser = &pb.ACMEUser{
+		Id:               int64(acmeUser.Id),
+		Email:            acmeUser.Email,
+		Description:      acmeUser.Description,
+		CreatedAt:        int64(acmeUser.CreatedAt),
+		AcmeProviderCode: acmeUser.ProviderCode,
+	}
+	if len(acmeUser.ProviderCode) == 0 {
+		acmeUser.ProviderCode = acme.DefaultProviderCode
+	}
+	var provider = acme.FindProviderWithCode(acmeUser.ProviderCode)
+	if provider != nil {
+		pbACMEUser.AcmeProvider = &pb.ACMEProvider{
+			Name:           provider.Name,
+			Code:           provider.Code,
+			Description:    provider.Description,
+			RequireEAB:     provider.RequireEAB,
+			EabDescription: provider.EABDescription,
+		}
+	}
+
+	// 账号
+	if acmeUser.AccountId > 0 {
+		account, err := acmemodels.SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, int64(acmeUser.AccountId))
+		if err != nil {
+			return nil, err
+		}
+		if account != nil {
+			pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
+				Id:           int64(account.Id),
+				Name:         account.Name,
+				IsOn:         account.IsOn == 1,
+				ProviderCode: account.ProviderCode,
+				AcmeProvider: nil,
+			}
+
+			var provider = acme.FindProviderWithCode(account.ProviderCode)
+			if provider != nil {
+				pbACMEUser.AcmeProviderAccount.AcmeProvider = &pb.ACMEProvider{
+					Name:           provider.Name,
+					Code:           provider.Code,
+					Description:    provider.Description,
+					RequireEAB:     provider.RequireEAB,
+					EabDescription: provider.EABDescription,
+				}
+			}
+		}
+	}
+
+	return &pb.FindEnabledACMEUserResponse{AcmeUser: pbACMEUser}, nil
 }
 
-// 查找所有用户
+// FindAllACMEUsers 查找所有用户
 func (this *ACMEUserService) FindAllACMEUsers(ctx context.Context, req *pb.FindAllACMEUsersRequest) (*pb.FindAllACMEUsersResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
@@ -167,17 +260,18 @@ func (this *ACMEUserService) FindAllACMEUsers(ctx context.Context, req *pb.FindA
 
 	tx := this.NullTx()
 
-	acmeUsers, err := acmemodels.SharedACMEUserDAO.FindAllACMEUsers(tx, adminId, userId)
+	acmeUsers, err := acmemodels.SharedACMEUserDAO.FindAllACMEUsers(tx, adminId, userId, req.AcmeProviderCode)
 	if err != nil {
 		return nil, err
 	}
 	result := []*pb.ACMEUser{}
 	for _, user := range acmeUsers {
 		result = append(result, &pb.ACMEUser{
-			Id:          int64(user.Id),
-			Email:       user.Email,
-			Description: user.Description,
-			CreatedAt:   int64(user.CreatedAt),
+			Id:               int64(user.Id),
+			Email:            user.Email,
+			Description:      user.Description,
+			CreatedAt:        int64(user.CreatedAt),
+			AcmeProviderCode: user.ProviderCode,
 		})
 	}
 	return &pb.FindAllACMEUsersResponse{AcmeUsers: result}, nil

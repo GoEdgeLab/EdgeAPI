@@ -1,6 +1,6 @@
 package acme
 
-//
+// ACMEUser ACME用户
 type ACMEUser struct {
 	Id           uint64 `field:"id"`           // ID
 	AdminId      uint32 `field:"adminId"`      // 管理员ID
@@ -11,6 +11,8 @@ type ACMEUser struct {
 	State        uint8  `field:"state"`        // 状态
 	Description  string `field:"description"`  // 备注介绍
 	Registration string `field:"registration"` // 注册信息
+	ProviderCode string `field:"providerCode"` // 服务商代号
+	AccountId    uint64 `field:"accountId"`    // 提供商ID
 }
 
 type ACMEUserOperator struct {
@@ -23,6 +25,8 @@ type ACMEUserOperator struct {
 	State        interface{} // 状态
 	Description  interface{} // 备注介绍
 	Registration interface{} // 注册信息
+	ProviderCode interface{} // 服务商代号
+	AccountId    interface{} // 提供商ID
 }
 
 func NewACMEUserOperator() *ACMEUserOperator {

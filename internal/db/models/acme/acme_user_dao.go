@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableACMEUser 启用条目
 func (this *ACMEUserDAO) EnableACMEUser(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -48,7 +48,7 @@ func (this *ACMEUserDAO) EnableACMEUser(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableACMEUser 禁用条目
 func (this *ACMEUserDAO) DisableACMEUser(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -69,8 +69,8 @@ func (this *ACMEUserDAO) FindEnabledACMEUser(tx *dbs.Tx, id int64) (*ACMEUser, e
 	return result.(*ACMEUser), err
 }
 
-// 创建用户
-func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64, email string, description string) (int64, error) {
+// CreateACMEUser 创建用户
+func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64, providerCode string, accountId int64, email string, description string) (int64, error) {
 	// 生成私钥
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -86,6 +86,8 @@ func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64,
 	op := NewACMEUserOperator()
 	op.AdminId = adminId
 	op.UserId = userId
+	op.ProviderCode = providerCode
+	op.AccountId = accountId
 	op.Email = email
 	op.Description = description
 	op.PrivateKey = privateKeyText
@@ -97,7 +99,7 @@ func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64,
 	return types.Int64(op.Id), nil
 }
 
-// 修改用户信息
+// UpdateACMEUser 修改用户信息
 func (this *ACMEUserDAO) UpdateACMEUser(tx *dbs.Tx, acmeUserId int64, description string) error {
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
@@ -109,7 +111,7 @@ func (this *ACMEUserDAO) UpdateACMEUser(tx *dbs.Tx, acmeUserId int64, descriptio
 	return err
 }
 
-// 修改用户ACME注册信息
+// UpdateACMEUserRegistration 修改用户ACME注册信息
 func (this *ACMEUserDAO) UpdateACMEUserRegistration(tx *dbs.Tx, acmeUserId int64, registrationJSON []byte) error {
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
@@ -121,7 +123,7 @@ func (this *ACMEUserDAO) UpdateACMEUserRegistration(tx *dbs.Tx, acmeUserId int64
 	return err
 }
 
-// 计算用户数量
+// CountACMEUsersWithAdminId 计算用户数量
 func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, userId int64) (int64, error) {
 	query := this.Query(tx)
 	if adminId > 0 {
@@ -136,7 +138,7 @@ func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, us
 		Count()
 }
 
-// 列出当前管理员的用户
+// ListACMEUsers 列出当前管理员的用户
 func (this *ACMEUserDAO) ListACMEUsers(tx *dbs.Tx, adminId int64, userId int64, offset int64, size int64) (result []*ACMEUser, err error) {
 	query := this.Query(tx)
 	if adminId > 0 {
@@ -156,8 +158,8 @@ func (this *ACMEUserDAO) ListACMEUsers(tx *dbs.Tx, adminId int64, userId int64, 
 	return
 }
 
-// 查找所有用户
-func (this *ACMEUserDAO) FindAllACMEUsers(tx *dbs.Tx, adminId int64, userId int64) (result []*ACMEUser, err error) {
+// FindAllACMEUsers 查找所有用户
+func (this *ACMEUserDAO) FindAllACMEUsers(tx *dbs.Tx, adminId int64, userId int64, providerCode string) (result []*ACMEUser, err error) {
 	// 防止没有传入条件导致返回的数据过多
 	if adminId <= 0 && userId <= 0 {
 		return nil, errors.New("'adminId' or 'userId' should not be empty")
@@ -170,6 +172,9 @@ func (this *ACMEUserDAO) FindAllACMEUsers(tx *dbs.Tx, adminId int64, userId int6
 	if userId > 0 {
 		query.Attr("userId", userId)
 	}
+	if len(providerCode) > 0 {
+		query.Attr("providerCode", providerCode)
+	}
 	_, err = query.
 		State(ACMEUserStateEnabled).
 		Slice(&result).
@@ -178,7 +183,7 @@ func (this *ACMEUserDAO) FindAllACMEUsers(tx *dbs.Tx, adminId int64, userId int6
 	return
 }
 
-// 检查用户权限
+// CheckACMEUser 检查用户权限
 func (this *ACMEUserDAO) CheckACMEUser(tx *dbs.Tx, acmeUserId int64, adminId int64, userId int64) (bool, error) {
 	if acmeUserId <= 0 {
 		return false, nil
