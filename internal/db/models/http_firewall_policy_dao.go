@@ -317,6 +317,10 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	config.IsOn = policy.IsOn == 1
 	config.Name = policy.Name
 	config.Description = policy.Description
+
+	if len(policy.Mode) == 0 {
+		policy.Mode = firewallconfigs.FirewallModeDefend
+	}
 	config.Mode = policy.Mode
 
 	// Inbound
