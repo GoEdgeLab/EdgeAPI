@@ -31,6 +31,7 @@ type HTTPWeb struct {
 	Fastcgi            string `field:"fastcgi"`            // Fastcgi配置
 	Auth               string `field:"auth"`               // 认证策略配置
 	Webp               string `field:"webp"`               // WebP配置
+	RemoteAddr         string `field:"remoteAddr"`         // 客户端IP配置
 }
 
 type HTTPWebOperator struct {
@@ -63,6 +64,7 @@ type HTTPWebOperator struct {
 	Fastcgi            interface{} // Fastcgi配置
 	Auth               interface{} // 认证策略配置
 	Webp               interface{} // WebP配置
+	RemoteAddr         interface{} // 客户端IP配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

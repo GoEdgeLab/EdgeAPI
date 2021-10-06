@@ -408,6 +408,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap maps.
 		config.WebP = webpConfig
 	}
 
+	// RemoteAddr
+	if IsNotNull(web.RemoteAddr) {
+		var remoteAddrConfig = &serverconfigs.HTTPRemoteAddrConfig{}
+		err = json.Unmarshal([]byte(web.RemoteAddr), remoteAddrConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.RemoteAddr = remoteAddrConfig
+	}
+
 	cacheMap[cacheKey] = config
 
 	return config, nil
@@ -474,6 +484,21 @@ func (this *HTTPWebDAO) UpdateWebWebP(tx *dbs.Tx, webId int64, webpConfig []byte
 		return err
 	}
 
+	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateWebRemoteAddr 修改RemoteAddr配置
+func (this *HTTPWebDAO) UpdateWebRemoteAddr(tx *dbs.Tx, webId int64, remoteAddrConfig []byte) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	var op = NewHTTPWebOperator()
+	op.Id = webId
+	op.RemoteAddr = remoteAddrConfig
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
 	return this.NotifyUpdate(tx, webId)
 }
 

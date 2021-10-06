@@ -173,6 +173,31 @@ func (this *HTTPWebService) UpdateHTTPWebWebP(ctx context.Context, req *pb.Updat
 	return this.Success()
 }
 
+// UpdateHTTPWebRemoteAddr 更改RemoteAddr配置
+func (this *HTTPWebService) UpdateHTTPWebRemoteAddr(ctx context.Context, req *pb.UpdateHTTPWebRemoteAddrRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		// 检查用户权限
+		err = models.SharedHTTPWebDAO.CheckUserWeb(nil, userId, req.WebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedHTTPWebDAO.UpdateWebRemoteAddr(tx, req.WebId, req.RemoteAddrJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // UpdateHTTPWebCharset 修改字符集配置
 func (this *HTTPWebService) UpdateHTTPWebCharset(ctx context.Context, req *pb.UpdateHTTPWebCharsetRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
