@@ -386,11 +386,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 	}
 
 	if group == nil {
-		return &pb.FindEnabledServerGroupConfigInfoResponse{
-			HasHTTPReverseProxy: false,
-			HasTCPReverseProxy:  false,
-			HasUDPReverseProxy:  false,
-		}, nil
+		return &pb.FindEnabledServerGroupConfigInfoResponse{}, nil
 	}
 
 	var result = &pb.FindEnabledServerGroupConfigInfoResponse{
@@ -424,5 +420,58 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 		result.HasUDPReverseProxy = ref.IsPrior
 	}
 
+	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), nil)
+	if err != nil {
+		return nil, err
+	}
+	if config != nil {
+		var webConfig = config.Web
+		if webConfig != nil {
+			result.HasRootConfig = webConfig != nil && webConfig.Root != nil && webConfig.Root.IsPrior
+			result.HasWAFConfig = webConfig != nil && webConfig.FirewallRef != nil && webConfig.FirewallRef.IsPrior
+			result.HasCacheConfig = webConfig != nil && webConfig.Cache != nil && webConfig.Cache.IsPrior
+			result.HasCharsetConfig = webConfig != nil && webConfig.Charset != nil && webConfig.Charset.IsPrior
+			result.HasAccessLogConfig = webConfig != nil && webConfig.AccessLogRef != nil && webConfig.AccessLogRef.IsPrior
+			result.HasStatConfig = webConfig != nil && webConfig.StatRef != nil && webConfig.StatRef.IsPrior
+			result.HasCompressionConfig = webConfig != nil && webConfig.Compression != nil && webConfig.Compression.IsPrior
+			result.HasWebsocketConfig = webConfig != nil && webConfig.WebsocketRef != nil && webConfig.WebsocketRef.IsPrior
+			result.HasRequestHeadersConfig = webConfig != nil && webConfig.RequestHeaderPolicyRef != nil && webConfig.RequestHeaderPolicyRef.IsPrior
+			result.HasResponseHeadersConfig = webConfig != nil && webConfig.ResponseHeaderPolicyRef != nil && webConfig.ResponseHeaderPolicyRef.IsPrior
+			result.HasWebPConfig = webConfig != nil && webConfig.WebP != nil && webConfig.WebP.IsPrior
+			result.HasRemoteAddrConfig = webConfig != nil && webConfig.RemoteAddr != nil && webConfig.RemoteAddr.IsPrior
+		}
+	}
+
 	return result, nil
+}
+
+// FindAndInitServerGroupWebConfig 初始化Web设置
+func (this *ServerGroupService) FindAndInitServerGroupWebConfig(ctx context.Context, req *pb.FindAndInitServerGroupWebConfigRequest) (*pb.FindAndInitServerGroupWebConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	webId, err := models.SharedServerGroupDAO.FindGroupWebId(tx, req.ServerGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if webId == 0 {
+		webId, err = models.SharedServerGroupDAO.InitGroupWeb(tx, req.ServerGroupId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	webConfig, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, nil)
+	if err != nil {
+		return nil, err
+	}
+	webConfigJSON, err := json.Marshal(webConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindAndInitServerGroupWebConfigResponse{WebJSON: webConfigJSON}, nil
 }

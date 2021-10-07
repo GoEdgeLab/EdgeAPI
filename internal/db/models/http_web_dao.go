@@ -966,6 +966,39 @@ func (this *HTTPWebDAO) FindWebServerId(tx *dbs.Tx, webId int64) (serverId int64
 	return this.FindWebServerId(tx, webId)
 }
 
+// FindWebServerGroupId 查找使用此Web的分组ID
+func (this *HTTPWebDAO) FindWebServerGroupId(tx *dbs.Tx, webId int64) (groupId int64, err error) {
+	if webId <= 0 {
+		return 0, nil
+	}
+	groupId, err = SharedServerGroupDAO.FindEnabledGroupIdWithWebId(tx, webId)
+	if err != nil {
+		return
+	}
+	if groupId > 0 {
+		return
+	}
+
+	// web在Location中的情况
+	locationId, err := SharedHTTPLocationDAO.FindEnabledLocationIdWithWebId(tx, webId)
+	if err != nil {
+		return 0, err
+	}
+	if locationId == 0 {
+		return
+	}
+	webId, err = this.FindEnabledWebIdWithLocationId(tx, locationId)
+	if err != nil {
+		return
+	}
+	if webId <= 0 {
+		return
+	}
+
+	// 第二轮查找
+	return this.FindWebServerGroupId(tx, webId)
+}
+
 // CheckUserWeb 检查用户权限
 func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) error {
 	serverId, err := this.FindWebServerId(tx, webId)
@@ -1015,12 +1048,23 @@ func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, e
 
 // NotifyUpdate 通知更新
 func (this *HTTPWebDAO) NotifyUpdate(tx *dbs.Tx, webId int64) error {
+	// server
 	serverId, err := this.FindWebServerId(tx, webId)
 	if err != nil {
 		return err
 	}
-	if serverId == 0 {
-		return nil
+	if serverId > 0 {
+		return SharedServerDAO.NotifyUpdate(tx, serverId)
 	}
-	return SharedServerDAO.NotifyUpdate(tx, serverId)
+
+	// group
+	groupId, err := this.FindWebServerGroupId(tx, webId)
+	if err != nil {
+		return err
+	}
+	if groupId > 0 {
+		return SharedServerGroupDAO.NotifyUpdate(tx, groupId)
+	}
+
+	return nil
 }

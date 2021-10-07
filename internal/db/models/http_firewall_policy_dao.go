@@ -96,9 +96,10 @@ func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (r
 }
 
 // CreateFirewallPolicy 创建策略
-func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, serverId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
+func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, serverGroupId int64, serverId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
 	op := NewHTTPFirewallPolicyOperator()
 	op.UserId = userId
+	op.GroupId = serverGroupId
 	op.ServerId = serverId
 	op.State = HTTPFirewallPolicyStateEnabled
 	op.IsOn = isOn
@@ -116,7 +117,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 
 // CreateDefaultFirewallPolicy 创建默认的WAF策略
 func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name string) (int64, error) {
-	policyId, err := this.CreateFirewallPolicy(tx, 0, 0, true, "\""+name+"\"WAF策略", "默认创建的WAF策略", nil, nil)
+	policyId, err := this.CreateFirewallPolicy(tx, 0, 0, 0, true, "\""+name+"\"WAF策略", "默认创建的WAF策略", nil, nil)
 	if err != nil {
 		return 0, err
 	}

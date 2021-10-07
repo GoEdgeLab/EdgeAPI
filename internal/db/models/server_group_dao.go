@@ -224,6 +224,48 @@ func (this *ServerGroupDAO) UpdateUDPReverseProxy(tx *dbs.Tx, groupId int64, con
 	return this.NotifyUpdate(tx, groupId)
 }
 
+// FindGroupWebId 查找分组WebId
+func (this *ServerGroupDAO) FindGroupWebId(tx *dbs.Tx, groupId int64) (webId int64, err error) {
+	return this.Query(tx).
+		Pk(groupId).
+		Result("webId").
+		FindInt64Col(0)
+}
+
+// FindEnabledGroupIdWithWebId 根据WebId查找分组
+func (this *ServerGroupDAO) FindEnabledGroupIdWithWebId(tx *dbs.Tx, webId int64) (int64, error) {
+	if webId <= 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		State(ServerGroupStateEnabled).
+		ResultPk().
+		Attr("webId", webId).
+		FindInt64Col(0)
+}
+
+// InitGroupWeb 初始化Web配置
+func (this *ServerGroupDAO) InitGroupWeb(tx *dbs.Tx, groupId int64) (int64, error) {
+	if groupId <= 0 {
+		return 0, errors.New("invalid groupId")
+	}
+
+	webId, err := SharedHTTPWebDAO.CreateWeb(tx, 0, 0, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.Query(tx).
+		Pk(groupId).
+		Set("webId", webId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return webId, nil
+}
+
 // ComposeGroupConfig 组合配置
 func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheMap maps.Map) (*serverconfigs.ServerGroupConfig, error) {
 	if cacheMap == nil {
@@ -312,6 +354,17 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		}
 	}
 
+	// web
+	if group.WebId > 0 {
+		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if webConfig != nil {
+			config.Web = webConfig
+		}
+	}
+
 	cacheMap[cacheKey] = config
 
 	return config, nil
@@ -326,7 +379,6 @@ func (this *ServerGroupDAO) FindEnabledGroupIdWithReverseProxyId(tx *dbs.Tx, rev
 		ResultPk().
 		FindInt64Col(0)
 }
-
 
 // NotifyUpdate 通知更新
 func (this *ServerGroupDAO) NotifyUpdate(tx *dbs.Tx, groupId int64) error {
