@@ -1434,3 +1434,90 @@ func (this *ServerService) FindLatestServers(ctx context.Context, req *pb.FindLa
 	}
 	return &pb.FindLatestServersResponse{Servers: pbServers}, nil
 }
+
+// FindNearbyServers 查找某个服务附近的服务
+func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNearbyServersRequest) (*pb.FindNearbyServersResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 查询服务的Group
+	groupIds, err := models.SharedServerDAO.FindServerGroupIds(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if len(groupIds) > 0 {
+		var pbGroups = []*pb.FindNearbyServersResponse_GroupInfo{}
+		for _, groupId := range groupIds {
+			group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(tx, groupId)
+			if err != nil {
+				return nil, err
+			}
+			if group == nil {
+				continue
+			}
+
+			var pbGroup = &pb.FindNearbyServersResponse_GroupInfo{
+				Name: group.Name,
+			}
+			servers, err := models.SharedServerDAO.FindNearbyServersInGroup(tx, groupId, req.ServerId, 10)
+			if err != nil {
+				return nil, err
+			}
+			for _, server := range servers {
+				pbGroup.Servers = append(pbGroup.Servers, &pb.Server{
+					Id:   int64(server.Id),
+					Name: server.Name,
+					IsOn: server.IsOn == 1,
+				})
+			}
+			pbGroups = append(pbGroups, pbGroup)
+		}
+
+		if len(pbGroups) > 0 {
+			return &pb.FindNearbyServersResponse{
+				Scope:  "group",
+				Groups: pbGroups,
+			}, nil
+		}
+	}
+
+	// 集群
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	servers, err := models.SharedServerDAO.FindNearbyServersInCluster(tx, clusterId, req.ServerId, 10)
+	if err != nil {
+		return nil, err
+	}
+	if len(servers) == 0 {
+		return &pb.FindNearbyServersResponse{
+			Scope:  "cluster",
+			Groups: nil,
+		}, nil
+	}
+
+	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	var pbGroup = &pb.FindNearbyServersResponse_GroupInfo{
+		Name: clusterName,
+	}
+	for _, server := range servers {
+		pbGroup.Servers = append(pbGroup.Servers, &pb.Server{
+			Id:   int64(server.Id),
+			Name: server.Name,
+			IsOn: server.IsOn == 1,
+		})
+	}
+
+	return &pb.FindNearbyServersResponse{
+		Scope:  "group",
+		Groups: []*pb.FindNearbyServersResponse_GroupInfo{pbGroup},
+	}, nil
+}

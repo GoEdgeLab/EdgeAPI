@@ -1419,6 +1419,82 @@ func (this *ServerDAO) FindLatestServers(tx *dbs.Tx, size int64) (result []*Serv
 	return
 }
 
+// FindNearbyServersInGroup 查找所属分组附近的服务
+func (this *ServerDAO) FindNearbyServersInGroup(tx *dbs.Tx, groupId int64, serverId int64, size int64) (result []*Server, err error) {
+	// 之前的
+	ones, err := SharedServerDAO.Query(tx).
+		Result("id", "name", "isOn").
+		State(ServerStateEnabled).
+		Where("JSON_CONTAINS(groupIds, :groupId)").
+		Param("groupId", numberutils.FormatInt64(groupId)).
+		Gte("id", serverId).
+		Limit(size).
+		AscPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	lists.Reverse(ones)
+	for _, one := range ones {
+		result = append(result, one.(*Server))
+	}
+
+	// 之后的
+	ones, err = SharedServerDAO.Query(tx).
+		Result("id", "name", "isOn").
+		State(ServerStateEnabled).
+		Where("JSON_CONTAINS(groupIds, :groupId)").
+		Param("groupId", numberutils.FormatInt64(groupId)).
+		Lt("id", serverId).
+		Limit(size).
+		DescPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		result = append(result, one.(*Server))
+	}
+	return
+}
+
+// FindNearbyServersInCluster 查找所属集群附近的服务
+func (this *ServerDAO) FindNearbyServersInCluster(tx *dbs.Tx, clusterId int64, serverId int64, size int64) (result []*Server, err error) {
+	// 之前的
+	ones, err := SharedServerDAO.Query(tx).
+		Result("id", "name", "isOn").
+		State(ServerStateEnabled).
+		Attr("clusterId", clusterId).
+		Gte("id", serverId).
+		Limit(size).
+		AscPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	lists.Reverse(ones)
+	for _, one := range ones {
+		result = append(result, one.(*Server))
+	}
+
+	// 之后的
+	ones, err = SharedServerDAO.Query(tx).
+		Result("id", "name", "isOn").
+		State(ServerStateEnabled).
+		Attr("clusterId", clusterId).
+		Lt("id", serverId).
+		Limit(size).
+		DescPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		result = append(result, one.(*Server))
+	}
+	return
+}
+
 // FindFirstHTTPOrHTTPSPortWithClusterId 获取集群中第一个HTTP或者HTTPS端口
 func (this *ServerDAO) FindFirstHTTPOrHTTPSPortWithClusterId(tx *dbs.Tx, clusterId int64) (int, error) {
 	one, _, err := this.Query(tx).
