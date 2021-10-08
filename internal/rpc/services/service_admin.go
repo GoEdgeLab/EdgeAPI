@@ -755,7 +755,7 @@ func (this *AdminService) UpdateAdminTheme(ctx context.Context, req *pb.UpdateAd
 // 查找集群、节点和服务的指标数据
 func (this *AdminService) findMetricDataCharts(tx *dbs.Tx) (result []*pb.MetricDataChart, err error) {
 	// 集群指标
-	items, err := models.SharedMetricItemDAO.FindAllPublicItems(tx)
+	items, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, serverconfigs.MetricItemCategoryHTTP)
 	if err != nil {
 		return nil, err
 	}

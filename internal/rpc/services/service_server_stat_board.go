@@ -519,7 +519,19 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, 0, req.ServerId, serverconfigs.MetricItemCategoryHTTP)
+
+	var metricCategory = serverconfigs.MetricItemCategoryHTTP
+	serverType, err := models.SharedServerDAO.FindEnabledServerType(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	switch serverType {
+	case serverconfigs.ServerTypeTCPProxy:
+		metricCategory = serverconfigs.MetricItemCategoryTCP
+	case serverconfigs.ServerTypeUDPProxy:
+		metricCategory = serverconfigs.MetricItemCategoryUDP
+	}
+	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, 0, req.ServerId, metricCategory)
 	if err != nil {
 		return nil, err
 	}
@@ -554,7 +566,7 @@ func (this *ServerStatBoardService) findNodeClusterMetricDataCharts(tx *dbs.Tx, 
 		metricItemIds = append(metricItemIds, itemId)
 	}
 
-	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx)
+	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, category)
 	if err != nil {
 		return nil, err
 	}

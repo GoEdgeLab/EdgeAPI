@@ -229,10 +229,11 @@ func (this *MetricItemDAO) ListEnabledItems(tx *dbs.Tx, category serverconfigs.M
 }
 
 // FindAllPublicItems 取得公用的指标
-func (this *MetricItemDAO) FindAllPublicItems(tx *dbs.Tx) (result []*MetricItem, err error) {
+func (this *MetricItemDAO) FindAllPublicItems(tx *dbs.Tx, category string) (result []*MetricItem, err error) {
 	_, err = this.Query(tx).
 		State(MetricItemStateEnabled).
 		Attr("userId", 0).
+		Attr("category", category).
 		Attr("isPublic", true).
 		DescPk().
 		Slice(&result).

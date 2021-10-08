@@ -843,7 +843,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 	}
 
 	// 公用指标
-	publicMetricItems, err := SharedMetricItemDAO.FindAllPublicItems(tx)
+	publicMetricItems, err := SharedMetricItemDAO.FindAllPublicItems(tx, serverconfigs.MetricItemCategoryHTTP)
 	if err != nil {
 		return nil, err
 	}
