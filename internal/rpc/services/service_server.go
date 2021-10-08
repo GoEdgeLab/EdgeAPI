@@ -1517,7 +1517,7 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 	}
 
 	return &pb.FindNearbyServersResponse{
-		Scope:  "group",
+		Scope:  "cluster",
 		Groups: []*pb.FindNearbyServersResponse_GroupInfo{pbGroup},
 	}, nil
 }
