@@ -166,6 +166,55 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStats(tx *dbs.Tx, hourFrom s
 	return
 }
 
+// FindTopDomainStatsWithAttack 取得一定时间内的域名排行数据
+func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithAttack(tx *dbs.Tx, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, resultErr error) {
+	var tables = this.FindAllPartitionTables()
+	var wg = sync.WaitGroup{}
+	wg.Add(len(tables))
+	var locker = sync.Mutex{}
+
+	for _, table := range tables {
+		go func(table string) {
+			defer wg.Done()
+
+			var topResults = []*ServerDomainHourlyStat{}
+
+			// TODO 节点如果已经被删除，则忽略
+			_, err := this.Query(tx).
+				Table(table).
+				Gt("countAttackRequests", 0).
+				Between("hour", hourFrom, hourTo).
+				Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
+				Group("domain").
+				Desc("countRequests").
+				Limit(size).
+				Slice(&topResults).
+				FindAll()
+			if err != nil {
+				resultErr = err
+				return
+			}
+
+			if len(topResults) > 0 {
+				locker.Lock()
+				result = append(result, topResults...)
+				locker.Unlock()
+			}
+		}(table)
+	}
+	wg.Wait()
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].CountRequests > result[j].CountRequests
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
+	}
+
+	return
+}
+
 // FindTopDomainStatsWithClusterId 取得集群上的一定时间内的域名排行数据
 func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithClusterId(tx *dbs.Tx, clusterId int64, hourFrom string, hourTo string, size int64) (result []*ServerDomainHourlyStat, resultErr error) {
 	var tables = this.FindAllPartitionTables()

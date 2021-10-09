@@ -176,6 +176,45 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 		})
 	}
 
+	// 节点排行
+	topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStatsWithAttack(tx, "node", hourFrom, hourTo, 10)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topNodeStats {
+		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(stat.NodeId))
+		if err != nil {
+			return nil, err
+		}
+		if len(nodeName) == 0 {
+			continue
+		}
+		result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeFirewallGlobalBoardResponse_NodeStat{
+			NodeId:              int64(stat.NodeId),
+			NodeName:            nodeName,
+			CountRequests:       int64(stat.CountRequests),
+			Bytes:               int64(stat.Bytes),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
+		})
+	}
+
+	// 域名排行
+	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithAttack(tx, hourFrom, hourTo, 10)
+	if err != nil {
+		return nil, err
+	}
+	for _, stat := range topDomainStats {
+		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeFirewallGlobalBoardResponse_DomainStat{
+			ServerId:            int64(stat.ServerId),
+			Domain:              stat.Domain,
+			CountRequests:       int64(stat.CountRequests),
+			Bytes:               int64(stat.Bytes),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
+		})
+	}
+
 	return result, nil
 }
 
