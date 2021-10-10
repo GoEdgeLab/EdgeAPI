@@ -1,6 +1,6 @@
 package models
 
-// 服务
+// Server 服务
 type Server struct {
 	Id                  uint32 `field:"id"`                  // ID
 	IsOn                uint8  `field:"isOn"`                // 是否启用
@@ -31,6 +31,8 @@ type Server struct {
 	CreatedAt           uint64 `field:"createdAt"`           // 创建时间
 	State               uint8  `field:"state"`               // 状态
 	DnsName             string `field:"dnsName"`             // DNS名称
+	TcpPorts            string `field:"tcpPorts"`            // 所包含TCP端口
+	UdpPorts            string `field:"udpPorts"`            // 所包含UDP端口
 }
 
 type ServerOperator struct {
@@ -63,6 +65,8 @@ type ServerOperator struct {
 	CreatedAt           interface{} // 创建时间
 	State               interface{} // 状态
 	DnsName             interface{} // DNS名称
+	TcpPorts            interface{} // 所包含TCP端口
+	UdpPorts            interface{} // 所包含UDP端口
 }
 
 func NewServerOperator() *ServerOperator {

@@ -493,5 +493,21 @@ func upgradeV0_3_2(db *dbs.DB) error {
 		}
 	}
 
+	// 更新服务端口
+	var serverDAO = models.NewServerDAO()
+	ones, err := serverDAO.Query(nil).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var serverId = int64(one.(*models.Server).Id)
+		err = serverDAO.NotifyServerPortsUpdate(nil, serverId)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
