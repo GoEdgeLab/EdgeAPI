@@ -272,6 +272,7 @@ func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx, k
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
 		Attr("serverId", 0).
+		Attr("groupId", 0).
 		Count()
 }
 
@@ -286,6 +287,7 @@ func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, keywo
 		State(HTTPFirewallPolicyStateEnabled).
 		Attr("userId", 0).
 		Attr("serverId", 0).
+		Attr("groupId", 0).
 		Offset(offset).
 		Limit(size).
 		DescPk().
