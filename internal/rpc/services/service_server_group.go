@@ -439,6 +439,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 			result.HasResponseHeadersConfig = webConfig != nil && webConfig.ResponseHeaderPolicyRef != nil && webConfig.ResponseHeaderPolicyRef.IsPrior
 			result.HasWebPConfig = webConfig != nil && webConfig.WebP != nil && webConfig.WebP.IsPrior
 			result.HasRemoteAddrConfig = webConfig != nil && webConfig.RemoteAddr != nil && webConfig.RemoteAddr.IsPrior
+			result.HasPagesConfig = webConfig != nil && (len(webConfig.Pages) > 0 || (webConfig.Shutdown != nil && webConfig.Shutdown.IsOn))
 		}
 	}
 
