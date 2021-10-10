@@ -1,6 +1,6 @@
 package models
 
-//
+// HTTPPage 特殊页面
 type HTTPPage struct {
 	Id         uint32 `field:"id"`         // ID
 	AdminId    uint32 `field:"adminId"`    // 管理员ID
@@ -11,6 +11,8 @@ type HTTPPage struct {
 	NewStatus  int32  `field:"newStatus"`  // 新状态码
 	State      uint8  `field:"state"`      // 状态
 	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
+	Body       string `field:"body"`       // 页面内容
+	BodyType   string `field:"bodyType"`   // 内容类型
 }
 
 type HTTPPageOperator struct {
@@ -23,6 +25,8 @@ type HTTPPageOperator struct {
 	NewStatus  interface{} // 新状态码
 	State      interface{} // 状态
 	CreatedAt  interface{} // 创建时间
+	Body       interface{} // 页面内容
+	BodyType   interface{} // 内容类型
 }
 
 func NewHTTPPageOperator() *HTTPPageOperator {

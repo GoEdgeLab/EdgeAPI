@@ -22,7 +22,7 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 
 	tx := this.NullTx()
 
-	pageId, err := models.SharedHTTPPageDAO.CreatePage(tx, req.StatusList, req.Url, types.Int(req.NewStatus))
+	pageId, err := models.SharedHTTPPageDAO.CreatePage(tx, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus))
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPPageDAO.UpdatePage(tx, req.PageId, req.StatusList, req.Url, types.Int(req.NewStatus))
+	err = models.SharedHTTPPageDAO.UpdatePage(tx, req.PageId, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus))
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -76,7 +77,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 }
 
 // CreatePage 创建Page
-func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string, newStatus int) (pageId int64, err error) {
+func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) (pageId int64, err error) {
 	op := NewHTTPPageOperator()
 	op.IsOn = true
 	op.State = HTTPPageStateEnabled
@@ -88,7 +89,9 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string,
 		}
 		op.StatusList = string(statusListJSON)
 	}
+	op.BodyType = bodyType
 	op.Url = url
+	op.Body = body
 	op.NewStatus = newStatus
 	err = this.Save(tx, op)
 	if err != nil {
@@ -99,7 +102,7 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, url string,
 }
 
 // UpdatePage 修改Page
-func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, url string, newStatus int) error {
+func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) error {
 	if pageId <= 0 {
 		return errors.New("invalid pageId")
 	}
@@ -118,7 +121,9 @@ func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []strin
 	}
 	op.StatusList = string(statusListJSON)
 
+	op.BodyType = bodyType
 	op.Url = url
+	op.Body = body
 	op.NewStatus = newStatus
 	err = this.Save(tx, op)
 	if err != nil {
@@ -152,6 +157,12 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap ma
 	config.IsOn = page.IsOn == 1
 	config.NewStatus = int(page.NewStatus)
 	config.URL = page.Url
+	config.Body = page.Body
+	config.BodyType = page.BodyType
+
+	if len(page.BodyType) == 0 {
+		page.BodyType = shared.BodyTypeURL
+	}
 
 	if len(page.StatusList) > 0 {
 		statusList := []string{}
