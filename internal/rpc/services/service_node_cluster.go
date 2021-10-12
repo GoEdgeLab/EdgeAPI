@@ -83,7 +83,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +160,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		DnsName:              cluster.DnsName,
 		DnsDomainId:          int64(cluster.DnsDomainId),
 		IsOn:                 cluster.IsOn == 1,
+		TimeZone:             cluster.TimeZone,
 	}}, nil
 }
 

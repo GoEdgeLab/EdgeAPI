@@ -26,6 +26,7 @@ type NodeCluster struct {
 	HttpFirewallPolicyId uint32 `field:"httpFirewallPolicyId"` // WAF策略ID
 	AccessLog            string `field:"accessLog"`            // 访问日志设置
 	SystemServices       string `field:"systemServices"`       // 系统服务设置
+	TimeZone             string `field:"timeZone"`             // 时区
 }
 
 type NodeClusterOperator struct {
@@ -53,6 +54,7 @@ type NodeClusterOperator struct {
 	HttpFirewallPolicyId interface{} // WAF策略ID
 	AccessLog            interface{} // 访问日志设置
 	SystemServices       interface{} // 系统服务设置
+	TimeZone             interface{} // 时区
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

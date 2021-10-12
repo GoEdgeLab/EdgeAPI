@@ -770,6 +770,15 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 				config.HTTPCachePolicies = append(config.HTTPCachePolicies, cachePolicy)
 			}
 		}
+
+		// 时区
+		timeZone, err := SharedNodeClusterDAO.FindClusterTimezone(tx, clusterId, cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if len(timeZone) > 0 {
+			config.TimeZone = timeZone
+		}
 	}
 
 	// 缓存最大容量设置
