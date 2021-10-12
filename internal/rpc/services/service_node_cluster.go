@@ -294,6 +294,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			DnsName:     cluster.DnsName,
 			DnsDomainId: int64(cluster.DnsDomainId),
 			IsOn:        cluster.IsOn == 1,
+			TimeZone:    cluster.TimeZone,
 		})
 	}
 
