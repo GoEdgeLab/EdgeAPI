@@ -1328,6 +1328,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 			delete(routeCodeMap, req.DnsDomainId)
 		}
 	} else {
+		routeCodeMap = map[int64][]string{}
 		if len(req.Routes) > 0 {
 			var m = map[int64][]string{} // domainId => codes
 			for _, route := range req.Routes {
@@ -1342,9 +1343,6 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 			for domainId, codes := range m {
 				routeCodeMap[domainId] = codes
 			}
-		} else {
-			// 清空
-			routeCodeMap = map[int64][]string{}
 		}
 	}
 
