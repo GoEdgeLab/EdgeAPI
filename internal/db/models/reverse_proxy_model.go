@@ -1,6 +1,6 @@
 package models
 
-// 反向代理配置
+// ReverseProxy 反向代理配置
 type ReverseProxy struct {
 	Id              uint32 `field:"id"`              // ID
 	AdminId         uint32 `field:"adminId"`         // 管理员ID
@@ -23,6 +23,7 @@ type ReverseProxy struct {
 	IdleTimeout     string `field:"idleTimeout"`     // 空闲超时时间
 	MaxConns        uint32 `field:"maxConns"`        // 最大并发连接数
 	MaxIdleConns    uint32 `field:"maxIdleConns"`    // 最大空闲连接数
+	ProxyProtocol   string `field:"proxyProtocol"`   // Proxy Protocol配置
 }
 
 type ReverseProxyOperator struct {
@@ -47,6 +48,7 @@ type ReverseProxyOperator struct {
 	IdleTimeout     interface{} // 空闲超时时间
 	MaxConns        interface{} // 最大并发连接数
 	MaxIdleConns    interface{} // 最大空闲连接数
+	ProxyProtocol   interface{} // Proxy Protocol配置
 }
 
 func NewReverseProxyOperator() *ReverseProxyOperator {

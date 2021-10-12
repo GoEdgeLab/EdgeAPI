@@ -190,6 +190,16 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		config.IdleTimeout = idleTimeout
 	}
 
+	// PROXY Protocol
+	if IsNotNull(reverseProxy.ProxyProtocol) {
+		var proxyProtocolConfig = &serverconfigs.ProxyProtocolConfig{}
+		err = json.Unmarshal([]byte(reverseProxy.ProxyProtocol), proxyProtocolConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.ProxyProtocol = proxyProtocolConfig
+	}
+
 	cacheMap[cacheKey] = config
 
 	return config, nil
@@ -286,7 +296,20 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 }
 
 // UpdateReverseProxy 修改是否启用
-func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64, requestHostType int8, requestHost string, requestURI string, stripPrefix string, autoFlush bool, addHeaders []string, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32) error {
+func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
+	reverseProxyId int64,
+	requestHostType int8,
+	requestHost string,
+	requestURI string,
+	stripPrefix string,
+	autoFlush bool,
+	addHeaders []string,
+	connTimeout *shared.TimeDuration,
+	readTimeout *shared.TimeDuration,
+	idleTimeout *shared.TimeDuration,
+	maxConns int32,
+	maxIdleConns int32,
+	proxyProtocolJSON []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -343,6 +366,10 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx, reverseProxyId int64
 		op.MaxIdleConns = maxIdleConns
 	} else {
 		op.MaxIdleConns = 0
+	}
+
+	if len(proxyProtocolJSON) > 0 {
+		op.ProxyProtocol = proxyProtocolJSON
 	}
 
 	err = this.Save(tx, op)
