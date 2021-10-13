@@ -1339,6 +1339,12 @@ func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Reco
 	if ttl <= 0 {
 		ttl = 300
 	}
+
+	// 华为云TXT需要加引号
+	if newRecord.Type == dnstypes.RecordTypeTXT {
+		newRecord.Value = "\"" + strings.Trim(newRecord.Value, "\"") + "\""
+	}
+
 	err = this.doAPI(http.MethodPost, "/v2.1/zones/"+zoneId+"/recordsets", map[string]string{}, maps.Map{
 		"name":        newRecord.Name + "." + domain + ".",
 		"description": "CDN系统自动创建",
@@ -1374,6 +1380,11 @@ func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Reco
 	var ttl = newRecord.TTL
 	if ttl <= 0 {
 		ttl = 300
+	}
+
+	// 华为云TXT需要加引号
+	if newRecord.Type == dnstypes.RecordTypeTXT {
+		newRecord.Value = "\"" + strings.Trim(newRecord.Value, "\"") + "\""
 	}
 
 	var resp = new(huaweidns.ZonesUpdateRecordSetResponse)
