@@ -75,6 +75,7 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
 	op.Hash = hash
 	op.Count = 1
+	op.IsRead = !(level == "error" || level == "warning")
 	err = this.Save(tx, op)
 	return err
 }
@@ -94,9 +95,20 @@ func (this *NodeLogDAO) DeleteExpiredLogs(tx *dbs.Tx, days int) error {
 }
 
 // CountNodeLogs 计算节点日志数量
-func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx, role string, nodeId int64, serverId int64, originId int64, dayFrom string, dayTo string, keyword string, level string) (int64, error) {
-	query := this.Query(tx).
-		Attr("role", role)
+func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
+	role string,
+	nodeId int64,
+	serverId int64,
+	originId int64,
+	dayFrom string,
+	dayTo string,
+	keyword string,
+	level string,
+	isUnread bool) (int64, error) {
+	query := this.Query(tx)
+	if len(role) > 0 {
+		query.Attr("role", role)
+	}
 	if nodeId > 0 {
 		query.Attr("nodeId", nodeId)
 	} else {
@@ -128,6 +140,9 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx, role string, nodeId int64, ser
 	if len(level) > 0 {
 		query.Attr("level", level)
 	}
+	if isUnread {
+		query.Attr("isRead", 0)
+	}
 
 	return query.Count()
 }
@@ -144,10 +159,13 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	keyword string,
 	level string,
 	fixedState configutils.BoolState,
+	isUnread bool,
 	offset int64,
 	size int64) (result []*NodeLog, err error) {
-	query := this.Query(tx).
-		Attr("role", role)
+	query := this.Query(tx)
+	if len(role) > 0 {
+		query.Attr("role", role)
+	}
 	if nodeId > 0 {
 		query.Attr("nodeId", nodeId)
 	} else {
@@ -186,6 +204,9 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	if len(level) > 0 {
 		query.Attr("level", level)
 	}
+	if isUnread {
+		query.Attr("isRead", 0)
+	}
 	_, err = query.
 		Offset(offset).
 		Limit(size).
@@ -222,5 +243,26 @@ func (this *NodeLogDAO) UpdateNodeLogFixed(tx *dbs.Tx, logId int64) error {
 		return err
 	}
 
+	return nil
+}
+
+// CountAllUnreadNodeLogs 计算未读的日志数量
+func (this *NodeLogDAO) CountAllUnreadNodeLogs(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		Attr("isRead", false).
+		Count()
+}
+
+// UpdateNodeLogsRead 设置日志为已读
+func (this *NodeLogDAO) UpdateNodeLogsRead(tx *dbs.Tx, nodeLogIds []int64) error {
+	for _, logId := range nodeLogIds {
+		err := this.Query(tx).
+			Pk(logId).
+			Set("isRead", true).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

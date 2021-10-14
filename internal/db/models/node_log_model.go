@@ -15,6 +15,7 @@ type NodeLog struct {
 	Hash        string `field:"hash"`        // 信息内容Hash
 	Count       uint32 `field:"count"`       // 重复次数
 	IsFixed     uint8  `field:"isFixed"`     // 是否已处理
+	IsRead      uint8  `field:"isRead"`      // 是否已读
 }
 
 type NodeLogOperator struct {
@@ -31,6 +32,7 @@ type NodeLogOperator struct {
 	Hash        interface{} // 信息内容Hash
 	Count       interface{} // 重复次数
 	IsFixed     interface{} // 是否已处理
+	IsRead      interface{} // 是否已读
 }
 
 func NewNodeLogOperator() *NodeLogOperator {

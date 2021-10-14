@@ -41,7 +41,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.DayFrom, req.DayTo, req.Keyword, req.Level)
+	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.DayFrom, req.DayTo, req.Keyword, req.Level, req.IsUnread)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 
 	tx := this.NullTx()
 
-	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.Offset, req.Size)
+	logs, err := models.SharedNodeLogDAO.ListNodeLogs(tx, req.Role, req.NodeId, req.ServerId, req.OriginId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.IsUnread, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -103,5 +103,35 @@ func (this *NodeLogService) FixNodeLog(ctx context.Context, req *pb.FixNodeLogRe
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// CountAllUnreadNodeLogs 计算未读的日志数量
+func (this *NodeLogService) CountAllUnreadNodeLogs(ctx context.Context, req *pb.CountAllUnreadNodeLogsRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedNodeLogDAO.CountAllUnreadNodeLogs(tx)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// UpdateNodeLogsRead 设置日志为已读
+func (this *NodeLogService) UpdateNodeLogsRead(ctx context.Context, req *pb.UpdateNodeLogsReadRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeLogDAO.UpdateNodeLogsRead(tx, req.NodeLogIds)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }
