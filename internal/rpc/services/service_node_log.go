@@ -85,6 +85,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 			CreatedAt:   int64(log.CreatedAt),
 			Count:       types.Int32(log.Count),
 			IsFixed:     log.IsFixed == 1,
+			IsRead:      log.IsRead == 1,
 		})
 	}
 	return &pb.ListNodeLogsResponse{NodeLogs: result}, nil
