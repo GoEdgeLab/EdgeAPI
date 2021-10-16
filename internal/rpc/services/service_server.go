@@ -468,6 +468,37 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 	return this.Success()
 }
 
+// UpdateServerDNS 修改服务的DNS相关设置
+func (this *ServerService) UpdateServerDNS(ctx context.Context, req *pb.UpdateServerDNSRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedServerDAO.UpdateServerDNS(tx, req.ServerId, req.SupportCNAME)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// RegenerateServerCNAME 重新生成CNAME
+func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.RegenerateServerCNAMERequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	_, err = models.SharedServerDAO.GenerateServerDNSName(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
 // CountAllEnabledServersMatch 计算服务数量
 func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
@@ -712,6 +743,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		Name:             server.Name,
 		Description:      server.Description,
 		DnsName:          server.DnsName,
+		SupportCNAME:     server.SupportCNAME == 1,
 		Config:           configJSON,
 		ServerNamesJSON:  []byte(server.ServerNames),
 		HttpJSON:         []byte(server.Http),
@@ -1065,6 +1097,11 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 		return nil, err
 	}
 
+	supportCNAME, err := models.SharedServerDAO.FindServerSupportCNAME(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
 	clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
 	if err != nil {
 		return nil, err
@@ -1093,8 +1130,9 @@ func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.Fin
 	}
 
 	return &pb.FindEnabledServerDNSResponse{
-		DnsName: dnsName,
-		Domain:  pbDomain,
+		DnsName:      dnsName,
+		Domain:       pbDomain,
+		SupportCNAME: supportCNAME,
 	}, nil
 }
 

@@ -721,6 +721,10 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 			continue
 		}
 		config.Servers = append(config.Servers, serverConfig)
+
+		if server.IsOn == 1 && server.SupportCNAME == 1 {
+			config.SupportCNAME = true
+		}
 	}
 
 	// 全局设置

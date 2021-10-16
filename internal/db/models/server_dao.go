@@ -472,10 +472,26 @@ func (this *ServerDAO) UpdateServerWeb(tx *dbs.Tx, serverId int64, webId int64) 
 	return this.NotifyUpdate(tx, serverId)
 }
 
+// UpdateServerDNS 修改DNS设置
+func (this *ServerDAO) UpdateServerDNS(tx *dbs.Tx, serverId int64, supportCNAME bool) error {
+	if serverId <= 0 {
+		return errors.New("invalid serverId")
+	}
+	var op = NewServerOperator()
+	op.Id = serverId
+	op.SupportCNAME = supportCNAME
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, serverId)
+}
+
 // InitServerWeb 初始化Web配置
 func (this *ServerDAO) InitServerWeb(tx *dbs.Tx, serverId int64) (int64, error) {
 	if serverId <= 0 {
-		return 0, errors.New("serverId should not be smaller than 0")
+		return 0, errors.New("invalid serverId")
 	}
 
 	adminId, userId, err := this.FindServerAdminIdAndUserId(tx, serverId)
@@ -859,6 +875,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// CNAME
+	config.SupportCNAME = server.SupportCNAME == 1
 	if server.ClusterId > 0 && len(server.DnsName) > 0 {
 		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId), cacheMap)
 		if err != nil {
@@ -1234,6 +1251,18 @@ func (this *ServerDAO) FindServerDNSName(tx *dbs.Tx, serverId int64) (string, er
 		Pk(serverId).
 		Result("dnsName").
 		FindStringCol("")
+}
+
+// FindServerSupportCNAME 查询服务是否支持CNAME
+func (this *ServerDAO) FindServerSupportCNAME(tx *dbs.Tx, serverId int64) (bool, error) {
+	supportCNAME, err := this.Query(tx).
+		Pk(serverId).
+		Result("supportCNAME").
+		FindIntCol(0)
+	if err != nil {
+		return false, err
+	}
+	return supportCNAME == 1, nil
 }
 
 // FindStatelessServerDNS 查询服务的DNS相关信息，并且不关注状态

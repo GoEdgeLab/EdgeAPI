@@ -33,6 +33,7 @@ type Server struct {
 	DnsName             string `field:"dnsName"`             // DNS名称
 	TcpPorts            string `field:"tcpPorts"`            // 所包含TCP端口
 	UdpPorts            string `field:"udpPorts"`            // 所包含UDP端口
+	SupportCNAME        uint8  `field:"supportCNAME"`        // 允许CNAME不在域名名单
 }
 
 type ServerOperator struct {
@@ -67,6 +68,7 @@ type ServerOperator struct {
 	DnsName             interface{} // DNS名称
 	TcpPorts            interface{} // 所包含TCP端口
 	UdpPorts            interface{} // 所包含UDP端口
+	SupportCNAME        interface{} // 允许CNAME不在域名名单
 }
 
 func NewServerOperator() *ServerOperator {
