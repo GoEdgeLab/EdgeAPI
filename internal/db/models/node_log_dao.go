@@ -75,7 +75,7 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 	op.Day = timeutil.FormatTime("Ymd", createdAt)
 	op.Hash = hash
 	op.Count = 1
-	op.IsRead = !(level == "error" || level == "warning")
+	op.IsRead = level != "error"
 	err = this.Save(tx, op)
 	return err
 }
