@@ -1565,7 +1565,11 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeServerCacheRequest) (*pb.PurgeServerCacheResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
-		return nil, err
+		// 检查是否为节点
+		_, err = this.ValidateNode(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(req.Domains) == 0 {
