@@ -1207,6 +1207,54 @@ func (this *ServerDAO) FindAllServersDNSWithClusterId(tx *dbs.Tx, clusterId int6
 	return
 }
 
+// FindAllEnabledServersWithDomain 根据域名查找服务
+func (this *ServerDAO) FindAllEnabledServersWithDomain(tx *dbs.Tx, domain string) (result []*Server, err error) {
+	if len(domain) == 0 {
+		return
+	}
+
+	_, err = this.Query(tx).
+		State(ServerStateEnabled).
+		Where("(JSON_CONTAINS(serverNames, :domain1) OR JSON_CONTAINS(serverNames, :domain2))").
+		Param("domain1", maps.Map{"name": domain}.AsJSON()).
+		Param("domain2", maps.Map{"subNames": domain}.AsJSON()).
+		Slice(&result).
+		DescPk().
+		FindAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 支持泛解析
+	var countPieces = strings.Count(domain, ".")
+	for {
+		var index = strings.Index(domain, ".")
+		if index > 0 {
+			domain = domain[index+1:]
+			var search = strings.Repeat("*.", countPieces-strings.Count(domain, ".")) + domain
+			_, err = this.Query(tx).
+				State(ServerStateEnabled).
+				Where("(JSON_CONTAINS(serverNames, :domain1) OR JSON_CONTAINS(serverNames, :domain2))").
+				Param("domain1", maps.Map{"name": search}.AsJSON()).
+				Param("domain2", maps.Map{"subNames": search}.AsJSON()).
+				Slice(&result).
+				DescPk().
+				FindAll()
+			if err != nil {
+				return
+			}
+			if len(result) > 0 {
+				return
+			}
+		} else {
+			break
+		}
+	}
+
+	return
+}
+
 // GenerateServerDNSName 重新生成子域名
 func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string, error) {
 	if serverId <= 0 {

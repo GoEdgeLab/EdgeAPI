@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
+	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/maps"
@@ -1558,4 +1559,92 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 		Scope:  "cluster",
 		Groups: []*pb.FindNearbyServersResponse_GroupInfo{pbGroup},
 	}, nil
+}
+
+// PurgeServerCache 清除缓存
+func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeServerCacheRequest) (*pb.PurgeServerCacheResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Domains) == 0 {
+		return nil, errors.New("'domains' field is required")
+	}
+
+	if len(req.Keys) == 0 && len(req.Prefixes) == 0 {
+		return &pb.PurgeServerCacheResponse{IsOk: true}, nil
+	}
+
+	var tx = this.NullTx()
+	var cacheMap = maps.Map{}
+	var purgeResponse = &pb.PurgeServerCacheResponse{}
+
+	for _, domain := range req.Domains {
+		servers, err := models.SharedServerDAO.FindAllEnabledServersWithDomain(tx, domain)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, server := range servers {
+			clusterId := int64(server.ClusterId)
+			if clusterId > 0 {
+				nodeIds, err := models.SharedNodeDAO.FindAllEnabledNodeIdsWithClusterId(tx, clusterId)
+				if err != nil {
+					return nil, err
+				}
+
+				cachePolicyId, err := models.SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if cachePolicyId == 0 {
+					continue
+				}
+
+				cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, cachePolicyId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if cachePolicy == nil {
+					continue
+				}
+				cachePolicyJSON, err := json.Marshal(cachePolicy)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, nodeId := range nodeIds {
+					msg := &messageconfigs.PurgeCacheMessage{
+						CachePolicyJSON: cachePolicyJSON,
+					}
+					if len(req.Prefixes) > 0 {
+						msg.Type = messageconfigs.PurgeCacheMessageTypeDir
+						msg.Keys = req.Prefixes
+					} else {
+						msg.Type = messageconfigs.PurgeCacheMessageTypeFile
+						msg.Keys = req.Keys
+					}
+					msgJSON, err := json.Marshal(msg)
+					if err != nil {
+						return nil, err
+					}
+
+					resp, err := SendCommandToNode(nodeId, NextCommandRequestId(), messageconfigs.MessageCodePurgeCache, msgJSON, 10, false)
+					if err != nil {
+						return nil, err
+					}
+					if !resp.IsOk {
+						purgeResponse.IsOk = false
+						purgeResponse.Message = resp.Message
+						return purgeResponse, nil
+					}
+				}
+			}
+		}
+	}
+
+	purgeResponse.IsOk = true
+
+	return purgeResponse, nil
 }

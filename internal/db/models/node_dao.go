@@ -498,6 +498,22 @@ func (this *NodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId int6
 	return
 }
 
+// FindAllEnabledNodeIdsWithClusterId 获取一个集群的所有节点Ids
+func (this *NodeDAO) FindAllEnabledNodeIdsWithClusterId(tx *dbs.Tx, clusterId int64) (result []int64, err error) {
+	ones, err := this.Query(tx).
+		ResultPk().
+		State(NodeStateEnabled).
+		Attr("clusterId", clusterId).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		result = append(result, int64(one.(*Node).Id))
+	}
+	return
+}
+
 // FindAllInactiveNodesWithClusterId 取得一个集群离线的节点
 func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*Node, err error) {
 	_, err = this.Query(tx).

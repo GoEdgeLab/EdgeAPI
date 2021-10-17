@@ -145,6 +145,22 @@ func TestServerDAO_FindAllEnabledServersWithNode(t *testing.T) {
 	}
 }
 
+func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
+	for _, domain := range []string{"yun4s.cn", "teaos.cn", "teaos2.cn", "cdn.teaos.cn", "cdn100.teaos.cn"} {
+		servers, err := NewServerDAO().FindAllEnabledServersWithDomain(nil, domain)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(servers) > 0 {
+			for _, server := range servers {
+				t.Log(domain + ": " + server.ServerNames)
+			}
+		} else {
+			t.Log(domain + ": not found")
+		}
+	}
+}
+
 func BenchmarkServerDAO_CountAllEnabledServers(b *testing.B) {
 	SharedServerDAO = NewServerDAO()
 
