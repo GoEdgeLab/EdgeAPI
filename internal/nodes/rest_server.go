@@ -45,7 +45,13 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 
 	// 是否显示Pretty后的JSON
-	shouldPretty := req.Header.Get("Edge-Response-Pretty") == "on"
+	shouldPretty := req.Header.Get("X-Edge-Response-Pretty") == "on"
+
+	// 兼容老的Header
+	var oldShouldPretty = req.Header.Get("Edge-Response-Pretty")
+	if len(oldShouldPretty) > 0 {
+		shouldPretty = oldShouldPretty == "on"
+	}
 
 	// 欢迎页
 	if path == "/" {
@@ -98,14 +104,17 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 
 	if serviceName != "APIAccessTokenService" || (methodName != "GetAPIAccessToken" && methodName != "getAPIAccessToken") {
 		// 校验TOKEN
-		token := req.Header.Get("Edge-Access-Token")
+		token := req.Header.Get("X-Edge-Access-Token")
 		if len(token) == 0 {
-			this.writeJSON(writer, maps.Map{
-				"code":    400,
-				"data":    maps.Map{},
-				"message": "require 'Edge-Access-Token' header",
-			}, shouldPretty)
-			return
+			token = req.Header.Get("Edge-Access-Token")
+			if len(token) == 0 {
+				this.writeJSON(writer, maps.Map{
+					"code":    400,
+					"data":    maps.Map{},
+					"message": "require 'X-Edge-Access-Token' header",
+				}, shouldPretty)
+				return
+			}
 		}
 
 		accessToken, err := models.SharedAPIAccessTokenDAO.FindAccessToken(nil, token)
