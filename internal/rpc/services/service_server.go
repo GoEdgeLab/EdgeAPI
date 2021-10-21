@@ -1652,3 +1652,45 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 
 	return purgeResponse, nil
 }
+
+// FindEnabledServerBandwidthLimit 查找带宽限制
+func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, req *pb.FindEnabledServerBandwidthLimitRequest) (*pb.FindEnabledServerBandwidthLimitResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	limitConfig, err := models.SharedServerDAO.FindServerBandwidthLimitConfig(tx, req.ServerId, nil)
+	if err != nil {
+		return nil, err
+	}
+	limitConfigJSON, err := json.Marshal(limitConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledServerBandwidthLimitResponse{
+		BandwidthLimitJSON: limitConfigJSON,
+	}, nil
+}
+
+// UpdateServerBandwidthLimit 设置带宽限制
+func (this *ServerService) UpdateServerBandwidthLimit(ctx context.Context, req *pb.UpdateServerBandwidthLimitRequest) (*pb.RPCSuccess, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var config = &serverconfigs.BandwidthLimitConfig{}
+	err = json.Unmarshal(req.BandwidthLimitJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedServerDAO.UpdateServerBandwidthLimitConfig(tx, req.ServerId, config)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}

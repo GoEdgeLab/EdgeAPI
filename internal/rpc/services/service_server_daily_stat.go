@@ -25,6 +25,7 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 
 	tx := this.NullTx()
 
+	// 保存统计数据
 	err = models.SharedServerDailyStatDAO.SaveStats(tx, req.Stats)
 	if err != nil {
 		return nil, err

@@ -3,10 +3,13 @@ package models
 import (
 	"crypto/md5"
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"testing"
+	"time"
 )
 
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
@@ -159,6 +162,27 @@ func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
 			t.Log(domain + ": not found")
 		}
 	}
+}
+
+func TestServerDAO_UpdateServerBandwidthLimitStatus(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	before := time.Now()
+	defer func() {
+		t.Log(time.Since(before).Seconds()*1000, "ms")
+	}()
+	err := NewServerDAO().UpdateServerBandwidthLimitStatus(tx, &serverconfigs.BandwidthLimitConfig{
+		IsOn:           true,
+		DailySize:      &shared.SizeCapacity{Count: 1, Unit: "mb"},
+		MonthlySize:    &shared.SizeCapacity{Count: 10, Unit: "mb"},
+		TotalSize:      nil,
+		NoticePageBody: "",
+	}, 23)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
 }
 
 func BenchmarkServerDAO_CountAllEnabledServers(b *testing.B) {
