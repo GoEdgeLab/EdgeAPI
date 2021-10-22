@@ -178,7 +178,7 @@ func TestServerDAO_UpdateServerBandwidthLimitStatus(t *testing.T) {
 		MonthlySize:    &shared.SizeCapacity{Count: 10, Unit: "mb"},
 		TotalSize:      nil,
 		NoticePageBody: "",
-	}, 23)
+	}, 23, false)
 	if err != nil {
 		t.Fatal(err)
 	}

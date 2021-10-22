@@ -177,18 +177,27 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 }
 
 // CountIPItemsWithListId 计算IP数量
-func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64) (int64, error) {
-	return this.Query(tx).
+func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, keyword string) (int64, error) {
+	var query = this.Query(tx).
 		State(IPItemStateEnabled).
-		Attr("listId", listId).
-		Count()
+		Attr("listId", listId)
+	if len(keyword) > 0 {
+		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	return query.Count()
 }
 
 // ListIPItemsWithListId 查找IP列表
-func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, offset int64, size int64) (result []*IPItem, err error) {
-	_, err = this.Query(tx).
+func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword string, offset int64, size int64) (result []*IPItem, err error) {
+	var query = this.Query(tx).
 		State(IPItemStateEnabled).
-		Attr("listId", listId).
+		Attr("listId", listId)
+	if len(keyword) > 0 {
+		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+	_, err = query.
 		DescPk().
 		Slice(&result).
 		Offset(offset).
