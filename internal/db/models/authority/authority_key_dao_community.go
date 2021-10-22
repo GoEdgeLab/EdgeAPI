@@ -4,7 +4,11 @@
 
 package authority
 
+import (
+	"github.com/iwind/TeaGo/dbs"
+)
+
 // IsPlus 判断是否为企业版
 func (this *AuthorityKeyDAO) IsPlus(tx *dbs.Tx) (bool, error) {
-	return false
+	return false, nil
 }
