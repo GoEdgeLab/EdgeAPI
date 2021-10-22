@@ -93,16 +93,3 @@ func (this *AuthorityKeyDAO) ResetKey(tx *dbs.Tx) error {
 		Delete()
 	return err
 }
-
-// IsPlus 判断是否为企业版
-func (this *AuthorityKeyDAO) IsPlus(tx *dbs.Tx) (bool, error) {
-	key, err := this.ReadKey(tx)
-	if err != nil {
-		return false, err
-	}
-	if key == nil {
-		return false, nil
-	}
-	teaconst.IsPlus = key.DayTo >= timeutil.Format("Y-m-d")
-	return teaconst.IsPlus, nil
-}

@@ -1,3 +1,8 @@
+// Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
+
+//go:build plus
+// +build plus
+
 package accesslogs
 
 import (
@@ -5,7 +10,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/lists"
@@ -47,23 +51,6 @@ func (this *StorageManager) Start() {
 			remotelogs.Error("ACCESS_LOG_STORAGE_MANAGER", "update error: "+err.Error())
 		}
 	}
-}
-
-// 写入日志
-func (this *StorageManager) Write(policyId int64, accessLogs []*pb.HTTPAccessLog) error {
-	this.locker.Lock()
-	storage, ok := this.storageMap[policyId]
-	this.locker.Unlock()
-
-	if !ok {
-		return nil
-	}
-
-	if !storage.IsOk() {
-		return nil
-	}
-
-	return storage.Write(accessLogs)
 }
 
 // Loop 更新
