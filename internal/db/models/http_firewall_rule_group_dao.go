@@ -163,11 +163,12 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroupIsOn(tx *dbs.Tx, groupId int64,
 }
 
 // CreateGroup 创建分组
-func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name string, description string) (int64, error) {
+func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name string, code string, description string) (int64, error) {
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.State = HTTPFirewallRuleStateEnabled
 	op.IsOn = isOn
 	op.Name = name
+	op.Code = code
 	op.Description = description
 	err := this.Save(tx, op)
 	if err != nil {
