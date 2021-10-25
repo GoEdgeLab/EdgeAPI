@@ -194,13 +194,13 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isO
 }
 
 // UpdateGroupSets 修改分组中的规则集
-func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64, setsJSON []byte) error {
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroupSets(tx *dbs.Tx, groupId int64, setRefsJSON []byte) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
 	op := NewHTTPFirewallRuleGroupOperator()
 	op.Id = groupId
-	op.Sets = setsJSON
+	op.Sets = setRefsJSON
 	err := this.Save(tx, op)
 	if err != nil {
 		return err

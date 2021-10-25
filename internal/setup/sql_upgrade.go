@@ -56,6 +56,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.3.2", upgradeV0_3_2,
 	},
+	{
+		"0.3.3", upgradeV0_3_3,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -507,6 +510,17 @@ func upgradeV0_3_2(db *dbs.DB) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// v0.3.3
+func upgradeV0_3_3(db *dbs.DB) error {
+	// 升级CC请求数Code
+	_, err := db.Exec("UPDATE edgeHTTPFirewallRuleSets SET code='8002' WHERE name='CC请求数' AND code='8001'")
+	if err != nil {
+		return err
 	}
 
 	return nil
