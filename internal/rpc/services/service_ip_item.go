@@ -151,7 +151,7 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 		}
 	}
 
-	count, err := models.SharedIPItemDAO.CountIPItemsWithListId(tx, req.IpListId, req.Keyword)
+	count, err := models.SharedIPItemDAO.CountIPItemsWithListId(tx, req.IpListId, req.Keyword, req.IpFrom, req.IpTo)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 		}
 	}
 
-	items, err := models.SharedIPItemDAO.ListIPItemsWithListId(tx, req.IpListId, req.Keyword, req.Offset, req.Size)
+	items, err := models.SharedIPItemDAO.ListIPItemsWithListId(tx, req.IpListId, req.Keyword, req.IpFrom, req.IpTo, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
