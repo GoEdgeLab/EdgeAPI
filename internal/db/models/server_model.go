@@ -37,6 +37,7 @@ type Server struct {
 	BandwidthLimit       string  `field:"bandwidthLimit"`       // 带宽限制
 	TotalBandwidth       float64 `field:"totalBandwidth"`       // 总带宽用量（单位GB）
 	BandwidthLimitStatus string  `field:"bandwidthLimitStatus"` // 带宽限制状态
+	UserPlanId           uint32  `field:"userPlanId"`           // 所属套餐ID
 }
 
 type ServerOperator struct {
@@ -75,6 +76,7 @@ type ServerOperator struct {
 	BandwidthLimit       interface{} // 带宽限制
 	TotalBandwidth       interface{} // 总带宽用量（单位GB）
 	BandwidthLimitStatus interface{} // 带宽限制状态
+	UserPlanId           interface{} // 所属套餐ID
 }
 
 func NewServerOperator() *ServerOperator {

@@ -411,7 +411,7 @@ func upgradeV0_3_2(db *dbs.DB) error {
 		GzipId  int64 `yaml:"gzipId" json:"gzipId"`   // 使用的配置ID
 	}
 
-	webOnes, _, err := db.FindOnes("SELECT id, gzip FROM edgeHTTPWebs WHERE gzip IS NOT NULL")
+	webOnes, _, err := db.FindOnes("SELECT id, gzip FROM edgeHTTPWebs WHERE gzip IS NOT NULL AND compression IS NULL")
 	if err != nil {
 		return err
 	}
