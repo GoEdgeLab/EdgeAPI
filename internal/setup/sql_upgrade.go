@@ -523,5 +523,12 @@ func upgradeV0_3_3(db *dbs.DB) error {
 		return err
 	}
 
+	// 清除节点
+	// 删除7天以前的info日志
+	err = models.NewNodeLogDAO().DeleteExpiredLogsWithLevel(nil, "info", 7)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
