@@ -72,7 +72,7 @@ func SharedAPIConfig() (*APIConfig, error) {
 	{
 		dbConfigFile := Tea.ConfigFile("db.yaml")
 		_, err := os.Stat(dbConfigFile)
-		if err == nil {
+		if err != nil {
 			paths := []string{}
 			homeDir, homeErr := os.UserHomeDir()
 			if homeErr == nil {
