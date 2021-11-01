@@ -13,7 +13,7 @@ func init() {
 	})
 }
 
-// 清理节点日志的工具
+// NodeLogCleanerTask 清理节点日志的任务
 type NodeLogCleanerTask struct {
 	duration time.Duration
 }
@@ -35,6 +35,12 @@ func (this *NodeLogCleanerTask) Start() {
 }
 
 func (this *NodeLogCleanerTask) loop() error {
-	// TODO 30天这个数值改成可以设置
-	return models.SharedNodeLogDAO.DeleteExpiredLogs(nil, 30)
+	// 删除7天以前的info日志
+	err := models.SharedNodeLogDAO.DeleteExpiredLogsWithLevel(nil, "info", 7)
+	if err != nil {
+		return err
+	}
+
+	// TODO 14天这个数值改成可以设置
+	return models.SharedNodeLogDAO.DeleteExpiredLogs(nil, 14)
 }

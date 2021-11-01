@@ -80,6 +80,21 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 	return err
 }
 
+// DeleteExpiredLogsWithLevel 清除超出一定日期的某级别日志
+func (this *NodeLogDAO) DeleteExpiredLogsWithLevel(tx *dbs.Tx, level string, days int) error {
+	if days <= 0 {
+		return errors.New("invalid days '" + strconv.Itoa(days) + "'")
+	}
+	date := time.Now().AddDate(0, 0, -days)
+	expireDay := timeutil.Format("Ymd", date)
+	_, err := this.Query(tx).
+		Attr("level", level).
+		Where("day<=:day").
+		Param("day", expireDay).
+		Delete()
+	return err
+}
+
 // DeleteExpiredLogs 清除超出一定日期的日志
 func (this *NodeLogDAO) DeleteExpiredLogs(tx *dbs.Tx, days int) error {
 	if days <= 0 {
