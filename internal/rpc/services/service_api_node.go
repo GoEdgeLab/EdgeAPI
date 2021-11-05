@@ -26,7 +26,7 @@ func (this *APINodeService) CreateAPINode(ctx context.Context, req *pb.CreateAPI
 		return nil, err
 	}
 
-	return &pb.CreateAPINodeResponse{NodeId: nodeId}, nil
+	return &pb.CreateAPINodeResponse{ApiNodeId: nodeId}, nil
 }
 
 // UpdateAPINode 修改API节点
@@ -38,7 +38,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 
 	tx := this.NullTx()
 
-	err = models.SharedAPINodeDAO.UpdateAPINode(tx, req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
+	err = models.SharedAPINodeDAO.UpdateAPINode(tx, req.ApiNodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (this *APINodeService) DeleteAPINode(ctx context.Context, req *pb.DeleteAPI
 
 	tx := this.NullTx()
 
-	err = models.SharedAPINodeDAO.DisableAPINode(tx, req.NodeId)
+	err = models.SharedAPINodeDAO.DisableAPINode(tx, req.ApiNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 		})
 	}
 
-	return &pb.FindAllEnabledAPINodesResponse{Nodes: result}, nil
+	return &pb.FindAllEnabledAPINodesResponse{ApiNodes: result}, nil
 }
 
 // CountAllEnabledAPINodes 计算API节点数量
@@ -176,7 +176,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 		})
 	}
 
-	return &pb.ListEnabledAPINodesResponse{Nodes: result}, nil
+	return &pb.ListEnabledAPINodesResponse{ApiNodes: result}, nil
 }
 
 // FindEnabledAPINode 根据ID查找节点
@@ -188,13 +188,13 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 
 	tx := this.NullTx()
 
-	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, req.NodeId)
+	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, req.ApiNodeId)
 	if err != nil {
 		return nil, err
 	}
 
 	if node == nil {
-		return &pb.FindEnabledAPINodeResponse{Node: nil}, nil
+		return &pb.FindEnabledAPINodeResponse{ApiNode: nil}, nil
 	}
 
 	accessAddrs, err := node.DecodeAccessAddrStrings()
@@ -218,7 +218,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		AccessAddrsJSON: []byte(node.AccessAddrs),
 		AccessAddrs:     accessAddrs,
 	}
-	return &pb.FindEnabledAPINodeResponse{Node: result}, nil
+	return &pb.FindEnabledAPINodeResponse{ApiNode: result}, nil
 }
 
 // FindCurrentAPINodeVersion 获取当前API节点的版本
