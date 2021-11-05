@@ -119,6 +119,23 @@ func (this *APINodeService) CountAllEnabledAPINodes(ctx context.Context, req *pb
 	return this.SuccessCount(count)
 }
 
+// CountAllEnabledAndOnAPINodes 计算API节点数量
+func (this *APINodeService) CountAllEnabledAndOnAPINodes(ctx context.Context, req *pb.CountAllEnabledAndOnAPINodesRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	count, err := models.SharedAPINodeDAO.CountAllEnabledAndOnAPINodes(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.SuccessCount(count)
+}
+
 // ListEnabledAPINodes 列出单页的API节点
 func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.ListEnabledAPINodesRequest) (*pb.ListEnabledAPINodesResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
