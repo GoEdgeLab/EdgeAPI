@@ -230,3 +230,26 @@ func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *
 
 	return &pb.FindCurrentAPINodeVersionResponse{Version: teaconst.Version}, nil
 }
+
+// CountAllEnabledAPINodesWithSSLCertId 计算使用某个SSL证书的API节点数量
+func (this *APINodeService) CountAllEnabledAPINodesWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledAPINodesWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, req.SslCertId)
+	if err != nil {
+		return nil, err
+	}
+	if len(policyIds) == 0 {
+		return this.SuccessCount(0)
+	}
+
+	count, err := models.SharedAPINodeDAO.CountAllEnabledAPINodesWithSSLPolicyIds(tx, policyIds)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -280,5 +281,21 @@ func (this *UserNodeDAO) CountAllEnabledAndOnOfflineNodes(tx *dbs.Tx) (int64, er
 		State(UserNodeStateEnabled).
 		Attr("isOn", true).
 		Where("(status IS NULL OR JSON_EXTRACT(status, '$.updatedAt')<UNIX_TIMESTAMP()-60)").
+		Count()
+}
+
+// CountAllEnabledUserNodesWithSSLPolicyIds 计算使用SSL策略的所有用户节点数量
+func (this *UserNodeDAO) CountAllEnabledUserNodesWithSSLPolicyIds(tx *dbs.Tx, sslPolicyIds []int64) (count int64, err error) {
+	if len(sslPolicyIds) == 0 {
+		return
+	}
+	policyStringIds := []string{}
+	for _, policyId := range sslPolicyIds {
+		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
+	}
+	return this.Query(tx).
+		State(UserNodeStateEnabled).
+		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds)) ").
+		Param("policyIds", strings.Join(policyStringIds, ",")).
 		Count()
 }

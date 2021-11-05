@@ -9,7 +9,6 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
-	"strconv"
 )
 
 const (
@@ -181,8 +180,8 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(tx *dbs.Tx, certId i
 	ones, err := this.Query(tx).
 		State(SSLPolicyStateEnabled).
 		ResultPk().
-		Where(`JSON_CONTAINS(certs, '{"certId": ` + strconv.FormatInt(certId, 10) + ` }')`).
-		Reuse(false). // 由于我们在JSON_CONTAINS()直接使用了变量，所以不能重用
+		Where("JSON_CONTAINS(certs, :certJSON)").
+		Param("certJSON", maps.Map{"certId": certId}.AsJSON()).
 		FindAll()
 	if err != nil {
 		return nil, err

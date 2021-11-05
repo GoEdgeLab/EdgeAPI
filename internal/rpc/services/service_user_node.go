@@ -27,7 +27,7 @@ func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateU
 		return nil, err
 	}
 
-	return &pb.CreateUserNodeResponse{NodeId: nodeId}, nil
+	return &pb.CreateUserNodeResponse{UserNodeId: nodeId}, nil
 }
 
 // UpdateUserNode 修改用户节点
@@ -39,7 +39,7 @@ func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateU
 
 	tx := this.NullTx()
 
-	err = models.SharedUserNodeDAO.UpdateUserNode(tx, req.NodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
+	err = models.SharedUserNodeDAO.UpdateUserNode(tx, req.UserNodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteU
 
 	tx := this.NullTx()
 
-	err = models.SharedUserNodeDAO.DisableUserNode(tx, req.NodeId)
+	err = models.SharedUserNodeDAO.DisableUserNode(tx, req.UserNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 		})
 	}
 
-	return &pb.FindAllEnabledUserNodesResponse{Nodes: result}, nil
+	return &pb.FindAllEnabledUserNodesResponse{UserNodes: result}, nil
 }
 
 // CountAllEnabledUserNodes 计算用户节点数量
@@ -155,7 +155,7 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 		})
 	}
 
-	return &pb.ListEnabledUserNodesResponse{Nodes: result}, nil
+	return &pb.ListEnabledUserNodesResponse{UserNodes: result}, nil
 }
 
 // FindEnabledUserNode 根据ID查找节点
@@ -167,13 +167,13 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 
 	tx := this.NullTx()
 
-	node, err := models.SharedUserNodeDAO.FindEnabledUserNode(tx, req.NodeId)
+	node, err := models.SharedUserNodeDAO.FindEnabledUserNode(tx, req.UserNodeId)
 	if err != nil {
 		return nil, err
 	}
 
 	if node == nil {
-		return &pb.FindEnabledUserNodeResponse{Node: nil}, nil
+		return &pb.FindEnabledUserNodeResponse{UserNode: nil}, nil
 	}
 
 	accessAddrs, err := node.DecodeAccessAddrStrings()
@@ -193,7 +193,7 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 		AccessAddrsJSON: []byte(node.AccessAddrs),
 		AccessAddrs:     accessAddrs,
 	}
-	return &pb.FindEnabledUserNodeResponse{Node: result}, nil
+	return &pb.FindEnabledUserNodeResponse{UserNode: result}, nil
 }
 
 // FindCurrentUserNode 获取当前用户节点的版本
@@ -220,7 +220,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 	}
 
 	if node == nil {
-		return &pb.FindCurrentUserNodeResponse{Node: nil}, nil
+		return &pb.FindCurrentUserNodeResponse{UserNode: nil}, nil
 	}
 
 	accessAddrs, err := node.DecodeAccessAddrStrings()
@@ -240,7 +240,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		AccessAddrsJSON: []byte(node.AccessAddrs),
 		AccessAddrs:     accessAddrs,
 	}
-	return &pb.FindCurrentUserNodeResponse{Node: result}, nil
+	return &pb.FindCurrentUserNodeResponse{UserNode: result}, nil
 }
 
 // UpdateUserNodeStatus 更新节点状态
@@ -251,8 +251,8 @@ func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	if req.NodeId > 0 {
-		nodeId = req.NodeId
+	if req.UserNodeId > 0 {
+		nodeId = req.UserNodeId
 	}
 
 	if nodeId <= 0 {
@@ -266,4 +266,27 @@ func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.U
 		return nil, err
 	}
 	return this.Success()
+}
+
+// CountAllEnabledUserNodesWithSSLCertId 计算使用某个SSL证书的用户节点数量
+func (this *UserNodeService) CountAllEnabledUserNodesWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledUserNodesWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, req.SslCertId)
+	if err != nil {
+		return nil, err
+	}
+	if len(policyIds) == 0 {
+		return this.SuccessCount(0)
+	}
+
+	count, err := models.SharedUserNodeDAO.CountAllEnabledUserNodesWithSSLPolicyIds(tx, policyIds)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
 }
