@@ -185,6 +185,7 @@ func (this *NSNodeQueue) InstallNode(nodeId int64, installStatus *models.NodeIns
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Passphrase: grant.Passphrase,
 		Method:     grant.Method,
 	})
 	if err != nil {
@@ -274,6 +275,7 @@ func (this *NSNodeQueue) StartNode(nodeId int64) error {
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Passphrase: grant.Passphrase,
 		Method:     grant.Method,
 	})
 	if err != nil {
@@ -379,6 +381,7 @@ func (this *NSNodeQueue) StopNode(nodeId int64) error {
 		Username:   grant.Username,
 		Password:   grant.Password,
 		PrivateKey: grant.PrivateKey,
+		Passphrase: grant.Passphrase,
 		Method:     grant.Method,
 	})
 	if err != nil {

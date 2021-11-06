@@ -26,7 +26,7 @@ func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.Creat
 
 	tx := this.NullTx()
 
-	grantId, err := models.SharedNodeGrantDAO.CreateGrant(tx, adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
+	grantId, err := models.SharedNodeGrantDAO.CreateGrant(tx, adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Description, req.NodeId)
+	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId)
 	return this.Success()
 }
 
@@ -162,6 +162,7 @@ func (this *NodeGrantService) FindEnabledNodeGrant(ctx context.Context, req *pb.
 		Password:    grant.Password,
 		Su:          grant.Su == 1,
 		PrivateKey:  grant.PrivateKey,
+		Passphrase:  grant.Passphrase,
 		Description: grant.Description,
 		NodeId:      int64(grant.NodeId),
 	}}, nil
@@ -231,7 +232,12 @@ func (this *NodeGrantService) TestNodeGrant(ctx context.Context, req *pb.TestNod
 			methods = append(methods, authMethod)
 		}
 	} else if grant.Method == "privateKey" {
-		signer, err := ssh.ParsePrivateKey([]byte(grant.PrivateKey))
+		var signer ssh.Signer
+		if len(grant.Passphrase) != 0 {
+			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(grant.PrivateKey), []byte(grant.Passphrase))
+		} else {
+			signer, err = ssh.ParsePrivateKey([]byte(grant.PrivateKey))
+		}
 		if err != nil {
 			resp.Error = "parse private key: " + err.Error()
 			return resp, nil

@@ -6,7 +6,7 @@ import (
 )
 
 func TestDNSNodeInstaller_Install(t *testing.T) {
-	var installer InstallerInterface = &DNSNodeInstaller{}
+	var installer InstallerInterface = &NSNodeInstaller{}
 	err := installer.Login(&Credentials{
 		Host:       "192.168.2.30",
 		Port:       22,

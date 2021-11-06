@@ -59,7 +59,13 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 			methods = append(methods, authMethod)
 		}
 	} else if credentials.Method == "privateKey" {
-		signer, err := ssh.ParsePrivateKey([]byte(credentials.PrivateKey))
+		var signer ssh.Signer
+		var err error
+		if len(credentials.Passphrase) > 0 {
+			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(credentials.PrivateKey), []byte(credentials.Passphrase))
+		} else {
+			signer, err = ssh.ParsePrivateKey([]byte(credentials.PrivateKey))
+		}
 		if err != nil {
 			return errors.New("parse private key: " + err.Error())
 		}
