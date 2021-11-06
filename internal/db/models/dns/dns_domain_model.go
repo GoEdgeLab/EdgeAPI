@@ -16,6 +16,7 @@ type DNSDomain struct {
 	Routes        string `field:"routes"`        // 线路数据
 	IsUp          uint8  `field:"isUp"`          // 是否在线
 	State         uint8  `field:"state"`         // 状态
+	IsDeleted     uint8  `field:"isDeleted"`     // 是否已删除
 }
 
 type DNSDomainOperator struct {
@@ -33,6 +34,7 @@ type DNSDomainOperator struct {
 	Routes        interface{} // 线路数据
 	IsUp          interface{} // 是否在线
 	State         interface{} // 状态
+	IsDeleted     interface{} // 是否已删除
 }
 
 func NewDNSDomainOperator() *DNSDomainOperator {

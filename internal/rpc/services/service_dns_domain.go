@@ -122,7 +122,24 @@ func (this *DNSDomainService) DeleteDNSDomain(ctx context.Context, req *pb.Delet
 
 	tx := this.NullTx()
 
-	err = dns.SharedDNSDomainDAO.DisableDNSDomain(tx, req.DnsDomainId)
+	err = dns.SharedDNSDomainDAO.UpdateDomainIsDeleted(tx, req.DnsDomainId, true)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// RecoverDNSDomain 恢复删除的域名
+func (this *DNSDomainService) RecoverDNSDomain(ctx context.Context, req *pb.RecoverDNSDomainRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	err = dns.SharedDNSDomainDAO.UpdateDomainIsDeleted(tx, req.DnsDomainId, false)
 	if err != nil {
 		return nil, err
 	}
@@ -239,9 +256,11 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 	result := []*pb.DNSDomain{}
 	for _, domain := range domains {
 		result = append(result, &pb.DNSDomain{
-			Id:   int64(domain.Id),
-			Name: domain.Name,
-			IsOn: domain.IsOn == 1,
+			Id:        int64(domain.Id),
+			Name:      domain.Name,
+			IsOn:      domain.IsOn == 1,
+			IsUp:      domain.IsUp == 1,
+			IsDeleted: domain.IsDeleted == 1,
 		})
 	}
 
@@ -371,6 +390,7 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 		Name:               domain.Name,
 		IsOn:               domain.IsOn == 1,
 		IsUp:               domain.IsUp == 1,
+		IsDeleted:          domain.IsDeleted == 1,
 		DataUpdatedAt:      int64(domain.DataUpdatedAt),
 		CountNodeRecords:   int64(countNodeRecords),
 		NodesChanged:       nodesChanged,

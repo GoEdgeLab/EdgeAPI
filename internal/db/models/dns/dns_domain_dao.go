@@ -214,7 +214,7 @@ func (this *DNSDomainDAO) FindDomainRouteName(tx *dbs.Tx, domainId int64, routeC
 // ExistAvailableDomains 判断是否有域名可选
 func (this *DNSDomainDAO) ExistAvailableDomains(tx *dbs.Tx) (bool, error) {
 	subQuery, err := SharedDNSProviderDAO.Query(tx).
-		Where("state=1").                   // 这里要使用非变量
+		Where("state=1"). // 这里要使用非变量
 		ResultPk().
 		AsSQL()
 	if err != nil {
@@ -263,7 +263,6 @@ func (this *DNSDomainDAO) ExistDomainRecord(tx *dbs.Tx, domainId int64, recordNa
 func (this *DNSDomainDAO) FindEnabledDomainWithName(tx *dbs.Tx, providerId int64, domainName string) (*DNSDomain, error) {
 	one, err := this.Query(tx).
 		State(DNSDomainStateEnabled).
-		Attr("isOn", true).
 		Attr("providerId", providerId).
 		Attr("name", domainName).
 		Find()
@@ -278,5 +277,13 @@ func (this *DNSDomainDAO) UpdateDomainIsUp(tx *dbs.Tx, domainId int64, isUp bool
 	return this.Query(tx).
 		Pk(domainId).
 		Set("isUp", isUp).
+		UpdateQuickly()
+}
+
+// UpdateDomainIsDeleted 设置域名为删除
+func (this *DNSDomainDAO) UpdateDomainIsDeleted(tx *dbs.Tx, domainId int64, isDeleted bool) error {
+	return this.Query(tx).
+		Pk(domainId).
+		Set("isDeleted", isDeleted).
 		UpdateQuickly()
 }
