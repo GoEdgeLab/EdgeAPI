@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"strconv"
 )
 
 const (
@@ -85,7 +86,7 @@ func (this *ClientBrowserDAO) FindBrowserIdWithNameCacheable(tx *dbs.Tx, browser
 
 	browserId, err := this.Query(tx).
 		Where("JSON_CONTAINS(codes, :browserName)").
-		Param("browserName", "\""+browserName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
+		Param("browserName", strconv.Quote(browserName)). // 查询的需要是个JSON字符串，所以这里加双引号
 		ResultPk().
 		FindInt64Col(0)
 	if err != nil {

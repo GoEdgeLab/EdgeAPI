@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/maps"
 )
 
 // NSDomainService 域名相关服务
@@ -89,7 +90,7 @@ func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.Fi
 	// 用户
 	var pbUser *pb.User
 	if domain.UserId > 0 {
-		user, err := models.SharedUserDAO.FindEnabledUser(tx, int64(domain.UserId))
+		user, err := models.SharedUserDAO.FindEnabledUser(tx, int64(domain.UserId), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -148,6 +149,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 		return nil, err
 	}
 	pbDomains := []*pb.NSDomain{}
+	var cacheMap = maps.Map{}
 	for _, domain := range domains {
 		// 集群
 		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))
@@ -161,7 +163,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 		// 用户
 		var pbUser *pb.User
 		if domain.UserId > 0 {
-			user, err := models.SharedUserDAO.FindEnabledUser(tx, int64(domain.UserId))
+			user, err := models.SharedUserDAO.FindEnabledUser(tx, int64(domain.UserId), cacheMap)
 			if err != nil {
 				return nil, err
 			}

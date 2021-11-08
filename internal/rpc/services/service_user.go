@@ -163,7 +163,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 
 	tx := this.NullTx()
 
-	user, err := models.SharedUserDAO.FindEnabledUser(tx, req.UserId)
+	user, err := models.SharedUserDAO.FindEnabledUser(tx, req.UserId, nil)
 	if err != nil {
 		return nil, err
 	}

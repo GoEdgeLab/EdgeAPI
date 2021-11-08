@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
@@ -88,7 +89,7 @@ func (this *RegionProvinceDAO) FindProvinceIdWithName(tx *dbs.Tx, countryId int6
 	return this.Query(tx).
 		Attr("countryId", countryId).
 		Where("JSON_CONTAINS(codes, :provinceName)").
-		Param("provinceName", "\""+provinceName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
+		Param("provinceName", strconv.Quote(provinceName)). // 查询的需要是个JSON字符串，所以这里加双引号
 		ResultPk().
 		FindInt64Col(0)
 }

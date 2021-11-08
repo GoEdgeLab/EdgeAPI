@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -55,15 +56,27 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err 
 		Update()
 }
 
-// FindEnabledUser 查找启用中的条目
-func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, id int64) (*User, error) {
+// FindEnabledUser 查找启用的用户
+func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, userId int64, cacheMap maps.Map) (*User, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":FindEnabledUser:" + types.String(userId)
+	cache, ok := cacheMap[cacheKey]
+	if ok {
+		return cache.(*User), nil
+	}
+
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(userId).
 		Attr("state", UserStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
+
+	cacheMap[cacheKey] = result
+
 	return result.(*User), err
 }
 

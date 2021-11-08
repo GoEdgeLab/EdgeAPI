@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 )
 
 const (
@@ -119,7 +120,7 @@ func (this *RegionCityDAO) FindCityIdWithNameCacheable(tx *dbs.Tx, provinceId in
 	cityId, err := this.Query(tx).
 		Attr("provinceId", provinceId).
 		Where("JSON_CONTAINS(codes, :cityName)").
-		Param("cityName", "\""+cityName+"\""). // 查询的需要是个JSON字符串，所以这里加双引号
+		Param("cityName", strconv.Quote(cityName)). // 查询的需要是个JSON字符串，所以这里加双引号
 		ResultPk().
 		FindInt64Col(0)
 	if err != nil {

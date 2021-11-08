@@ -10,6 +10,13 @@ func TestRangeDays(t *testing.T) {
 	t.Log(days)
 }
 
+func TestRangeMonth(t *testing.T) {
+	days, err := RangeMonths("20200101", "20210115")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(days)
+}
 
 func TestRangeHours(t *testing.T) {
 	{

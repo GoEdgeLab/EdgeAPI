@@ -136,3 +136,14 @@ func (this *UserPlanDAO) UpdateUserPlan(tx *dbs.Tx, userPlanId int64, planId int
 	op.IsOn = isOn
 	return this.Save(tx, op)
 }
+
+// UpdateUserPlanDayTo 修改套餐日期
+func (this *UserPlanDAO) UpdateUserPlanDayTo(tx *dbs.Tx, userPlanId int64, dayTo string) error {
+	if userPlanId <= 0 {
+		return errors.New("invalid userPlanId")
+	}
+	var op = NewUserPlanOperator()
+	op.Id = userPlanId
+	op.DayTo = dayTo
+	return this.Save(tx, op)
+}
