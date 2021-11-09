@@ -1711,8 +1711,8 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 	return purgeResponse, nil
 }
 
-// FindEnabledServerBandwidthLimit 查找带宽限制
-func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, req *pb.FindEnabledServerBandwidthLimitRequest) (*pb.FindEnabledServerBandwidthLimitResponse, error) {
+// FindEnabledServerTrafficLimit 查找流量限制
+func (this *ServerService) FindEnabledServerTrafficLimit(ctx context.Context, req *pb.FindEnabledServerTrafficLimitRequest) (*pb.FindEnabledServerTrafficLimitResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
@@ -1721,7 +1721,7 @@ func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, 
 	// TODO 检查用户权限
 
 	var tx = this.NullTx()
-	limitConfig, err := models.SharedServerDAO.FindServerBandwidthLimitConfig(tx, req.ServerId, nil)
+	limitConfig, err := models.SharedServerDAO.FindServerTrafficLimitConfig(tx, req.ServerId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1729,26 +1729,26 @@ func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.FindEnabledServerBandwidthLimitResponse{
-		BandwidthLimitJSON: limitConfigJSON,
+	return &pb.FindEnabledServerTrafficLimitResponse{
+		TrafficLimitJSON: limitConfigJSON,
 	}, nil
 }
 
-// UpdateServerBandwidthLimit 设置带宽限制
-func (this *ServerService) UpdateServerBandwidthLimit(ctx context.Context, req *pb.UpdateServerBandwidthLimitRequest) (*pb.RPCSuccess, error) {
+// UpdateServerTrafficLimit 设置流量限制
+func (this *ServerService) UpdateServerTrafficLimit(ctx context.Context, req *pb.UpdateServerTrafficLimitRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	var config = &serverconfigs.BandwidthLimitConfig{}
-	err = json.Unmarshal(req.BandwidthLimitJSON, config)
+	var config = &serverconfigs.TrafficLimitConfig{}
+	err = json.Unmarshal(req.TrafficLimitJSON, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = models.SharedServerDAO.UpdateServerBandwidthLimitConfig(tx, req.ServerId, config)
+	err = models.SharedServerDAO.UpdateServerTrafficLimitConfig(tx, req.ServerId, config)
 	if err != nil {
 		return nil, err
 	}
@@ -1813,8 +1813,6 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 	if err != nil {
 		return nil, err
 	}
-
-
 
 	return this.Success()
 }

@@ -1031,24 +1031,24 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 		config.HTTPCachePolicyId = httpCachePolicyId
 	}
 
-	// bandwidth limit
-	if len(server.BandwidthLimit) > 0 {
-		var bandwidthLimitConfig = &serverconfigs.BandwidthLimitConfig{}
-		err = json.Unmarshal([]byte(server.BandwidthLimit), bandwidthLimitConfig)
+	// traffic limit
+	if len(server.TrafficLimit) > 0 {
+		var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
+		err = json.Unmarshal([]byte(server.TrafficLimit), trafficLimitConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.BandwidthLimit = bandwidthLimitConfig
+		config.TrafficLimit = trafficLimitConfig
 
-		if bandwidthLimitConfig.IsOn && !bandwidthLimitConfig.IsEmpty() {
-			if len(server.BandwidthLimitStatus) > 0 {
-				var status = &serverconfigs.BandwidthLimitStatus{}
-				err = json.Unmarshal([]byte(server.BandwidthLimitStatus), status)
+		if trafficLimitConfig.IsOn && !trafficLimitConfig.IsEmpty() {
+			if len(server.TrafficLimitStatus) > 0 {
+				var status = &serverconfigs.TrafficLimitStatus{}
+				err = json.Unmarshal([]byte(server.TrafficLimitStatus), status)
 				if err != nil {
 					return nil, err
 				}
 				if status.IsValid() {
-					config.BandwidthLimitStatus = status
+					config.TrafficLimitStatus = status
 				}
 			}
 		}
@@ -1060,12 +1060,29 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 		if err != nil {
 			return nil, err
 		}
-		if userPlan != nil {
+		if userPlan != nil && userPlan.IsOn == 1 {
 			if len(userPlan.DayTo) == 0 {
 				userPlan.DayTo = DefaultUserPlanMaxDay
 			}
-			config.UserPlan = &serverconfigs.UserPlanConfig{
-				DayTo: userPlan.DayTo,
+
+			// 套餐是否依然有效
+			plan, err := SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+			if err != nil {
+				return nil, err
+			}
+			if plan != nil {
+				config.UserPlan = &serverconfigs.UserPlanConfig{
+					DayTo: userPlan.DayTo,
+				}
+
+				if len(plan.TrafficLimit) > 0 && (config.TrafficLimit == nil || !config.TrafficLimit.IsOn) {
+					var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
+					err = json.Unmarshal([]byte(plan.TrafficLimit), trafficLimitConfig)
+					if err != nil {
+						return nil, err
+					}
+					config.TrafficLimit = trafficLimitConfig
+				}
 			}
 		}
 	}
@@ -1791,63 +1808,65 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 		UpdateQuickly()
 }
 
-// FindServerBandwidthLimitConfig 查找服务的带宽限制
-func (this *ServerDAO) FindServerBandwidthLimitConfig(tx *dbs.Tx, serverId int64, cacheMap maps.Map) (*serverconfigs.BandwidthLimitConfig, error) {
+// FindServerTrafficLimitConfig 查找服务的流量限制
+func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
 	if cacheMap == nil {
 		cacheMap = maps.Map{}
 	}
-	var cacheKey = this.Table + ":FindServerBandwidthLimitConfig:" + types.String(serverId)
+	var cacheKey = this.Table + ":FindServerTrafficLimitConfig:" + types.String(serverId)
 	result, ok := cacheMap[cacheKey]
 	if ok {
-		return result.(*serverconfigs.BandwidthLimitConfig), nil
+		return result.(*serverconfigs.TrafficLimitConfig), nil
 	}
 
-	bandwidthLimit, err := this.Query(tx).
+	trafficLimit, err := this.Query(tx).
 		Pk(serverId).
-		Result("bandwidthLimit").
+		Result("trafficLimit").
 		FindStringCol("")
 	if err != nil {
 		return nil, err
 	}
 
-	var limit = &serverconfigs.BandwidthLimitConfig{}
-	if len(bandwidthLimit) == 0 {
+	var limit = &serverconfigs.TrafficLimitConfig{}
+	if len(trafficLimit) == 0 {
 		return limit, nil
 	}
-	err = json.Unmarshal([]byte(bandwidthLimit), limit)
+	err = json.Unmarshal([]byte(trafficLimit), limit)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 套餐
 
 	cacheMap[cacheKey] = limit
 
 	return limit, nil
 }
 
-// UpdateServerBandwidthLimitConfig 修改服务的带宽限制
-func (this *ServerDAO) UpdateServerBandwidthLimitConfig(tx *dbs.Tx, serverId int64, bandwidthLimitConfig *serverconfigs.BandwidthLimitConfig) error {
+// UpdateServerTrafficLimitConfig 修改服务的流量限制
+func (this *ServerDAO) UpdateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, trafficLimitConfig *serverconfigs.TrafficLimitConfig) error {
 	if serverId <= 0 {
 		return errors.New("invalid serverId")
 	}
-	limitJSON, err := json.Marshal(bandwidthLimitConfig)
+	limitJSON, err := json.Marshal(trafficLimitConfig)
 	if err != nil {
 		return err
 	}
 
 	err = this.Query(tx).
 		Pk(serverId).
-		Set("bandwidthLimit", limitJSON).
+		Set("trafficLimit", limitJSON).
 		UpdateQuickly()
 	if err != nil {
 		return err
 	}
 
 	// 更新状态
-	return this.UpdateServerBandwidthLimitStatus(tx, bandwidthLimitConfig, serverId, true)
+	return this.UpdateServerTrafficLimitStatus(tx, trafficLimitConfig, serverId, true)
 }
 
-func (this *ServerDAO) UpdateServerBandwidthLimitStatus(tx *dbs.Tx, bandwidthLimitConfig *serverconfigs.BandwidthLimitConfig, serverId int64, isUpdatingConfig bool) error {
-	if !bandwidthLimitConfig.IsOn {
+func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitConfig *serverconfigs.TrafficLimitConfig, serverId int64, isUpdatingConfig bool) error {
+	if !trafficLimitConfig.IsOn {
 		if isUpdatingConfig {
 			return this.NotifyUpdate(tx, serverId)
 		}
@@ -1856,12 +1875,12 @@ func (this *ServerDAO) UpdateServerBandwidthLimitStatus(tx *dbs.Tx, bandwidthLim
 
 	oldStatusString, err := this.Query(tx).
 		Pk(serverId).
-		Result("bandwidthLimitStatus").
+		Result("trafficLimitStatus").
 		FindStringCol("")
 	if err != nil {
 		return err
 	}
-	var oldStatus = &serverconfigs.BandwidthLimitStatus{}
+	var oldStatus = &serverconfigs.TrafficLimitStatus{}
 	if len(oldStatusString) > 0 {
 		err = json.Unmarshal([]byte(oldStatusString), oldStatus)
 		if err != nil {
@@ -1877,52 +1896,52 @@ func (this *ServerDAO) UpdateServerBandwidthLimitStatus(tx *dbs.Tx, bandwidthLim
 	var untilDay = ""
 
 	// daily
-	if bandwidthLimitConfig.DailyBytes() > 0 {
+	if trafficLimitConfig.DailyBytes() > 0 {
 		stat, err := SharedServerDailyStatDAO.SumDailyStat(tx, serverId, timeutil.Format("Ymd"))
 		if err != nil {
 			return err
 		}
-		if stat != nil && stat.Bytes >= bandwidthLimitConfig.DailyBytes() {
+		if stat != nil && stat.Bytes >= trafficLimitConfig.DailyBytes() {
 			untilDay = timeutil.Format("Ymd")
 		}
 	}
 
 	// monthly
-	if bandwidthLimitConfig.MonthlyBytes() > 0 {
+	if trafficLimitConfig.MonthlyBytes() > 0 {
 		stat, err := SharedServerDailyStatDAO.SumMonthlyStat(tx, serverId, timeutil.Format("Ym"))
 		if err != nil {
 			return err
 		}
-		if stat != nil && stat.Bytes >= bandwidthLimitConfig.MonthlyBytes() {
+		if stat != nil && stat.Bytes >= trafficLimitConfig.MonthlyBytes() {
 			untilDay = timeutil.Format("Ym") + fmt.Sprintf("%02d", types.Int(timeutil.Format("t")))
 		}
 	}
 
 	// totally
-	if bandwidthLimitConfig.TotalBytes() > 0 {
-		totalBandwidth, err := this.Query(tx).
+	if trafficLimitConfig.TotalBytes() > 0 {
+		totalTraffic, err := this.Query(tx).
 			Pk(serverId).
-			Result("totalBandwidth").
+			Result("totalTraffic").
 			FindFloat64Col(0)
 		if err != nil {
 			return err
 		}
 
-		if totalBandwidth >= float64(bandwidthLimitConfig.TotalBytes()) {
+		if totalTraffic >= float64(trafficLimitConfig.TotalBytes()) {
 			untilDay = "20990101"
 		}
 	}
 
 	var isChanged = oldStatus.UntilDay != untilDay
 	if isChanged {
-		statusJSON, err := json.Marshal(&serverconfigs.BandwidthLimitStatus{UntilDay: untilDay})
+		statusJSON, err := json.Marshal(&serverconfigs.TrafficLimitStatus{UntilDay: untilDay})
 		if err != nil {
 			return err
 		}
 
 		err = this.Query(tx).
 			Pk(serverId).
-			Set("bandwidthLimitStatus", statusJSON).
+			Set("trafficLimitStatus", statusJSON).
 			UpdateQuickly()
 		if err != nil {
 			return err
@@ -1936,22 +1955,22 @@ func (this *ServerDAO) UpdateServerBandwidthLimitStatus(tx *dbs.Tx, bandwidthLim
 	return nil
 }
 
-// IncreaseServerTotalBandwidth 增加服务的总带宽
-func (this *ServerDAO) IncreaseServerTotalBandwidth(tx *dbs.Tx, serverId int64, bytes int64) error {
+// IncreaseServerTotalTraffic 增加服务的总流量
+func (this *ServerDAO) IncreaseServerTotalTraffic(tx *dbs.Tx, serverId int64, bytes int64) error {
 	var gb = float64(bytes) / 1024 / 1024 / 1024
 	return this.Query(tx).
 		Pk(serverId).
-		Set("totalBandwidth", dbs.SQL("totalBandwidth+:bandwidthGB")).
-		Param("bandwidthGB", gb).
+		Set("totalTraffic", dbs.SQL("totalTraffic+:trafficGB")).
+		Param("trafficGB", gb).
 		UpdateQuickly()
 
 }
 
-// ResetServerTotalBandwidth 重置服务总带宽
-func (this *ServerDAO) ResetServerTotalBandwidth(tx *dbs.Tx, serverId int64) error {
+// ResetServerTotalTraffic 重置服务总流量
+func (this *ServerDAO) ResetServerTotalTraffic(tx *dbs.Tx, serverId int64) error {
 	return this.Query(tx).
 		Pk(serverId).
-		Set("totalBandwidth", 0).
+		Set("totalTraffic", 0).
 		UpdateQuickly()
 }
 

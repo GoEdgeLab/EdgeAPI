@@ -164,7 +164,7 @@ func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
 	}
 }
 
-func TestServerDAO_UpdateServerBandwidthLimitStatus(t *testing.T) {
+func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
@@ -172,7 +172,7 @@ func TestServerDAO_UpdateServerBandwidthLimitStatus(t *testing.T) {
 	defer func() {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
-	err := NewServerDAO().UpdateServerBandwidthLimitStatus(tx, &serverconfigs.BandwidthLimitConfig{
+	err := NewServerDAO().UpdateServerTrafficLimitStatus(tx, &serverconfigs.TrafficLimitConfig{
 		IsOn:           true,
 		DailySize:      &shared.SizeCapacity{Count: 1, Unit: "mb"},
 		MonthlySize:    &shared.SizeCapacity{Count: 10, Unit: "mb"},

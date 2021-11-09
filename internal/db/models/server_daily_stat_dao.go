@@ -104,13 +104,13 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 			return err
 		}
 
-		// 更新带宽限制状态
-		bandwidthLimit, err := SharedServerDAO.FindServerBandwidthLimitConfig(tx, stat.ServerId, cacheMap)
+		// 更新流量限制状态
+		trafficLimit, err := SharedServerDAO.FindServerTrafficLimitConfig(tx, stat.ServerId, cacheMap)
 		if err != nil {
 			return err
 		}
-		if bandwidthLimit != nil && bandwidthLimit.IsOn && !bandwidthLimit.IsEmpty() {
-			err = SharedServerDAO.UpdateServerBandwidthLimitStatus(tx, bandwidthLimit, stat.ServerId, false)
+		if trafficLimit != nil && trafficLimit.IsOn && !trafficLimit.IsEmpty() {
+			err = SharedServerDAO.UpdateServerTrafficLimitStatus(tx, trafficLimit, stat.ServerId, false)
 			if err != nil {
 				return err
 			}
