@@ -49,7 +49,11 @@ func (this *PlanDAO) DisablePlan(tx *dbs.Tx, id int64) error {
 		Pk(id).
 		Set("state", PlanStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, id)
 }
 
 // FindEnabledPlan 查找启用中的条目
@@ -106,6 +110,16 @@ func (this *PlanDAO) UpdatePlan(tx *dbs.Tx, planId int64, name string, isOn bool
 	if planId <= 0 {
 		return errors.New("invalid planId")
 	}
+
+	// 检查集群有无变化
+	oldClusterId, err := this.Query(tx).
+		Pk(planId).
+		Result("clusterId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+
 	var op = NewPlanOperator()
 	op.Id = planId
 	op.Name = name
@@ -136,7 +150,25 @@ func (this *PlanDAO) UpdatePlan(tx *dbs.Tx, planId int64, name string, isOn bool
 	} else {
 		op.YearlyPrice = 0
 	}
-	return this.Save(tx, op)
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	if oldClusterId != clusterId {
+		// 修改服务所属集群
+		err = SharedServerDAO.UpdateServersClusterIdWithPlanId(tx, planId, clusterId)
+		if err != nil {
+			return err
+		}
+
+		err = SharedNodeClusterDAO.NotifyUpdate(tx, oldClusterId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return this.NotifyUpdate(tx, planId)
 }
 
 // CountAllEnabledPlans 计算套餐的数量
@@ -174,6 +206,22 @@ func (this *PlanDAO) SortPlans(tx *dbs.Tx, planIds []int64) error {
 			return err
 		}
 		order--
+	}
+	return nil
+}
+
+// NotifyUpdate 通知变更
+func (this *PlanDAO) NotifyUpdate(tx *dbs.Tx, planId int64) error {
+	// 这里不要加入状态参数，因为需要适应删除后的更新
+	clusterId, err := this.Query(tx).
+		Pk(planId).
+		Result("clusterId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+	if clusterId > 0 {
+		return SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
 	}
 	return nil
 }

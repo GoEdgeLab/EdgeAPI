@@ -12,6 +12,8 @@ import (
 const (
 	UserPlanStateEnabled  = 1 // 已启用
 	UserPlanStateDisabled = 0 // 已禁用
+
+	DefaultUserPlanMaxDay = "3000-01-01"
 )
 
 type UserPlanDAO dbs.DAO
@@ -50,13 +52,16 @@ func (this *UserPlanDAO) DisableUserPlan(tx *dbs.Tx, id int64) error {
 		Pk(id).
 		Set("state", UserPlanStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, id)
 }
 
 // FindEnabledUserPlan 查找启用中的条目
-func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, id int64) (*UserPlan, error) {
+func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64) (*UserPlan, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(userPlanId).
 		Attr("state", UserPlanStateEnabled).
 		Find()
 	if result == nil {
@@ -87,11 +92,14 @@ func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, isAvailable bool, 
 }
 
 // ListEnabledUserPlans 列出单页套餐
-func (this *UserPlanDAO) ListEnabledUserPlans(tx *dbs.Tx, isAvailable bool, isExpired bool, expiringDays int32, offset int64, size int64) (result []*UserPlan, err error) {
+func (this *UserPlanDAO) ListEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32, offset int64, size int64) (result []*UserPlan, err error) {
 	var query = this.Query(tx).
 		State(UserPlanStateEnabled).
 		Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)").
 		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
 	var today = timeutil.Format("Y-m-d")
 	if isAvailable {
 		query.Gte("dayTo", today)
@@ -134,7 +142,11 @@ func (this *UserPlanDAO) UpdateUserPlan(tx *dbs.Tx, userPlanId int64, planId int
 	op.PlanId = planId
 	op.DayTo = dayTo
 	op.IsOn = isOn
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, userPlanId)
 }
 
 // UpdateUserPlanDayTo 修改套餐日期
@@ -145,5 +157,40 @@ func (this *UserPlanDAO) UpdateUserPlanDayTo(tx *dbs.Tx, userPlanId int64, dayTo
 	var op = NewUserPlanOperator()
 	op.Id = userPlanId
 	op.DayTo = dayTo
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, userPlanId)
+}
+
+// FindAllEnabledPlansForServer 列出服务可用的套餐
+func (this *UserPlanDAO) FindAllEnabledPlansForServer(tx *dbs.Tx, userId int64, serverId int64) (result []*UserPlan, err error) {
+	var query = this.Query(tx).
+		State(UserPlanStateEnabled).
+		Attr("userId", userId).
+		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
+	if serverId > 0 {
+		query.Where("id NOT IN (SELECT userPlanId FROM " + SharedServerDAO.Table + " WHERE state=1 AND id!=:serverId)")
+		query.Param("serverId", serverId)
+	} else {
+		query.Where("id NOT IN (SELECT userPlanId FROM " + SharedServerDAO.Table + " WHERE state=1)")
+	}
+	_, err = query.
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// NotifyUpdate 通知更新
+func (this *UserPlanDAO) NotifyUpdate(tx *dbs.Tx, userPlanId int64) error {
+	serverId, err := SharedServerDAO.FindEnabledServerIdWithUserPlanId(tx, userPlanId)
+	if err != nil {
+		return err
+	}
+	if serverId > 0 {
+		return SharedServerDAO.NotifyUpdate(tx, serverId)
+	}
+	return nil
 }

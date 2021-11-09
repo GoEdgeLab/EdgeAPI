@@ -61,6 +61,24 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 				}
 			}
 		}
+
+		// 集群
+		nodeClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, userId)
+		if err != nil {
+			return nil, err
+		}
+		if nodeClusterId > 0 {
+			req.NodeClusterId = nodeClusterId
+		}
+	} else if req.UserId > 0 {
+		// 集群
+		nodeClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, req.UserId)
+		if err != nil {
+			return nil, err
+		}
+		if nodeClusterId > 0 {
+			req.NodeClusterId = nodeClusterId
+		}
 	}
 
 	// 是否需要审核
@@ -82,7 +100,45 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds)
+	// 校验用户套餐
+	if req.UserPlanId > 0 {
+		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId)
+		if err != nil {
+			return nil, err
+		}
+		if userPlan == nil {
+			return nil, errors.New("can not find user plan with id '" + types.String(req.UserPlanId) + "'")
+		}
+		if userId > 0 && int64(userPlan.UserId) != userId {
+			return nil, errors.New("invalid user plan")
+		}
+		if req.UserId > 0 && int64(userPlan.UserId) != req.UserId {
+			return nil, errors.New("invalid user plan")
+		}
+
+		// 套餐
+		plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+		if err != nil {
+			return nil, err
+		}
+		if plan == nil {
+			return nil, errors.New("invalid plan: " + types.String(userPlan.PlanId))
+		}
+		if plan.ClusterId > 0 {
+			req.NodeClusterId = int64(plan.ClusterId)
+		}
+
+		// 检查是否已经被别的服务所占用
+		planServerId, err := models.SharedServerDAO.FindEnabledServerIdWithUserPlanId(tx, req.UserPlanId)
+		if err != nil {
+			return nil, err
+		}
+		if planServerId > 0 {
+			return nil, errors.New("the user plan is used by another server '" + types.String(planServerId) + "'")
+		}
+	}
+
+	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds, req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
@@ -738,13 +794,15 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
-		Id:               int64(server.Id),
-		IsOn:             server.IsOn == 1,
-		Type:             server.Type,
-		Name:             server.Name,
-		Description:      server.Description,
-		DnsName:          server.DnsName,
-		SupportCNAME:     server.SupportCNAME == 1,
+		Id:           int64(server.Id),
+		IsOn:         server.IsOn == 1,
+		Type:         server.Type,
+		Name:         server.Name,
+		Description:  server.Description,
+		DnsName:      server.DnsName,
+		SupportCNAME: server.SupportCNAME == 1,
+		UserPlanId:   int64(server.UserPlanId),
+
 		Config:           configJSON,
 		ServerNamesJSON:  []byte(server.ServerNames),
 		HttpJSON:         []byte(server.Http),
@@ -1660,6 +1718,8 @@ func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, 
 		return nil, err
 	}
 
+	// TODO 检查用户权限
+
 	var tx = this.NullTx()
 	limitConfig, err := models.SharedServerDAO.FindServerBandwidthLimitConfig(tx, req.ServerId, nil)
 	if err != nil {
@@ -1676,7 +1736,7 @@ func (this *ServerService) FindEnabledServerBandwidthLimit(ctx context.Context, 
 
 // UpdateServerBandwidthLimit 设置带宽限制
 func (this *ServerService) UpdateServerBandwidthLimit(ctx context.Context, req *pb.UpdateServerBandwidthLimitRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1692,5 +1752,69 @@ func (this *ServerService) UpdateServerBandwidthLimit(ctx context.Context, req *
 	if err != nil {
 		return nil, err
 	}
+	return this.Success()
+}
+
+// UpdateServerUserPlan 修改服务套餐
+func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.UpdateServerUserPlanRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// TODO 支持用户调用
+
+	// 检查套餐
+	if req.UserPlanId < 0 {
+		req.UserPlanId = 0
+	}
+	if req.UserPlanId > 0 {
+		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		if userId == 0 {
+			return nil, errors.New("the server is not belong to any user")
+		}
+
+		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId)
+		if err != nil {
+			return nil, err
+		}
+		if userPlan == nil {
+			return nil, errors.New("can not find user plan with id '" + types.String(req.UserPlanId) + "'")
+		}
+		if int64(userPlan.UserId) != userId {
+			return nil, errors.New("can not find user plan with id '" + types.String(req.UserPlanId) + "'")
+		}
+
+		// 检查是否已经被别的服务所使用
+		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithUserPlanId(tx, req.UserPlanId)
+		if err != nil {
+			return nil, err
+		}
+		if serverId > 0 && serverId != req.ServerId {
+			return nil, errors.New("the user plan is used by other server")
+		}
+	}
+
+	// 检查是否有变化
+	oldUserPlanId, err := models.SharedServerDAO.FindServerUserPlanId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if req.UserPlanId == oldUserPlanId {
+		return this.Success()
+	}
+
+	err = models.SharedServerDAO.UpdateServerUserPlanId(tx, req.ServerId, req.UserPlanId)
+	if err != nil {
+		return nil, err
+	}
+
+
+
 	return this.Success()
 }

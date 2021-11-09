@@ -15,8 +15,13 @@ type UserPlanService struct {
 }
 
 // CreateUserPlan 添加已购套餐
-func (this *UserPlanService) CreateUserPlan(ctx context.Context, req *pb.CreateUserPlanRequest) (*pb.CreateUserPlanResponse, error) {
-	return &pb.CreateUserPlanResponse{UserPlanId: 0}, nil
+func (this *UserPlanService) BuyUserPlan(ctx context.Context, req *pb.BuyUserPlanRequest) (*pb.BuyUserPlanResponse, error) {
+	return &pb.BuyUserPlanResponse{UserPlanId: 0}, nil
+}
+
+// RenewUserPlan 续费套餐
+func (this *UserPlanService) RenewUserPlan(ctx context.Context, req *pb.RenewUserPlanRequest) (*pb.RPCSuccess, error) {
+	return this.Success()
 }
 
 // FindEnabledUserPlan 查找单个已购套餐信息
@@ -42,4 +47,9 @@ func (this *UserPlanService) CountAllEnabledUserPlans(ctx context.Context, req *
 // ListEnabledUserPlans 列出单页已购套餐
 func (this *UserPlanService) ListEnabledUserPlans(ctx context.Context, req *pb.ListEnabledUserPlansRequest) (*pb.ListEnabledUserPlansResponse, error) {
 	return &pb.ListEnabledUserPlansResponse{UserPlans: nil}, nil
+}
+
+// FindAllEnabledUserPlansForServer 查找所有服务可用的套餐
+func (this *UserPlanService) FindAllEnabledUserPlansForServer(ctx context.Context, req *pb.FindAllEnabledUserPlansForServerRequest) (*pb.FindAllEnabledUserPlansForServerResponse, error) {
+	return &pb.FindAllEnabledUserPlansForServerResponse{}, nil
 }

@@ -149,7 +149,8 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	clusterId int64,
 	includeNodesJSON string,
 	excludeNodesJSON string,
-	groupIds []int64) (serverId int64, err error) {
+	groupIds []int64,
+	userPlanId int64) (serverId int64, err error) {
 	op := NewServerOperator()
 	op.UserId = userId
 	op.AdminId = adminId
@@ -210,6 +211,8 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 		return 0, err
 	}
 	op.DnsName = dnsName
+
+	op.UserPlanId = userPlanId
 
 	op.Version = 1
 	op.IsOn = 1
@@ -1051,6 +1054,22 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 		}
 	}
 
+	// 用户套餐
+	if server.UserPlanId > 0 {
+		userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, int64(server.UserPlanId))
+		if err != nil {
+			return nil, err
+		}
+		if userPlan != nil {
+			if len(userPlan.DayTo) == 0 {
+				userPlan.DayTo = DefaultUserPlanMaxDay
+			}
+			config.UserPlan = &serverconfigs.UserPlanConfig{
+				DayTo: userPlan.DayTo,
+			}
+		}
+	}
+
 	return config, nil
 }
 
@@ -1376,6 +1395,14 @@ func (this *ServerDAO) FindServerUserId(tx *dbs.Tx, serverId int64) (userId int6
 		return 0, err
 	}
 	return one.GetInt64("userId"), nil
+}
+
+// FindServerUserPlanId  查找服务的套餐ID
+func (this *ServerDAO) FindServerUserPlanId(tx *dbs.Tx, serverId int64) (userPlanId int64, err error) {
+	return this.Query(tx).
+		Pk(serverId).
+		Result("userPlanId").
+		FindInt64Col(0)
 }
 
 // CheckUserServer 检查用户服务
@@ -1926,6 +1953,53 @@ func (this *ServerDAO) ResetServerTotalBandwidth(tx *dbs.Tx, serverId int64) err
 		Pk(serverId).
 		Set("totalBandwidth", 0).
 		UpdateQuickly()
+}
+
+// FindEnabledServerIdWithUserPlanId 查找使用某个套餐的服务
+func (this *ServerDAO) FindEnabledServerIdWithUserPlanId(tx *dbs.Tx, userPlanId int64) (int64, error) {
+	return this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("userPlanId", userPlanId).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// UpdateServersClusterIdWithPlanId 修改套餐所在集群
+func (this *ServerDAO) UpdateServersClusterIdWithPlanId(tx *dbs.Tx, planId int64, clusterId int64) error {
+	return this.Query(tx).
+		Where("userPlanId IN (SELECT id FROM "+SharedUserPlanDAO.Table+" WHERE planId=:planId AND state=1)").
+		Param("planId", planId).
+		Set("clusterId", clusterId).
+		UpdateQuickly()
+}
+
+// UpdateServerUserPlanId 设置服务所属套餐
+func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPlanId int64) error {
+	userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId)
+	if err != nil {
+		return err
+	}
+	if userPlan == nil {
+		return errors.New("can not find user plan with id '" + types.String(userPlanId) + "'")
+	}
+
+	plan, err := SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+	if err != nil {
+		return err
+	}
+	if plan == nil {
+		return errors.New("can not find plan with id '" + types.String(userPlan.PlanId) + "'")
+	}
+
+	err = this.Query(tx).
+		Pk(serverId).
+		Set("userPlanId", userPlanId).
+		Set("clusterId", plan.ClusterId).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, serverId)
 }
 
 // NotifyUpdate 同步集群
