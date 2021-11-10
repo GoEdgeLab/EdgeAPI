@@ -35,8 +35,12 @@ type Server struct {
 	UdpPorts            string  `field:"udpPorts"`            // 所包含UDP端口
 	SupportCNAME        uint8   `field:"supportCNAME"`        // 允许CNAME不在域名名单
 	TrafficLimit        string  `field:"trafficLimit"`        // 流量限制
-	TotalTraffic        float64 `field:"totalTraffic"`        // 总流量用量（单位GB）
+	TrafficDay          string  `field:"trafficDay"`          // YYYYMMDD
+	TrafficMonth        string  `field:"trafficMonth"`        // YYYYMM
+	TotalDailyTraffic   float64 `field:"totalDailyTraffic"`   // 日流量
+	TotalMonthlyTraffic float64 `field:"totalMonthlyTraffic"` // 月流量
 	TrafficLimitStatus  string  `field:"trafficLimitStatus"`  // 流量限制状态
+	TotalTraffic        float64 `field:"totalTraffic"`        // 总流量
 	UserPlanId          uint32  `field:"userPlanId"`          // 所属套餐ID
 }
 
@@ -74,8 +78,12 @@ type ServerOperator struct {
 	UdpPorts            interface{} // 所包含UDP端口
 	SupportCNAME        interface{} // 允许CNAME不在域名名单
 	TrafficLimit        interface{} // 流量限制
-	TotalTraffic        interface{} // 总流量用量（单位GB）
+	TrafficDay          interface{} // YYYYMMDD
+	TrafficMonth        interface{} // YYYYMM
+	TotalDailyTraffic   interface{} // 日流量
+	TotalMonthlyTraffic interface{} // 月流量
 	TrafficLimitStatus  interface{} // 流量限制状态
+	TotalTraffic        interface{} // 总流量
 	UserPlanId          interface{} // 所属套餐ID
 }
 

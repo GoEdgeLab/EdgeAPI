@@ -1,11 +1,14 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -208,6 +211,40 @@ func (this *PlanDAO) SortPlans(tx *dbs.Tx, planIds []int64) error {
 		order--
 	}
 	return nil
+}
+
+// FindEnabledPlanTrafficLimit 获取套餐的流量限制
+func (this *PlanDAO) FindEnabledPlanTrafficLimit(tx *dbs.Tx, planId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
+	var cacheKey = this.Table + ":FindEnabledPlanTrafficLimit:" + types.String(planId)
+	if cacheMap != nil {
+		cache, ok := cacheMap[cacheKey]
+		if ok {
+			return cache.(*serverconfigs.TrafficLimitConfig), nil
+		}
+	}
+
+	trafficLimit, err := this.Query(tx).
+		Pk(planId).
+		State(PlanStateEnabled).
+		Result("trafficLimit").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+	if len(trafficLimit) == 0 {
+		return nil, nil
+	}
+	var config = &serverconfigs.TrafficLimitConfig{}
+	err = json.Unmarshal([]byte(trafficLimit), config)
+	if err != nil {
+		return nil, err
+	}
+
+	if cacheMap != nil {
+		cacheMap[cacheKey] = config
+	}
+
+	return config, nil
 }
 
 // NotifyUpdate 通知变更

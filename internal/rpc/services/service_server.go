@@ -100,9 +100,9 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	// 校验用户套餐
+	// 检查用户套餐
 	if req.UserPlanId > 0 {
-		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId)
+		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -643,7 +643,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false)
 		if err != nil {
 			return nil, err
 		}
@@ -784,7 +784,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -844,7 +844,7 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 		}
 	}
 
-	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1779,7 +1779,7 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 			return nil, errors.New("the server is not belong to any user")
 		}
 
-		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId)
+		userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, req.UserPlanId, nil)
 		if err != nil {
 			return nil, err
 		}

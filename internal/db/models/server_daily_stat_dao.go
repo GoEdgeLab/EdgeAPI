@@ -105,14 +105,21 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 		}
 
 		// 更新流量限制状态
-		trafficLimit, err := SharedServerDAO.FindServerTrafficLimitConfig(tx, stat.ServerId, cacheMap)
-		if err != nil {
-			return err
-		}
-		if trafficLimit != nil && trafficLimit.IsOn && !trafficLimit.IsEmpty() {
-			err = SharedServerDAO.UpdateServerTrafficLimitStatus(tx, trafficLimit, stat.ServerId, false)
+		if stat.CheckTrafficLimiting {
+			trafficLimitConfig, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, stat.ServerId, cacheMap)
 			if err != nil {
 				return err
+			}
+			if trafficLimitConfig != nil && trafficLimitConfig.IsOn && !trafficLimitConfig.IsEmpty() {
+				err = SharedServerDAO.IncreaseServerTotalTraffic(tx, stat.ServerId, stat.Bytes)
+				if err != nil {
+					return err
+				}
+
+				err = SharedServerDAO.UpdateServerTrafficLimitStatus(tx, trafficLimitConfig, stat.ServerId, false)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

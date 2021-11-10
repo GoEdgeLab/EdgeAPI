@@ -5,6 +5,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -59,7 +61,15 @@ func (this *UserPlanDAO) DisableUserPlan(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledUserPlan 查找启用中的条目
-func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64) (*UserPlan, error) {
+func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cacheMap maps.Map) (*UserPlan, error) {
+	var cacheKey = this.Table + ":FindEnabledUserPlan:" + types.String(userPlanId)
+	if cacheMap != nil {
+		cache, ok := cacheMap[cacheKey]
+		if ok {
+			return cache.(*UserPlan), nil
+		}
+	}
+
 	result, err := this.Query(tx).
 		Pk(userPlanId).
 		Attr("state", UserPlanStateEnabled).
@@ -67,6 +77,11 @@ func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64) (*Use
 	if result == nil {
 		return nil, err
 	}
+
+	if cacheMap != nil {
+		cacheMap[cacheKey] = result
+	}
+
 	return result.(*UserPlan), err
 }
 

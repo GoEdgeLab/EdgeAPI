@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
 	"testing"
 	"time"
 )
@@ -15,7 +16,7 @@ import (
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +26,7 @@ func TestServerDAO_ComposeServerConfig(t *testing.T) {
 func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 14)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 14, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +36,7 @@ func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 func TestServerDAO_UpdateServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1)
+	config, err := SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,13 +177,49 @@ func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
 		IsOn:           true,
 		DailySize:      &shared.SizeCapacity{Count: 1, Unit: "mb"},
 		MonthlySize:    &shared.SizeCapacity{Count: 10, Unit: "mb"},
-		TotalSize:      nil,
+		TotalSize:      &shared.SizeCapacity{Count: 100, Unit: "gb"},
 		NoticePageBody: "",
 	}, 23, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("ok")
+}
+
+func TestServerDAO_CalculateServerTrafficLimitConfig(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	before := time.Now()
+	defer func() {
+		t.Log(time.Since(before).Seconds()*1000, "ms")
+	}()
+
+	var cacheMap = maps.Map{}
+	config, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(config, t)
+}
+
+func TestServerDAO_CalculateServerTrafficLimitConfig_Cache(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	before := time.Now()
+	defer func() {
+		t.Log(time.Since(before).Seconds()*1000, "ms")
+	}()
+
+	var cacheMap = maps.Map{}
+	for i := 0; i < 10; i++ {
+		config, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = config
+	}
 }
 
 func BenchmarkServerDAO_CountAllEnabledServers(b *testing.B) {

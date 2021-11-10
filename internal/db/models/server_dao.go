@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -827,7 +826,7 @@ func (this *ServerDAO) FindServerNodeFilters(tx *dbs.Tx, serverId int64) (isOk b
 }
 
 // ComposeServerConfigWithServerId 构造服务的Config
-func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int64) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int64, forNode bool) (*serverconfigs.ServerConfig, error) {
 	server, err := this.FindEnabledServer(tx, serverId)
 	if err != nil {
 		return nil, err
@@ -835,11 +834,12 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 	if server == nil {
 		return nil, ErrNotFound
 	}
-	return this.ComposeServerConfig(tx, server, nil)
+	return this.ComposeServerConfig(tx, server, nil, forNode)
 }
 
 // ComposeServerConfig 构造服务的Config
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap maps.Map) (*serverconfigs.ServerConfig, error) {
+// forNode 是否是节点请求
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap maps.Map, forNode bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
@@ -1039,24 +1039,11 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 			return nil, err
 		}
 		config.TrafficLimit = trafficLimitConfig
-
-		if trafficLimitConfig.IsOn && !trafficLimitConfig.IsEmpty() {
-			if len(server.TrafficLimitStatus) > 0 {
-				var status = &serverconfigs.TrafficLimitStatus{}
-				err = json.Unmarshal([]byte(server.TrafficLimitStatus), status)
-				if err != nil {
-					return nil, err
-				}
-				if status.IsValid() {
-					config.TrafficLimitStatus = status
-				}
-			}
-		}
 	}
 
 	// 用户套餐
-	if server.UserPlanId > 0 {
-		userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, int64(server.UserPlanId))
+	if forNode && server.UserPlanId > 0 {
+		userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, int64(server.UserPlanId), cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -1083,6 +1070,19 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 					}
 					config.TrafficLimit = trafficLimitConfig
 				}
+			}
+		}
+	}
+
+	if config.TrafficLimit != nil && config.TrafficLimit.IsOn && !config.TrafficLimit.IsEmpty() {
+		if len(server.TrafficLimitStatus) > 0 {
+			var status = &serverconfigs.TrafficLimitStatus{}
+			err = json.Unmarshal([]byte(server.TrafficLimitStatus), status)
+			if err != nil {
+				return nil, err
+			}
+			if status.IsValid() {
+				config.TrafficLimitStatus = status
 			}
 		}
 	}
@@ -1819,28 +1819,104 @@ func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, 
 		return result.(*serverconfigs.TrafficLimitConfig), nil
 	}
 
-	trafficLimit, err := this.Query(tx).
+	serverOne, err := this.Query(tx).
 		Pk(serverId).
 		Result("trafficLimit").
-		FindStringCol("")
+		Find()
 	if err != nil {
 		return nil, err
 	}
 
 	var limit = &serverconfigs.TrafficLimitConfig{}
-	if len(trafficLimit) == 0 {
+	if serverOne == nil {
 		return limit, nil
 	}
+
+	var trafficLimit = serverOne.(*Server).TrafficLimit
+
 	err = json.Unmarshal([]byte(trafficLimit), limit)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO 套餐
-
 	cacheMap[cacheKey] = limit
 
 	return limit, nil
+}
+
+// CalculateServerTrafficLimitConfig 计算服务的流量限制
+// TODO 优化性能
+func (this *ServerDAO) CalculateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
+	if cacheMap == nil {
+		cacheMap = maps.Map{}
+	}
+	var cacheKey = this.Table + ":FindServerTrafficLimitConfig:" + types.String(serverId)
+	result, ok := cacheMap[cacheKey]
+	if ok {
+		return result.(*serverconfigs.TrafficLimitConfig), nil
+	}
+
+	serverOne, err := this.Query(tx).
+		Pk(serverId).
+		Result("trafficLimit", "userPlanId").
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	var limitConfig = &serverconfigs.TrafficLimitConfig{}
+	if serverOne == nil {
+		return limitConfig, nil
+	}
+
+	var trafficLimit = serverOne.(*Server).TrafficLimit
+	var userPlanId = int64(serverOne.(*Server).UserPlanId)
+
+	if len(trafficLimit) == 0 {
+		if userPlanId > 0 {
+			userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if userPlan != nil {
+				planLimit, err := SharedPlanDAO.FindEnabledPlanTrafficLimit(tx, int64(userPlan.PlanId), cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if planLimit != nil {
+					return planLimit, nil
+				}
+			}
+		}
+		return limitConfig, nil
+	}
+
+	err = json.Unmarshal([]byte(trafficLimit), limitConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if !limitConfig.IsOn {
+		if userPlanId > 0 {
+			userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if userPlan != nil {
+				planLimit, err := SharedPlanDAO.FindEnabledPlanTrafficLimit(tx, int64(userPlan.PlanId), cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if planLimit != nil {
+					return planLimit, nil
+				}
+			}
+		}
+	}
+
+	cacheMap[cacheKey] = limitConfig
+
+	return limitConfig, nil
 }
 
 // UpdateServerTrafficLimitConfig 修改服务的流量限制
@@ -1873,16 +1949,22 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 		return nil
 	}
 
-	oldStatusString, err := this.Query(tx).
+	serverOne, err := this.Query(tx).
 		Pk(serverId).
-		Result("trafficLimitStatus").
-		FindStringCol("")
+		Result("trafficLimitStatus", "totalTraffic", "totalDailyTraffic", "totalMonthlyTraffic", "trafficDay", "trafficMonth").
+		Find()
 	if err != nil {
 		return err
 	}
+	if serverOne == nil {
+		return nil
+	}
+
+	var server = serverOne.(*Server)
+
 	var oldStatus = &serverconfigs.TrafficLimitStatus{}
-	if len(oldStatusString) > 0 {
-		err = json.Unmarshal([]byte(oldStatusString), oldStatus)
+	if len(server.TrafficLimitStatus) > 0 {
+		err = json.Unmarshal([]byte(server.TrafficLimitStatus), oldStatus)
 		if err != nil {
 			return err
 		}
@@ -1897,38 +1979,22 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 
 	// daily
 	if trafficLimitConfig.DailyBytes() > 0 {
-		stat, err := SharedServerDailyStatDAO.SumDailyStat(tx, serverId, timeutil.Format("Ymd"))
-		if err != nil {
-			return err
-		}
-		if stat != nil && stat.Bytes >= trafficLimitConfig.DailyBytes() {
+		if server.TrafficDay == timeutil.Format("Ymd") && server.TotalDailyTraffic >= float64(trafficLimitConfig.DailyBytes())/1024/1024/1024 {
 			untilDay = timeutil.Format("Ymd")
 		}
 	}
 
 	// monthly
-	if trafficLimitConfig.MonthlyBytes() > 0 {
-		stat, err := SharedServerDailyStatDAO.SumMonthlyStat(tx, serverId, timeutil.Format("Ym"))
-		if err != nil {
-			return err
-		}
-		if stat != nil && stat.Bytes >= trafficLimitConfig.MonthlyBytes() {
-			untilDay = timeutil.Format("Ym") + fmt.Sprintf("%02d", types.Int(timeutil.Format("t")))
+	if server.TrafficMonth == timeutil.Format("Ym") && trafficLimitConfig.MonthlyBytes() > 0 {
+		if server.TotalMonthlyTraffic >= float64(trafficLimitConfig.MonthlyBytes())/1024/1024/1024 {
+			untilDay = timeutil.Format("Ym32")
 		}
 	}
 
 	// totally
 	if trafficLimitConfig.TotalBytes() > 0 {
-		totalTraffic, err := this.Query(tx).
-			Pk(serverId).
-			Result("totalTraffic").
-			FindFloat64Col(0)
-		if err != nil {
-			return err
-		}
-
-		if totalTraffic >= float64(trafficLimitConfig.TotalBytes()) {
-			untilDay = "20990101"
+		if server.TotalTraffic >= float64(trafficLimitConfig.TotalBytes())/1024/1024/1024 {
+			untilDay = "30000101"
 		}
 	}
 
@@ -1958,9 +2024,17 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 // IncreaseServerTotalTraffic 增加服务的总流量
 func (this *ServerDAO) IncreaseServerTotalTraffic(tx *dbs.Tx, serverId int64, bytes int64) error {
 	var gb = float64(bytes) / 1024 / 1024 / 1024
+	var day = timeutil.Format("Ymd")
+	var month = timeutil.Format("Ym")
 	return this.Query(tx).
 		Pk(serverId).
+		Set("totalDailyTraffic", dbs.SQL("IF(trafficDay=:day, totalDailyTraffic, 0)+:trafficGB")).
+		Set("totalMonthlyTraffic", dbs.SQL("IF(trafficMonth=:month, totalMonthlyTraffic, 0)+:trafficGB")).
 		Set("totalTraffic", dbs.SQL("totalTraffic+:trafficGB")).
+		Set("trafficDay", day).
+		Set("trafficMonth", month).
+		Param("day", day).
+		Param("month", month).
 		Param("trafficGB", gb).
 		UpdateQuickly()
 
@@ -1970,7 +2044,8 @@ func (this *ServerDAO) IncreaseServerTotalTraffic(tx *dbs.Tx, serverId int64, by
 func (this *ServerDAO) ResetServerTotalTraffic(tx *dbs.Tx, serverId int64) error {
 	return this.Query(tx).
 		Pk(serverId).
-		Set("totalTraffic", 0).
+		Set("totalDailyTraffic", 0).
+		Set("totalMonthlyTraffic", 0).
 		UpdateQuickly()
 }
 
@@ -1994,7 +2069,7 @@ func (this *ServerDAO) UpdateServersClusterIdWithPlanId(tx *dbs.Tx, planId int64
 
 // UpdateServerUserPlanId 设置服务所属套餐
 func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPlanId int64) error {
-	userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId)
+	userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId, nil)
 	if err != nil {
 		return err
 	}
