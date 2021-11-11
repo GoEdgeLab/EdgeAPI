@@ -1,6 +1,6 @@
 package models
 
-// 用户账单
+// UserBill 用户账单
 type UserBill struct {
 	Id          uint64  `field:"id"`          // ID
 	UserId      uint32  `field:"userId"`      // 用户ID
@@ -10,6 +10,7 @@ type UserBill struct {
 	Month       string  `field:"month"`       // 帐期YYYYMM
 	IsPaid      uint8   `field:"isPaid"`      // 是否已支付
 	PaidAt      uint64  `field:"paidAt"`      // 支付时间
+	Code        string  `field:"code"`        // 账单编号
 	CreatedAt   uint64  `field:"createdAt"`   // 创建时间
 }
 
@@ -22,6 +23,7 @@ type UserBillOperator struct {
 	Month       interface{} // 帐期YYYYMM
 	IsPaid      interface{} // 是否已支付
 	PaidAt      interface{} // 支付时间
+	Code        interface{} // 账单编号
 	CreatedAt   interface{} // 创建时间
 }
 

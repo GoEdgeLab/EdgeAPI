@@ -1060,6 +1060,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 			if plan != nil {
 				config.UserPlan = &serverconfigs.UserPlanConfig{
 					DayTo: userPlan.DayTo,
+					Plan: &serverconfigs.PlanConfig{
+						Id: int64(plan.Id),
+					},
 				}
 
 				if len(plan.TrafficLimit) > 0 && (config.TrafficLimit == nil || !config.TrafficLimit.IsOn) {

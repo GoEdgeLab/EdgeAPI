@@ -9,12 +9,12 @@ import (
 	"regexp"
 )
 
-// 账单相关服务
+// UserBillService 账单相关服务
 type UserBillService struct {
 	BaseService
 }
 
-// 手工生成订单
+// GenerateAllUserBills 手工生成订单
 func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.GenerateAllUserBillsRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -39,7 +39,7 @@ func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.G
 	return this.Success()
 }
 
-// 计算所有账单数量
+// CountAllUserBills 计算所有账单数量
 func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.CountAllUserBillsRequest) (*pb.RPCCountResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -55,7 +55,7 @@ func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.Coun
 	return this.SuccessCount(count)
 }
 
-// 列出单页账单
+// ListUserBills 列出单页账单
 func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUserBillsRequest) (*pb.ListUserBillsResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
@@ -70,16 +70,20 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 	}
 	result := []*pb.UserBill{}
 	for _, bill := range bills {
-		userFullname, err := models.SharedUserDAO.FindUserFullname(tx, int64(bill.UserId))
+		user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, int64(bill.UserId))
 		if err != nil {
 			return nil, err
+		}
+		if user == nil {
+			user = &models.User{Id: bill.UserId}
 		}
 
 		result = append(result, &pb.UserBill{
 			Id: int64(bill.Id),
 			User: &pb.User{
 				Id:       int64(bill.UserId),
-				Fullname: userFullname,
+				Fullname: user.Fullname,
+				Username: user.Username,
 			},
 			Type:        bill.Type,
 			TypeName:    models.SharedUserBillDAO.BillTypeName(bill.Type),
@@ -88,6 +92,7 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 			Month:       bill.Month,
 			IsPaid:      bill.IsPaid == 1,
 			PaidAt:      int64(bill.PaidAt),
+			Code:        bill.Code,
 		})
 	}
 	return &pb.ListUserBillsResponse{UserBills: result}, nil

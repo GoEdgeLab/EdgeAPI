@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableNodePriceItem 启用条目
 func (this *NodePriceItemDAO) EnableNodePriceItem(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +44,7 @@ func (this *NodePriceItemDAO) EnableNodePriceItem(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableNodePriceItem 禁用条目
 func (this *NodePriceItemDAO) DisableNodePriceItem(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *NodePriceItemDAO) DisableNodePriceItem(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledNodePriceItem 查找启用中的条目
 func (this *NodePriceItemDAO) FindEnabledNodePriceItem(tx *dbs.Tx, id int64) (*NodePriceItem, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -65,7 +65,7 @@ func (this *NodePriceItemDAO) FindEnabledNodePriceItem(tx *dbs.Tx, id int64) (*N
 	return result.(*NodePriceItem), err
 }
 
-// 根据主键查找名称
+// FindNodePriceItemName 根据主键查找名称
 func (this *NodePriceItemDAO) FindNodePriceItemName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -73,7 +73,7 @@ func (this *NodePriceItemDAO) FindNodePriceItemName(tx *dbs.Tx, id int64) (strin
 		FindStringCol("")
 }
 
-// 创建价格
+// CreateItem 创建价格
 func (this *NodePriceItemDAO) CreateItem(tx *dbs.Tx, name string, itemType string, bitsFrom, bitsTo int64) (int64, error) {
 	op := NewNodePriceItemOperator()
 	op.Name = name
@@ -85,7 +85,7 @@ func (this *NodePriceItemDAO) CreateItem(tx *dbs.Tx, name string, itemType strin
 	return this.SaveInt64(tx, op)
 }
 
-// 修改价格
+// UpdateItem 修改价格
 func (this *NodePriceItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, bitsFrom, bitsTo int64) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
@@ -98,7 +98,7 @@ func (this *NodePriceItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, 
 	return this.Save(tx, op)
 }
 
-// 列出某个区域的所有价格
+// FindAllEnabledRegionPrices 列出某个区域的所有价格
 func (this *NodePriceItemDAO) FindAllEnabledRegionPrices(tx *dbs.Tx, priceType string) (result []*NodePriceItem, err error) {
 	_, err = this.Query(tx).
 		Attr("type", priceType).
@@ -109,7 +109,7 @@ func (this *NodePriceItemDAO) FindAllEnabledRegionPrices(tx *dbs.Tx, priceType s
 	return
 }
 
-// 列出某个区域的所有启用的价格
+// FindAllEnabledAndOnRegionPrices 列出某个区域的所有启用的价格
 func (this *NodePriceItemDAO) FindAllEnabledAndOnRegionPrices(tx *dbs.Tx, priceType string) (result []*NodePriceItem, err error) {
 	_, err = this.Query(tx).
 		Attr("type", priceType).
@@ -121,7 +121,7 @@ func (this *NodePriceItemDAO) FindAllEnabledAndOnRegionPrices(tx *dbs.Tx, priceT
 	return
 }
 
-// 根据字节查找付费项目
+// SearchItemsWithBytes 根据字节查找付费项目
 func (this *NodePriceItemDAO) SearchItemsWithBytes(items []*NodePriceItem, bytes int64) int64 {
 	bytes *= 8
 

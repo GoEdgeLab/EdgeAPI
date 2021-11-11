@@ -194,6 +194,15 @@ func (this *PlanDAO) ListEnabledPlans(tx *dbs.Tx, offset int64, size int64) (res
 	return
 }
 
+// FindAllEnabledPlans 查找所有可用套餐
+func (this *PlanDAO) FindAllEnabledPlans(tx *dbs.Tx) (result []*Plan, err error) {
+	_, err = this.Query(tx).
+		State(PlanStateEnabled).
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // SortPlans 增加排序
 func (this *PlanDAO) SortPlans(tx *dbs.Tx, planIds []int64) error {
 	if len(planIds) == 0 {

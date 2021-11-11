@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableNodeRegion 启用条目
 func (this *NodeRegionDAO) EnableNodeRegion(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +44,7 @@ func (this *NodeRegionDAO) EnableNodeRegion(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableNodeRegion 禁用条目
 func (this *NodeRegionDAO) DisableNodeRegion(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -53,7 +53,7 @@ func (this *NodeRegionDAO) DisableNodeRegion(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledNodeRegion 查找启用中的条目
 func (this *NodeRegionDAO) FindEnabledNodeRegion(tx *dbs.Tx, id int64) (*NodeRegion, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -65,7 +65,7 @@ func (this *NodeRegionDAO) FindEnabledNodeRegion(tx *dbs.Tx, id int64) (*NodeReg
 	return result.(*NodeRegion), err
 }
 
-// 根据主键查找名称
+// FindNodeRegionName 根据主键查找名称
 func (this *NodeRegionDAO) FindNodeRegionName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -73,7 +73,7 @@ func (this *NodeRegionDAO) FindNodeRegionName(tx *dbs.Tx, id int64) (string, err
 		FindStringCol("")
 }
 
-// 创建区域
+// CreateRegion 创建区域
 func (this *NodeRegionDAO) CreateRegion(tx *dbs.Tx, adminId int64, name string, description string) (int64, error) {
 	op := NewNodeRegionOperator()
 	op.AdminId = adminId
@@ -84,7 +84,7 @@ func (this *NodeRegionDAO) CreateRegion(tx *dbs.Tx, adminId int64, name string, 
 	return this.SaveInt64(tx, op)
 }
 
-// 修改区域
+// UpdateRegion 修改区域
 func (this *NodeRegionDAO) UpdateRegion(tx *dbs.Tx, regionId int64, name string, description string, isOn bool) error {
 	if regionId <= 0 {
 		return errors.New("invalid regionId")
@@ -97,7 +97,7 @@ func (this *NodeRegionDAO) UpdateRegion(tx *dbs.Tx, regionId int64, name string,
 	return this.Save(tx, op)
 }
 
-// 列出所有区域
+// FindAllEnabledRegions 列出所有区域
 func (this *NodeRegionDAO) FindAllEnabledRegions(tx *dbs.Tx) (result []*NodeRegion, err error) {
 	_, err = this.Query(tx).
 		State(NodeRegionStateEnabled).
@@ -108,7 +108,7 @@ func (this *NodeRegionDAO) FindAllEnabledRegions(tx *dbs.Tx) (result []*NodeRegi
 	return
 }
 
-// 列出所有价格
+// FindAllEnabledRegionPrices 列出所有价格
 func (this *NodeRegionDAO) FindAllEnabledRegionPrices(tx *dbs.Tx) (result []*NodeRegion, err error) {
 	_, err = this.Query(tx).
 		State(NodeRegionStateEnabled).
@@ -120,7 +120,7 @@ func (this *NodeRegionDAO) FindAllEnabledRegionPrices(tx *dbs.Tx) (result []*Nod
 	return
 }
 
-// 列出所有启用的区域
+// FindAllEnabledAndOnRegions 列出所有启用的区域
 func (this *NodeRegionDAO) FindAllEnabledAndOnRegions(tx *dbs.Tx) (result []*NodeRegion, err error) {
 	_, err = this.Query(tx).
 		State(NodeRegionStateEnabled).
@@ -132,7 +132,7 @@ func (this *NodeRegionDAO) FindAllEnabledAndOnRegions(tx *dbs.Tx) (result []*Nod
 	return
 }
 
-// 排序
+// UpdateRegionOrders 排序
 func (this *NodeRegionDAO) UpdateRegionOrders(tx *dbs.Tx, regionIds []int64) error {
 	order := len(regionIds)
 	for _, regionId := range regionIds {
@@ -148,7 +148,7 @@ func (this *NodeRegionDAO) UpdateRegionOrders(tx *dbs.Tx, regionIds []int64) err
 	return nil
 }
 
-// 修改价格项价格
+// UpdateRegionItemPrice 修改价格项价格
 func (this *NodeRegionDAO) UpdateRegionItemPrice(tx *dbs.Tx, regionId int64, itemId int64, price float32) error {
 	one, err := this.Query(tx).
 		Pk(regionId).

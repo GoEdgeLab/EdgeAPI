@@ -3,13 +3,35 @@ package accounts
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
+
+func init() {
+	dbs.OnReadyDone(func() {
+		go func() {
+			// 自动支付账单任务
+			var ticker = time.NewTicker(12 * time.Hour)
+			for range ticker.C {
+				if SharedUserAccountDAO.Instance != nil {
+					err := SharedUserAccountDAO.Instance.RunTx(func(tx *dbs.Tx) error {
+						return SharedUserAccountDAO.PayBills(tx)
+					})
+					if err != nil {
+						remotelogs.Error("USER_ACCOUNT_DAO", "pay bills task failed: "+err.Error())
+					}
+				}
+			}
+		}()
+	})
+}
 
 type UserAccountDAO dbs.DAO
 
@@ -169,4 +191,47 @@ func (this *UserAccountDAO) ListAccounts(tx *dbs.Tx, keyword string, offset int6
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// PayBills 尝试自动支付账单
+func (this *UserAccountDAO) PayBills(tx *dbs.Tx) error {
+	bills, err := models.SharedUserBillDAO.FindUnpaidBills(tx, 10000)
+	if err != nil {
+		return err
+	}
+
+	// 先支付久远的
+	lists.Reverse(bills)
+
+	for _, bill := range bills {
+		if bill.Amount <= 0 {
+			err = models.SharedUserBillDAO.UpdateUserBillIsPaid(tx, int64(bill.Id), true)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		account, err := SharedUserAccountDAO.FindUserAccountWithUserId(tx, int64(bill.UserId))
+		if err != nil {
+			return err
+		}
+		if account == nil || account.Total < bill.Amount {
+			continue
+		}
+
+		// 扣款
+		err = SharedUserAccountDAO.UpdateUserAccount(tx, int64(account.Id), -float32(bill.Amount), userconfigs.AccountEventTypePayBill, "支付账单"+bill.Code, maps.Map{"billId": bill.Id})
+		if err != nil {
+			return err
+		}
+
+		// 改为已支付
+		err = models.SharedUserBillDAO.UpdateUserBillIsPaid(tx, int64(bill.Id), true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

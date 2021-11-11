@@ -88,6 +88,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 				"countCachedRequests": stat.CountCachedRequests,
 				"countAttackRequests": stat.CountAttackRequests,
 				"attackBytes":         stat.AttackBytes,
+				"planId":              stat.PlanId,
 				"day":                 day,
 				"hour":                hour,
 				"timeFrom":            timeFrom,
@@ -99,6 +100,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 				"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
 				"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
 				"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
+				"planId":              stat.PlanId,
 			})
 		if err != nil {
 			return err
@@ -137,6 +139,30 @@ func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionI
 	return query.Between("day", month+"01", month+"32").
 		Attr("userId", userId).
 		SumInt64("bytes", 0)
+}
+
+// SumUserMonthlyWithoutPlan 根据用户计算某月合计并排除套餐
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumUserMonthlyWithoutPlan(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
+	query := this.Query(tx)
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	return query.
+		Attr("planId", 0).
+		Between("day", month+"01", month+"32").
+		Attr("userId", userId).
+		SumInt64("bytes", 0)
+}
+
+// SumUserMonthlyFee 计算用户某个月费用
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumUserMonthlyFee(tx *dbs.Tx, userId int64, month string) (float64, error) {
+	return this.Query(tx).
+		Attr("userId", userId).
+		Between("day", month+"01", month+"32").
+		Gt("fee", 0).
+		Sum("fee", 0)
 }
 
 // SumUserMonthlyPeek 获取某月带宽峰值
@@ -345,6 +371,17 @@ func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFr
 	return
 }
 
+// FindMonthlyStatsWithPlan 查找某月有套餐的流量
+// month YYYYMM
+func (this *ServerDailyStatDAO) FindMonthlyStatsWithPlan(tx *dbs.Tx, month string) (result []*ServerDailyStat, err error) {
+	_, err = this.Query(tx).
+		Between("day", month+"01", month+"32").
+		Gt("planId", 0).
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // FindHourlyStats 按小时统计
 func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
@@ -388,6 +425,14 @@ func (this *ServerDailyStatDAO) FindTopUserStats(tx *dbs.Tx, hourFrom string, ho
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// UpdateStatFee 设置费用
+func (this *ServerDailyStatDAO) UpdateStatFee(tx *dbs.Tx, statId int64, fee float32) error {
+	return this.Query(tx).
+		Pk(statId).
+		Set("fee", fee).
+		UpdateQuickly()
 }
 
 // Clean 清理历史数据
