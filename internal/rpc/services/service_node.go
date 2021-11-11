@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -14,6 +15,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
+	"github.com/andybalholm/brotli"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -631,7 +633,29 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	return &pb.FindCurrentNodeConfigResponse{IsChanged: true, NodeJSON: data}, nil
+	var isCompressed = false
+	if req.Compress {
+		var buf = &bytes.Buffer{}
+		writer := brotli.NewWriterLevel(buf, 5)
+		_, err = writer.Write(data)
+		if err != nil {
+			_ = writer.Close()
+		} else {
+			err = writer.Close()
+			if err == nil {
+				isCompressed = true
+				data = buf.Bytes()
+				buf.Reset()
+			}
+		}
+	}
+
+	return &pb.FindCurrentNodeConfigResponse{
+		IsChanged:    true,
+		NodeJSON:     data,
+		DataSize:     int64(len(data)),
+		IsCompressed: isCompressed,
+	}, nil
 }
 
 // UpdateNodeStatus 更新节点状态
