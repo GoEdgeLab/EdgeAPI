@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -23,7 +24,17 @@ import (
 	"net"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 )
+
+// NodeVersionCache 节点版本缓存
+type NodeVersionCache struct {
+	CacheMap map[int64]*utils.CacheMap // version => map
+}
+
+var nodeVersionCacheMap = map[int64]*NodeVersionCache{} // [cluster_id]_[version] => cache
+var nodeVersionCacheLocker = &sync.Mutex{}
 
 // NodeService 边缘节点相关服务
 type NodeService struct {
@@ -604,8 +615,6 @@ func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindE
 
 // FindCurrentNodeConfig 组合节点配置
 func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.FindCurrentNodeConfigRequest) (*pb.FindCurrentNodeConfigResponse, error) {
-	_ = req
-
 	// 校验节点
 	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
 	if err != nil {
@@ -623,7 +632,12 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return &pb.FindCurrentNodeConfigResponse{IsChanged: false}, nil
 	}
 
-	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, nil)
+	clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	var cacheMap = this.findClusterCacheMap(clusterId, req.NodeTaskVersion)
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -633,6 +647,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
+	// 压缩
 	var isCompressed = false
 	if req.Compress {
 		var buf = &bytes.Buffer{}
@@ -1560,4 +1575,38 @@ func (this *NodeService) UpdateNodeCache(ctx context.Context, req *pb.UpdateNode
 	}
 
 	return this.Success()
+}
+
+// 获取缓存CacheMap
+func (this *NodeService) findClusterCacheMap(clusterId int64, version int64) *utils.CacheMap {
+	nodeVersionCacheLocker.Lock()
+	defer nodeVersionCacheLocker.Unlock()
+
+	cache, ok := nodeVersionCacheMap[clusterId]
+	if ok {
+		cacheMap, ok := cache.CacheMap[version]
+		if ok {
+			return cacheMap
+		}
+
+		// 清除以前版本
+		for v := range cache.CacheMap {
+			if version-v > 60*time.Second.Nanoseconds() {
+				delete(cache.CacheMap, v)
+			}
+		}
+
+		// 添加
+		cacheMap = utils.NewCacheMap()
+		cache.CacheMap[version] = cacheMap
+		return cacheMap
+	} else {
+		var cacheMap = utils.NewCacheMap()
+		cache = &NodeVersionCache{
+			CacheMap: map[int64]*utils.CacheMap{
+				version: cacheMap,
+			}}
+		nodeVersionCacheMap[clusterId] = cache
+		return cacheMap
+	}
 }

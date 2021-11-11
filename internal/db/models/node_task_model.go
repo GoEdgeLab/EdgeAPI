@@ -13,6 +13,7 @@ type NodeTask struct {
 	IsOk       uint8  `field:"isOk"`       // 是否已完成
 	Error      string `field:"error"`      // 错误信息
 	IsNotified uint8  `field:"isNotified"` // 是否已通知更新
+	Version    uint64 `field:"version"`    // 版本
 }
 
 type NodeTaskOperator struct {
@@ -27,6 +28,7 @@ type NodeTaskOperator struct {
 	IsOk       interface{} // 是否已完成
 	Error      interface{} // 错误信息
 	IsNotified interface{} // 是否已通知更新
+	Version    interface{} // 版本
 }
 
 func NewNodeTaskOperator() *NodeTaskOperator {

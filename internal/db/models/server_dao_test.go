@@ -3,12 +3,12 @@ package models
 import (
 	"crypto/md5"
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
-	"github.com/iwind/TeaGo/maps"
 	"testing"
 	"time"
 )
@@ -140,6 +140,7 @@ func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
 func TestServerDAO_FindAllEnabledServersWithNode(t *testing.T) {
 	dbs.NotifyReady()
 
+	var before = time.Now()
 	servers, err := SharedServerDAO.FindAllEnabledServersWithNode(nil, 48)
 	if err != nil {
 		t.Fatal(err)
@@ -147,6 +148,34 @@ func TestServerDAO_FindAllEnabledServersWithNode(t *testing.T) {
 	for _, server := range servers {
 		t.Log("serverId:", server.Id, "clusterId:", server.ClusterId)
 	}
+	t.Log(time.Since(before).Seconds()*1000, "ms")
+}
+
+func TestServerDAO_FindAllEnabledServersWithNode_Cache(t *testing.T) {
+	dbs.NotifyReady()
+
+	var cacheMap = utils.NewCacheMap()
+	{
+		servers, err := SharedServerDAO.FindAllEnabledServersWithNode(nil, 48)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, server := range servers {
+			_, _ = SharedServerDAO.ComposeServerConfig(nil, server, cacheMap, true)
+		}
+	}
+
+	var before = time.Now()
+	{
+		servers, err := SharedServerDAO.FindAllEnabledServersWithNode(nil, 48)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, server := range servers {
+			_, _ = SharedServerDAO.ComposeServerConfig(nil, server, cacheMap, true)
+		}
+	}
+	t.Log(time.Since(before).Seconds()*1000, "ms")
 }
 
 func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
@@ -195,7 +224,7 @@ func TestServerDAO_CalculateServerTrafficLimitConfig(t *testing.T) {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
 
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	config, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
 	if err != nil {
 		t.Fatal(err)
@@ -212,7 +241,7 @@ func TestServerDAO_CalculateServerTrafficLimitConfig_Cache(t *testing.T) {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
 
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	for i := 0; i < 10; i++ {
 		config, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
 		if err != nil {

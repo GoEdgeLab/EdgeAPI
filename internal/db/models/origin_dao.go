@@ -3,13 +3,13 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -220,12 +220,12 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 }
 
 // ComposeOriginConfig 将源站信息转换为配置
-func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap maps.Map) (*serverconfigs.OriginConfig, error) {
+func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap *utils.CacheMap) (*serverconfigs.OriginConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":config:" + types.String(originId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(*serverconfigs.OriginConfig), nil
 	}
@@ -358,7 +358,9 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 		// TODO
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }

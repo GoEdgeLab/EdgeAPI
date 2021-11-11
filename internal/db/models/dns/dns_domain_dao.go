@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -58,14 +59,13 @@ func (this *DNSDomainDAO) DisableDNSDomain(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledDNSDomain 查找启用中的条目
-func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, domainId int64, cacheMap maps.Map) (*DNSDomain, error) {
-	if cacheMap == nil {
-		cacheMap = maps.Map{}
-	}
+func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, domainId int64, cacheMap *utils.CacheMap) (*DNSDomain, error) {
 	var cacheKey = this.Table + ":record:" + types.String(domainId)
-	var cache = cacheMap.Get(cacheKey)
-	if cache != nil {
-		return cache.(*DNSDomain), nil
+	if cacheMap != nil {
+		cache, _ := cacheMap.Get(cacheKey)
+		if cache != nil {
+			return cache.(*DNSDomain), nil
+		}
 	}
 
 	result, err := this.Query(tx).
@@ -75,7 +75,9 @@ func (this *DNSDomainDAO) FindEnabledDNSDomain(tx *dbs.Tx, domainId int64, cache
 	if result == nil {
 		return nil, err
 	}
-	cacheMap[cacheKey] = result
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
 	return result.(*DNSDomain), err
 }
 

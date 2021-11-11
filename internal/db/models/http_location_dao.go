@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
@@ -131,12 +132,12 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 }
 
 // ComposeLocationConfig 组合配置
-func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64, cacheMap maps.Map) (*serverconfigs.HTTPLocationConfig, error) {
+func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64, cacheMap *utils.CacheMap) (*serverconfigs.HTTPLocationConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":config:" + types.String(locationId)
-	var cacheConfig = cacheMap.Get(cacheKey)
+	var cacheConfig, _ = cacheMap.Get(cacheKey)
 	if cacheConfig != nil {
 		return cacheConfig.(*serverconfigs.HTTPLocationConfig), nil
 	}
@@ -194,7 +195,9 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 		config.Conds = conds
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }
@@ -259,7 +262,7 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, web
 }
 
 // ConvertLocationRefs 转换引用为配置
-func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfigs.HTTPLocationRef, cacheMap maps.Map) (locations []*serverconfigs.HTTPLocationConfig, err error) {
+func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfigs.HTTPLocationRef, cacheMap *utils.CacheMap) (locations []*serverconfigs.HTTPLocationConfig, err error) {
 	for _, ref := range refs {
 		config, err := this.ComposeLocationConfig(tx, ref.LocationId, cacheMap)
 		if err != nil {

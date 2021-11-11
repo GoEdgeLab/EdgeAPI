@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -1639,7 +1640,7 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	var purgeResponse = &pb.PurgeServerCacheResponse{}
 
 	for _, domain := range req.Domains {

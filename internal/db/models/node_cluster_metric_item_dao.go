@@ -2,10 +2,12 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -112,16 +114,32 @@ func (this *NodeClusterMetricItemDAO) FindAllClusterItems(tx *dbs.Tx, clusterId 
 }
 
 // FindAllClusterItemIds 查找某个集群的指标Ids
-func (this *NodeClusterMetricItemDAO) FindAllClusterItemIds(tx *dbs.Tx, clusterId int64) (result []int64, err error) {
+func (this *NodeClusterMetricItemDAO) FindAllClusterItemIds(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (result []int64, err error) {
+	var cacheKey = this.Table + ":FindAllClusterItemIds:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.([]int64), nil
+		}
+	}
+
 	ones, err := this.Query(tx).
 		Attr("clusterId", clusterId).
 		State(NodeClusterMetricItemStateEnabled).
 		Result("itemId").
 		DescPk().
 		FindAll()
+	if err != nil {
+		return nil, err
+	}
 	for _, one := range ones {
 		result = append(result, int64(one.(*NodeClusterMetricItem).ItemId))
 	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
 	return
 }
 

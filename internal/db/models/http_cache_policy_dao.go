@@ -3,12 +3,12 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -225,12 +225,12 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 }
 
 // ComposeCachePolicy 组合配置
-func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, cacheMap maps.Map) (*serverconfigs.HTTPCachePolicy, error) {
+func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, cacheMap *utils.CacheMap) (*serverconfigs.HTTPCachePolicy, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":config:" + types.String(policyId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(*serverconfigs.HTTPCachePolicy), nil
 	}
@@ -292,7 +292,9 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 		config.CacheRefs = refs
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }

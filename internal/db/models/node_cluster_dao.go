@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -407,14 +408,13 @@ func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int
 }
 
 // FindClusterDNSInfo 查找DNS信息
-func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (*NodeCluster, error) {
-	if cacheMap == nil {
-		cacheMap = maps.Map{}
-	}
+func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*NodeCluster, error) {
 	var cacheKey = this.Table + ":FindClusterDNSInfo:" + types.String(clusterId)
-	var cache = cacheMap.Get(cacheKey)
-	if cache != nil {
-		return cache.(*NodeCluster), nil
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*NodeCluster), nil
+		}
 	}
 
 	one, err := this.Query(tx).
@@ -427,7 +427,9 @@ func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64, cach
 	if one == nil {
 		return nil, nil
 	}
-	cacheMap[cacheKey] = one
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, one)
+	}
 	return one.(*NodeCluster), nil
 }
 
@@ -487,7 +489,15 @@ func (this *NodeClusterDAO) FindClusterAdminId(tx *dbs.Tx, clusterId int64) (int
 }
 
 // FindClusterTOAConfig 查找集群的TOA设置
-func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64) (*nodeconfigs.TOAConfig, error) {
+func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.TOAConfig, error) {
+	var cacheKey = this.Table + ":FindClusterTOAConfig:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.TOAConfig), nil
+		}
+	}
+
 	toa, err := this.Query(tx).
 		Pk(clusterId).
 		Result("toa").
@@ -504,6 +514,11 @@ func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64) (*
 	if err != nil {
 		return nil, err
 	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
+
 	return config, nil
 }
 
@@ -587,12 +602,12 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithCachePolicyId(tx *db
 }
 
 // FindClusterHTTPFirewallPolicyId 获取集群的WAF策略ID
-func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (int64, error) {
+func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (int64, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":FindClusterHTTPFirewallPolicyId:" + types.String(clusterId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(int64), nil
 	}
@@ -605,7 +620,9 @@ func (this *NodeClusterDAO) FindClusterHTTPFirewallPolicyId(tx *dbs.Tx, clusterI
 		return 0, err
 	}
 
-	cacheMap[cacheKey] = firewallPolicyId
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, firewallPolicyId)
+	}
 
 	return firewallPolicyId, nil
 }
@@ -623,12 +640,12 @@ func (this *NodeClusterDAO) UpdateNodeClusterHTTPCachePolicyId(tx *dbs.Tx, clust
 }
 
 // FindClusterHTTPCachePolicyId 获取集群的缓存策略ID
-func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (int64, error) {
+func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (int64, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":FindClusterHTTPCachePolicyId:" + types.String(clusterId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(int64), nil
 	}
@@ -641,7 +658,9 @@ func (this *NodeClusterDAO) FindClusterHTTPCachePolicyId(tx *dbs.Tx, clusterId i
 		return 0, err
 	}
 
-	cacheMap[cacheKey] = cachePolicyId
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, cachePolicyId)
+	}
 
 	return cachePolicyId, nil
 }
@@ -720,10 +739,19 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServiceParams(tx *dbs.Tx, clust
 }
 
 // FindNodeClusterSystemServices 查找集群的所有服务设置
-func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId int64) (services map[string]maps.Map, err error) {
+func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (services map[string]maps.Map, err error) {
 	if clusterId <= 0 {
 		return nil, errors.New("invalid clusterId")
 	}
+
+	var cacheKey = this.Table + ":FindNodeClusterSystemServices:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(map[string]maps.Map), nil
+		}
+	}
+
 	service, err := this.Query(tx).
 		Pk(clusterId).
 		Result("systemServices").
@@ -738,6 +766,11 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId 
 			return nil, err
 		}
 	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, servicesMap)
+	}
+
 	return servicesMap, nil
 }
 
@@ -816,14 +849,13 @@ func (this *NodeClusterDAO) ExistsEnabledCluster(tx *dbs.Tx, clusterId int64) (b
 }
 
 // FindClusterTimezone 查找时区
-func (this *NodeClusterDAO) FindClusterTimezone(tx *dbs.Tx, clusterId int64, cacheMap maps.Map) (string, error) {
-	if cacheMap == nil {
-		cacheMap = maps.Map{}
-	}
+func (this *NodeClusterDAO) FindClusterTimezone(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (string, error) {
 	var cacheKey = this.Table + ":FindEnabledTimeZone:" + types.String(clusterId)
-	var cache = cacheMap.Get(cacheKey)
-	if cache != nil {
-		return cache.(string), nil
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(string), nil
+		}
 	}
 
 	timeZone, err := this.Query(tx).
@@ -833,7 +865,9 @@ func (this *NodeClusterDAO) FindClusterTimezone(tx *dbs.Tx, clusterId int64, cac
 	if err != nil {
 		return "", err
 	}
-	cacheMap[cacheKey] = timeZone
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, timeZone)
+	}
 	return timeZone, nil
 }
 

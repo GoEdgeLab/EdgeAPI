@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
@@ -37,7 +38,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	tasks, err := models.SharedMessageTaskDAO.FindSendingMessageTasks(tx, req.Size)
 	if err != nil {
 		return nil, err
@@ -186,7 +187,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	task, err := models.SharedMessageTaskDAO.FindEnabledMessageTask(tx, req.MessageTaskId)
 	if err != nil {
 		return nil, err
@@ -305,7 +306,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	tasks, err := models.SharedMessageTaskDAO.ListMessageTasksWithStatus(tx, types.Int(req.Status), req.Offset, req.Size)
 	if err != nil {
 		return nil, err

@@ -8,8 +8,8 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/iwind/TeaGo/maps"
 )
 
 // NSDomainService 域名相关服务
@@ -149,7 +149,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 		return nil, err
 	}
 	pbDomains := []*pb.NSDomain{}
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	for _, domain := range domains {
 		// 集群
 		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(tx, int64(domain.ClusterId))

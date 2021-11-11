@@ -701,7 +701,11 @@ func (this *NodeDAO) UpdateNodeInstallStatus(tx *dbs.Tx, nodeId int64, status *N
 
 // ComposeNodeConfig 组合配置
 // TODO 提升运行速度
-func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.Map) (*nodeconfigs.NodeConfig, error) {
+func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils.CacheMap) (*nodeconfigs.NodeConfig, error) {
+	if cacheMap == nil {
+		cacheMap = utils.NewCacheMap()
+	}
+
 	node, err := this.FindEnabledNode(tx, nodeId)
 	if err != nil {
 		return nil, err
@@ -745,10 +749,19 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 
 	// 全局设置
 	// TODO 根据用户的不同读取不同的全局设置
-	settingJSON, err := SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
-	if err != nil {
-		return nil, err
+	var settingCacheKey = "SharedSysSettingDAO:" + systemconfigs.SettingCodeServerGlobalConfig
+	settingJSONCache, ok := cacheMap.Get(settingCacheKey)
+	var settingJSON = []byte{}
+	if ok {
+		settingJSON = settingJSONCache.([]byte)
+	} else {
+		settingJSON, err = SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
+		if err != nil {
+			return nil, err
+		}
+		cacheMap.Put(settingCacheKey, settingJSON)
 	}
+
 	if len(settingJSON) > 0 {
 		globalConfig := &serverconfigs.GlobalConfig{}
 		err = json.Unmarshal(settingJSON, globalConfig)
@@ -825,14 +838,14 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 	}
 
 	// TOA
-	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(tx, primaryClusterId)
+	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(tx, primaryClusterId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
 	config.TOA = toaConfig
 
 	// 系统服务
-	services, err := SharedNodeClusterDAO.FindNodeClusterSystemServices(tx, primaryClusterId)
+	services, err := SharedNodeClusterDAO.FindNodeClusterSystemServices(tx, primaryClusterId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -841,7 +854,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 	}
 
 	// 防火墙动作
-	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, primaryClusterId)
+	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, primaryClusterId, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -856,7 +869,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 	}
 
 	// 集群指标
-	metricItemIds, err := SharedNodeClusterMetricItemDAO.FindAllClusterItemIds(tx, int64(node.ClusterId))
+	metricItemIds, err := SharedNodeClusterMetricItemDAO.FindAllClusterItemIds(tx, int64(node.ClusterId), cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -872,7 +885,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap maps.M
 	}
 
 	// 公用指标
-	publicMetricItems, err := SharedMetricItemDAO.FindAllPublicItems(tx, serverconfigs.MetricItemCategoryHTTP)
+	publicMetricItems, err := SharedMetricItemDAO.FindAllPublicItems(tx, serverconfigs.MetricItemCategoryHTTP, cacheMap)
 	if err != nil {
 		return nil, err
 	}
@@ -1427,7 +1440,7 @@ func (this *NodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 		return err
 	}
 	if clusterId > 0 {
-		return SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, NodeTaskTypeConfigChanged)
+		return SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, NodeTaskTypeConfigChanged, 0)
 	}
 	return nil
 }

@@ -2,10 +2,10 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -61,10 +61,10 @@ func (this *UserPlanDAO) DisableUserPlan(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledUserPlan 查找启用中的条目
-func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cacheMap maps.Map) (*UserPlan, error) {
+func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cacheMap *utils.CacheMap) (*UserPlan, error) {
 	var cacheKey = this.Table + ":FindEnabledUserPlan:" + types.String(userPlanId)
 	if cacheMap != nil {
-		cache, ok := cacheMap[cacheKey]
+		cache, ok := cacheMap.Get(cacheKey)
 		if ok {
 			return cache.(*UserPlan), nil
 		}
@@ -79,7 +79,7 @@ func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cache
 	}
 
 	if cacheMap != nil {
-		cacheMap[cacheKey] = result
+		cacheMap.Put(cacheKey, result)
 	}
 
 	return result.(*UserPlan), err

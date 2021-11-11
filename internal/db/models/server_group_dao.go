@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -267,13 +268,13 @@ func (this *ServerGroupDAO) InitGroupWeb(tx *dbs.Tx, groupId int64) (int64, erro
 }
 
 // ComposeGroupConfig 组合配置
-func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheMap maps.Map) (*serverconfigs.ServerGroupConfig, error) {
+func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 
 	var cacheKey = this.Table + ":config:" + types.String(groupId)
-	var cacheConfig = cacheMap.Get(cacheKey)
+	var cacheConfig, _ = cacheMap.Get(cacheKey)
 	if cacheConfig != nil {
 		// 克隆，防止分解后的Server配置相互受到影响
 		configJSON, err := json.Marshal(cacheConfig)
@@ -365,7 +366,9 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		}
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }

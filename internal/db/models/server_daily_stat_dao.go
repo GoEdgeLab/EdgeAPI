@@ -54,7 +54,7 @@ func init() {
 // SaveStats 提交数据
 func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailyStat) error {
 	var serverUserMap = map[int64]int64{} // serverId => userId
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	for _, stat := range stats {
 		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
 		hour := timeutil.FormatTime("YmdH", stat.CreatedAt)

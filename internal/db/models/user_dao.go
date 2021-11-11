@@ -8,7 +8,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -57,12 +56,12 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err 
 }
 
 // FindEnabledUser 查找启用的用户
-func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, userId int64, cacheMap maps.Map) (*User, error) {
+func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, userId int64, cacheMap *utils.CacheMap) (*User, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":FindEnabledUser:" + types.String(userId)
-	cache, ok := cacheMap[cacheKey]
+	cache, ok := cacheMap.Get(cacheKey)
 	if ok {
 		return cache.(*User), nil
 	}
@@ -75,7 +74,9 @@ func (this *UserDAO) FindEnabledUser(tx *dbs.Tx, userId int64, cacheMap maps.Map
 		return nil, err
 	}
 
-	cacheMap[cacheKey] = result
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
 
 	return result.(*User), err
 }

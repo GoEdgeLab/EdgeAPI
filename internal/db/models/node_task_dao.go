@@ -49,7 +49,7 @@ func init() {
 }
 
 // CreateNodeTask 创建单个节点任务
-func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, taskType NodeTaskType) error {
+func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, taskType NodeTaskType, version int64) error {
 	if clusterId <= 0 || nodeId <= 0 {
 		return nil
 	}
@@ -66,6 +66,7 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 			"isDone":    0,
 			"isOk":      0,
 			"error":     "",
+			"version":   version,
 		}, maps.Map{
 			"clusterId":  clusterId,
 			"updatedAt":  updatedAt,
@@ -73,6 +74,7 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 			"isOk":       0,
 			"error":      "",
 			"isNotified": 0,
+			"version":    version,
 		})
 	return err
 }
@@ -97,12 +99,14 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId in
 			"isOk":       0,
 			"isNotified": 0,
 			"error":      "",
+			"version":    time.Now().UnixNano(),
 		}, maps.Map{
 			"updatedAt":  updatedAt,
 			"isDone":     0,
 			"isOk":       0,
 			"isNotified": 0,
 			"error":      "",
+			"version":    time.Now().UnixNano(),
 		})
 	return err
 }
@@ -125,8 +129,9 @@ func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, tas
 		return err
 	}
 
+	var version = time.Now().UnixNano()
 	for _, nodeId := range nodeIds {
-		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, taskType)
+		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, taskType, version)
 		if err != nil {
 			return err
 		}
@@ -156,15 +161,16 @@ func (this *NodeTaskDAO) ExtractNSClusterTask(tx *dbs.Tx, clusterId int64, taskT
 		Attr("role", nodeconfigs.NodeRoleDNS).
 		Attr("clusterId", clusterId).
 		Param("clusterIdString", types.String(clusterId)).
-		Where("nodeId> 0").
+		Where("nodeId > 0").
 		Attr("type", taskType).
 		Delete()
 	if err != nil {
 		return err
 	}
 
+	var version = time.Now().UnixNano()
 	for _, nodeId := range nodeIds {
-		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, taskType)
+		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, taskType, version)
 		if err != nil {
 			return err
 		}

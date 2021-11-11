@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
@@ -69,7 +70,7 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	receivers, err := models.SharedMessageReceiverDAO.FindAllEnabledReceivers(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, "")
 	if err != nil {
 		return nil, err

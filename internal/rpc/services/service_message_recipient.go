@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/iwind/TeaGo/maps"
 )
 
 // MessageRecipientService 消息接收人服务
@@ -83,7 +83,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	recipients, err := models.SharedMessageRecipientDAO.ListAllEnabledRecipients(tx, req.AdminId, req.MessageRecipientGroupId, req.MediaType, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	recipient, err := models.SharedMessageRecipientDAO.FindEnabledMessageRecipient(tx, req.MessageRecipientId, cacheMap)
 	if err != nil {
 		return nil, err

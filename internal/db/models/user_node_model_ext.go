@@ -2,8 +2,8 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/iwind/TeaGo/maps"
 )
 
 // DecodeHTTP 解析HTTP配置
@@ -26,7 +26,7 @@ func (this *UserNode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 }
 
 // DecodeHTTPS 解析HTTPS配置
-func (this *UserNode) DecodeHTTPS(cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
+func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if !IsNotNull(this.Https) {
 		return nil, nil
 	}

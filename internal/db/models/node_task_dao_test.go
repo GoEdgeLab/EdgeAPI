@@ -11,7 +11,7 @@ func TestNodeTaskDAO_CreateNodeTask(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, 1, 2, NodeTaskTypeConfigChanged)
+	err := SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, 1, 2, NodeTaskTypeConfigChanged, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

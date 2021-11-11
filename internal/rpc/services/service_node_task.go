@@ -35,8 +35,10 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 	pbTasks := []*pb.NodeTask{}
 	for _, task := range tasks {
 		pbTasks = append(pbTasks, &pb.NodeTask{
-			Id:   int64(task.Id),
-			Type: task.Type,
+			Id:        int64(task.Id),
+			Type:      task.Type,
+			Version:   int64(task.Version),
+			IsPrimary: primaryNodeId == nodeId,
 		})
 	}
 

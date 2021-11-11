@@ -665,7 +665,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterTOA(ctx context.Context, r
 
 	tx := this.NullTx()
 
-	config, err := models.SharedNodeClusterDAO.FindClusterTOAConfig(tx, req.NodeClusterId)
+	config, err := models.SharedNodeClusterDAO.FindClusterTOAConfig(tx, req.NodeClusterId, nil)
 	if err != nil {
 		return nil, err
 	}

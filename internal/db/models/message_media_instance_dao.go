@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -55,12 +56,12 @@ func (this *MessageMediaInstanceDAO) DisableMessageMediaInstance(tx *dbs.Tx, id 
 }
 
 // FindEnabledMessageMediaInstance 查找启用中的条目
-func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx, instanceId int64, cacheMap maps.Map) (*MessageMediaInstance, error) {
+func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx, instanceId int64, cacheMap *utils.CacheMap) (*MessageMediaInstance, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":record:" + types.String(instanceId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(*MessageMediaInstance), nil
 	}
@@ -73,7 +74,9 @@ func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx,
 		return nil, err
 	}
 
-	cacheMap[cacheKey] = result
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
 
 	return result.(*MessageMediaInstance), err
 }

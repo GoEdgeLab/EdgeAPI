@@ -3,11 +3,11 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -223,11 +223,11 @@ func (this *PlanDAO) SortPlans(tx *dbs.Tx, planIds []int64) error {
 }
 
 // FindEnabledPlanTrafficLimit 获取套餐的流量限制
-func (this *PlanDAO) FindEnabledPlanTrafficLimit(tx *dbs.Tx, planId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
+func (this *PlanDAO) FindEnabledPlanTrafficLimit(tx *dbs.Tx, planId int64, cacheMap *utils.CacheMap) (*serverconfigs.TrafficLimitConfig, error) {
 	var cacheKey = this.Table + ":FindEnabledPlanTrafficLimit:" + types.String(planId)
 	if cacheMap != nil {
-		cache, ok := cacheMap[cacheKey]
-		if ok {
+		cache, _ := cacheMap.Get(cacheKey)
+		if cache != nil {
 			return cache.(*serverconfigs.TrafficLimitConfig), nil
 		}
 	}
@@ -250,7 +250,7 @@ func (this *PlanDAO) FindEnabledPlanTrafficLimit(tx *dbs.Tx, planId int64, cache
 	}
 
 	if cacheMap != nil {
-		cacheMap[cacheKey] = config
+		cacheMap.Put(cacheKey, config)
 	}
 
 	return config, nil

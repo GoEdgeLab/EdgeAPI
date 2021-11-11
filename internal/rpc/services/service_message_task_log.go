@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/iwind/TeaGo/maps"
 )
 
 // MessageTaskLogService 消息发送日志相关服务
@@ -33,7 +33,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 		return nil, err
 	}
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	logs, err := models.SharedMessageTaskLogDAO.ListLogs(tx, req.Offset, req.Size)
 	if err != nil {
 		return nil, err

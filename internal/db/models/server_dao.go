@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -839,13 +840,18 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 
 // ComposeServerConfig 构造服务的Config
 // forNode 是否是节点请求
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap maps.Map, forNode bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap *utils.CacheMap, forNode bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
 
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
+	}
+	var cacheKey = this.Table + ":ComposeServerConfig:" + types.String(server.Id)
+	cache, ok := cacheMap.Get(cacheKey)
+	if ok {
+		return cache.(*serverconfigs.ServerConfig), nil
 	}
 
 	config := &serverconfigs.ServerConfig{}
@@ -1088,6 +1094,10 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 				config.TrafficLimitStatus = status
 			}
 		}
+	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
 	}
 
 	return config, nil
@@ -1812,12 +1822,12 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 }
 
 // FindServerTrafficLimitConfig 查找服务的流量限制
-func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
+func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap *utils.CacheMap) (*serverconfigs.TrafficLimitConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":FindServerTrafficLimitConfig:" + types.String(serverId)
-	result, ok := cacheMap[cacheKey]
+	result, ok := cacheMap.Get(cacheKey)
 	if ok {
 		return result.(*serverconfigs.TrafficLimitConfig), nil
 	}
@@ -1842,19 +1852,21 @@ func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, 
 		return nil, err
 	}
 
-	cacheMap[cacheKey] = limit
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, limit)
+	}
 
 	return limit, nil
 }
 
 // CalculateServerTrafficLimitConfig 计算服务的流量限制
 // TODO 优化性能
-func (this *ServerDAO) CalculateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap maps.Map) (*serverconfigs.TrafficLimitConfig, error) {
+func (this *ServerDAO) CalculateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, cacheMap *utils.CacheMap) (*serverconfigs.TrafficLimitConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":FindServerTrafficLimitConfig:" + types.String(serverId)
-	result, ok := cacheMap[cacheKey]
+	result, ok := cacheMap.Get(cacheKey)
 	if ok {
 		return result.(*serverconfigs.TrafficLimitConfig), nil
 	}
@@ -1917,7 +1929,9 @@ func (this *ServerDAO) CalculateServerTrafficLimitConfig(tx *dbs.Tx, serverId in
 		}
 	}
 
-	cacheMap[cacheKey] = limitConfig
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, limitConfig)
+	}
 
 	return limitConfig, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
@@ -147,7 +148,7 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 	}
 
 	var tx = this.NullTx()
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	instance, err := models.SharedMessageMediaInstanceDAO.FindEnabledMessageMediaInstance(tx, req.MessageMediaInstanceId, cacheMap)
 	if err != nil {
 		return nil, err

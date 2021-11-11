@@ -566,7 +566,7 @@ func (this *ServerStatBoardService) findNodeClusterMetricDataCharts(tx *dbs.Tx, 
 		metricItemIds = append(metricItemIds, itemId)
 	}
 
-	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, category)
+	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, category, nil)
 	if err != nil {
 		return nil, err
 	}

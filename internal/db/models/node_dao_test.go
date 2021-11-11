@@ -1,9 +1,9 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"testing"
 	"time"
 )
@@ -46,13 +46,13 @@ func TestNodeDAO_ComposeNodeConfig(t *testing.T) {
 	}()
 
 	var tx *dbs.Tx
-	var cacheMap = maps.Map{}
+	var cacheMap = utils.NewCacheMap()
 	nodeConfig, err := SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(len(nodeConfig.Servers), "servers")
-	t.Log(len(cacheMap), "items")
+	t.Log(cacheMap.Len(), "items")
 
 	// old: 77ms => new: 56ms
 }

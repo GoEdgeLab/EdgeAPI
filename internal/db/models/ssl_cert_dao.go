@@ -3,11 +3,11 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -164,12 +164,12 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx, certId int64, isOn bool, name str
 }
 
 // ComposeCertConfig 组合配置
-func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap maps.Map) (*sslconfigs.SSLCertConfig, error) {
+func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *utils.CacheMap) (*sslconfigs.SSLCertConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	var cacheKey = this.Table + ":config:" + types.String(certId)
-	var cache = cacheMap.Get(cacheKey)
+	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(*sslconfigs.SSLCertConfig), nil
 	}
@@ -213,7 +213,9 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap map
 		config.CommonNames = commonNames
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }

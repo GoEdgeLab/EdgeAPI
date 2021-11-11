@@ -18,7 +18,9 @@ import (
 	"time"
 )
 
-// 命令请求相关
+var primaryNodeId int64 = 0
+
+// CommandRequest 命令请求相关
 type CommandRequest struct {
 	Id          int64
 	Code        string
@@ -73,6 +75,26 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	if err != nil {
 		return err
 	}
+
+	// 选择一个作为主节点
+	if primaryNodeId == 0 {
+		primaryNodeId = nodeId
+	}
+
+	defer func() {
+		if primaryNodeId == nodeId {
+			primaryNodeId = 0
+
+			nodeLocker.Lock()
+			if len(nodeRequestChanMap) > 0 {
+				for anotherNodeId := range nodeRequestChanMap {
+					primaryNodeId = anotherNodeId
+					break
+				}
+			}
+			nodeLocker.Unlock()
+		}
+	}()
 
 	// 返回连接成功
 	{

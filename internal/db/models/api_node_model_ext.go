@@ -2,9 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/maps"
 )
 
 // DecodeHTTP 解析HTTP配置
@@ -27,11 +27,7 @@ func (this *APINode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 }
 
 // DecodeHTTPS 解析HTTPS配置
-func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
-	if cacheMap == nil {
-		cacheMap = maps.Map{}
-	}
-
+func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if !IsNotNull(this.Https) {
 		return nil, nil
 	}
@@ -123,9 +119,9 @@ func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error)
 }
 
 // DecodeRestHTTPS 解析HTTPS配置
-func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap maps.Map) (*serverconfigs.HTTPSProtocolConfig, error) {
+func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverconfigs.HTTPSProtocolConfig, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 	if this.RestIsOn != 1 {
 		return nil, nil

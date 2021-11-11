@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -76,13 +77,13 @@ func (this *SSLPolicyDAO) FindEnabledSSLPolicy(tx *dbs.Tx, id int64) (*SSLPolicy
 }
 
 // ComposePolicyConfig 组合配置
-func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheMap maps.Map) (*sslconfigs.SSLPolicy, error) {
+func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheMap *utils.CacheMap) (*sslconfigs.SSLPolicy, error) {
 	if cacheMap == nil {
-		cacheMap = maps.Map{}
+		cacheMap = utils.NewCacheMap()
 	}
 
 	var cacheKey = this.Table + ":config:" + types.String(policyId)
-	var cacheConfig = cacheMap.Get(cacheKey)
+	var cacheConfig, _ = cacheMap.Get(cacheKey)
 	if cacheConfig != nil {
 		return cacheConfig.(*sslconfigs.SSLPolicy), nil
 	}
@@ -166,7 +167,9 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 		config.HSTS = hstsConfig
 	}
 
-	cacheMap[cacheKey] = config
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, config)
+	}
 
 	return config, nil
 }

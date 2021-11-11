@@ -2,11 +2,13 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 )
 
 const (
@@ -35,7 +37,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableFirewallAction 启用条目
 func (this *NodeClusterFirewallActionDAO) EnableFirewallAction(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -44,7 +46,7 @@ func (this *NodeClusterFirewallActionDAO) EnableFirewallAction(tx *dbs.Tx, id ui
 	return err
 }
 
-// 禁用条目
+// DisableFirewallAction 禁用条目
 func (this *NodeClusterFirewallActionDAO) DisableFirewallAction(tx *dbs.Tx, actionId int64) error {
 	_, err := this.Query(tx).
 		Pk(actionId).
@@ -56,7 +58,7 @@ func (this *NodeClusterFirewallActionDAO) DisableFirewallAction(tx *dbs.Tx, acti
 	return this.NotifyUpdate(tx, actionId)
 }
 
-// 查找启用中的条目
+// FindEnabledFirewallAction 查找启用中的条目
 func (this *NodeClusterFirewallActionDAO) FindEnabledFirewallAction(tx *dbs.Tx, actionId int64) (*NodeClusterFirewallAction, error) {
 	result, err := this.Query(tx).
 		Pk(actionId).
@@ -68,7 +70,7 @@ func (this *NodeClusterFirewallActionDAO) FindEnabledFirewallAction(tx *dbs.Tx, 
 	return result.(*NodeClusterFirewallAction), err
 }
 
-// 根据主键查找名称
+// FindFirewallActionName 根据主键查找名称
 func (this *NodeClusterFirewallActionDAO) FindFirewallActionName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -76,7 +78,7 @@ func (this *NodeClusterFirewallActionDAO) FindFirewallActionName(tx *dbs.Tx, id 
 		FindStringCol("")
 }
 
-// 创建动作
+// CreateFirewallAction 创建动作
 func (this *NodeClusterFirewallActionDAO) CreateFirewallAction(tx *dbs.Tx, adminId int64, clusterId int64, name string, eventLevel, actionType firewallconfigs.FirewallActionType, params maps.Map) (int64, error) {
 	if params == nil {
 		params = maps.Map{}
@@ -101,7 +103,7 @@ func (this *NodeClusterFirewallActionDAO) CreateFirewallAction(tx *dbs.Tx, admin
 	return actionId, nil
 }
 
-// 修改动作
+// UpdateFirewallAction 修改动作
 func (this *NodeClusterFirewallActionDAO) UpdateFirewallAction(tx *dbs.Tx, actionId int64, name string, eventLevel string, actionType firewallconfigs.FirewallActionType, params maps.Map) error {
 	if actionId <= 0 {
 		return errors.New("invalid actionId")
@@ -124,17 +126,33 @@ func (this *NodeClusterFirewallActionDAO) UpdateFirewallAction(tx *dbs.Tx, actio
 	return this.NotifyUpdate(tx, actionId)
 }
 
-// 查找所有集群的动作
-func (this *NodeClusterFirewallActionDAO) FindAllEnabledFirewallActions(tx *dbs.Tx, clusterId int64) (result []*NodeClusterFirewallAction, err error) {
+// FindAllEnabledFirewallActions 查找所有集群的动作
+func (this *NodeClusterFirewallActionDAO) FindAllEnabledFirewallActions(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (result []*NodeClusterFirewallAction, err error) {
+	var cacheKey = this.Table + ":FindAllEnabledFirewallActions:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.([]*NodeClusterFirewallAction), nil
+		}
+	}
+
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterId).
 		State(NodeClusterFirewallActionStateEnabled).
 		Slice(&result).
 		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
 	return
 }
 
-// 组合配置
+// ComposeFirewallActionConfig 组合配置
 func (this *NodeClusterFirewallActionDAO) ComposeFirewallActionConfig(tx *dbs.Tx, action *NodeClusterFirewallAction) (*firewallconfigs.FirewallActionConfig, error) {
 	if action == nil {
 		return nil, nil
@@ -153,7 +171,7 @@ func (this *NodeClusterFirewallActionDAO) ComposeFirewallActionConfig(tx *dbs.Tx
 	return config, nil
 }
 
-// 计算动作数量
+// CountAllEnabledFirewallActions 计算动作数量
 func (this *NodeClusterFirewallActionDAO) CountAllEnabledFirewallActions(tx *dbs.Tx, clusterId int64) (int64, error) {
 	return this.Query(tx).
 		State(NodeClusterFirewallActionStateEnabled).
@@ -161,7 +179,7 @@ func (this *NodeClusterFirewallActionDAO) CountAllEnabledFirewallActions(tx *dbs
 		Count()
 }
 
-// 通知更新
+// NotifyUpdate 通知更新
 func (this *NodeClusterFirewallActionDAO) NotifyUpdate(tx *dbs.Tx, actionId int64) error {
 	clusterId, err := this.Query(tx).
 		Pk(actionId).
