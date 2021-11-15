@@ -281,3 +281,11 @@ func (this *NodeLogDAO) UpdateNodeLogsRead(tx *dbs.Tx, nodeLogIds []int64) error
 	}
 	return nil
 }
+
+// UpdateAllNodeLogsRead 设置所有日志为已读
+func (this *NodeLogDAO) UpdateAllNodeLogsRead(tx *dbs.Tx) error {
+	return this.Query(tx).
+		Attr("isRead", false).
+		Set("isRead", true).
+		UpdateQuickly()
+}

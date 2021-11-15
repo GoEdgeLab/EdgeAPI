@@ -136,3 +136,18 @@ func (this *NodeLogService) UpdateNodeLogsRead(ctx context.Context, req *pb.Upda
 	}
 	return this.Success()
 }
+
+// UpdateAllNodeLogsRead 设置所有日志未已读
+func (this *NodeLogService) UpdateAllNodeLogsRead(ctx context.Context, req *pb.UpdateAllNodeLogsReadRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeLogDAO.UpdateAllNodeLogsRead(tx)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
