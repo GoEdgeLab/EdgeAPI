@@ -13,7 +13,6 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"google.golang.org/grpc/metadata"
-	"time"
 )
 
 type UserType = string
@@ -123,12 +122,6 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 	err = json.Unmarshal(data, &m)
 	if err != nil {
 		return UserTypeNone, 0, 0, errors.New("decode token error: " + err.Error())
-	}
-
-	timestamp := m.GetInt64("timestamp")
-	if time.Now().Unix()-timestamp > 600 {
-		// 请求超过10分钟认为超时
-		return UserTypeNone, 0, 0, errors.New("authenticate timeout, please check your system clock")
 	}
 
 	t := m.GetString("type")

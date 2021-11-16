@@ -16,7 +16,6 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"google.golang.org/grpc/metadata"
-	"time"
 )
 
 type BaseService struct {
@@ -160,12 +159,6 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 	err = json.Unmarshal(data, &m)
 	if err != nil {
 		return rpcutils.UserTypeNone, 0, errors.New("decode token error: " + err.Error())
-	}
-
-	timestamp := m.GetInt64("timestamp")
-	if time.Now().Unix()-timestamp > 600 {
-		// 请求超过10分钟认为超时
-		return rpcutils.UserTypeNone, 0, errors.New("authenticate timeout, please check your system clock")
 	}
 
 	role = apiToken.Role
