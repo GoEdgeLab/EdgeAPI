@@ -98,7 +98,21 @@ func (this *IPItemDAO) DisableOldIPItem(tx *dbs.Tx, listId int64, ipFrom string,
 }
 
 // CreateIPItem 创建IP
-func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) (int64, error) {
+func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
+	listId int64,
+	ipFrom string,
+	ipTo string,
+	expiredAt int64,
+	reason string,
+	itemType IPItemType,
+	eventLevel string,
+	nodeId int64,
+	serverId int64,
+	sourceNodeId int64,
+	sourceServerId int64,
+	sourceHTTPFirewallPolicyId int64,
+	sourceHTTPFirewallRuleGroupId int64,
+	sourceHTTPFirewallRuleSetId int64) (int64, error) {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -118,6 +132,15 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipT
 		expiredAt = 0
 	}
 	op.ExpiredAt = expiredAt
+
+	op.NodeId = nodeId
+	op.ServerId = serverId
+	op.SourceNodeId = sourceNodeId
+	op.SourceServerId = sourceServerId
+	op.SourceHTTPFirewallPolicyId = sourceHTTPFirewallPolicyId
+	op.SourceHTTPFirewallRuleGroupId = sourceHTTPFirewallRuleGroupId
+	op.SourceHTTPFirewallRuleSetId = sourceHTTPFirewallRuleSetId
+
 	op.State = IPItemStateEnabled
 	err = this.Save(tx, op)
 	if err != nil {

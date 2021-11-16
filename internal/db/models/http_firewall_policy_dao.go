@@ -86,6 +86,19 @@ func (this *HTTPFirewallPolicyDAO) FindHTTPFirewallPolicyName(tx *dbs.Tx, id int
 		FindStringCol("")
 }
 
+// FindEnabledHTTPFirewallPolicyBasic 获取WAF策略基本信息
+func (this *HTTPFirewallPolicyDAO) FindEnabledHTTPFirewallPolicyBasic(tx *dbs.Tx, policyId int64) (*HTTPFirewallPolicy, error) {
+	result, err := this.Query(tx).
+		Pk(policyId).
+		Result("id", "name", "serverId", "isOn").
+		Attr("state", HTTPFirewallPolicyStateEnabled).
+		Find()
+	if result == nil {
+		return nil, err
+	}
+	return result.(*HTTPFirewallPolicy), err
+}
+
 // FindAllEnabledFirewallPolicies 查找所有可用策略
 func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (result []*HTTPFirewallPolicy, err error) {
 	_, err = this.Query(tx).

@@ -62,7 +62,7 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		return nil, err
 	}
 
-	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel)
+	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel, req.NodeId, req.ServerId, req.SourceNodeId, req.SourceServerId, req.SourceHTTPFirewallPolicyId, req.SourceHTTPFirewallRuleGroupId, req.SourceHTTPFirewallRuleSetId)
 	if err != nil {
 		return nil, err
 	}
@@ -185,16 +185,82 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 			item.Type = models.IPItemTypeIPv4
 		}
 
+		// server
+		var pbSourceServer *pb.Server
+		if item.SourceServerId > 0 {
+			serverName, err := models.SharedServerDAO.FindEnabledServerName(tx, int64(item.SourceServerId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceServer = &pb.Server{
+				Id:   int64(item.SourceServerId),
+				Name: serverName,
+			}
+		}
+
+		// WAF策略
+		var pbSourcePolicy *pb.HTTPFirewallPolicy
+		if item.SourceHTTPFirewallPolicyId > 0 {
+			policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledHTTPFirewallPolicyBasic(tx, int64(item.SourceHTTPFirewallPolicyId))
+			if err != nil {
+				return nil, err
+			}
+			if policy != nil {
+				pbSourcePolicy = &pb.HTTPFirewallPolicy{
+					Id:       int64(item.SourceHTTPFirewallPolicyId),
+					Name:     policy.Name,
+					ServerId: int64(policy.ServerId),
+				}
+			}
+		}
+
+		// WAF分组
+		var pbSourceGroup *pb.HTTPFirewallRuleGroup
+		if item.SourceHTTPFirewallRuleGroupId > 0 {
+			groupName, err := models.SharedHTTPFirewallRuleGroupDAO.FindHTTPFirewallRuleGroupName(tx, int64(item.SourceHTTPFirewallRuleGroupId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceGroup = &pb.HTTPFirewallRuleGroup{
+				Id:   int64(item.SourceHTTPFirewallRuleGroupId),
+				Name: groupName,
+			}
+		}
+
+		// WAF规则集
+		var pbSourceSet *pb.HTTPFirewallRuleSet
+		if item.SourceHTTPFirewallRuleSetId > 0 {
+			setName, err := models.SharedHTTPFirewallRuleSetDAO.FindHTTPFirewallRuleSetName(tx, int64(item.SourceHTTPFirewallRuleSetId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceSet = &pb.HTTPFirewallRuleSet{
+				Id:   int64(item.SourceHTTPFirewallRuleSetId),
+				Name: setName,
+			}
+		}
+
 		result = append(result, &pb.IPItem{
-			Id:         int64(item.Id),
-			IpFrom:     item.IpFrom,
-			IpTo:       item.IpTo,
-			Version:    int64(item.Version),
-			CreatedAt:  int64(item.CreatedAt),
-			ExpiredAt:  int64(item.ExpiredAt),
-			Reason:     item.Reason,
-			Type:       item.Type,
-			EventLevel: item.EventLevel,
+			Id:                            int64(item.Id),
+			IpFrom:                        item.IpFrom,
+			IpTo:                          item.IpTo,
+			Version:                       int64(item.Version),
+			CreatedAt:                     int64(item.CreatedAt),
+			ExpiredAt:                     int64(item.ExpiredAt),
+			Reason:                        item.Reason,
+			Type:                          item.Type,
+			EventLevel:                    item.EventLevel,
+			NodeId:                        int64(item.NodeId),
+			ServerId:                      int64(item.ServerId),
+			SourceNodeId:                  int64(item.SourceNodeId),
+			SourceServerId:                int64(item.SourceServerId),
+			SourceHTTPFirewallPolicyId:    int64(item.SourceHTTPFirewallPolicyId),
+			SourceHTTPFirewallRuleGroupId: int64(item.SourceHTTPFirewallRuleGroupId),
+			SourceHTTPFirewallRuleSetId:   int64(item.SourceHTTPFirewallRuleSetId),
+			SourceServer:                  pbSourceServer,
+			SourceHTTPFirewallPolicy:      pbSourcePolicy,
+			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
+			SourceHTTPFirewallRuleSet:     pbSourceSet,
 		})
 	}
 
@@ -240,6 +306,8 @@ func (this *IPItemService) FindEnabledIPItem(ctx context.Context, req *pb.FindEn
 		Reason:     item.Reason,
 		Type:       item.Type,
 		EventLevel: item.EventLevel,
+		NodeId:     int64(item.NodeId),
+		ServerId:   int64(item.ServerId),
 	}}, nil
 }
 
@@ -282,6 +350,8 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			Type:       item.Type,
 			EventLevel: item.EventLevel,
 			ListType:   listType,
+			NodeId:     int64(item.NodeId),
+			ServerId:   int64(item.ServerId),
 		})
 	}
 
