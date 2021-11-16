@@ -97,12 +97,12 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 	}
 
 	var tx = this.NullTx()
-	lists, err := models.SharedIPListDAO.ListEnabledIPLists(tx, req.Type, req.IsPublic, req.Keyword, req.Offset, req.Size)
+	ipLists, err := models.SharedIPListDAO.ListEnabledIPLists(tx, req.Type, req.IsPublic, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
 	var pbLists []*pb.IPList
-	for _, list := range lists {
+	for _, list := range ipLists {
 		pbLists = append(pbLists, &pb.IPList{
 			Id:          int64(list.Id),
 			IsOn:        list.IsOn == 1,
@@ -129,6 +129,13 @@ func (this *IPListService) DeleteIPList(ctx context.Context, req *pb.DeleteIPLis
 	if err != nil {
 		return nil, err
 	}
+
+	// 删除所有IP
+	err = models.SharedIPItemDAO.DisableIPItemsWithListId(tx, req.IpListId)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }
 

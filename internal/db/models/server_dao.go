@@ -74,6 +74,13 @@ func (this *ServerDAO) DisableServer(tx *dbs.Tx, serverId int64) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// 删除对应的操作
+	err = this.NotifyDisable(tx, serverId)
+	if err != nil {
+		return err
+	}
+
 	err = this.NotifyUpdate(tx, serverId)
 	if err != nil {
 		return err
@@ -2149,4 +2156,26 @@ func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
 		return nil
 	}
 	return dns.SharedDNSTaskDAO.CreateServerTask(tx, serverId, dns.DNSTaskTypeServerChange)
+}
+
+// NotifyDisable 通知禁用
+func (this *ServerDAO) NotifyDisable(tx *dbs.Tx, serverId int64) error {
+	// 禁用缓存策略相关的内容
+	policyIds, err := SharedHTTPFirewallPolicyDAO.FindFirewallPolicyIdsWithServerId(tx, serverId)
+	if err != nil {
+		return err
+	}
+	for _, policyId := range policyIds {
+		err = SharedHTTPFirewallPolicyDAO.DisableHTTPFirewallPolicy(tx, policyId)
+		if err != nil {
+			return err
+		}
+
+		err = SharedHTTPFirewallPolicyDAO.NotifyDisable(tx, policyId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

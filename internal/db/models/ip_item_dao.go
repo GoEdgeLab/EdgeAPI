@@ -75,6 +75,21 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 	return this.NotifyUpdate(tx, id)
 }
 
+// DisableIPItemsWithListId 禁用某个IP名单内的所有IP
+func (this *IPItemDAO) DisableIPItemsWithListId(tx *dbs.Tx, listId int64) error {
+	version, err := SharedIPListDAO.IncreaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
+	return this.Query(tx).
+		Attr("listId", listId).
+		State(IPItemStateEnabled).
+		Set("version", version).
+		Set("state", IPItemStateDisabled).
+		UpdateQuickly()
+}
+
 // FindEnabledIPItem 查找启用中的条目
 func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) {
 	result, err := this.Query(tx).
@@ -249,6 +264,7 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
 		Param("expiredAt", time.Now().Unix()).
 		Asc("version").
+		Asc("id").
 		Limit(size).
 		Slice(&result).
 		FindAll()

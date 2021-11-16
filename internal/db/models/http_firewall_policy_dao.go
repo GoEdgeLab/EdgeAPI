@@ -63,6 +63,11 @@ func (this *HTTPFirewallPolicyDAO) DisableHTTPFirewallPolicy(tx *dbs.Tx, policyI
 		return err
 	}
 
+	err = this.NotifyDisable(tx, policyId)
+	if err != nil {
+		return err
+	}
+
 	return this.NotifyUpdate(tx, policyId)
 }
 
@@ -482,6 +487,23 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, poli
 	return err
 }
 
+// FindFirewallPolicyIdsWithServerId 查找服务独立关联的策略IDs
+func (this *HTTPFirewallPolicyDAO) FindFirewallPolicyIdsWithServerId(tx *dbs.Tx, serverId int64) ([]int64, error) {
+	var result = []int64{}
+	ones, err := this.Query(tx).
+		Attr("serverId", serverId).
+		State(HTTPFirewallPolicyStateEnabled).
+		Result("id").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		result = append(result, int64(one.(*HTTPFirewallPolicy).Id))
+	}
+	return result, nil
+}
+
 // NotifyUpdate 通知更新
 func (this *HTTPFirewallPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
 	webIds, err := SharedHTTPWebDAO.FindAllWebIdsWithHTTPFirewallPolicyId(tx, policyId)
@@ -503,6 +525,68 @@ func (this *HTTPFirewallPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) erro
 		err := SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// NotifyDisable 通知禁用
+func (this *HTTPFirewallPolicyDAO) NotifyDisable(tx *dbs.Tx, policyId int64) error {
+	if policyId <= 0 {
+		return nil
+	}
+
+	// 禁用IP名单
+	inboundString, err := this.Query(tx).
+		Pk(policyId).
+		Result("inbound").
+		FindStringCol("")
+	if err != nil {
+		return err
+	}
+	if len(inboundString) > 0 {
+		var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{}
+		err = json.Unmarshal([]byte(inboundString), inboundConfig)
+		if err != nil {
+			// 不处理错误
+			return nil
+		}
+
+		if inboundConfig.AllowListRef != nil && inboundConfig.AllowListRef.ListId > 0 {
+			err = SharedIPListDAO.DisableIPList(tx, inboundConfig.AllowListRef.ListId)
+			if err != nil {
+				return err
+			}
+
+			err = SharedIPItemDAO.DisableIPItemsWithListId(tx, inboundConfig.AllowListRef.ListId)
+			if err != nil {
+				return err
+			}
+		}
+
+		if inboundConfig.DenyListRef != nil && inboundConfig.DenyListRef.ListId > 0 {
+			err = SharedIPListDAO.DisableIPList(tx, inboundConfig.DenyListRef.ListId)
+			if err != nil {
+				return err
+			}
+
+			err = SharedIPItemDAO.DisableIPItemsWithListId(tx, inboundConfig.DenyListRef.ListId)
+			if err != nil {
+				return err
+			}
+		}
+
+		if inboundConfig.GreyListRef != nil && inboundConfig.GreyListRef.ListId > 0 {
+			err = SharedIPListDAO.DisableIPList(tx, inboundConfig.GreyListRef.ListId)
+			if err != nil {
+				return err
+			}
+
+			err = SharedIPItemDAO.DisableIPItemsWithListId(tx, inboundConfig.GreyListRef.ListId)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
