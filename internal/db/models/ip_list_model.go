@@ -15,6 +15,7 @@ type IPList struct {
 	Actions     string `field:"actions"`     // IP触发的动作
 	Description string `field:"description"` // 描述
 	IsPublic    uint8  `field:"isPublic"`    // 是否公用
+	IsGlobal    uint8  `field:"isGlobal"`    // 是否全局
 }
 
 type IPListOperator struct {
@@ -31,6 +32,7 @@ type IPListOperator struct {
 	Actions     interface{} // IP触发的动作
 	Description interface{} // 描述
 	IsPublic    interface{} // 是否公用
+	IsGlobal    interface{} // 是否全局
 }
 
 func NewIPListOperator() *IPListOperator {

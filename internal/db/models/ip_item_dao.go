@@ -77,17 +77,37 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 
 // DisableIPItemsWithListId 禁用某个IP名单内的所有IP
 func (this *IPItemDAO) DisableIPItemsWithListId(tx *dbs.Tx, listId int64) error {
-	version, err := SharedIPListDAO.IncreaseVersion(tx)
-	if err != nil {
-		return err
+	for {
+		ones, err := this.Query(tx).
+			ResultPk().
+			Attr("listId", listId).
+			State(IPItemStateEnabled).
+			Limit(1000).
+			FindAll()
+		if err != nil {
+			return err
+		}
+		if len(ones) == 0 {
+			break
+		}
+		for _, one := range ones {
+			var itemId = one.(*IPItem).Id
+			version, err := SharedIPListDAO.IncreaseVersion(tx)
+			if err != nil {
+				return err
+			}
+			err = this.Query(tx).
+				Pk(itemId).
+				State(IPItemStateEnabled).
+				Set("version", version).
+				Set("state", IPItemStateDisabled).
+				UpdateQuickly()
+			if err != nil {
+				return err
+			}
+		}
 	}
-
-	return this.Query(tx).
-		Attr("listId", listId).
-		State(IPItemStateEnabled).
-		Set("version", version).
-		Set("state", IPItemStateDisabled).
-		UpdateQuickly()
+	return nil
 }
 
 // FindEnabledIPItem 查找启用中的条目

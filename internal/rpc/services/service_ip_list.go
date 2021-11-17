@@ -22,7 +22,7 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 
 	tx := this.NullTx()
 
-	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic)
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic, req.IsGlobal)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 		Code:        list.Code,
 		TimeoutJSON: []byte(list.Timeout),
 		Description: list.Description,
+		IsGlobal:    list.IsGlobal == 1,
 	}}, nil
 }
 
@@ -112,6 +113,7 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 			TimeoutJSON: []byte(list.Timeout),
 			IsPublic:    list.IsPublic == 1,
 			Description: list.Description,
+			IsGlobal:    list.IsGlobal == 1,
 		})
 	}
 	return &pb.ListEnabledIPListsResponse{IpLists: pbLists}, nil
@@ -191,6 +193,7 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 			Name:        list.Name,
 			Code:        list.Code,
 			IsPublic:    list.IsPublic == 1,
+			IsGlobal:    list.IsGlobal == 1,
 			Description: "",
 		})
 

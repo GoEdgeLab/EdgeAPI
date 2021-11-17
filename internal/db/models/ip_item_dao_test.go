@@ -16,3 +16,14 @@ func TestIPItemDAO_NotifyClustersUpdate(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+func TestIPItemDAO_DisableIPItemsWithListId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	err := SharedIPItemDAO.DisableIPItemsWithListId(tx, 67)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+}

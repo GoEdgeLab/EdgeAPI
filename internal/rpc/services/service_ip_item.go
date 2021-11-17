@@ -332,9 +332,17 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 		}
 
 		// List类型
-		listType, err := models.SharedIPListDAO.FindIPListTypeCacheable(tx, int64(item.ListId))
+		list, err := models.SharedIPListDAO.FindIPListCacheable(tx, int64(item.ListId))
 		if err != nil {
 			return nil, err
+		}
+		if list == nil {
+			continue
+		}
+
+		// 如果已经删除
+		if list.State != models.IPListStateEnabled {
+			item.State = models.IPItemStateDisabled
 		}
 
 		result = append(result, &pb.IPItem{
@@ -349,7 +357,8 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			IsDeleted:  item.State == 0,
 			Type:       item.Type,
 			EventLevel: item.EventLevel,
-			ListType:   listType,
+			ListType:   list.Type,
+			IsGlobal:   list.IsPublic == 1 && list.IsGlobal == 1,
 			NodeId:     int64(item.NodeId),
 			ServerId:   int64(item.ServerId),
 		})
