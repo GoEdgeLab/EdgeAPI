@@ -468,6 +468,19 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 	return result, nil
 }
 
+// FindEnabledFirewallPolicyWithIPListId 查找使用某个IPList的策略
+func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyWithIPListId(tx *dbs.Tx, ipListId int64) (*HTTPFirewallPolicy, error) {
+	one, err := this.Query(tx).
+		State(HTTPFirewallPolicyStateEnabled).
+		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef'))").
+		Param("listQuery", maps.Map{"isOn": true, "listId": ipListId}.AsJSON()).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*HTTPFirewallPolicy), err
+}
+
 // FindEnabledFirewallPolicyIdWithRuleGroupId 查找包含某个规则分组的策略ID
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdWithRuleGroupId(tx *dbs.Tx, ruleGroupId int64) (int64, error) {
 	return this.Query(tx).

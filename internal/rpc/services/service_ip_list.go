@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/lists"
 )
@@ -56,7 +57,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 
 	tx := this.NullTx()
 
-	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId)
+	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -171,12 +172,13 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 
 	var pbLists = []*pb.IPList{}
 	var listIds = []int64{}
+	var cacheMap = utils.NewCacheMap()
 	for _, item := range items {
 		if lists.ContainsInt64(listIds, int64(item.ListId)) {
 			continue
 		}
 
-		list, err := models.SharedIPListDAO.FindEnabledIPList(tx, int64(item.ListId))
+		list, err := models.SharedIPListDAO.FindEnabledIPList(tx, int64(item.ListId), cacheMap)
 		if err != nil {
 			return nil, err
 		}

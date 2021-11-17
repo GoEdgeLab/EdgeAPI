@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -340,6 +341,35 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 		Pk(itemId).
 		State(IPItemStateEnabled).
 		Exist()
+}
+
+// CountAllEnabledIPItems 计算数量
+func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string) (int64, error) {
+	var query = this.Query(tx)
+	if len(ip) > 0 {
+		query.Attr("ipFrom", ip)
+	}
+	return query.
+		Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))").
+		State(IPItemStateEnabled).
+		Count()
+}
+
+// ListAllEnabledIPItems 搜索所有IP
+func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, offset int64, size int64) (result []*IPItem, err error) {
+	var query = this.Query(tx)
+	if len(ip) > 0 {
+		query.Attr("ipFrom", ip)
+	}
+	_, err = query.
+		Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))").
+		State(IPItemStateEnabled).
+		DescPk().
+		Offset(offset).
+		Size(size).
+		Slice(&result).
+		FindAll()
+	return
 }
 
 // NotifyUpdate 通知更新

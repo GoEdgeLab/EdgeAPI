@@ -387,7 +387,7 @@ func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckI
 	tx := this.NullTx()
 
 	// 名单类型
-	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId)
+	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -445,4 +445,182 @@ func (this *IPItemService) ExistsEnabledIPItem(ctx context.Context, req *pb.Exis
 		return nil, err
 	}
 	return &pb.ExistsEnabledIPItemResponse{Exists: b}, nil
+}
+
+// CountAllEnabledIPItems 计算所有IP数量
+func (this *IPItemService) CountAllEnabledIPItems(ctx context.Context, req *pb.CountAllEnabledIPItemsRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// ListAllEnabledIPItems 搜索IP
+func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.ListAllEnabledIPItemsRequest) (*pb.ListAllEnabledIPItemsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var results = []*pb.ListAllEnabledIPItemsResponse_Result{}
+	var tx = this.NullTx()
+	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var cacheMap = utils.NewCacheMap()
+	for _, item := range items {
+		// server
+		var pbSourceServer *pb.Server
+		if item.SourceServerId > 0 {
+			serverName, err := models.SharedServerDAO.FindEnabledServerName(tx, int64(item.SourceServerId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceServer = &pb.Server{
+				Id:   int64(item.SourceServerId),
+				Name: serverName,
+			}
+		}
+
+		// WAF策略
+		var pbSourcePolicy *pb.HTTPFirewallPolicy
+		if item.SourceHTTPFirewallPolicyId > 0 {
+			policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledHTTPFirewallPolicyBasic(tx, int64(item.SourceHTTPFirewallPolicyId))
+			if err != nil {
+				return nil, err
+			}
+			if policy != nil {
+				pbSourcePolicy = &pb.HTTPFirewallPolicy{
+					Id:       int64(item.SourceHTTPFirewallPolicyId),
+					Name:     policy.Name,
+					ServerId: int64(policy.ServerId),
+				}
+			}
+		}
+
+		// WAF分组
+		var pbSourceGroup *pb.HTTPFirewallRuleGroup
+		if item.SourceHTTPFirewallRuleGroupId > 0 {
+			groupName, err := models.SharedHTTPFirewallRuleGroupDAO.FindHTTPFirewallRuleGroupName(tx, int64(item.SourceHTTPFirewallRuleGroupId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceGroup = &pb.HTTPFirewallRuleGroup{
+				Id:   int64(item.SourceHTTPFirewallRuleGroupId),
+				Name: groupName,
+			}
+		}
+
+		// WAF规则集
+		var pbSourceSet *pb.HTTPFirewallRuleSet
+		if item.SourceHTTPFirewallRuleSetId > 0 {
+			setName, err := models.SharedHTTPFirewallRuleSetDAO.FindHTTPFirewallRuleSetName(tx, int64(item.SourceHTTPFirewallRuleSetId))
+			if err != nil {
+				return nil, err
+			}
+			pbSourceSet = &pb.HTTPFirewallRuleSet{
+				Id:   int64(item.SourceHTTPFirewallRuleSetId),
+				Name: setName,
+			}
+		}
+
+		var pbItem = &pb.IPItem{
+			Id:                            int64(item.Id),
+			IpFrom:                        item.IpFrom,
+			IpTo:                          item.IpTo,
+			Version:                       int64(item.Version),
+			CreatedAt:                     int64(item.CreatedAt),
+			ExpiredAt:                     int64(item.ExpiredAt),
+			Reason:                        item.Reason,
+			Type:                          item.Type,
+			EventLevel:                    item.EventLevel,
+			NodeId:                        int64(item.NodeId),
+			ServerId:                      int64(item.ServerId),
+			SourceNodeId:                  int64(item.SourceNodeId),
+			SourceServerId:                int64(item.SourceServerId),
+			SourceHTTPFirewallPolicyId:    int64(item.SourceHTTPFirewallPolicyId),
+			SourceHTTPFirewallRuleGroupId: int64(item.SourceHTTPFirewallRuleGroupId),
+			SourceHTTPFirewallRuleSetId:   int64(item.SourceHTTPFirewallRuleSetId),
+			SourceServer:                  pbSourceServer,
+			SourceHTTPFirewallPolicy:      pbSourcePolicy,
+			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
+			SourceHTTPFirewallRuleSet:     pbSourceSet,
+		}
+
+		// 所属名单
+		list, err := models.SharedIPListDAO.FindEnabledIPList(tx, int64(item.ListId), cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if list == nil {
+			err = models.SharedIPItemDAO.DisableIPItem(tx, int64(item.Id))
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		var pbList = &pb.IPList{
+			Id:       int64(list.Id),
+			Name:     list.Name,
+			Type:     list.Type,
+			IsPublic: list.IsPublic == 1,
+			IsGlobal: list.IsGlobal == 1,
+		}
+
+		// 所属服务（注意同SourceServer不同）
+		var pbFirewallServer *pb.Server
+
+		// 所属策略（注意同SourceHTTPFirewallPolicy不同）
+		var pbFirewallPolicy *pb.HTTPFirewallPolicy
+		if list.IsPublic == 0 {
+			policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyWithIPListId(tx, int64(list.Id))
+			if err != nil {
+				return nil, err
+			}
+			if policy == nil {
+				err = models.SharedIPItemDAO.DisableIPItem(tx, int64(item.Id))
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+
+			pbFirewallPolicy = &pb.HTTPFirewallPolicy{
+				Id:   int64(policy.Id),
+				Name: policy.Name,
+			}
+
+			if policy.ServerId > 0 {
+				serverName, err := models.SharedServerDAO.FindEnabledServerName(tx, int64(policy.ServerId))
+				if err != nil {
+					return nil, err
+				}
+				if len(serverName) == 0 {
+					serverName = "[已删除]"
+				}
+				pbFirewallServer = &pb.Server{
+					Id:   int64(policy.ServerId),
+					Name: serverName,
+				}
+			}
+		}
+
+		results = append(results, &pb.ListAllEnabledIPItemsResponse_Result{
+			IpList:             pbList,
+			IpItem:             pbItem,
+			Server:             pbFirewallServer,
+			HttpFirewallPolicy: pbFirewallPolicy,
+		})
+	}
+
+	return &pb.ListAllEnabledIPItemsResponse{Results: results}, nil
 }

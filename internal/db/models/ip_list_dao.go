@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
@@ -18,6 +19,15 @@ const (
 )
 
 var listTypeCacheMap = map[int64]*IPList{} // listId => *IPList
+var DefaultGlobalIPList = &IPList{
+	Id:       uint32(firewallconfigs.GlobalListId),
+	Name:     "全局封锁名单",
+	IsPublic: 1,
+	IsGlobal: 1,
+	Type:     "black",
+	State:    IPListStateEnabled,
+	IsOn:     1,
+}
 
 type IPListDAO dbs.DAO
 
@@ -59,7 +69,19 @@ func (this *IPListDAO) DisableIPList(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledIPList 查找启用中的条目
-func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64) (*IPList, error) {
+func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64, cacheMap *utils.CacheMap) (*IPList, error) {
+	if id == firewallconfigs.GlobalListId {
+		return DefaultGlobalIPList, nil
+	}
+
+	var cacheKey = this.Table + ":FindEnabledIPList:" + types.String(id)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*IPList), nil
+		}
+	}
+
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", IPListStateEnabled).
@@ -67,6 +89,11 @@ func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64) (*IPList, error) 
 	if result == nil {
 		return nil, err
 	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
 	return result.(*IPList), err
 }
 
@@ -82,14 +109,7 @@ func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 func (this *IPListDAO) FindIPListCacheable(tx *dbs.Tx, listId int64) (*IPList, error) {
 	// 全局黑名单
 	if listId == firewallconfigs.GlobalListId {
-		return &IPList{
-			Id:       uint32(listId),
-			IsPublic: 1,
-			IsGlobal: 1,
-			Type:     "black",
-			State:    IPListStateEnabled,
-			IsOn:     1,
-		}, nil
+		return DefaultGlobalIPList, nil
 	}
 
 	// 检查缓存
