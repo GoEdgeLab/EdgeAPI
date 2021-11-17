@@ -7,6 +7,7 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"net"
 )
 
@@ -455,7 +456,11 @@ func (this *IPItemService) CountAllEnabledIPItems(ctx context.Context, req *pb.C
 	}
 
 	var tx = this.NullTx()
-	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip)
+	var listId int64 = 0
+	if req.GlobalOnly {
+		listId = firewallconfigs.GlobalListId
+	}
+	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip, listId)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +476,11 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 
 	var results = []*pb.ListAllEnabledIPItemsResponse_Result{}
 	var tx = this.NullTx()
-	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, req.Offset, req.Size)
+	var listId int64 = 0
+	if req.GlobalOnly {
+		listId = firewallconfigs.GlobalListId
+	}
+	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, listId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

@@ -344,25 +344,33 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 }
 
 // CountAllEnabledIPItems 计算数量
-func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string) (int64, error) {
+func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64) (int64, error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
 	}
+	if listId > 0 {
+		query.Attr("listId", listId)
+	} else {
+		query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+	}
 	return query.
-		Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))").
 		State(IPItemStateEnabled).
 		Count()
 }
 
 // ListAllEnabledIPItems 搜索所有IP
-func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, offset int64, size int64) (result []*IPItem, err error) {
+func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, offset int64, size int64) (result []*IPItem, err error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
 	}
+	if listId > 0 {
+		query.Attr("listId", listId)
+	} else {
+		query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+	}
 	_, err = query.
-		Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))").
 		State(IPItemStateEnabled).
 		DescPk().
 		Offset(offset).
