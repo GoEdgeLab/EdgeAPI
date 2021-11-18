@@ -1271,7 +1271,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
 	}
 
-	ipAddr, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+	ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 	if err != nil {
 		return nil, err
 	}

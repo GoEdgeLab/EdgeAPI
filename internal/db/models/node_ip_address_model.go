@@ -13,10 +13,13 @@ type NodeIPAddress struct {
 	CanAccess         uint8  `field:"canAccess"`         // 是否可以访问
 	IsOn              uint8  `field:"isOn"`              // 是否启用
 	IsUp              uint8  `field:"isUp"`              // 是否上线
+	IsHealthy         uint8  `field:"isHealthy"`         // 是否健康
 	Thresholds        string `field:"thresholds"`        // 上线阈值
 	Connectivity      string `field:"connectivity"`      // 连通性状态
 	BackupIP          string `field:"backupIP"`          // 备用IP
 	BackupThresholdId uint32 `field:"backupThresholdId"` // 触发备用IP的阈值
+	CountUp           uint32 `field:"countUp"`           // UP状态次数
+	CountDown         uint32 `field:"countDown"`         // DOWN状态次数
 }
 
 type NodeIPAddressOperator struct {
@@ -31,10 +34,13 @@ type NodeIPAddressOperator struct {
 	CanAccess         interface{} // 是否可以访问
 	IsOn              interface{} // 是否启用
 	IsUp              interface{} // 是否上线
+	IsHealthy         interface{} // 是否健康
 	Thresholds        interface{} // 上线阈值
 	Connectivity      interface{} // 连通性状态
 	BackupIP          interface{} // 备用IP
 	BackupThresholdId interface{} // 触发备用IP的阈值
+	CountUp           interface{} // UP状态次数
+	CountDown         interface{} // DOWN状态次数
 }
 
 func NewNodeIPAddressOperator() *NodeIPAddressOperator {

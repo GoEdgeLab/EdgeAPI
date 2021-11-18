@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -62,7 +63,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			Node: node,
 		}
 
-		ipAddr, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id), nodeconfigs.NodeRoleNode)
+		ipAddr, ipAddrId, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
@@ -70,6 +71,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			result.Error = "no ip address can be used"
 		} else {
 			result.NodeAddr = ipAddr
+			result.NodeAddrId = ipAddrId
 		}
 
 		results = append(results, result)
@@ -118,37 +120,57 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			for {
 				select {
 				case result := <-queue:
-					for i := 1; i <= countTries; i++ {
-						before := time.Now()
-						err := this.checkNode(healthCheckConfig, result)
-						result.CostMs = time.Since(before).Seconds() * 1000
-						if err != nil {
-							result.Error = err.Error()
-						}
-						if result.IsOk {
-							break
-						}
-						if tryDelay > 0 {
-							time.Sleep(tryDelay)
-						}
-					}
-
-					// 修改节点状态
-					if healthCheckConfig.AutoDown {
-						isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
-						if err != nil {
-							remotelogs.Error("HEALTH_CHECK", err.Error())
-						} else if isChanged {
-							// 通知恢复或下线
+					func() {
+						for i := 1; i <= countTries; i++ {
+							before := time.Now()
+							err := this.checkNode(healthCheckConfig, result)
+							result.CostMs = time.Since(before).Seconds() * 1000
+							if err != nil {
+								result.Error = err.Error()
+							}
 							if result.IsOk {
-								message := "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
-								err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
-							} else {
-								message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
-								err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
+								break
+							}
+							if tryDelay > 0 {
+								time.Sleep(tryDelay)
 							}
 						}
-					}
+
+						// 修改节点IP状态
+						if teaconst.IsPlus {
+							isChanged, err := models.SharedNodeIPAddressDAO.UpdateAddressHealthCount(nil, result.NodeAddrId, result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
+							if err != nil {
+								remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+								return
+							}
+
+							if isChanged {
+								// 触发阈值
+								err = models.SharedNodeIPAddressDAO.FireThresholds(nil, nodeconfigs.NodeRoleNode, int64(result.Node.Id))
+								if err != nil {
+									remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+									return
+								}
+							}
+						}
+
+						// 修改节点状态
+						if healthCheckConfig.AutoDown {
+							isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
+							if err != nil {
+								remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+							} else if isChanged {
+								// 通知恢复或下线
+								if result.IsOk {
+									message := "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
+									err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
+								} else {
+									message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
+									err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
+								}
+							}
+						}
+					}()
 
 					wg.Done()
 				default:

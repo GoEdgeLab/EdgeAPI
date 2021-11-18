@@ -40,3 +40,25 @@ func TestNodeIPAddressDAO_LoopTasks(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+func TestNodeIPAddressDAO_FindAddressIsHealthy(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	isHealthy, err := SharedNodeIPAddressDAO.FindAddressIsHealthy(tx, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("isHealthy:", isHealthy)
+}
+
+func TestNodeIPAddressDAO_UpdateAddressHealthCount(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	isChanged, err := SharedNodeIPAddressDAO.UpdateAddressHealthCount(tx, 1, true, 3, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("isChanged:", isChanged)
+}
