@@ -76,8 +76,10 @@ function build() {
 	fi
 
 	# build sql
-	echo "building sql ..."
-	${ROOT}/sql.sh
+	if [ $TAG = "plus" ]; then
+		echo "building sql ..."
+		${ROOT}/sql.sh
+	fi
 
 	# copy files
 	echo "copying ..."
