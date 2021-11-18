@@ -9,12 +9,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 )
 
-// SSL证书相关服务
+// SSLCertService SSL证书相关服务
 type SSLCertService struct {
 	BaseService
 }
 
-// 创建Cert
+// CreateSSLCert 创建Cert
 func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSLCertRequest) (*pb.CreateSSLCertResponse, error) {
 	// 校验请求
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -32,7 +32,7 @@ func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSL
 	return &pb.CreateSSLCertResponse{SslCertId: certId}, nil
 }
 
-// 修改Cert
+// UpdateSSLCert 修改Cert
 func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSLCertRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -58,7 +58,7 @@ func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSL
 	return this.Success()
 }
 
-// 查找证书配置
+// FindEnabledSSLCertConfig 查找证书配置
 func (this *SSLCertService) FindEnabledSSLCertConfig(ctx context.Context, req *pb.FindEnabledSSLCertConfigRequest) (*pb.FindEnabledSSLCertConfigResponse, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -88,7 +88,7 @@ func (this *SSLCertService) FindEnabledSSLCertConfig(ctx context.Context, req *p
 	return &pb.FindEnabledSSLCertConfigResponse{SslCertJSON: configJSON}, nil
 }
 
-// 删除证书
+// DeleteSSLCert 删除证书
 func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSLCertRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -120,17 +120,21 @@ func (this *SSLCertService) DeleteSSLCert(ctx context.Context, req *pb.DeleteSSL
 	return this.Success()
 }
 
-// 计算匹配的Cert数量
+// CountSSLCerts 计算匹配的Cert数量
 func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLCertRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId)
+	if adminId > 0 {
+		userId = req.UserId
+	}
+
+	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -138,17 +142,21 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 	return this.SuccessCount(count)
 }
 
-// 列出单页匹配的Cert
+// ListSSLCerts 列出单页匹配的Cert
 func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCertsRequest) (*pb.ListSSLCertsResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
+	if adminId > 0 {
+		userId = req.UserId
+	}
+
 	tx := this.NullTx()
 
-	certIds, err := models.SharedSSLCertDAO.ListCertIds(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserId, req.Offset, req.Size)
+	certIds, err := models.SharedSSLCertDAO.ListCertIds(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
