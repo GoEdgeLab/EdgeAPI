@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 )
 
 type APINodeService struct {
@@ -229,6 +230,47 @@ func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *
 	}
 
 	return &pb.FindCurrentAPINodeVersionResponse{Version: teaconst.Version}, nil
+}
+
+// FindCurrentAPINode 获取当前API节点的信息
+func (this *APINodeService) FindCurrentAPINode(ctx context.Context, req *pb.FindCurrentAPINodeRequest) (*pb.FindCurrentAPINodeResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodeId = teaconst.NodeId
+	var tx *dbs.Tx
+	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return &pb.FindCurrentAPINodeResponse{ApiNode: nil}, nil
+	}
+
+	accessAddrs, err := node.DecodeAccessAddrStrings()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindCurrentAPINodeResponse{ApiNode: &pb.APINode{
+		Id:              int64(node.Id),
+		IsOn:            node.IsOn == 1,
+		NodeClusterId:   0,
+		UniqueId:        "",
+		Secret:          "",
+		Name:            "",
+		Description:     "",
+		HttpJSON:        nil,
+		HttpsJSON:       nil,
+		RestIsOn:        false,
+		RestHTTPJSON:    nil,
+		RestHTTPSJSON:   nil,
+		AccessAddrsJSON: []byte(node.AccessAddrs),
+		AccessAddrs:     accessAddrs,
+		StatusJSON:      nil,
+	}}, nil
 }
 
 // CountAllEnabledAPINodesWithSSLCertId 计算使用某个SSL证书的API节点数量

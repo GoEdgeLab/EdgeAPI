@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -82,6 +83,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	}
 
 	defer func() {
+		// 修改当前API节点的主边缘节点
 		if primaryNodeId == nodeId {
 			primaryNodeId = 0
 
@@ -93,6 +95,12 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 				}
 			}
 			nodeLocker.Unlock()
+		}
+
+		// 修改在线状态
+		err = models.SharedNodeDAO.UpdateNodeActive(nil, nodeId, false)
+		if err != nil {
+			remotelogs.Error("NODE_SERVICE", "change node active failed: "+err.Error())
 		}
 	}()
 
@@ -125,6 +133,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	if err != nil {
 		return err
 	}
+
 	if !oldIsActive {
 		err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
 		if err != nil {

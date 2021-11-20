@@ -315,7 +315,7 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
+		query.Where("isActive AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
 		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
@@ -519,9 +519,9 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
-		Attr("isOn", true).        // 只监控启用的节点
+		Attr("isOn", true). // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
-		Attr("isActive", true).    // 当前已经在线的
+		Attr("isActive", true). // 当前已经在线的
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
 		Result("id", "name").
 		Slice(&result).
@@ -569,7 +569,7 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
 	case configutils.BoolStateAll:
 		// 所有
 	case configutils.BoolStateYes:
-		query.Where("JSON_EXTRACT(status, '$.isActive') AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
+		query.Where("isActive AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')<=60")
 	case configutils.BoolStateNo:
 		query.Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)")
 	}
@@ -597,6 +597,7 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
 func (this *NodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
 	_, err := this.Query(tx).
 		Pk(nodeId).
+		Set("isActive", true).
 		Set("status", string(statusJSON)).
 		Update()
 	return err
