@@ -58,7 +58,7 @@ func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconf
 // DeleteExpiredValues 清除数据
 func (this *NodeValueDAO) DeleteExpiredValues(tx *dbs.Tx) error {
 	// 删除N天之前的所有数据
-	expiredDays := 100
+	expiredDays := 7
 	day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -expiredDays))
 	_, err := this.Query(tx).
 		Where("day<:day").
