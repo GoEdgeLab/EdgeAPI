@@ -282,8 +282,6 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 	_, err = this.Query(tx).
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
 		Gt("version", version).
-		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
-		Param("expiredAt", time.Now().Unix()).
 		Asc("version").
 		Asc("id").
 		Limit(size).
@@ -356,6 +354,8 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int6
 	}
 	return query.
 		State(IPItemStateEnabled).
+		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
+		Param("expiredAt", time.Now().Unix()).
 		Count()
 }
 
@@ -372,6 +372,8 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64
 	}
 	_, err = query.
 		State(IPItemStateEnabled).
+		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
+		Param("expiredAt", time.Now().Unix()).
 		DescPk().
 		Offset(offset).
 		Size(size).

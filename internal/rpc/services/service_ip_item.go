@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"net"
+	"time"
 )
 
 // IPItemService IP条目相关服务
@@ -328,6 +329,11 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 		return nil, err
 	}
 	for _, item := range items {
+		// 是否已过期
+		if item.ExpiredAt > 0 && int64(item.ExpiredAt) <= time.Now().Unix() {
+			item.State = models.IPItemStateDisabled
+		}
+
 		if len(item.Type) == 0 {
 			item.Type = models.IPItemTypeIPv4
 		}
