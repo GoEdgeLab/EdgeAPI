@@ -41,6 +41,8 @@ type APINode struct {
 	serviceInstanceLocker sync.Mutex
 
 	sock *gosock.Sock
+
+	isStarting bool
 }
 
 func NewAPINode() *APINode {
@@ -51,6 +53,8 @@ func NewAPINode() *APINode {
 }
 
 func (this *APINode) Start() {
+	this.isStarting = true
+
 	logs.Println("[API_NODE]start api node, pid: " + strconv.Itoa(os.Getpid()))
 
 	// 检查数据库连接
@@ -61,6 +65,7 @@ func (this *APINode) Start() {
 	}
 
 	// 本地Sock
+	logs.Println("[API_NODE]listening sock ...")
 	err = this.listenSock()
 	if err != nil {
 		logs.Println("[API_NODE]" + err.Error())
@@ -68,6 +73,7 @@ func (this *APINode) Start() {
 	}
 
 	// 自动升级
+	logs.Println("[API_NODE]auto upgrading ...")
 	err = this.autoUpgrade()
 	if err != nil {
 		logs.Println("[API_NODE]auto upgrade failed: " + err.Error())
@@ -75,6 +81,7 @@ func (this *APINode) Start() {
 	}
 
 	// 自动设置数据库
+	logs.Println("[API_NODE]setup database ...")
 	err = this.setupDB()
 	if err != nil {
 		logs.Println("[API_NODE]setup database '" + err.Error() + "'")
@@ -83,9 +90,11 @@ func (this *APINode) Start() {
 	}
 
 	// 数据库通知启动
+	logs.Println("[API_NODE]notify ready ...")
 	dbs.NotifyReady()
 
 	// 读取配置
+	logs.Println("[API_NODE]reading api config ...")
 	config, err := configs.SharedAPIConfig()
 	if err != nil {
 		logs.Println("[API_NODE]start failed: " + err.Error())
@@ -123,6 +132,9 @@ func (this *APINode) Start() {
 		remotelogs.Error("API_NODE", "the api node require at least one listening address")
 		return
 	}
+
+	// 结束启动
+	this.isStarting = false
 
 	// 保持进程
 	select {}
@@ -515,6 +527,13 @@ func (this *APINode) listenSock() error {
 				// 退出主进程
 				events.Notify(events.EventQuit)
 				os.Exit(0)
+			case "starting": // 是否正在启动
+				_ = cmd.Reply(&gosock.Command{
+					Code: "starting",
+					Params: map[string]interface{}{
+						"isStarting": this.isStarting,
+					},
+				})
 			}
 		})
 
