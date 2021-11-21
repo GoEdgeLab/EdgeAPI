@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/go-yaml/yaml"
 	"github.com/iwind/TeaGo/Tea"
@@ -11,7 +10,6 @@ import (
 )
 
 var sharedAPIConfig *APIConfig = nil
-var PaddingId string
 
 // APIConfig API节点配置
 type APIConfig struct {
@@ -100,7 +98,6 @@ func SharedAPIConfig() (*APIConfig, error) {
 func (this *APIConfig) SetNumberId(numberId int64) {
 	this.numberId = numberId
 	teaconst.NodeId = numberId
-	PaddingId = fmt.Sprintf("%08d", numberId)
 }
 
 // NumberId 获取数字ID

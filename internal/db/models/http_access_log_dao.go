@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -18,7 +17,6 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -82,7 +80,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		fields["nodeId"] = accessLog.NodeId
 		fields["status"] = accessLog.Status
 		fields["createdAt"] = accessLog.Timestamp
-		fields["requestId"] = accessLog.RequestId + strconv.FormatInt(time.Now().UnixNano(), 10) + configs.PaddingId
+		fields["requestId"] = accessLog.RequestId
 		fields["firewallPolicyId"] = accessLog.FirewallPolicyId
 		fields["firewallRuleGroupId"] = accessLog.FirewallRuleGroupId
 		fields["firewallRuleSetId"] = accessLog.FirewallRuleSetId
@@ -407,7 +405,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 // FindAccessLogWithRequestId 根据请求ID获取访问日志
 func (this *HTTPAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId string) (*HTTPAccessLog, error) {
-	if !regexp.MustCompile(`^\d{30,}`).MatchString(requestId) {
+	if !regexp.MustCompile(`^\d{11,}`).MatchString(requestId) {
 		return nil, errors.New("invalid requestId")
 	}
 

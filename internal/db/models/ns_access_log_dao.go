@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
@@ -14,7 +13,6 @@ import (
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -78,7 +76,7 @@ func (this *NSAccessLogDAO) CreateNSAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *NS
 		fields["domainId"] = accessLog.NsDomainId
 		fields["recordId"] = accessLog.NsRecordId
 		fields["createdAt"] = accessLog.Timestamp
-		fields["requestId"] = accessLog.RequestId + strconv.FormatInt(time.Now().UnixNano(), 10) + configs.PaddingId
+		fields["requestId"] = accessLog.RequestId
 
 		content, err := json.Marshal(accessLog)
 		if err != nil {
@@ -259,7 +257,7 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 
 // FindAccessLogWithRequestId 根据请求ID获取访问日志
 func (this *NSAccessLogDAO) FindAccessLogWithRequestId(tx *dbs.Tx, requestId string) (*NSAccessLog, error) {
-	if !regexp.MustCompile(`^\d{30,}`).MatchString(requestId) {
+	if !regexp.MustCompile(`^\d{11,}`).MatchString(requestId) {
 		return nil, errors.New("invalid requestId")
 	}
 

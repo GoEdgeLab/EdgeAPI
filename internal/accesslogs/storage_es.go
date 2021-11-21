@@ -13,9 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 )
 
@@ -57,14 +55,12 @@ func (this *ESStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 		return nil
 	}
 
-	var requestId int64 = 1_0000_0000_0000_0000
-
 	bulk := &strings.Builder{}
 	indexName := this.FormatVariables(this.config.Index)
 	typeName := this.FormatVariables(this.config.MappingType)
 	for _, accessLog := range accessLogs {
 		if len(accessLog.RequestId) == 0 {
-			accessLog.RequestId = strconv.FormatInt(time.Now().UnixNano(), 10) + strconv.FormatInt(atomic.AddInt64(&requestId, 1), 10) + fmt.Sprintf("%08d", 1)
+			continue
 		}
 
 		opData, err := json.Marshal(map[string]interface{}{
