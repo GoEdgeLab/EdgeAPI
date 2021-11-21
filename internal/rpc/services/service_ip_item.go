@@ -136,6 +136,23 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	return this.Success()
 }
 
+// DeleteIPItems 批量删除IP
+func (this *IPItemService) DeleteIPItems(ctx context.Context, req *pb.DeleteIPItemsRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+	for _, itemId := range req.IpItemIds {
+		err = models.SharedIPItemDAO.DisableIPItem(tx, itemId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return this.Success()
+}
+
 // CountIPItemsWithListId 计算IP数量
 func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.CountIPItemsWithListIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
