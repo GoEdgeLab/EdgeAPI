@@ -1854,9 +1854,11 @@ func (this *ServerDAO) FindServerTrafficLimitConfig(tx *dbs.Tx, serverId int64, 
 
 	var trafficLimit = serverOne.(*Server).TrafficLimit
 
-	err = json.Unmarshal([]byte(trafficLimit), limit)
-	if err != nil {
-		return nil, err
+	if len(trafficLimit) > 0 {
+		err = json.Unmarshal([]byte(trafficLimit), limit)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if cacheMap != nil {
