@@ -419,6 +419,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		config.RemoteAddr = remoteAddrConfig
 	}
 
+	// mergeSlashes
+	config.MergeSlashes = web.MergeSlashes == 1
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1037,6 +1040,8 @@ func (this *HTTPWebDAO) UpdateWebHostRedirects(tx *dbs.Tx, webId int64, hostRedi
 	return this.NotifyUpdate(tx, webId)
 }
 
+// 通用设置
+
 // FindWebHostRedirects 查找主机跳转
 func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, error) {
 	col, err := this.Query(tx).
@@ -1047,6 +1052,17 @@ func (this *HTTPWebDAO) FindWebHostRedirects(tx *dbs.Tx, webId int64) ([]byte, e
 		return nil, err
 	}
 	return []byte(col), nil
+}
+
+// UpdateWebCommon 修改通用设置
+func (this *HTTPWebDAO) UpdateWebCommon(tx *dbs.Tx, webId int64, mergeSlashes bool) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	var op = NewHTTPWebOperator()
+	op.Id = webId
+	op.MergeSlashes = mergeSlashes
+	return this.Save(tx, op)
 }
 
 // NotifyUpdate 通知更新

@@ -27,7 +27,7 @@ func (this *MonitorNodeService) CreateMonitorNode(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	return &pb.CreateMonitorNodeResponse{NodeId: nodeId}, nil
+	return &pb.CreateMonitorNodeResponse{MonitorNodeId: nodeId}, nil
 }
 
 // UpdateMonitorNode 修改监控节点
@@ -39,7 +39,7 @@ func (this *MonitorNodeService) UpdateMonitorNode(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedMonitorNodeDAO.UpdateMonitorNode(tx, req.NodeId, req.Name, req.Description, req.IsOn)
+	err = models.SharedMonitorNodeDAO.UpdateMonitorNode(tx, req.MonitorNodeId, req.Name, req.Description, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (this *MonitorNodeService) DeleteMonitorNode(ctx context.Context, req *pb.D
 
 	tx := this.NullTx()
 
-	err = models.SharedMonitorNodeDAO.DisableMonitorNode(tx, req.NodeId)
+	err = models.SharedMonitorNodeDAO.DisableMonitorNode(tx, req.MonitorNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (this *MonitorNodeService) FindAllEnabledMonitorNodes(ctx context.Context, 
 		})
 	}
 
-	return &pb.FindAllEnabledMonitorNodesResponse{Nodes: result}, nil
+	return &pb.FindAllEnabledMonitorNodesResponse{MonitorNodes: result}, nil
 }
 
 // CountAllEnabledMonitorNodes 计算监控节点数量
@@ -137,7 +137,7 @@ func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req
 		})
 	}
 
-	return &pb.ListEnabledMonitorNodesResponse{Nodes: result}, nil
+	return &pb.ListEnabledMonitorNodesResponse{MonitorNodes: result}, nil
 }
 
 // FindEnabledMonitorNode 根据ID查找节点
@@ -149,13 +149,13 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	node, err := models.SharedMonitorNodeDAO.FindEnabledMonitorNode(tx, req.NodeId)
+	node, err := models.SharedMonitorNodeDAO.FindEnabledMonitorNode(tx, req.MonitorNodeId)
 	if err != nil {
 		return nil, err
 	}
 
 	if node == nil {
-		return &pb.FindEnabledMonitorNodeResponse{Node: nil}, nil
+		return &pb.FindEnabledMonitorNodeResponse{MonitorNode: nil}, nil
 	}
 
 	result := &pb.MonitorNode{
@@ -166,7 +166,7 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 		Name:        node.Name,
 		Description: node.Description,
 	}
-	return &pb.FindEnabledMonitorNodeResponse{Node: result}, nil
+	return &pb.FindEnabledMonitorNodeResponse{MonitorNode: result}, nil
 }
 
 // FindCurrentMonitorNode 获取当前监控节点的版本
@@ -193,7 +193,7 @@ func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req 
 	}
 
 	if node == nil {
-		return &pb.FindCurrentMonitorNodeResponse{Node: nil}, nil
+		return &pb.FindCurrentMonitorNodeResponse{MonitorNode: nil}, nil
 	}
 
 	result := &pb.MonitorNode{
@@ -204,7 +204,7 @@ func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req 
 		Name:        node.Name,
 		Description: node.Description,
 	}
-	return &pb.FindCurrentMonitorNodeResponse{Node: result}, nil
+	return &pb.FindCurrentMonitorNodeResponse{MonitorNode: result}, nil
 }
 
 // UpdateMonitorNodeStatus 更新节点状态
@@ -215,8 +215,8 @@ func (this *MonitorNodeService) UpdateMonitorNodeStatus(ctx context.Context, req
 		return nil, err
 	}
 
-	if req.NodeId > 0 {
-		nodeId = req.NodeId
+	if req.MonitorNodeId > 0 {
+		nodeId = req.MonitorNodeId
 	}
 
 	if nodeId <= 0 {

@@ -27,7 +27,7 @@ func (this *AuthorityNodeService) CreateAuthorityNode(ctx context.Context, req *
 		return nil, err
 	}
 
-	return &pb.CreateAuthorityNodeResponse{NodeId: nodeId}, nil
+	return &pb.CreateAuthorityNodeResponse{AuthorityNodeId: nodeId}, nil
 }
 
 // UpdateAuthorityNode 修改认证节点
@@ -39,7 +39,7 @@ func (this *AuthorityNodeService) UpdateAuthorityNode(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	err = authority.SharedAuthorityNodeDAO.UpdateAuthorityNode(tx, req.NodeId, req.Name, req.Description, req.IsOn)
+	err = authority.SharedAuthorityNodeDAO.UpdateAuthorityNode(tx, req.AuthorityNodeId, req.Name, req.Description, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (this *AuthorityNodeService) DeleteAuthorityNode(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	err = authority.SharedAuthorityNodeDAO.DisableAuthorityNode(tx, req.NodeId)
+	err = authority.SharedAuthorityNodeDAO.DisableAuthorityNode(tx, req.AuthorityNodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (this *AuthorityNodeService) FindAllEnabledAuthorityNodes(ctx context.Conte
 		})
 	}
 
-	return &pb.FindAllEnabledAuthorityNodesResponse{Nodes: result}, nil
+	return &pb.FindAllEnabledAuthorityNodesResponse{AuthorityNodes: result}, nil
 }
 
 // CountAllEnabledAuthorityNodes 计算认证节点数量
@@ -137,7 +137,7 @@ func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context,
 		})
 	}
 
-	return &pb.ListEnabledAuthorityNodesResponse{Nodes: result}, nil
+	return &pb.ListEnabledAuthorityNodesResponse{AuthorityNodes: result}, nil
 }
 
 // FindEnabledAuthorityNode 根据ID查找节点
@@ -149,13 +149,13 @@ func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, 
 
 	tx := this.NullTx()
 
-	node, err := authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNode(tx, req.NodeId)
+	node, err := authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNode(tx, req.AuthorityNodeId)
 	if err != nil {
 		return nil, err
 	}
 
 	if node == nil {
-		return &pb.FindEnabledAuthorityNodeResponse{Node: nil}, nil
+		return &pb.FindEnabledAuthorityNodeResponse{AuthorityNode: nil}, nil
 	}
 
 	result := &pb.AuthorityNode{
@@ -166,7 +166,7 @@ func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, 
 		Name:        node.Name,
 		Description: node.Description,
 	}
-	return &pb.FindEnabledAuthorityNodeResponse{Node: result}, nil
+	return &pb.FindEnabledAuthorityNodeResponse{AuthorityNode: result}, nil
 }
 
 // FindCurrentAuthorityNode 获取当前认证节点的版本
@@ -193,7 +193,7 @@ func (this *AuthorityNodeService) FindCurrentAuthorityNode(ctx context.Context, 
 	}
 
 	if node == nil {
-		return &pb.FindCurrentAuthorityNodeResponse{Node: nil}, nil
+		return &pb.FindCurrentAuthorityNodeResponse{AuthorityNode: nil}, nil
 	}
 
 	result := &pb.AuthorityNode{
@@ -204,7 +204,7 @@ func (this *AuthorityNodeService) FindCurrentAuthorityNode(ctx context.Context, 
 		Name:        node.Name,
 		Description: node.Description,
 	}
-	return &pb.FindCurrentAuthorityNodeResponse{Node: result}, nil
+	return &pb.FindCurrentAuthorityNodeResponse{AuthorityNode: result}, nil
 }
 
 // UpdateAuthorityNodeStatus 更新节点状态
@@ -215,8 +215,8 @@ func (this *AuthorityNodeService) UpdateAuthorityNodeStatus(ctx context.Context,
 		return nil, err
 	}
 
-	if req.NodeId > 0 {
-		nodeId = req.NodeId
+	if req.AuthorityNodeId > 0 {
+		nodeId = req.AuthorityNodeId
 	}
 
 	if nodeId <= 0 {
