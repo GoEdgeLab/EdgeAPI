@@ -1062,7 +1062,12 @@ func (this *HTTPWebDAO) UpdateWebCommon(tx *dbs.Tx, webId int64, mergeSlashes bo
 	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.MergeSlashes = mergeSlashes
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
 }
 
 // NotifyUpdate 通知更新
