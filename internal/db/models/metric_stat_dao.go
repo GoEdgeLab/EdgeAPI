@@ -22,7 +22,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		go func() {
 			for range ticker.C {
-				err := SharedMetricStatDAO.Clean(nil, 120) // 只保留120天
+				err := SharedMetricStatDAO.Clean(nil, 30) // 只保留30天
 				if err != nil {
 					logs.Println("SharedMetricStatDAO: clean expired data failed: " + err.Error())
 				}
