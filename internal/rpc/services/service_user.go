@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -221,9 +222,17 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 
 // LoginUser 登录
 func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	_, _, _, err := rpcutils.ValidateRequest(ctx)
+	_, err := this.ValidateUserNode(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if !teaconst.IsPlus {
+		return &pb.LoginUserResponse{
+			UserId:  0,
+			IsOk:    false,
+			Message: "你正在使用的系统版本为非商业版本或已过期，请管理员续费后才能登录",
+		}, nil
 	}
 
 	if len(req.Username) == 0 || len(req.Password) == 0 {
