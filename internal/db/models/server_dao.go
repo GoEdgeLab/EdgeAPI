@@ -652,7 +652,7 @@ func (this *ServerDAO) CountAllEnabledServers(tx *dbs.Tx) (int64, error) {
 }
 
 // CountAllEnabledServersMatch 计算所有可用服务数量
-func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamily string) (int64, error) {
+func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamilies []string) (int64, error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled)
 	if groupId > 0 {
@@ -678,16 +678,27 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 	if auditingFlag == configutils.BoolStateYes {
 		query.Attr("isAuditing", true)
 	}
-	if protocolFamily == "http" {
-		query.Where("(http IS NOT NULL OR https IS NOT NULL)")
-	} else if protocolFamily == "tcp" {
-		query.Where("(tcp IS NOT NULL OR tls IS NOT NULL)")
+
+	var protocolConds = []string{}
+	for _, family := range protocolFamilies {
+		switch family {
+		case "http":
+			protocolConds = append(protocolConds, "(http IS NOT NULL OR https IS NOT NULL)")
+		case "tcp":
+			protocolConds = append(protocolConds, "(tcp IS NOT NULL OR tls IS NOT NULL)")
+		case "udp":
+			protocolConds = append(protocolConds, "(udp IS NOT NULL)")
+		}
 	}
+	if len(protocolConds) > 0 {
+		query.Where("(" + strings.Join(protocolConds, " OR ") + ")")
+	}
+
 	return query.Count()
 }
 
 // ListEnabledServersMatch 列出单页的服务
-func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamily string) (result []*Server, err error) {
+func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamilies []string) (result []*Server, err error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled).
 		Offset(offset).
@@ -718,10 +729,19 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	if auditingFlag == 1 {
 		query.Attr("isAuditing", true)
 	}
-	if protocolFamily == "http" {
-		query.Where("(http IS NOT NULL OR https IS NOT NULL)")
-	} else if protocolFamily == "tcp" {
-		query.Where("(tcp IS NOT NULL OR tls IS NOT NULL)")
+	var protocolConds = []string{}
+	for _, family := range protocolFamilies {
+		switch family {
+		case "http":
+			protocolConds = append(protocolConds, "(http IS NOT NULL OR https IS NOT NULL)")
+		case "tcp":
+			protocolConds = append(protocolConds, "(tcp IS NOT NULL OR tls IS NOT NULL)")
+		case "udp":
+			protocolConds = append(protocolConds, "(udp IS NOT NULL)")
+		}
+	}
+	if len(protocolConds) > 0 {
+		query.Where("(" + strings.Join(protocolConds, " OR ") + ")")
 	}
 
 	_, err = query.FindAll()
@@ -1536,16 +1556,67 @@ func (this *ServerDAO) FindEnabledServerIdWithReverseProxyId(tx *dbs.Tx, reverse
 		FindInt64Col(0)
 }
 
-// CheckTCPPortIsUsing 检查TCP端口是否被使用
-func (this *ServerDAO) CheckTCPPortIsUsing(tx *dbs.Tx, clusterId int64, port int, excludeServerId int64, excludeProtocol string) (bool, error) {
+// CheckPortIsUsing 检查端口是否被使用
+// protocolFamily支持tcp和udp
+func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, protocolFamily string, port int, excludeServerId int64, excludeProtocol string) (bool, error) {
+	// 检查是否在别的协议中
+	if excludeServerId > 0 {
+		one, err := this.Query(tx).
+			Pk(excludeServerId).
+			Result("tcp", "tls", "udp", "http", "https").
+			Find()
+		if err != nil {
+			return false, err
+		}
+		if one != nil {
+			var server = one.(*Server)
+			for _, protocol := range []string{"http", "https", "tcp", "tls", "udp"} {
+				if protocol == excludeProtocol {
+					continue
+				}
+				switch protocol {
+				case "http":
+					if protocolFamily == "tcp" && lists.ContainsInt(server.DecodeHTTPPorts(), port) {
+						return true, nil
+					}
+				case "https":
+					if protocolFamily == "tcp" && lists.ContainsInt(server.DecodeHTTPSPorts(), port) {
+						return true, nil
+					}
+				case "tcp":
+					if protocolFamily == "tcp" && lists.ContainsInt(server.DecodeTCPPorts(), port) {
+						return true, nil
+					}
+				case "tls":
+					if protocolFamily == "tcp" && lists.ContainsInt(server.DecodeTLSPorts(), port) {
+						return true, nil
+					}
+				case "udp":
+					// 不需要判断
+				}
+			}
+		}
+	}
+
+	// 其他服务中
 	query := this.Query(tx).
 		Attr("clusterId", clusterId).
 		State(ServerStateEnabled).
 		Param("port", types.String(port))
 	if excludeServerId <= 0 {
-		query.Where("JSON_CONTAINS(tcpPorts, :port)")
+		switch protocolFamily {
+		case "tcp", "http", "":
+			query.Where("JSON_CONTAINS(tcpPorts, :port)")
+		case "udp":
+			query.Where("JSON_CONTAINS(udpPorts, :port)")
+		}
 	} else {
-		query.Where("(id!=:serverId AND JSON_CONTAINS(tcpPorts, :port))")
+		switch protocolFamily {
+		case "tcp", "http", "":
+			query.Where("(id!=:serverId AND JSON_CONTAINS(tcpPorts, :port))")
+		case "udp":
+			query.Where("(id!=:serverId AND JSON_CONTAINS(udpPorts, :port))")
+		}
 		query.Param("serverId", excludeServerId)
 	}
 	return query.

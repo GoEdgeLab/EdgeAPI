@@ -905,7 +905,7 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 			continue
 		}
 
-		isUsing, err := models.SharedServerDAO.CheckTCPPortIsUsing(tx, req.NodeClusterId, port, 0, "")
+		isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, req.ProtocolFamily, port, 0, "")
 		if err != nil {
 			return nil, err
 		}
@@ -925,7 +925,7 @@ func (this *NodeClusterService) CheckPortIsUsingInNodeCluster(ctx context.Contex
 	}
 
 	var tx = this.NullTx()
-	isUsing, err := models.SharedServerDAO.CheckTCPPortIsUsing(tx, req.NodeClusterId, int(req.Port), req.ExcludeServerId, req.ExcludeProtocol)
+	isUsing, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, req.ProtocolFamily, int(req.Port), req.ExcludeServerId, req.ExcludeProtocol)
 	if err != nil {
 		return nil, err
 	}

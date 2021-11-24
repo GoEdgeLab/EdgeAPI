@@ -330,9 +330,16 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 // UpdateServerUDP 修改UDP服务
 func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
+	}
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(nil, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if req.ServerId <= 0 {
@@ -567,7 +574,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 
 	tx := this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), req.ProtocolFamily)
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), utils.SplitStrings(req.ProtocolFamily, ","))
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +592,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, req.ProtocolFamily)
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, utils.SplitStrings(req.ProtocolFamily, ","))
 	if err != nil {
 		return nil, err
 	}

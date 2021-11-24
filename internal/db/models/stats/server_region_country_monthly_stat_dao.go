@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-// 增加数量
+// IncreaseMonthlyCount 增加数量
 func (this *ServerRegionCountryMonthlyStatDAO) IncreaseMonthlyCount(tx *dbs.Tx, serverId int64, countryId int64, month string, count int64) error {
 	if len(month) != 6 {
 		return errors.New("invalid month '" + month + "'")
@@ -50,7 +50,7 @@ func (this *ServerRegionCountryMonthlyStatDAO) IncreaseMonthlyCount(tx *dbs.Tx, 
 	return nil
 }
 
-// 查找单页数据
+// ListStats 查找单页数据
 func (this *ServerRegionCountryMonthlyStatDAO) ListStats(tx *dbs.Tx, serverId int64, month string, offset int64, size int64) (result []*ServerRegionCountryMonthlyStat, err error) {
 	query := this.Query(tx).
 		Attr("serverId", serverId).

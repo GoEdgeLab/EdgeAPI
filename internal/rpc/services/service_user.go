@@ -310,7 +310,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	tx := this.NullTx()
 
 	// 网站数量
-	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll, "")
+	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll, []string{})
 	if err != nil {
 		return nil, err
 	}
