@@ -394,6 +394,37 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 		return nil
 	}
 
+	if listId == firewallconfigs.GlobalListId {
+		sourceNodeId, err := this.Query(tx).
+			Pk(itemId).
+			Result("sourceNodeId").
+			FindInt64Col(0)
+		if err != nil {
+			return err
+		}
+		if sourceNodeId > 0 {
+			clusterIds, err := SharedNodeDAO.FindEnabledNodeClusterIds(tx, sourceNodeId)
+			if err != nil {
+				return err
+			}
+			for _, clusterId := range clusterIds {
+				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeIPItemChanged)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIds(tx)
+			for _, clusterId := range clusterIds {
+				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeIPItemChanged)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
 	httpFirewallPolicyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
 	if err != nil {
 		return err

@@ -588,6 +588,22 @@ func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId
 	return
 }
 
+// FindAllEnabledNodeClusterIds 查找所有可用的集群
+func (this *NodeClusterDAO) FindAllEnabledNodeClusterIds(tx *dbs.Tx) ([]int64, error) {
+	ones, err := this.Query(tx).
+		State(NodeClusterStateEnabled).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*NodeCluster).Id))
+	}
+	return result, nil
+}
+
 // FindAllEnabledNodeClusterIdsWithCachePolicyId 查找使用缓存策略的所有集群Ids
 func (this *NodeClusterDAO) FindAllEnabledNodeClusterIdsWithCachePolicyId(tx *dbs.Tx, cachePolicyId int64) (result []int64, err error) {
 	ones, err := this.Query(tx).
