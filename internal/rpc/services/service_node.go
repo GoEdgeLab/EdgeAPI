@@ -33,7 +33,7 @@ type NodeVersionCache struct {
 	CacheMap map[int64]*utils.CacheMap // version => map
 }
 
-var nodeVersionCacheMap = map[int64]*NodeVersionCache{} // [cluster_id]_[version] => cache
+var nodeVersionCacheMap = map[int64]*NodeVersionCache{} // [cluster_id] =>  { [version] => cache }
 var nodeVersionCacheLocker = &sync.Mutex{}
 
 // NodeService 边缘节点相关服务
@@ -1581,6 +1581,10 @@ func (this *NodeService) UpdateNodeCache(ctx context.Context, req *pb.UpdateNode
 func (this *NodeService) findClusterCacheMap(clusterId int64, version int64) *utils.CacheMap {
 	nodeVersionCacheLocker.Lock()
 	defer nodeVersionCacheLocker.Unlock()
+
+	if version == 0 {
+		return utils.NewCacheMap()
+	}
 
 	cache, ok := nodeVersionCacheMap[clusterId]
 	if ok {
