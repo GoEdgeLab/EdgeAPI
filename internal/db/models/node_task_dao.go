@@ -311,20 +311,30 @@ func (this *NodeTaskDAO) FindAllDoingNodeIds(tx *dbs.Tx, role string) ([]int64, 
 }
 
 // ExistsDoingNodeTasks 检查是否有正在执行的任务
-func (this *NodeTaskDAO) ExistsDoingNodeTasks(tx *dbs.Tx, role string) (bool, error) {
-	return this.Query(tx).
+func (this *NodeTaskDAO) ExistsDoingNodeTasks(tx *dbs.Tx, role string, excludeTypes []NodeTaskType) (bool, error) {
+	var query = this.Query(tx).
 		Attr("role", role).
 		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
-		Gt("nodeId", 0).
-		Exist()
+		Gt("nodeId", 0)
+	if len(excludeTypes) > 0 {
+		for _, excludeType := range excludeTypes {
+			query.Neq("type", excludeType)
+		}
+	}
+	return query.Exist()
 }
 
 // ExistsErrorNodeTasks 是否有错误的任务
-func (this *NodeTaskDAO) ExistsErrorNodeTasks(tx *dbs.Tx, role string) (bool, error) {
-	return this.Query(tx).
+func (this *NodeTaskDAO) ExistsErrorNodeTasks(tx *dbs.Tx, role string, excludeTypes []NodeTaskType) (bool, error) {
+	var query = this.Query(tx).
 		Attr("role", role).
-		Where("(isDone=1 AND isOk=0)").
-		Exist()
+		Where("(isDone=1 AND isOk=0)")
+	if len(excludeTypes) > 0 {
+		for _, excludeType := range excludeTypes {
+			query.Neq("type", excludeType)
+		}
+	}
+	return query.Exist()
 }
 
 // DeleteNodeTask 删除任务

@@ -163,13 +163,13 @@ func (this *NodeTaskService) ExistsNodeTasks(ctx context.Context, req *pb.Exists
 	var tx = this.NullTx()
 
 	// 是否有任务
-	existTask, err := models.SharedNodeTaskDAO.ExistsDoingNodeTasks(tx, nodeconfigs.NodeRoleNode)
+	existTask, err := models.SharedNodeTaskDAO.ExistsDoingNodeTasks(tx, nodeconfigs.NodeRoleNode, req.ExcludeTypes)
 	if err != nil {
 		return nil, err
 	}
 
 	// 是否有错误
-	existError, err := models.SharedNodeTaskDAO.ExistsErrorNodeTasks(tx, nodeconfigs.NodeRoleNode)
+	existError, err := models.SharedNodeTaskDAO.ExistsErrorNodeTasks(tx, nodeconfigs.NodeRoleNode, req.ExcludeTypes)
 	if err != nil {
 		return nil, err
 	}
