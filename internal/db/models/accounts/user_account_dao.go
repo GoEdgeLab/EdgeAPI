@@ -108,7 +108,7 @@ func (this *UserAccountDAO) UpdateUserAccount(tx *dbs.Tx, accountId int64, delta
 	if account == nil {
 		return errors.New("invalid account id '" + types.String(accountId) + "'")
 	}
-	var userId = int64(account.Id)
+	var userId = int64(account.UserId)
 	var deltaFloat64 = float64(delta)
 	if deltaFloat64 < 0 && account.Total < -deltaFloat64 {
 		return errors.New("not enough account quota to decrease")
@@ -233,5 +233,20 @@ func (this *UserAccountDAO) PayBills(tx *dbs.Tx) error {
 		}
 	}
 
+	return nil
+}
+
+// CheckUserAccount 检查用户账户
+func (this *UserAccountDAO) CheckUserAccount(tx *dbs.Tx, userId int64, accountId int64) error {
+	exists, err := this.Query(tx).
+		Pk(accountId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return models.ErrNotFound
+	}
 	return nil
 }

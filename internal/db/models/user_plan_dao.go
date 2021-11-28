@@ -86,11 +86,17 @@ func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cache
 }
 
 // CountAllEnabledUserPlans 计算套餐数量
-func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, isAvailable bool, isExpired bool, expiringDays int32) (int64, error) {
+func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32) (int64, error) {
 	var query = this.Query(tx).
 		State(UserPlanStateEnabled).
-		Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)").
 		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
+
+	if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		query.Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)")
+	}
+
 	var today = timeutil.Format("Y-m-d")
 	if isAvailable {
 		query.Gte("dayTo", today)
@@ -110,10 +116,11 @@ func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, isAvailable bool, 
 func (this *UserPlanDAO) ListEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32, offset int64, size int64) (result []*UserPlan, err error) {
 	var query = this.Query(tx).
 		State(UserPlanStateEnabled).
-		Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)").
 		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
 	if userId > 0 {
 		query.Attr("userId", userId)
+	} else {
+		query.Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)")
 	}
 	var today = timeutil.Format("Y-m-d")
 	if isAvailable {
@@ -196,6 +203,22 @@ func (this *UserPlanDAO) FindAllEnabledPlansForServer(tx *dbs.Tx, userId int64, 
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// CheckUserPlan 检查用户套餐
+func (this *UserPlanDAO) CheckUserPlan(tx *dbs.Tx, userId int64, userPlanId int64) error {
+	exists, err := this.Query(tx).
+		Pk(userPlanId).
+		Attr("userId", userId).
+		State(UserPlanStateEnabled).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // NotifyUpdate 通知更新

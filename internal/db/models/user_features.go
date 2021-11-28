@@ -50,6 +50,11 @@ var (
 			Code:        "finance",
 			Description: "开启费用账单相关功能",
 		},
+		{
+			Name:        "套餐",
+			Code:        "plan",
+			Description: "用户可以购买和管理套餐",
+		},
 	}
 )
 
