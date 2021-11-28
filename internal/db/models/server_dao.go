@@ -1094,7 +1094,8 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 				config.UserPlan = &serverconfigs.UserPlanConfig{
 					DayTo: userPlan.DayTo,
 					Plan: &serverconfigs.PlanConfig{
-						Id: int64(plan.Id),
+						Id:   int64(plan.Id),
+						Name: plan.Name,
 					},
 				}
 
@@ -2146,13 +2147,26 @@ func (this *ServerDAO) ResetServerTotalTraffic(tx *dbs.Tx, serverId int64) error
 		UpdateQuickly()
 }
 
-// FindEnabledServerIdWithUserPlanId 查找使用某个套餐的服务
+// FindEnabledServerIdWithUserPlanId 查找使用某个套餐的服务ID
 func (this *ServerDAO) FindEnabledServerIdWithUserPlanId(tx *dbs.Tx, userPlanId int64) (int64, error) {
 	return this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("userPlanId", userPlanId).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// FindEnabledServerWithUserPlanId 查找使用某个套餐的服务
+func (this *ServerDAO) FindEnabledServerWithUserPlanId(tx *dbs.Tx, userPlanId int64) (*Server, error) {
+	one, err := this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("userPlanId", userPlanId).
+		Result("id", "name", "serverNames", "type").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Server), nil
 }
 
 // UpdateServersClusterIdWithPlanId 修改套餐所在集群
@@ -2166,6 +2180,40 @@ func (this *ServerDAO) UpdateServersClusterIdWithPlanId(tx *dbs.Tx, planId int64
 
 // UpdateServerUserPlanId 设置服务所属套餐
 func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPlanId int64) error {
+	// 取消套餐
+	if userPlanId <= 0 {
+		// 所属用户
+		userId, err := this.Query(tx).
+			Pk(serverId).
+			Result("userId").
+			FindInt64Col(0)
+		if err != nil {
+			return err
+		}
+		if userId <= 0 {
+			return errors.New("can not cancel the server plan, because the server has no user")
+		}
+
+		clusterId, err := SharedUserDAO.FindUserClusterId(tx, userId)
+		if err != nil {
+			return err
+		}
+		if clusterId <= 0 {
+			return errors.New("can not cancel the server plan, because the server use does not have a cluster")
+		}
+
+		err = this.Query(tx).
+			Pk(serverId).
+			Set("userPlanId", userPlanId).
+			Set("clusterId", clusterId).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+		return this.NotifyUpdate(tx, serverId)
+	}
+
+	// 设置新套餐
 	userPlan, err := SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId, nil)
 	if err != nil {
 		return err

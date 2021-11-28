@@ -144,10 +144,11 @@ func (this *UserPlanDAO) ListEnabledUserPlans(tx *dbs.Tx, userId int64, isAvaila
 }
 
 // CreateUserPlan 创建套餐
-func (this *UserPlanDAO) CreateUserPlan(tx *dbs.Tx, userId int64, planId int64, dayTo string) (int64, error) {
+func (this *UserPlanDAO) CreateUserPlan(tx *dbs.Tx, userId int64, planId int64, name string, dayTo string) (int64, error) {
 	var op = NewUserPlanOperator()
 	op.UserId = userId
 	op.PlanId = planId
+	op.Name = name
 	op.DayTo = dayTo
 	op.IsOn = true
 	op.State = UserStateEnabled
@@ -155,13 +156,14 @@ func (this *UserPlanDAO) CreateUserPlan(tx *dbs.Tx, userId int64, planId int64, 
 }
 
 // UpdateUserPlan 修改套餐
-func (this *UserPlanDAO) UpdateUserPlan(tx *dbs.Tx, userPlanId int64, planId int64, dayTo string, isOn bool) error {
+func (this *UserPlanDAO) UpdateUserPlan(tx *dbs.Tx, userPlanId int64, planId int64, name string, dayTo string, isOn bool) error {
 	if userPlanId <= 0 {
 		return errors.New("invalid userPlanId")
 	}
 	var op = NewUserPlanOperator()
 	op.Id = userPlanId
 	op.PlanId = planId
+	op.Name = name
 	op.DayTo = dayTo
 	op.IsOn = isOn
 	err := this.Save(tx, op)

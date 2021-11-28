@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -276,7 +277,7 @@ func (this *UserDAO) UpdateUserFeatures(tx *dbs.Tx, userId int64, featuresJSON [
 }
 
 // FindUserFeatures 查找用户Features
-func (this *UserDAO) FindUserFeatures(tx *dbs.Tx, userId int64) ([]*UserFeature, error) {
+func (this *UserDAO) FindUserFeatures(tx *dbs.Tx, userId int64) ([]*userconfigs.UserFeature, error) {
 	featuresJSON, err := this.Query(tx).
 		Pk(userId).
 		Result("features").
@@ -295,12 +296,12 @@ func (this *UserDAO) FindUserFeatures(tx *dbs.Tx, userId int64) ([]*UserFeature,
 	}
 
 	// 检查是否还存在以及设置名称
-	result := []*UserFeature{}
+	result := []*userconfigs.UserFeature{}
 	if len(featureCodes) > 0 {
 		for _, featureCode := range featureCodes {
-			f := FindUserFeature(featureCode)
+			f := userconfigs.FindUserFeature(featureCode)
 			if f != nil {
-				result = append(result, &UserFeature{Name: f.Name, Code: f.Code, Description: f.Description})
+				result = append(result, &userconfigs.UserFeature{Name: f.Name, Code: f.Code, Description: f.Description})
 			}
 		}
 	}

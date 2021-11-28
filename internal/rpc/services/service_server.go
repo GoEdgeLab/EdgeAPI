@@ -792,7 +792,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, userId > 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1765,19 +1765,35 @@ func (this *ServerService) UpdateServerTrafficLimit(ctx context.Context, req *pb
 
 // UpdateServerUserPlan 修改服务套餐
 func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.UpdateServerUserPlanRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
 
-	// TODO 支持用户调用
+	if userId > 0 {
+		// 检查服务
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// 检查套餐
 	if req.UserPlanId < 0 {
 		req.UserPlanId = 0
 	}
+
+	// 检查是否有变化
+	oldUserPlanId, err := models.SharedServerDAO.FindServerUserPlanId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if req.UserPlanId == oldUserPlanId {
+		return this.Success()
+	}
+
 	if req.UserPlanId > 0 {
 		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
 		if err != nil {
@@ -1808,19 +1824,69 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 		}
 	}
 
-	// 检查是否有变化
-	oldUserPlanId, err := models.SharedServerDAO.FindServerUserPlanId(tx, req.ServerId)
-	if err != nil {
-		return nil, err
-	}
-	if req.UserPlanId == oldUserPlanId {
-		return this.Success()
-	}
-
 	err = models.SharedServerDAO.UpdateServerUserPlanId(tx, req.ServerId, req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
 
 	return this.Success()
+}
+
+// FindServerUserPlan 获取服务套餐信息
+func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindServerUserPlanRequest) (*pb.FindServerUserPlanResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		// 检查服务
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	userPlanId, err := models.SharedServerDAO.FindServerUserPlanId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if userPlanId <= 0 {
+		return &pb.FindServerUserPlanResponse{UserPlan: nil}, nil
+	}
+
+	userPlan, err := models.SharedUserPlanDAO.FindEnabledUserPlan(tx, userPlanId, nil)
+	if err != nil {
+		return nil, err
+	}
+	if userPlan == nil {
+		return &pb.FindServerUserPlanResponse{UserPlan: nil}, nil
+	}
+
+	plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+	if err != nil {
+		return nil, err
+	}
+	if plan == nil {
+		return &pb.FindServerUserPlanResponse{UserPlan: nil}, nil
+	}
+
+	return &pb.FindServerUserPlanResponse{
+		UserPlan: &pb.UserPlan{
+			Id:     int64(userPlan.Id),
+			UserId: int64(userPlan.UserId),
+			PlanId: int64(userPlan.PlanId),
+			Name:   userPlan.Name,
+			IsOn:   userPlan.IsOn == 1,
+			DayTo:  userPlan.DayTo,
+			User:   nil,
+			Plan: &pb.Plan{
+				Id:        int64(plan.Id),
+				Name:      plan.Name,
+				PriceType: plan.PriceType,
+			},
+		},
+	}, nil
 }

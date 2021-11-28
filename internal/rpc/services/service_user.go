@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -426,9 +427,7 @@ func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserF
 		return nil, err
 	}
 	if userId > 0 {
-		if userId != req.UserId {
-			return nil, this.PermissionError()
-		}
+		req.UserId = userId
 	}
 
 	tx := this.NullTx()
@@ -453,7 +452,7 @@ func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req 
 		return nil, err
 	}
 
-	features := models.FindAllUserFeatures()
+	features := userconfigs.FindAllUserFeatures()
 	result := []*pb.UserFeature{}
 	for _, feature := range features {
 		result = append(result, feature.ToPB())
