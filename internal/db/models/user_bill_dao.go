@@ -68,6 +68,17 @@ func init() {
 	})
 }
 
+// FindUserBill 查找单个账单
+func (this *UserBillDAO) FindUserBill(tx *dbs.Tx, billId int64) (*UserBill, error) {
+	one, err := this.Query(tx).
+		Pk(billId).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*UserBill), nil
+}
+
 // CountAllUserBills 计算账单数量
 func (this *UserBillDAO) CountAllUserBills(tx *dbs.Tx, isPaid int32, userId int64, month string) (int64, error) {
 	query := this.Query(tx)
@@ -329,4 +340,34 @@ func (this *UserBillDAO) GenerateBillCode(tx *dbs.Tx) (string, error) {
 		return code, nil
 	}
 	return this.GenerateBillCode(tx)
+}
+
+// CheckUserBill 检查用户账单
+func (this *UserBillDAO) CheckUserBill(tx *dbs.Tx, userId int64, billId int64) error {
+	if userId <= 0 || billId <= 0 {
+		return ErrNotFound
+	}
+	exists, err := this.Query(tx).
+		Pk(billId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// SumUnpaidUserBill 计算某个用户未支付总额
+func (this *UserBillDAO) SumUnpaidUserBill(tx *dbs.Tx, userId int64) (float32, error) {
+	sum, err := this.Query(tx).
+		Attr("userId", userId).
+		Attr("isPaid", 0).
+		Sum("amount", 0)
+	if err != nil {
+		return 0, err
+	}
+	return float32(sum), nil
 }
