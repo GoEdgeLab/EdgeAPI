@@ -41,8 +41,25 @@ func init() {
 }
 
 // CreateLog 创建日志
-func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nodeId int64, serverId int64, originId int64, level string, tag string, description string, createdAt int64) error {
-	hash := stringutil.Md5(nodeRole + "@" + types.String(nodeId) + "@" + types.String(serverId) + "@" + types.String(originId) + "@" + level + "@" + tag + "@" + description)
+func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nodeId int64, serverId int64, originId int64, level string, tag string, description string, createdAt int64, logType string, paramsJSON []byte) error {
+	// 修复以前同样的日志
+	if nodeId > 0 && level == "success" && len(logType) > 0 && len(paramsJSON) > 0 {
+		err := this.Query(tx).
+			Attr("nodeId", nodeId).
+			Attr("serverId", serverId).
+			Attr("type", logType).
+			Attr("level", "error").
+			Attr("isFixed", 0).
+			JSONContains("params", string(paramsJSON)).
+			Set("isFixed", 1).
+			Set("isRead", 1).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+
+	hash := stringutil.Md5(nodeRole + "@" + types.String(nodeId) + "@" + types.String(serverId) + "@" + types.String(originId) + "@" + level + "@" + tag + "@" + description + "@" + string(paramsJSON))
 
 	// 检查是否在重复最后一条，避免重复创建
 	lastLog, err := this.Query(tx).
@@ -76,6 +93,12 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 	op.Hash = hash
 	op.Count = 1
 	op.IsRead = level != "error"
+
+	op.Type = logType
+	if len(paramsJSON) > 0 {
+		op.Params = paramsJSON
+	}
+
 	err = this.Save(tx, op)
 	return err
 }
@@ -253,6 +276,7 @@ func (this *NodeLogDAO) UpdateNodeLogFixed(tx *dbs.Tx, logId int64) error {
 		Attr("hash", hash).
 		Attr("isFixed", false).
 		Set("isFixed", true).
+		Set("isRead", true).
 		UpdateQuickly()
 	if err != nil {
 		return err

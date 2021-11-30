@@ -4,6 +4,7 @@ package models
 type NodeLog struct {
 	Id          uint64 `field:"id"`          // ID
 	Role        string `field:"role"`        // 节点角色
+	Type        string `field:"type"`        // 类型
 	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
 	Tag         string `field:"tag"`         // 标签
 	Description string `field:"description"` // 描述
@@ -16,11 +17,13 @@ type NodeLog struct {
 	Count       uint32 `field:"count"`       // 重复次数
 	IsFixed     uint8  `field:"isFixed"`     // 是否已处理
 	IsRead      uint8  `field:"isRead"`      // 是否已读
+	Params      string `field:"params"`      // 参数
 }
 
 type NodeLogOperator struct {
 	Id          interface{} // ID
 	Role        interface{} // 节点角色
+	Type        interface{} // 类型
 	CreatedAt   interface{} // 创建时间
 	Tag         interface{} // 标签
 	Description interface{} // 描述
@@ -33,6 +36,7 @@ type NodeLogOperator struct {
 	Count       interface{} // 重复次数
 	IsFixed     interface{} // 是否已处理
 	IsRead      interface{} // 是否已读
+	Params      interface{} // 参数
 }
 
 func NewNodeLogOperator() *NodeLogOperator {

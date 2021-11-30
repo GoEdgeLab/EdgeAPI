@@ -109,7 +109,7 @@ Loop:
 	for {
 		select {
 		case log := <-logChan:
-			err := sharedDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt)
+			err := sharedDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt, "", nil)
 			if err != nil {
 				return err
 			}
