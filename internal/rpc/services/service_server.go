@@ -466,10 +466,8 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	// 是否需要审核
-	if userId > 0 {
+		// 是否需要审核
 		globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
 		if err != nil {
 			return nil, err
@@ -479,6 +477,12 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 			if err != nil {
 				return nil, err
 			}
+
+			// 发送审核通知
+			err = models.SharedMessageDAO.CreateMessage(tx, 0, 0, models.MessageTypeServerNamesRequireAuditing, models.MessageLevelWarning, "有新的网站域名需要审核", "有新的网站域名需要审核", maps.Map{
+				"serverId": req.ServerId,
+			}.AsJSON())
+
 			return this.Success()
 		}
 	}
