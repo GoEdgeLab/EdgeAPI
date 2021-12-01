@@ -169,6 +169,7 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 		op.ServerNames = serverNamesJSON
 	}
 	op.IsAuditing = isAuditing
+	op.AuditingAt = time.Now().Unix()
 	if len(auditingServerNamesJSON) > 0 {
 		op.AuditingServerNames = auditingServerNamesJSON
 	}
@@ -533,22 +534,22 @@ func (this *ServerDAO) InitServerWeb(tx *dbs.Tx, serverId int64) (int64, error) 
 }
 
 // FindServerServerNames 查找ServerNames配置
-func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
+func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (serverNamesJSON []byte, isAuditing bool, auditingAt int64, auditingServerNamesJSON []byte, auditingResultJSON []byte, err error) {
 	if serverId <= 0 {
 		return
 	}
 	one, err := this.Query(tx).
 		Pk(serverId).
-		Result("serverNames", "isAuditing", "auditingServerNames", "auditingResult").
+		Result("serverNames", "isAuditing", "auditingAt", "auditingServerNames", "auditingResult").
 		Find()
 	if err != nil {
-		return nil, false, nil, nil, err
+		return nil, false, 0, nil, nil, err
 	}
 	if one == nil {
 		return
 	}
 	server := one.(*Server)
-	return []byte(server.ServerNames), server.IsAuditing == 1, []byte(server.AuditingServerNames), []byte(server.AuditingResult), nil
+	return []byte(server.ServerNames), server.IsAuditing == 1, int64(server.AuditingAt), []byte(server.AuditingServerNames), []byte(server.AuditingResult), nil
 }
 
 // UpdateServerNames 修改ServerNames配置
@@ -580,6 +581,9 @@ func (this *ServerDAO) UpdateAuditingServerNames(tx *dbs.Tx, serverId int64, isA
 	op := NewServerOperator()
 	op.Id = serverId
 	op.IsAuditing = isAuditing
+	if isAuditing {
+		op.AuditingAt = time.Now().Unix()
+	}
 	if len(auditingServerNamesJSON) == 0 {
 		op.AuditingServerNames = "[]"
 	} else {

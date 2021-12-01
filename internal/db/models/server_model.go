@@ -10,6 +10,7 @@ type Server struct {
 	Name                string  `field:"name"`                // 名称
 	Description         string  `field:"description"`         // 描述
 	ServerNames         string  `field:"serverNames"`         // 域名列表
+	AuditingAt          uint64  `field:"auditingAt"`          // 审核提交时间
 	AuditingServerNames string  `field:"auditingServerNames"` // 审核中的域名
 	IsAuditing          uint8   `field:"isAuditing"`          // 是否正在审核
 	AuditingResult      string  `field:"auditingResult"`      // 审核结果
@@ -53,6 +54,7 @@ type ServerOperator struct {
 	Name                interface{} // 名称
 	Description         interface{} // 描述
 	ServerNames         interface{} // 域名列表
+	AuditingAt          interface{} // 审核提交时间
 	AuditingServerNames interface{} // 审核中的域名
 	IsAuditing          interface{} // 是否正在审核
 	AuditingResult      interface{} // 审核结果

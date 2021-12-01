@@ -425,7 +425,7 @@ func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServ
 		}
 	}
 
-	serverNamesJSON, isAuditing, auditingServerNamesJSON, auditingResultJSON, err := models.SharedServerDAO.FindServerServerNames(tx, req.ServerId)
+	serverNamesJSON, isAuditing, auditingAt, auditingServerNamesJSON, auditingResultJSON, err := models.SharedServerDAO.FindServerServerNames(tx, req.ServerId)
 	if err != nil {
 		return nil, err
 	}
@@ -444,6 +444,7 @@ func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServ
 	return &pb.FindServerNamesResponse{
 		ServerNamesJSON:         serverNamesJSON,
 		IsAuditing:              isAuditing,
+		AuditingAt:              auditingAt,
 		AuditingServerNamesJSON: auditingServerNamesJSON,
 		AuditingResult:          auditingResult,
 	}, nil
@@ -457,11 +458,15 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		return nil, err
 	}
 
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
 	tx := this.NullTx()
+
+	// 检查用户
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// 是否需要审核
 	if userId > 0 {
@@ -677,6 +682,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			ExcludeNodes:            []byte(server.ExcludeNodes),
 			ServerNamesJSON:         []byte(server.ServerNames),
 			IsAuditing:              server.IsAuditing == 1,
+			AuditingAt:              int64(server.AuditingAt),
 			AuditingServerNamesJSON: []byte(server.AuditingServerNames),
 			AuditingResult:          auditingResult,
 			CreatedAt:               int64(server.CreatedAt),
