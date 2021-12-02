@@ -322,6 +322,7 @@ func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip ui
 // FindEnabledItemsWithIP 根据IP查找Item
 func (this *IPItemDAO) FindEnabledItemsWithIP(tx *dbs.Tx, ip string) (result []*IPItem, err error) {
 	_, err = this.Query(tx).
+		State(IPItemStateEnabled).
 		Attr("ipFrom", ip).
 		Attr("ipTo", "").
 		Where("(expiredAt=0 OR expiredAt>:nowTime)").
