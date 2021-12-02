@@ -330,6 +330,11 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 						query.Param("intKeyword2", types.Int(pieces[1]))
 					}
 
+					if regexp.MustCompile(`^\d{20,}$`).MatchString(keyword) {
+						where += " OR requestId=:requestId"
+						query.Param("requestId", keyword)
+					}
+
 					query.Where("("+where+")").
 						Param("keyword", "%"+keyword+"%")
 					if useOriginKeyword {
