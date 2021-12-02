@@ -16,6 +16,7 @@ type HTTPFirewallRuleSet struct {
 	Action        string `field:"action"`        // 执行的动作（过期）
 	ActionOptions string `field:"actionOptions"` // 动作的选项（过期）
 	Actions       string `field:"actions"`       // 一组动作
+	IgnoreLocal   uint8  `field:"ignoreLocal"`   // 忽略局域网请求
 }
 
 type HTTPFirewallRuleSetOperator struct {
@@ -33,6 +34,7 @@ type HTTPFirewallRuleSetOperator struct {
 	Action        interface{} // 执行的动作（过期）
 	ActionOptions interface{} // 动作的选项（过期）
 	Actions       interface{} // 一组动作
+	IgnoreLocal   interface{} // 忽略局域网请求
 }
 
 func NewHTTPFirewallRuleSetOperator() *HTTPFirewallRuleSetOperator {

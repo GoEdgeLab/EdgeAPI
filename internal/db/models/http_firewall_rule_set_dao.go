@@ -99,6 +99,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 	config.Description = set.Description
 	config.Code = set.Code
 	config.Connector = set.Connector
+	config.IgnoreLocal = set.IgnoreLocal == 1
 
 	if IsNotNull(set.Rules) {
 		ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
@@ -139,6 +140,7 @@ func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(tx *dbs.Tx, setC
 	op.Name = setConfig.Name
 	op.Description = setConfig.Description
 	op.Connector = setConfig.Connector
+	op.IgnoreLocal = setConfig.IgnoreLocal
 
 	if len(setConfig.Actions) == 0 {
 		op.Actions = "[]"
