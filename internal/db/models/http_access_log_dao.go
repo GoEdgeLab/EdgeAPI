@@ -330,9 +330,9 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 						query.Param("intKeyword2", types.Int(pieces[1]))
 					}
 
-					if regexp.MustCompile(`^\d{20,}$`).MatchString(keyword) {
+					if regexp.MustCompile(`^\d{20,}\s*\.?$`).MatchString(keyword) {
 						where += " OR requestId=:requestId"
-						query.Param("requestId", keyword)
+						query.Param("requestId", strings.TrimRight(keyword, ". "))
 					}
 
 					query.Where("("+where+")").
