@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -510,6 +511,12 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		return nil, err
 	}
 	result.CountServers = countServers
+
+	countAuditingServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", 0, 0, configutils.BoolStateYes, nil)
+	if err != nil {
+		return nil, err
+	}
+	result.CountAuditingServers = countAuditingServers
 
 	// 用户数
 	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "")
