@@ -481,6 +481,7 @@ func (this *MetricStatDAO) Clean(tx *dbs.Tx) error {
 				_, err := this.Query(tx).
 					Attr("itemId", item.Id).
 					Lte("createdDay", expiresDay).
+					UseIndex("createdDay").
 					Limit(100_000). // 一次性不要删除太多，防止阻塞其他操作
 					Delete()
 				if err != nil {
