@@ -4,10 +4,29 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/rands"
+	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 type MetricSumStatDAO dbs.DAO
+
+func init() {
+	dbs.OnReadyDone(func() {
+		// 清理数据任务
+		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
+		go func() {
+			for range ticker.C {
+				err := SharedMetricSumStatDAO.Clean(nil, 30) // 只保留30天
+				if err != nil {
+					logs.Println("SharedMetricSumStatDAO: clean expired data failed: " + err.Error())
+				}
+			}
+		}()
+	})
+}
 
 func NewMetricSumStatDAO() *MetricSumStatDAO {
 	return dbs.NewDAO(&MetricSumStatDAO{
@@ -32,14 +51,15 @@ func init() {
 func (this *MetricSumStatDAO) UpdateSum(tx *dbs.Tx, clusterId int64, nodeId int64, serverId int64, time string, itemId int64, version int32, count int64, total float32) error {
 	return this.Query(tx).
 		InsertOrUpdateQuickly(maps.Map{
-			"clusterId": clusterId,
-			"nodeId":    nodeId,
-			"serverId":  serverId,
-			"itemId":    itemId,
-			"version":   version,
-			"time":      time,
-			"count":     count,
-			"total":     total,
+			"clusterId":  clusterId,
+			"nodeId":     nodeId,
+			"serverId":   serverId,
+			"itemId":     itemId,
+			"version":    version,
+			"time":       time,
+			"count":      count,
+			"total":      total,
+			"createdDay": timeutil.Format("Ymd"),
 		}, maps.Map{
 			"count": count,
 			"total": total,
@@ -133,4 +153,16 @@ func (this *MetricSumStatDAO) FindNodeSum(tx *dbs.Tx, nodeId int64, time string,
 		return
 	}
 	return int64(one.(*MetricSumStat).Count), float32(one.(*MetricSumStat).Total), nil
+}
+
+// Clean 清理数据
+func (this *MetricSumStatDAO) Clean(tx *dbs.Tx, days int64) error {
+	_, err := this.Query(tx).
+		Where("(createdDay IS NULL OR createdDay<:day)").
+		Param("day", timeutil.FormatTime("Ymd", time.Now().Unix()-days*86400)).
+		Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }

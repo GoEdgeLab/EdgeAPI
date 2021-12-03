@@ -100,7 +100,7 @@ func TestServerDAO_CheckPortIsUsing(t *testing.T) {
 	//	t.Log("isUsing:", isUsing)
 	//}
 	{
-		isUsing, err := SharedServerDAO.CheckTCPPortIsUsing(tx, 18, 3306, 0, "tcp")
+		isUsing, err := SharedServerDAO.CheckPortIsUsing(tx, 18, "tcp", 3306, 0, "")
 		if err != nil {
 			t.Fatal(err)
 		}
