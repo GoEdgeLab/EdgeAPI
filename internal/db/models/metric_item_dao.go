@@ -78,6 +78,12 @@ func (this *MetricItemDAO) DisableMetricItem(tx *dbs.Tx, itemId int64) error {
 	if err != nil {
 		return err
 	}
+
+	err = SharedMetricSumStatDAO.DeleteItemStats(tx, itemId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

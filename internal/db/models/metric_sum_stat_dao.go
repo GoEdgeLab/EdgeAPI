@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -19,7 +20,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		go func() {
 			for range ticker.C {
-				err := SharedMetricSumStatDAO.Clean(nil, 30) // 只保留30天
+				err := SharedMetricSumStatDAO.Clean(nil)
 				if err != nil {
 					logs.Println("SharedMetricSumStatDAO: clean expired data failed: " + err.Error())
 				}
@@ -104,6 +105,7 @@ func (this *MetricSumStatDAO) FindSumAtTime(tx *dbs.Tx, time string, itemId int6
 // FindServerSum 查找某个服务的统计数据
 func (this *MetricSumStatDAO) FindServerSum(tx *dbs.Tx, serverId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
 	one, err := this.Query(tx).
+		UseIndex("server_item_time").
 		Attr("serverId", serverId).
 		Attr("time", time).
 		Attr("itemId", itemId).
@@ -122,6 +124,7 @@ func (this *MetricSumStatDAO) FindServerSum(tx *dbs.Tx, serverId int64, time str
 // FindClusterSum 查找集群上的统计数据
 func (this *MetricSumStatDAO) FindClusterSum(tx *dbs.Tx, clusterId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
 	one, err := this.Query(tx).
+		UseIndex("cluster_item_time").
 		Attr("clusterId", clusterId).
 		Attr("time", time).
 		Attr("itemId", itemId).
@@ -140,6 +143,7 @@ func (this *MetricSumStatDAO) FindClusterSum(tx *dbs.Tx, clusterId int64, time s
 // FindNodeSum 查找节点上的统计数据
 func (this *MetricSumStatDAO) FindNodeSum(tx *dbs.Tx, nodeId int64, time string, itemId int64, version int32) (count int64, total float32, err error) {
 	one, err := this.Query(tx).
+		UseIndex("node_item_time").
 		Attr("nodeId", nodeId).
 		Attr("time", time).
 		Attr("itemId", itemId).
@@ -155,14 +159,48 @@ func (this *MetricSumStatDAO) FindNodeSum(tx *dbs.Tx, nodeId int64, time string,
 	return int64(one.(*MetricSumStat).Count), float32(one.(*MetricSumStat).Total), nil
 }
 
-// Clean 清理数据
-func (this *MetricSumStatDAO) Clean(tx *dbs.Tx, days int64) error {
+// DeleteItemStats 删除某个指标相关的统计数据
+func (this *MetricSumStatDAO) DeleteItemStats(tx *dbs.Tx, itemId int64) error {
 	_, err := this.Query(tx).
-		Where("(createdDay IS NULL OR createdDay<:day)").
-		Param("day", timeutil.FormatTime("Ymd", time.Now().Unix()-days*86400)).
+		Attr("itemId", itemId).
 		Delete()
-	if err != nil {
-		return err
+	return err
+}
+
+// Clean 清理数据
+func (this *MetricSumStatDAO) Clean(tx *dbs.Tx) error {
+	for _, category := range serverconfigs.FindAllMetricItemCategoryCodes() {
+		var offset int64 = 0
+		var size int64 = 100
+		for {
+			items, err := SharedMetricItemDAO.ListEnabledItems(tx, category, offset, size)
+			if err != nil {
+				return err
+			}
+			for _, item := range items {
+				var config = &serverconfigs.MetricItemConfig{
+					Id:         int64(item.Id),
+					Period:     int(item.Period),
+					PeriodUnit: item.PeriodUnit,
+				}
+				var expiresDay = config.ServerExpiresDay()
+				_, err := this.Query(tx).
+					Attr("itemId", item.Id).
+					Where("(createdDay IS NULL OR createdDay<:day)").
+					Param("day", expiresDay).
+					Limit(100_000). // 一次性不要删除太多，防止阻塞其他操作
+					Delete()
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(items) == 0 {
+				break
+			}
+
+			offset += size
+		}
 	}
 	return nil
 }

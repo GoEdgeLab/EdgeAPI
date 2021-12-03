@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -22,7 +23,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		go func() {
 			for range ticker.C {
-				err := SharedMetricStatDAO.Clean(nil, 30) // 只保留30天
+				err := SharedMetricStatDAO.Clean(nil)
 				if err != nil {
 					logs.Println("SharedMetricStatDAO: clean expired data failed: " + err.Error())
 				}
@@ -461,12 +462,38 @@ func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId 
 }
 
 // Clean 清理数据
-func (this *MetricStatDAO) Clean(tx *dbs.Tx, days int64) error {
-	_, err := this.Query(tx).
-		Lt("createdDay", timeutil.FormatTime("Ymd", time.Now().Unix()-days*86400)).
-		Delete()
-	if err != nil {
-		return err
+func (this *MetricStatDAO) Clean(tx *dbs.Tx) error {
+	for _, category := range serverconfigs.FindAllMetricItemCategoryCodes() {
+		var offset int64 = 0
+		var size int64 = 100
+		for {
+			items, err := SharedMetricItemDAO.ListEnabledItems(tx, category, offset, size)
+			if err != nil {
+				return err
+			}
+			for _, item := range items {
+				var config = &serverconfigs.MetricItemConfig{
+					Id:         int64(item.Id),
+					Period:     int(item.Period),
+					PeriodUnit: item.PeriodUnit,
+				}
+				var expiresDay = config.ServerExpiresDay()
+				_, err := this.Query(tx).
+					Attr("itemId", item.Id).
+					Lte("createdDay", expiresDay).
+					Limit(100_000). // 一次性不要删除太多，防止阻塞其他操作
+					Delete()
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(items) == 0 {
+				break
+			}
+
+			offset += size
+		}
 	}
 	return nil
 }

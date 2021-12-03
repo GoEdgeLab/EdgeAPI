@@ -3,6 +3,7 @@ package models
 import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -10,14 +11,24 @@ import (
 )
 
 func TestNewMetricStatDAO_InsertMany(t *testing.T) {
-	for i := 0; i <= 10_000_000; i++ {
+	for i := 0; i <= 1; i++ {
 		err := NewMetricStatDAO().CreateStat(nil, types.String(i)+"_v1", 18, int64(rands.Int(0, 10000)), int64(rands.Int(0, 10000)), int64(rands.Int(0, 100)), []string{"/html" + types.String(i)}, 1, timeutil.Format("Ymd"), 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if i % 10000 == 0 {
+		if i%10000 == 0 {
 			t.Log(i)
 		}
 	}
 	t.Log("done")
+}
+
+func TestMetricStatDAO_Clean(t *testing.T) {
+	dbs.NotifyReady()
+
+	err := NewMetricStatDAO().Clean(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
 }
