@@ -207,10 +207,10 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	var rpcServer *grpc.Server
 	if tlsConfig == nil {
 		remotelogs.Println("API_NODE", "listening GRPC http://"+listener.Addr().String()+" ...")
-		rpcServer = grpc.NewServer()
+		rpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(128 * 1024 * 1024))
 	} else {
 		logs.Println("[API_NODE]listening GRPC https://" + listener.Addr().String() + " ...")
-		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)))
+		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)), grpc.MaxRecvMsgSize(128*1024*1024))
 	}
 	this.registerServices(rpcServer)
 	err := rpcServer.Serve(listener)
