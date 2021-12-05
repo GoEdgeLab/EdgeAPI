@@ -736,14 +736,14 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		}
 	}
 
-	// 流量排行
+	// 地区流量排行
 	if isPlus {
-		totalBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes(tx, timeutil.Format("Ymd"))
+		totalCountryBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes(tx, timeutil.Format("Ymd"))
 		if err != nil {
 			return nil, err
 		}
 
-		if totalBytes > 0 {
+		if totalCountryBytes > 0 {
 			topCountryStats, err := stats.SharedServerRegionCountryDailyStatDAO.ListSumStats(tx, timeutil.Format("Ymd"), "bytes", 0, 100)
 			if err != nil {
 				return nil, err
@@ -755,10 +755,12 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 					return nil, err
 				}
 				result.TopCountryStats = append(result.TopCountryStats, &pb.ComposeAdminDashboardResponse_CountryStat{
-					CountryName:   countryName,
-					Bytes:         int64(stat.Bytes),
-					CountRequests: int64(stat.CountRequests),
-					Percent:       float32(stat.Bytes*100) / float32(totalBytes),
+					CountryName:         countryName,
+					Bytes:               int64(stat.Bytes),
+					CountRequests:       int64(stat.CountRequests),
+					AttackBytes:         int64(stat.AttackBytes),
+					CountAttackRequests: int64(stat.CountAttackRequests),
+					Percent:             float32(stat.Bytes*100) / float32(totalCountryBytes),
 				})
 			}
 		}

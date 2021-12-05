@@ -94,8 +94,10 @@ func (this *ServerRegionCountryDailyStatDAO) ListServerStats(tx *dbs.Tx, serverI
 		query.Desc("countRequests")
 	case "attackBytes":
 		query.Desc("attackBytes")
+		query.Gt("attackBytes", 0)
 	case "countAttackRequests":
 		query.Desc("countAttackRequests")
+		query.Gt("countAttackRequests", 0)
 	}
 
 	_, err = query.FindAll()
@@ -119,19 +121,28 @@ func (this *ServerRegionCountryDailyStatDAO) ListSumStats(tx *dbs.Tx, day string
 		query.Desc("countRequests")
 	case "attackBytes":
 		query.Desc("attackBytes")
+		query.Gt("attackBytes", 0)
 	case "countAttackRequests":
 		query.Desc("countAttackRequests")
+		query.Gt("countAttackRequests", 0)
 	}
 
 	_, err = query.FindAll()
 	return
 }
 
-// SumDailyBytes 计算总流量
+// SumDailyTotalBytes 计算总流量
 func (this *ServerRegionCountryDailyStatDAO) SumDailyTotalBytes(tx *dbs.Tx, day string) (int64, error) {
 	return this.Query(tx).
 		Attr("day", day).
 		SumInt64("bytes", 0)
+}
+
+// SumDailyTotalAttackRequests 计算总攻击次数
+func (this *ServerRegionCountryDailyStatDAO) SumDailyTotalAttackRequests(tx *dbs.Tx, day string) (int64, error) {
+	return this.Query(tx).
+		Attr("day", day).
+		SumInt64("countAttackRequests", 0)
 }
 
 // Clean 清理统计数据

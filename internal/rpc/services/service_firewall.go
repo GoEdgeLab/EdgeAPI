@@ -5,6 +5,7 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -213,6 +214,34 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 			CountAttackRequests: int64(stat.CountAttackRequests),
 			AttackBytes:         int64(stat.AttackBytes),
 		})
+	}
+
+	// 地区流量排行
+	totalCountryRequests, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalAttackRequests(tx, timeutil.Format("Ymd"))
+	if err != nil {
+		return nil, err
+	}
+
+	if totalCountryRequests > 0 {
+		topCountryStats, err := stats.SharedServerRegionCountryDailyStatDAO.ListSumStats(tx, timeutil.Format("Ymd"), "countAttackRequests", 0, 100)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, stat := range topCountryStats {
+			countryName, err := regions.SharedRegionCountryDAO.FindRegionCountryName(tx, int64(stat.CountryId))
+			if err != nil {
+				return nil, err
+			}
+			result.TopCountryStats = append(result.TopCountryStats, &pb.ComposeFirewallGlobalBoardResponse_CountryStat{
+				CountryName:         countryName,
+				Bytes:               int64(stat.Bytes),
+				CountRequests:       int64(stat.CountRequests),
+				AttackBytes:         int64(stat.AttackBytes),
+				CountAttackRequests: int64(stat.CountAttackRequests),
+				Percent:             float32(stat.CountAttackRequests*100) / float32(totalCountryRequests),
+			})
+		}
 	}
 
 	return result, nil
