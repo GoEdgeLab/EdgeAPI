@@ -16,7 +16,8 @@ const (
 	RegionCountryStateDisabled = 0 // 已禁用
 )
 
-var regionCountryNameAndIdCacheMap = map[string]int64{} // country name => int
+var regionCountryNameAndIdCacheMap = map[string]int64{} // country name => id
+var regionCountryIdAndNameCacheMap = map[int64]string{} // country id => name
 
 type RegionCountryDAO dbs.DAO
 
@@ -39,7 +40,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableRegionCountry 启用条目
 func (this *RegionCountryDAO) EnableRegionCountry(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -48,7 +49,7 @@ func (this *RegionCountryDAO) EnableRegionCountry(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 禁用条目
+// DisableRegionCountry 禁用条目
 func (this *RegionCountryDAO) DisableRegionCountry(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -57,7 +58,7 @@ func (this *RegionCountryDAO) DisableRegionCountry(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledRegionCountry 查找启用中的条目
 func (this *RegionCountryDAO) FindEnabledRegionCountry(tx *dbs.Tx, id int64) (*RegionCountry, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -69,15 +70,29 @@ func (this *RegionCountryDAO) FindEnabledRegionCountry(tx *dbs.Tx, id int64) (*R
 	return result.(*RegionCountry), err
 }
 
-// 根据主键查找名称
+// FindRegionCountryName 根据主键查找名称
 func (this *RegionCountryDAO) FindRegionCountryName(tx *dbs.Tx, id int64) (string, error) {
-	return this.Query(tx).
+	SharedCacheLocker.Lock()
+	defer SharedCacheLocker.Unlock()
+
+	name, ok := regionCountryIdAndNameCacheMap[id]
+	if ok {
+		return name, nil
+	}
+
+	name, err := this.Query(tx).
 		Pk(id).
 		Result("name").
 		FindStringCol("")
+	if err != nil {
+		return "", err
+	}
+
+	regionCountryIdAndNameCacheMap[id] = name
+	return name, nil
 }
 
-// 根据数据ID查找国家
+// FindCountryIdWithDataId 根据数据ID查找国家
 func (this *RegionCountryDAO) FindCountryIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).
 		Attr("dataId", dataId).
@@ -85,7 +100,7 @@ func (this *RegionCountryDAO) FindCountryIdWithDataId(tx *dbs.Tx, dataId string)
 		FindInt64Col(0)
 }
 
-// 根据国家名查找国家ID
+// FindCountryIdWithName 根据国家名查找国家ID
 func (this *RegionCountryDAO) FindCountryIdWithName(tx *dbs.Tx, countryName string) (int64, error) {
 	return this.Query(tx).
 		Where("JSON_CONTAINS(codes, :countryName)").
@@ -94,7 +109,7 @@ func (this *RegionCountryDAO) FindCountryIdWithName(tx *dbs.Tx, countryName stri
 		FindInt64Col(0)
 }
 
-// 根据国家名查找国家ID，并可使用缓存
+// FindCountryIdWithNameCacheable 根据国家名查找国家ID，并可使用缓存
 func (this *RegionCountryDAO) FindCountryIdWithNameCacheable(tx *dbs.Tx, countryName string) (int64, error) {
 	SharedCacheLocker.RLock()
 	provinceId, ok := regionCountryNameAndIdCacheMap[countryName]
@@ -116,7 +131,7 @@ func (this *RegionCountryDAO) FindCountryIdWithNameCacheable(tx *dbs.Tx, country
 	return countryId, nil
 }
 
-// 根据数据ID创建国家
+// CreateCountry 根据数据ID创建国家
 func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId string) (int64, error) {
 	op := NewRegionCountryOperator()
 	op.Name = name
@@ -145,7 +160,7 @@ func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId stri
 	return types.Int64(op.Id), nil
 }
 
-// 查找所有可用的国家
+// FindAllEnabledCountriesOrderByPinyin 查找所有可用的国家
 func (this *RegionCountryDAO) FindAllEnabledCountriesOrderByPinyin(tx *dbs.Tx) (result []*RegionCountry, err error) {
 	_, err = this.Query(tx).
 		State(RegionCountryStateEnabled).

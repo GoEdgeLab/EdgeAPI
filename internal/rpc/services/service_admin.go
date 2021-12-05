@@ -6,6 +6,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -732,6 +733,34 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 				CountRequests: int64(stat.CountRequests),
 				Bytes:         int64(stat.Bytes),
 			})
+		}
+	}
+
+	// 流量排行
+	if isPlus {
+		totalBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes(tx, timeutil.Format("Ymd"))
+		if err != nil {
+			return nil, err
+		}
+
+		if totalBytes > 0 {
+			topCountryStats, err := stats.SharedServerRegionCountryDailyStatDAO.ListSumStats(tx, timeutil.Format("Ymd"), "bytes", 0, 100)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, stat := range topCountryStats {
+				countryName, err := regions.SharedRegionCountryDAO.FindRegionCountryName(tx, int64(stat.CountryId))
+				if err != nil {
+					return nil, err
+				}
+				result.TopCountryStats = append(result.TopCountryStats, &pb.ComposeAdminDashboardResponse_CountryStat{
+					CountryName:   countryName,
+					Bytes:         int64(stat.Bytes),
+					CountRequests: int64(stat.CountRequests),
+					Percent:       float32(stat.Bytes*100) / float32(totalBytes),
+				})
+			}
 		}
 	}
 

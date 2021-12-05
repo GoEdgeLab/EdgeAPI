@@ -1358,9 +1358,17 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 					return err
 				}
 				if countryId > 0 {
-					key := fmt.Sprintf("%d@%d@%s", result.ServerId, countryId, month)
+					countryKey := fmt.Sprintf("%d@%d@%s", result.ServerId, countryId, day)
 					serverStatLocker.Lock()
-					serverHTTPCountryStatMap[key] += result.Count
+					stat, ok := serverHTTPCountryStatMap[countryKey]
+					if !ok {
+						stat = &TrafficStat{}
+						serverHTTPCountryStatMap[countryKey] = stat
+					}
+					stat.CountRequests += result.CountRequests
+					stat.Bytes += result.Bytes
+					stat.CountAttackRequests += result.CountAttackRequests
+					stat.AttackBytes += result.AttackBytes
 					serverStatLocker.Unlock()
 
 					// 省份
@@ -1372,7 +1380,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 						if provinceId > 0 {
 							key := fmt.Sprintf("%d@%d@%s", result.ServerId, provinceId, month)
 							serverStatLocker.Lock()
-							serverHTTPProvinceStatMap[key] += result.Count
+							serverHTTPProvinceStatMap[key] += result.CountRequests
 							serverStatLocker.Unlock()
 
 							// 城市
@@ -1384,7 +1392,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 								if cityId > 0 {
 									key := fmt.Sprintf("%d@%d@%s", result.ServerId, cityId, month)
 									serverStatLocker.Lock()
-									serverHTTPCityStatMap[key] += result.Count
+									serverHTTPCityStatMap[key] += result.CountRequests
 									serverStatLocker.Unlock()
 								}
 							}

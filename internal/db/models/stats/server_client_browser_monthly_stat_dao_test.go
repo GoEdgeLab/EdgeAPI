@@ -17,3 +17,12 @@ func TestServerClientBrowserMonthlyStatDAO_IncreaseMonthlyCount(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+func TestServerClientBrowserMonthlyStatDAO_Clean(t *testing.T) {
+	var dao = NewServerClientBrowserMonthlyStatDAO()
+	err := dao.Clean(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+}

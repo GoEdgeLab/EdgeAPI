@@ -21,7 +21,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		go func() {
 			for range ticker.C {
-				err := SharedServerHTTPFirewallDailyStatDAO.Clean(nil, 60) // 只保留60天
+				err := SharedServerHTTPFirewallDailyStatDAO.Clean(nil, 30) // 只保留N天
 				if err != nil {
 					remotelogs.Error("ServerHTTPFirewallDailyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -133,4 +133,3 @@ func (this *ServerHTTPFirewallDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
 		Delete()
 	return err
 }
-

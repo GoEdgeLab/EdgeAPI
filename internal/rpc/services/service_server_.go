@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -12,8 +13,19 @@ import (
 	"time"
 )
 
+type TrafficStat struct {
+	Bytes                int64
+	CachedBytes          int64
+	CountRequests        int64
+	CountCachedRequests  int64
+	CountAttackRequests  int64
+	AttackBytes          int64
+	PlanId               int64
+	CheckingTrafficLimit bool
+}
+
 // HTTP请求统计缓存队列
-var serverHTTPCountryStatMap = map[string]int64{}           // serverId@countryId@month => count
+var serverHTTPCountryStatMap = map[string]*TrafficStat{}    // serverId@countryId@day => *TrafficStat
 var serverHTTPProvinceStatMap = map[string]int64{}          // serverId@provinceId@month => count
 var serverHTTPCityStatMap = map[string]int64{}              // serverId@cityId@month => count
 var serverHTTPProviderStatMap = map[string]int64{}          // serverId@providerId@month => count
@@ -49,14 +61,26 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	{
 		serverStatLocker.Lock()
 		m := serverHTTPCountryStatMap
-		serverHTTPCountryStatMap = map[string]int64{}
+		serverHTTPCountryStatMap = map[string]*TrafficStat{}
 		serverStatLocker.Unlock()
-		for k, count := range m {
+		for k, stat := range m {
 			pieces := strings.Split(k, "@")
 			if len(pieces) != 3 {
 				continue
 			}
-			err := stats.SharedServerRegionCountryMonthlyStatDAO.IncreaseMonthlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], count)
+
+			// Monthly
+			var day = pieces[2]
+			if len(day) != 8 {
+				return errors.New("invalid day '" + day + "'")
+			}
+			err := stats.SharedServerRegionCountryMonthlyStatDAO.IncreaseMonthlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), day[:6], stat.CountRequests)
+			if err != nil {
+				return err
+			}
+
+			// Daily
+			err = stats.SharedServerRegionCountryDailyStatDAO.IncreaseDailyStat(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), day, stat.Bytes, stat.CountRequests, stat.AttackBytes, stat.CountAttackRequests)
 			if err != nil {
 				return err
 			}
@@ -87,12 +111,12 @@ func (this *ServerService) dumpServerHTTPStats() error {
 		m := serverHTTPCityStatMap
 		serverHTTPCityStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
-		for k, count := range m {
+		for k, countRequests := range m {
 			pieces := strings.Split(k, "@")
 			if len(pieces) != 3 {
 				continue
 			}
-			err := stats.SharedServerRegionCityMonthlyStatDAO.IncreaseMonthlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], count)
+			err := stats.SharedServerRegionCityMonthlyStatDAO.IncreaseMonthlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], countRequests)
 			if err != nil {
 				return err
 			}
@@ -172,13 +196,12 @@ func (this *ServerService) dumpServerHTTPStats() error {
 			}
 
 			// 按小时统计
-			err = stats.SharedServerHTTPFirewallHourlyStatDAO.IncreaseHourlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], pieces[3] + timeutil.Format("H"), count)
+			err = stats.SharedServerHTTPFirewallHourlyStatDAO.IncreaseHourlyCount(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), pieces[2], pieces[3]+timeutil.Format("H"), count)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 
 	return nil
 }
