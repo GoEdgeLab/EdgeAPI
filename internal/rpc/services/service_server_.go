@@ -1,6 +1,7 @@
 package services
 
 import (
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -80,9 +81,11 @@ func (this *ServerService) dumpServerHTTPStats() error {
 			}
 
 			// Daily
-			err = stats.SharedServerRegionCountryDailyStatDAO.IncreaseDailyStat(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), day, stat.Bytes, stat.CountRequests, stat.AttackBytes, stat.CountAttackRequests)
-			if err != nil {
-				return err
+			if teaconst.IsPlus { // 非商业版暂时不记录
+				err = stats.SharedServerRegionCountryDailyStatDAO.IncreaseDailyStat(nil, types.Int64(pieces[0]), types.Int64(pieces[1]), day, stat.Bytes, stat.CountRequests, stat.AttackBytes, stat.CountAttackRequests)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
