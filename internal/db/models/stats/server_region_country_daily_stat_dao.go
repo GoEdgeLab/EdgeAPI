@@ -145,6 +145,22 @@ func (this *ServerRegionCountryDailyStatDAO) SumDailyTotalAttackRequests(tx *dbs
 		SumInt64("countAttackRequests", 0)
 }
 
+// SumDailyTotalBytesWithServerId 计算单个服务的总流量
+func (this *ServerRegionCountryDailyStatDAO) SumDailyTotalBytesWithServerId(tx *dbs.Tx, day string, serverId int64) (int64, error) {
+	return this.Query(tx).
+		Attr("day", day).
+		Attr("serverId", serverId).
+		SumInt64("bytes", 0)
+}
+
+// SumDailyTotalAttackRequestsWithServerId 计算单个服务的总攻击次数
+func (this *ServerRegionCountryDailyStatDAO) SumDailyTotalAttackRequestsWithServerId(tx *dbs.Tx, day string, serverId int64) (int64, error) {
+	return this.Query(tx).
+		Attr("day", day).
+		Attr("serverId", serverId).
+		SumInt64("countAttackRequests", 0)
+}
+
 // Clean 清理统计数据
 func (this *ServerRegionCountryDailyStatDAO) Clean(tx *dbs.Tx) error {
 	// 只保留7天的

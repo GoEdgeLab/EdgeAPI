@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -512,6 +513,34 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			CountAttackRequests: int64(stat.CountAttackRequests),
 			AttackBytes:         int64(stat.AttackBytes),
 		})
+	}
+
+	// 地区流量排行
+	totalCountryBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytesWithServerId(tx, timeutil.Format("Ymd"), req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	if totalCountryBytes > 0 {
+		topCountryStats, err := stats.SharedServerRegionCountryDailyStatDAO.ListServerStats(tx, req.ServerId, timeutil.Format("Ymd"), "bytes", 0, 100)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, stat := range topCountryStats {
+			countryName, err := regions.SharedRegionCountryDAO.FindRegionCountryName(tx, int64(stat.CountryId))
+			if err != nil {
+				return nil, err
+			}
+			result.TopCountryStats = append(result.TopCountryStats, &pb.ComposeServerStatBoardResponse_CountryStat{
+				CountryName:         countryName,
+				Bytes:               int64(stat.Bytes),
+				CountRequests:       int64(stat.CountRequests),
+				AttackBytes:         int64(stat.AttackBytes),
+				CountAttackRequests: int64(stat.CountAttackRequests),
+				Percent:             float32(stat.Bytes*100) / float32(totalCountryBytes),
+			})
+		}
 	}
 
 	// 指标
