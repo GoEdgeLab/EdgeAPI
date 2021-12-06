@@ -279,6 +279,34 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword s
 
 // ListIPItemsAfterVersion 根据版本号查找IP列表
 func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
+	// 将过期的设置为已删除，这样是为了在 expiredAt<UNIX_TIMESTAMP()边缘节点让过期的IP有一个执行删除的机会
+	ones, _, err := this.Query(tx).
+		ResultPk().
+		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
+		Param("timestamp", time.Now().Unix()).
+		State(IPItemStateEnabled).
+		Limit(100).
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		var expiredId = one.GetInt64("id")
+		newVersion, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return nil, err
+		}
+		_, err = this.Query(tx).
+			Pk(expiredId).
+			Set("state", IPItemStateDisabled).
+			Set("version", newVersion).
+			Update()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	_, err = this.Query(tx).
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
 		Gt("version", version).
