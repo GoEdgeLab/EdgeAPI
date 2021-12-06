@@ -39,5 +39,5 @@ func (this *MonitorItemValueTask) Start() {
 }
 
 func (this *MonitorItemValueTask) Loop() error {
-	return models.SharedNodeValueDAO.DeleteExpiredValues(nil)
+	return models.SharedNodeValueDAO.Clean(nil)
 }
