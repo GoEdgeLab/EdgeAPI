@@ -8,4 +8,5 @@ type Credentials struct {
 	PrivateKey string
 	Passphrase string
 	Method     string
+	Sudo       bool
 }

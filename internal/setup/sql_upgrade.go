@@ -59,6 +59,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.3.3", upgradeV0_3_3,
 	},
+	{
+		"0.3.7", upgradeV0_3_7,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -530,5 +533,15 @@ func upgradeV0_3_3(db *dbs.DB) error {
 		return err
 	}
 
+	return nil
+}
+
+// v0.3.7
+func upgradeV0_3_7(db *dbs.DB) error {
+	// 修改所有edgeNodeGrants中的su为0
+	_, err := db.Exec("UPDATE edgeNodeGrants SET su=0 WHERE su=1")
+	if err != nil {
+		return err
+	}
 	return nil
 }

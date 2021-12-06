@@ -26,7 +26,7 @@ func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.Creat
 
 	tx := this.NullTx()
 
-	grantId, err := models.SharedNodeGrantDAO.CreateGrant(tx, adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId)
+	grantId, err := models.SharedNodeGrantDAO.CreateGrant(tx, adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId, req.Su)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId)
+	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId, req.Su)
 	return this.Success()
 }
 

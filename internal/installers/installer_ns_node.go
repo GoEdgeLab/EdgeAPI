@@ -97,6 +97,12 @@ func (this *NSNodeInstaller) Install(dir string, params interface{}, installStat
 	// 修改配置文件
 	{
 		configFile := dir + "/edge-dns/configs/api.yaml"
+
+		// sudo之后我们需要修改配置目录才能写入文件
+		if this.client.sudo {
+			_, _, _ = this.client.Exec("chown " + this.client.User() + " " + filepath.Dir(configFile))
+		}
+
 		var data = []byte(`rpc:
   endpoints: [ ${endpoints} ]
 nodeId: "${nodeId}"
@@ -108,7 +114,7 @@ secret: "${nodeSecret}"`)
 
 		_, err = this.client.WriteFile(configFile, data)
 		if err != nil {
-			return errors.New("write 'configs/api.yaml': " + err.Error())
+			return errors.New("write '" + configFile + "': " + err.Error())
 		}
 	}
 

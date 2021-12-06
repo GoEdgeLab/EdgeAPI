@@ -73,7 +73,7 @@ func (this *NodeGrantDAO) FindNodeGrantName(tx *dbs.Tx, id uint32) (string, erro
 }
 
 // CreateGrant 创建认证信息
-func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, method string, username string, password string, privateKey string, passphrase string, description string, nodeId int64) (grantId int64, err error) {
+func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, method string, username string, password string, privateKey string, passphrase string, description string, nodeId int64, su bool) (grantId int64, err error) {
 	op := NewNodeGrantOperator()
 	op.AdminId = adminId
 	op.Name = name
@@ -83,12 +83,12 @@ func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, me
 	case "user":
 		op.Username = username
 		op.Password = password
-		op.Su = false // TODO 需要做到前端可以配置
 	case "privateKey":
 		op.Username = username
 		op.PrivateKey = privateKey
 		op.Passphrase = passphrase
 	}
+	op.Su = su
 	op.Description = description
 	op.NodeId = nodeId
 	op.State = NodeGrantStateEnabled
@@ -97,7 +97,7 @@ func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, me
 }
 
 // UpdateGrant 修改认证信息
-func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, method string, username string, password string, privateKey string, passphrase string, description string, nodeId int64) error {
+func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, method string, username string, password string, privateKey string, passphrase string, description string, nodeId int64, su bool) error {
 	if grantId <= 0 {
 		return errors.New("invalid grantId")
 	}
@@ -111,12 +111,12 @@ func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, me
 	case "user":
 		op.Username = username
 		op.Password = password
-		op.Su = false // TODO 需要做到前端可以配置
 	case "privateKey":
 		op.Username = username
 		op.PrivateKey = privateKey
 		op.Passphrase = passphrase
 	}
+	op.Su = su
 	op.Description = description
 	op.NodeId = nodeId
 	err := this.Save(tx, op)

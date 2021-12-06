@@ -133,24 +133,6 @@ func (this *NSNodeQueue) InstallNode(nodeId int64, installStatus *models.NodeIns
 		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
-	// 安装目录
-	installDir := node.InstallDir
-	if len(installDir) == 0 {
-		clusterId := node.ClusterId
-		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(nil, int64(clusterId))
-		if err != nil {
-			return err
-		}
-		if cluster == nil {
-			return errors.New("can not find cluster, ID：'" + fmt.Sprintf("%d", clusterId) + "'")
-		}
-		installDir = cluster.InstallDir
-		if len(installDir) == 0 {
-			// 默认是 $登录用户/edge-dns
-			installDir = "/" + grant.Username + "/edge-dns"
-		}
-	}
-
 	// API终端
 	apiNodes, err := models.SharedAPINodeDAO.FindAllEnabledAndOnAPINodes(nil)
 	if err != nil {
@@ -187,6 +169,7 @@ func (this *NSNodeQueue) InstallNode(nodeId int64, installStatus *models.NodeIns
 		PrivateKey: grant.PrivateKey,
 		Passphrase: grant.Passphrase,
 		Method:     grant.Method,
+		Sudo:       grant.Su == 1,
 	})
 	if err != nil {
 		installStatus.ErrorCode = "SSH_LOGIN_FAILED"
@@ -195,6 +178,24 @@ func (this *NSNodeQueue) InstallNode(nodeId int64, installStatus *models.NodeIns
 	defer func() {
 		_ = installer.Close()
 	}()
+
+	// 安装目录
+	installDir := node.InstallDir
+	if len(installDir) == 0 {
+		clusterId := node.ClusterId
+		cluster, err := models.SharedNSClusterDAO.FindEnabledNSCluster(nil, int64(clusterId))
+		if err != nil {
+			return err
+		}
+		if cluster == nil {
+			return errors.New("can not find cluster, ID：'" + fmt.Sprintf("%d", clusterId) + "'")
+		}
+		installDir = cluster.InstallDir
+		if len(installDir) == 0 {
+			// 默认是 $登录用户/edge-dns
+			installDir = installer.client.UserHome() + "/edge-dns"
+		}
+	}
 
 	err = installer.Install(installDir, params, installStatus)
 	return err
@@ -250,6 +251,24 @@ func (this *NSNodeQueue) StartNode(nodeId int64) error {
 		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
+	installer := &NSNodeInstaller{}
+	err = installer.Login(&Credentials{
+		Host:       loginParams.Host,
+		Port:       loginParams.Port,
+		Username:   grant.Username,
+		Password:   grant.Password,
+		PrivateKey: grant.PrivateKey,
+		Passphrase: grant.Passphrase,
+		Method:     grant.Method,
+		Sudo:       grant.Su == 1,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = installer.Close()
+	}()
+
 	// 安装目录
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
@@ -264,26 +283,9 @@ func (this *NSNodeQueue) StartNode(nodeId int64) error {
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
 			// 默认是 $登录用户/edge-dns
-			installDir = "/" + grant.Username + "/edge-dns"
+			installDir = installer.client.UserHome() + "/edge-dns"
 		}
 	}
-
-	installer := &NSNodeInstaller{}
-	err = installer.Login(&Credentials{
-		Host:       loginParams.Host,
-		Port:       loginParams.Port,
-		Username:   grant.Username,
-		Password:   grant.Password,
-		PrivateKey: grant.PrivateKey,
-		Passphrase: grant.Passphrase,
-		Method:     grant.Method,
-	})
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = installer.Close()
-	}()
 
 	// 检查命令是否存在
 	exeFile := installDir + "/edge-dns/bin/edge-dns"
@@ -356,6 +358,24 @@ func (this *NSNodeQueue) StopNode(nodeId int64) error {
 		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
+	installer := &NSNodeInstaller{}
+	err = installer.Login(&Credentials{
+		Host:       loginParams.Host,
+		Port:       loginParams.Port,
+		Username:   grant.Username,
+		Password:   grant.Password,
+		PrivateKey: grant.PrivateKey,
+		Passphrase: grant.Passphrase,
+		Method:     grant.Method,
+		Sudo:       grant.Su == 1,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = installer.Close()
+	}()
+
 	// 安装目录
 	installDir := node.InstallDir
 	if len(installDir) == 0 {
@@ -370,26 +390,9 @@ func (this *NSNodeQueue) StopNode(nodeId int64) error {
 		installDir = cluster.InstallDir
 		if len(installDir) == 0 {
 			// 默认是 $登录用户/edge-dns
-			installDir = "/" + grant.Username + "/edge-dns"
+			installDir = installer.client.UserHome() + "/edge-dns"
 		}
 	}
-
-	installer := &NSNodeInstaller{}
-	err = installer.Login(&Credentials{
-		Host:       loginParams.Host,
-		Port:       loginParams.Port,
-		Username:   grant.Username,
-		Password:   grant.Password,
-		PrivateKey: grant.PrivateKey,
-		Passphrase: grant.Passphrase,
-		Method:     grant.Method,
-	})
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = installer.Close()
-	}()
 
 	// 检查命令是否存在
 	exeFile := installDir + "/edge-dns/bin/edge-dns"
