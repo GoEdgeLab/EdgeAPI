@@ -8,9 +8,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -320,4 +322,52 @@ func (this *APINodeDAO) CountAllEnabledAPINodesWithSSLPolicyIds(tx *dbs.Tx, sslP
 		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds) OR FIND_IN_SET(JSON_EXTRACT(restHTTPS, '$.sslPolicyRef.sslPolicyId'), :policyIds))").
 		Param("policyIds", strings.Join(policyStringIds, ",")).
 		Count()
+}
+
+// FindAllEnabledAPIAccessIPs 获取所有的API可访问IP地址
+func (this *APINodeDAO) FindAllEnabledAPIAccessIPs(tx *dbs.Tx, cacheMap *utils.CacheMap) ([]string, error) {
+	var cacheKey = this.Table + ":FindAllEnabledAPIAccessIPs"
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.([]string), nil
+		}
+	}
+
+	ones, _, err := this.Query(tx).
+		State(APINodeStateEnabled).
+		Result("JSON_EXTRACT(accessAddrs, '$[*].host') AS host").
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	var result = []string{}
+	for _, one := range ones {
+		var host = one.GetString("host")
+		if len(host) == 0 {
+			continue
+		}
+
+		var ips = []string{}
+		err = json.Unmarshal([]byte(host), &ips)
+		if err != nil {
+			continue
+		}
+
+		for _, ip := range ips {
+			if !lists.ContainsString(result, ip) {
+				if net.ParseIP(ip) == nil {
+					continue
+				}
+
+				result = append(result, ip)
+			}
+		}
+	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
+	return result, nil
 }

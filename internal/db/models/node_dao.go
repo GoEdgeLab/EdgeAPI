@@ -519,9 +519,9 @@ func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("clusterId", clusterId).
-		Attr("isOn", true). // 只监控启用的节点
+		Attr("isOn", true).        // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
-		Attr("isActive", true). // 当前已经在线的
+		Attr("isActive", true).    // 当前已经在线的
 		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
 		Result("id", "name").
 		Slice(&result).
@@ -726,6 +726,13 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		MaxCPU:   types.Int32(node.MaxCPU),
 		RegionId: int64(node.RegionId),
 	}
+
+	// API节点IP
+	apiNodeIPs, err := SharedAPINodeDAO.FindAllEnabledAPIAccessIPs(tx, cacheMap)
+	if err != nil {
+		return nil, err
+	}
+	config.AllowedIPs = append(config.AllowedIPs, apiNodeIPs...)
 
 	// 获取所有的服务
 	servers, err := SharedServerDAO.FindAllEnabledServersWithNode(tx, int64(node.Id))
