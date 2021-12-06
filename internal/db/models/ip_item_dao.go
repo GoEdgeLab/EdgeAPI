@@ -299,6 +299,7 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 		_, err = this.Query(tx).
 			Pk(expiredId).
 			Set("state", IPItemStateDisabled).
+			Set("expiredAt", 0).
 			Set("version", newVersion).
 			Update()
 
