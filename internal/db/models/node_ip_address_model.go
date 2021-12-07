@@ -5,6 +5,7 @@ type NodeIPAddress struct {
 	Id                uint32 `field:"id"`                // ID
 	NodeId            uint32 `field:"nodeId"`            // 节点ID
 	Role              string `field:"role"`              // 节点角色
+	GroupId           uint32 `field:"groupId"`           // 所属分组ID
 	Name              string `field:"name"`              // 名称
 	Ip                string `field:"ip"`                // IP地址
 	Description       string `field:"description"`       // 描述
@@ -26,6 +27,7 @@ type NodeIPAddressOperator struct {
 	Id                interface{} // ID
 	NodeId            interface{} // 节点ID
 	Role              interface{} // 节点角色
+	GroupId           interface{} // 所属分组ID
 	Name              interface{} // 名称
 	Ip                interface{} // IP地址
 	Description       interface{} // 描述

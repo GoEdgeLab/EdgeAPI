@@ -21,12 +21,40 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 
 	tx := this.NullTx()
 
-	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.IsUp)
+	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.IsUp, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.CreateNodeIPAddressResponse{NodeIPAddressId: addressId}, nil
+}
+
+// CreateNodeIPAddresses 批量创建IP地址
+func (this *NodeIPAddressService) CreateNodeIPAddresses(ctx context.Context, req *pb.CreateNodeIPAddressesRequest) (*pb.CreateNodeIPAddressesResponse, error) {
+	// 校验请求
+	adminId, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := this.NullTx()
+
+	// 创建分组
+	groupId, err := models.SharedNodeIPAddressGroupDAO.CreateGroup(tx, req.GroupValue, req.GroupValue)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []int64{}
+	for _, ip := range req.IpList {
+		addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, ip, req.CanAccess, req.IsUp, groupId)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, addressId)
+	}
+
+	return &pb.CreateNodeIPAddressesResponse{NodeIPAddressIds: result}, nil
 }
 
 // UpdateNodeIPAddress 修改IP地址

@@ -119,7 +119,7 @@ func (this *NodeIPAddressDAO) FindAddressIsHealthy(tx *dbs.Tx, addressId int64) 
 }
 
 // CreateAddress 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, isUp bool) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, isUp bool, groupId int64) (addressId int64, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
@@ -131,6 +131,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 	op.Ip = ip
 	op.CanAccess = canAccess
 	op.IsUp = isUp
+	op.GroupId = groupId
 
 	op.State = NodeIPAddressStateEnabled
 	addressId, err = this.SaveInt64(tx, op)
