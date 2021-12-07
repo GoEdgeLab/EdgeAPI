@@ -13,5 +13,6 @@ func (this *HTTPAccessLog) ToPB() (*pb.HTTPAccessLog, error) {
 		return nil, err
 	}
 	p.RequestId = this.RequestId
+	p.RequestBody = []byte(this.RequestBody)
 	return p, nil
 }

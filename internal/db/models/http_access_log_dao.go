@@ -86,7 +86,11 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogsWithDAO(tx *dbs.Tx, daoWrapper
 		fields["firewallRuleSetId"] = accessLog.FirewallRuleSetId
 		fields["firewallRuleId"] = accessLog.FirewallRuleId
 
-		// TODO 根据集群、服务设置获取IP
+		if len(accessLog.RequestBody) > 0 {
+			fields["requestBody"] = accessLog.RequestBody
+			accessLog.RequestBody = nil
+		}
+
 		if tableDef.HasRemoteAddr {
 			fields["remoteAddr"] = accessLog.RemoteAddr
 		}
