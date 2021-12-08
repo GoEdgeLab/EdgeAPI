@@ -61,7 +61,7 @@ func (this *NodeValueDAO) Clean(tx *dbs.Tx) error {
 	expiredDays := 2
 	day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -expiredDays))
 	_, err := this.Query(tx).
-		Where("day<:day").
+		Where("day<=:day").
 		Param("day", day).
 		Delete()
 	if err != nil {
