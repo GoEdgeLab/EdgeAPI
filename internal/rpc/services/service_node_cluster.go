@@ -83,7 +83,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.NodeTCPMaxConnections)
 	if err != nil {
 		return nil, err
 	}
@@ -148,19 +148,21 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 	}
 
 	return &pb.FindEnabledNodeClusterResponse{NodeCluster: &pb.NodeCluster{
-		Id:                   int64(cluster.Id),
-		Name:                 cluster.Name,
-		CreatedAt:            int64(cluster.CreatedAt),
-		InstallDir:           cluster.InstallDir,
-		NodeGrantId:          int64(cluster.GrantId),
-		UniqueId:             cluster.UniqueId,
-		Secret:               cluster.Secret,
-		HttpCachePolicyId:    int64(cluster.CachePolicyId),
-		HttpFirewallPolicyId: int64(cluster.HttpFirewallPolicyId),
-		DnsName:              cluster.DnsName,
-		DnsDomainId:          int64(cluster.DnsDomainId),
-		IsOn:                 cluster.IsOn == 1,
-		TimeZone:             cluster.TimeZone,
+		Id:                    int64(cluster.Id),
+		Name:                  cluster.Name,
+		CreatedAt:             int64(cluster.CreatedAt),
+		InstallDir:            cluster.InstallDir,
+		NodeGrantId:           int64(cluster.GrantId),
+		UniqueId:              cluster.UniqueId,
+		Secret:                cluster.Secret,
+		HttpCachePolicyId:     int64(cluster.CachePolicyId),
+		HttpFirewallPolicyId:  int64(cluster.HttpFirewallPolicyId),
+		DnsName:               cluster.DnsName,
+		DnsDomainId:           int64(cluster.DnsDomainId),
+		IsOn:                  cluster.IsOn == 1,
+		TimeZone:              cluster.TimeZone,
+		NodeMaxThreads:        int32(cluster.NodeMaxThreads),
+		NodeTCPMaxConnections: int32(cluster.NodeTCPMaxConnections),
 	}}, nil
 }
 

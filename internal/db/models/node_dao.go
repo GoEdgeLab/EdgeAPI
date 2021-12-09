@@ -782,11 +782,17 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	var primaryClusterId = int64(node.ClusterId)
 	var clusterIds = []int64{primaryClusterId}
 	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
+	var clusterIndex = 0
 	for _, clusterId := range clusterIds {
-		httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
+		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
+		if nodeCluster == nil {
+			continue
+		}
+
+		var httpFirewallPolicyId = int64(nodeCluster.HttpFirewallPolicyId)
 		if httpFirewallPolicyId > 0 {
 			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId, cacheMap)
 			if err != nil {
@@ -798,10 +804,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		}
 
 		// 缓存策略
-		httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
-		if err != nil {
-			return nil, err
-		}
+		var httpCachePolicyId = int64(nodeCluster.CachePolicyId)
 		if httpCachePolicyId > 0 {
 			cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId, cacheMap)
 			if err != nil {
@@ -813,13 +816,20 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		}
 
 		// 时区
-		timeZone, err := SharedNodeClusterDAO.FindClusterTimezone(tx, clusterId, cacheMap)
-		if err != nil {
-			return nil, err
+		if len(config.TimeZone) == 0 {
+			var timeZone = nodeCluster.TimeZone
+			if len(timeZone) > 0 {
+				config.TimeZone = timeZone
+			}
 		}
-		if len(timeZone) > 0 {
-			config.TimeZone = timeZone
+
+		// 最大线程数、TCP连接数
+		if clusterIndex == 0 {
+			config.MaxThreads = int(nodeCluster.NodeMaxThreads)
+			config.TCPMaxConnections = int(nodeCluster.NodeTCPMaxConnections)
 		}
+
+		clusterIndex++
 	}
 
 	// 缓存最大容量设置

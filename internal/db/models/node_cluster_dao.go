@@ -178,7 +178,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, nodeTCPMaxConnections int32) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -188,6 +188,17 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 	op.GrantId = grantId
 	op.InstallDir = installDir
 	op.TimeZone = timezone
+
+	if nodeMaxThreads < 0 {
+		nodeMaxThreads = 0
+	}
+	op.NodeMaxThreads = nodeMaxThreads
+
+	if nodeTCPMaxConnections < 0 {
+		nodeTCPMaxConnections = 0
+	}
+	op.NodeTCPMaxConnections = nodeTCPMaxConnections
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -864,27 +875,27 @@ func (this *NodeClusterDAO) ExistsEnabledCluster(tx *dbs.Tx, clusterId int64) (b
 		Exist()
 }
 
-// FindClusterTimezone 查找时区
-func (this *NodeClusterDAO) FindClusterTimezone(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (string, error) {
-	var cacheKey = this.Table + ":FindEnabledTimeZone:" + types.String(clusterId)
+// FindClusterBasicInfo 查找集群基础信息
+func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*NodeCluster, error) {
+	var cacheKey = this.Table + ":FindClusterBasicInfo:" + types.String(clusterId)
 	if cacheMap != nil {
 		cache, ok := cacheMap.Get(cacheKey)
 		if ok {
-			return cache.(string), nil
+			return cache.(*NodeCluster), nil
 		}
 	}
 
-	timeZone, err := this.Query(tx).
+	cluster, err := this.Query(tx).
 		Pk(clusterId).
-		Result("timeZone").
-		FindStringCol("")
-	if err != nil {
-		return "", err
+		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId").
+		Find()
+	if err != nil || cluster == nil {
+		return nil, err
 	}
 	if cacheMap != nil {
-		cacheMap.Put(cacheKey, timeZone)
+		cacheMap.Put(cacheKey, cluster)
 	}
-	return timeZone, nil
+	return cluster.(*NodeCluster), nil
 }
 
 // NotifyUpdate 通知更新
