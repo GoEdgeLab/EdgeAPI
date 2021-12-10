@@ -123,14 +123,15 @@ func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) 
 	return result.(*IPItem), err
 }
 
-// DisableOldIPItem 根据IP删除以前的旧记录
-func (this *IPItemDAO) DisableOldIPItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string) error {
-	return this.Query(tx).
+// DeleteOldItem 根据IP删除以前的旧记录
+func (this *IPItemDAO) DeleteOldItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string) error {
+	_, err := this.Query(tx).
+		UseIndex("ipFrom").
 		Attr("listId", listId).
 		Attr("ipFrom", ipFrom).
 		Attr("ipTo", ipTo).
-		Set("state", IPItemStateDisabled).
-		UpdateQuickly()
+		Delete()
+	return err
 }
 
 // CreateIPItem 创建IP

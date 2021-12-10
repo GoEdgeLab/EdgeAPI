@@ -59,7 +59,7 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 	}
 
 	// 删除以前的
-	err = models.SharedIPItemDAO.DisableOldIPItem(tx, req.IpListId, req.IpFrom, req.IpTo)
+	err = models.SharedIPItemDAO.DeleteOldItem(tx, req.IpListId, req.IpFrom, req.IpTo)
 	if err != nil {
 		return nil, err
 	}
