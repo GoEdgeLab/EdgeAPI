@@ -185,6 +185,11 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	}
 	itemId := types.Int64(op.Id)
 
+	// 全局名单不需要即时更新，防止数量过多而导致性能问题
+	if listId == firewallconfigs.GlobalListId {
+		return itemId, nil
+	}
+
 	err = this.NotifyUpdate(tx, itemId)
 	if err != nil {
 		return 0, err

@@ -84,6 +84,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 
 	defer func() {
 		// 修改当前API节点的主边缘节点
+		/// TODO 每个集群应该有一个primaryNodeId
 		if primaryNodeId == nodeId {
 			primaryNodeId = 0
 
