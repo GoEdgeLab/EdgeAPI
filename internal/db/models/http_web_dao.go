@@ -422,6 +422,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 	// mergeSlashes
 	config.MergeSlashes = web.MergeSlashes == 1
 
+	// 请求限制
+	if len(web.RequestLimit) > 0 {
+		var requestLimitConfig = &serverconfigs.HTTPRequestLimitConfig{}
+		if len(web.RequestLimit) > 0 {
+			err = json.Unmarshal([]byte(web.RequestLimit), requestLimitConfig)
+			if err != nil {
+				return nil, err
+			}
+			config.RequestLimit = requestLimitConfig
+		}
+	}
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1068,6 +1080,43 @@ func (this *HTTPWebDAO) UpdateWebCommon(tx *dbs.Tx, webId int64, mergeSlashes bo
 	}
 
 	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateWebRequestLimit 修改服务的请求限制
+func (this *HTTPWebDAO) UpdateWebRequestLimit(tx *dbs.Tx, webId int64, config *serverconfigs.HTTPRequestLimitConfig) error {
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(webId).
+		Set("requestLimit", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebRequestLimit 获取服务的请求限制
+func (this *HTTPWebDAO) FindWebRequestLimit(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPRequestLimitConfig, error) {
+	configString, err := this.Query(tx).
+		Pk(webId).
+		Result("requestLimit").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.HTTPRequestLimitConfig{}
+	if len(configString) == 0 {
+		return config, nil
+	}
+	err = json.Unmarshal([]byte(configString), config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // NotifyUpdate 通知更新

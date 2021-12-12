@@ -33,6 +33,7 @@ type HTTPWeb struct {
 	Webp               string `field:"webp"`               // WebP配置
 	RemoteAddr         string `field:"remoteAddr"`         // 客户端IP配置
 	MergeSlashes       uint8  `field:"mergeSlashes"`       // 是否合并路径中的斜杠
+	RequestLimit       string `field:"requestLimit"`       // 请求限制
 }
 
 type HTTPWebOperator struct {
@@ -67,6 +68,7 @@ type HTTPWebOperator struct {
 	Webp               interface{} // WebP配置
 	RemoteAddr         interface{} // 客户端IP配置
 	MergeSlashes       interface{} // 是否合并路径中的斜杠
+	RequestLimit       interface{} // 请求限制
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

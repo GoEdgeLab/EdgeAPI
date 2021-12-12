@@ -2043,6 +2043,7 @@ func (this *ServerDAO) UpdateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64
 	return this.UpdateServerTrafficLimitStatus(tx, trafficLimitConfig, serverId, true)
 }
 
+// UpdateServerTrafficLimitStatus 修改服务的流量限制状态
 func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitConfig *serverconfigs.TrafficLimitConfig, serverId int64, isUpdatingConfig bool) error {
 	if !trafficLimitConfig.IsOn {
 		if isUpdatingConfig {

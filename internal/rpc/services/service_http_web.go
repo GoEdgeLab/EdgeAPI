@@ -660,3 +660,47 @@ func (this *HTTPWebService) UpdateHTTPWebCommon(ctx context.Context, req *pb.Upd
 
 	return this.Success()
 }
+
+// UpdateHTTPWebRequestLimit 修改请求限制
+func (this *HTTPWebService) UpdateHTTPWebRequestLimit(ctx context.Context, req *pb.UpdateHTTPWebRequestLimitRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	var config = &serverconfigs.HTTPRequestLimitConfig{}
+	err = json.Unmarshal(req.RequestLimitJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebRequestLimit(tx, req.HttpWebId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindHTTPWebRequestLimit 查找请求限制
+func (this *HTTPWebService) FindHTTPWebRequestLimit(ctx context.Context, req *pb.FindHTTPWebRequestLimitRequest) (*pb.FindHTTPWebRequestLimitResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	config, err := models.SharedHTTPWebDAO.FindWebRequestLimit(tx, req.HttpWebId)
+	if err != nil {
+		return nil, err
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindHTTPWebRequestLimitResponse{RequestLimitJSON: configJSON}, nil
+}
