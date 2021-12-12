@@ -18,6 +18,7 @@ type HTTPLocation struct {
 	UrlPrefix    string `field:"urlPrefix"`    // URL前缀
 	IsBreak      uint8  `field:"isBreak"`      // 是否终止匹配
 	Conds        string `field:"conds"`        // 匹配条件
+	Domains      string `field:"domains"`      // 专属域名
 }
 
 type HTTPLocationOperator struct {
@@ -37,6 +38,7 @@ type HTTPLocationOperator struct {
 	UrlPrefix    interface{} // URL前缀
 	IsBreak      interface{} // 是否终止匹配
 	Conds        interface{} // 匹配条件
+	Domains      interface{} // 专属域名
 }
 
 func NewHTTPLocationOperator() *HTTPLocationOperator {

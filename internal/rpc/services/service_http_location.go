@@ -24,7 +24,7 @@ func (this *HTTPLocationService) CreateHTTPLocation(ctx context.Context, req *pb
 
 	tx := this.NullTx()
 
-	locationId, err := models.SharedHTTPLocationDAO.CreateLocation(tx, req.ParentId, req.Name, req.Pattern, req.Description, req.IsBreak, req.CondsJSON)
+	locationId, err := models.SharedHTTPLocationDAO.CreateLocation(tx, req.ParentId, req.Name, req.Pattern, req.Description, req.IsBreak, req.CondsJSON, req.Domains)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (this *HTTPLocationService) UpdateHTTPLocation(ctx context.Context, req *pb
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPLocationDAO.UpdateLocation(tx, req.LocationId, req.Name, req.Pattern, req.Description, req.IsOn, req.IsBreak, req.CondsJSON)
+	err = models.SharedHTTPLocationDAO.UpdateLocation(tx, req.LocationId, req.Name, req.Pattern, req.Description, req.IsOn, req.IsBreak, req.CondsJSON, req.Domains)
 	if err != nil {
 		return nil, err
 	}

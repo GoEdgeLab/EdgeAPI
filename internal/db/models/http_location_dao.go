@@ -86,7 +86,7 @@ func (this *HTTPLocationDAO) FindHTTPLocationName(tx *dbs.Tx, id int64) (string,
 }
 
 // CreateLocation 创建路由规则
-func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name string, pattern string, description string, isBreak bool, condsJSON []byte) (int64, error) {
+func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name string, pattern string, description string, isBreak bool, condsJSON []byte, domains []string) (int64, error) {
 	op := NewHTTPLocationOperator()
 	op.IsOn = true
 	op.State = HTTPLocationStateEnabled
@@ -100,7 +100,16 @@ func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name str
 		op.Conds = condsJSON
 	}
 
-	err := this.Save(tx, op)
+	if domains == nil {
+		domains = []string{}
+	}
+	domainsJSON, err := json.Marshal(domains)
+	if err != nil {
+		return 0, err
+	}
+	op.Domains = domainsJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
@@ -108,7 +117,7 @@ func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name str
 }
 
 // UpdateLocation 修改路由规则
-func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name string, pattern string, description string, isOn bool, isBreak bool, condsJSON []byte) error {
+func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name string, pattern string, description string, isOn bool, isBreak bool, condsJSON []byte, domains []string) error {
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
 	}
@@ -124,7 +133,16 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 		op.Conds = condsJSON
 	}
 
-	err := this.Save(tx, op)
+	if domains == nil {
+		domains = []string{}
+	}
+	domainsJSON, err := json.Marshal(domains)
+	if err != nil {
+		return err
+	}
+	op.Domains = domainsJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}
@@ -193,6 +211,18 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 			return nil, err
 		}
 		config.Conds = conds
+	}
+
+	// domains
+	if len(location.Domains) > 0 {
+		var domains = []string{}
+		err = json.Unmarshal([]byte(location.Domains), &domains)
+		if err != nil {
+			return nil, err
+		}
+		if len(domains) > 0 {
+			config.Domains = domains
+		}
 	}
 
 	if cacheMap != nil {
