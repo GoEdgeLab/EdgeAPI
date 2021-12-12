@@ -506,46 +506,20 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 	// 入站分组
 	if newConfig.Inbound != nil {
 		for _, g := range newConfig.Inbound.Groups {
+			var oldGroup *firewallconfigs.HTTPFirewallRuleGroup
+
+			// 使用代号查找
 			if len(g.Code) > 0 {
-				// 对于有代号的，覆盖或者添加
-				oldGroup := oldConfig.FindRuleGroupWithCode(g.Code)
-				if oldGroup == nil {
-					// 新创建分组
-					groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, g)
-					if err != nil {
-						return nil, err
-					}
-					oldConfig.Inbound.GroupRefs = append(oldConfig.Inbound.GroupRefs, &firewallconfigs.HTTPFirewallRuleGroupRef{
-						IsOn:    true,
-						GroupId: groupId,
-					})
-				} else {
-					setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
-					for _, set := range g.Sets {
-						setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, set)
-						if err != nil {
-							return nil, err
-						}
-						setRefs = append(setRefs, &firewallconfigs.HTTPFirewallRuleSetRef{
-							IsOn:  true,
-							SetId: setId,
-						})
-					}
-					setsJSON, err := json.Marshal(setRefs)
-					if err != nil {
-						return nil, err
-					}
-					err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupIsOn(tx, oldGroup.Id, true)
-					if err != nil {
-						return nil, err
-					}
-					err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, oldGroup.Id, setsJSON)
-					if err != nil {
-						return nil, err
-					}
-				}
-			} else {
-				// 没有代号的直接创建
+				oldGroup = oldConfig.FindRuleGroupWithCode(g.Code)
+			}
+
+			// 再次根据Name查找
+			if oldGroup == nil && len(g.Name) > 0 {
+				oldGroup = oldConfig.FindRuleGroupWithName(g.Name)
+			}
+
+			if oldGroup == nil {
+				// 新创建分组
 				groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, g)
 				if err != nil {
 					return nil, err
@@ -554,6 +528,32 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 					IsOn:    true,
 					GroupId: groupId,
 				})
+			} else {
+				setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
+				for _, set := range g.Sets {
+					setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, set)
+					if err != nil {
+						return nil, err
+					}
+					setRefs = append(setRefs, &firewallconfigs.HTTPFirewallRuleSetRef{
+						IsOn:  true,
+						SetId: setId,
+					})
+				}
+				setsJSON, err := json.Marshal(setRefs)
+				if err != nil {
+					return nil, err
+				}
+
+				err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(tx, oldGroup.Id, g.IsOn, g.Name, g.Code, g.Description)
+				if err != nil {
+					return nil, err
+				}
+
+				err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, oldGroup.Id, setsJSON)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -561,46 +561,20 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 	// 出站分组
 	if newConfig.Outbound != nil {
 		for _, g := range newConfig.Outbound.Groups {
+			var oldGroup *firewallconfigs.HTTPFirewallRuleGroup
+
+			// 使用代号查找
 			if len(g.Code) > 0 {
-				// 对于有代号的，覆盖或者添加
-				oldGroup := oldConfig.FindRuleGroupWithCode(g.Code)
-				if oldGroup == nil {
-					// 新创建分组
-					groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, g)
-					if err != nil {
-						return nil, err
-					}
-					oldConfig.Outbound.GroupRefs = append(oldConfig.Outbound.GroupRefs, &firewallconfigs.HTTPFirewallRuleGroupRef{
-						IsOn:    true,
-						GroupId: groupId,
-					})
-				} else {
-					setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
-					for _, set := range g.Sets {
-						setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, set)
-						if err != nil {
-							return nil, err
-						}
-						setRefs = append(setRefs, &firewallconfigs.HTTPFirewallRuleSetRef{
-							IsOn:  true,
-							SetId: setId,
-						})
-					}
-					setsJSON, err := json.Marshal(setRefs)
-					if err != nil {
-						return nil, err
-					}
-					err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupIsOn(tx, oldGroup.Id, true)
-					if err != nil {
-						return nil, err
-					}
-					err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, oldGroup.Id, setsJSON)
-					if err != nil {
-						return nil, err
-					}
-				}
-			} else {
-				// 没有代号的直接创建
+				oldGroup = oldConfig.FindRuleGroupWithCode(g.Code)
+			}
+
+			// 再次根据Name查找
+			if oldGroup == nil && len(g.Name) > 0 {
+				oldGroup = oldConfig.FindRuleGroupWithName(g.Name)
+			}
+
+			if oldGroup == nil {
+				// 新创建分组
 				groupId, err := models.SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, g)
 				if err != nil {
 					return nil, err
@@ -609,6 +583,30 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 					IsOn:    true,
 					GroupId: groupId,
 				})
+			} else {
+				setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
+				for _, set := range g.Sets {
+					setId, err := models.SharedHTTPFirewallRuleSetDAO.CreateOrUpdateSetFromConfig(tx, set)
+					if err != nil {
+						return nil, err
+					}
+					setRefs = append(setRefs, &firewallconfigs.HTTPFirewallRuleSetRef{
+						IsOn:  true,
+						SetId: setId,
+					})
+				}
+				setsJSON, err := json.Marshal(setRefs)
+				if err != nil {
+					return nil, err
+				}
+				err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(tx, oldGroup.Id, g.IsOn, g.Name, g.Code, g.Description)
+				if err != nil {
+					return nil, err
+				}
+				err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroupSets(tx, oldGroup.Id, setsJSON)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}

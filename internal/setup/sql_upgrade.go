@@ -543,5 +543,12 @@ func upgradeV0_3_7(db *dbs.DB) error {
 	if err != nil {
 		return err
 	}
+
+	// WAF预置分组
+	_, err = db.Exec("UPDATE edgeHTTPFirewallRuleGroups SET isTemplate=1 WHERE LENGTH(code)>0")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

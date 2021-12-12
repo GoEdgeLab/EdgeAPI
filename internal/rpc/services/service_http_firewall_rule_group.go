@@ -75,7 +75,7 @@ func (this *HTTPFirewallRuleGroupService) UpdateHTTPFirewallRuleGroup(ctx contex
 
 	tx := this.NullTx()
 
-	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(tx, req.FirewallRuleGroupId, req.IsOn, req.Name, req.Description)
+	err = models.SharedHTTPFirewallRuleGroupDAO.UpdateGroup(tx, req.FirewallRuleGroupId, req.IsOn, req.Name, req.Code, req.Description)
 	if err != nil {
 		return nil, err
 	}

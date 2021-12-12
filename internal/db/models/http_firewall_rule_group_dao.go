@@ -95,6 +95,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	config.Name = group.Name
 	config.Description = group.Description
 	config.Code = group.Code
+	config.IsTemplate = group.IsTemplate == 1
 
 	if IsNotNull(group.Sets) {
 		setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
@@ -125,6 +126,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroupFromConfig(tx *dbs.Tx, groupCon
 	op.Description = groupConfig.Description
 	op.State = HTTPFirewallRuleGroupStateEnabled
 	op.Code = groupConfig.Code
+	op.IsTemplate = groupConfig.IsTemplate
 
 	// sets
 	setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
@@ -178,7 +180,7 @@ func (this *HTTPFirewallRuleGroupDAO) CreateGroup(tx *dbs.Tx, isOn bool, name st
 }
 
 // UpdateGroup 修改分组
-func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isOn bool, name string, description string) error {
+func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isOn bool, name string, code string, description string) error {
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
@@ -186,6 +188,7 @@ func (this *HTTPFirewallRuleGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, isO
 	op.Id = groupId
 	op.IsOn = isOn
 	op.Name = name
+	op.Code = code
 	op.Description = description
 	err := this.Save(tx, op)
 	if err != nil {
