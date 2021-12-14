@@ -10,7 +10,9 @@ import (
 	"time"
 )
 
-func TestCreateHTTPAccessLogs(t *testing.T) {
+func TestCreateHTTPAccessLog(t *testing.T) {
+	dbs.NotifyReady()
+
 	var tx *dbs.Tx
 
 	err := NewDBNodeInitializer().loop()
@@ -26,9 +28,19 @@ func TestCreateHTTPAccessLogs(t *testing.T) {
 	}
 	dao := randomHTTPAccessLogDAO()
 	t.Log("dao:", dao)
-	err = SharedHTTPAccessLogDAO.CreateHTTPAccessLogsWithDAO(tx, dao, []*pb.HTTPAccessLog{accessLog})
-	if err != nil {
-		t.Fatal(err)
+
+	// 先初始化
+	_ = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
+
+	var before = time.Now()
+	defer func() {
+		t.Log(time.Since(before).Seconds()*1000, "ms")
+	}()
+	for i := 0; i < 1000; i++ {
+		err = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	t.Log("ok")
 }
