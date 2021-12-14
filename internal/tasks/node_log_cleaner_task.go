@@ -2,14 +2,17 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
-	dbs.OnReady(func() {
-		go NewNodeLogCleanerTask().Start()
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			NewNodeLogCleanerTask().Start()
+		})
 	})
 }
 

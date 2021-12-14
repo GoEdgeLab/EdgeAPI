@@ -3,6 +3,7 @@ package models
 import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -46,14 +47,14 @@ func init() {
 	dbs.OnReadyDone(func() {
 		// 清理数据任务
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
-		go func() {
+		goman.New(func() {
 			for range ticker.C {
 				err := SharedMessageTaskDAO.CleanExpiredMessageTasks(nil, 30) // 只保留30天
 				if err != nil {
 					remotelogs.Error("SharedMessageTaskDAO", "clean expired data failed: "+err.Error())
 				}
 			}
-		}()
+		})
 	})
 }
 

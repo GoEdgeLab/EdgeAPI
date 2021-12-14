@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
@@ -54,7 +55,7 @@ func NextCommandRequestId() int64 {
 func init() {
 	// 清理WaitingChannelMap
 	ticker := time.NewTicker(30 * time.Second)
-	go func() {
+	goman.New(func() {
 		for range ticker.C {
 			nodeLocker.Lock()
 			for requestId, request := range nodeResponseChanMap {
@@ -65,7 +66,7 @@ func init() {
 			}
 			nodeLocker.Unlock()
 		}
-	}()
+	})
 }
 
 // NodeStream 节点stream
@@ -173,7 +174,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	}()
 
 	// 发送请求
-	go func() {
+	goman.New(func() {
 		for {
 			select {
 			case <-server.Context().Done():
@@ -199,7 +200,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 				}
 			}
 		}
-	}()
+	})
 
 	// 接受请求
 	for {

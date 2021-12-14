@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -13,8 +14,10 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
-		go NewLogTask().Run()
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			NewLogTask().Run()
+		})
 	})
 }
 
@@ -26,8 +29,12 @@ func NewLogTask() *LogTask {
 }
 
 func (this *LogTask) Run() {
-	go this.runClean()
-	go this.runMonitor()
+	goman.New(func() {
+		this.runClean()
+	})
+	goman.New(func() {
+		this.runMonitor()
+	})
 }
 
 func (this *LogTask) runClean() {

@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
@@ -49,7 +50,9 @@ type NSAccessLogDAOWrapper struct {
 func init() {
 	initializer := NewDBNodeInitializer()
 	dbs.OnReadyDone(func() {
-		go initializer.Start()
+		goman.New(func() {
+			initializer.Start()
+		})
 	})
 }
 

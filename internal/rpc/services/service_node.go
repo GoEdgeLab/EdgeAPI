@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -723,12 +724,12 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 		return nil, err
 	}
 
-	go func() {
+	goman.New(func() {
 		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, false)
 		if err != nil {
 			logs.Println("[RPC]install node:" + err.Error())
 		}
-	}()
+	})
 
 	return &pb.InstallNodeResponse{}, nil
 }
@@ -763,12 +764,12 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 		return nil, err
 	}
 
-	go func() {
+	goman.New(func() {
 		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, true)
 		if err != nil {
 			logs.Println("[RPC]install node:" + err.Error())
 		}
-	}()
+	})
 
 	return &pb.UpgradeNodeResponse{}, nil
 }

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -11,17 +12,17 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
+	dbs.OnReadyDone(func() {
 		task := NewNSNodeMonitorTask(60)
 		ticker := time.NewTicker(60 * time.Second)
-		go func() {
+		goman.New(func() {
 			for range ticker.C {
 				err := task.loop()
 				if err != nil {
 					logs.Println("[TASK][NS_NODE_MONITOR]" + err.Error())
 				}
 			}
-		}()
+		})
 	})
 }
 

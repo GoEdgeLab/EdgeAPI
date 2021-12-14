@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
@@ -52,7 +53,7 @@ func NextCommandRequestId() int64 {
 func init() {
 	dbs.OnReadyDone(func() {
 		// 清理WaitingChannelMap
-		go func() {
+		goman.New(func() {
 			ticker := time.NewTicker(30 * time.Second)
 			for range ticker.C {
 				nodeLocker.Lock()
@@ -64,10 +65,10 @@ func init() {
 				}
 				nodeLocker.Unlock()
 			}
-		}()
+		})
 
 		// 自动同步连接到本API节点的NS节点任务
-		go func() {
+		goman.New(func() {
 			defer func() {
 				_ = recover()
 			}()
@@ -97,7 +98,7 @@ func init() {
 				}
 				nodeLocker.Unlock()
 			}
-		}()
+		})
 	})
 }
 
@@ -177,7 +178,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 	}()
 
 	// 发送请求
-	go func() {
+	goman.New(func() {
 		for {
 			select {
 			case <-server.Context().Done():
@@ -203,7 +204,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 				}
 			}
 		}
-	}()
+	})
 
 	// 接受请求
 	for {

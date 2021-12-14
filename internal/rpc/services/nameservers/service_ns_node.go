@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -325,12 +326,12 @@ func (this *NSNodeService) InstallNSNode(ctx context.Context, req *pb.InstallNSN
 		return nil, err
 	}
 
-	go func() {
+	goman.New(func() {
 		err = installers.SharedNSNodeQueue().InstallNodeProcess(req.NsNodeId, false)
 		if err != nil {
 			logs.Println("[RPC]install dns node:" + err.Error())
 		}
-	}()
+	})
 
 	return &pb.InstallNSNodeResponse{}, nil
 }

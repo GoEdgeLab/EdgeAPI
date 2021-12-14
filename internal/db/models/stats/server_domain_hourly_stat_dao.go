@@ -2,6 +2,7 @@ package stats
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -22,14 +23,14 @@ func init() {
 	dbs.OnReadyDone(func() {
 		// 清理数据任务
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
-		go func() {
+		goman.New(func() {
 			for range ticker.C {
 				err := SharedServerDomainHourlyStatDAO.Clean(nil, 7) // 只保留7天
 				if err != nil {
 					remotelogs.Error("ServerDomainHourlyStatDAO", "clean expired data failed: "+err.Error())
 				}
 			}
-		}()
+		})
 	})
 }
 

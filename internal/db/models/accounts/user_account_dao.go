@@ -3,6 +3,7 @@ package accounts
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -16,7 +17,7 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		go func() {
+		goman.New(func() {
 			// 自动支付账单任务
 			var ticker = time.NewTicker(12 * time.Hour)
 			for range ticker.C {
@@ -29,7 +30,7 @@ func init() {
 					}
 				}
 			}
-		}()
+		})
 	})
 }
 

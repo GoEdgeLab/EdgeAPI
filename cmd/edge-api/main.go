@@ -11,6 +11,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/gosock/pkg/gosock"
 	"log"
 	"os"
 )
@@ -67,6 +68,20 @@ func main() {
 			return
 		}
 		fmt.Println("done")
+	})
+	app.On("goman", func() {
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "goman"})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			instancesJSON, err := json.MarshalIndent(reply.Params, "", "  ")
+			if err != nil {
+				fmt.Println("[ERROR]" + err.Error())
+			} else {
+				fmt.Println(string(instancesJSON))
+			}
+		}
 	})
 	app.Run(func() {
 		nodes.NewAPINode().Start()

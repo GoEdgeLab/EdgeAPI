@@ -3,6 +3,7 @@ package tasks
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -13,8 +14,10 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
-		go NewSSLCertExpireCheckExecutor().Start()
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			NewSSLCertExpireCheckExecutor().Start()
+		})
 	})
 }
 

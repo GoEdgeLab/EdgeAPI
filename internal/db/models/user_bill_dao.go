@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -20,7 +21,7 @@ func init() {
 	dbs.OnReadyDone(func() {
 		var generatedMonths = []string{}
 
-		go func() {
+		goman.New(func() {
 			// 自动生成账单任务
 			var ticker = time.NewTicker(1 * time.Minute)
 			for range ticker.C {
@@ -37,7 +38,7 @@ func init() {
 					generatedMonths = append(generatedMonths, lastMonth)
 				}
 			}
-		}()
+		})
 	})
 }
 

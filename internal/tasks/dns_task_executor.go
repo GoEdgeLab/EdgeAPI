@@ -6,6 +6,7 @@ import (
 	dnsmodels "github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
@@ -19,7 +20,9 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		go NewDNSTaskExecutor().Start()
+		goman.New(func() {
+			NewDNSTaskExecutor().Start()
+		})
 	})
 }
 

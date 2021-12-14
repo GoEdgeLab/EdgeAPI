@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -19,27 +20,27 @@ func init() {
 	})
 }
 
-// IP库更新程序
+// Updater IP库更新程序
 type Updater struct {
 }
 
-// 获取新对象
+// NewUpdater 获取新对象
 func NewUpdater() *Updater {
 	return &Updater{}
 }
 
-// 开始更新
+// Start 开始更新
 func (this *Updater) Start() {
 	// 这里不需要太频繁检查更新，因为通常不需要更新IP库
 	ticker := time.NewTicker(1 * time.Hour)
-	go func() {
+	goman.New(func() {
 		for range ticker.C {
 			err := this.loop()
 			if err != nil {
 				logs.Println("[IP_LIBRARY]" + err.Error())
 			}
 		}
-	}()
+	})
 }
 
 // 单次任务

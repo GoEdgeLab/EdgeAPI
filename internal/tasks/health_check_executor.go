@@ -7,6 +7,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -116,7 +117,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(countResults)
 	for i := 0; i < countRoutines; i++ {
-		go func() {
+		goman.New(func() {
 			for {
 				select {
 				case result := <-queue:
@@ -177,7 +178,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 					return
 				}
 			}
-		}()
+		})
 	}
 	wg.Wait()
 

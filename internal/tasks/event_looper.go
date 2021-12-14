@@ -2,19 +2,22 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
-	dbs.OnReady(func() {
+	dbs.OnReadyDone(func() {
 		looper := NewEventLooper()
-		go looper.Start()
+		goman.New(func() {
+			looper.Start()
+		})
 	})
 }
 
-// 事件相关处理程序
+// EventLooper 事件相关处理程序
 type EventLooper struct {
 }
 

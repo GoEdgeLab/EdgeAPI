@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -10,11 +11,13 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		go NewNodeTaskExtractor().Start()
+		goman.New(func() {
+			NewNodeTaskExtractor().Start()
+		})
 	})
 }
 
-// 节点任务
+// NodeTaskExtractor 节点任务
 type NodeTaskExtractor struct {
 }
 

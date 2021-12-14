@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -53,7 +54,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 	}
 
 	// 更新数据，且不提示错误
-	go func() {
+	goman.New(func() {
 		domainName := req.Name
 
 		providerInterface := dnsclients.FindProvider(provider.Type)
@@ -90,7 +91,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 		if err != nil {
 			return
 		}
-	}()
+	})
 
 	return &pb.CreateDNSDomainResponse{DnsDomainId: domainId}, nil
 }

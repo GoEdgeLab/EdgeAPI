@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -37,7 +38,7 @@ func (this *NSNodeQueue) InstallNodeProcess(nodeId int64, isUpgrading bool) erro
 
 	// 更新时间
 	ticker := utils.NewTicker(3 * time.Second)
-	go func() {
+	goman.New(func() {
 		for ticker.Wait() {
 			installStatus.UpdatedAt = time.Now().Unix()
 			err := models.SharedNSNodeDAO.UpdateNodeInstallStatus(nil, nodeId, installStatus)
@@ -46,7 +47,7 @@ func (this *NSNodeQueue) InstallNodeProcess(nodeId int64, isUpgrading bool) erro
 				continue
 			}
 		}
-	}()
+	})
 	defer func() {
 		ticker.Stop()
 	}()

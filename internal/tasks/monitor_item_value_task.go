@@ -4,6 +4,7 @@ package tasks
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -11,8 +12,10 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
-		go NewMonitorItemValueTask().Start()
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			NewMonitorItemValueTask().Start()
+		})
 	})
 }
 

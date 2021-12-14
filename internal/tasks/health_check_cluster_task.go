@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -68,14 +69,14 @@ func (this *HealthCheckClusterTask) Run() {
 		return
 	}
 	ticker := utils.NewTicker(duration)
-	go func() {
+	goman.New(func() {
 		for ticker.Wait() {
 			err := this.loop(int64(duration.Seconds()))
 			if err != nil {
 				logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
 			}
 		}
-	}()
+	})
 	this.ticker = ticker
 }
 

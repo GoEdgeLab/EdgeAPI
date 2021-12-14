@@ -9,6 +9,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -29,6 +30,8 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -118,10 +121,14 @@ func (this *APINode) Start() {
 	_ = utils.SetRLimit(1024 * 1024)
 
 	// 状态变更计时器
-	go NewNodeStatusExecutor().Listen()
+	goman.New(func() {
+		NewNodeStatusExecutor().Listen()
+	})
 
 	// 访问日志存储管理器
-	go accesslogs.SharedStorageManager.Start()
+	goman.New(func() {
+		accesslogs.SharedStorageManager.Start()
+	})
 
 	// 监听RPC服务
 	remotelogs.Println("API_NODE", "starting RPC server ...")
@@ -355,13 +362,13 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 					}
 					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ok")
 				}
-				go func() {
+				goman.New(func() {
 					err := this.listenRPC(listener, nil)
 					if err != nil {
 						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
 						return
 					}
-				}()
+				})
 				isListening = true
 			}
 		}
@@ -402,7 +409,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 					}
 					remotelogs.Println("API_NODE", "retry listening port ':"+port+"' only ok")
 				}
-				go func() {
+				goman.New(func() {
 					err := this.listenRPC(listener, &tls.Config{
 						Certificates: certs,
 					})
@@ -410,7 +417,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 						remotelogs.Error("API_NODE", "listening '"+addr+"' rpc: "+err.Error())
 						return
 					}
-				}()
+				})
 				isListening = true
 			}
 		}
@@ -430,7 +437,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 					remotelogs.Error("API_NODE", "listening REST 'http://"+addr+"' failed: "+err.Error())
 					continue
 				}
-				go func() {
+				goman.New(func() {
 					remotelogs.Println("API_NODE", "listening REST http://"+addr+" ...")
 					server := &RestServer{}
 					err := server.Listen(listener)
@@ -438,7 +445,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 						remotelogs.Error("API_NODE", "listening REST 'http://"+addr+"' failed: "+err.Error())
 						return
 					}
-				}()
+				})
 				isListening = true
 			}
 		}
@@ -463,7 +470,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 					remotelogs.Error("API_NODE", "listening REST 'https://"+addr+"' failed: "+err.Error())
 					continue
 				}
-				go func() {
+				goman.New(func() {
 					remotelogs.Println("API_NODE", "listening REST https://"+addr+" ...")
 					server := &RestServer{}
 
@@ -479,7 +486,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 						remotelogs.Error("API_NODE", "listening REST 'https://"+addr+"' failed: "+err.Error())
 						return
 					}
-				}()
+				})
 				isListening = true
 			}
 		}
@@ -501,7 +508,7 @@ func (this *APINode) listenSock() error {
 	}
 
 	// 启动监听
-	go func() {
+	goman.New(func() {
 		this.sock.OnCommand(func(cmd *gosock.Command) {
 			switch cmd.Code {
 			case "pid":
@@ -534,6 +541,37 @@ func (this *APINode) listenSock() error {
 						"isStarting": this.isStarting,
 					},
 				})
+			case "goman":
+				var posMap = map[string]maps.Map{} // file#line => Map
+				for _, instance := range goman.List() {
+					var pos = instance.File + "#" + types.String(instance.Line)
+					m, ok := posMap[pos]
+					if ok {
+						m["count"] = m["count"].(int) + 1
+					} else {
+						m = maps.Map{
+							"pos":   pos,
+							"count": 1,
+						}
+						posMap[pos] = m
+					}
+				}
+
+				var result = []maps.Map{}
+				for _, m := range posMap {
+					result = append(result, m)
+				}
+
+				sort.Slice(result, func(i, j int) bool {
+					return result[i]["count"].(int) > result[j]["count"].(int)
+				})
+
+				_ = cmd.Reply(&gosock.Command{
+					Params: map[string]interface{}{
+						"total":  runtime.NumGoroutine(),
+						"result": result,
+					},
+				})
 			}
 		})
 
@@ -541,7 +579,7 @@ func (this *APINode) listenSock() error {
 		if err != nil {
 			logs.Println("API_NODE", err.Error())
 		}
-	}()
+	})
 
 	events.On(events.EventQuit, func() {
 		logs.Println("API_NODE", "quit unix sock")

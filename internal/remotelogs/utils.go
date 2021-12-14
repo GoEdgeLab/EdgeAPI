@@ -3,6 +3,7 @@ package remotelogs
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/logs"
@@ -15,14 +16,14 @@ var sharedDAO DAOInterface
 func init() {
 	// 定期上传日志
 	ticker := time.NewTicker(60 * time.Second)
-	go func() {
+	goman.New(func() {
 		for range ticker.C {
 			err := uploadLogs()
 			if err != nil {
 				logs.Println("[LOG]" + err.Error())
 			}
 		}
-	}()
+	})
 }
 
 // Println 打印普通信息

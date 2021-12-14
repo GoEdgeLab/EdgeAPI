@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -14,13 +15,15 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
+	dbs.OnReadyDone(func() {
 		task := NewServerAccessLogCleaner()
-		go task.Start()
+		goman.New(func() {
+			task.Start()
+		})
 	})
 }
 
-// 服务访问日志自动清理
+// ServerAccessLogCleaner 服务访问日志自动清理
 type ServerAccessLogCleaner struct {
 }
 

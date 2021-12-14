@@ -4,6 +4,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -40,7 +41,7 @@ func init() {
 
 	dbs.OnReadyDone(func() {
 		// 导入统计数据
-		go func() {
+		goman.New(func() {
 			var duration = 30 * time.Minute
 			if Tea.IsTesting() {
 				// 测试条件下缩短时间，以便进行观察
@@ -53,7 +54,7 @@ func init() {
 					remotelogs.Error("SERVER_SERVICE", err.Error())
 				}
 			}
-		}()
+		})
 	})
 }
 

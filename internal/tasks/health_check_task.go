@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -14,12 +15,14 @@ import (
 )
 
 func init() {
-	dbs.OnReady(func() {
-		go NewHealthCheckTask().Run()
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			NewHealthCheckTask().Run()
+		})
 	})
 }
 
-// 节点健康检查任务
+// HealthCheckTask 节点健康检查任务
 type HealthCheckTask struct {
 	tasksMap map[int64]*HealthCheckClusterTask // taskId => task
 }
@@ -83,12 +86,16 @@ func (this *HealthCheckTask) loop() error {
 			oldJSON, _ := json.Marshal(task.Config())
 			if bytes.Compare(oldJSON, newJSON) != 0 {
 				logs.Println("[TASK][HEALTH_CHECK]update cluster '" + numberutils.FormatInt64(clusterId) + "'")
-				go task.Reset(config)
+				goman.New(func() {
+					task.Reset(config)
+				})
 			}
 		} else {
-			task := NewHealthCheckClusterTask(clusterId, config)
+			task = NewHealthCheckClusterTask(clusterId, config)
 			this.tasksMap[clusterId] = task
-			go task.Run()
+			goman.New(func() {
+				task.Run()
+			})
 		}
 	}
 
