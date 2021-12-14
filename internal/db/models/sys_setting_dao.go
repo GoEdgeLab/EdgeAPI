@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -40,6 +42,16 @@ func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSO
 
 	countRetries := 3
 	var lastErr error
+
+	defer func() {
+		if lastErr == nil {
+			err := this.NotifyUpdate(tx, codeFormat)
+			if err != nil {
+				remotelogs.Error("SysSettingDAO", "notify update failed: "+err.Error())
+			}
+		}
+	}()
+
 	for i := 0; i < countRetries; i++ {
 		settingId, err := this.Query(tx).
 			Attr("code", codeFormat).
@@ -61,6 +73,8 @@ func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSO
 				// 因为错误的原因可能是因为code冲突，所以这里我们继续执行
 				continue
 			}
+
+			lastErr = nil
 			return nil
 		}
 
@@ -72,6 +86,8 @@ func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSO
 		if err != nil {
 			return err
 		}
+		lastErr = nil
+		break
 	}
 
 	return lastErr
@@ -120,4 +136,13 @@ func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalCo
 		return nil, err
 	}
 	return config, nil
+}
+
+// NotifyUpdate 通知更改
+func (this *SysSettingDAO) NotifyUpdate(tx *dbs.Tx, code string) error {
+	switch code {
+	case systemconfigs.SettingCodeAccessLogQueue:
+		accessLogQueueChanged <- zero.New()
+	}
+	return nil
 }
