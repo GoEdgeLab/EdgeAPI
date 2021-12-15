@@ -186,48 +186,6 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 	config.Id = int64(policy.Id)
 	config.IsOn = policy.IsOn == 1
 
-	// AddHeaders
-	if len(policy.AddHeaders) > 0 {
-		refs := []*shared.HTTPHeaderRef{}
-		err = json.Unmarshal([]byte(policy.AddHeaders), &refs)
-		if err != nil {
-			return nil, err
-		}
-		if len(refs) > 0 {
-			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
-				if err != nil {
-					return nil, err
-				}
-				config.AddHeaders = append(config.AddHeaders, headerConfig)
-			}
-		}
-	}
-
-	// AddTrailers
-	if len(policy.AddTrailers) > 0 {
-		refs := []*shared.HTTPHeaderRef{}
-		err = json.Unmarshal([]byte(policy.AddTrailers), &refs)
-		if err != nil {
-			return nil, err
-		}
-		if len(refs) > 0 {
-			resultRefs := []*shared.HTTPHeaderRef{}
-			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
-				if err != nil {
-					return nil, err
-				}
-				if headerConfig == nil {
-					continue
-				}
-				resultRefs = append(resultRefs, ref)
-				config.AddTrailers = append(config.AddTrailers, headerConfig)
-			}
-			config.AddHeaderRefs = resultRefs
-		}
-	}
-
 	// SetHeaders
 	if len(policy.SetHeaders) > 0 {
 		refs := []*shared.HTTPHeaderRef{}
@@ -249,30 +207,6 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 				config.SetHeaders = append(config.SetHeaders, headerConfig)
 			}
 			config.SetHeaderRefs = resultRefs
-		}
-	}
-
-	// ReplaceHeaders
-	if len(policy.ReplaceHeaders) > 0 {
-		refs := []*shared.HTTPHeaderRef{}
-		err = json.Unmarshal([]byte(policy.ReplaceHeaders), &refs)
-		if err != nil {
-			return nil, err
-		}
-		if len(refs) > 0 {
-			resultRefs := []*shared.HTTPHeaderRef{}
-			for _, ref := range refs {
-				headerConfig, err := SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, ref.HeaderId)
-				if err != nil {
-					return nil, err
-				}
-				if headerConfig == nil {
-					continue
-				}
-				resultRefs = append(resultRefs, ref)
-				config.ReplaceHeaders = append(config.ReplaceHeaders, headerConfig)
-			}
-			config.ReplaceHeaderRefs = resultRefs
 		}
 	}
 
