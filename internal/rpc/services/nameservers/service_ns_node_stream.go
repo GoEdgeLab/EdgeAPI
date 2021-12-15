@@ -2,9 +2,8 @@ package nameservers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/TeaOSLab/EdgeAPI/internal/configs"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
@@ -112,23 +111,9 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 	}
 
 	// 返回连接成功
-	{
-		apiConfig, err := configs.SharedAPIConfig()
-		if err != nil {
-			return err
-		}
-		connectedMessage := &messageconfigs.NSConnectedAPINodeMessage{APINodeId: apiConfig.NumberId()}
-		connectedMessageJSON, err := json.Marshal(connectedMessage)
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		err = server.Send(&pb.NSNodeStreamMessage{
-			Code:     messageconfigs.NSMessageCodeConnectedAPINode,
-			DataJSON: connectedMessageJSON,
-		})
-		if err != nil {
-			return err
-		}
+	err = models.SharedNSNodeDAO.UpdateNodeConnectedAPINodes(nil, nodeId, []int64{teaconst.NodeId})
+	if err != nil {
+		return err
 	}
 
 	//logs.Println("[RPC]accepted ns node '" + types.String(nodeId) + "' connection")

@@ -131,6 +131,7 @@ func (this *IPItemDAO) DeleteOldItem(tx *dbs.Tx, listId int64, ipFrom string, ip
 		Attr("ipFrom", ipFrom).
 		Attr("ipTo", ipTo).
 		Delete()
+	// 这里不通知更新
 	return err
 }
 
