@@ -443,6 +443,7 @@ func (this *NodeIPAddressDAO) UpdateAddressBackupIP(tx *dbs.Tx, addressId int64,
 		return errors.New("invalid addressId")
 	}
 	var op = NewNodeIPAddressOperator()
+	op.IsUp = true // IP必须在线备用IP才会有用
 	op.Id = addressId
 	op.BackupThresholdId = thresholdId
 	op.BackupIP = ip
