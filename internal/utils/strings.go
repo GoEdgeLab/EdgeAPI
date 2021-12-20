@@ -19,3 +19,14 @@ func SplitStrings(s string, glue string) []string {
 	}
 	return result
 }
+
+// ContainsStringInsensitive 检查是否包含某个字符串，并且不区分大小写
+func ContainsStringInsensitive(list []string, search string) bool {
+	search = strings.ToLower(search)
+	for _, s := range list {
+		if strings.ToLower(s) == search {
+			return true
+		}
+	}
+	return false
+}

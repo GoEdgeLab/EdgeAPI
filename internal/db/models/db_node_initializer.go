@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -141,7 +142,7 @@ func findNSAccessLogTableName(db *dbs.DB, day string) (tableName string, ok bool
 		return tableName, false, err
 	}
 
-	return tableName, lists.ContainsString(tableNames, tableName), nil
+	return tableName, utils.ContainsStringInsensitive(tableNames, tableName), nil
 }
 
 // 根据日期获取表名
@@ -168,7 +169,7 @@ func findHTTPAccessLogTable(db *dbs.DB, day string, force bool) (*httpAccessLogD
 		return nil, err
 	}
 
-	if lists.ContainsString(tableNames, tableName) {
+	if utils.ContainsStringInsensitive(tableNames, tableName) {
 		table, err := db.FindTable(tableName)
 		if err != nil {
 			return nil, err
@@ -236,7 +237,7 @@ func findNSAccessLogTable(db *dbs.DB, day string, force bool) (string, error) {
 		return tableName, err
 	}
 
-	if lists.ContainsString(tableNames, tableName) {
+	if utils.ContainsStringInsensitive(tableNames, tableName) {
 		accessLogLocker.Lock()
 		nsAccessLogTableMapping[cacheKey] = true
 		accessLogLocker.Unlock()
@@ -364,6 +365,7 @@ func (this *DBNodeInitializer) loop() error {
 						continue
 					} else {
 						err = nil
+						continue
 					}
 				}
 

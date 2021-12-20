@@ -306,12 +306,12 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			dao := daoWrapper.DAO
 
 			tableName, hasRemoteAddrField, hasDomainField, exists, err := findHTTPAccessLogTableName(dao.Instance, day)
-			if !exists {
-				// 表格不存在则跳过
-				return
-			}
 			if err != nil {
 				logs.Println("[DB_NODE]" + err.Error())
+				return
+			}
+			if !exists {
+				// 表格不存在则跳过
 				return
 			}
 
