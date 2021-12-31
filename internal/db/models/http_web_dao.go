@@ -434,6 +434,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		}
 	}
 
+	// 请求脚本
+	if len(web.RequestScripts) > 0 {
+		var requestScriptsConfig = &serverconfigs.HTTPRequestScriptsConfig{}
+		if len(web.RequestScripts) > 0 {
+			err = json.Unmarshal([]byte(web.RequestScripts), requestScriptsConfig)
+			if err != nil {
+				return nil, err
+			}
+			config.RequestScripts = requestScriptsConfig
+		}
+	}
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1109,6 +1121,43 @@ func (this *HTTPWebDAO) FindWebRequestLimit(tx *dbs.Tx, webId int64) (*servercon
 	}
 
 	var config = &serverconfigs.HTTPRequestLimitConfig{}
+	if len(configString) == 0 {
+		return config, nil
+	}
+	err = json.Unmarshal([]byte(configString), config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// UpdateWebRequestScripts 修改服务的请求脚本设置
+func (this *HTTPWebDAO) UpdateWebRequestScripts(tx *dbs.Tx, webId int64, config *serverconfigs.HTTPRequestScriptsConfig) error {
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(webId).
+		Set("requestScripts", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebRequestScripts 查找服务的脚本设置
+func (this *HTTPWebDAO) FindWebRequestScripts(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPRequestScriptsConfig, error) {
+	configString, err := this.Query(tx).
+		Pk(webId).
+		Result("requestScripts").
+		FindStringCol("")
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.HTTPRequestScriptsConfig{}
 	if len(configString) == 0 {
 		return config, nil
 	}

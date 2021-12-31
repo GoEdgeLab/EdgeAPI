@@ -34,6 +34,7 @@ type HTTPWeb struct {
 	RemoteAddr         string `field:"remoteAddr"`         // 客户端IP配置
 	MergeSlashes       uint8  `field:"mergeSlashes"`       // 是否合并路径中的斜杠
 	RequestLimit       string `field:"requestLimit"`       // 请求限制
+	RequestScripts     string `field:"requestScripts"`     // 请求脚本
 }
 
 type HTTPWebOperator struct {
@@ -69,6 +70,7 @@ type HTTPWebOperator struct {
 	RemoteAddr         interface{} // 客户端IP配置
 	MergeSlashes       interface{} // 是否合并路径中的斜杠
 	RequestLimit       interface{} // 请求限制
+	RequestScripts     interface{} // 请求脚本
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {
