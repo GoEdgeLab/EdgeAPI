@@ -9,19 +9,30 @@ import (
 
 var SharedDeployManager = NewDeployManager()
 
+// DeployManager 节点部署文件管理器
+// 如果节点部署文件有变化，需要重启API节点以便于生效
 type DeployManager struct {
-	dir string
+	dir         string
+	nodeFiles   []*DeployFile
+	nsNodeFiles []*DeployFile
 }
 
-// NewDeployManager 节点部署文件管理器
+// NewDeployManager 获取新节点部署文件管理器
 func NewDeployManager() *DeployManager {
-	return &DeployManager{
+	var manager = &DeployManager{
 		dir: Tea.Root + "/deploy",
 	}
+	manager.LoadNodeFiles()
+	manager.LoadNSNodeFiles()
+	return manager
 }
 
 // LoadNodeFiles 加载所有边缘节点文件
 func (this *DeployManager) LoadNodeFiles() []*DeployFile {
+	if len(this.nodeFiles) > 0 {
+		return this.nodeFiles
+	}
+
 	keyMap := map[string]*DeployFile{} // key => File
 
 	reg := regexp.MustCompile(`^edge-node-(\w+)-(\w+)-v([0-9.]+)\.zip$`)
@@ -52,6 +63,9 @@ func (this *DeployManager) LoadNodeFiles() []*DeployFile {
 	for _, v := range keyMap {
 		result = append(result, v)
 	}
+
+	this.nodeFiles = result
+
 	return result
 }
 
@@ -67,6 +81,10 @@ func (this *DeployManager) FindNodeFile(os string, arch string) *DeployFile {
 
 // LoadNSNodeFiles 加载所有NS节点安装文件
 func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
+	if len(this.nsNodeFiles) > 0 {
+		return this.nsNodeFiles
+	}
+
 	keyMap := map[string]*DeployFile{} // key => File
 
 	reg := regexp.MustCompile(`^edge-dns-(\w+)-(\w+)-v([0-9.]+)\.zip$`)
@@ -97,6 +115,9 @@ func (this *DeployManager) LoadNSNodeFiles() []*DeployFile {
 	for _, v := range keyMap {
 		result = append(result, v)
 	}
+
+	this.nsNodeFiles = result
+
 	return result
 }
 
