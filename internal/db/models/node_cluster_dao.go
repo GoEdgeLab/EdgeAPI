@@ -178,7 +178,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, nodeTCPMaxConnections int32) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, nodeTCPMaxConnections int32, autoOpenPorts bool) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -198,6 +198,7 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 		nodeTCPMaxConnections = 0
 	}
 	op.NodeTCPMaxConnections = nodeTCPMaxConnections
+	op.AutoOpenPorts = autoOpenPorts
 
 	err := this.Save(tx, op)
 	if err != nil {
@@ -887,7 +888,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
-		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId").
+		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err

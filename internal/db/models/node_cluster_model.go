@@ -29,6 +29,7 @@ type NodeCluster struct {
 	TimeZone              string `field:"timeZone"`              // 时区
 	NodeMaxThreads        uint32 `field:"nodeMaxThreads"`        // 节点最大线程数
 	NodeTCPMaxConnections uint32 `field:"nodeTCPMaxConnections"` // TCP最大连接数
+	AutoOpenPorts         uint8  `field:"autoOpenPorts"`         // 是否自动尝试开放端口
 }
 
 type NodeClusterOperator struct {
@@ -59,6 +60,7 @@ type NodeClusterOperator struct {
 	TimeZone              interface{} // 时区
 	NodeMaxThreads        interface{} // 节点最大线程数
 	NodeTCPMaxConnections interface{} // TCP最大连接数
+	AutoOpenPorts         interface{} // 是否自动尝试开放端口
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

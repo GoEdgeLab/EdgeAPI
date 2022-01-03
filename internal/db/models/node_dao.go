@@ -827,6 +827,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		if clusterIndex == 0 {
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)
 			config.TCPMaxConnections = int(nodeCluster.NodeTCPMaxConnections)
+			config.AutoOpenPorts = nodeCluster.AutoOpenPorts == 1
 		}
 
 		clusterIndex++

@@ -83,7 +83,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.NodeTCPMaxConnections)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.NodeTCPMaxConnections, req.AutoOpenPorts)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +163,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		TimeZone:              cluster.TimeZone,
 		NodeMaxThreads:        int32(cluster.NodeMaxThreads),
 		NodeTCPMaxConnections: int32(cluster.NodeTCPMaxConnections),
+		AutoOpenPorts:         cluster.AutoOpenPorts == 1,
 	}}, nil
 }
 
