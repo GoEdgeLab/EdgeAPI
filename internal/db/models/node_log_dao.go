@@ -142,7 +142,8 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	dayTo string,
 	keyword string,
 	level string,
-	isUnread bool) (int64, error) {
+	isUnread bool,
+	tag string) (int64, error) {
 	query := this.Query(tx)
 	if len(role) > 0 {
 		query.Attr("role", role)
@@ -181,6 +182,9 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	if isUnread {
 		query.Attr("isRead", 0)
 	}
+	if len(tag) > 0 {
+		query.Like("tag", "%"+tag+"%")
+	}
 
 	return query.Count()
 }
@@ -198,6 +202,7 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	level string,
 	fixedState configutils.BoolState,
 	isUnread bool,
+	tag string,
 	offset int64,
 	size int64) (result []*NodeLog, err error) {
 	query := this.Query(tx)
@@ -240,10 +245,18 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 			Param("keyword", "%"+keyword+"%")
 	}
 	if len(level) > 0 {
-		query.Attr("level", level)
+		var pieces = strings.Split(level, ",")
+		if len(pieces) == 1 {
+			query.Attr("level", pieces[0])
+		} else {
+			query.Attr("level", pieces)
+		}
 	}
 	if isUnread {
 		query.Attr("isRead", 0)
+	}
+	if len(tag) > 0 {
+		query.Like("tag", "%"+tag+"%")
 	}
 	_, err = query.
 		Offset(offset).
