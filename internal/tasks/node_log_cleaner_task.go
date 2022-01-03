@@ -38,12 +38,12 @@ func (this *NodeLogCleanerTask) Start() {
 }
 
 func (this *NodeLogCleanerTask) loop() error {
-	// 删除7天以前的info日志
-	err := models.SharedNodeLogDAO.DeleteExpiredLogsWithLevel(nil, "info", 7)
+	// 删除 N天 以前的info日志
+	err := models.SharedNodeLogDAO.DeleteExpiredLogsWithLevel(nil, "info", 3)
 	if err != nil {
 		return err
 	}
 
-	// TODO 14天这个数值改成可以设置
-	return models.SharedNodeLogDAO.DeleteExpiredLogs(nil, 14)
+	// TODO 7天这个数值改成可以设置
+	return models.SharedNodeLogDAO.DeleteExpiredLogs(nil, 7)
 }
