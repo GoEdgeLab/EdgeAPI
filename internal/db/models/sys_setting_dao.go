@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -132,6 +133,24 @@ func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalCo
 	}
 	config := &serverconfigs.GlobalConfig{}
 	err = json.Unmarshal(globalConfigData, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// ReadUserServerConfig 读取用户服务配置
+func (this *SysSettingDAO) ReadUserServerConfig(tx *dbs.Tx) (*userconfigs.UserServerConfig, error) {
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserServerConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) == 0 {
+		return userconfigs.DefaultUserServerConfig(), nil
+	}
+
+	var config = userconfigs.DefaultUserServerConfig()
+	err = json.Unmarshal(valueJSON, config)
 	if err != nil {
 		return nil, err
 	}

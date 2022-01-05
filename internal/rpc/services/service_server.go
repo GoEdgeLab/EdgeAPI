@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -70,6 +71,12 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 		if nodeClusterId > 0 {
 			req.NodeClusterId = nodeClusterId
+		}
+
+		// 服务分组
+		config, err := models.SharedSysSettingDAO.ReadUserServerConfig(tx)
+		if err == nil && config.GroupId > 0 && !lists.ContainsInt64(req.ServerGroupIds, config.GroupId) {
+			req.ServerGroupIds = append(req.ServerGroupIds, config.GroupId)
 		}
 	} else if req.UserId > 0 {
 		// 集群
