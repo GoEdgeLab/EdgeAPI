@@ -77,10 +77,11 @@ func (this *ServerGroupDAO) FindServerGroupName(tx *dbs.Tx, id int64) (string, e
 }
 
 // CreateGroup 创建分组
-func (this *ServerGroupDAO) CreateGroup(tx *dbs.Tx, name string) (groupId int64, err error) {
+func (this *ServerGroupDAO) CreateGroup(tx *dbs.Tx, name string, userId int64) (groupId int64, err error) {
 	op := NewServerGroupOperator()
 	op.State = ServerGroupStateEnabled
 	op.Name = name
+	op.UserId = userId
 	op.IsOn = true
 	err = this.Save(tx, op)
 	if err != nil {
@@ -102,9 +103,15 @@ func (this *ServerGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, name string) 
 }
 
 // FindAllEnabledGroups 查找所有分组
-func (this *ServerGroupDAO) FindAllEnabledGroups(tx *dbs.Tx) (result []*ServerGroup, err error) {
-	_, err = this.Query(tx).
-		State(ServerGroupStateEnabled).
+func (this *ServerGroupDAO) FindAllEnabledGroups(tx *dbs.Tx, userId int64) (result []*ServerGroup, err error) {
+	var query = this.Query(tx).
+		State(ServerGroupStateEnabled)
+	if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		query.Attr("userId", 0)
+	}
+	_, err = query.
 		Desc("order").
 		AscPk().
 		Slice(&result).
@@ -113,9 +120,13 @@ func (this *ServerGroupDAO) FindAllEnabledGroups(tx *dbs.Tx) (result []*ServerGr
 }
 
 // UpdateGroupOrders 修改分组排序
-func (this *ServerGroupDAO) UpdateGroupOrders(tx *dbs.Tx, groupIds []int64) error {
+func (this *ServerGroupDAO) UpdateGroupOrders(tx *dbs.Tx, groupIds []int64, userId int64) error {
 	for index, groupId := range groupIds {
-		_, err := this.Query(tx).
+		var query = this.Query(tx)
+		if userId > 0 {
+			query.Attr("userId", userId)
+		}
+		_, err := query.
 			Pk(groupId).
 			Set("order", len(groupIds)-index).
 			Update()
@@ -381,6 +392,22 @@ func (this *ServerGroupDAO) FindEnabledGroupIdWithReverseProxyId(tx *dbs.Tx, rev
 		Param("jsonQuery", maps.Map{"reverseProxyId": reverseProxyId}.AsJSON()).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// CheckUserGroup 检查用户分组
+func (this *ServerGroupDAO) CheckUserGroup(tx *dbs.Tx, userId int64, groupId int64) error {
+	b, err := this.Query(tx).
+		Pk(groupId).
+		Attr("userId", userId).
+		State(ServerGroupStateEnabled).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !b {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // NotifyUpdate 通知更新

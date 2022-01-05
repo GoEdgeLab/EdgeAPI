@@ -74,6 +74,14 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 
 		// 服务分组
+		for _, groupId := range req.ServerGroupIds {
+			err := models.SharedServerGroupDAO.CheckUserGroup(tx, userId, groupId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// 增加默认分组
 		config, err := models.SharedSysSettingDAO.ReadUserServerConfig(tx)
 		if err == nil && config.GroupId > 0 && !lists.ContainsInt64(req.ServerGroupIds, config.GroupId) {
 			req.ServerGroupIds = append(req.ServerGroupIds, config.GroupId)
@@ -698,6 +706,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			AuditingResult:          auditingResult,
 			CreatedAt:               int64(server.CreatedAt),
 			DnsName:                 server.DnsName,
+			UserPlanId:              int64(server.UserPlanId),
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
@@ -1092,14 +1101,14 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 // CountAllEnabledServersWithServerGroupId 计算使用某个分组的服务数量
 func (this *ServerService) CountAllEnabledServersWithServerGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithServerGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.ServerGroupId)
+	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.ServerGroupId, userId)
 	if err != nil {
 		return nil, err
 	}

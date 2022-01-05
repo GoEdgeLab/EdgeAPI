@@ -1262,9 +1262,13 @@ func (this *ServerDAO) CountAllEnabledServersWithNodeClusterId(tx *dbs.Tx, clust
 }
 
 // CountAllEnabledServersWithGroupId 计算使用某个分组的服务数量
-func (this *ServerDAO) CountAllEnabledServersWithGroupId(tx *dbs.Tx, groupId int64) (int64, error) {
-	return this.Query(tx).
-		State(ServerStateEnabled).
+func (this *ServerDAO) CountAllEnabledServersWithGroupId(tx *dbs.Tx, groupId int64, userId int64) (int64, error) {
+	var query = this.Query(tx).
+		State(ServerStateEnabled)
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	return query.
 		Where("JSON_CONTAINS(groupIds, :groupId)").
 		Param("groupId", numberutils.FormatInt64(groupId)).
 		Count()

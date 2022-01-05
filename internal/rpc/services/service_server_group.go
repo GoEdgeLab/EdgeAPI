@@ -16,14 +16,14 @@ type ServerGroupService struct {
 // CreateServerGroup 创建分组
 func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.CreateServerGroupRequest) (*pb.CreateServerGroupResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	groupId, err := models.SharedServerGroupDAO.CreateGroup(tx, req.Name)
+	groupId, err := models.SharedServerGroupDAO.CreateGroup(tx, req.Name, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +33,20 @@ func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.C
 // UpdateServerGroup 修改分组
 func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.UpdateServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	// 检查用户权限
+	if userId > 0 {
+		err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, req.ServerGroupId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = models.SharedServerGroupDAO.UpdateGroup(tx, req.ServerGroupId, req.Name)
 	if err != nil {
@@ -51,12 +59,20 @@ func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.U
 // DeleteServerGroup 删除分组
 func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.DeleteServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	// 检查用户权限
+	if userId > 0 {
+		err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, req.ServerGroupId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = models.SharedServerGroupDAO.DisableServerGroup(tx, req.ServerGroupId)
 	if err != nil {
@@ -69,14 +85,14 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 // FindAllEnabledServerGroups 查询所有分组
 func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, req *pb.FindAllEnabledServerGroupsRequest) (*pb.FindAllEnabledServerGroupsResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	groups, err := models.SharedServerGroupDAO.FindAllEnabledGroups(tx)
+	groups, err := models.SharedServerGroupDAO.FindAllEnabledGroups(tx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -93,14 +109,14 @@ func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, 
 // UpdateServerGroupOrders 修改分组排序
 func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req *pb.UpdateServerGroupOrdersRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	err = models.SharedServerGroupDAO.UpdateGroupOrders(tx, req.ServerGroupIds)
+	err = models.SharedServerGroupDAO.UpdateGroupOrders(tx, req.ServerGroupIds, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +126,7 @@ func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req
 // FindEnabledServerGroup 查找单个分组信息
 func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req *pb.FindEnabledServerGroupRequest) (*pb.FindEnabledServerGroupResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +138,13 @@ func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req 
 		return nil, err
 	}
 	if group == nil {
+		return &pb.FindEnabledServerGroupResponse{
+			ServerGroup: nil,
+		}, nil
+	}
+
+	// 检查用户权限
+	if userId > 0 && int64(group.UserId) != userId {
 		return &pb.FindEnabledServerGroupResponse{
 			ServerGroup: nil,
 		}, nil
