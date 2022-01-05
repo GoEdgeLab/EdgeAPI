@@ -74,7 +74,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 	result.CountInactiveNodes = countInactiveNodes
 
-	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, req.NodeClusterId, "")
+	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, req.NodeClusterId, "", false)
 	if err != nil {
 		return nil, err
 	}

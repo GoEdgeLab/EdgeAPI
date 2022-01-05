@@ -520,7 +520,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	result.CountAuditingServers = countAuditingServers
 
 	// 用户数
-	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "")
+	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "", false)
 	if err != nil {
 		return nil, err
 	}

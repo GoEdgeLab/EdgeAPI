@@ -175,7 +175,7 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 
 	tx := this.NullTx()
 
-	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, req.Keyword)
+	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, req.Keyword, req.IsVerifying)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 	tx := this.NullTx()
 
-	users, err := models.SharedUserDAO.ListEnabledUsers(tx, 0, req.Keyword, req.Offset, req.Size)
+	users, err := models.SharedUserDAO.ListEnabledUsers(tx, 0, req.Keyword, req.IsVerifying, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -548,11 +548,18 @@ func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.Com
 
 	var result = &pb.ComposeUserGlobalBoardResponse{}
 	var tx = this.NullTx()
-	totalUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "")
+	totalUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "", false)
 	if err != nil {
 		return nil, err
 	}
 	result.TotalUsers = totalUsers
+
+	// 等待审核的用户
+	countVerifyingUsers, err := models.SharedUserDAO.CountAllVerifyingUsers(tx)
+	if err != nil {
+		return nil, err
+	}
+	result.CountVerifyingUsers = countVerifyingUsers
 
 	countTodayUsers, err := models.SharedUserDAO.SumDailyUsers(tx, timeutil.Format("Ymd"), timeutil.Format("Ymd"))
 	if err != nil {

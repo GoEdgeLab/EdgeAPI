@@ -202,7 +202,7 @@ func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, 
 }
 
 // CountAllEnabledUsers 计算用户数量
-func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string) (int64, error) {
+func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string, isVerifying bool) (int64, error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
 	if clusterId > 0 {
@@ -211,12 +211,23 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword s
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if isVerifying {
+		query.Attr("isVerified", 0)
 	}
 	return query.Count()
 }
 
+// CountAllVerifyingUsers 获取等待审核的用户数
+func (this *UserDAO) CountAllVerifyingUsers(tx *dbs.Tx) (int64, error) {
+	query := this.Query(tx)
+	query.State(UserStateEnabled)
+	query.Attr("isVerified", 0)
+	return query.Count()
+}
+
 // ListEnabledUsers 列出单页用户
-func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string, offset int64, size int64) (result []*User, err error) {
+func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword string, isVerifying bool, offset int64, size int64) (result []*User, err error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
 	if clusterId > 0 {
@@ -225,6 +236,9 @@ func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword strin
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if isVerifying {
+		query.Attr("isVerified", 0)
 	}
 	_, err = query.
 		DescPk().
