@@ -104,7 +104,18 @@ func (this *UserDAO) FindUserFullname(tx *dbs.Tx, userId int64) (string, error) 
 }
 
 // CreateUser 创建用户
-func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fullname string, mobile string, tel string, email string, remark string, source string, clusterId int64) (int64, error) {
+func (this *UserDAO) CreateUser(tx *dbs.Tx, username string,
+	password string,
+	fullname string,
+	mobile string,
+	tel string,
+	email string,
+	remark string,
+	source string,
+	clusterId int64,
+	features []string,
+	registeredIP string,
+	isVerified bool) (int64, error) {
 	op := NewUserOperator()
 	op.Username = username
 	op.Password = stringutil.Md5(password)
@@ -112,10 +123,24 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string, password string, fu
 	op.Mobile = mobile
 	op.Tel = tel
 	op.Email = email
+	op.EmailIsVerified = false
 	op.Remark = remark
 	op.Source = source
 	op.ClusterId = clusterId
 	op.Day = timeutil.Format("Ymd")
+	op.IsVerified = isVerified
+	op.RegisteredIP = registeredIP
+
+	// features
+	if len(features) == 0 {
+		op.Features = "[]"
+	} else {
+		featuresJSON, err := json.Marshal(features)
+		if err != nil {
+			return 0, err
+		}
+		op.Features = featuresJSON
+	}
 
 	op.IsOn = true
 	op.State = UserStateEnabled
@@ -149,13 +174,15 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 }
 
 // UpdateUserInfo 修改用户基本信息
-func (this *UserDAO) UpdateUserInfo(tx *dbs.Tx, userId int64, fullname string) error {
+func (this *UserDAO) UpdateUserInfo(tx *dbs.Tx, userId int64, fullname string, mobile string, email string) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
 	op := NewUserOperator()
 	op.Id = userId
 	op.Fullname = fullname
+	op.Mobile = mobile
+	op.Email = email
 	return this.Save(tx, op)
 }
 
@@ -354,4 +381,17 @@ func (this *UserDAO) CountDailyUsers(tx *dbs.Tx, dayFrom string, dayTo string) (
 	}
 
 	return result, nil
+}
+
+// UpdateUserIsVerified 审核用户
+func (this *UserDAO) UpdateUserIsVerified(tx *dbs.Tx, userId int64, isRejected bool, rejectReason string) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	var op = NewUserOperator()
+	op.Id = userId
+	op.IsRejected = isRejected
+	op.RejectReason = rejectReason
+	op.IsVerified = true
+	return this.Save(tx, op)
 }

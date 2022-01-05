@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -30,11 +33,80 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 
 	tx := this.NullTx()
 
-	userId, err := models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId)
+	userId, err := models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId, nil, "", true)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.CreateUserResponse{UserId: userId}, nil
+}
+
+// RegisterUser 注册用户
+func (this *UserService) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*pb.RPCSuccess, error) {
+	userId, err := this.ValidateUserNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		return nil, this.PermissionError()
+	}
+
+	// 注册配置
+	configJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, systemconfigs.SettingCodeUserRegisterConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(configJSON) == 0 {
+		return nil, errors.New("the registration has been disabled")
+	}
+	var config = userconfigs.DefaultUserRegisterConfig()
+	err = json.Unmarshal(configJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	if !config.IsOn {
+		return nil, errors.New("the registration has been disabled")
+	}
+
+	err = this.RunTx(func(tx *dbs.Tx) error {
+		// 检查用户名
+		exists, err := models.SharedUserDAO.ExistUser(tx, 0, req.Username)
+		if err != nil {
+			return err
+		}
+		if exists {
+			return errors.New("the username exists already")
+		}
+
+		// 创建用户
+		_, err = models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, "", req.Email, "", req.Source, config.ClusterId, config.Features, req.Ip, !config.RequireVerification)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// VerifyUser 审核用户
+func (this *UserService) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedUserDAO.UpdateUserIsVerified(tx, req.UserId, req.IsRejected, req.RejectReason)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }
 
 // UpdateUser 修改用户
@@ -140,16 +212,19 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 		}
 
 		result = append(result, &pb.User{
-			Id:          int64(user.Id),
-			Username:    user.Username,
-			Fullname:    user.Fullname,
-			Mobile:      user.Mobile,
-			Tel:         user.Tel,
-			Email:       user.Email,
-			Remark:      user.Remark,
-			IsOn:        user.IsOn == 1,
-			CreatedAt:   int64(user.CreatedAt),
-			NodeCluster: pbCluster,
+			Id:           int64(user.Id),
+			Username:     user.Username,
+			Fullname:     user.Fullname,
+			Mobile:       user.Mobile,
+			Tel:          user.Tel,
+			Email:        user.Email,
+			Remark:       user.Remark,
+			IsOn:         user.IsOn == 1,
+			RegisteredIP: user.RegisteredIP,
+			IsVerified:   user.IsVerified == 1,
+			IsRejected:   user.IsRejected == 1,
+			CreatedAt:    int64(user.CreatedAt),
+			NodeCluster:  pbCluster,
 		})
 	}
 
@@ -187,16 +262,20 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 	}
 
 	return &pb.FindEnabledUserResponse{User: &pb.User{
-		Id:          int64(user.Id),
-		Username:    user.Username,
-		Fullname:    user.Fullname,
-		Mobile:      user.Mobile,
-		Tel:         user.Tel,
-		Email:       user.Email,
-		Remark:      user.Remark,
-		IsOn:        user.IsOn == 1,
-		CreatedAt:   int64(user.CreatedAt),
-		NodeCluster: pbCluster,
+		Id:           int64(user.Id),
+		Username:     user.Username,
+		Fullname:     user.Fullname,
+		Mobile:       user.Mobile,
+		Tel:          user.Tel,
+		Email:        user.Email,
+		Remark:       user.Remark,
+		IsOn:         user.IsOn == 1,
+		CreatedAt:    int64(user.CreatedAt),
+		RegisteredIP: user.RegisteredIP,
+		IsVerified:   user.IsVerified == 1,
+		IsRejected:   user.IsRejected == 1,
+		RejectReason: user.RejectReason,
+		NodeCluster:  pbCluster,
 	}}, nil
 }
 
@@ -279,7 +358,7 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 
 	tx := this.NullTx()
 
-	err = models.SharedUserDAO.UpdateUserInfo(tx, req.UserId, req.Fullname)
+	err = models.SharedUserDAO.UpdateUserInfo(tx, req.UserId, req.Fullname, req.Mobile, req.Email)
 	if err != nil {
 		return nil, err
 	}
