@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableRegionCity 启用条目
 func (this *RegionCityDAO) EnableRegionCity(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -47,7 +47,7 @@ func (this *RegionCityDAO) EnableRegionCity(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 禁用条目
+// DisableRegionCity 禁用条目
 func (this *RegionCityDAO) DisableRegionCity(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -56,7 +56,7 @@ func (this *RegionCityDAO) DisableRegionCity(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledRegionCity 查找启用中的条目
 func (this *RegionCityDAO) FindEnabledRegionCity(tx *dbs.Tx, id int64) (*RegionCity, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -68,7 +68,7 @@ func (this *RegionCityDAO) FindEnabledRegionCity(tx *dbs.Tx, id int64) (*RegionC
 	return result.(*RegionCity), err
 }
 
-// 根据主键查找名称
+// FindRegionCityName 根据主键查找名称
 func (this *RegionCityDAO) FindRegionCityName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -76,7 +76,7 @@ func (this *RegionCityDAO) FindRegionCityName(tx *dbs.Tx, id uint32) (string, er
 		FindStringCol("")
 }
 
-// 根据数据ID查找城市
+// FindCityWithDataId 根据数据ID查找城市
 func (this *RegionCityDAO) FindCityWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).
 		Attr("dataId", dataId).
@@ -84,7 +84,7 @@ func (this *RegionCityDAO) FindCityWithDataId(tx *dbs.Tx, dataId string) (int64,
 		FindInt64Col(0)
 }
 
-// 创建城市
+// CreateCity 创建城市
 func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string, dataId string) (int64, error) {
 	op := NewRegionCityOperator()
 	op.ProvinceId = provinceId
@@ -105,7 +105,7 @@ func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string,
 	return types.Int64(op.Id), nil
 }
 
-// 根据城市名查找城市ID
+// FindCityIdWithNameCacheable 根据城市名查找城市ID
 func (this *RegionCityDAO) FindCityIdWithNameCacheable(tx *dbs.Tx, provinceId int64, cityName string) (int64, error) {
 	key := cityName + "@" + numberutils.FormatInt64(provinceId)
 
@@ -131,4 +131,13 @@ func (this *RegionCityDAO) FindCityIdWithNameCacheable(tx *dbs.Tx, provinceId in
 	SharedCacheLocker.Unlock()
 
 	return cityId, nil
+}
+
+// FindAllEnabledCities 获取所有城市信息
+func (this *RegionCityDAO) FindAllEnabledCities(tx *dbs.Tx) (result []*RegionCity, err error) {
+	_, err = this.Query(tx).
+		State(RegionCityStateEnabled).
+		Slice(&result).
+		FindAll()
+	return
 }

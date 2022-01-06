@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -15,14 +14,14 @@ type RegionProvinceService struct {
 // FindAllEnabledRegionProvincesWithCountryId 查找所有省份
 func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ctx context.Context, req *pb.FindAllEnabledRegionProvincesWithCountryIdRequest) (*pb.FindAllEnabledRegionProvincesWithCountryIdResponse, error) {
 	// 校验请求
-	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, err := this.ValidateNodeId(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	provinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.CountryId)
+	provinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.RegionCountryId)
 	if err != nil {
 		return nil, err
 	}
@@ -36,30 +35,30 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 	}
 
 	return &pb.FindAllEnabledRegionProvincesWithCountryIdResponse{
-		Provinces: result,
+		RegionProvinces: result,
 	}, nil
 }
 
 // FindEnabledRegionProvince 查找单个省份信息
 func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context, req *pb.FindEnabledRegionProvinceRequest) (*pb.FindEnabledRegionProvinceResponse, error) {
 	// 校验请求
-	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, err := this.ValidateNodeId(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	province, err := regions.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.ProvinceId)
+	province, err := regions.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.RegionProvinceId)
 	if err != nil {
 		return nil, err
 	}
 	if province == nil {
-		return &pb.FindEnabledRegionProvinceResponse{Province: nil}, nil
+		return &pb.FindEnabledRegionProvinceResponse{RegionProvince: nil}, nil
 	}
 
 	return &pb.FindEnabledRegionProvinceResponse{
-		Province: &pb.RegionProvince{
+		RegionProvince: &pb.RegionProvince{
 			Id:    int64(province.Id),
 			Name:  province.Name,
 			Codes: province.DecodeCodes(),

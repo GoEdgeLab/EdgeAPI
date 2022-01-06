@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
-	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -16,7 +15,7 @@ type RegionCountryService struct {
 // FindAllEnabledRegionCountries 查找所有的国家列表
 func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Context, req *pb.FindAllEnabledRegionCountriesRequest) (*pb.FindAllEnabledRegionCountriesResponse, error) {
 	// 校验请求
-	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, err := this.ValidateNodeId(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,29 +46,29 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		})
 	}
 	return &pb.FindAllEnabledRegionCountriesResponse{
-		Countries: result,
+		RegionCountries: result,
 	}, nil
 }
 
 // FindEnabledRegionCountry 查找单个国家信息
 func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, req *pb.FindEnabledRegionCountryRequest) (*pb.FindEnabledRegionCountryResponse, error) {
 	// 校验请求
-	_, _, _, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeNode)
+	_, _, err := this.ValidateNodeId(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
 
-	country, err := regions.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.CountryId)
+	country, err := regions.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.RegionCountryId)
 	if err != nil {
 		return nil, err
 	}
 	if country == nil {
-		return &pb.FindEnabledRegionCountryResponse{Country: nil}, nil
+		return &pb.FindEnabledRegionCountryResponse{RegionCountry: nil}, nil
 	}
 
-	return &pb.FindEnabledRegionCountryResponse{Country: &pb.RegionCountry{
+	return &pb.FindEnabledRegionCountryResponse{RegionCountry: &pb.RegionCountry{
 		Id:    int64(country.Id),
 		Name:  country.Name,
 		Codes: country.DecodeCodes(),

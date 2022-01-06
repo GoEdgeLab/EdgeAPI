@@ -37,7 +37,7 @@ func (this *ServerRegionProviderMonthlyStatService) FindTopServerRegionProviderM
 		pbStat := &pb.FindTopServerRegionProviderMonthlyStatsResponse_Stat{
 			Count: int64(stat.Count),
 		}
-		provider, err := regions.SharedRegionProviderDAO.FindEnabledRegionProvider(tx, stat.ProviderId)
+		provider, err := regions.SharedRegionProviderDAO.FindEnabledRegionProvider(tx, int64(stat.ProviderId))
 		if err != nil {
 			return nil, err
 		}

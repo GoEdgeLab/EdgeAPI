@@ -36,7 +36,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableRegionProvider 启用条目
 func (this *RegionProviderDAO) EnableRegionProvider(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -45,7 +45,7 @@ func (this *RegionProviderDAO) EnableRegionProvider(tx *dbs.Tx, id uint32) error
 	return err
 }
 
-// 禁用条目
+// DisableRegionProvider 禁用条目
 func (this *RegionProviderDAO) DisableRegionProvider(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -54,8 +54,8 @@ func (this *RegionProviderDAO) DisableRegionProvider(tx *dbs.Tx, id uint32) erro
 	return err
 }
 
-// 查找启用中的条目
-func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id uint32) (*RegionProvider, error) {
+// FindEnabledRegionProvider 查找启用中的条目
+func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id int64) (*RegionProvider, error) {
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", RegionProviderStateEnabled).
@@ -66,7 +66,7 @@ func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id uint32) 
 	return result.(*RegionProvider), err
 }
 
-// 根据主键查找名称
+// FindRegionProviderName 根据主键查找名称
 func (this *RegionProviderDAO) FindRegionProviderName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
 		Pk(id).
@@ -74,7 +74,7 @@ func (this *RegionProviderDAO) FindRegionProviderName(tx *dbs.Tx, id uint32) (st
 		FindStringCol("")
 }
 
-// 根据服务商名称查找服务商ID
+// FindProviderIdWithNameCacheable 根据服务商名称查找服务商ID
 func (this *RegionProviderDAO) FindProviderIdWithNameCacheable(tx *dbs.Tx, providerName string) (int64, error) {
 	SharedCacheLocker.RLock()
 	providerId, ok := regionProviderNameAndIdCacheMap[providerName]
@@ -100,7 +100,7 @@ func (this *RegionProviderDAO) FindProviderIdWithNameCacheable(tx *dbs.Tx, provi
 	return providerId, nil
 }
 
-// 创建Provider
+// CreateProvider 创建Provider
 func (this *RegionProviderDAO) CreateProvider(tx *dbs.Tx, name string) (int64, error) {
 	op := NewRegionProviderOperator()
 	op.Name = name
@@ -111,4 +111,13 @@ func (this *RegionProviderDAO) CreateProvider(tx *dbs.Tx, name string) (int64, e
 	}
 	op.Codes = codesJSON
 	return this.SaveInt64(tx, op)
+}
+
+// FindAllEnabledProviders 查找所有服务商
+func (this *RegionProviderDAO) FindAllEnabledProviders(tx *dbs.Tx) (result []*RegionProvider, err error) {
+	_, err = this.Query(tx).
+		State(RegionProviderStateEnabled).
+		Slice(&result).
+		FindAll()
+	return
 }

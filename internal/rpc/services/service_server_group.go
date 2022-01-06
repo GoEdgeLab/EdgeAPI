@@ -377,12 +377,29 @@ func (this *ServerGroupService) UpdateServerGroupUDPReverseProxy(ctx context.Con
 // FindEnabledServerGroupConfigInfo 取得分组的配置概要信息
 func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Context, req *pb.FindEnabledServerGroupConfigInfoRequest) (*pb.FindEnabledServerGroupConfigInfoResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	// 检查用户权限
+	if userId > 0 {
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if req.ServerGroupId > 0 {
+			err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, req.ServerGroupId)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	var group *models.ServerGroup
 	if req.ServerGroupId > 0 {
