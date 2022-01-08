@@ -156,7 +156,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 		return 0, err
 	}
 
-	op := NewIPItemOperator()
+	var op = NewIPItemOperator()
 	op.ListId = listId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
@@ -179,6 +179,11 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	op.SourceHTTPFirewallRuleGroupId = sourceHTTPFirewallRuleGroupId
 	op.SourceHTTPFirewallRuleSetId = sourceHTTPFirewallRuleSetId
 
+	var autoAdded = listId == firewallconfigs.GlobalListId || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0
+	if autoAdded {
+		op.IsRead = 0
+	}
+
 	op.State = IPItemStateEnabled
 	err = this.Save(tx, op)
 	if err != nil {
@@ -187,7 +192,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	itemId := types.Int64(op.Id)
 
 	// 自动加入名单不需要即时更新，防止数量过多而导致性能问题
-	if listId == firewallconfigs.GlobalListId || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0 {
+	if autoAdded {
 		return itemId, nil
 	}
 
@@ -379,7 +384,7 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 }
 
 // CountAllEnabledIPItems 计算数量
-func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64) (int64, error) {
+func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool) (int64, error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
@@ -388,6 +393,9 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int6
 		query.Attr("listId", listId)
 	} else {
 		query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+	}
+	if unread {
+		query.Attr("isRead", 0)
 	}
 	return query.
 		State(IPItemStateEnabled).
@@ -397,7 +405,7 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int6
 }
 
 // ListAllEnabledIPItems 搜索所有IP
-func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, offset int64, size int64) (result []*IPItem, err error) {
+func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool, offset int64, size int64) (result []*IPItem, err error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
@@ -406,6 +414,9 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64
 		query.Attr("listId", listId)
 	} else {
 		query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+	}
+	if unread {
+		query.Attr("isRead", 0)
 	}
 	_, err = query.
 		State(IPItemStateEnabled).
@@ -417,6 +428,14 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// UpdateItemsRead 设置所有未已读
+func (this *IPItemDAO) UpdateItemsRead(tx *dbs.Tx) error {
+	return this.Query(tx).
+		Attr("isRead", 0).
+		Set("isRead", 1).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 通知更新

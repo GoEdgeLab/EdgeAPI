@@ -23,6 +23,7 @@ type IPItem struct {
 	SourceHTTPFirewallPolicyId    uint32 `field:"sourceHTTPFirewallPolicyId"`    // 来源策略ID
 	SourceHTTPFirewallRuleGroupId uint32 `field:"sourceHTTPFirewallRuleGroupId"` // 来源规则集分组ID
 	SourceHTTPFirewallRuleSetId   uint32 `field:"sourceHTTPFirewallRuleSetId"`   // 来源规则集ID
+	IsRead                        uint8  `field:"isRead"`                        // 是否已读
 }
 
 type IPItemOperator struct {
@@ -47,6 +48,7 @@ type IPItemOperator struct {
 	SourceHTTPFirewallPolicyId    interface{} // 来源策略ID
 	SourceHTTPFirewallRuleGroupId interface{} // 来源规则集分组ID
 	SourceHTTPFirewallRuleSetId   interface{} // 来源规则集ID
+	IsRead                        interface{} // 是否已读
 }
 
 func NewIPItemOperator() *IPItemOperator {

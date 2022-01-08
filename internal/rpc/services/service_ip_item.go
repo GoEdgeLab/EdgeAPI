@@ -280,6 +280,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 			SourceHTTPFirewallPolicy:      pbSourcePolicy,
 			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
 			SourceHTTPFirewallRuleSet:     pbSourceSet,
+			IsRead:                        item.IsRead == 1,
 		})
 	}
 
@@ -483,7 +484,7 @@ func (this *IPItemService) CountAllEnabledIPItems(ctx context.Context, req *pb.C
 	if req.GlobalOnly {
 		listId = firewallconfigs.GlobalListId
 	}
-	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip, listId)
+	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip, listId, req.Unread)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +504,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 	if req.GlobalOnly {
 		listId = firewallconfigs.GlobalListId
 	}
-	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, listId, req.Offset, req.Size)
+	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, listId, req.Unread, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -586,6 +587,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			SourceHTTPFirewallPolicy:      pbSourcePolicy,
 			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
 			SourceHTTPFirewallRuleSet:     pbSourceSet,
+			IsRead:                        item.IsRead == 1,
 		}
 
 		// 所属名单
@@ -655,4 +657,19 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 	}
 
 	return &pb.ListAllEnabledIPItemsResponse{Results: results}, nil
+}
+
+// UpdateIPItemsRead 设置所有为已读
+func (this *IPItemService) UpdateIPItemsRead(ctx context.Context, req *pb.UpdateIPItemsReadRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedIPItemDAO.UpdateItemsRead(tx)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }
