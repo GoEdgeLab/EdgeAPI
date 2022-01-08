@@ -186,8 +186,8 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	}
 	itemId := types.Int64(op.Id)
 
-	// 全局名单不需要即时更新，防止数量过多而导致性能问题
-	if listId == firewallconfigs.GlobalListId {
+	// 自动加入名单不需要即时更新，防止数量过多而导致性能问题
+	if listId == firewallconfigs.GlobalListId || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0 {
 		return itemId, nil
 	}
 
