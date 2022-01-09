@@ -10,11 +10,20 @@ import (
 )
 
 func TestNodeValueDAO_CreateValue(t *testing.T) {
-	dao := NewNodeValueDAO()
+	var dao = NewNodeValueDAO()
 	m := maps.Map{
 		"hello": "world12344",
 	}
 	err := dao.CreateValue(nil, 1, nodeconfigs.NodeRoleNode, 1, "test", m.AsJSON(), time.Now().Unix())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+}
+
+func TestNodeValueDAO_Clean(t *testing.T) {
+	var dao = NewNodeValueDAO()
+	err := dao.Clean(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

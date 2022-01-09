@@ -57,12 +57,10 @@ func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconf
 
 // Clean 清除数据
 func (this *NodeValueDAO) Clean(tx *dbs.Tx) error {
-	// 删除N天之前的所有数据
-	expiredDays := 2
-	day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -expiredDays))
+	var hour = timeutil.Format("YmdH", time.Now().Add(-2*time.Hour))
 	_, err := this.Query(tx).
-		Where("day<=:day").
-		Param("day", day).
+		Where("hour<=:hour").
+		Param("hour", hour).
 		Delete()
 	if err != nil {
 		return err

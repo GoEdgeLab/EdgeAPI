@@ -29,7 +29,7 @@ func NewMonitorItemValueTask() *MonitorItemValueTask {
 }
 
 func (this *MonitorItemValueTask) Start() {
-	ticker := time.NewTicker(24 * time.Hour)
+	ticker := time.NewTicker(1 * time.Hour)
 	if Tea.IsTesting() {
 		ticker = time.NewTicker(1 * time.Minute)
 	}
