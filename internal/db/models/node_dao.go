@@ -917,6 +917,18 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 
 	config.MetricItems = metricItems
 
+	// 产品
+	adminUIConfig, err := SharedSysSettingDAO.ReadAdminUIConfig(tx, cacheMap)
+	if err != nil {
+		return nil, err
+	}
+	if adminUIConfig != nil {
+		config.ProductConfig = &nodeconfigs.ProductConfig{
+			Name:    adminUIConfig.ProductName,
+			Version: adminUIConfig.Version,
+		}
+	}
+
 	return config, nil
 }
 

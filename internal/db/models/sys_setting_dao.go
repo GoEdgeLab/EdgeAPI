@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -155,6 +156,36 @@ func (this *SysSettingDAO) ReadUserServerConfig(tx *dbs.Tx) (*userconfigs.UserSe
 		return nil, err
 	}
 	return config, nil
+}
+
+// ReadAdminUIConfig 读取管理员界面配置
+func (this *SysSettingDAO) ReadAdminUIConfig(tx *dbs.Tx, cacheMap *utils.CacheMap) (*systemconfigs.AdminUIConfig, error) {
+	var cacheKey = this.Table + ":ReadAdminUIConfig"
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok && cache != nil {
+			return cache.(*systemconfigs.AdminUIConfig), nil
+		}
+	}
+
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeAdminUIConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) > 0 {
+		var config = &systemconfigs.AdminUIConfig{}
+		err = json.Unmarshal(valueJSON, config)
+		if err != nil {
+			return nil, err
+		}
+
+		if cacheMap != nil {
+			cacheMap.Put(cacheKey, config)
+		}
+
+		return config, nil
+	}
+	return &systemconfigs.AdminUIConfig{}, nil
 }
 
 // NotifyUpdate 通知更改
