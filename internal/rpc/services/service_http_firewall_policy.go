@@ -37,13 +37,14 @@ func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx co
 	result := []*pb.HTTPFirewallPolicy{}
 	for _, p := range policies {
 		result = append(result, &pb.HTTPFirewallPolicy{
-			Id:           int64(p.Id),
-			Name:         p.Name,
-			Description:  p.Description,
-			IsOn:         p.IsOn == 1,
-			InboundJSON:  []byte(p.Inbound),
-			OutboundJSON: []byte(p.Outbound),
-			Mode:         p.Mode,
+			Id:               int64(p.Id),
+			Name:             p.Name,
+			Description:      p.Description,
+			IsOn:             p.IsOn == 1,
+			InboundJSON:      []byte(p.Inbound),
+			OutboundJSON:     []byte(p.Outbound),
+			Mode:             p.Mode,
+			UseLocalFirewall: p.UseLocalFirewall == 1,
 		})
 	}
 
@@ -284,7 +285,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode, req.UseLocalFirewall)
 	if err != nil {
 		return nil, err
 	}
@@ -377,13 +378,14 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 	result := []*pb.HTTPFirewallPolicy{}
 	for _, p := range policies {
 		result = append(result, &pb.HTTPFirewallPolicy{
-			Id:           int64(p.Id),
-			Name:         p.Name,
-			Description:  p.Description,
-			IsOn:         p.IsOn == 1,
-			InboundJSON:  []byte(p.Inbound),
-			OutboundJSON: []byte(p.Outbound),
-			Mode:         p.Mode,
+			Id:               int64(p.Id),
+			Name:             p.Name,
+			Description:      p.Description,
+			IsOn:             p.IsOn == 1,
+			InboundJSON:      []byte(p.Inbound),
+			OutboundJSON:     []byte(p.Outbound),
+			Mode:             p.Mode,
+			UseLocalFirewall: p.UseLocalFirewall == 1,
 		})
 	}
 
