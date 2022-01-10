@@ -133,12 +133,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 	op.UseLocalFirewall = true
 
 	{
-		synFloodJSON, err := json.Marshal(&firewallconfigs.SYNFloodConfig{
-			IsOn:           true,
-			MinAttempts:    10,
-			TimeoutSeconds: 600,
-			IgnoreLocal:    true,
-		})
+		synFloodJSON, err := json.Marshal(firewallconfigs.DefaultSYNFloodConfig())
 		if err != nil {
 			return 0, err
 		}

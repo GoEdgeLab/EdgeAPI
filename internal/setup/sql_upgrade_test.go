@@ -84,3 +84,20 @@ func TestUpgradeSQLData_v0_3_7(t *testing.T) {
 	}
 	t.Log("ok")
 }
+
+
+func TestUpgradeSQLData_v0_4_0(t *testing.T) {
+	db, err := dbs.NewInstanceFromConfig(&dbs.DBConfig{
+		Driver: "mysql",
+		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge?charset=utf8mb4&timeout=30s",
+		Prefix: "edge",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = upgradeV0_4_0(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("ok")
+}

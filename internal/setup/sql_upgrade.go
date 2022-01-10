@@ -62,6 +62,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.3.7", upgradeV0_3_7,
 	},
+	{
+		"0.4.0", upgradeV0_4_0,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -548,6 +551,20 @@ func upgradeV0_3_7(db *dbs.DB) error {
 	_, err = db.Exec("UPDATE edgeHTTPFirewallRuleGroups SET isTemplate=1 WHERE LENGTH(code)>0")
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// v0.4.0
+func upgradeV0_4_0(db *dbs.DB) error {
+	// 升级SYN Flood配置
+	synFloodJSON, err := json.Marshal(firewallconfigs.DefaultSYNFloodConfig())
+	if err == nil {
+		_, err := db.Exec("UPDATE edgeHTTPFirewallPolicies SET synFlood=? WHERE synFlood IS NULL AND state=1", string(synFloodJSON))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
