@@ -18,6 +18,7 @@ type HTTPFirewallPolicy struct {
 	BlockOptions     string `field:"blockOptions"`     // BLOCK选项
 	Mode             string `field:"mode"`             // 模式
 	UseLocalFirewall uint8  `field:"useLocalFirewall"` // 是否自动使用本地防火墙
+	SynFlood         string `field:"synFlood"`         // SynFlood防御设置
 }
 
 type HTTPFirewallPolicyOperator struct {
@@ -37,6 +38,7 @@ type HTTPFirewallPolicyOperator struct {
 	BlockOptions     interface{} // BLOCK选项
 	Mode             interface{} // 模式
 	UseLocalFirewall interface{} // 是否自动使用本地防火墙
+	SynFlood         interface{} // SynFlood防御设置
 }
 
 func NewHTTPFirewallPolicyOperator() *HTTPFirewallPolicyOperator {

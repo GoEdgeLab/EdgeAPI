@@ -130,6 +130,21 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 	if len(outboundJSON) > 0 {
 		op.Outbound = outboundJSON
 	}
+	op.UseLocalFirewall = true
+
+	{
+		synFloodJSON, err := json.Marshal(&firewallconfigs.SYNFloodConfig{
+			IsOn:           true,
+			MinAttempts:    10,
+			TimeoutSeconds: 600,
+			IgnoreLocal:    true,
+		})
+		if err != nil {
+			return 0, err
+		}
+		op.SynFlood = synFloodJSON
+	}
+
 	err := this.Save(tx, op)
 	return types.Int64(op.Id), err
 }
@@ -249,7 +264,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 }
 
 // UpdateFirewallPolicy 修改策略
-func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte, mode firewallconfigs.FirewallMode, useLocalFirewall bool) error {
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte, mode firewallconfigs.FirewallMode, useLocalFirewall bool, synFloodConfig *firewallconfigs.SYNFloodConfig) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -272,6 +287,17 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 	if len(blockOptionsJSON) > 0 {
 		op.BlockOptions = blockOptionsJSON
 	}
+
+	if synFloodConfig != nil {
+		synFloodConfigJSON, err := json.Marshal(synFloodConfig)
+		if err != nil {
+			return err
+		}
+		op.SynFlood = synFloodConfigJSON
+	} else {
+		op.SynFlood = "null"
+	}
+
 	op.UseLocalFirewall = useLocalFirewall
 	err := this.Save(tx, op)
 	if err != nil {
@@ -411,6 +437,16 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 			return config, err
 		}
 		config.BlockOptions = blockAction
+	}
+
+	// syn flood
+	if len(policy.SynFlood) > 0 {
+		var synFloodConfig = &firewallconfigs.SYNFloodConfig{}
+		err = json.Unmarshal([]byte(policy.SynFlood), synFloodConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.SYNFlood = synFloodConfig
 	}
 
 	if cacheMap != nil {

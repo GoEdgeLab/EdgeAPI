@@ -566,6 +566,22 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			}
 		}
 
+		// 节点
+		var pbSourceNode *pb.Node
+		if item.SourceNodeId > 0 {
+			node, err := models.SharedNodeDAO.FindEnabledBasicNode(tx, int64(item.SourceNodeId))
+			if err != nil {
+				return nil, err
+			}
+			if node != nil {
+				pbSourceNode = &pb.Node{
+					Id:          int64(node.Id),
+					Name:        node.Name,
+					NodeCluster: &pb.NodeCluster{Id: int64(node.ClusterId)},
+				}
+			}
+		}
+
 		var pbItem = &pb.IPItem{
 			Id:                            int64(item.Id),
 			IpFrom:                        item.IpFrom,
@@ -587,6 +603,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			SourceHTTPFirewallPolicy:      pbSourcePolicy,
 			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
 			SourceHTTPFirewallRuleSet:     pbSourceSet,
+			SourceNode:                    pbSourceNode,
 			IsRead:                        item.IsRead == 1,
 		}
 
