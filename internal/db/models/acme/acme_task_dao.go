@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	acmeutils "github.com/TeaOSLab/EdgeAPI/internal/acme"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
@@ -400,6 +401,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 					client := utils.SharedHttpClient(5 * time.Second)
 					req, err := http.NewRequest(http.MethodPost, task.AuthURL, bytes.NewReader(authJSON))
 					req.Header.Set("Content-Type", "application/json")
+					req.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
 					if err != nil {
 						remotelogs.Error("ACME", "parse auth url failed '"+task.AuthURL+"': "+err.Error())
 					} else {

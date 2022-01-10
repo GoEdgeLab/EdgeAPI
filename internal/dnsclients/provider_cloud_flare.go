@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/cloudflare"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
@@ -257,6 +258,7 @@ func (this *CloudFlareProvider) doAPI(method string, apiPath string, args map[st
 	if err != nil {
 		return err
 	}
+	req.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Auth-Key", this.apiKey)
 	req.Header.Set("x-Auth-Email", this.email)

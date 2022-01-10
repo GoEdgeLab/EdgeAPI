@@ -165,7 +165,7 @@ func (this *CustomHTTPProvider) post(params maps.Map) (respData []byte, err erro
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	req.Header.Set("Timestamp", timestamp)
 	req.Header.Set("Token", fmt.Sprintf("%x", sha1.Sum([]byte(this.secret+"@"+timestamp))))
-	req.Header.Set("User-Agent", "GoEdge/"+teaconst.Version)
+	req.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
 
 	resp, err := customHTTPClient.Do(req)
 	if err != nil {
