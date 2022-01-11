@@ -135,6 +135,7 @@ func (this *NodeLogDAO) DeleteExpiredLogs(tx *dbs.Tx, days int) error {
 // CountNodeLogs 计算节点日志数量
 func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	role string,
+	nodeClusterId int64,
 	nodeId int64,
 	serverId int64,
 	originId int64,
@@ -151,11 +152,16 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	if nodeId > 0 {
 		query.Attr("nodeId", nodeId)
 	} else {
-		switch role {
-		case nodeconfigs.NodeRoleNode:
-			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId>0)")
-		case nodeconfigs.NodeRoleDNS:
-			query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1 AND clusterId > 0)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
+		if nodeClusterId > 0 {
+			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE clusterId=:nodeClusterId AND state=1)")
+			query.Param("nodeClusterId", nodeClusterId)
+		} else {
+			switch role {
+			case nodeconfigs.NodeRoleNode:
+				query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId>0)")
+			case nodeconfigs.NodeRoleDNS:
+				query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1 AND clusterId > 0)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
+			}
 		}
 	}
 	if serverId > 0 {
@@ -192,6 +198,7 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 // ListNodeLogs 列出单页日志
 func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	role string,
+	nodeClusterId int64,
 	nodeId int64,
 	serverId int64,
 	originId int64,
@@ -212,11 +219,16 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	if nodeId > 0 {
 		query.Attr("nodeId", nodeId)
 	} else {
-		switch role {
-		case nodeconfigs.NodeRoleNode:
-			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId>0)")
-		case nodeconfigs.NodeRoleDNS:
-			query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1 AND clusterId>0)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
+		if nodeClusterId > 0 {
+			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE clusterId=:nodeClusterId AND state=1)")
+			query.Param("nodeClusterId", nodeClusterId)
+		} else {
+			switch role {
+			case nodeconfigs.NodeRoleNode:
+				query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId>0)")
+			case nodeconfigs.NodeRoleDNS:
+				query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1 AND clusterId>0)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
+			}
 		}
 	}
 	if serverId > 0 {
