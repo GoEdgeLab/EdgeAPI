@@ -299,3 +299,21 @@ func (this *FirewallService) NotifyHTTPFirewallEvent(ctx context.Context, req *p
 	}
 	return this.Success()
 }
+
+// CountFirewallDailyBlocks 读取当前Block动作次数
+func (this *FirewallService) CountFirewallDailyBlocks(ctx context.Context, req *pb.CountFirewallDailyBlocksRequest) (*pb.CountFirewallDailyBlocksResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var day = timeutil.Format("Ymd")
+	countDailyBlock, err := stats.SharedServerHTTPFirewallDailyStatDAO.SumDailyCount(tx, 0, 0, "block", day, day)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountFirewallDailyBlocksResponse{
+		CountBlocks: countDailyBlock,
+	}, nil
+}
