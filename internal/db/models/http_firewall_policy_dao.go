@@ -303,8 +303,12 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 }
 
 // CountAllEnabledFirewallPolicies 计算所有可用的策略数量
-func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx, keyword string) (int64, error) {
+func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx, clusterId int64, keyword string) (int64, error) {
 	query := this.Query(tx)
+	if clusterId > 0 {
+		query.Where("id IN (SELECT httpFirewallPolicyId FROM " + SharedNodeClusterDAO.Table + " WHERE id=:clusterId)")
+		query.Param("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
@@ -318,8 +322,12 @@ func (this *HTTPFirewallPolicyDAO) CountAllEnabledFirewallPolicies(tx *dbs.Tx, k
 }
 
 // ListEnabledFirewallPolicies 列出单页的策略
-func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*HTTPFirewallPolicy, err error) {
+func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, clusterId int64, keyword string, offset int64, size int64) (result []*HTTPFirewallPolicy, err error) {
 	query := this.Query(tx)
+	if clusterId > 0 {
+		query.Where("id IN (SELECT httpFirewallPolicyId FROM " + SharedNodeClusterDAO.Table + " WHERE id=:clusterId)")
+		query.Param("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")

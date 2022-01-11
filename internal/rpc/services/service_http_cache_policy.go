@@ -99,7 +99,7 @@ func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context
 
 	tx := this.NullTx()
 
-	count, err := models.SharedHTTPCachePolicyDAO.CountAllEnabledHTTPCachePolicies(tx, req.Keyword)
+	count, err := models.SharedHTTPCachePolicyDAO.CountAllEnabledHTTPCachePolicies(tx, req.NodeClusterId, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 
 	tx := this.NullTx()
 
-	cachePolicies, err := models.SharedHTTPCachePolicyDAO.ListEnabledHTTPCachePolicies(tx, req.Keyword, req.Offset, req.Size)
+	cachePolicies, err := models.SharedHTTPCachePolicyDAO.ListEnabledHTTPCachePolicies(tx, req.NodeClusterId, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

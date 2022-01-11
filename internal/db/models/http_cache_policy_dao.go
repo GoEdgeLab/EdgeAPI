@@ -300,9 +300,13 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 }
 
 // CountAllEnabledHTTPCachePolicies 计算可用缓存策略数量
-func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, keyword string) (int64, error) {
+func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string) (int64, error) {
 	query := this.Query(tx).
 		State(HTTPCachePolicyStateEnabled)
+	if clusterId > 0 {
+		query.Where("id IN (SELECT cachePolicyId FROM " + SharedNodeClusterDAO.Table + " WHERE id=:clusterId)")
+		query.Param("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
@@ -311,9 +315,13 @@ func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, key
 }
 
 // ListEnabledHTTPCachePolicies 列出单页的缓存策略
-func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, keyword string, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
+func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
 	query := this.Query(tx).
 		State(HTTPCachePolicyStateEnabled)
+	if clusterId > 0 {
+		query.Where("id IN (SELECT cachePolicyId FROM " + SharedNodeClusterDAO.Table + " WHERE id=:clusterId)")
+		query.Param("clusterId", clusterId)
+	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")

@@ -361,7 +361,7 @@ func (this *HTTPFirewallPolicyService) CountAllEnabledHTTPFirewallPolicies(ctx c
 
 	tx := this.NullTx()
 
-	count, err := models.SharedHTTPFirewallPolicyDAO.CountAllEnabledFirewallPolicies(tx, req.Keyword)
+	count, err := models.SharedHTTPFirewallPolicyDAO.CountAllEnabledFirewallPolicies(tx, req.NodeClusterId, req.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -378,7 +378,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 
 	tx := this.NullTx()
 
-	policies, err := models.SharedHTTPFirewallPolicyDAO.ListEnabledFirewallPolicies(tx, req.Keyword, req.Offset, req.Size)
+	policies, err := models.SharedHTTPFirewallPolicyDAO.ListEnabledFirewallPolicies(tx, req.NodeClusterId, req.Keyword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
