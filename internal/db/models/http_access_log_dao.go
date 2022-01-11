@@ -233,6 +233,8 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
 	size int64,
 	day string,
+	clusterId int64,
+	nodeId int64,
 	serverId int64,
 	reverse bool,
 	hasError bool,
@@ -253,18 +255,18 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string, ip string, domain string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, clusterId int64, nodeId int64, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string, ip string, domain string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -318,6 +320,30 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 			query := dao.Query(tx)
 
 			// 条件
+			if nodeId > 0 {
+				query.Attr("nodeId", nodeId)
+			} else if clusterId > 0 {
+				nodeIds, err := SharedNodeDAO.FindAllEnabledNodeIdsWithClusterId(tx, clusterId)
+				if err != nil {
+					remotelogs.Error("DBNODE", err.Error())
+					return
+				}
+				if len(nodeIds) > 0 {
+					sort.Slice(nodeIds, func(i, j int) bool {
+						return nodeIds[i] < nodeIds[j]
+					})
+					var nodeIdStrings = []string{}
+					for _, subNodeId := range nodeIds {
+						nodeIdStrings = append(nodeIdStrings, types.String(subNodeId))
+					}
+
+					query.Where("nodeId IN (" + strings.Join(nodeIdStrings, ",") + ")")
+					query.Reuse(false)
+				} else {
+					// 如果没有节点，则直接返回空
+					return
+				}
+			}
 			if serverId > 0 {
 				query.Attr("serverId", serverId)
 			} else if userId > 0 && len(serverIds) > 0 {
