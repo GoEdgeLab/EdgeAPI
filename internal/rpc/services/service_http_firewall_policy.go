@@ -478,6 +478,7 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context
 	}
 	return &pb.FindEnabledHTTPFirewallPolicyResponse{HttpFirewallPolicy: &pb.HTTPFirewallPolicy{
 		Id:           int64(policy.Id),
+		ServerId:     int64(policy.ServerId),
 		Name:         policy.Name,
 		Description:  policy.Description,
 		IsOn:         policy.IsOn == 1,
