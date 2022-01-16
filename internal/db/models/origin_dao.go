@@ -87,7 +87,20 @@ func (this *OriginDAO) FindOriginName(tx *dbs.Tx, id int64) (string, error) {
 }
 
 // CreateOrigin 创建源站
-func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32, domains []string) (originId int64, err error) {
+func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
+	adminId int64,
+	userId int64,
+	name string,
+	addrJSON string,
+	description string,
+	weight int32, isOn bool,
+	connTimeout *shared.TimeDuration,
+	readTimeout *shared.TimeDuration,
+	idleTimeout *shared.TimeDuration,
+	maxConns int32,
+	maxIdleConns int32,
+	certRef *sslconfigs.SSLCertRef,
+	domains []string) (originId int64, err error) {
 	op := NewOriginOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -133,6 +146,15 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, nam
 	}
 	op.Weight = weight
 
+	// cert
+	if certRef != nil {
+		certRefJSON, err := json.Marshal(certRef)
+		if err != nil {
+			return 0, err
+		}
+		op.Cert = certRefJSON
+	}
+
 	if len(domains) > 0 {
 		domainsJSON, err := json.Marshal(domains)
 		if err != nil {
@@ -152,7 +174,20 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx, adminId int64, userId int64, nam
 }
 
 // UpdateOrigin 修改源站
-func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, addrJSON string, description string, weight int32, isOn bool, connTimeout *shared.TimeDuration, readTimeout *shared.TimeDuration, idleTimeout *shared.TimeDuration, maxConns int32, maxIdleConns int32, domains []string) error {
+func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
+	originId int64,
+	name string,
+	addrJSON string,
+	description string,
+	weight int32,
+	isOn bool,
+	connTimeout *shared.TimeDuration,
+	readTimeout *shared.TimeDuration,
+	idleTimeout *shared.TimeDuration,
+	maxConns int32,
+	maxIdleConns int32,
+	certRef *sslconfigs.SSLCertRef,
+	domains []string) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
@@ -200,6 +235,17 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx, originId int64, name string, add
 
 	op.IsOn = isOn
 	op.Version = dbs.SQL("version+1")
+
+	// cert
+	if certRef != nil {
+		certRefJSON, err := json.Marshal(certRef)
+		if err != nil {
+			return err
+		}
+		op.Cert = certRefJSON
+	} else {
+		op.Cert = dbs.SQL("NULL")
+	}
 
 	if len(domains) > 0 {
 		domainsJSON, err := json.Marshal(domains)

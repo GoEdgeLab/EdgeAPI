@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	"github.com/iwind/TeaGo/maps"
 )
 
@@ -58,7 +59,20 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		}
 	}
 
-	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.Domains)
+	// cert
+	var certRef *sslconfigs.SSLCertRef
+	if len(req.CertRefJSON) > 0 {
+		certRef = &sslconfigs.SSLCertRef{}
+		err = json.Unmarshal(req.CertRefJSON, certRef)
+		if err != nil {
+			return nil, err
+		}
+		if certRef.CertId <= 0 {
+			certRef = nil
+		}
+	}
+
+	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +126,20 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		}
 	}
 
-	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.Domains)
+	// cert
+	var certRef *sslconfigs.SSLCertRef
+	if len(req.CertRefJSON) > 0 {
+		certRef = &sslconfigs.SSLCertRef{}
+		err = json.Unmarshal(req.CertRefJSON, certRef)
+		if err != nil {
+			return nil, err
+		}
+		if certRef.CertId <= 0 {
+			certRef = nil
+		}
+	}
+
+	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains)
 	if err != nil {
 		return nil, err
 	}
