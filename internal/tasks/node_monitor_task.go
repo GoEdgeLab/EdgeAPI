@@ -13,8 +13,8 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		task := NewNodeMonitorTask(60)
-		ticker := time.NewTicker(60 * time.Second)
+		var task = NewNodeMonitorTask(60)
+		var ticker = time.NewTicker(60 * time.Second)
 		goman.New(func() {
 			for range ticker.C {
 				err := task.loop()
@@ -29,11 +29,14 @@ func init() {
 // NodeMonitorTask 边缘节点监控任务
 type NodeMonitorTask struct {
 	intervalSeconds int
+
+	inactiveMap map[int64]int // nodeId => count
 }
 
 func NewNodeMonitorTask(intervalSeconds int) *NodeMonitorTask {
 	return &NodeMonitorTask{
 		intervalSeconds: intervalSeconds,
+		inactiveMap:     map[int64]int{},
 	}
 }
 
@@ -81,24 +84,37 @@ func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
 	if err != nil {
 		return err
 	}
-	for _, node := range inactiveNodes {
-		subject := "节点\"" + node.Name + "\"已处于离线状态"
-		msg := "节点\"" + node.Name + "\"已处于离线状态"
-		err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, subject, msg, nil, false)
-		if err != nil {
-			return err
-		}
 
-		// 修改在线状态
-		err = models.SharedNodeDAO.UpdateNodeActive(nil, int64(node.Id), false)
-		if err != nil {
-			return err
+	var nodeMap = map[int64]*models.Node{}
+	for _, node := range inactiveNodes {
+		var nodeId = int64(node.Id)
+		nodeMap[nodeId] = node
+		this.inactiveMap[nodeId]++
+	}
+
+	const maxInactiveTries = 5
+
+	// 处理现有的离线状态
+	for nodeId, count := range this.inactiveMap {
+		node, ok := nodeMap[nodeId]
+		if ok {
+			// 连续两次
+			if count >= maxInactiveTries {
+				this.inactiveMap[nodeId] = 0
+
+				subject := "节点\"" + node.Name + "\"已处于离线状态"
+				msg := "集群'" + cluster.Name + "'节点\"" + node.Name + "\"已处于离线状态，请检查节点是否异常"
+				err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, subject, msg, nil, false)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			this.inactiveMap[nodeId] = 0
 		}
 	}
 
-	// TODO 检查恢复连接
-
-	// 检查CPU、内存、磁盘不足节点，而且离线的节点不再重复提示
+	// 检查CPU、内存、磁盘不足节点
 	// TODO 需要实现
 
 	return nil

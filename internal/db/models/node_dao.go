@@ -518,11 +518,11 @@ func (this *NodeDAO) FindAllEnabledNodeIdsWithClusterId(tx *dbs.Tx, clusterId in
 func (this *NodeDAO) FindAllInactiveNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*Node, err error) {
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
+		Result("id", "name", "status").
 		Attr("clusterId", clusterId).
 		Attr("isOn", true).        // 只监控启用的节点
 		Attr("isInstalled", true). // 只监控已经安装的节点
-		Attr("isActive", true).    // 当前已经在线的
-		Where("(status IS NULL OR (JSON_EXTRACT(status, '$.isActive')=false AND UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>10) OR  UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>120)").
+		Attr("isActive", false).
 		Result("id", "name").
 		Slice(&result).
 		FindAll()
