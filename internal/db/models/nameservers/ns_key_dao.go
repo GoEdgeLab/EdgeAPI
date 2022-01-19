@@ -199,7 +199,7 @@ func (this *NSKeyDAO) NotifyUpdate(tx *dbs.Tx, keyId int64) error {
 			return err
 		}
 		if clusterId > 0 {
-			err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeKeyChanged)
+			err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, models.NSNodeTaskTypeKeyChanged)
 			if err != nil {
 				return err
 			}

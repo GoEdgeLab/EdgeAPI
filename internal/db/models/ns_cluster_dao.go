@@ -195,5 +195,5 @@ func (this *NSClusterDAO) FindClusterRecursion(tx *dbs.Tx, clusterId int64) ([]b
 
 // NotifyUpdate 通知更改
 func (this *NSClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
-	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, NSNodeTaskTypeConfigChanged)
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, NSNodeTaskTypeConfigChanged)
 }

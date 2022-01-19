@@ -901,7 +901,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 
 // NotifyUpdate 通知更新
 func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
-	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeConfigChanged)
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeConfigChanged)
 }
 
 // NotifyDNSUpdate 通知DNS更新

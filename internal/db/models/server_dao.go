@@ -1500,11 +1500,11 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 	}
 
 	if oldClusterId > 0 {
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, NodeTaskTypeConfigChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, NodeTaskTypeConfigChanged)
 		if err != nil {
 			return err
 		}
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, NodeTaskTypeIPItemChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, NodeTaskTypeIPItemChanged)
 		if err != nil {
 			return err
 		}
@@ -1515,11 +1515,11 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 	}
 
 	if newClusterId > 0 {
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, NodeTaskTypeConfigChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, NodeTaskTypeConfigChanged)
 		if err != nil {
 			return err
 		}
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, NodeTaskTypeIPItemChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, NodeTaskTypeIPItemChanged)
 		if err != nil {
 			return err
 		}
@@ -2260,7 +2260,7 @@ func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	if clusterId == 0 {
 		return nil
 	}
-	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeConfigChanged)
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
 }
 
 // NotifyDNSUpdate 通知DNS更新

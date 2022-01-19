@@ -464,7 +464,7 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 				return err
 			}
 			for _, clusterId := range clusterIds {
-				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeIPItemChanged)
+				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeIPItemChanged)
 				if err != nil {
 					return err
 				}
@@ -472,7 +472,7 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 		} else {
 			clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIds(tx)
 			for _, clusterId := range clusterIds {
-				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeIPItemChanged)
+				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeIPItemChanged)
 				if err != nil {
 					return err
 				}
@@ -524,7 +524,7 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 
 	if len(resultClusterIds) > 0 {
 		for _, clusterId := range resultClusterIds {
-			err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, NodeTaskTypeIPItemChanged)
+			err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeIPItemChanged)
 			if err != nil {
 				return err
 			}

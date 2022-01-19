@@ -259,7 +259,7 @@ func (this *NSRouteDAO) NotifyUpdate(tx *dbs.Tx) error {
 		return err
 	}
 	for _, clusterId := range clusterIds {
-		err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeRouteChanged)
+		err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, models.NSNodeTaskTypeRouteChanged)
 		if err != nil {
 			return err
 		}

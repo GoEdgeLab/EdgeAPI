@@ -279,7 +279,7 @@ func (this *NSRecordDAO) NotifyUpdate(tx *dbs.Tx, recordId int64) error {
 	}
 
 	if clusterId > 0 {
-		err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeRecordChanged)
+		err = models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, models.NSNodeTaskTypeRecordChanged)
 		if err != nil {
 			return err
 		}

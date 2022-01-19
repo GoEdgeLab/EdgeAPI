@@ -282,7 +282,7 @@ func (this *NSDomainDAO) NotifyUpdate(tx *dbs.Tx, domainId int64) error {
 		return err
 	}
 	if clusterId > 0 {
-		return models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, models.NSNodeTaskTypeDomainChanged)
+		return models.SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, models.NSNodeTaskTypeDomainChanged)
 	}
 
 	return nil

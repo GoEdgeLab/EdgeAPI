@@ -1924,3 +1924,29 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 		},
 	}, nil
 }
+
+// ComposeServerConfig 获取服务配置
+func (this *ServerService) ComposeServerConfig(ctx context.Context, req *pb.ComposeServerConfigRequest) (*pb.ComposeServerConfigResponse, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	serverConfig, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, true)
+	if err != nil {
+		if err == models.ErrNotFound {
+			return &pb.ComposeServerConfigResponse{ServerConfigJSON: nil}, nil
+		}
+		return nil, err
+	}
+	if serverConfig == nil {
+		return &pb.ComposeServerConfigResponse{ServerConfigJSON: nil}, nil
+	}
+
+	configJSON, err := json.Marshal(serverConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ComposeServerConfigResponse{ServerConfigJSON: configJSON}, nil
+}
