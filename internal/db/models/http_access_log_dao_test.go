@@ -53,7 +53,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "", 10, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0, false, 0, "", "", "")
+	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "", 10, timeutil.Format("Ymd"), 0, 0, 0, false, false, 0, 0, 0, false, 0, "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page(t *testing.T) {
 	times := 0 // 防止循环次数太多
 	for {
 		before := time.Now()
-		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd"), 0, false, false, 0, 0, 0, false, 0, "", "", "")
+		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd"), 0, 0, 0, false, false, 0, 0, 0, false, 0, "", "", "")
 		cost := time.Since(before).Seconds()
 		if err != nil {
 			t.Fatal(err)
@@ -111,7 +111,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Reverse(t *testing.T) {
 	}
 
 	before := time.Now()
-	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "16023261176446590001000000000000003500000004", 2, timeutil.Format("Ymd"), 0, true, false, 0, 0, 0, false, 0, "", "", "")
+	accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, "16023261176446590001000000000000003500000004", 2, timeutil.Format("Ymd"), 0, 0, 0, true, false, 0, 0, 0, false, 0, "", "", "")
 	cost := time.Since(before).Seconds()
 	if err != nil {
 		t.Fatal(err)
@@ -136,7 +136,7 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page_NotExists(t *testing.T) {
 	times := 0 // 防止循环次数太多
 	for {
 		before := time.Now()
-		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd", time.Now().AddDate(0, 0, 1)), 0, false, false, 0, 0, 0, false, 0, "", "", "")
+		accessLogs, requestId, hasMore, err := SharedHTTPAccessLogDAO.ListAccessLogs(tx, lastRequestId, 2, timeutil.Format("Ymd", time.Now().AddDate(0, 0, 1)), 0, 0, 0, false, false, 0, 0, 0, false, 0, "", "", "")
 		cost := time.Since(before).Seconds()
 		if err != nil {
 			t.Fatal(err)

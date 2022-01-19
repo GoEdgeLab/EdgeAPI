@@ -189,7 +189,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 
 	tx := this.NullTx()
 
-	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, req.ApiNodeId)
+	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, req.ApiNodeId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (this *APINodeService) FindCurrentAPINode(ctx context.Context, req *pb.Find
 
 	var nodeId = teaconst.NodeId
 	var tx *dbs.Tx
-	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, nodeId)
+	node, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, nodeId, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -294,4 +294,15 @@ func (this *APINodeService) CountAllEnabledAPINodesWithSSLCertId(ctx context.Con
 		return nil, err
 	}
 	return this.SuccessCount(count)
+}
+
+// DebugAPINode 修改调试模式状态
+func (this *APINodeService) DebugAPINode(ctx context.Context, req *pb.DebugAPINodeRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	teaconst.Debug = req.Debug
+	return this.Success()
 }

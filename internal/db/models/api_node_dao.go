@@ -62,7 +62,15 @@ func (this *APINodeDAO) DisableAPINode(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledAPINode 查找启用中的条目
-func (this *APINodeDAO) FindEnabledAPINode(tx *dbs.Tx, id int64) (*APINode, error) {
+func (this *APINodeDAO) FindEnabledAPINode(tx *dbs.Tx, id int64, cacheMap *utils.CacheMap) (*APINode, error) {
+	var cacheKey = this.Table + ":FindEnabledAPINode:" + types.String(id)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*APINode), nil
+		}
+	}
+
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", APINodeStateEnabled).
@@ -70,6 +78,11 @@ func (this *APINodeDAO) FindEnabledAPINode(tx *dbs.Tx, id int64) (*APINode, erro
 	if result == nil {
 		return nil, err
 	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
 	return result.(*APINode), err
 }
 

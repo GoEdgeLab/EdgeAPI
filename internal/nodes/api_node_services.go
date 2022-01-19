@@ -64,6 +64,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		instance := this.serviceInstance(&services.APIMethodStatService{}).(*services.APIMethodStatService)
+		pb.RegisterAPIMethodStatServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		instance := this.serviceInstance(&services.OriginService{}).(*services.OriginService)
 		pb.RegisterOriginServiceServer(server, instance)
 		this.rest(instance)

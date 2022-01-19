@@ -1,5 +1,6 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
-// +build community
+//go:build !plus
+// +build !plus
 
 package nodes
 

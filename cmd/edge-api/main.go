@@ -83,6 +83,20 @@ func main() {
 			}
 		}
 	})
+	app.On("debug", func() {
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "debug"})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			var isDebug = maps.NewMap(reply.Params).GetBool("debug")
+			if isDebug {
+				fmt.Println("debug on")
+			} else {
+				fmt.Println("debug off")
+			}
+		}
+	})
 	app.Run(func() {
 		nodes.NewAPINode().Start()
 	})

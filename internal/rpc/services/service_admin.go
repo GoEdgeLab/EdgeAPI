@@ -477,7 +477,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	var tx = this.NullTx()
 
 	// 默认集群
+	this.BeginTag(ctx, "SharedNodeClusterDAO.ListEnabledClusters")
 	nodeClusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, "", 0, 1)
+	this.EndTag(ctx, "SharedNodeClusterDAO.ListEnabledClusters")
 	if err != nil {
 		return nil, err
 	}
@@ -486,84 +488,108 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 集群数
+	this.BeginTag(ctx, "SharedNodeClusterDAO.CountAllEnabledClusters")
 	countClusters, err := models.SharedNodeClusterDAO.CountAllEnabledClusters(tx, "")
+	this.EndTag(ctx, "SharedNodeClusterDAO.CountAllEnabledClusters")
 	if err != nil {
 		return nil, err
 	}
 	result.CountNodeClusters = countClusters
 
 	// 节点数
+	this.BeginTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
 	countNodes, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
+	this.EndTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountNodes = countNodes
 
 	// 离线节点
+	this.BeginTag(ctx, "SharedNodeDAO.CountAllEnabledOfflineNodes")
 	countOfflineNodes, err := models.SharedNodeDAO.CountAllEnabledOfflineNodes(tx)
+	this.EndTag(ctx, "SharedNodeDAO.CountAllEnabledOfflineNodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountOfflineNodes = countOfflineNodes
 
 	// 服务数
+	this.BeginTag(ctx, "SharedServerDAO.CountAllEnabledServers")
 	countServers, err := models.SharedServerDAO.CountAllEnabledServers(tx)
+	this.EndTag(ctx, "SharedServerDAO.CountAllEnabledServers")
 	if err != nil {
 		return nil, err
 	}
 	result.CountServers = countServers
 
+	this.BeginTag(ctx, "SharedServerDAO.CountAllEnabledServersMatch")
 	countAuditingServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", 0, 0, configutils.BoolStateYes, nil)
+	this.EndTag(ctx, "SharedServerDAO.CountAllEnabledServersMatch")
 	if err != nil {
 		return nil, err
 	}
 	result.CountAuditingServers = countAuditingServers
 
 	// 用户数
+	this.BeginTag(ctx, "SharedUserDAO.CountAllEnabledUsers")
 	countUsers, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, "", false)
+	this.EndTag(ctx, "SharedUserDAO.CountAllEnabledUsers")
 	if err != nil {
 		return nil, err
 	}
 	result.CountUsers = countUsers
 
 	// API节点数
+	this.BeginTag(ctx, "SharedAPINodeDAO.CountAllEnabledAndOnAPINodes")
 	countAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAndOnAPINodes(tx)
+	this.EndTag(ctx, "SharedAPINodeDAO.CountAllEnabledAndOnAPINodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountAPINodes = countAPINodes
 
 	// 离线API节点
+	this.BeginTag(ctx, "SharedAPINodeDAO.CountAllEnabledAndOnOfflineAPINodes")
 	countOfflineAPINodes, err := models.SharedAPINodeDAO.CountAllEnabledAndOnOfflineAPINodes(tx)
+	this.EndTag(ctx, "SharedAPINodeDAO.CountAllEnabledAndOnOfflineAPINodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountOfflineAPINodes = countOfflineAPINodes
 
 	// 数据库节点数
+	this.BeginTag(ctx, "SharedDBNodeDAO.CountAllEnabledNodes")
 	countDBNodes, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
+	this.EndTag(ctx, "SharedDBNodeDAO.CountAllEnabledNodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountDBNodes = countDBNodes
 
 	// 用户节点数
+	this.BeginTag(ctx, "SharedUserNodeDAO.CountAllEnabledAndOnUserNodes")
 	countUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledAndOnUserNodes(tx)
+	this.EndTag(ctx, "SharedUserNodeDAO.CountAllEnabledAndOnUserNodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountUserNodes = countUserNodes
 
 	// 离线用户节点数
+	this.BeginTag(ctx, "SharedUserNodeDAO.CountAllEnabledAndOnOfflineNodes")
 	countOfflineUserNodes, err := models.SharedUserNodeDAO.CountAllEnabledAndOnOfflineNodes(tx)
+	this.EndTag(ctx, "SharedUserNodeDAO.CountAllEnabledAndOnOfflineNodes")
 	if err != nil {
 		return nil, err
 	}
 	result.CountOfflineUserNodes = countOfflineUserNodes
 
 	// 按日流量统计
+	this.BeginTag(ctx, "SharedTrafficDailyStatDAO.FindDailyStats")
 	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
 	dailyTrafficStats, err := stats.SharedTrafficDailyStatDAO.FindDailyStats(tx, dayFrom, timeutil.Format("Ymd"))
+	this.EndTag(ctx, "SharedTrafficDailyStatDAO.FindDailyStats")
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +608,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	// 小时流量统计
 	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
 	hourTo := timeutil.Format("YmdH")
+	this.BeginTag(ctx, "SharedTrafficHourlyStatDAO.FindHourlyStats")
 	hourlyTrafficStats, err := stats.SharedTrafficHourlyStatDAO.FindHourlyStats(tx, hourFrom, hourTo)
+	this.EndTag(ctx, "SharedTrafficHourlyStatDAO.FindHourlyStats")
 	if err != nil {
 		return nil, err
 	}
@@ -609,7 +637,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.NodeVersion,
 		}
+		this.BeginTag(ctx, "SharedNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -622,7 +652,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.MonitorNodeVersion,
 		}
+		this.BeginTag(ctx, "SharedMonitorNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedMonitorNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedMonitorNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -635,7 +667,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.AuthorityNodeVersion,
 		}
+		this.BeginTag(ctx, "SharedAuthorityNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := authority.SharedAuthorityNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedAuthorityNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -648,7 +682,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.UserNodeVersion,
 		}
+		this.BeginTag(ctx, "SharedUserNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedUserNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedUserNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -665,7 +701,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: apiVersion,
 		}
+		this.BeginTag(ctx, "SharedAPINodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedAPINodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedAPINodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -678,7 +716,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.DNSNodeVersion,
 		}
+		this.BeginTag(ctx, "SharedNSNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedNSNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedNSNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -691,7 +731,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
 			NewVersion: teaconst.ReportNodeVersion,
 		}
+		this.BeginTag(ctx, "SharedReportNodeDAO.CountAllLowerVersionNodes")
 		countNodes, err := models.SharedReportNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
+		this.EndTag(ctx, "SharedReportNodeDAO.CountAllLowerVersionNodes")
 		if err != nil {
 			return nil, err
 		}
@@ -700,7 +742,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 域名排行
+	this.BeginTag(ctx, "SharedServerDomainHourlyStatDAO.FindTopDomainStats")
 	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)
+	this.EndTag(ctx, "SharedServerDomainHourlyStatDAO.FindTopDomainStats")
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +759,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 节点排行
 	if isPlus {
+		this.BeginTag(ctx, "SharedNodeTrafficHourlyStatDAO.FindTopNodeStats")
 		topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo, 10)
+		this.EndTag(ctx, "SharedNodeTrafficHourlyStatDAO.FindTopNodeStats")
 		if err != nil {
 			return nil, err
 		}
@@ -738,7 +784,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 地区流量排行
 	if isPlus {
+		this.BeginTag(ctx, "SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes")
 		totalCountryBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes(tx, timeutil.Format("Ymd"))
+		this.EndTag(ctx, "SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes")
 		if err != nil {
 			return nil, err
 		}
@@ -767,7 +815,9 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 指标数据
+	this.BeginTag(ctx, "findMetricDataCharts")
 	pbCharts, err := this.findMetricDataCharts(tx)
+	this.EndTag(ctx, "findMetricDataCharts")
 	if err != nil {
 		return nil, err
 	}

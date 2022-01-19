@@ -1,6 +1,7 @@
 package nodes
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/go-yaml/yaml"
@@ -214,10 +216,10 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	var rpcServer *grpc.Server
 	if tlsConfig == nil {
 		remotelogs.Println("API_NODE", "listening GRPC http://"+listener.Addr().String()+" ...")
-		rpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(128 * 1024 * 1024))
+		rpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(128*1024*1024), grpc.UnaryInterceptor(this.unaryInterceptor))
 	} else {
 		logs.Println("[API_NODE]listening GRPC https://" + listener.Addr().String() + " ...")
-		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)), grpc.MaxRecvMsgSize(128*1024*1024))
+		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)), grpc.MaxRecvMsgSize(128*1024*1024), grpc.UnaryInterceptor(this.unaryInterceptor))
 	}
 	this.registerServices(rpcServer)
 	err := rpcServer.Serve(listener)
@@ -572,6 +574,11 @@ func (this *APINode) listenSock() error {
 						"result": result,
 					},
 				})
+			case "debug":
+				teaconst.Debug = !teaconst.Debug
+				_ = cmd.Reply(&gosock.Command{
+					Params: map[string]interface{}{"debug": teaconst.Debug},
+				})
 			}
 		})
 
@@ -587,4 +594,30 @@ func (this *APINode) listenSock() error {
 	})
 
 	return nil
+}
+
+// 服务过滤器
+func (this *APINode) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	if teaconst.Debug {
+		var before = time.Now()
+		var traceCtx = rpc.NewContext(ctx)
+		resp, err = handler(traceCtx, req)
+
+		var costMs = time.Since(before).Seconds() * 1000
+		statErr := models.SharedAPIMethodStatDAO.CreateStat(nil, info.FullMethod, "", costMs)
+		if statErr != nil {
+			remotelogs.Error("API_NODE", "create method stat failed: "+statErr.Error())
+		}
+
+		var tagMap = traceCtx.TagMap()
+		for tag, tagCostMs := range tagMap {
+			statErr = models.SharedAPIMethodStatDAO.CreateStat(nil, info.FullMethod, tag, tagCostMs)
+			if statErr != nil {
+				remotelogs.Error("API_NODE", "create method stat failed: "+statErr.Error())
+			}
+		}
+
+		return
+	}
+	return handler(ctx, req)
 }

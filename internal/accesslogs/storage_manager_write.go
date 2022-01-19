@@ -1,7 +1,7 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 
-//go:build community
-// +build community
+//go:build !plus
+// +build !plus
 
 package accesslogs
 

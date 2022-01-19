@@ -275,7 +275,7 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId
 		return nil, err
 	}
 	for _, apiNodeId := range apiNodeIds {
-		apiNode, err := SharedAPINodeDAO.FindEnabledAPINode(tx, apiNodeId)
+		apiNode, err := SharedAPINodeDAO.FindEnabledAPINode(tx, apiNodeId, nil)
 		if err != nil {
 			return nil, err
 		}

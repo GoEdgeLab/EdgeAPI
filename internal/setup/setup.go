@@ -167,7 +167,7 @@ func (this *Setup) Run() error {
 		apiNodeId = nodeId
 	}
 
-	apiNode, err := dao.FindEnabledAPINode(nil, apiNodeId)
+	apiNode, err := dao.FindEnabledAPINode(nil, apiNodeId, nil)
 	if err != nil {
 		return err
 	}

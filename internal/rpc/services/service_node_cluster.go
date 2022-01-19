@@ -197,7 +197,7 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 		if len(apiNodeIds) > 0 {
 			apiNodes := []*pb.APINode{}
 			for _, apiNodeId := range apiNodeIds {
-				apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, apiNodeId)
+				apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINode(tx, apiNodeId, nil)
 				if err != nil {
 					return nil, err
 				}

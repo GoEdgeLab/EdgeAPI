@@ -6,4 +6,5 @@ var (
 	IsPlus         = false
 	MaxNodes int32 = 0
 	NodeId   int64 = 0
+	Debug          = false
 )

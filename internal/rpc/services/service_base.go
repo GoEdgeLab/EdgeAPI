@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -235,4 +236,26 @@ func (this *BaseService) RunTx(callback func(tx *dbs.Tx) error) error {
 		return err
 	}
 	return db.RunTx(callback)
+}
+
+// BeginTag 开始标签统计
+func (this *BaseService) BeginTag(ctx context.Context, name string) {
+	if !teaconst.Debug {
+		return
+	}
+	traceCtx, ok := ctx.(*rpc.Context)
+	if ok {
+		traceCtx.Begin(name)
+	}
+}
+
+// EndTag 结束标签统计
+func (this *BaseService) EndTag(ctx context.Context, name string) {
+	if !teaconst.Debug {
+		return
+	}
+	traceCtx, ok := ctx.(*rpc.Context)
+	if ok {
+		traceCtx.End(name)
+	}
 }
