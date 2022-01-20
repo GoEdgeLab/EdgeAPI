@@ -25,7 +25,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedServerDomainHourlyStatDAO.Clean(nil, 7) // 只保留7天
+				err := SharedServerDomainHourlyStatDAO.Clean(nil, 7) // 只保留 N 天
 				if err != nil {
 					remotelogs.Error("ServerDomainHourlyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -374,7 +374,9 @@ func (this *ServerDomainHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
 			Table(table).
 			Lt("hour", hour).
 			Delete()
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
