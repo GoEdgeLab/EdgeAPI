@@ -182,6 +182,12 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 		}
 	}
 
+	// 默认计费方式
+	userFinanceConfig, err := SharedSysSettingDAO.ReadUserFinanceConfig(tx)
+	if err != nil {
+		return err
+	}
+
 	// 计算服务套餐费用
 	plans, err := SharedPlanDAO.FindAllEnabledPlans(tx)
 	if err != nil {
@@ -212,52 +218,103 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 
 		userIds = append(userIds, userId)
 		if userPlanId == 0 {
-			var fee float64
-			for _, region := range regions {
-				var regionId = int64(region.Id)
-				var pricesMap = region.DecodePriceMap()
-				if len(pricesMap) == 0 {
-					continue
-				}
-
-				trafficBytes, err := SharedServerDailyStatDAO.SumServerMonthlyWithRegion(tx, serverId, regionId, month)
-				if err != nil {
-					return err
-				}
-				if trafficBytes == 0 {
-					continue
-				}
-				var itemId = SharedNodePriceItemDAO.SearchItemsWithBytes(priceItems, trafficBytes)
-				if itemId == 0 {
-					continue
-				}
-				price, ok := pricesMap[itemId]
-				if !ok {
-					continue
-				}
-				if price <= 0 {
-					continue
-				}
-				var regionFee = float64(trafficBytes) / 1000 / 1000 / 1000 * 8 * price
-				fee += regionFee
-			}
-
 			// 总流量
 			totalTrafficBytes, err := SharedServerDailyStatDAO.SumMonthlyBytes(tx, serverId, month)
 			if err != nil {
 				return err
 			}
 
-			// 百分位
-			var percentile = 95
-			percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
-			if err != nil {
-				return err
-			}
+			// 默认计费方式
+			if userFinanceConfig != nil && userFinanceConfig.IsOn { // 默认计费方式
+				switch userFinanceConfig.PriceType {
+				case serverconfigs.PlanPriceTypeTraffic:
+					var config = userFinanceConfig.TrafficPriceConfig
+					var fee float64 = 0
+					if config != nil && config.Base > 0 {
+						fee = float64(totalTrafficBytes) / 1024 / 1024 / 1024 * float64(config.Base)
+					}
 
-			err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, userId, serverId, month, userPlanId, 0, totalTrafficBytes, percentileBytes, percentile, fee)
-			if err != nil {
-				return err
+					// 百分位
+					var percentile = 95
+					percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+					if err != nil {
+						return err
+					}
+
+					err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, userId, serverId, month, userPlanId, 0, totalTrafficBytes, percentileBytes, percentile, userFinanceConfig.PriceType, fee)
+					if err != nil {
+						return err
+					}
+				case serverconfigs.PlanPriceTypeBandwidth:
+					// 百分位
+					var percentile = 95
+					var config = userFinanceConfig.BandwidthPriceConfig
+					if config != nil {
+						percentile = config.Percentile
+						if percentile <= 0 {
+							percentile = 95
+						} else if percentile > 100 {
+							percentile = 100
+						}
+					}
+					percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+					if err != nil {
+						return err
+					}
+					var mb = float32(percentileBytes) / 1024 / 1024
+					var price float32
+					if config != nil {
+						price = config.LookupPrice(mb)
+					}
+					var fee = float64(price)
+					err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, userId, serverId, month, userPlanId, 0, totalTrafficBytes, percentileBytes, percentile, userFinanceConfig.PriceType, fee)
+					if err != nil {
+						return err
+					}
+				}
+			} else { // 区域流量计费
+				var fee float64
+
+				for _, region := range regions {
+					var regionId = int64(region.Id)
+					var pricesMap = region.DecodePriceMap()
+					if len(pricesMap) == 0 {
+						continue
+					}
+
+					trafficBytes, err := SharedServerDailyStatDAO.SumServerMonthlyWithRegion(tx, serverId, regionId, month)
+					if err != nil {
+						return err
+					}
+					if trafficBytes == 0 {
+						continue
+					}
+					var itemId = SharedNodePriceItemDAO.SearchItemsWithBytes(priceItems, trafficBytes)
+					if itemId == 0 {
+						continue
+					}
+					price, ok := pricesMap[itemId]
+					if !ok {
+						continue
+					}
+					if price <= 0 {
+						continue
+					}
+					var regionFee = float64(trafficBytes) / 1000 / 1000 / 1000 * 8 * price
+					fee += regionFee
+				}
+
+				// 百分位
+				var percentile = 95
+				percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+				if err != nil {
+					return err
+				}
+
+				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, userId, serverId, month, userPlanId, 0, totalTrafficBytes, percentileBytes, percentile, "", fee)
+				if err != nil {
+					return err
+				}
 			}
 		} else {
 			userPlan, err := SharedUserPlanDAO.FindUserPlanWithoutState(tx, userPlanId, cacheMap)
@@ -291,7 +348,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 					return err
 				}
 
-				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, fee)
+				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, plan.PriceType, fee)
 				if err != nil {
 					return err
 				}
@@ -309,7 +366,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 					return err
 				}
 
-				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, fee)
+				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, plan.PriceType, fee)
 				if err != nil {
 					return err
 				}
@@ -335,7 +392,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 					price = config.LookupPrice(mb)
 				}
 				var fee = float64(price)
-				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, fee)
+				err = SharedServerBillDAO.CreateOrUpdateServerBill(tx, int64(userPlan.UserId), serverId, month, userPlanId, int64(userPlan.PlanId), totalTrafficBytes, percentileBytes, percentile, plan.PriceType, fee)
 				if err != nil {
 					return err
 				}

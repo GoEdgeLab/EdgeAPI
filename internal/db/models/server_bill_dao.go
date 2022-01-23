@@ -31,13 +31,24 @@ func init() {
 }
 
 // CreateOrUpdateServerBill 创建账单
-func (this *ServerBillDAO) CreateOrUpdateServerBill(tx *dbs.Tx, userId int64, serverId int64, month string, userPlanId int64, planId int64, totalTrafficBytes int64, bandwidthPercentileBytes int64, bandwidthPercentile int, fee float64) error {
+func (this *ServerBillDAO) CreateOrUpdateServerBill(tx *dbs.Tx,
+	userId int64,
+	serverId int64,
+	month string,
+	userPlanId int64,
+	planId int64,
+	totalTrafficBytes int64,
+	bandwidthPercentileBytes int64,
+	bandwidthPercentile int,
+	priceType string,
+	fee float64) error {
 	fee = math.Floor(fee*100) / 100
 	return this.Query(tx).
 		InsertOrUpdateQuickly(maps.Map{
 			"userId":                   userId,
 			"serverId":                 serverId,
 			"month":                    month,
+			"priceType":                priceType,
 			"amount":                   fee,
 			"userPlanId":               userPlanId,
 			"planId":                   planId,
@@ -47,6 +58,7 @@ func (this *ServerBillDAO) CreateOrUpdateServerBill(tx *dbs.Tx, userId int64, se
 			"createdAt":                time.Now().Unix(),
 		}, maps.Map{
 			"userId":                   userId,
+			"priceType":                priceType,
 			"amount":                   fee,
 			"userPlanId":               userPlanId,
 			"planId":                   planId,

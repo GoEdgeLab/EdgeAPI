@@ -12,7 +12,7 @@ func TestServerBillDAO_CreateOrUpdateServerBill(t *testing.T) {
 	var dao = NewServerBillDAO()
 	var tx *dbs.Tx
 	var month = timeutil.Format("Y02")
-	err := dao.CreateOrUpdateServerBill(tx, 1, 2, month, 4, 5, 6, 7, 95, 100)
+	err := dao.CreateOrUpdateServerBill(tx, 1, 2, month, 4, 5, 6, 7, 95, "", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

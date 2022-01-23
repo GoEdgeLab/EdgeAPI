@@ -13,6 +13,7 @@ type ServerBill struct {
 	TotalTrafficBytes        uint64  `field:"totalTrafficBytes"`        // 总流量
 	BandwidthPercentileBytes uint64  `field:"bandwidthPercentileBytes"` // 带宽百分位字节
 	BandwidthPercentile      uint8   `field:"bandwidthPercentile"`      // 带宽百分位
+	PriceType                string  `field:"priceType"`                // 计费类型
 }
 
 type ServerBillOperator struct {
@@ -27,6 +28,7 @@ type ServerBillOperator struct {
 	TotalTrafficBytes        interface{} // 总流量
 	BandwidthPercentileBytes interface{} // 带宽百分位字节
 	BandwidthPercentile      interface{} // 带宽百分位
+	PriceType                interface{} // 计费类型
 }
 
 func NewServerBillOperator() *ServerBillOperator {

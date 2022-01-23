@@ -114,6 +114,7 @@ func (this *ServerBillService) ListServerBills(ctx context.Context, req *pb.List
 			UserId:                   int64(bill.UserId),
 			ServerId:                 int64(bill.ServerId),
 			Amount:                   float32(bill.Amount),
+			PriceType:                bill.PriceType,
 			CreatedAt:                int64(bill.CreatedAt),
 			UserPlanId:               int64(bill.UserPlanId),
 			PlanId:                   int64(bill.PlanId),
