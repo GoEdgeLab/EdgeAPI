@@ -406,7 +406,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 
 	// 本月总流量
 	month := timeutil.Format("Ym")
-	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, 0, month)
+	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, month)
 	if err != nil {
 		return nil, err
 	}

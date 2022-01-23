@@ -95,6 +95,18 @@ func (this *UserDAO) FindEnabledBasicUser(tx *dbs.Tx, id int64) (*User, error) {
 	return result.(*User), err
 }
 
+// FindBasicUserWithoutState 查找用户基本信息，并忽略状态
+func (this *UserDAO) FindBasicUserWithoutState(tx *dbs.Tx, id int64) (*User, error) {
+	result, err := this.Query(tx).
+		Pk(id).
+		Result("id", "fullname", "username").
+		Find()
+	if result == nil {
+		return nil, err
+	}
+	return result.(*User), err
+}
+
 // FindUserFullname 获取管理员名称
 func (this *UserDAO) FindUserFullname(tx *dbs.Tx, userId int64) (string, error) {
 	return this.Query(tx).

@@ -74,7 +74,7 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 	}
 	result := []*pb.UserBill{}
 	for _, bill := range bills {
-		user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, int64(bill.UserId))
+		user, err := models.SharedUserDAO.FindBasicUserWithoutState(tx, int64(bill.UserId))
 		if err != nil {
 			return nil, err
 		}
@@ -85,15 +85,17 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 		result = append(result, &pb.UserBill{
 			Id: int64(bill.Id),
 			User: &pb.User{
-				Id:       int64(bill.UserId),
-				Fullname: user.Fullname,
-				Username: user.Username,
+				Id:        int64(bill.UserId),
+				Fullname:  user.Fullname,
+				Username:  user.Username,
+				IsDeleted: user.State == models.UserStateDisabled,
 			},
 			Type:        bill.Type,
 			TypeName:    models.SharedUserBillDAO.BillTypeName(bill.Type),
 			Description: bill.Description,
 			Amount:      float32(bill.Amount),
 			Month:       bill.Month,
+			CanPay:      bill.CanPay == 1,
 			IsPaid:      bill.IsPaid == 1,
 			PaidAt:      int64(bill.PaidAt),
 			Code:        bill.Code,
@@ -151,6 +153,7 @@ func (this *UserBillService) FindUserBill(ctx context.Context, req *pb.FindUserB
 			Description: bill.Description,
 			Amount:      float32(bill.Amount),
 			Month:       bill.Month,
+			CanPay:      bill.CanPay == 1,
 			IsPaid:      bill.IsPaid == 1,
 			PaidAt:      int64(bill.PaidAt),
 			Code:        bill.Code,
@@ -192,6 +195,10 @@ func (this *UserBillService) PayUserBill(ctx context.Context, req *pb.PayUserBil
 		if bill.Amount <= 0 {
 			// 直接修改为已支付
 			return models.SharedUserBillDAO.UpdateUserBillIsPaid(tx, req.UserBillId, true)
+		}
+
+		if bill.CanPay == 0 {
+			return errors.New("can not pay now")
 		}
 
 		// 余额是否足够

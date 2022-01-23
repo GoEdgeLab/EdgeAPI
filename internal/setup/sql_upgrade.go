@@ -65,6 +65,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.0", upgradeV0_4_0,
 	},
+	{
+		"0.4.1", upgradeV0_4_1,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -565,6 +568,17 @@ func upgradeV0_4_0(db *dbs.DB) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// v0.4.1
+func upgradeV0_4_1(db *dbs.DB) error {
+	// 升级 servers.lastUserPlanId
+	_, err := db.Exec("UPDATE edgeServers SET lastUserPlanId=userPlanId WHERE userPlanId>0")
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -12,7 +12,9 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"math"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -24,7 +26,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedServerDailyStatDAO.Clean(nil, 30) // 只保留N天
+				err := SharedServerDailyStatDAO.Clean(nil, 60) // 只保留 N 天，时间需要长一些，因为需要用来生成账单
 				if err != nil {
 					logs.Println("ServerDailyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -130,15 +132,15 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 	return nil
 }
 
-// SumUserMonthly 根据用户计算某月合计
+// SumServerMonthlyWithRegion 根据服务计算某月合计
 // month 格式为YYYYMM
-func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, regionId int64, month string) (int64, error) {
+func (this *ServerDailyStatDAO) SumServerMonthlyWithRegion(tx *dbs.Tx, serverId int64, regionId int64, month string) (int64, error) {
 	query := this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
 	return query.Between("day", month+"01", month+"32").
-		Attr("userId", userId).
+		Attr("serverId", serverId).
 		SumInt64("bytes", 0)
 }
 
@@ -154,16 +156,6 @@ func (this *ServerDailyStatDAO) SumUserMonthlyWithoutPlan(tx *dbs.Tx, userId int
 		Between("day", month+"01", month+"32").
 		Attr("userId", userId).
 		SumInt64("bytes", 0)
-}
-
-// SumUserMonthlyFee 计算用户某个月费用
-// month 格式为YYYYMM
-func (this *ServerDailyStatDAO) SumUserMonthlyFee(tx *dbs.Tx, userId int64, month string) (float64, error) {
-	return this.Query(tx).
-		Attr("userId", userId).
-		Between("day", month+"01", month+"32").
-		Gt("fee", 0).
-		Sum("fee", 0)
 }
 
 // SumUserMonthlyPeek 获取某月带宽峰值
@@ -191,6 +183,15 @@ func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId 
 	}
 	return query.
 		Attr("day", day).
+		Attr("userId", userId).
+		SumInt64("bytes", 0)
+}
+
+// SumUserMonthly 获取某月流量总和
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, month string) (int64, error) {
+	return this.Query(tx).
+		Between("day", month+"01", month+"31").
 		Attr("userId", userId).
 		SumInt64("bytes", 0)
 }
@@ -339,6 +340,59 @@ func (this *ServerDailyStatDAO) SumMonthlyStat(tx *dbs.Tx, serverId int64, month
 	return
 }
 
+// SumMonthlyBytes 获取某月内的流量
+// month 格式为YYYYMM
+func (this *ServerDailyStatDAO) SumMonthlyBytes(tx *dbs.Tx, serverId int64, month string) (result int64, err error) {
+	if !regexp.MustCompile(`^\d{6}$`).MatchString(month) {
+		return
+	}
+
+	return this.Query(tx).
+		Result("SUM(bytes) AS bytes").
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		FindInt64Col(0)
+}
+
+// FindMonthlyPercentile 获取某月内百分位
+func (this *ServerDailyStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int) (result int64, err error) {
+	if percentile <= 0 {
+		percentile = 95
+	}
+	if percentile > 100 {
+		percentile = 100
+	}
+
+	total, err := this.Query(tx).
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		Count()
+	if err != nil {
+		return 0, err
+	}
+	if total == 0 {
+		return 0, nil
+	}
+
+	var offset int64
+
+	if total > 1 {
+		offset = int64(math.Ceil(float64(total) * float64(100-percentile) / 100))
+	}
+	result, err = this.Query(tx).
+		Result("bytes").
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		Desc("bytes").
+		Offset(offset).
+		Limit(1).
+		FindInt64Col(0)
+
+	// 因为是5分钟统计，所以需要除以300
+	result = result / 300
+	return
+}
+
 // FindDailyStats 按天统计
 func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
@@ -426,6 +480,25 @@ func (this *ServerDailyStatDAO) FindTopUserStats(tx *dbs.Tx, hourFrom string, ho
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindDistinctServerIds 查找所有有流量的服务ID列表
+// dayFrom YYYYMMDD
+// dayTo YYYYMMDD
+func (this *ServerDailyStatDAO) FindDistinctServerIds(tx *dbs.Tx, dayFrom string, dayTo string) (serverIds []int64, err error) {
+	dayFrom = strings.ReplaceAll(dayFrom, "-", "")
+	dayTo = strings.ReplaceAll(dayTo, "-", "")
+	ones, _, err := this.Query(tx).
+		Result("DISTINCT(serverId) AS serverId").
+		Between("day", dayFrom, dayTo).
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		serverIds = append(serverIds, one.GetInt64("serverId"))
+	}
+	return serverIds, nil
 }
 
 // UpdateStatFee 设置费用

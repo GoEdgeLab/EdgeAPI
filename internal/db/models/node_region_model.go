@@ -1,6 +1,6 @@
 package models
 
-// 节点区域
+// NodeRegion 节点区域
 type NodeRegion struct {
 	Id          uint32 `field:"id"`          // ID
 	AdminId     uint32 `field:"adminId"`     // 管理员ID

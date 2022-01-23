@@ -80,7 +80,17 @@ func (this *PlanDAO) FindPlanName(tx *dbs.Tx, id int64) (string, error) {
 }
 
 // CreatePlan 创建套餐
-func (this *PlanDAO) CreatePlan(tx *dbs.Tx, name string, clusterId int64, trafficLimitJSON []byte, featuresJSON []byte, priceType serverconfigs.PlanPriceType, trafficPriceJSON []byte, monthlyPrice float32, seasonallyPrice float32, yearlyPrice float32) (int64, error) {
+func (this *PlanDAO) CreatePlan(tx *dbs.Tx,
+	name string,
+	clusterId int64,
+	trafficLimitJSON []byte,
+	featuresJSON []byte,
+	priceType serverconfigs.PlanPriceType,
+	trafficPriceJSON []byte,
+	bandwidthPriceJSON []byte,
+	monthlyPrice float32,
+	seasonallyPrice float32,
+	yearlyPrice float32) (int64, error) {
 	var op = NewPlanOperator()
 	op.Name = name
 	op.ClusterId = clusterId
@@ -93,6 +103,9 @@ func (this *PlanDAO) CreatePlan(tx *dbs.Tx, name string, clusterId int64, traffi
 	op.PriceType = priceType
 	if len(trafficPriceJSON) > 0 {
 		op.TrafficPrice = trafficPriceJSON
+	}
+	if len(bandwidthPriceJSON) > 0 {
+		op.BandwidthPrice = bandwidthPriceJSON
 	}
 	if monthlyPrice >= 0 {
 		op.MonthlyPrice = monthlyPrice
@@ -109,7 +122,19 @@ func (this *PlanDAO) CreatePlan(tx *dbs.Tx, name string, clusterId int64, traffi
 }
 
 // UpdatePlan 修改套餐
-func (this *PlanDAO) UpdatePlan(tx *dbs.Tx, planId int64, name string, isOn bool, clusterId int64, trafficLimitJSON []byte, featuresJSON []byte, priceType serverconfigs.PlanPriceType, trafficPriceJSON []byte, monthlyPrice float32, seasonallyPrice float32, yearlyPrice float32) error {
+func (this *PlanDAO) UpdatePlan(tx *dbs.Tx,
+	planId int64,
+	name string,
+	isOn bool,
+	clusterId int64,
+	trafficLimitJSON []byte,
+	featuresJSON []byte,
+	priceType serverconfigs.PlanPriceType,
+	trafficPriceJSON []byte,
+	bandwidthPriceJSON []byte,
+	monthlyPrice float32,
+	seasonallyPrice float32,
+	yearlyPrice float32) error {
 	if planId <= 0 {
 		return errors.New("invalid planId")
 	}
@@ -137,6 +162,9 @@ func (this *PlanDAO) UpdatePlan(tx *dbs.Tx, planId int64, name string, isOn bool
 	op.PriceType = priceType
 	if len(trafficPriceJSON) > 0 {
 		op.TrafficPrice = trafficPriceJSON
+	}
+	if len(bandwidthPriceJSON) > 0 {
+		op.BandwidthPrice = bandwidthPriceJSON
 	}
 	if monthlyPrice >= 0 {
 		op.MonthlyPrice = monthlyPrice

@@ -221,6 +221,7 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	op.DnsName = dnsName
 
 	op.UserPlanId = userPlanId
+	op.LastUserPlanId = userPlanId
 
 	op.Version = 1
 	op.IsOn = 1
@@ -2242,12 +2243,26 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 	err = this.Query(tx).
 		Pk(serverId).
 		Set("userPlanId", userPlanId).
+		Set("lastUserPlanId", userPlanId).
 		Set("clusterId", plan.ClusterId).
 		UpdateQuickly()
 	if err != nil {
 		return err
 	}
 	return this.NotifyUpdate(tx, serverId)
+}
+
+// FindServerLastUserPlanIdAndUserId 查找最后使用的套餐
+func (this *ServerDAO) FindServerLastUserPlanIdAndUserId(tx *dbs.Tx, serverId int64) (userPlanId int64, userId int64, err error) {
+	one, err := this.Query(tx).
+		Pk(serverId).
+		Result("lastUserPlanId", "userId").
+		Find()
+	if err != nil || one == nil {
+		return 0, 0, err
+	}
+
+	return int64(one.(*Server).LastUserPlanId), int64(one.(*Server).UserId), nil
 }
 
 // NotifyUpdate 同步集群

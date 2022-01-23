@@ -9,6 +9,7 @@ type Plan struct {
 	TrafficLimit    string  `field:"trafficLimit"`    // 流量限制
 	Features        string  `field:"features"`        // 允许的功能
 	TrafficPrice    string  `field:"trafficPrice"`    // 流量价格设定
+	BandwidthPrice  string  `field:"bandwidthPrice"`  // 带宽价格
 	MonthlyPrice    float64 `field:"monthlyPrice"`    // 月付
 	SeasonallyPrice float64 `field:"seasonallyPrice"` // 季付
 	YearlyPrice     float64 `field:"yearlyPrice"`     // 年付
@@ -25,6 +26,7 @@ type PlanOperator struct {
 	TrafficLimit    interface{} // 流量限制
 	Features        interface{} // 允许的功能
 	TrafficPrice    interface{} // 流量价格设定
+	BandwidthPrice  interface{} // 带宽价格
 	MonthlyPrice    interface{} // 月付
 	SeasonallyPrice interface{} // 季付
 	YearlyPrice     interface{} // 年付

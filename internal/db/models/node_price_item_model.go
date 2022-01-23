@@ -1,6 +1,6 @@
 package models
 
-// 区域计费设置
+// NodePriceItem 区域计费设置
 type NodePriceItem struct {
 	Id        uint32 `field:"id"`        // ID
 	IsOn      uint8  `field:"isOn"`      // 是否启用

@@ -7,7 +7,10 @@ type UserBill struct {
 	Type        string  `field:"type"`        // 消费类型
 	Description string  `field:"description"` // 描述
 	Amount      float64 `field:"amount"`      // 消费数额
+	DayFrom     string  `field:"dayFrom"`     // YYYYMMDD
+	DayTo       string  `field:"dayTo"`       // YYYYMMDD
 	Month       string  `field:"month"`       // 帐期YYYYMM
+	CanPay      uint8   `field:"canPay"`      // 是否可以支付
 	IsPaid      uint8   `field:"isPaid"`      // 是否已支付
 	PaidAt      uint64  `field:"paidAt"`      // 支付时间
 	Code        string  `field:"code"`        // 账单编号
@@ -20,7 +23,10 @@ type UserBillOperator struct {
 	Type        interface{} // 消费类型
 	Description interface{} // 描述
 	Amount      interface{} // 消费数额
+	DayFrom     interface{} // YYYYMMDD
+	DayTo       interface{} // YYYYMMDD
 	Month       interface{} // 帐期YYYYMM
+	CanPay      interface{} // 是否可以支付
 	IsPaid      interface{} // 是否已支付
 	PaidAt      interface{} // 支付时间
 	Code        interface{} // 账单编号

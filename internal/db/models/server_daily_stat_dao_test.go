@@ -46,7 +46,7 @@ func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
 func TestServerDailyStatDAO_SumUserMonthly(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	bytes, err := NewServerDailyStatDAO().SumUserMonthly(tx, 1, 1, timeutil.Format("Ym"))
+	bytes, err := NewServerDailyStatDAO().SumUserMonthly(tx, 1, timeutil.Format("Ym"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,9 +68,28 @@ func TestServerDailyStatDAO_SumMinutelyRequests(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
 
-	stat, err := NewServerDailyStatDAO().SumMinutelyStat(tx, 23, timeutil.Format("Ymd") + "1435")
+	stat, err := NewServerDailyStatDAO().SumMinutelyStat(tx, 23, timeutil.Format("Ymd")+"1435")
 	if err != nil {
 		t.Fatal(err)
 	}
 	logs.PrintAsJSON(stat, t)
+}
+
+func TestServerDailyStatDAO_FindDistinctPlanServerIdsBetweenDay(t *testing.T) {
+	var tx *dbs.Tx
+	serverIds, err := NewServerDailyStatDAO().FindDistinctServerIds(tx, timeutil.Format("Ym01"), timeutil.Format("Ymd"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(serverIds)
+}
+
+func TestServerDailyStatDAO_FindMonthlyPercentile(t *testing.T) {
+	var tx *dbs.Tx
+	var dao = NewServerDailyStatDAO()
+	result, err := dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("result:", result)
 }

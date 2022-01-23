@@ -85,6 +85,31 @@ func (this *UserPlanDAO) FindEnabledUserPlan(tx *dbs.Tx, userPlanId int64, cache
 	return result.(*UserPlan), err
 }
 
+// FindUserPlanWithoutState 查找套餐，并不检查状态
+// 防止因为删除套餐而导致计费失败
+func (this *UserPlanDAO) FindUserPlanWithoutState(tx *dbs.Tx, userPlanId int64, cacheMap *utils.CacheMap) (*UserPlan, error) {
+	var cacheKey = this.Table + ":FindUserPlanWithoutState:" + types.String(userPlanId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*UserPlan), nil
+		}
+	}
+
+	result, err := this.Query(tx).
+		Pk(userPlanId).
+		Find()
+	if result == nil {
+		return nil, err
+	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
+	return result.(*UserPlan), err
+}
+
 // CountAllEnabledUserPlans 计算套餐数量
 func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32) (int64, error) {
 	var query = this.Query(tx).

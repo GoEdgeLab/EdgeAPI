@@ -43,6 +43,7 @@ type Server struct {
 	TrafficLimitStatus  string  `field:"trafficLimitStatus"`  // 流量限制状态
 	TotalTraffic        float64 `field:"totalTraffic"`        // 总流量
 	UserPlanId          uint32  `field:"userPlanId"`          // 所属套餐ID
+	LastUserPlanId      uint32  `field:"lastUserPlanId"`      // 上一次使用的套餐
 }
 
 type ServerOperator struct {
@@ -87,6 +88,7 @@ type ServerOperator struct {
 	TrafficLimitStatus  interface{} // 流量限制状态
 	TotalTraffic        interface{} // 总流量
 	UserPlanId          interface{} // 所属套餐ID
+	LastUserPlanId      interface{} // 上一次使用的套餐
 }
 
 func NewServerOperator() *ServerOperator {
