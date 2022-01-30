@@ -291,6 +291,16 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword s
 
 // ListIPItemsAfterVersion 根据版本号查找IP列表
 func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
+	// 删除很早之前过期的
+	_, err = this.Query(tx).
+		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
+		State(IPItemStateDisabled).
+		Param("timestamp", time.Now().Unix()-7*86400). // N 天之前过期的
+		Delete()
+	if err != nil {
+		return nil, err
+	}
+
 	// 将过期的设置为已删除，这样是为了在 expiredAt<UNIX_TIMESTAMP()边缘节点让过期的IP有一个执行删除的机会
 	ones, _, err := this.Query(tx).
 		ResultPk().
