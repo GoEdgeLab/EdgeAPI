@@ -117,15 +117,16 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 
 	// 新增表格
 	for _, newTable := range newResult.Tables {
-		oldTable := currentResult.FindTable(newTable.Name)
+		var oldTable = currentResult.FindTable(newTable.Name)
 		if oldTable == nil {
-			ops = append(ops, "+ table "+newTable.Name)
+			var op = "+ table " + newTable.Name
+			ops = append(ops, op)
 			if showLog {
-				fmt.Println("+ table " + newTable.Name)
+				fmt.Println(op)
 			}
 			_, err = db.Exec(newTable.Definition)
 			if err != nil {
-				return nil, err
+				return nil, errors.New("'" + op + "' failed: " + err.Error())
 			}
 		} else if oldTable.Definition != newTable.Definition {
 			// 对比字段
@@ -133,22 +134,24 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 			for _, newField := range newTable.Fields {
 				oldField := oldTable.FindField(newField.Name)
 				if oldField == nil {
-					ops = append(ops, "+ "+newTable.Name+" "+newField.Name)
+					var op = "+ " + newTable.Name + " " + newField.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("+ " + newTable.Name + " " + newField.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
-						return nil, err
+						return nil, errors.New("'" + op + "' failed: " + err.Error())
 					}
 				} else if !newField.EqualDefinition(oldField.Definition) {
-					ops = append(ops, "* "+newTable.Name+" "+newField.Name)
+					var op = "* " + newTable.Name + " " + newField.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("* " + newTable.Name + " " + newField.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " MODIFY `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
-						return nil, err
+						return nil, errors.New("'" + op + "' failed: " + err.Error())
 					}
 				}
 			}
@@ -158,31 +161,33 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 			for _, newIndex := range newTable.Indexes {
 				oldIndex := oldTable.FindIndex(newIndex.Name)
 				if oldIndex == nil {
-					ops = append(ops, "+ index "+newTable.Name+" "+newIndex.Name)
+					var op = "+ index " + newTable.Name + " " + newIndex.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("+ index " + newTable.Name + " " + newIndex.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
 						err = this.tryCreateIndex(err, db, newTable.Name, newIndex.Definition)
 						if err != nil {
-							return nil, err
+							return nil, errors.New("'" + op + "' failed: " + err.Error())
 						}
 					}
 				} else if oldIndex.Definition != newIndex.Definition {
-					ops = append(ops, "* index "+newTable.Name+" "+newIndex.Name)
+					var op = "* index " + newTable.Name + " " + newIndex.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("* index " + newTable.Name + " " + newIndex.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " DROP KEY " + newIndex.Name)
 					if err != nil {
-						return nil, err
+						return nil, errors.New("'" + op + "' drop old key failed: " + err.Error())
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
 						err = this.tryCreateIndex(err, db, newTable.Name, newIndex.Definition)
 						if err != nil {
-							return nil, err
+							return nil, errors.New("'" + op + "' failed: " + err.Error())
 						}
 					}
 				}
@@ -192,13 +197,14 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 			for _, oldIndex := range oldTable.Indexes {
 				newIndex := newTable.FindIndex(oldIndex.Name)
 				if newIndex == nil {
-					ops = append(ops, "- index "+oldTable.Name+" "+oldIndex.Name)
+					var op = "- index " + oldTable.Name + " " + oldIndex.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("- index " + oldTable.Name + " " + oldIndex.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP KEY " + oldIndex.Name)
 					if err != nil {
-						return nil, err
+						return nil, errors.New("'" + op + "' failed: " + err.Error())
 					}
 				}
 			}
@@ -208,13 +214,14 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 			for _, oldField := range oldTable.Fields {
 				newField := newTable.FindField(oldField.Name)
 				if newField == nil {
-					ops = append(ops, "- field "+oldTable.Name+" "+oldField.Name)
+					var op = "- field " + oldTable.Name + " " + oldField.Name
+					ops = append(ops, op)
 					if showLog {
-						fmt.Println("- field " + oldTable.Name + " " + oldField.Name)
+						fmt.Println(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP COLUMN `" + oldField.Name + "`")
 					if err != nil {
-						return nil, err
+						return nil, errors.New("'" + op + "' failed: " + err.Error())
 					}
 				}
 			}
