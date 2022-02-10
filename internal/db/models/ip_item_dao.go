@@ -296,6 +296,7 @@ func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size i
 		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
 		State(IPItemStateDisabled).
 		Param("timestamp", time.Now().Unix()-7*86400). // N 天之前过期的
+		Limit(10000).                                  // 限制条数，防止数量过多导致超时
 		Delete()
 	if err != nil {
 		return nil, err
