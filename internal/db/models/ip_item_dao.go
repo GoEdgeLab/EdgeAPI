@@ -444,7 +444,7 @@ func (this *IPItemDAO) CleanExpiredIPItems(tx *dbs.Tx) error {
 		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
 		Param("timestamp", time.Now().Unix()).
 		State(IPItemStateEnabled).
-		Limit(100).
+		Limit(500).
 		FindOnes()
 	if err != nil {
 		return err

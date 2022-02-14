@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-// 开锁
+// Lock 开锁
 func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, err error) {
 	maxErrors := 5
 	for {
@@ -103,7 +103,7 @@ func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, 
 	}
 }
 
-// 解锁
+// Unlock 解锁
 func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
 	_, err := this.Query(tx).
 		Attr("key", key).
@@ -112,7 +112,7 @@ func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
 	return err
 }
 
-// 增加版本号
+// Increase 增加版本号
 func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (int64, error) {
 	if tx == nil {
 		var result int64
