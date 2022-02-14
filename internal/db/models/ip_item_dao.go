@@ -2,6 +2,8 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
@@ -18,6 +20,20 @@ const (
 	IPItemStateEnabled  = 1 // 已启用
 	IPItemStateDisabled = 0 // 已禁用
 )
+
+func init() {
+	dbs.OnReadyDone(func() {
+		goman.New(func() {
+			var ticker = time.NewTicker(1 * time.Minute)
+			for range ticker.C {
+				err := SharedIPItemDAO.CleanExpiredIPItems(nil)
+				if err != nil {
+					remotelogs.Error("IPItemDAO", "clean expired ip items failed: "+err.Error())
+				}
+			}
+		})
+	})
+}
 
 type IPItemType = string
 
@@ -291,46 +307,6 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword s
 
 // ListIPItemsAfterVersion 根据版本号查找IP列表
 func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
-	// 删除很早之前过期的
-	_, err = this.Query(tx).
-		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
-		State(IPItemStateDisabled).
-		Param("timestamp", time.Now().Unix()-7*86400). // N 天之前过期的
-		Limit(10000).                                  // 限制条数，防止数量过多导致超时
-		Delete()
-	if err != nil {
-		return nil, err
-	}
-
-	// 将过期的设置为已删除，这样是为了在 expiredAt<UNIX_TIMESTAMP()边缘节点让过期的IP有一个执行删除的机会
-	ones, _, err := this.Query(tx).
-		ResultPk().
-		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
-		Param("timestamp", time.Now().Unix()).
-		State(IPItemStateEnabled).
-		Limit(100).
-		FindOnes()
-	if err != nil {
-		return nil, err
-	}
-	for _, one := range ones {
-		var expiredId = one.GetInt64("id")
-		newVersion, err := SharedIPListDAO.IncreaseVersion(tx)
-		if err != nil {
-			return nil, err
-		}
-		_, err = this.Query(tx).
-			Pk(expiredId).
-			Set("state", IPItemStateDisabled).
-			Set("expiredAt", 0).
-			Set("version", newVersion).
-			Update()
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	_, err = this.Query(tx).
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
 		Gt("version", version).
@@ -447,6 +423,51 @@ func (this *IPItemDAO) UpdateItemsRead(tx *dbs.Tx) error {
 		Attr("isRead", 0).
 		Set("isRead", 1).
 		UpdateQuickly()
+}
+
+// CleanExpiredIPItems 清除过期数据
+func (this *IPItemDAO) CleanExpiredIPItems(tx *dbs.Tx) error {
+	// 删除 N 天之前过期的数据
+	_, err := this.Query(tx).
+		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
+		State(IPItemStateDisabled).
+		Param("timestamp", time.Now().Unix()-7*86400). // N 天之前过期的
+		Limit(10000).                                  // 限制条数，防止数量过多导致超时
+		Delete()
+	if err != nil {
+		return err
+	}
+
+	// 将过期的设置为已删除，这样是为了在 expiredAt<UNIX_TIMESTAMP()边缘节点让过期的IP有一个执行删除的机会
+	ones, _, err := this.Query(tx).
+		ResultPk().
+		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
+		Param("timestamp", time.Now().Unix()).
+		State(IPItemStateEnabled).
+		Limit(100).
+		FindOnes()
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var expiredId = one.GetInt64("id")
+		newVersion, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return err
+		}
+		_, err = this.Query(tx).
+			Pk(expiredId).
+			Set("state", IPItemStateDisabled).
+			Set("expiredAt", 0).
+			Set("version", newVersion).
+			Update()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // NotifyUpdate 通知更新
