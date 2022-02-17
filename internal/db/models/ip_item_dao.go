@@ -429,7 +429,7 @@ func (this *IPItemDAO) UpdateItemsRead(tx *dbs.Tx) error {
 func (this *IPItemDAO) CleanExpiredIPItems(tx *dbs.Tx) error {
 	// 删除 N 天之前过期的数据
 	_, err := this.Query(tx).
-		Where("(expiredAt>0 AND expiredAt<=:timestamp)").
+		Where("expiredAt<=:timestamp").
 		State(IPItemStateDisabled).
 		Param("timestamp", time.Now().Unix()-7*86400). // N 天之前过期的
 		Limit(10000).                                  // 限制条数，防止数量过多导致超时
@@ -455,10 +455,10 @@ func (this *IPItemDAO) CleanExpiredIPItems(tx *dbs.Tx) error {
 		if err != nil {
 			return err
 		}
+		// 这里不重置过期时间用于清理
 		_, err = this.Query(tx).
 			Pk(expiredId).
 			Set("state", IPItemStateDisabled).
-			Set("expiredAt", 0).
 			Set("version", newVersion).
 			Update()
 
