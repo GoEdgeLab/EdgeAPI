@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
@@ -577,6 +578,12 @@ func upgradeV0_4_0(db *dbs.DB) error {
 func upgradeV0_4_1(db *dbs.DB) error {
 	// 升级 servers.lastUserPlanId
 	_, err := db.Exec("UPDATE edgeServers SET lastUserPlanId=userPlanId WHERE userPlanId>0")
+	if err != nil {
+		return err
+	}
+
+	// 执行域名统计清理
+	err = stats.NewServerDomainHourlyStatDAO().Clean(nil, 7)
 	if err != nil {
 		return err
 	}
