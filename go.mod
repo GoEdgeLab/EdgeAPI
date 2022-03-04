@@ -14,7 +14,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
-	github.com/iwind/TeaGo v0.0.0-20211026123858-7de7a21cad24
+	github.com/iwind/TeaGo v0.0.0-20220304043459-0dd944a5b475
 	github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mozillazg/go-pinyin v0.18.0
