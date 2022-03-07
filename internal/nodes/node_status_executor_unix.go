@@ -4,8 +4,8 @@ package nodes
 
 import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
-	"github.com/shirou/gopsutil/load"
-	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/v3/load"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 // 更新内存
