@@ -456,9 +456,26 @@ func (this *NodeDAO) FindEnabledNodeClusterIds(tx *dbs.Tx, nodeId int64) (result
 	return
 }
 
+// FindEnabledNodeIdsWithClusterId 查找某个集群下的所有节点IDs
+func (this *NodeDAO) FindEnabledNodeIdsWithClusterId(tx *dbs.Tx, clusterId int64) ([]int64, error) {
+	ones, err := this.Query(tx).
+		Attr("clusterId", clusterId).
+		State(NodeClusterStateEnabled).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*Node).Id))
+	}
+	return result, nil
+}
+
 // FindAllNodeIdsMatch 匹配节点并返回节点ID
 func (this *NodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, isOn configutils.BoolState) (result []int64, err error) {
-	query := this.Query(tx)
+	var query = this.Query(tx)
 	query.State(NodeStateEnabled)
 	if clusterId > 0 {
 		if includeSecondaryNodes {

@@ -9,12 +9,11 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/tasks"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
@@ -208,11 +207,12 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 		})
 	}
 
-	charts, err := this.findNodeClusterMetricDataCharts(tx, req.NodeClusterId, 0, 0, serverconfigs.MetricItemCategoryHTTP)
-	if err != nil {
-		return nil, err
+	var pbCharts []*pb.MetricDataChart
+	charts, ok := tasks.SharedCacheTaskManager.GetCluster(tasks.CacheKeyFindNodeClusterMetricDataCharts, req.NodeClusterId, serverconfigs.MetricItemCategoryHTTP)
+	if ok {
+		pbCharts = charts.([]*pb.MetricDataChart)
 	}
-	result.MetricDataCharts = charts
+	result.MetricDataCharts = pbCharts
 
 	return result, nil
 }
@@ -443,11 +443,12 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 
 	// 指标
 	var clusterId = int64(node.ClusterId)
-	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, req.NodeId, 0, serverconfigs.MetricItemCategoryHTTP)
-	if err != nil {
-		return nil, err
+	var pbCharts []*pb.MetricDataChart
+	charts, ok := tasks.SharedCacheTaskManager.GetNode(tasks.CacheKeyFindNodeMetricDataCharts, clusterId, req.NodeId, serverconfigs.MetricItemCategoryHTTP)
+	if ok {
+		pbCharts = charts.([]*pb.MetricDataChart)
 	}
-	result.MetricDataCharts = charts
+	result.MetricDataCharts = pbCharts
 
 	return result, nil
 }
@@ -560,182 +561,13 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	case serverconfigs.ServerTypeUDPProxy:
 		metricCategory = serverconfigs.MetricItemCategoryUDP
 	}
-	charts, err := this.findNodeClusterMetricDataCharts(tx, clusterId, 0, req.ServerId, metricCategory)
-	if err != nil {
-		return nil, err
+
+	var pbCharts []*pb.MetricDataChart
+	charts, ok := tasks.SharedCacheTaskManager.GetServer(tasks.CacheKeyFindServerMetricDataCharts, clusterId, req.ServerId, metricCategory)
+	if ok {
+		pbCharts = charts.([]*pb.MetricDataChart)
 	}
-	result.MetricDataCharts = charts
+	result.MetricDataCharts = pbCharts
 
 	return result, nil
-}
-
-// 查找集群、节点和服务的指标数据
-func (this *ServerStatBoardService) findNodeClusterMetricDataCharts(tx *dbs.Tx, clusterId int64, nodeId int64, serverId int64, category string) (result []*pb.MetricDataChart, err error) {
-	// 集群指标
-	clusterMetricItems, err := models.SharedNodeClusterMetricItemDAO.FindAllClusterItems(tx, clusterId, category)
-	if err != nil {
-		return nil, err
-	}
-	var pbMetricCharts = []*pb.MetricDataChart{}
-	var metricItemIds = []int64{}
-	var items = []*models.MetricItem{}
-	for _, clusterMetricItem := range clusterMetricItems {
-		if clusterMetricItem.IsOn != 1 {
-			continue
-		}
-		var itemId = int64(clusterMetricItem.ItemId)
-		item, err := models.SharedMetricItemDAO.FindEnabledMetricItem(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-		if item == nil || item.IsOn == 0 {
-			continue
-		}
-		items = append(items, item)
-		metricItemIds = append(metricItemIds, itemId)
-	}
-
-	publicMetricItems, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, category, nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, item := range publicMetricItems {
-		if item.IsOn != 1 {
-			continue
-		}
-		if lists.ContainsInt64(metricItemIds, int64(item.Id)) {
-			continue
-		}
-		items = append(items, item)
-	}
-
-	for _, item := range items {
-		var itemId = int64(item.Id)
-		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, chart := range charts {
-			if chart.IsOn == 0 {
-				continue
-			}
-
-			var pbChart = &pb.MetricChart{
-				Id:         int64(chart.Id),
-				Name:       chart.Name,
-				Type:       chart.Type,
-				WidthDiv:   chart.WidthDiv,
-				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
-				MaxItems:   types.Int32(chart.MaxItems),
-				MetricItem: &pb.MetricItem{
-					Id:         itemId,
-					PeriodUnit: item.PeriodUnit,
-					Period:     types.Int32(item.Period),
-					Name:       item.Name,
-					Value:      item.Value,
-					Category:   item.Category,
-					Keys:       item.DecodeKeys(),
-					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
-				},
-			}
-			var pbStats = []*pb.MetricStat{}
-			switch chart.Type {
-			case serverconfigs.MetricChartTypeTimeLine:
-				var itemStats []*models.MetricStat
-				if serverId > 0 {
-					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithServerId(tx, serverId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				} else if nodeId > 0 {
-					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithNodeId(tx, nodeId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				} else {
-					itemStats, err = models.SharedMetricStatDAO.FindLatestItemStatsWithClusterId(tx, clusterId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				}
-				if err != nil {
-					return nil, err
-				}
-
-				for _, stat := range itemStats {
-					// 当前时间总和
-					var count int64
-					var total float32
-					if serverId > 0 {
-						count, total, err = models.SharedMetricSumStatDAO.FindServerSum(tx, serverId, stat.Time, itemId, types.Int32(item.Version))
-					} else if nodeId > 0 {
-						count, total, err = models.SharedMetricSumStatDAO.FindNodeSum(tx, nodeId, stat.Time, itemId, types.Int32(item.Version))
-					} else {
-						count, total, err = models.SharedMetricSumStatDAO.FindClusterSum(tx, clusterId, stat.Time, itemId, types.Int32(item.Version))
-					}
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			default:
-				var itemStats []*models.MetricStat
-				if serverId > 0 {
-					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithServerIdAndLastTime(tx, serverId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				} else if nodeId > 0 {
-					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithNodeIdAndLastTime(tx, nodeId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				} else {
-					itemStats, err = models.SharedMetricStatDAO.FindItemStatsWithClusterIdAndLastTime(tx, clusterId, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				}
-				if err != nil {
-					return nil, err
-				}
-				for _, stat := range itemStats {
-					// 当前时间总和
-					var count int64
-					var total float32
-					if serverId > 0 {
-						count, total, err = models.SharedMetricSumStatDAO.FindServerSum(tx, serverId, stat.Time, itemId, types.Int32(item.Version))
-					} else if nodeId > 0 {
-						count, total, err = models.SharedMetricSumStatDAO.FindNodeSum(tx, nodeId, stat.Time, itemId, types.Int32(item.Version))
-					} else {
-						count, total, err = models.SharedMetricSumStatDAO.FindClusterSum(tx, clusterId, stat.Time, itemId, types.Int32(item.Version))
-					}
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			}
-			pbMetricCharts = append(pbMetricCharts, &pb.MetricDataChart{
-				MetricChart: pbChart,
-				MetricStats: pbStats,
-			})
-		}
-	}
-	return pbMetricCharts, nil
 }

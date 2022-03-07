@@ -9,14 +9,12 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/tasks"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
-	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -743,7 +741,11 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 域名排行
 	this.BeginTag(ctx, "SharedServerDomainHourlyStatDAO.FindTopDomainStats")
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStats(tx, hourFrom, hourTo, 10)
+	var topDomainStats []*stats.ServerDomainHourlyStat
+	topDomainStatsCache, ok := tasks.SharedCacheTaskManager.GetGlobalTopDomains()
+	if ok {
+		topDomainStats = topDomainStatsCache.([]*stats.ServerDomainHourlyStat)
+	}
 	this.EndTag(ctx, "SharedServerDomainHourlyStatDAO.FindTopDomainStats")
 	if err != nil {
 		return nil, err
@@ -816,7 +818,11 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 指标数据
 	this.BeginTag(ctx, "findMetricDataCharts")
-	pbCharts, err := this.findMetricDataCharts(tx)
+	var pbCharts []*pb.MetricDataChart
+	pbChartsCache, ok := tasks.SharedCacheTaskManager.Get(tasks.CacheKeyFindAllMetricDataCharts)
+	if ok {
+		pbCharts = pbChartsCache.([]*pb.MetricDataChart)
+	}
 	this.EndTag(ctx, "findMetricDataCharts")
 	if err != nil {
 		return nil, err
@@ -838,112 +844,4 @@ func (this *AdminService) UpdateAdminTheme(ctx context.Context, req *pb.UpdateAd
 		return nil, err
 	}
 	return this.Success()
-}
-
-// 查找集群、节点和服务的指标数据
-func (this *AdminService) findMetricDataCharts(tx *dbs.Tx) (result []*pb.MetricDataChart, err error) {
-	// 集群指标
-	items, err := models.SharedMetricItemDAO.FindAllPublicItems(tx, serverconfigs.MetricItemCategoryHTTP, nil)
-	if err != nil {
-		return nil, err
-	}
-	var pbMetricCharts = []*pb.MetricDataChart{}
-	for _, item := range items {
-		var itemId = int64(item.Id)
-		charts, err := models.SharedMetricChartDAO.FindAllEnabledCharts(tx, itemId)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, chart := range charts {
-			if chart.IsOn == 0 {
-				continue
-			}
-
-			var pbChart = &pb.MetricChart{
-				Id:         int64(chart.Id),
-				Name:       chart.Name,
-				Type:       chart.Type,
-				WidthDiv:   chart.WidthDiv,
-				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
-				MaxItems:   types.Int32(chart.MaxItems),
-				MetricItem: &pb.MetricItem{
-					Id:         itemId,
-					PeriodUnit: item.PeriodUnit,
-					Period:     types.Int32(item.Period),
-					Name:       item.Name,
-					Value:      item.Value,
-					Category:   item.Category,
-					Keys:       item.DecodeKeys(),
-					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
-				},
-			}
-			var pbStats = []*pb.MetricStat{}
-			switch chart.Type {
-			case serverconfigs.MetricChartTypeTimeLine:
-				itemStats, err := models.SharedMetricStatDAO.FindLatestItemStats(tx, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, stat := range itemStats {
-					// 当前时间总和
-					count, total, err := models.SharedMetricSumStatDAO.FindSumAtTime(tx, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			default:
-				itemStats, err := models.SharedMetricStatDAO.FindItemStatsAtLastTime(tx, itemId, chart.IgnoreEmptyKeys == 1, chart.DecodeIgnoredKeys(), types.Int32(item.Version), 10)
-				if err != nil {
-					return nil, err
-				}
-				for _, stat := range itemStats {
-					count, total, err := models.SharedMetricSumStatDAO.FindSumAtTime(tx, stat.Time, itemId, types.Int32(item.Version))
-					if err != nil {
-						return nil, err
-					}
-
-					pbStats = append(pbStats, &pb.MetricStat{
-						Id:          int64(stat.Id),
-						Hash:        stat.Hash,
-						ServerId:    0,
-						ItemId:      0,
-						Keys:        stat.DecodeKeys(),
-						Value:       types.Float32(stat.Value),
-						Time:        stat.Time,
-						Version:     0,
-						NodeCluster: nil,
-						Node:        nil,
-						Server:      nil,
-						SumCount:    count,
-						SumTotal:    total,
-					})
-				}
-			}
-			pbMetricCharts = append(pbMetricCharts, &pb.MetricDataChart{
-				MetricChart: pbChart,
-				MetricStats: pbStats,
-			})
-		}
-	}
-	return pbMetricCharts, nil
 }
