@@ -38,34 +38,17 @@ func (this *LogTask) Run() {
 }
 
 func (this *LogTask) runClean() {
-	ticker := utils.NewTicker(24 * time.Hour)
+	var ticker = utils.NewTicker(24 * time.Hour)
 	for ticker.Wait() {
-		err := this.loopClean(86400)
+		err := this.loopClean()
 		if err != nil {
 			logs.Println("[TASK][LOG]" + err.Error())
 		}
 	}
 }
 
-func (this *LogTask) loopClean(seconds int64) error {
-	// 检查上次运行时间，防止重复运行
-	settingKey := "logTaskCleanLoop"
-	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
-	if err != nil {
-		return err
-	}
-	if c > 0 {
-		return nil
-	}
-
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
-	}
-
-	configKey := "adminLogConfig"
+func (this *LogTask) loopClean() error {
+	var configKey = "adminLogConfig"
 	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, configKey)
 	if err != nil {
 		return err
@@ -74,7 +57,7 @@ func (this *LogTask) loopClean(seconds int64) error {
 		return nil
 	}
 
-	config := &systemconfigs.LogConfig{}
+	var config = &systemconfigs.LogConfig{}
 	err = json.Unmarshal(valueJSON, config)
 	if err != nil {
 		return err
@@ -89,7 +72,7 @@ func (this *LogTask) loopClean(seconds int64) error {
 }
 
 func (this *LogTask) runMonitor() {
-	ticker := utils.NewTicker(1 * time.Minute)
+	var ticker = utils.NewTicker(1 * time.Minute)
 	for ticker.Wait() {
 		err := this.loopMonitor(60)
 		if err != nil {
@@ -100,8 +83,8 @@ func (this *LogTask) runMonitor() {
 
 func (this *LogTask) loopMonitor(seconds int64) error {
 	// 检查上次运行时间，防止重复运行
-	settingKey := "logTaskMonitorLoop"
-	timestamp := time.Now().Unix()
+	var settingKey = "logTaskMonitorLoop"
+	var timestamp = time.Now().Unix()
 	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
 	if err != nil {
 		return err
@@ -116,7 +99,7 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 		return err
 	}
 
-	configKey := "adminLogConfig"
+	var configKey = "adminLogConfig"
 	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, configKey)
 	if err != nil {
 		return err
@@ -125,7 +108,7 @@ func (this *LogTask) loopMonitor(seconds int64) error {
 		return nil
 	}
 
-	config := &systemconfigs.LogConfig{}
+	var config = &systemconfigs.LogConfig{}
 	err = json.Unmarshal(valueJSON, config)
 	if err != nil {
 		return err
