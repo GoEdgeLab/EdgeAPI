@@ -103,23 +103,18 @@ func (this *ServerAccessLogCleaner) cleanDB(db *dbs.DB, endDay string) error {
 		return errors.New("invalid column names: " + strings.Join(columnNames, ", "))
 	}
 	columnName := columnNames[0]
+	var reg = regexp.MustCompile(`^(?i)(edgeHTTPAccessLogs|edgeNSAccessLogs)_(\d{8})(_\d{4})?$`)
 	for _, one := range ones {
-		tableName := one.GetString(columnName)
+		var tableName = one.GetString(columnName)
 		if len(tableName) == 0 {
 			continue
 		}
-		ok, err := regexp.MatchString(`^(?i)(edgeHTTPAccessLogs|edgeNSAccessLogs)_(\d{8})$`, tableName)
-		if err != nil {
-			return err
-		}
-		if !ok {
+		if !reg.MatchString(tableName) {
 			continue
 		}
-		index := strings.LastIndex(tableName, "_")
-		if index < 0 {
-			continue
-		}
-		day := tableName[index+1:]
+		var matches = reg.FindStringSubmatch(tableName)
+		var day = matches[2]
+
 		if day < endDay {
 			_, err = db.Exec("DROP TABLE " + tableName)
 			if err != nil {

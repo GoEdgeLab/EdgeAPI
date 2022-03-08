@@ -1,6 +1,7 @@
-package tasks
+package tasks_test
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/iwind/TeaGo/dbs"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestServerAccessLogCleaner_Loop(t *testing.T) {
 	dbs.NotifyReady()
 
-	task := NewServerAccessLogCleaner()
+	task := tasks.NewServerAccessLogCleaner()
 	err := task.Loop()
 	if err != nil {
 		t.Fatal(err)

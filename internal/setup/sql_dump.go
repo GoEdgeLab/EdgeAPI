@@ -45,7 +45,10 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 	}
 	for _, tableName := range tableNames {
 		// 忽略一些分表
-		if strings.HasPrefix(tableName, "edgeHTTPAccessLogs_") {
+		if strings.HasPrefix(strings.ToLower(tableName), strings.ToLower("edgeHTTPAccessLogs_")) {
+			continue
+		}
+		if strings.HasPrefix(strings.ToLower(tableName), strings.ToLower("edgeNSAccessLogs_")) {
 			continue
 		}
 

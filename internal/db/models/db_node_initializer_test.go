@@ -1,9 +1,7 @@
 package models
 
 import (
-	"runtime"
 	"testing"
-	"time"
 )
 
 func TestDBNodeInitializer_loop(t *testing.T) {
@@ -13,33 +11,4 @@ func TestDBNodeInitializer_loop(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(len(accessLogDBMapping), len(httpAccessLogDAOMapping))
-}
-
-func TestFindAccessLogTable(t *testing.T) {
-	before := time.Now()
-	db := SharedHTTPAccessLogDAO.Instance
-	tableName, err := findHTTPAccessLogTable(db, "20201010", false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(tableName)
-	t.Log(time.Since(before).Seconds()*1000, "ms")
-
-	before = time.Now()
-	tableName, err = findHTTPAccessLogTable(db, "20201010", false)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(tableName)
-	t.Log(time.Since(before).Seconds()*1000, "ms")
-}
-
-func BenchmarkFindAccessLogTable(b *testing.B) {
-	db := SharedHTTPAccessLogDAO.Instance
-
-	runtime.GOMAXPROCS(1)
-	for i := 0; i < b.N; i++ {
-		_, _ = findHTTPAccessLogTable(db, "20201010", false)
-	}
 }

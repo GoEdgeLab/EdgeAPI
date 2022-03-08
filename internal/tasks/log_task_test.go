@@ -9,7 +9,7 @@ func TestLogTask_loopClean(t *testing.T) {
 	dbs.NotifyReady()
 
 	task := NewLogTask()
-	err := task.loopClean(5)
+	err := task.loopClean()
 	if err != nil {
 		t.Fatal(err)
 	}

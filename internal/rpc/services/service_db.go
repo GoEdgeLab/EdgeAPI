@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-// 数据库相关服务
+// DBService 数据库相关服务
 type DBService struct {
 	BaseService
 }
 
-// 获取所有表信息
+// FindAllDBTables 获取所有表信息
 func (this *DBService) FindAllDBTables(ctx context.Context, req *pb.FindAllDBTablesRequest) (*pb.FindAllDBTablesResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -60,7 +60,7 @@ func (this *DBService) FindAllDBTables(ctx context.Context, req *pb.FindAllDBTab
 	return &pb.FindAllDBTablesResponse{DbTables: pbTables}, nil
 }
 
-// 删除表
+// DeleteDBTable 删除表
 func (this *DBService) DeleteDBTable(ctx context.Context, req *pb.DeleteDBTableRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -84,7 +84,7 @@ func (this *DBService) DeleteDBTable(ctx context.Context, req *pb.DeleteDBTableR
 	return this.Success()
 }
 
-// 清空表
+// TruncateDBTable 清空表
 func (this *DBService) TruncateDBTable(ctx context.Context, req *pb.TruncateDBTableRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
