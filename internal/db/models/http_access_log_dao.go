@@ -417,6 +417,9 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 							}
 						}
 					} else {
+						// 去掉IPv6的[]
+						ip = strings.Trim(ip, "[]")
+
 						query.Attr("remoteAddr", ip)
 						query.UseIndex("remoteAddr")
 					}
