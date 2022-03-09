@@ -235,6 +235,8 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
 	size int64,
 	day string,
+	hourFrom string,
+	hourTo string,
 	clusterId int64,
 	nodeId int64,
 	serverId int64,
@@ -257,18 +259,36 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, clusterId int64, nodeId int64, serverId int64, reverse bool, hasError bool, firewallPolicyId int64, firewallRuleGroupId int64, firewallRuleSetId int64, hasFirewallPolicy bool, userId int64, keyword string, ip string, domain string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
+func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
+	lastRequestId string,
+	size int64,
+	day string,
+	hourFrom string,
+	hourTo string,
+	clusterId int64,
+	nodeId int64,
+	serverId int64,
+	reverse bool,
+	hasError bool,
+	firewallPolicyId int64,
+	firewallRuleGroupId int64,
+	firewallRuleSetId int64,
+	hasFirewallPolicy bool,
+	userId int64,
+	keyword string,
+	ip string,
+	domain string) (result []*HTTPAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
@@ -331,7 +351,8 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 
 	var locker = sync.Mutex{}
 
-	var statusPrefixReg = regexp.MustCompile(`status:\s*(\d{3})`)
+	var statusPrefixReg = regexp.MustCompile(`status:\s*(\d{3})\b`)
+	var statusRangeReg = regexp.MustCompile(`status:\s*(\d{3})-(\d{3})\b`)
 
 	var count = len(tableQueries)
 	var wg = &sync.WaitGroup{}
@@ -433,9 +454,15 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 					} else {
 						query.Between("INET_ATON(remoteAddr)", utils.IP2Long(pieces[0]), utils.IP2Long(pieces[1]))
 					}
+				} else if statusRangeReg.MatchString(keyword) {
+					var matches = statusRangeReg.FindStringSubmatch(keyword)
+					query.Between("status", types.Int(matches[1]), types.Int(matches[2]))
+
+					// TODO 处理剩余的关键词
 				} else if statusPrefixReg.MatchString(keyword) {
 					var matches = statusPrefixReg.FindStringSubmatch(keyword)
 					query.Attr("status", matches[1])
+					// TODO 处理剩余的关键词
 				} else {
 					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
 						keyword = keyword[3:]
@@ -488,6 +515,20 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, s
 					if useOriginKeyword {
 						query.Param("originKeyword", keyword)
 					}
+				}
+			}
+
+			// hourFrom - hourTo
+			if len(hourFrom) > 0 && len(hourTo) > 0 {
+				var hourFromInt = types.Int(hourFrom)
+				var hourToInt = types.Int(hourTo)
+				if hourFromInt >= 0 && hourFromInt <= 23 && hourToInt >= hourFromInt && hourToInt <= 23 {
+					var y = types.Int(day[:4])
+					var m = types.Int(day[4:6])
+					var d = types.Int(day[6:])
+					var timeFrom = time.Date(y, time.Month(m), d, hourFromInt, 0, 0, 0, time.Local)
+					var timeTo = time.Date(y, time.Month(m), d, hourToInt, 59, 59, 0, time.Local)
+					query.Between("createdAt", timeFrom.Unix(), timeTo.Unix())
 				}
 			}
 
