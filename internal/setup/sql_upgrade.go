@@ -69,6 +69,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.1", upgradeV0_4_1,
 	},
+	{
+		"0.4.5", upgradeV0_4_5,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -586,6 +589,35 @@ func upgradeV0_4_1(db *dbs.DB) error {
 	err = stats.NewServerDomainHourlyStatDAO().Clean(nil, 7)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// v0.4.5
+func upgradeV0_4_5(db *dbs.DB) error {
+	// 升级访问日志自动分表
+	{
+		var dao = models.NewSysSettingDAO()
+		valueJSON, err := dao.ReadSetting(nil, systemconfigs.SettingCodeAccessLogQueue)
+		if err != nil {
+			return err
+		}
+		if len(valueJSON) > 0 {
+			var config = &serverconfigs.AccessLogQueueConfig{}
+			err = json.Unmarshal(valueJSON, config)
+			if err == nil {
+				config.EnableAutoPartial = true
+				config.RowsPerTable = 500_000
+				configJSON, err := json.Marshal(config)
+				if err == nil {
+					err = dao.UpdateSetting(nil, systemconfigs.SettingCodeAccessLogQueue, configJSON)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
 
 	return nil

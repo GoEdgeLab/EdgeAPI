@@ -214,7 +214,7 @@ func (this *HTTPAccessLogManager) findTableWithoutCache(db *dbs.DB, day string, 
 	}
 
 	var lastTableName = tableNames[len(tableNames)-1]
-	if !force || !accessLogEnableAutoPartial {
+	if !force || !accessLogEnableAutoPartial || accessLogRowsPerTable <= 0 {
 		hasRemoteAddrField, hasDomainField, err := this.checkTableFields(db, lastTableName)
 		if err != nil {
 			return nil, err
@@ -235,7 +235,7 @@ func (this *HTTPAccessLogManager) findTableWithoutCache(db *dbs.DB, day string, 
 
 	if lastId != nil {
 		var lastInt64Id = types.Int64(lastId)
-		if lastInt64Id >= accessLogPartialRows {
+		if accessLogRowsPerTable > 0 && lastInt64Id >= accessLogRowsPerTable {
 			// create next partial table
 			var nextTableName = ""
 			if accessLogTableMainReg.MatchString(lastTableName) {

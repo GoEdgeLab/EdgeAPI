@@ -44,7 +44,7 @@ var (
 	accessLogQueueChanged   = make(chan zero.Zero, 1)
 
 	accessLogEnableAutoPartial       = true    // 是否启用自动分表
-	accessLogPartialRows       int64 = 500_000 // 自动分表的单表最大值
+	accessLogRowsPerTable      int64 = 500_000 // 自动分表的单表最大值
 )
 
 type accessLogTableQuery struct {
@@ -224,7 +224,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 		return err
 	}
 
-	if lastId%accessLogPartialRows == 0 {
+	if accessLogEnableAutoPartial && accessLogRowsPerTable > 0 && lastId%accessLogRowsPerTable == 0 {
 		SharedHTTPAccessLogManager.ResetTable(dao.Instance, day)
 	}
 
@@ -652,11 +652,18 @@ func (this *HTTPAccessLogDAO) SetupQueue() {
 		config.MaxLength = 100_000
 	}
 
+	accessLogEnableAutoPartial = config.EnableAutoPartial
+	if config.RowsPerTable > 0 {
+		accessLogRowsPerTable = config.RowsPerTable
+	}
+
 	if accessLogQueueMaxLength != config.MaxLength {
 		accessLogQueueMaxLength = config.MaxLength
 		oldAccessLogQueue = accessLogQueue
 		accessLogQueue = make(chan *pb.HTTPAccessLog, config.MaxLength)
 	}
 
-	remotelogs.Println("HTTP_ACCESS_LOG_QUEUE", "change queue max length: "+types.String(config.MaxLength)+", percent: "+types.String(config.Percent)+", countPerSecond: "+types.String(config.CountPerSecond))
+	if Tea.IsTesting() {
+		remotelogs.Println("HTTP_ACCESS_LOG_QUEUE", "change queue "+string(configJSON))
+	}
 }
