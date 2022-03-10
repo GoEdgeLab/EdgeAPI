@@ -98,7 +98,7 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 	if err != nil {
 		return nil, err
 	}
-	if len(resp) == 0 {
+	if len(resp) == 0 || string(resp) == "null" {
 		return nil, nil
 	}
 	record := &dnstypes.Record{}
