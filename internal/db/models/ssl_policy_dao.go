@@ -167,6 +167,9 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 		config.HSTS = hstsConfig
 	}
 
+	// ocsp
+	config.OCSPIsOn = policy.OcspIsOn == 1
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -196,7 +199,7 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(tx *dbs.Tx, certId i
 }
 
 // CreatePolicy 创建Policy
-func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
+func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
 	op := NewSSLPolicyOperator()
 	op.State = SSLPolicyStateEnabled
 	op.IsOn = true
@@ -212,6 +215,8 @@ func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, 
 	if len(hstsJSON) > 0 {
 		op.Hsts = hstsJSON
 	}
+
+	op.OcspIsOn = ocspIsOn
 
 	op.ClientAuthType = clientAuthType
 	if len(clientCACertsJSON) > 0 {
@@ -234,7 +239,7 @@ func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, 
 }
 
 // UpdatePolicy 修改Policy
-func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
+func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -250,6 +255,8 @@ func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled 
 	if len(hstsJSON) > 0 {
 		op.Hsts = hstsJSON
 	}
+
+	op.OcspIsOn = ocspIsOn
 
 	op.ClientAuthType = clientAuthType
 	if len(clientCACertsJSON) > 0 {

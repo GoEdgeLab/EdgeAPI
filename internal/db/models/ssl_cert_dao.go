@@ -113,6 +113,8 @@ func (this *SSLCertDAO) CreateCert(tx *dbs.Tx, adminId int64, userId int64, isOn
 	}
 	op.CommonNames = commonNamesJSON
 
+	op.OcspIsUpdated = false
+
 	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -121,7 +123,18 @@ func (this *SSLCertDAO) CreateCert(tx *dbs.Tx, adminId int64, userId int64, isOn
 }
 
 // UpdateCert 修改证书
-func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx, certId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) error {
+func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
+	certId int64,
+	isOn bool,
+	name string,
+	description string,
+	serverName string,
+	isCA bool,
+	certData []byte,
+	keyData []byte,
+	timeBeginAt int64,
+	timeEndAt int64,
+	dnsNames []string, commonNames []string) error {
 	if certId <= 0 {
 		return errors.New("invalid certId")
 	}
@@ -155,6 +168,8 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx, certId int64, isOn bool, name str
 		return err
 	}
 	op.CommonNames = commonNamesJSON
+
+	op.OcspIsUpdated = false
 
 	err = this.Save(tx, op)
 	if err != nil {
@@ -194,6 +209,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	config.ServerName = cert.ServerName
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
 	config.TimeEndAt = int64(cert.TimeEndAt)
+	config.OCSP = []byte(cert.Ocsp)
 
 	if IsNotNull(cert.DnsNames) {
 		dnsNames := []string{}
@@ -354,6 +370,41 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 		return errors.New("not found")
 	}
 	return nil
+}
+
+// ListCertsToUpdateOCSP 查找需要更新OCSP的证书
+func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, size int64) (result []*SSLCert, err error) {
+	_, err = this.Query(tx).
+		State(SSLCertStateEnabled).
+		Attr("ocspIsUpdated", false).
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// UpdateCertOSCP 修改OCSP
+func (this *SSLCertDAO) UpdateCertOSCP(tx *dbs.Tx, certId int64, ocsp []byte, errString string) error {
+	if ocsp == nil {
+		ocsp = []byte{}
+	}
+
+	// 限制长度
+	if len(errString) > 300 {
+		errString = errString[:300]
+	}
+
+	err := this.Query(tx).
+		Pk(certId).
+		Set("ocsp", ocsp).
+		Set("ocspError", errString).
+		Set("ocspIsUpdated", true).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, certId)
 }
 
 // NotifyUpdate 通知更新

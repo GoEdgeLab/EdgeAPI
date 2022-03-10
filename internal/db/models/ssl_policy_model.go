@@ -1,6 +1,6 @@
 package models
 
-//
+// SSLPolicy SSL配置策略
 type SSLPolicy struct {
 	Id               uint32 `field:"id"`               // ID
 	AdminId          uint32 `field:"adminId"`          // 管理员ID
@@ -14,6 +14,7 @@ type SSLPolicy struct {
 	CipherSuites     string `field:"cipherSuites"`     // 加密算法套件
 	Hsts             string `field:"hsts"`             // HSTS设置
 	Http2Enabled     uint8  `field:"http2Enabled"`     // 是否启用HTTP/2
+	OcspIsOn         uint8  `field:"ocspIsOn"`         // 是否启用OCSP
 	State            uint8  `field:"state"`            // 状态
 	CreatedAt        uint64 `field:"createdAt"`        // 创建时间
 }
@@ -31,6 +32,7 @@ type SSLPolicyOperator struct {
 	CipherSuites     interface{} // 加密算法套件
 	Hsts             interface{} // HSTS设置
 	Http2Enabled     interface{} // 是否启用HTTP/2
+	OcspIsOn         interface{} // 是否启用OCSP
 	State            interface{} // 状态
 	CreatedAt        interface{} // 创建时间
 }
