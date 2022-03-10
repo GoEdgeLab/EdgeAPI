@@ -42,7 +42,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 				return nil, err
 			}
 			if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, userId)
+				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, httpsConfig.SSLPolicyRef.SSLPolicyId)
 				if err != nil {
 					return nil, err
 				}
@@ -57,7 +57,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 				return nil, err
 			}
 			if tlsConfig.SSLPolicyRef != nil && tlsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, userId)
+				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, tlsConfig.SSLPolicyRef.SSLPolicyId)
 				if err != nil {
 					return nil, err
 				}

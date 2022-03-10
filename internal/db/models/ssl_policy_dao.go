@@ -281,9 +281,9 @@ func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled 
 }
 
 // CheckUserPolicy 检查是否为用户所属策略
-func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, policyId int64, userId int64) error {
+func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, userId int64, policyId int64) error {
 	if policyId <= 0 || userId <= 0 {
-		return errors.New("not found")
+		return ErrNotFound
 	}
 	ok, err := this.Query(tx).
 		State(SSLPolicyStateEnabled).
@@ -294,7 +294,14 @@ func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, policyId int64, userId int
 		return err
 	}
 	if !ok {
-		return errors.New("not found")
+		// 是否为当前用户的某个服务所用
+		exists, err := SharedServerDAO.ExistEnabledUserServerWithSSLPolicyId(tx, userId, policyId)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return ErrNotFound
+		}
 	}
 	return nil
 }

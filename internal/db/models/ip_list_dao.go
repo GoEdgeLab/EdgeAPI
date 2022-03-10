@@ -184,6 +184,10 @@ func (this *IPListDAO) IncreaseVersion(tx *dbs.Tx) (int64, error) {
 
 // CheckUserIPList 检查用户权限
 func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) error {
+	if userId == 0 || listId == 0 {
+		return ErrNotFound
+	}
+
 	ok, err := this.Query(tx).
 		Pk(listId).
 		Attr("userId", userId).
@@ -194,6 +198,18 @@ func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) e
 	if ok {
 		return nil
 	}
+
+	// 检查是否被用户的服务所使用
+	policyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
+	if err != nil {
+		return err
+	}
+	for _, policyId := range policyIds {
+		if SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(tx, userId, policyId) == nil {
+			return nil
+		}
+	}
+
 	return ErrNotFound
 }
 

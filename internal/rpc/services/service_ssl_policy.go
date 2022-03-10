@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -62,9 +63,9 @@ func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.Updat
 	tx := this.NullTx()
 
 	if userId > 0 {
-		err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, req.SslPolicyId, userId)
+		err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, req.SslPolicyId)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("check ssl policy failed: " + err.Error())
 		}
 	}
 

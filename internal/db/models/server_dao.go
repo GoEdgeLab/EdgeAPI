@@ -1227,6 +1227,16 @@ func (this *ServerDAO) FindAllEnabledServerIdsWithSSLPolicyIds(tx *dbs.Tx, sslPo
 	return
 }
 
+// ExistEnabledUserServerWithSSLPolicyId 检查是否存在某个用户的策略
+func (this *ServerDAO) ExistEnabledUserServerWithSSLPolicyId(tx *dbs.Tx, userId int64, sslPolicyId int64) (bool, error) {
+	return this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("userId", userId).
+		Where("(JSON_CONTAINS(https, :jsonQuery) OR JSON_CONTAINS(tls, :jsonQuery))").
+		Param("jsonQuery", maps.Map{"sslPolicyRef": maps.Map{"sslPolicyId": sslPolicyId}}.AsJSON()).
+		Exist()
+}
+
 // CountEnabledServersWithWebIds 计算使用某个缓存策略的所有服务数量
 func (this *ServerDAO) CountEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64) (count int64, err error) {
 	if len(webIds) == 0 {
