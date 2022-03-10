@@ -29,6 +29,8 @@ var customHTTPClient = &http.Client{
 type CustomHTTPProvider struct {
 	url    string
 	secret string
+
+	BaseProvider
 }
 
 // Auth 认证
@@ -117,7 +119,7 @@ func (this *CustomHTTPProvider) AddRecord(domain string, newRecord *dnstypes.Rec
 		"domain":    domain,
 		"newRecord": newRecord,
 	})
-	return err
+	return this.WrapError(err, domain, newRecord)
 }
 
 // UpdateRecord 修改记录
@@ -128,7 +130,7 @@ func (this *CustomHTTPProvider) UpdateRecord(domain string, record *dnstypes.Rec
 		"record":    record,
 		"newRecord": newRecord,
 	})
-	return err
+	return this.WrapError(err, domain, newRecord)
 }
 
 // DeleteRecord 删除记录
@@ -138,7 +140,7 @@ func (this *CustomHTTPProvider) DeleteRecord(domain string, record *dnstypes.Rec
 		"domain": domain,
 		"record": record,
 	})
-	return err
+	return this.WrapError(err, domain, record)
 }
 
 // DefaultRoute 默认线路

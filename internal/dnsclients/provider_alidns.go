@@ -150,13 +150,13 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 	resp := alidns.CreateAddDomainRecordResponse()
 	err := this.doAPI(req, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 	if resp.IsSuccess() {
 		return nil
 	}
 
-	return errors.New(resp.GetHttpContentString())
+	return this.WrapError(errors.New(resp.GetHttpContentString()), domain, newRecord)
 }
 
 // UpdateRecord 修改记录
@@ -174,7 +174,7 @@ func (this *AliDNSProvider) UpdateRecord(domain string, record *dnstypes.Record,
 
 	resp := alidns.CreateUpdateDomainRecordResponse()
 	err := this.doAPI(req, resp)
-	return err
+	return this.WrapError(err, domain, newRecord)
 }
 
 // DeleteRecord 删除记录
@@ -184,7 +184,7 @@ func (this *AliDNSProvider) DeleteRecord(domain string, record *dnstypes.Record)
 
 	resp := alidns.CreateDeleteDomainRecordResponse()
 	err := this.doAPI(req, resp)
-	return err
+	return this.WrapError(err, domain, record)
 }
 
 // DefaultRoute 默认线路

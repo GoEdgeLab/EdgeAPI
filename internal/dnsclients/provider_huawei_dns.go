@@ -1331,7 +1331,7 @@ func (this *HuaweiDNSProvider) QueryRecord(domain string, name string, recordTyp
 func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	var resp = new(huaweidns.ZonesCreateRecordSetResponse)
@@ -1354,7 +1354,7 @@ func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Reco
 		"ttl":         ttl,
 	}, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	newRecord.Id = resp.Id + "@" + newRecord.Value
@@ -1366,7 +1366,7 @@ func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Reco
 func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	var recordId string
@@ -1397,7 +1397,7 @@ func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Reco
 		"ttl":         ttl,
 	}, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	return nil
@@ -1407,7 +1407,7 @@ func (this *HuaweiDNSProvider) UpdateRecord(domain string, record *dnstypes.Reco
 func (this *HuaweiDNSProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, record)
 	}
 
 	var recordId string
@@ -1421,7 +1421,7 @@ func (this *HuaweiDNSProvider) DeleteRecord(domain string, record *dnstypes.Reco
 	var resp = new(huaweidns.ZonesDeleteRecordSetResponse)
 	err = this.doAPI(http.MethodDelete, "/v2.1/zones/"+zoneId+"/recordsets/"+recordId, map[string]string{}, maps.Map{}, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, record)
 	}
 
 	return nil

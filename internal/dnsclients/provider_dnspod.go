@@ -182,7 +182,7 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 		args["ttl"] = types.String(newRecord.TTL)
 	}
 	_, err := this.post("/Record.Create", args)
-	return err
+	return this.WrapError(err, domain, newRecord)
 }
 
 // UpdateRecord 修改记录
@@ -211,7 +211,7 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record,
 		args["ttl"] = types.String(newRecord.TTL)
 	}
 	_, err := this.post("/Record.Modify", args)
-	return err
+	return this.WrapError(err, domain, newRecord)
 }
 
 // DeleteRecord 删除记录
@@ -225,7 +225,7 @@ func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record)
 		"record_id": record.Id,
 	})
 
-	return err
+	return this.WrapError(err, domain, record)
 }
 
 // 发送请求

@@ -17,6 +17,8 @@ import (
 type LocalEdgeDNSProvider struct {
 	clusterId int64 // 集群ID
 	ttl       int32 // TTL
+
+	BaseProvider
 }
 
 // Auth 认证
@@ -193,10 +195,10 @@ func (this *LocalEdgeDNSProvider) AddRecord(domain string, newRecord *dnstypes.R
 	var tx *dbs.Tx
 	domainId, err := nameservers.SharedNSDomainDAO.FindDomainIdWithName(tx, this.clusterId, domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 	if domainId == 0 {
-		return errors.New("can not find domain '" + domain + "'")
+		return this.WrapError(errors.New("can not find domain '"+domain+"'"), domain, newRecord)
 	}
 
 	var routeIds = []string{}
@@ -209,7 +211,7 @@ func (this *LocalEdgeDNSProvider) AddRecord(domain string, newRecord *dnstypes.R
 	}
 	_, err = nameservers.SharedNSRecordDAO.CreateRecord(tx, domainId, "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	return nil
@@ -220,7 +222,7 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 	var tx *dbs.Tx
 	domainId, err := nameservers.SharedNSDomainDAO.FindDomainIdWithName(tx, this.clusterId, domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 	if domainId == 0 {
 		return errors.New("can not find domain '" + domain + "'")
@@ -238,17 +240,17 @@ func (this *LocalEdgeDNSProvider) UpdateRecord(domain string, record *dnstypes.R
 	if len(record.Id) > 0 {
 		err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(record.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds, true)
 		if err != nil {
-			return err
+			return this.WrapError(err, domain, newRecord)
 		}
 	} else {
 		realRecord, err := nameservers.SharedNSRecordDAO.FindEnabledRecordWithName(tx, domainId, record.Name, record.Type)
 		if err != nil {
-			return err
+			return this.WrapError(err, domain, newRecord)
 		}
 		if realRecord != nil {
 			err = nameservers.SharedNSRecordDAO.UpdateRecord(tx, types.Int64(realRecord.Id), "", newRecord.Name, newRecord.Type, newRecord.Value, newRecord.TTL, routeIds, true)
 			if err != nil {
-				return err
+				return this.WrapError(err, domain, newRecord)
 			}
 		}
 	}
@@ -261,7 +263,7 @@ func (this *LocalEdgeDNSProvider) DeleteRecord(domain string, record *dnstypes.R
 	var tx *dbs.Tx
 	domainId, err := nameservers.SharedNSDomainDAO.FindDomainIdWithName(tx, this.clusterId, domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, record)
 	}
 	if domainId == 0 {
 		return errors.New("can not find domain '" + domain + "'")
@@ -270,17 +272,17 @@ func (this *LocalEdgeDNSProvider) DeleteRecord(domain string, record *dnstypes.R
 	if len(record.Id) > 0 {
 		err = nameservers.SharedNSRecordDAO.DisableNSRecord(tx, types.Int64(record.Id))
 		if err != nil {
-			return err
+			return this.WrapError(err, domain, record)
 		}
 	} else {
 		realRecord, err := nameservers.SharedNSRecordDAO.FindEnabledRecordWithName(tx, domainId, record.Name, record.Type)
 		if err != nil {
-			return err
+			return this.WrapError(err, domain, record)
 		}
 		if realRecord != nil {
 			err = nameservers.SharedNSRecordDAO.DisableNSRecord(tx, types.Int64(realRecord.Id))
 			if err != nil {
-				return err
+				return this.WrapError(err, domain, record)
 			}
 		}
 	}

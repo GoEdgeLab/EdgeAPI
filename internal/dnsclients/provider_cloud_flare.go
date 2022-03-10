@@ -169,7 +169,7 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 func (this *CloudFlareProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	resp := new(cloudflare.CreateDNSRecordResponse)
@@ -186,7 +186,7 @@ func (this *CloudFlareProvider) AddRecord(domain string, newRecord *dnstypes.Rec
 		"ttl":     ttl,
 	}, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 	return nil
 }
@@ -195,7 +195,7 @@ func (this *CloudFlareProvider) AddRecord(domain string, newRecord *dnstypes.Rec
 func (this *CloudFlareProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, newRecord)
 	}
 
 	var ttl = newRecord.TTL
@@ -216,13 +216,13 @@ func (this *CloudFlareProvider) UpdateRecord(domain string, record *dnstypes.Rec
 func (this *CloudFlareProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, record)
 	}
 
 	resp := new(cloudflare.DeleteDNSRecordResponse)
 	err = this.doAPI(http.MethodDelete, "zones/"+zoneId+"/dns_records/"+record.Id, map[string]string{}, nil, resp)
 	if err != nil {
-		return err
+		return this.WrapError(err, domain, record)
 	}
 	return nil
 }
