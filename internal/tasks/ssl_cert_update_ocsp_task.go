@@ -72,6 +72,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 		var errString = ""
 		if err != nil {
 			errString = err.Error()
+			remotelogs.Error("SSLCertUpdateOCSPTask", "update ocsp failed: "+errString)
 		}
 		err = models.SharedSSLCertDAO.UpdateCertOSCP(tx, int64(cert.Id), ocspData, errString)
 		if err != nil {
