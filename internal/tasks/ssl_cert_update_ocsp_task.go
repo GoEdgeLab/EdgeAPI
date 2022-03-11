@@ -72,7 +72,8 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 		var errString = ""
 		if err != nil {
 			errString = err.Error()
-			remotelogs.Error("SSLCertUpdateOCSPTask", "update ocsp failed: "+errString)
+
+			remotelogs.Warn("SSLCertUpdateOCSPTask", "update ocsp failed: "+errString)
 		}
 		err = models.SharedSSLCertDAO.UpdateCertOSCP(tx, int64(cert.Id), ocspData, errString)
 		if err != nil {
@@ -127,7 +128,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 	issuerReq.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
 	issuerResp, err := httpClient.Do(issuerReq)
 	if err != nil {
-		return nil, errors.New("request issuer certificate failed: " + err.Error())
+		return nil, errors.New("request issuer certificate failed: '" + issuerURL + "': " + err.Error())
 	}
 	defer func() {
 		_ = issuerResp.Body.Close()
@@ -135,11 +136,11 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 
 	issuerData, err := ioutil.ReadAll(issuerResp.Body)
 	if err != nil {
-		return nil, errors.New("read issuer certificate failed: " + err.Error())
+		return nil, errors.New("read issuer certificate failed: '" + issuerURL + "': " + err.Error())
 	}
 	issuerCert, err := x509.ParseCertificate(issuerData)
 	if err != nil {
-		return nil, errors.New("parse issuer certificate failed: " + err.Error())
+		return nil, errors.New("parse issuer certificate failed: '" + issuerURL + "': " + err.Error())
 	}
 
 	buf, err := ocsp.CreateRequest(cert, issuerCert, &ocsp.RequestOptions{
@@ -157,7 +158,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 
 	ocspResp, err := httpClient.Do(ocspReq)
 	if err != nil {
-		return nil, errors.New("request ocsp failed: " + err.Error())
+		return nil, errors.New("request ocsp failed: '" + ocspServerURL + "': " + err.Error())
 	}
 
 	defer func() {
@@ -166,7 +167,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 
 	respData, err := ioutil.ReadAll(ocspResp.Body)
 	if err != nil {
-		return nil, errors.New("read ocsp failed: " + err.Error())
+		return nil, errors.New("read ocsp failed: '" + ocspServerURL + "': " + err.Error())
 	}
 
 	ocspResult, err := ocsp.ParseResponse(respData, issuerCert)
