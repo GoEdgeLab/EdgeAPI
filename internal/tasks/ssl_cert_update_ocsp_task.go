@@ -34,7 +34,7 @@ type SSLCertUpdateOCSPTask struct {
 
 func NewSSLCertUpdateOCSPTask() *SSLCertUpdateOCSPTask {
 	return &SSLCertUpdateOCSPTask{
-		ticker: time.NewTicker(5 * time.Minute),
+		ticker: time.NewTicker(1 * time.Minute),
 	}
 }
 
@@ -48,7 +48,7 @@ func (this *SSLCertUpdateOCSPTask) Start() {
 }
 
 func (this *SSLCertUpdateOCSPTask) Loop() error {
-	ok, err := models.SharedSysLockerDAO.Lock(nil, "ssl_cert_update_ocsp_task", 300-1) // 假设执行时间为1秒
+	ok, err := models.SharedSysLockerDAO.Lock(nil, "ssl_cert_update_ocsp_task", 60-1) // 假设执行时间为1秒
 	if err != nil {
 		return err
 	}
@@ -57,9 +57,14 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 	}
 
 	var tx *dbs.Tx
-	certs, err := models.SharedSSLCertDAO.ListCertsToUpdateOCSP(tx, 10)
+	// TODO 将来可以设置单次任务条数
+	var size int64 = 20
+	certs, err := models.SharedSSLCertDAO.ListCertsToUpdateOCSP(tx, size)
 	if err != nil {
 		return errors.New("list certs failed: " + err.Error())
+	}
+	if len(certs) == 0 {
+		return nil
 	}
 
 	for _, cert := range certs {
