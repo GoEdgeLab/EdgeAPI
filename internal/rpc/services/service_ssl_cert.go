@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
+	"github.com/iwind/TeaGo/types"
 )
 
 // SSLCertService SSL证书相关服务
@@ -179,4 +180,105 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 		return nil, err
 	}
 	return &pb.ListSSLCertsResponse{SslCertsJSON: certConfigsJSON}, nil
+}
+
+// CountAllSSLCertsWithOCSPError 计算有OCSP错误的证书数量
+func (this *SSLCertService) CountAllSSLCertsWithOCSPError(ctx context.Context, req *pb.CountAllSSLCertsWithOCSPErrorRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedSSLCertDAO.CountAllSSLCertsWithOCSPError(tx, req.Keyword)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// ListSSLCertsWithOCSPError 列出有OCSP错误的证书
+func (this *SSLCertService) ListSSLCertsWithOCSPError(ctx context.Context, req *pb.ListSSLCertsWithOCSPErrorRequest) (*pb.ListSSLCertsWithOCSPErrorResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	certs, err := models.SharedSSLCertDAO.ListSSLCertsWithOCSPError(tx, req.Keyword, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbCerts = []*pb.SSLCert{}
+	for _, cert := range certs {
+		pbCerts = append(pbCerts, &pb.SSLCert{
+			Id:            int64(cert.Id),
+			IsOn:          cert.IsOn == 1,
+			Name:          cert.Name,
+			TimeBeginAt:   types.Int64(cert.TimeBeginAt),
+			TimeEndAt:     types.Int64(cert.TimeEndAt),
+			DnsNames:      cert.DecodeDNSNames(),
+			CommonNames:   cert.DecodeCommonNames(),
+			IsACME:        cert.IsACME == 1,
+			AcmeTaskId:    int64(cert.AcmeTaskId),
+			Ocsp:          []byte(cert.Ocsp),
+			OcspIsUpdated: cert.OcspIsUpdated == 1,
+			OcspError:     cert.OcspError,
+			Description:   cert.Description,
+			IsCA:          cert.IsCA == 1,
+			ServerName:    cert.ServerName,
+			CreatedAt:     int64(cert.CreatedAt),
+			UpdatedAt:     int64(cert.UpdatedAt),
+		})
+	}
+
+	return &pb.ListSSLCertsWithOCSPErrorResponse{
+		SslCerts: pbCerts,
+	}, nil
+}
+
+// IgnoreSSLCertsWithOCSPError 忽略一组OCSP证书错误
+func (this *SSLCertService) IgnoreSSLCertsWithOCSPError(ctx context.Context, req *pb.IgnoreSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedSSLCertDAO.IgnoreSSLCertsWithOCSPError(tx, req.SslCertIds)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// ResetSSLCertsWithOCSPError 重置一组证书OCSP错误状态
+func (this *SSLCertService) ResetSSLCertsWithOCSPError(ctx context.Context, req *pb.ResetSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedSSLCertDAO.ResetSSLCertsWithOCSPError(tx, req.SslCertIds)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// ResetAllSSLCertsWithOCSPError 重置所有证书OCSP错误状态
+func (this *SSLCertService) ResetAllSSLCertsWithOCSPError(ctx context.Context, req *pb.ResetAllSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedSSLCertDAO.ResetAllSSLCertsWithOCSPError(tx)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
 }

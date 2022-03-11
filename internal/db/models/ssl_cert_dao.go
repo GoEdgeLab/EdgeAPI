@@ -210,6 +210,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
 	config.TimeEndAt = int64(cert.TimeEndAt)
 	config.OCSP = []byte(cert.Ocsp)
+	config.OCSPError = cert.OcspError
 
 	if IsNotNull(cert.DnsNames) {
 		dnsNames := []string{}
@@ -405,6 +406,83 @@ func (this *SSLCertDAO) UpdateCertOSCP(tx *dbs.Tx, certId int64, ocsp []byte, er
 	}
 
 	return this.NotifyUpdate(tx, certId)
+}
+
+// CountAllSSLCertsWithOCSPError 计算有OCSP错误的证书数量
+func (this *SSLCertDAO) CountAllSSLCertsWithOCSPError(tx *dbs.Tx, keyword string) (int64, error) {
+	var query = this.Query(tx)
+
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR description LIKE :keyword OR dnsNames LIKE :keyword OR commonNames LIKE :keyword OR ocspError LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	return query.
+		State(SSLCertStateEnabled).
+		Attr("ocspIsUpdated", true).
+		Where("LENGTH(ocspError) > 0").
+		Count()
+}
+
+// ListSSLCertsWithOCSPError 列出有OCSP错误的证书
+func (this *SSLCertDAO) ListSSLCertsWithOCSPError(tx *dbs.Tx, keyword string, offset int64, size int64) (result []*SSLCert, err error) {
+	var query = this.Query(tx)
+
+	if len(keyword) > 0 {
+		query.Where("(name LIKE :keyword OR description LIKE :keyword OR dnsNames LIKE :keyword OR commonNames LIKE :keyword OR ocspError LIKE :keyword)").
+			Param("keyword", "%"+keyword+"%")
+	}
+
+	_, err = query.
+		State(SSLCertStateEnabled).
+		Attr("ocspIsUpdated", true).
+		Where("LENGTH(ocspError) > 0").
+		Offset(offset).
+		Limit(size).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// IgnoreSSLCertsWithOCSPError 忽略一组OCSP证书错误
+func (this *SSLCertDAO) IgnoreSSLCertsWithOCSPError(tx *dbs.Tx, certIds []int64) error {
+	for _, certId := range certIds {
+		err := this.Query(tx).
+			Pk(certId).
+			Set("ocspError", "").
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ResetSSLCertsWithOCSPError 重置一组证书OCSP错误状态
+func (this *SSLCertDAO) ResetSSLCertsWithOCSPError(tx *dbs.Tx, certIds []int64) error {
+	for _, certId := range certIds {
+		err := this.Query(tx).
+			Pk(certId).
+			Set("ocspIsUpdated", 0).
+			Set("ocspError", "").
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ResetAllSSLCertsWithOCSPError 重置所有证书OCSP错误状态
+func (this *SSLCertDAO) ResetAllSSLCertsWithOCSPError(tx *dbs.Tx) error {
+	return this.Query(tx).
+		State(SSLCertStateEnabled).
+		Attr("ocspIsUpdated", 1).
+		Where("LENGTH(ocspError)>0").
+		Set("ocspIsUpdated", 0).
+		Set("ocspError", "").
+		UpdateQuickly()
 }
 
 // NotifyUpdate 通知更新
