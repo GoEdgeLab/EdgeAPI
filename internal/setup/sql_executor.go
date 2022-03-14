@@ -2,7 +2,6 @@ package setup
 
 import (
 	"encoding/json"
-	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
@@ -113,7 +112,7 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 	}
 
 	// 更新版本号
-	err = this.updateVersion(db, teaconst.Version)
+	err = this.updateVersion(db, ComposeSQLVersion())
 	if err != nil {
 		return err
 	}

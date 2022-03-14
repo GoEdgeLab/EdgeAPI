@@ -276,7 +276,7 @@ func (this *APINode) autoUpgrade() error {
 	if err != nil {
 		return errors.New("decode database config failed: " + err.Error())
 	}
-	dbConfig := config.DBs[Tea.Env]
+	var dbConfig = config.DBs[Tea.Env]
 	db, err := dbs.NewInstanceFromConfig(dbConfig)
 	if err != nil {
 		return errors.New("load database failed: " + err.Error())
@@ -287,8 +287,8 @@ func (this *APINode) autoUpgrade() error {
 	}
 	if one != nil {
 		// 如果是同样的版本，则直接认为是最新版本
-		version := one.GetString("version")
-		if stringutil.VersionCompare(version, teaconst.Version) >= 0 {
+		var version = one.GetString("version")
+		if stringutil.VersionCompare(version, setup.ComposeSQLVersion()) >= 0 {
 			return nil
 		}
 	}
