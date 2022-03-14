@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -158,10 +159,14 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 	}
 
 	// 规则分组
-	groupStats, err := stats.SharedServerHTTPFirewallDailyStatDAO.GroupDailyCount(tx, 0, 0, dayFrom, day, 0, 10)
+	var today = timeutil.Format("Ymd")
+	groupStats, err := stats.SharedServerHTTPFirewallDailyStatDAO.GroupDailyCount(tx, 0, 0, today, today, 0, 20)
 	if err != nil {
 		return nil, err
 	}
+
+	// 合并同名
+	var groupNamedStatsMap = map[string]*stats.ServerHTTPFirewallDailyStat{} // name => *ServerHTTPFirewallDailyStat
 	for _, stat := range groupStats {
 		ruleGroupName, err := models.SharedHTTPFirewallRuleGroupDAO.FindHTTPFirewallRuleGroupName(tx, int64(stat.HttpFirewallRuleGroupId))
 		if err != nil {
@@ -171,10 +176,25 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 			continue
 		}
 
+		namedStat, ok := groupNamedStatsMap[ruleGroupName]
+		if ok {
+			namedStat.Count += stat.Count
+		} else {
+			groupNamedStatsMap[ruleGroupName] = stat
+		}
+	}
+
+	for ruleGroupName, stat := range groupNamedStatsMap {
 		result.HttpFirewallRuleGroups = append(result.HttpFirewallRuleGroups, &pb.ComposeFirewallGlobalBoardResponse_HTTPFirewallRuleGroupStat{
 			HttpFirewallRuleGroup: &pb.HTTPFirewallRuleGroup{Id: int64(stat.HttpFirewallRuleGroupId), Name: ruleGroupName},
 			Count:                 int64(stat.Count),
 		})
+	}
+	sort.Slice(result.HttpFirewallRuleGroups, func(i, j int) bool {
+		return result.HttpFirewallRuleGroups[i].Count > result.HttpFirewallRuleGroups[j].Count
+	})
+	if len(result.HttpFirewallRuleGroups) > 10 {
+		result.HttpFirewallRuleGroups = result.HttpFirewallRuleGroups[:10]
 	}
 
 	// 节点排行
