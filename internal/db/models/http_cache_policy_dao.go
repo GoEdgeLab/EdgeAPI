@@ -183,6 +183,12 @@ func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string
 
 	var storageOptions = &serverconfigs.HTTPFileCacheStorage{
 		Dir: "/opt/cache",
+		MemoryPolicy: &serverconfigs.HTTPCachePolicy{
+			Capacity: &shared.SizeCapacity{
+				Count: 1,
+				Unit:  shared.SizeCapacityUnitGB,
+			},
+		},
 	}
 	storageOptionsJSON, err := json.Marshal(storageOptions)
 	if err != nil {
@@ -303,7 +309,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 }
 
 // CountAllEnabledHTTPCachePolicies 计算可用缓存策略数量
-func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string) (int64, error) {
+func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string, storageType string) (int64, error) {
 	query := this.Query(tx).
 		State(HTTPCachePolicyStateEnabled)
 	if clusterId > 0 {
@@ -313,12 +319,15 @@ func (this *HTTPCachePolicyDAO) CountAllEnabledHTTPCachePolicies(tx *dbs.Tx, clu
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if len(storageType) > 0 {
+		query.Attr("type", storageType)
 	}
 	return query.Count()
 }
 
 // ListEnabledHTTPCachePolicies 列出单页的缓存策略
-func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
+func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, clusterId int64, keyword string, storageType string, offset int64, size int64) ([]*serverconfigs.HTTPCachePolicy, error) {
 	query := this.Query(tx).
 		State(HTTPCachePolicyStateEnabled)
 	if clusterId > 0 {
@@ -328,6 +337,9 @@ func (this *HTTPCachePolicyDAO) ListEnabledHTTPCachePolicies(tx *dbs.Tx, cluster
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
 			Param("keyword", "%"+keyword+"%")
+	}
+	if len(storageType) > 0 {
+		query.Attr("type", storageType)
 	}
 	ones, err := query.
 		ResultPk().
