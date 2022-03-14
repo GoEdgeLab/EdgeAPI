@@ -107,6 +107,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	config.RequestURI = reverseProxy.RequestURI
 	config.StripPrefix = reverseProxy.StripPrefix
 	config.AutoFlush = reverseProxy.AutoFlush == 1
+	config.FollowRedirects = reverseProxy.FollowRedirects == 1
 
 	schedulingConfig := &serverconfigs.SchedulingConfig{}
 	if len(reverseProxy.Scheduling) > 0 && reverseProxy.Scheduling != "null" {
@@ -312,12 +313,13 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	idleTimeout *shared.TimeDuration,
 	maxConns int32,
 	maxIdleConns int32,
-	proxyProtocolJSON []byte) error {
+	proxyProtocolJSON []byte,
+	followRedirects bool) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
 
-	op := NewReverseProxyOperator()
+	var op = NewReverseProxyOperator()
 	op.Id = reverseProxyId
 
 	if requestHostType < 0 {
@@ -329,6 +331,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	op.RequestURI = requestURI
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush
+	op.FollowRedirects = followRedirects
 
 	if len(addHeaders) == 0 {
 		addHeaders = []string{}

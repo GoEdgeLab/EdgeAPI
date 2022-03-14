@@ -24,6 +24,7 @@ type ReverseProxy struct {
 	MaxConns        uint32 `field:"maxConns"`        // 最大并发连接数
 	MaxIdleConns    uint32 `field:"maxIdleConns"`    // 最大空闲连接数
 	ProxyProtocol   string `field:"proxyProtocol"`   // Proxy Protocol配置
+	FollowRedirects uint8  `field:"followRedirects"` // 回源跟随
 }
 
 type ReverseProxyOperator struct {
@@ -49,6 +50,7 @@ type ReverseProxyOperator struct {
 	MaxConns        interface{} // 最大并发连接数
 	MaxIdleConns    interface{} // 最大空闲连接数
 	ProxyProtocol   interface{} // Proxy Protocol配置
+	FollowRedirects interface{} // 回源跟随
 }
 
 func NewReverseProxyOperator() *ReverseProxyOperator {
