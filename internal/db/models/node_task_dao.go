@@ -76,6 +76,7 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 			"error":      "",
 			"isNotified": 0,
 			"version":    version,
+			"serverId":   serverId,
 		})
 	return err
 }
@@ -109,6 +110,7 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId in
 			"isNotified": 0,
 			"error":      "",
 			"version":    time.Now().UnixNano(),
+			"serverId":   serverId,
 		})
 	return err
 }
