@@ -53,8 +53,8 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 	if clusterId <= 0 || nodeId <= 0 {
 		return nil
 	}
-	uniqueId := role + "@" + types.String(nodeId) + "@node@" + taskType
-	updatedAt := time.Now().Unix()
+	var uniqueId = role + "@" + types.String(nodeId) + "@node@" + types.String(serverId) + "@" + taskType
+	var updatedAt = time.Now().Unix()
 	_, _, err := this.Query(tx).
 		InsertOrUpdate(maps.Map{
 			"role":      role,
@@ -87,8 +87,8 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId in
 		return nil
 	}
 
-	uniqueId := role + "@" + types.String(clusterId) + "@" + types.String(serverId) + "@cluster@" + taskType
-	updatedAt := time.Now().Unix()
+	var uniqueId = role + "@" + types.String(clusterId) + "@" + types.String(serverId) + "@cluster@" + types.String(serverId) + "@" + taskType
+	var updatedAt = time.Now().Unix()
 	_, _, err := this.Query(tx).
 		InsertOrUpdate(maps.Map{
 			"role":       role,
