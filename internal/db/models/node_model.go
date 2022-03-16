@@ -31,6 +31,7 @@ type Node struct {
 	DnsRoutes              string `field:"dnsRoutes"`              // DNS线路设置
 	MaxCacheDiskCapacity   string `field:"maxCacheDiskCapacity"`   // 硬盘缓存容量
 	MaxCacheMemoryCapacity string `field:"maxCacheMemoryCapacity"` // 内存缓存容量
+	CacheDiskDir           string `field:"cacheDiskDir"`           // 缓存目录
 }
 
 type NodeOperator struct {
@@ -63,6 +64,7 @@ type NodeOperator struct {
 	DnsRoutes              interface{} // DNS线路设置
 	MaxCacheDiskCapacity   interface{} // 硬盘缓存容量
 	MaxCacheMemoryCapacity interface{} // 内存缓存容量
+	CacheDiskDir           interface{} // 缓存目录
 }
 
 func NewNodeOperator() *NodeOperator {

@@ -578,6 +578,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		NodeRegion:             pbRegion,
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
 		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
+		CacheDiskDir:           node.CacheDiskDir,
 	}}, nil
 }
 
@@ -1570,7 +1571,7 @@ func (this *NodeService) UpdateNodeCache(ctx context.Context, req *pb.UpdateNode
 		}
 	}
 
-	err = models.SharedNodeDAO.UpdateNodeCache(tx, req.NodeId, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON)
+	err = models.SharedNodeDAO.UpdateNodeCache(tx, req.NodeId, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON, req.CacheDiskDir)
 	if err != nil {
 		return nil, err
 	}
