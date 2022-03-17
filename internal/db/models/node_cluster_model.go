@@ -30,6 +30,7 @@ type NodeCluster struct {
 	NodeMaxThreads        uint32 `field:"nodeMaxThreads"`        // 节点最大线程数
 	NodeTCPMaxConnections uint32 `field:"nodeTCPMaxConnections"` // TCP最大连接数
 	AutoOpenPorts         uint8  `field:"autoOpenPorts"`         // 是否自动尝试开放端口
+	IsPinned              uint8  `field:"isPinned"`              // 是否置顶
 }
 
 type NodeClusterOperator struct {
@@ -61,6 +62,7 @@ type NodeClusterOperator struct {
 	NodeMaxThreads        interface{} // 节点最大线程数
 	NodeTCPMaxConnections interface{} // TCP最大连接数
 	AutoOpenPorts         interface{} // 是否自动尝试开放端口
+	IsPinned              interface{} // 是否置顶
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

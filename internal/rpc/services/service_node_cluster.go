@@ -298,6 +298,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			DnsDomainId: int64(cluster.DnsDomainId),
 			IsOn:        cluster.IsOn == 1,
 			TimeZone:    cluster.TimeZone,
+			IsPinned:    cluster.IsPinned == 1,
 		})
 	}
 
@@ -1025,4 +1026,20 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	result.HasMetricItems = countMetricItems > 0
 
 	return result, nil
+}
+
+// UpdateNodeClusterPinned 设置集群是否置顶
+func (this *NodeClusterService) UpdateNodeClusterPinned(ctx context.Context, req *pb.UpdateNodeClusterPinnedRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateClusterIsPinned(tx, req.NodeClusterId, req.IsPinned)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

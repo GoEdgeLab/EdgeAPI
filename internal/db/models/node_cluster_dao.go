@@ -207,6 +207,14 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 	return this.NotifyUpdate(tx, clusterId)
 }
 
+// UpdateClusterIsPinned 设置集群是否置顶
+func (this *NodeClusterDAO) UpdateClusterIsPinned(tx *dbs.Tx, clusterId int64, isPinned bool) error {
+	return this.Query(tx).
+		Pk(clusterId).
+		Set("isPinned", isPinned).
+		UpdateQuickly()
+}
+
 // CountAllEnabledClusters 计算所有集群数量
 func (this *NodeClusterDAO) CountAllEnabledClusters(tx *dbs.Tx, keyword string) (int64, error) {
 	query := this.Query(tx).
@@ -230,6 +238,7 @@ func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offs
 		Offset(offset).
 		Limit(size).
 		Slice(&result).
+		Desc("isPinned").
 		DescPk().
 		FindAll()
 	return
