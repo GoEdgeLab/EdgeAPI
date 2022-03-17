@@ -119,7 +119,7 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 		return nil, err
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, "log", dayFrom, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, []string{"log", "tag"}, dayFrom, day)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 		}
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, "captcha", dayFrom, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, []string{"captcha"}, dayFrom, day)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req
 		}
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, "block", dayFrom, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, 0, 0, []string{"block", "page"}, dayFrom, day)
 		if err != nil {
 			return nil, err
 		}

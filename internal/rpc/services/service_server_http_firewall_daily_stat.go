@@ -135,7 +135,7 @@ func (this *ServerHTTPFirewallDailyStatService) ComposeServerHTTPFirewallDashboa
 		return nil, err
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, "log", dayBefore, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, []string{"log", "tag"}, dayBefore, day)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func (this *ServerHTTPFirewallDailyStatService) ComposeServerHTTPFirewallDashboa
 		}
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, "block", dayBefore, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, []string{"block", "page"}, dayBefore, day)
 		if err != nil {
 			return nil, err
 		}
@@ -161,7 +161,7 @@ func (this *ServerHTTPFirewallDailyStatService) ComposeServerHTTPFirewallDashboa
 		}
 	}
 	{
-		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, "captcha", dayBefore, day)
+		statList, err := stats.SharedServerHTTPFirewallDailyStatDAO.FindDailyStats(tx, userId, req.ServerId, []string{"captcha"}, dayBefore, day)
 		if err != nil {
 			return nil, err
 		}

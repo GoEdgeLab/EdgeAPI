@@ -109,10 +109,13 @@ func (this *ServerHTTPFirewallDailyStatDAO) GroupDailyCount(tx *dbs.Tx, userId i
 }
 
 // FindDailyStats 查询某个日期段内的记录
-func (this *ServerHTTPFirewallDailyStatDAO) FindDailyStats(tx *dbs.Tx, userId int64, serverId int64, action string, dayFrom string, dayTo string) (result []*ServerHTTPFirewallDailyStat, err error) {
+func (this *ServerHTTPFirewallDailyStatDAO) FindDailyStats(tx *dbs.Tx, userId int64, serverId int64, actions []string, dayFrom string, dayTo string) (result []*ServerHTTPFirewallDailyStat, err error) {
+	if len(actions) == 0 {
+		return nil, nil
+	}
 	query := this.Query(tx).
 		Between("day", dayFrom, dayTo).
-		Attr("action", action)
+		Attr("action", actions)
 	if serverId > 0 {
 		query.Attr("serverId", serverId)
 	} else if userId > 0 {
