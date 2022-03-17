@@ -100,8 +100,9 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 	maxConns int32,
 	maxIdleConns int32,
 	certRef *sslconfigs.SSLCertRef,
-	domains []string) (originId int64, err error) {
-	op := NewOriginOperator()
+	domains []string,
+	host string) (originId int64, err error) {
+	var op = NewOriginOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.IsOn = isOn
@@ -165,6 +166,8 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 		op.Domains = "[]"
 	}
 
+	op.Host = host
+
 	op.State = OriginStateEnabled
 	err = this.Save(tx, op)
 	if err != nil {
@@ -187,11 +190,12 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	maxConns int32,
 	maxIdleConns int32,
 	certRef *sslconfigs.SSLCertRef,
-	domains []string) error {
+	domains []string,
+	host string) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
-	op := NewOriginOperator()
+	var op = NewOriginOperator()
 	op.Id = originId
 	op.Name = name
 	op.Addr = addrJSON
@@ -257,6 +261,8 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 		op.Domains = "[]"
 	}
 
+	op.Host = host
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -284,7 +290,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 		return nil, nil
 	}
 
-	config := &serverconfigs.OriginConfig{
+	var config = &serverconfigs.OriginConfig{
 		Id:           int64(origin.Id),
 		IsOn:         origin.IsOn == 1,
 		Version:      int(origin.Version),
