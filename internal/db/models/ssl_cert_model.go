@@ -25,9 +25,11 @@ type SSLCert struct {
 	NotifiedAt         uint64 `field:"notifiedAt"`         // 最后通知时间
 	Ocsp               string `field:"ocsp"`               // OCSP缓存
 	OcspIsUpdated      uint8  `field:"ocspIsUpdated"`      // OCSP是否已更新
-	OcspUpdatedAt      uint32 `field:"ocspUpdatedAt"`      // OCSP更新时间
+	OcspUpdatedAt      uint64 `field:"ocspUpdatedAt"`      // OCSP更新时间
 	OcspError          string `field:"ocspError"`          // OCSP更新错误
 	OcspUpdatedVersion uint64 `field:"ocspUpdatedVersion"` // OCSP更新版本
+	OcspExpiresAt      uint64 `field:"ocspExpiresAt"`      // OCSP过期时间(UTC)
+	OcspTries          uint32 `field:"ocspTries"`          // OCSP尝试次数
 }
 
 type SSLCertOperator struct {
@@ -57,6 +59,8 @@ type SSLCertOperator struct {
 	OcspUpdatedAt      interface{} // OCSP更新时间
 	OcspError          interface{} // OCSP更新错误
 	OcspUpdatedVersion interface{} // OCSP更新版本
+	OcspExpiresAt      interface{} // OCSP过期时间(UTC)
+	OcspTries          interface{} // OCSP尝试次数
 }
 
 func NewSSLCertOperator() *SSLCertOperator {

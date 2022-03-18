@@ -300,7 +300,8 @@ func (this *SSLCertService) ListUpdatedSSLCertOCSP(ctx context.Context, req *pb.
 	for _, cert := range certs {
 		result = append(result, &pb.ListUpdatedSSLCertOCSPResponse_SSLCertOCSP{
 			SslCertId: int64(cert.Id),
-			Ocsp:      []byte(cert.Ocsp),
+			Data:      []byte(cert.Ocsp),
+			ExpiresAt: int64(cert.OcspExpiresAt),
 			Version:   int64(cert.OcspUpdatedVersion),
 		})
 	}

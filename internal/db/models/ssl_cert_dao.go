@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -138,7 +139,18 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 	if certId <= 0 {
 		return errors.New("invalid certId")
 	}
-	op := NewSSLCertOperator()
+
+	oldOne, err := this.Query(tx).Find()
+	if err != nil {
+		return err
+	}
+	if oldOne == nil {
+		return nil
+	}
+	var oldCert = oldOne.(*SSLCert)
+	var dataIsChanged = bytes.Compare(certData, []byte(oldCert.CertData)) != 0 || bytes.Compare(keyData, []byte(oldCert.KeyData)) != 0
+
+	var op = NewSSLCertOperator()
 	op.Id = certId
 	op.IsOn = isOn
 	op.Name = name
@@ -169,7 +181,15 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 	}
 	op.CommonNames = commonNamesJSON
 
-	op.OcspIsUpdated = false
+	// OCSP
+	if dataIsChanged {
+		op.OcspIsUpdated = 0
+		op.Ocsp = ""
+		op.OcspUpdatedAt = 0
+		op.OcspError = ""
+		op.OcspTries = 0
+		op.OcspExpiresAt = 0
+	}
 
 	err = this.Save(tx, op)
 	if err != nil {
@@ -209,7 +229,12 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	config.ServerName = cert.ServerName
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
 	config.TimeEndAt = int64(cert.TimeEndAt)
-	config.OCSP = []byte(cert.Ocsp)
+
+	// OCSP
+	if int64(cert.OcspExpiresAt) > time.Now().Unix() {
+		config.OCSP = []byte(cert.Ocsp)
+		config.OCSPExpiresAt = int64(cert.OcspExpiresAt)
+	}
 	config.OCSPError = cert.OcspError
 
 	if IsNotNull(cert.DnsNames) {
@@ -374,15 +399,14 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 }
 
 // ListCertsToUpdateOCSP 查找需要更新OCSP的证书
-func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxAge int, size int64) (result []*SSLCert, err error) {
-	if maxAge <= 0 {
-		maxAge = 7200
-	}
-
+func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxTries int, size int64) (result []*SSLCert, err error) {
+	var nowTime = time.Now().Unix()
 	var query = this.Query(tx).
 		State(SSLCertStateEnabled).
-		Where("ocspUpdatedAt<:timestamp").
-		Param("timestamp", time.Now().Unix()-int64(maxAge))
+		Lt("ocspExpiresAt", nowTime+120). // 提前 N 秒钟准备更新
+		Lt("ocspTries", maxTries).
+		Lt("timeBeginAt", nowTime).
+		Gt("timeEndAt", nowTime)
 
 	// TODO 需要排除没有被server使用的policy，或许可以增加一个字段记录policy最近使用时间
 
@@ -411,7 +435,7 @@ func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxAge int, size int64
 func (this *SSLCertDAO) ListCertOCSPAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*SSLCert, err error) {
 	// 不需要判断ocsp是否为空
 	_, err = this.Query(tx).
-		Result("id", "ocsp", "ocspUpdatedVersion").
+		Result("id", "ocsp", "ocspUpdatedVersion", "ocspExpiresAt").
 		State(SSLCertStateEnabled).
 		Attr("ocspIsUpdated", 1).
 		Gt("ocspUpdatedVersion", version).
@@ -441,7 +465,11 @@ func (this *SSLCertDAO) PrepareCertOCSPUpdating(tx *dbs.Tx, certId int64) error 
 }
 
 // UpdateCertOCSP 修改OCSP
-func (this *SSLCertDAO) UpdateCertOCSP(tx *dbs.Tx, certId int64, ocsp []byte, errString string) error {
+func (this *SSLCertDAO) UpdateCertOCSP(tx *dbs.Tx, certId int64, ocsp []byte, expiresAt int64, hasErr bool, errString string) error {
+	if hasErr && len(errString) == 0 {
+		errString = "failed"
+	}
+
 	version, err := SharedSysLockerDAO.Increase(tx, "SSL_CERT_OCSP_VERSION", 1)
 	if err != nil {
 		return err
@@ -456,14 +484,22 @@ func (this *SSLCertDAO) UpdateCertOCSP(tx *dbs.Tx, certId int64, ocsp []byte, er
 		errString = errString[:300]
 	}
 
-	err = this.Query(tx).
+	var query = this.Query(tx).
 		Pk(certId).
 		Set("ocsp", ocsp).
 		Set("ocspError", errString).
 		Set("ocspIsUpdated", true).
 		Set("ocspUpdatedAt", time.Now().Unix()).
 		Set("ocspUpdatedVersion", version).
-		UpdateQuickly()
+		Set("ocspExpiresAt", expiresAt)
+
+	if hasErr {
+		query.Set("ocspTries", dbs.SQL("ocspTries+1"))
+	} else {
+		query.Set("ocspTries", 0)
+	}
+
+	err = query.UpdateQuickly()
 	if err != nil {
 		return err
 	}
@@ -531,6 +567,7 @@ func (this *SSLCertDAO) ResetSSLCertsWithOCSPError(tx *dbs.Tx, certIds []int64) 
 			Set("ocspIsUpdated", 0).
 			Set("ocspUpdatedAt", 0).
 			Set("ocspError", "").
+			Set("ocspTries", 0).
 			UpdateQuickly()
 		if err != nil {
 			return err
@@ -548,6 +585,7 @@ func (this *SSLCertDAO) ResetAllSSLCertsWithOCSPError(tx *dbs.Tx) error {
 		Set("ocspIsUpdated", 0).
 		Set("ocspUpdatedAt", 0).
 		Set("ocspError", "").
+		Set("ocspTries", 0).
 		UpdateQuickly()
 }
 
