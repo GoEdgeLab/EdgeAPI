@@ -282,3 +282,30 @@ func (this *SSLCertService) ResetAllSSLCertsWithOCSPError(ctx context.Context, r
 	}
 	return this.Success()
 }
+
+// ListUpdatedSSLCertOCSP 读取证书的OCSP
+func (this *SSLCertService) ListUpdatedSSLCertOCSP(ctx context.Context, req *pb.ListUpdatedSSLCertOCSPRequest) (*pb.ListUpdatedSSLCertOCSPResponse, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	certs, err := models.SharedSSLCertDAO.ListCertOCSPAfterVersion(tx, req.Version, int64(req.Size))
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []*pb.ListUpdatedSSLCertOCSPResponse_SSLCertOCSP{}
+	for _, cert := range certs {
+		result = append(result, &pb.ListUpdatedSSLCertOCSPResponse_SSLCertOCSP{
+			SslCertId: int64(cert.Id),
+			Ocsp:      []byte(cert.Ocsp),
+			Version:   int64(cert.OcspUpdatedVersion),
+		})
+	}
+
+	return &pb.ListUpdatedSSLCertOCSPResponse{
+		SslCertOCSP: result,
+	}, nil
+}

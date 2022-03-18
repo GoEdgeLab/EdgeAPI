@@ -29,42 +29,56 @@ func init() {
 }
 
 type SSLCertUpdateOCSPTask struct {
-	ticker *time.Ticker
+	ticker     *time.Ticker
+	httpClient *http.Client
 }
 
 func NewSSLCertUpdateOCSPTask() *SSLCertUpdateOCSPTask {
 	return &SSLCertUpdateOCSPTask{
-		ticker: time.NewTicker(1 * time.Minute),
+		ticker:     time.NewTicker(1 * time.Minute),
+		httpClient: utils.SharedHttpClient(5 * time.Second),
 	}
 }
 
 func (this *SSLCertUpdateOCSPTask) Start() {
 	for range this.ticker.C {
-		err := this.Loop()
+		err := this.Loop(true)
 		if err != nil {
 			remotelogs.Error("SSLCertUpdateOCSPTask", err.Error())
 		}
 	}
 }
 
-func (this *SSLCertUpdateOCSPTask) Loop() error {
-	ok, err := models.SharedSysLockerDAO.Lock(nil, "ssl_cert_update_ocsp_task", 60-1) // 假设执行时间为1秒
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return nil
+func (this *SSLCertUpdateOCSPTask) Loop(checkLock bool) error {
+	if checkLock {
+		ok, err := models.SharedSysLockerDAO.Lock(nil, "ssl_cert_update_ocsp_task", 60-1) // 假设执行时间为1秒
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return nil
+		}
 	}
 
 	var tx *dbs.Tx
 	// TODO 将来可以设置单次任务条数
-	var size int64 = 20
-	certs, err := models.SharedSSLCertDAO.ListCertsToUpdateOCSP(tx, size)
+	var size int64 = 60
+	var maxAge = 7200
+	certs, err := models.SharedSSLCertDAO.ListCertsToUpdateOCSP(tx, maxAge, size)
 	if err != nil {
 		return errors.New("list certs failed: " + err.Error())
 	}
+
 	if len(certs) == 0 {
 		return nil
+	}
+
+	// 锁定
+	for _, cert := range certs {
+		err := models.SharedSSLCertDAO.PrepareCertOCSPUpdating(tx, int64(cert.Id))
+		if err != nil {
+			return errors.New("prepare cert ocsp updating failed: " + err.Error())
+		}
 	}
 
 	for _, cert := range certs {
@@ -75,7 +89,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 
 			remotelogs.Warn("SSLCertUpdateOCSPTask", "update ocsp failed: "+errString)
 		}
-		err = models.SharedSSLCertDAO.UpdateCertOSCP(tx, int64(cert.Id), ocspData, errString)
+		err = models.SharedSSLCertDAO.UpdateCertOCSP(tx, int64(cert.Id), ocspData, errString)
 		if err != nil {
 			return errors.New("update ocsp failed: " + err.Error())
 		}
@@ -84,6 +98,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 	return nil
 }
 
+// UpdateCertOCSP 更新单个证书OCSP
 func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocspData []byte, err error) {
 	if certOne.IsCA == 1 || len(certOne.CertData) == 0 || len(certOne.KeyData) == 0 {
 		return
@@ -120,13 +135,12 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 	var issuerURL = cert.IssuingCertificateURL[0]
 	var ocspServerURL = cert.OCSPServer[0]
 
-	var httpClient = utils.SharedHttpClient(5 * time.Second)
 	issuerReq, err := http.NewRequest(http.MethodGet, issuerURL, nil)
 	if err != nil {
 		return nil, errors.New("request issuer certificate failed: " + err.Error())
 	}
 	issuerReq.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
-	issuerResp, err := httpClient.Do(issuerReq)
+	issuerResp, err := this.httpClient.Do(issuerReq)
 	if err != nil {
 		return nil, errors.New("request issuer certificate failed: '" + issuerURL + "': " + err.Error())
 	}
@@ -156,7 +170,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 	ocspReq.Header.Set("Content-Type", "application/ocsp-request")
 	ocspReq.Header.Set("Accept", "application/ocsp-response")
 
-	ocspResp, err := httpClient.Do(ocspReq)
+	ocspResp, err := this.httpClient.Do(ocspReq)
 	if err != nil {
 		return nil, errors.New("request ocsp failed: '" + ocspServerURL + "': " + err.Error())
 	}

@@ -12,7 +12,7 @@ func TestSSLCertUpdateOCSPTask_Loop(t *testing.T) {
 	dbs.NotifyReady()
 
 	var task = tasks.NewSSLCertUpdateOCSPTask()
-	err := task.Loop()
+	err := task.Loop(false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -374,18 +374,64 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 }
 
 // ListCertsToUpdateOCSP 查找需要更新OCSP的证书
-func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, size int64) (result []*SSLCert, err error) {
+func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxAge int, size int64) (result []*SSLCert, err error) {
+	if maxAge <= 0 {
+		maxAge = 7200
+	}
 	_, err = this.Query(tx).
 		State(SSLCertStateEnabled).
-		Attr("ocspIsUpdated", false).
+		Where("ocspUpdatedAt<:timestamp").
+		Param("timestamp", time.Now().Unix()-int64(maxAge)).
+
+		// TODO 需要排除没有被server使用的policy，或许可以增加一个字段记录policy最近使用时间
+		Where("JSON_CONTAINS((SELECT JSON_ARRAYAGG(JSON_EXTRACT(certs, '$[*].certId')) FROM edgeSSLPolicies WHERE state=1 AND ocspIsOn=1 AND certs IS NOT NULL), CAST(id AS CHAR))").
+		Asc("ocspUpdatedAt").
 		Limit(size).
 		Slice(&result).
 		FindAll()
 	return
 }
 
-// UpdateCertOSCP 修改OCSP
-func (this *SSLCertDAO) UpdateCertOSCP(tx *dbs.Tx, certId int64, ocsp []byte, errString string) error {
+// ListCertOCSPAfterVersion 列出某个版本后的OCSP
+func (this *SSLCertDAO) ListCertOCSPAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*SSLCert, err error) {
+	// 不需要判断ocsp是否为空
+	_, err = this.Query(tx).
+		Result("id", "ocsp", "ocspUpdatedVersion").
+		State(SSLCertStateEnabled).
+		Attr("ocspIsUpdated", 1).
+		Gt("ocspUpdatedVersion", version).
+		Asc("ocspUpdatedVersion").
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindCertOCSPLatestVersion 获取OCSP最新版本
+func (this *SSLCertDAO) FindCertOCSPLatestVersion(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		Result("ocspUpdatedVersion").
+		Desc("ocspUpdatedVersion").
+		Limit(1).
+		FindInt64Col(0)
+}
+
+// PrepareCertOCSPUpdating 更新OCSP更新时间，以便于准备更新，相当于锁定
+func (this *SSLCertDAO) PrepareCertOCSPUpdating(tx *dbs.Tx, certId int64) error {
+	return this.Query(tx).
+		Pk(certId).
+		Set("ocspUpdatedAt", time.Now().Unix()).
+		UpdateQuickly()
+
+}
+
+// UpdateCertOCSP 修改OCSP
+func (this *SSLCertDAO) UpdateCertOCSP(tx *dbs.Tx, certId int64, ocsp []byte, errString string) error {
+	version, err := SharedSysLockerDAO.Increase(tx, "SSL_CERT_OCSP_VERSION", 1)
+	if err != nil {
+		return err
+	}
+
 	if ocsp == nil {
 		ocsp = []byte{}
 	}
@@ -395,17 +441,20 @@ func (this *SSLCertDAO) UpdateCertOSCP(tx *dbs.Tx, certId int64, ocsp []byte, er
 		errString = errString[:300]
 	}
 
-	err := this.Query(tx).
+	err = this.Query(tx).
 		Pk(certId).
 		Set("ocsp", ocsp).
 		Set("ocspError", errString).
 		Set("ocspIsUpdated", true).
+		Set("ocspUpdatedAt", time.Now().Unix()).
+		Set("ocspUpdatedVersion", version).
 		UpdateQuickly()
 	if err != nil {
 		return err
 	}
 
-	return this.NotifyUpdate(tx, certId)
+	// 注意：这里不通知更新，避免频繁的更新导致服务不稳定
+	return nil
 }
 
 // CountAllSSLCertsWithOCSPError 计算有OCSP错误的证书数量
@@ -465,6 +514,7 @@ func (this *SSLCertDAO) ResetSSLCertsWithOCSPError(tx *dbs.Tx, certIds []int64) 
 		err := this.Query(tx).
 			Pk(certId).
 			Set("ocspIsUpdated", 0).
+			Set("ocspUpdatedAt", 0).
 			Set("ocspError", "").
 			UpdateQuickly()
 		if err != nil {
@@ -481,6 +531,7 @@ func (this *SSLCertDAO) ResetAllSSLCertsWithOCSPError(tx *dbs.Tx) error {
 		Attr("ocspIsUpdated", 1).
 		Where("LENGTH(ocspError)>0").
 		Set("ocspIsUpdated", 0).
+		Set("ocspUpdatedAt", 0).
 		Set("ocspError", "").
 		UpdateQuickly()
 }

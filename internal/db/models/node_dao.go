@@ -948,6 +948,13 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		}
 	}
 
+	// OCSP
+	ocspVersion, err := SharedSSLCertDAO.FindCertOCSPLatestVersion(tx)
+	if err != nil {
+		return nil, err
+	}
+	config.OCSPVersion = ocspVersion
+
 	return config, nil
 }
 
