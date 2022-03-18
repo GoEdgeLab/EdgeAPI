@@ -378,13 +378,28 @@ func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxAge int, size int64
 	if maxAge <= 0 {
 		maxAge = 7200
 	}
-	_, err = this.Query(tx).
+
+	var query = this.Query(tx).
 		State(SSLCertStateEnabled).
 		Where("ocspUpdatedAt<:timestamp").
-		Param("timestamp", time.Now().Unix()-int64(maxAge)).
+		Param("timestamp", time.Now().Unix()-int64(maxAge))
 
-		// TODO 需要排除没有被server使用的policy，或许可以增加一个字段记录policy最近使用时间
-		Where("JSON_CONTAINS((SELECT JSON_ARRAYAGG(JSON_EXTRACT(certs, '$[*].certId')) FROM edgeSSLPolicies WHERE state=1 AND ocspIsOn=1 AND certs IS NOT NULL), CAST(id AS CHAR))").
+	// TODO 需要排除没有被server使用的policy，或许可以增加一个字段记录policy最近使用时间
+
+	// 检查函数
+	var JSONArrayAggIsEnabled = false
+	_, err = this.Object().Instance.Exec("SELECT JSON_ARRAYAGG('1')")
+	if err == nil {
+		JSONArrayAggIsEnabled = true
+	}
+
+	if JSONArrayAggIsEnabled {
+		query.Where("JSON_CONTAINS((SELECT JSON_ARRAYAGG(JSON_EXTRACT(certs, '$[*].certId')) FROM edgeSSLPolicies WHERE state=1 AND ocspIsOn=1 AND certs IS NOT NULL), CAST(id AS CHAR))")
+	} else {
+		query.Where("JSON_CONTAINS((SELECT REPLACE(GROUP_CONCAT(JSON_EXTRACT(certs, '$[*].certId')), '],[', ',') FROM edgeSSLPolicies WHERE state=1 AND ocspIsOn=1 AND certs IS NOT NULL), CAST(id AS CHAR))")
+	}
+
+	_, err = query.
 		Asc("ocspUpdatedAt").
 		Limit(size).
 		Slice(&result).
