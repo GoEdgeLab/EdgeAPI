@@ -37,6 +37,9 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	// grpc decompression
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 var sharedAPIConfig *configs.APIConfig = nil
