@@ -606,7 +606,7 @@ func upgradeV0_4_5(db *dbs.DB) error {
 		if len(valueJSON) > 0 {
 			var config = &serverconfigs.AccessLogQueueConfig{}
 			err = json.Unmarshal(valueJSON, config)
-			if err == nil {
+			if err == nil && config.RowsPerTable == 0 {
 				config.EnableAutoPartial = true
 				config.RowsPerTable = 500_000
 				configJSON, err := json.Marshal(config)
@@ -616,6 +616,22 @@ func upgradeV0_4_5(db *dbs.DB) error {
 						return err
 					}
 				}
+			}
+		}
+	}
+
+	// 升级一个SQL注入规则
+	{
+		var dao = models.NewHTTPFirewallRuleDAO()
+		ones, _, err := dao.Instance.FindOnes(`SELECT id FROM edgeHTTPFirewallRules WHERE value=?`, "(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\\s*\\(")
+		if err != nil {
+			return err
+		}
+		for _, one := range ones {
+			var ruleId = one.GetInt64("id")
+			_, err = dao.Instance.Exec(`UPDATE edgeHTTPFirewallRules SET value=? WHERE id=? LIMIT 1`, `\b(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\s*\(.*\)`, ruleId)
+			if err != nil {
+				return err
 			}
 		}
 	}
