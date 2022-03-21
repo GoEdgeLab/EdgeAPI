@@ -4,7 +4,7 @@ package models
 type FileChunk struct {
 	Id     uint32 `field:"id"`     // ID
 	FileId uint32 `field:"fileId"` // 文件ID
-	Data   string `field:"data"`   // 分块内容
+	Data   []byte `field:"data"`   // 分块内容
 }
 
 type FileChunkOperator struct {

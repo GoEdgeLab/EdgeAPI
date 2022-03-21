@@ -41,12 +41,12 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	if cluster == nil {
 		return nil, errors.New("can not find cluster with id '" + strconv.FormatInt(this.clusterId, 10) + "'")
 	}
-	if len(cluster.HealthCheck) == 0 || cluster.HealthCheck == "null" {
+	if !cluster.HealthCheck.IsNotNull() {
 		return nil, errors.New("health check config is not found")
 	}
 
 	healthCheckConfig := &serverconfigs.HealthCheckConfig{}
-	err = json.Unmarshal([]byte(cluster.HealthCheck), healthCheckConfig)
+	err = json.Unmarshal(cluster.HealthCheck, healthCheckConfig)
 	if err != nil {
 		return nil, err
 	}

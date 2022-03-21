@@ -1,13 +1,15 @@
 package regions
 
-//
+import "github.com/iwind/TeaGo/dbs"
+
+// RegionCity 区域城市
 type RegionCity struct {
-	Id         uint32 `field:"id"`         // ID
-	ProvinceId uint32 `field:"provinceId"` // 省份ID
-	Name       string `field:"name"`       // 名称
-	Codes      string `field:"codes"`      // 代号
-	State      uint8  `field:"state"`      // 状态
-	DataId     string `field:"dataId"`     // 原始数据ID
+	Id         uint32   `field:"id"`         // ID
+	ProvinceId uint32   `field:"provinceId"` // 省份ID
+	Name       string   `field:"name"`       // 名称
+	Codes      dbs.JSON `field:"codes"`      // 代号
+	State      uint8    `field:"state"`      // 状态
+	DataId     string   `field:"dataId"`     // 原始数据ID
 }
 
 type RegionCityOperator struct {

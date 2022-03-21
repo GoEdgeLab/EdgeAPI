@@ -71,8 +71,8 @@ func (this *HealthCheckTask) loop() error {
 		clusterId := int64(cluster.Id)
 
 		config := &serverconfigs.HealthCheckConfig{}
-		if len(cluster.HealthCheck) > 0 && cluster.HealthCheck != "null" {
-			err = json.Unmarshal([]byte(cluster.HealthCheck), config)
+		if len(cluster.HealthCheck) > 0 {
+			err = json.Unmarshal(cluster.HealthCheck, config)
 			if err != nil {
 				logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
 				continue

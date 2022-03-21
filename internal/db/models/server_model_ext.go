@@ -13,7 +13,7 @@ func (this *Server) DecodeGroupIds() []int64 {
 	}
 
 	var result = []int64{}
-	err := json.Unmarshal([]byte(this.GroupIds), &result)
+	err := json.Unmarshal(this.GroupIds, &result)
 	if err != nil {
 		remotelogs.Error("Server.DecodeGroupIds", err.Error())
 		// 忽略错误
@@ -23,9 +23,9 @@ func (this *Server) DecodeGroupIds() []int64 {
 
 // DecodeHTTPPorts 获取HTTP所有端口
 func (this *Server) DecodeHTTPPorts() (ports []int) {
-	if len(this.Http) > 0 && this.Http != "null" {
+	if len(this.Http) > 0 {
 		config := &serverconfigs.HTTPProtocolConfig{}
-		err := json.Unmarshal([]byte(this.Http), config)
+		err := json.Unmarshal(this.Http, config)
 		if err != nil {
 			return nil
 		}
@@ -44,9 +44,9 @@ func (this *Server) DecodeHTTPPorts() (ports []int) {
 
 // DecodeHTTPSPorts 获取HTTPS所有端口
 func (this *Server) DecodeHTTPSPorts() (ports []int) {
-	if len(this.Https) > 0 && this.Https != "null" {
+	if len(this.Https) > 0 {
 		config := &serverconfigs.HTTPSProtocolConfig{}
-		err := json.Unmarshal([]byte(this.Https), config)
+		err := json.Unmarshal(this.Https, config)
 		if err != nil {
 			return nil
 		}
@@ -65,9 +65,9 @@ func (this *Server) DecodeHTTPSPorts() (ports []int) {
 
 // DecodeTCPPorts 获取TCP所有端口
 func (this *Server) DecodeTCPPorts() (ports []int) {
-	if len(this.Tcp) > 0 && this.Tcp != "null" {
+	if len(this.Tcp) > 0 {
 		config := &serverconfigs.TCPProtocolConfig{}
-		err := json.Unmarshal([]byte(this.Tcp), config)
+		err := json.Unmarshal(this.Tcp, config)
 		if err != nil {
 			return nil
 		}
@@ -86,9 +86,9 @@ func (this *Server) DecodeTCPPorts() (ports []int) {
 
 // DecodeTLSPorts 获取TLS所有端口
 func (this *Server) DecodeTLSPorts() (ports []int) {
-	if len(this.Tls) > 0 && this.Tls != "null" {
+	if len(this.Tls) > 0 {
 		config := &serverconfigs.TLSProtocolConfig{}
-		err := json.Unmarshal([]byte(this.Tls), config)
+		err := json.Unmarshal(this.Tls, config)
 		if err != nil {
 			return nil
 		}
@@ -107,9 +107,9 @@ func (this *Server) DecodeTLSPorts() (ports []int) {
 
 // DecodeUDPPorts 获取UDP所有端口
 func (this *Server) DecodeUDPPorts() (ports []int) {
-	if len(this.Udp) > 0 && this.Udp != "null" {
+	if len(this.Udp) > 0 {
 		config := &serverconfigs.UDPProtocolConfig{}
-		err := json.Unmarshal([]byte(this.Udp), config)
+		err := json.Unmarshal(this.Udp, config)
 		if err != nil {
 			return nil
 		}

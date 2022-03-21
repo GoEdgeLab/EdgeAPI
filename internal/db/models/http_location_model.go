@@ -1,24 +1,26 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPLocation 路由规则配置
 type HTTPLocation struct {
-	Id           uint32 `field:"id"`           // ID
-	TemplateId   uint32 `field:"templateId"`   // 模版ID
-	AdminId      uint32 `field:"adminId"`      // 管理员ID
-	UserId       uint32 `field:"userId"`       // 用户ID
-	ParentId     uint32 `field:"parentId"`     // 父级ID
-	State        uint8  `field:"state"`        // 状态
-	CreatedAt    uint64 `field:"createdAt"`    // 创建时间
-	Pattern      string `field:"pattern"`      // 匹配规则
-	IsOn         uint8  `field:"isOn"`         // 是否启用
-	Name         string `field:"name"`         // 名称
-	Description  string `field:"description"`  // 描述
-	WebId        uint32 `field:"webId"`        // Web配置ID
-	ReverseProxy string `field:"reverseProxy"` // 反向代理
-	UrlPrefix    string `field:"urlPrefix"`    // URL前缀
-	IsBreak      uint8  `field:"isBreak"`      // 是否终止匹配
-	Conds        string `field:"conds"`        // 匹配条件
-	Domains      string `field:"domains"`      // 专属域名
+	Id           uint32   `field:"id"`           // ID
+	TemplateId   uint32   `field:"templateId"`   // 模版ID
+	AdminId      uint32   `field:"adminId"`      // 管理员ID
+	UserId       uint32   `field:"userId"`       // 用户ID
+	ParentId     uint32   `field:"parentId"`     // 父级ID
+	State        uint8    `field:"state"`        // 状态
+	CreatedAt    uint64   `field:"createdAt"`    // 创建时间
+	Pattern      string   `field:"pattern"`      // 匹配规则
+	IsOn         uint8    `field:"isOn"`         // 是否启用
+	Name         string   `field:"name"`         // 名称
+	Description  string   `field:"description"`  // 描述
+	WebId        uint32   `field:"webId"`        // Web配置ID
+	ReverseProxy dbs.JSON `field:"reverseProxy"` // 反向代理
+	UrlPrefix    string   `field:"urlPrefix"`    // URL前缀
+	IsBreak      uint8    `field:"isBreak"`      // 是否终止匹配
+	Conds        dbs.JSON `field:"conds"`        // 匹配条件
+	Domains      dbs.JSON `field:"domains"`      // 专属域名
 }
 
 type HTTPLocationOperator struct {

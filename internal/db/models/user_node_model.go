@@ -1,22 +1,24 @@
 package models
 
-// API节点
+import "github.com/iwind/TeaGo/dbs"
+
+// 用户节点
 type UserNode struct {
-	Id          uint32 `field:"id"`          // ID
-	IsOn        uint8  `field:"isOn"`        // 是否启用
-	UniqueId    string `field:"uniqueId"`    // 唯一ID
-	Secret      string `field:"secret"`      // 密钥
-	Name        string `field:"name"`        // 名称
-	Description string `field:"description"` // 描述
-	Http        string `field:"http"`        // 监听的HTTP配置
-	Https       string `field:"https"`       // 监听的HTTPS配置
-	AccessAddrs string `field:"accessAddrs"` // 外部访问地址
-	Order       uint32 `field:"order"`       // 排序
-	State       uint8  `field:"state"`       // 状态
-	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
-	AdminId     uint32 `field:"adminId"`     // 管理员ID
-	Weight      uint32 `field:"weight"`      // 权重
-	Status      string `field:"status"`      // 运行状态
+	Id          uint32   `field:"id"`          // ID
+	IsOn        uint8    `field:"isOn"`        // 是否启用
+	UniqueId    string   `field:"uniqueId"`    // 唯一ID
+	Secret      string   `field:"secret"`      // 密钥
+	Name        string   `field:"name"`        // 名称
+	Description string   `field:"description"` // 描述
+	Http        dbs.JSON `field:"http"`        // 监听的HTTP配置
+	Https       dbs.JSON `field:"https"`       // 监听的HTTPS配置
+	AccessAddrs dbs.JSON `field:"accessAddrs"` // 外部访问地址
+	Order       uint32   `field:"order"`       // 排序
+	State       uint8    `field:"state"`       // 状态
+	CreatedAt   uint64   `field:"createdAt"`   // 创建时间
+	AdminId     uint32   `field:"adminId"`     // 管理员ID
+	Weight      uint32   `field:"weight"`      // 权重
+	Status      dbs.JSON `field:"status"`      // 运行状态
 }
 
 type UserNodeOperator struct {

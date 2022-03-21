@@ -189,8 +189,8 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 	result.UseAllAPINodes = cluster.UseAllAPINodes == 1
 
 	apiNodeIds := []int64{}
-	if len(cluster.ApiNodes) > 0 && cluster.ApiNodes != "null" {
-		err = json.Unmarshal([]byte(cluster.ApiNodes), &apiNodeIds)
+	if models.IsNotNull(cluster.ApiNodes) {
+		err = json.Unmarshal(cluster.ApiNodes, &apiNodeIds)
 		if err != nil {
 			return nil, err
 		}
@@ -978,9 +978,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	var result = &pb.FindEnabledNodeClusterConfigInfoResponse{}
 
 	// health check
-	if len(cluster.HealthCheck) > 0 {
+	if models.IsNotNull(cluster.HealthCheck) {
 		healthCheckConfig := &serverconfigs.HealthCheckConfig{}
-		err = json.Unmarshal([]byte(cluster.HealthCheck), healthCheckConfig)
+		err = json.Unmarshal(cluster.HealthCheck, healthCheckConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1009,9 +1009,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	result.HasMessageReceivers = countReceivers > 0
 
 	// toa
-	if len(cluster.Toa) > 0 {
+	if models.IsNotNull(cluster.Toa) {
 		var toaConfig = &nodeconfigs.TOAConfig{}
-		err = json.Unmarshal([]byte(cluster.Toa), toaConfig)
+		err = json.Unmarshal(cluster.Toa, toaConfig)
 		if err != nil {
 			return nil, err
 		}

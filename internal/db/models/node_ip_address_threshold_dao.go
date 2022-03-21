@@ -230,7 +230,7 @@ func (this *NodeIPAddressThresholdDAO) formatThreshold(tx *dbs.Tx, threshold *No
 	if err != nil {
 		return err
 	}
-	threshold.Items = string(itemsJSON)
+	threshold.Items = itemsJSON
 
 	return nil
 }

@@ -7,11 +7,11 @@ import (
 
 // DecodeRoutes 获取所有的线路
 func (this *DNSDomain) DecodeRoutes() ([]*dnstypes.Route, error) {
-	if len(this.Routes) == 0 || this.Routes == "null" {
+	if len(this.Routes) == 0 {
 		return nil, nil
 	}
 	result := []*dnstypes.Route{}
-	err := json.Unmarshal([]byte(this.Routes), &result)
+	err := json.Unmarshal(this.Routes, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (this *DNSDomain) ContainsRouteCode(route string) (bool, error) {
 // DecodeRecords 获取所有的记录
 func (this *DNSDomain) DecodeRecords() ([]*dnstypes.Record, error) {
 	records := this.Records
-	if len(records) == 0 || records == "null" {
+	if len(records) == 0 {
 		return nil, nil
 	}
 	result := []*dnstypes.Record{}

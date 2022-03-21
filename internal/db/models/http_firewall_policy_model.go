@@ -1,5 +1,7 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPFirewallPolicy HTTP防火墙
 type HTTPFirewallPolicy struct {
 	Id               uint32 `field:"id"`               // ID
@@ -13,12 +15,12 @@ type HTTPFirewallPolicy struct {
 	IsOn             uint8  `field:"isOn"`             // 是否启用
 	Name             string `field:"name"`             // 名称
 	Description      string `field:"description"`      // 描述
-	Inbound          string `field:"inbound"`          // 入站规则
-	Outbound         string `field:"outbound"`         // 出站规则
-	BlockOptions     string `field:"blockOptions"`     // BLOCK选项
+	Inbound          dbs.JSON `field:"inbound"`          // 入站规则
+	Outbound         dbs.JSON `field:"outbound"`         // 出站规则
+	BlockOptions     dbs.JSON `field:"blockOptions"`     // BLOCK选项
 	Mode             string `field:"mode"`             // 模式
 	UseLocalFirewall uint8  `field:"useLocalFirewall"` // 是否自动使用本地防火墙
-	SynFlood         string `field:"synFlood"`         // SynFlood防御设置
+	SynFlood         dbs.JSON `field:"synFlood"`         // SynFlood防御设置
 }
 
 type HTTPFirewallPolicyOperator struct {

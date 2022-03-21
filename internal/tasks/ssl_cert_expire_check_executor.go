@@ -70,7 +70,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 		for _, cert := range certs {
 			// 发送消息
 			subject := "SSL证书\"" + cert.Name + "\"在" + strconv.Itoa(days) + "天后将到期，"
-			msg := "SSL证书\"" + cert.Name + "\"（" + cert.DnsNames + "）在" + strconv.Itoa(days) + "天后将到期，"
+			msg := "SSL证书\"" + cert.Name + "\"（" + string(cert.DnsNames) + "）在" + strconv.Itoa(days) + "天后将到期，"
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
@@ -114,7 +114,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 		for _, cert := range certs {
 			// 发送消息
 			subject := "SSL证书\"" + cert.Name + "\"在" + strconv.Itoa(days) + "天后将到期，"
-			msg := "SSL证书\"" + cert.Name + "\"（" + cert.DnsNames + "）在" + strconv.Itoa(days) + "天后将到期，"
+			msg := "SSL证书\"" + cert.Name + "\"（" + string(cert.DnsNames) + "）在" + strconv.Itoa(days) + "天后将到期，"
 
 			// 是否有自动更新任务
 			if cert.AcmeTaskId > 0 {
@@ -128,7 +128,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 						if isOk {
 							// 发送成功通知
 							subject := "系统已成功为你自动更新了证书\"" + cert.Name + "\""
-							msg = "系统已成功为你自动更新了证书\"" + cert.Name + "\"（" + cert.DnsNames + "）。"
+							msg = "系统已成功为你自动更新了证书\"" + cert.Name + "\"（" + string(cert.DnsNames) + "）。"
 							err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskSuccess, models.MessageLevelSuccess, subject, msg, maps.Map{
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
@@ -142,7 +142,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 						} else {
 							// 发送失败通知
 							subject := "系统在尝试自动更新证书\"" + cert.Name + "\"时发生错误"
-							msg = "系统在尝试自动更新证书\"" + cert.Name + "\"（" + cert.DnsNames + "）时发生错误：" + errMsg + "。请检查系统设置并修复错误。"
+							msg = "系统在尝试自动更新证书\"" + cert.Name + "\"（" + string(cert.DnsNames) + "）时发生错误：" + errMsg + "。请检查系统设置并修复错误。"
 							err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertACMETaskFailed, models.MessageLevelError, subject, msg, maps.Map{
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
@@ -192,7 +192,7 @@ func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
 			// 发送消息
 			today := timeutil.Format("Y-m-d")
 			subject := "SSL证书\"" + cert.Name + "\"在今天（" + today + "）过期"
-			msg := "SSL证书\"" + cert.Name + "\"（" + cert.DnsNames + "）在今天（" + today + "）过期，请及时更新证书，之后将不再重复提醒。"
+			msg := "SSL证书\"" + cert.Name + "\"（" + string(cert.DnsNames) + "）在今天（" + today + "）过期，请及时更新证书，之后将不再重复提醒。"
 			err = models.SharedMessageDAO.CreateMessage(nil, int64(cert.AdminId), int64(cert.UserId), models.MessageTypeSSLCertExpiring, models.MessageLevelWarning, subject, msg, maps.Map{
 				"certId":     cert.Id,
 				"acmeTaskId": cert.AcmeTaskId,

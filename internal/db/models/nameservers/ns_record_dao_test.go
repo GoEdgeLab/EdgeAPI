@@ -13,17 +13,17 @@ func TestNSRecord_DecodeRouteIds(t *testing.T) {
 	}
 
 	{
-		record := &NSRecord{RouteIds: "[]"}
+		record := &NSRecord{RouteIds: []byte("[]")}
 		t.Log(record.DecodeRouteIds())
 	}
 
 	{
-		record := &NSRecord{RouteIds: "[1, 2, 3]"}
+		record := &NSRecord{RouteIds: []byte("[1, 2, 3]")}
 		t.Log(record.DecodeRouteIds())
 	}
 
 	{
-		record := &NSRecord{RouteIds: `["id:1", "id:2", "isp:liantong"]`}
+		record := &NSRecord{RouteIds: []byte(`["id:1", "id:2", "isp:liantong"]`)}
 		t.Log(record.DecodeRouteIds())
 	}
 }

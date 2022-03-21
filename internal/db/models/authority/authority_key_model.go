@@ -1,15 +1,17 @@
 package authority
 
+import "github.com/iwind/TeaGo/dbs"
+
 // AuthorityKey 企业版认证信息
 type AuthorityKey struct {
-	Id           uint32 `field:"id"`           // ID
-	Value        string `field:"value"`        // Key值
-	DayFrom      string `field:"dayFrom"`      // 开始日期
-	DayTo        string `field:"dayTo"`        // 结束日期
-	Hostname     string `field:"hostname"`     // Hostname
-	MacAddresses string `field:"macAddresses"` // MAC地址
-	UpdatedAt    uint64 `field:"updatedAt"`    // 创建/修改时间
-	Company      string `field:"company"`      // 公司组织
+	Id           uint32   `field:"id"`           // ID
+	Value        string   `field:"value"`        // Key值
+	DayFrom      string   `field:"dayFrom"`      // 开始日期
+	DayTo        string   `field:"dayTo"`        // 结束日期
+	Hostname     string   `field:"hostname"`     // Hostname
+	MacAddresses dbs.JSON `field:"macAddresses"` // MAC地址
+	UpdatedAt    uint64   `field:"updatedAt"`    // 创建/修改时间
+	Company      string   `field:"company"`      // 公司组织
 }
 
 type AuthorityKeyOperator struct {

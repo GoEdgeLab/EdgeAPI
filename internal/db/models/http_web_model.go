@@ -1,40 +1,42 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPWeb HTTP Web
 type HTTPWeb struct {
-	Id                 uint32 `field:"id"`                 // ID
-	IsOn               uint8  `field:"isOn"`               // 是否启用
-	TemplateId         uint32 `field:"templateId"`         // 模版ID
-	AdminId            uint32 `field:"adminId"`            // 管理员ID
-	UserId             uint32 `field:"userId"`             // 用户ID
-	State              uint8  `field:"state"`              // 状态
-	CreatedAt          uint64 `field:"createdAt"`          // 创建时间
-	Root               string `field:"root"`               // 根目录
-	Charset            string `field:"charset"`            // 字符集
-	Shutdown           string `field:"shutdown"`           // 临时关闭页面配置
-	Pages              string `field:"pages"`              // 特殊页面
-	RedirectToHttps    string `field:"redirectToHttps"`    // 跳转到HTTPS设置
-	Indexes            string `field:"indexes"`            // 首页文件列表
-	MaxRequestBodySize string `field:"maxRequestBodySize"` // 最大允许的请求内容尺寸
-	RequestHeader      string `field:"requestHeader"`      // 请求Header配置
-	ResponseHeader     string `field:"responseHeader"`     // 响应Header配置
-	AccessLog          string `field:"accessLog"`          // 访问日志配置
-	Stat               string `field:"stat"`               // 统计配置
-	Gzip               string `field:"gzip"`               // Gzip配置（v0.3.2弃用）
-	Compression        string `field:"compression"`        // 压缩配置
-	Cache              string `field:"cache"`              // 缓存配置
-	Firewall           string `field:"firewall"`           // 防火墙设置
-	Locations          string `field:"locations"`          // 路由规则配置
-	Websocket          string `field:"websocket"`          // Websocket设置
-	RewriteRules       string `field:"rewriteRules"`       // 重写规则配置
-	HostRedirects      string `field:"hostRedirects"`      // 域名跳转
-	Fastcgi            string `field:"fastcgi"`            // Fastcgi配置
-	Auth               string `field:"auth"`               // 认证策略配置
-	Webp               string `field:"webp"`               // WebP配置
-	RemoteAddr         string `field:"remoteAddr"`         // 客户端IP配置
-	MergeSlashes       uint8  `field:"mergeSlashes"`       // 是否合并路径中的斜杠
-	RequestLimit       string `field:"requestLimit"`       // 请求限制
-	RequestScripts     string `field:"requestScripts"`     // 请求脚本
+	Id                 uint32   `field:"id"`                 // ID
+	IsOn               uint8    `field:"isOn"`               // 是否启用
+	TemplateId         uint32   `field:"templateId"`         // 模版ID
+	AdminId            uint32   `field:"adminId"`            // 管理员ID
+	UserId             uint32   `field:"userId"`             // 用户ID
+	State              uint8    `field:"state"`              // 状态
+	CreatedAt          uint64   `field:"createdAt"`          // 创建时间
+	Root               dbs.JSON `field:"root"`               // 根目录
+	Charset            dbs.JSON `field:"charset"`            // 字符集
+	Shutdown           dbs.JSON `field:"shutdown"`           // 临时关闭页面配置
+	Pages              dbs.JSON `field:"pages"`              // 特殊页面
+	RedirectToHttps    dbs.JSON `field:"redirectToHttps"`    // 跳转到HTTPS设置
+	Indexes            dbs.JSON `field:"indexes"`            // 首页文件列表
+	MaxRequestBodySize dbs.JSON `field:"maxRequestBodySize"` // 最大允许的请求内容尺寸
+	RequestHeader      dbs.JSON `field:"requestHeader"`      // 请求Header配置
+	ResponseHeader     dbs.JSON `field:"responseHeader"`     // 响应Header配置
+	AccessLog          dbs.JSON `field:"accessLog"`          // 访问日志配置
+	Stat               dbs.JSON `field:"stat"`               // 统计配置
+	Gzip               dbs.JSON `field:"gzip"`               // Gzip配置（v0.3.2弃用）
+	Compression        dbs.JSON `field:"compression"`        // 压缩配置
+	Cache              dbs.JSON `field:"cache"`              // 缓存配置
+	Firewall           dbs.JSON `field:"firewall"`           // 防火墙设置
+	Locations          dbs.JSON `field:"locations"`          // 路由规则配置
+	Websocket          dbs.JSON `field:"websocket"`          // Websocket设置
+	RewriteRules       dbs.JSON `field:"rewriteRules"`       // 重写规则配置
+	HostRedirects      dbs.JSON `field:"hostRedirects"`      // 域名跳转
+	Fastcgi            dbs.JSON `field:"fastcgi"`            // Fastcgi配置
+	Auth               dbs.JSON `field:"auth"`               // 认证策略配置
+	Webp               dbs.JSON `field:"webp"`               // WebP配置
+	RemoteAddr         dbs.JSON `field:"remoteAddr"`         // 客户端IP配置
+	MergeSlashes       uint8    `field:"mergeSlashes"`       // 是否合并路径中的斜杠
+	RequestLimit       dbs.JSON `field:"requestLimit"`       // 请求限制
+	RequestScripts     dbs.JSON `field:"requestScripts"`     // 请求脚本
 }
 
 type HTTPWebOperator struct {

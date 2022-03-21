@@ -154,7 +154,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, string(req.HttpJSON), string(req.HttpsJSON), string(req.TcpJSON), string(req.TlsJSON), string(req.UnixJSON), string(req.UdpJSON), req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds, req.UserPlanId)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UnixJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds, req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
@@ -629,9 +629,9 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 		// 分组信息
 		pbGroups := []*pb.ServerGroup{}
-		if len(server.GroupIds) > 0 {
+		if models.IsNotNull(server.GroupIds) {
 			groupIds := []int64{}
-			err = json.Unmarshal([]byte(server.GroupIds), &groupIds)
+			err = json.Unmarshal(server.GroupIds, &groupIds)
 			if err != nil {
 				return nil, err
 			}
@@ -666,7 +666,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		// 审核结果
 		auditingResult := &pb.ServerNameAuditingResult{}
 		if len(server.AuditingResult) > 0 {
-			err = json.Unmarshal([]byte(server.AuditingResult), auditingResult)
+			err = json.Unmarshal(server.AuditingResult, auditingResult)
 			if err != nil {
 				return nil, err
 			}
@@ -691,18 +691,18 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			Config:                  configJSON,
 			Name:                    server.Name,
 			Description:             server.Description,
-			HttpJSON:                []byte(server.Http),
-			HttpsJSON:               []byte(server.Https),
-			TcpJSON:                 []byte(server.Tcp),
-			TlsJSON:                 []byte(server.Tls),
-			UnixJSON:                []byte(server.Unix),
-			UdpJSON:                 []byte(server.Udp),
-			IncludeNodes:            []byte(server.IncludeNodes),
-			ExcludeNodes:            []byte(server.ExcludeNodes),
-			ServerNamesJSON:         []byte(server.ServerNames),
+			HttpJSON:                server.Http,
+			HttpsJSON:               server.Https,
+			TcpJSON:                 server.Tcp,
+			TlsJSON:                 server.Tls,
+			UnixJSON:                server.Unix,
+			UdpJSON:                 server.Udp,
+			IncludeNodes:            server.IncludeNodes,
+			ExcludeNodes:            server.ExcludeNodes,
+			ServerNamesJSON:         server.ServerNames,
 			IsAuditing:              server.IsAuditing == 1,
 			AuditingAt:              int64(server.AuditingAt),
-			AuditingServerNamesJSON: []byte(server.AuditingServerNames),
+			AuditingServerNamesJSON: server.AuditingServerNames,
 			AuditingResult:          auditingResult,
 			CreatedAt:               int64(server.CreatedAt),
 			DnsName:                 server.DnsName,
@@ -782,7 +782,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	pbGroups := []*pb.ServerGroup{}
 	if len(server.GroupIds) > 0 {
 		groupIds := []int64{}
-		err = json.Unmarshal([]byte(server.GroupIds), &groupIds)
+		err = json.Unmarshal(server.GroupIds, &groupIds)
 		if err != nil {
 			return nil, err
 		}
@@ -838,18 +838,18 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		UserPlanId:   int64(server.UserPlanId),
 
 		Config:           configJSON,
-		ServerNamesJSON:  []byte(server.ServerNames),
-		HttpJSON:         []byte(server.Http),
-		HttpsJSON:        []byte(server.Https),
-		TcpJSON:          []byte(server.Tcp),
-		TlsJSON:          []byte(server.Tls),
-		UnixJSON:         []byte(server.Unix),
-		UdpJSON:          []byte(server.Udp),
+		ServerNamesJSON:  server.ServerNames,
+		HttpJSON:         server.Http,
+		HttpsJSON:        server.Https,
+		TcpJSON:          server.Tcp,
+		TlsJSON:          server.Tls,
+		UnixJSON:         server.Unix,
+		UdpJSON:          server.Udp,
 		WebId:            int64(server.WebId),
-		ReverseProxyJSON: []byte(server.ReverseProxy),
+		ReverseProxyJSON: server.ReverseProxy,
 
-		IncludeNodes: []byte(server.IncludeNodes),
-		ExcludeNodes: []byte(server.ExcludeNodes),
+		IncludeNodes: server.IncludeNodes,
+		ExcludeNodes: server.ExcludeNodes,
 		CreatedAt:    int64(server.CreatedAt),
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(server.ClusterId),
@@ -1260,9 +1260,9 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 	}
 	serverNames := []string{}
 	for _, server := range servers {
-		if len(server.ServerNames) > 0 && server.ServerNames != "null" {
+		if models.IsNotNull(server.ServerNames) {
 			serverNameConfigs := []*serverconfigs.ServerNameConfig{}
-			err = json.Unmarshal([]byte(server.ServerNames), &serverNameConfigs)
+			err = json.Unmarshal(server.ServerNames, &serverNameConfigs)
 			if err != nil {
 				return nil, err
 			}

@@ -1,21 +1,23 @@
 package acme
 
+import "github.com/iwind/TeaGo/dbs"
+
 // ACMETask ACME任务
 type ACMETask struct {
-	Id            uint64 `field:"id"`            // ID
-	AdminId       uint32 `field:"adminId"`       // 管理员ID
-	UserId        uint32 `field:"userId"`        // 用户ID
-	IsOn          uint8  `field:"isOn"`          // 是否启用
-	AcmeUserId    uint32 `field:"acmeUserId"`    // ACME用户ID
-	DnsDomain     string `field:"dnsDomain"`     // DNS主域名
-	DnsProviderId uint64 `field:"dnsProviderId"` // DNS服务商
-	Domains       string `field:"domains"`       // 证书域名
-	CreatedAt     uint64 `field:"createdAt"`     // 创建时间
-	State         uint8  `field:"state"`         // 状态
-	CertId        uint64 `field:"certId"`        // 生成的证书ID
-	AutoRenew     uint8  `field:"autoRenew"`     // 是否自动更新
-	AuthType      string `field:"authType"`      // 认证类型
-	AuthURL       string `field:"authURL"`       // 认证URL
+	Id            uint64   `field:"id"`            // ID
+	AdminId       uint32   `field:"adminId"`       // 管理员ID
+	UserId        uint32   `field:"userId"`        // 用户ID
+	IsOn          uint8    `field:"isOn"`          // 是否启用
+	AcmeUserId    uint32   `field:"acmeUserId"`    // ACME用户ID
+	DnsDomain     string   `field:"dnsDomain"`     // DNS主域名
+	DnsProviderId uint64   `field:"dnsProviderId"` // DNS服务商
+	Domains       dbs.JSON `field:"domains"`       // 证书域名
+	CreatedAt     uint64   `field:"createdAt"`     // 创建时间
+	State         uint8    `field:"state"`         // 状态
+	CertId        uint64   `field:"certId"`        // 生成的证书ID
+	AutoRenew     uint8    `field:"autoRenew"`     // 是否自动更新
+	AuthType      string   `field:"authType"`      // 认证类型
+	AuthURL       string   `field:"authURL"`       // 认证URL
 }
 
 type ACMETaskOperator struct {

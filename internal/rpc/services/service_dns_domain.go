@@ -331,8 +331,8 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 	}
 
 	records := []*dnstypes.Record{}
-	if len(domain.Records) > 0 && domain.Records != "null" {
-		err := json.Unmarshal([]byte(domain.Records), &records)
+	if models.IsNotNull(domain.Records) {
+		err := json.Unmarshal(domain.Records, &records)
 		if err != nil {
 			return nil, err
 		}
@@ -653,8 +653,8 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "域名没有设置服务商"}, nil
 	}
 	apiParams := maps.Map{}
-	if len(provider.ApiParams) > 0 && provider.ApiParams != "null" {
-		err = json.Unmarshal([]byte(provider.ApiParams), &apiParams)
+	if models.IsNotNull(provider.ApiParams) {
+		err = json.Unmarshal(provider.ApiParams, &apiParams)
 		if err != nil {
 			return nil, err
 		}

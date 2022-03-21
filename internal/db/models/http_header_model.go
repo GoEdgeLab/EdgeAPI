@@ -1,24 +1,26 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPHeader HTTP Header
 type HTTPHeader struct {
-	Id              uint32 `field:"id"`              // ID
-	AdminId         uint32 `field:"adminId"`         // 管理员ID
-	UserId          uint32 `field:"userId"`          // 用户ID
-	TemplateId      uint32 `field:"templateId"`      // 模版ID
-	IsOn            uint8  `field:"isOn"`            // 是否启用
-	Name            string `field:"name"`            // 名称
-	Value           string `field:"value"`           // 值
-	Order           uint32 `field:"order"`           // 排序
-	Status          string `field:"status"`          // 状态码设置
-	DisableRedirect uint8  `field:"disableRedirect"` // 是否不支持跳转
-	ShouldAppend    uint8  `field:"shouldAppend"`    // 是否为附加
-	ShouldReplace   uint8  `field:"shouldReplace"`   // 是否替换变量
-	ReplaceValues   string `field:"replaceValues"`   // 替换的值
-	Methods         string `field:"methods"`         // 支持的方法
-	Domains         string `field:"domains"`         // 支持的域名
-	State           uint8  `field:"state"`           // 状态
-	CreatedAt       uint64 `field:"createdAt"`       // 创建时间
+	Id              uint32   `field:"id"`              // ID
+	AdminId         uint32   `field:"adminId"`         // 管理员ID
+	UserId          uint32   `field:"userId"`          // 用户ID
+	TemplateId      uint32   `field:"templateId"`      // 模版ID
+	IsOn            uint8    `field:"isOn"`            // 是否启用
+	Name            string   `field:"name"`            // 名称
+	Value           string   `field:"value"`           // 值
+	Order           uint32   `field:"order"`           // 排序
+	Status          dbs.JSON `field:"status"`          // 状态码设置
+	DisableRedirect uint8    `field:"disableRedirect"` // 是否不支持跳转
+	ShouldAppend    uint8    `field:"shouldAppend"`    // 是否为附加
+	ShouldReplace   uint8    `field:"shouldReplace"`   // 是否替换变量
+	ReplaceValues   dbs.JSON `field:"replaceValues"`   // 替换的值
+	Methods         dbs.JSON `field:"methods"`         // 支持的方法
+	Domains         dbs.JSON `field:"domains"`         // 支持的域名
+	State           uint8    `field:"state"`           // 状态
+	CreatedAt       uint64   `field:"createdAt"`       // 创建时间
 }
 
 type HTTPHeaderOperator struct {

@@ -1,18 +1,20 @@
 package nameservers
 
+import "github.com/iwind/TeaGo/dbs"
+
 // NSRoute DNS线路
 type NSRoute struct {
-	Id        uint32 `field:"id"`        // ID
-	IsOn      uint8  `field:"isOn"`      // 是否启用
-	ClusterId uint32 `field:"clusterId"` // 集群ID
-	DomainId  uint32 `field:"domainId"`  // 域名ID
-	UserId    uint32 `field:"userId"`    // 用户ID
-	Name      string `field:"name"`      // 名称
-	Ranges    string `field:"ranges"`    // 范围
-	Order     uint32 `field:"order"`     // 排序
-	Version   uint64 `field:"version"`   // 版本号
-	Code      string `field:"code"`      // 代号
-	State     uint8  `field:"state"`     // 状态
+	Id        uint32   `field:"id"`        // ID
+	IsOn      uint8    `field:"isOn"`      // 是否启用
+	ClusterId uint32   `field:"clusterId"` // 集群ID
+	DomainId  uint32   `field:"domainId"`  // 域名ID
+	UserId    uint32   `field:"userId"`    // 用户ID
+	Name      string   `field:"name"`      // 名称
+	Ranges    dbs.JSON `field:"ranges"`    // 范围
+	Order     uint32   `field:"order"`     // 排序
+	Version   uint64   `field:"version"`   // 版本号
+	Code      string   `field:"code"`      // 代号
+	State     uint8    `field:"state"`     // 状态
 }
 
 type NSRouteOperator struct {

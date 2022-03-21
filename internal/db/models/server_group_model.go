@@ -1,19 +1,21 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // ServerGroup 服务分组
 type ServerGroup struct {
-	Id               uint32 `field:"id"`               // ID
-	AdminId          uint32 `field:"adminId"`          // 管理员ID
-	UserId           uint32 `field:"userId"`           // 用户ID
-	IsOn             uint8  `field:"isOn"`             // 是否启用
-	Name             string `field:"name"`             // 名称
-	Order            uint32 `field:"order"`            // 排序
-	CreatedAt        uint64 `field:"createdAt"`        // 创建时间
-	State            uint8  `field:"state"`            // 状态
-	HttpReverseProxy string `field:"httpReverseProxy"` // 反向代理设置
-	TcpReverseProxy  string `field:"tcpReverseProxy"`  // TCP反向代理
-	UdpReverseProxy  string `field:"udpReverseProxy"`  // UDP反向代理
-	WebId            uint32 `field:"webId"`            // Web配置ID
+	Id               uint32   `field:"id"`               // ID
+	AdminId          uint32   `field:"adminId"`          // 管理员ID
+	UserId           uint32   `field:"userId"`           // 用户ID
+	IsOn             uint8    `field:"isOn"`             // 是否启用
+	Name             string   `field:"name"`             // 名称
+	Order            uint32   `field:"order"`            // 排序
+	CreatedAt        uint64   `field:"createdAt"`        // 创建时间
+	State            uint8    `field:"state"`            // 状态
+	HttpReverseProxy dbs.JSON `field:"httpReverseProxy"` // 反向代理设置
+	TcpReverseProxy  dbs.JSON `field:"tcpReverseProxy"`  // TCP反向代理
+	UdpReverseProxy  dbs.JSON `field:"udpReverseProxy"`  // UDP反向代理
+	WebId            uint32   `field:"webId"`            // Web配置ID
 }
 
 type ServerGroupOperator struct {

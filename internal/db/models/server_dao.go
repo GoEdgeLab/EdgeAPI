@@ -145,12 +145,12 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	serverNamesJSON []byte,
 	isAuditing bool,
 	auditingServerNamesJSON []byte,
-	httpJSON string,
-	httpsJSON string,
-	tcpJSON string,
-	tlsJSON string,
-	unixJSON string,
-	udpJSON string,
+	httpJSON []byte,
+	httpsJSON []byte,
+	tcpJSON []byte,
+	tlsJSON []byte,
+	unixJSON []byte,
+	udpJSON []byte,
 	webId int64,
 	reverseProxyJSON []byte,
 	clusterId int64,
@@ -550,7 +550,7 @@ func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (server
 		return
 	}
 	server := one.(*Server)
-	return []byte(server.ServerNames), server.IsAuditing == 1, int64(server.AuditingAt), []byte(server.AuditingServerNames), []byte(server.AuditingResult), nil
+	return server.ServerNames, server.IsAuditing == 1, int64(server.AuditingAt), server.AuditingServerNames, server.AuditingResult, nil
 }
 
 // UpdateServerNames 修改ServerNames配置
@@ -909,9 +909,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	config.Group = groupConfig
 
 	// ServerNames
-	if len(server.ServerNames) > 0 && server.ServerNames != "null" {
+	if IsNotNull(server.ServerNames) {
 		serverNames := []*serverconfigs.ServerNameConfig{}
-		err := json.Unmarshal([]byte(server.ServerNames), &serverNames)
+		err := json.Unmarshal(server.ServerNames, &serverNames)
 		if err != nil {
 			return nil, err
 		}
@@ -938,9 +938,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// HTTP
-	if len(server.Http) > 0 && server.Http != "null" {
+	if IsNotNull(server.Http) {
 		httpConfig := &serverconfigs.HTTPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Http), httpConfig)
+		err := json.Unmarshal(server.Http, httpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -948,9 +948,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// HTTPS
-	if len(server.Https) > 0 && server.Https != "null" {
+	if IsNotNull(server.Https) {
 		httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Https), httpsConfig)
+		err := json.Unmarshal(server.Https, httpsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -970,9 +970,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// TCP
-	if len(server.Tcp) > 0 && server.Tcp != "null" {
+	if IsNotNull(server.Tcp) {
 		tcpConfig := &serverconfigs.TCPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Tcp), tcpConfig)
+		err := json.Unmarshal(server.Tcp, tcpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -980,9 +980,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// TLS
-	if len(server.Tls) > 0 && server.Tls != "null" {
+	if IsNotNull(server.Tls) {
 		tlsConfig := &serverconfigs.TLSProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Tls), tlsConfig)
+		err := json.Unmarshal(server.Tls, tlsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1002,9 +1002,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// Unix
-	if len(server.Unix) > 0 && server.Unix != "null" {
+	if IsNotNull(server.Unix) {
 		unixConfig := &serverconfigs.UnixProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Unix), unixConfig)
+		err := json.Unmarshal(server.Unix, unixConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1012,9 +1012,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// UDP
-	if len(server.Udp) > 0 && server.Udp != "null" {
+	if IsNotNull(server.Udp) {
 		udpConfig := &serverconfigs.UDPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Udp), udpConfig)
+		err := json.Unmarshal(server.Udp, udpConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1035,7 +1035,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	// ReverseProxy
 	if IsNotNull(server.ReverseProxy) {
 		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal([]byte(server.ReverseProxy), reverseProxyRef)
+		err := json.Unmarshal(server.ReverseProxy, reverseProxyRef)
 		if err != nil {
 			return nil, err
 		}
@@ -1072,7 +1072,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	// traffic limit
 	if len(server.TrafficLimit) > 0 {
 		var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
-		err = json.Unmarshal([]byte(server.TrafficLimit), trafficLimitConfig)
+		err = json.Unmarshal(server.TrafficLimit, trafficLimitConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1106,7 +1106,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 				if len(plan.TrafficLimit) > 0 && (config.TrafficLimit == nil || !config.TrafficLimit.IsOn) {
 					var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
-					err = json.Unmarshal([]byte(plan.TrafficLimit), trafficLimitConfig)
+					err = json.Unmarshal(plan.TrafficLimit, trafficLimitConfig)
 					if err != nil {
 						return nil, err
 					}
@@ -1119,7 +1119,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	if config.TrafficLimit != nil && config.TrafficLimit.IsOn && !config.TrafficLimit.IsEmpty() {
 		if len(server.TrafficLimitStatus) > 0 {
 			var status = &serverconfigs.TrafficLimitStatus{}
-			err = json.Unmarshal([]byte(server.TrafficLimitStatus), status)
+			err = json.Unmarshal(server.TrafficLimitStatus, status)
 			if err != nil {
 				return nil, err
 			}
@@ -1829,9 +1829,9 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 	// HTTP
 	var tcpListens = []*serverconfigs.NetworkAddressConfig{}
 	var udpListens = []*serverconfigs.NetworkAddressConfig{}
-	if len(server.Http) > 0 && server.Http != "null" {
+	if IsNotNull(server.Http) {
 		httpConfig := &serverconfigs.HTTPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Http), httpConfig)
+		err := json.Unmarshal(server.Http, httpConfig)
 		if err != nil {
 			return err
 		}
@@ -1839,9 +1839,9 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 	}
 
 	// HTTPS
-	if len(server.Https) > 0 && server.Https != "null" {
+	if IsNotNull(server.Https) {
 		httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Https), httpsConfig)
+		err := json.Unmarshal(server.Https, httpsConfig)
 		if err != nil {
 			return err
 		}
@@ -1849,9 +1849,9 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 	}
 
 	// TCP
-	if len(server.Tcp) > 0 && server.Tcp != "null" {
+	if IsNotNull(server.Tcp) {
 		tcpConfig := &serverconfigs.TCPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Tcp), tcpConfig)
+		err := json.Unmarshal(server.Tcp, tcpConfig)
 		if err != nil {
 			return err
 		}
@@ -1859,9 +1859,9 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 	}
 
 	// TLS
-	if len(server.Tls) > 0 && server.Tls != "null" {
+	if IsNotNull(server.Tls) {
 		tlsConfig := &serverconfigs.TLSProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Tls), tlsConfig)
+		err := json.Unmarshal(server.Tls, tlsConfig)
 		if err != nil {
 			return err
 		}
@@ -1869,9 +1869,9 @@ func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error
 	}
 
 	// UDP
-	if len(server.Udp) > 0 && server.Udp != "null" {
+	if IsNotNull(server.Udp) {
 		udpConfig := &serverconfigs.UDPProtocolConfig{}
-		err := json.Unmarshal([]byte(server.Udp), udpConfig)
+		err := json.Unmarshal(server.Udp, udpConfig)
 		if err != nil {
 			return err
 		}
@@ -2006,7 +2006,7 @@ func (this *ServerDAO) CalculateServerTrafficLimitConfig(tx *dbs.Tx, serverId in
 		return limitConfig, nil
 	}
 
-	err = json.Unmarshal([]byte(trafficLimit), limitConfig)
+	err = json.Unmarshal(trafficLimit, limitConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -2081,8 +2081,8 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 	var server = serverOne.(*Server)
 
 	var oldStatus = &serverconfigs.TrafficLimitStatus{}
-	if len(server.TrafficLimitStatus) > 0 {
-		err = json.Unmarshal([]byte(server.TrafficLimitStatus), oldStatus)
+	if IsNotNull(server.TrafficLimitStatus) {
+		err = json.Unmarshal(server.TrafficLimitStatus, oldStatus)
 		if err != nil {
 			return err
 		}

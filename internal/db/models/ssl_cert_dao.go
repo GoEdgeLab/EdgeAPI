@@ -148,7 +148,7 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 		return nil
 	}
 	var oldCert = oldOne.(*SSLCert)
-	var dataIsChanged = bytes.Compare(certData, []byte(oldCert.CertData)) != 0 || bytes.Compare(keyData, []byte(oldCert.KeyData)) != 0
+	var dataIsChanged = bytes.Compare(certData, oldCert.CertData) != 0 || bytes.Compare(keyData, oldCert.KeyData) != 0
 
 	var op = NewSSLCertOperator()
 	op.Id = certId
@@ -224,31 +224,31 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	config.IsACME = cert.IsACME == 1
 	config.Name = cert.Name
 	config.Description = cert.Description
-	config.CertData = []byte(cert.CertData)
-	config.KeyData = []byte(cert.KeyData)
+	config.CertData = cert.CertData
+	config.KeyData = cert.KeyData
 	config.ServerName = cert.ServerName
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
 	config.TimeEndAt = int64(cert.TimeEndAt)
 
 	// OCSP
 	if int64(cert.OcspExpiresAt) > time.Now().Unix() {
-		config.OCSP = []byte(cert.Ocsp)
+		config.OCSP = cert.Ocsp
 		config.OCSPExpiresAt = int64(cert.OcspExpiresAt)
 	}
 	config.OCSPError = cert.OcspError
 
 	if IsNotNull(cert.DnsNames) {
 		dnsNames := []string{}
-		err := json.Unmarshal([]byte(cert.DnsNames), &dnsNames)
+		err := json.Unmarshal(cert.DnsNames, &dnsNames)
 		if err != nil {
 			return nil, err
 		}
 		config.DNSNames = dnsNames
 	}
 
-	if IsNotNull(cert.CommonNames) {
+	if cert.CommonNames.IsNotNull() {
 		commonNames := []string{}
-		err := json.Unmarshal([]byte(cert.CommonNames), &commonNames)
+		err := json.Unmarshal(cert.CommonNames, &commonNames)
 		if err != nil {
 			return nil, err
 		}

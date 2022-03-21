@@ -1,13 +1,15 @@
 package regions
 
-//
+import "github.com/iwind/TeaGo/dbs"
+
+// RegionCountry 区域国家|地区
 type RegionCountry struct {
-	Id     uint32 `field:"id"`     // ID
-	Name   string `field:"name"`   // 名称
-	Codes  string `field:"codes"`  // 代号
-	State  uint8  `field:"state"`  // 状态
-	DataId string `field:"dataId"` // 原始数据ID
-	Pinyin string `field:"pinyin"` // 拼音
+	Id     uint32   `field:"id"`     // ID
+	Name   string   `field:"name"`   // 名称
+	Codes  dbs.JSON `field:"codes"`  // 代号
+	State  uint8    `field:"state"`  // 状态
+	DataId string   `field:"dataId"` // 原始数据ID
+	Pinyin dbs.JSON `field:"pinyin"` // 拼音
 }
 
 type RegionCountryOperator struct {

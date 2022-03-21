@@ -1,22 +1,24 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPFirewallRuleSet 防火墙规则集
 type HTTPFirewallRuleSet struct {
-	Id            uint32 `field:"id"`            // ID
-	IsOn          uint8  `field:"isOn"`          // 是否启用
-	Code          string `field:"code"`          // 代号
-	Name          string `field:"name"`          // 名称
-	Description   string `field:"description"`   // 描述
-	CreatedAt     uint64 `field:"createdAt"`     // 创建时间
-	Rules         string `field:"rules"`         // 规则列表
-	Connector     string `field:"connector"`     // 规则之间的关系
-	State         uint8  `field:"state"`         // 状态
-	AdminId       uint32 `field:"adminId"`       // 管理员ID
-	UserId        uint32 `field:"userId"`        // 用户ID
-	Action        string `field:"action"`        // 执行的动作（过期）
-	ActionOptions string `field:"actionOptions"` // 动作的选项（过期）
-	Actions       string `field:"actions"`       // 一组动作
-	IgnoreLocal   uint8  `field:"ignoreLocal"`   // 忽略局域网请求
+	Id            uint32   `field:"id"`            // ID
+	IsOn          uint8    `field:"isOn"`          // 是否启用
+	Code          string   `field:"code"`          // 代号
+	Name          string   `field:"name"`          // 名称
+	Description   string   `field:"description"`   // 描述
+	CreatedAt     uint64   `field:"createdAt"`     // 创建时间
+	Rules         dbs.JSON `field:"rules"`         // 规则列表
+	Connector     string   `field:"connector"`     // 规则之间的关系
+	State         uint8    `field:"state"`         // 状态
+	AdminId       uint32   `field:"adminId"`       // 管理员ID
+	UserId        uint32   `field:"userId"`        // 用户ID
+	Action        string   `field:"action"`        // 执行的动作（过期）
+	ActionOptions dbs.JSON `field:"actionOptions"` // 动作的选项（过期）
+	Actions       dbs.JSON `field:"actions"`       // 一组动作
+	IgnoreLocal   uint8    `field:"ignoreLocal"`   // 忽略局域网请求
 }
 
 type HTTPFirewallRuleSetOperator struct {

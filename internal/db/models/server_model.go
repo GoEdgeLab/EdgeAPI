@@ -1,49 +1,51 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // Server 服务
 type Server struct {
-	Id                  uint32  `field:"id"`                  // ID
-	IsOn                uint8   `field:"isOn"`                // 是否启用
-	UserId              uint32  `field:"userId"`              // 用户ID
-	AdminId             uint32  `field:"adminId"`             // 管理员ID
-	Type                string  `field:"type"`                // 服务类型
-	Name                string  `field:"name"`                // 名称
-	Description         string  `field:"description"`         // 描述
-	ServerNames         string  `field:"serverNames"`         // 域名列表
-	AuditingAt          uint64  `field:"auditingAt"`          // 审核提交时间
-	AuditingServerNames string  `field:"auditingServerNames"` // 审核中的域名
-	IsAuditing          uint8   `field:"isAuditing"`          // 是否正在审核
-	AuditingResult      string  `field:"auditingResult"`      // 审核结果
-	Http                string  `field:"http"`                // HTTP配置
-	Https               string  `field:"https"`               // HTTPS配置
-	Tcp                 string  `field:"tcp"`                 // TCP配置
-	Tls                 string  `field:"tls"`                 // TLS配置
-	Unix                string  `field:"unix"`                // Unix配置
-	Udp                 string  `field:"udp"`                 // UDP配置
-	WebId               uint32  `field:"webId"`               // WEB配置
-	ReverseProxy        string  `field:"reverseProxy"`        // 反向代理配置
-	GroupIds            string  `field:"groupIds"`            // 分组ID列表
-	Config              string  `field:"config"`              // 服务配置，自动生成
-	ConfigMd5           string  `field:"configMd5"`           // Md5
-	ClusterId           uint32  `field:"clusterId"`           // 集群ID
-	IncludeNodes        string  `field:"includeNodes"`        // 部署条件
-	ExcludeNodes        string  `field:"excludeNodes"`        // 节点排除条件
-	Version             uint32  `field:"version"`             // 版本号
-	CreatedAt           uint64  `field:"createdAt"`           // 创建时间
-	State               uint8   `field:"state"`               // 状态
-	DnsName             string  `field:"dnsName"`             // DNS名称
-	TcpPorts            string  `field:"tcpPorts"`            // 所包含TCP端口
-	UdpPorts            string  `field:"udpPorts"`            // 所包含UDP端口
-	SupportCNAME        uint8   `field:"supportCNAME"`        // 允许CNAME不在域名名单
-	TrafficLimit        string  `field:"trafficLimit"`        // 流量限制
-	TrafficDay          string  `field:"trafficDay"`          // YYYYMMDD
-	TrafficMonth        string  `field:"trafficMonth"`        // YYYYMM
-	TotalDailyTraffic   float64 `field:"totalDailyTraffic"`   // 日流量
-	TotalMonthlyTraffic float64 `field:"totalMonthlyTraffic"` // 月流量
-	TrafficLimitStatus  string  `field:"trafficLimitStatus"`  // 流量限制状态
-	TotalTraffic        float64 `field:"totalTraffic"`        // 总流量
-	UserPlanId          uint32  `field:"userPlanId"`          // 所属套餐ID
-	LastUserPlanId      uint32  `field:"lastUserPlanId"`      // 上一次使用的套餐
+	Id                  uint32   `field:"id"`                  // ID
+	IsOn                uint8    `field:"isOn"`                // 是否启用
+	UserId              uint32   `field:"userId"`              // 用户ID
+	AdminId             uint32   `field:"adminId"`             // 管理员ID
+	Type                string   `field:"type"`                // 服务类型
+	Name                string   `field:"name"`                // 名称
+	Description         string   `field:"description"`         // 描述
+	ServerNames         dbs.JSON `field:"serverNames"`         // 域名列表
+	AuditingAt          uint64   `field:"auditingAt"`          // 审核提交时间
+	AuditingServerNames dbs.JSON `field:"auditingServerNames"` // 审核中的域名
+	IsAuditing          uint8    `field:"isAuditing"`          // 是否正在审核
+	AuditingResult      dbs.JSON `field:"auditingResult"`      // 审核结果
+	Http                dbs.JSON `field:"http"`                // HTTP配置
+	Https               dbs.JSON `field:"https"`               // HTTPS配置
+	Tcp                 dbs.JSON `field:"tcp"`                 // TCP配置
+	Tls                 dbs.JSON `field:"tls"`                 // TLS配置
+	Unix                dbs.JSON `field:"unix"`                // Unix配置
+	Udp                 dbs.JSON `field:"udp"`                 // UDP配置
+	WebId               uint32   `field:"webId"`               // WEB配置
+	ReverseProxy        dbs.JSON `field:"reverseProxy"`        // 反向代理配置
+	GroupIds            dbs.JSON `field:"groupIds"`            // 分组ID列表
+	Config              dbs.JSON `field:"config"`              // 服务配置，自动生成
+	ConfigMd5           string   `field:"configMd5"`           // Md5
+	ClusterId           uint32   `field:"clusterId"`           // 集群ID
+	IncludeNodes        dbs.JSON `field:"includeNodes"`        // 部署条件
+	ExcludeNodes        dbs.JSON `field:"excludeNodes"`        // 节点排除条件
+	Version             uint32   `field:"version"`             // 版本号
+	CreatedAt           uint64   `field:"createdAt"`           // 创建时间
+	State               uint8    `field:"state"`               // 状态
+	DnsName             string   `field:"dnsName"`             // DNS名称
+	TcpPorts            dbs.JSON `field:"tcpPorts"`            // 所包含TCP端口
+	UdpPorts            dbs.JSON `field:"udpPorts"`            // 所包含UDP端口
+	SupportCNAME        uint8    `field:"supportCNAME"`        // 允许CNAME不在域名名单
+	TrafficLimit        dbs.JSON `field:"trafficLimit"`        // 流量限制
+	TrafficDay          string   `field:"trafficDay"`          // YYYYMMDD
+	TrafficMonth        string   `field:"trafficMonth"`        // YYYYMM
+	TotalDailyTraffic   float64  `field:"totalDailyTraffic"`   // 日流量
+	TotalMonthlyTraffic float64  `field:"totalMonthlyTraffic"` // 月流量
+	TrafficLimitStatus  dbs.JSON `field:"trafficLimitStatus"`  // 流量限制状态
+	TotalTraffic        float64  `field:"totalTraffic"`        // 总流量
+	UserPlanId          uint32   `field:"userPlanId"`          // 所属套餐ID
+	LastUserPlanId      uint32   `field:"lastUserPlanId"`      // 上一次使用的套餐
 }
 
 type ServerOperator struct {

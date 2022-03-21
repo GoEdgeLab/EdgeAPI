@@ -1,14 +1,16 @@
 package nameservers
 
+import "github.com/iwind/TeaGo/dbs"
+
 // NSZone 域名子域
 type NSZone struct {
-	Id       uint64 `field:"id"`       // ID
-	DomainId uint64 `field:"domainId"` // 域名ID
-	IsOn     uint8  `field:"isOn"`     // 是否启用
-	Order    uint32 `field:"order"`    // 排序
-	Version  uint64 `field:"version"`  // 版本
-	Tsig     string `field:"tsig"`     // TSIG配置
-	State    uint8  `field:"state"`    // 状态
+	Id       uint64   `field:"id"`       // ID
+	DomainId uint64   `field:"domainId"` // 域名ID
+	IsOn     uint8    `field:"isOn"`     // 是否启用
+	Order    uint32   `field:"order"`    // 排序
+	Version  uint64   `field:"version"`  // 版本
+	Tsig     dbs.JSON `field:"tsig"`     // TSIG配置
+	State    uint8    `field:"state"`    // 状态
 }
 
 type NSZoneOperator struct {

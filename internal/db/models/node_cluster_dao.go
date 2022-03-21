@@ -279,7 +279,7 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId
 	if !IsNotNull(cluster.ApiNodes) {
 		return
 	}
-	err = json.Unmarshal([]byte(cluster.ApiNodes), &apiNodeIds)
+	err = json.Unmarshal(cluster.ApiNodes, &apiNodeIds)
 	if err != nil {
 		return nil, err
 	}
@@ -526,7 +526,7 @@ func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64, ca
 	if err != nil {
 		return nil, err
 	}
-	if !IsNotNull(toa) {
+	if !IsNotNull([]byte(toa)) {
 		return nodeconfigs.DefaultTOAConfig(), nil
 	}
 
@@ -719,16 +719,16 @@ func (this *NodeClusterDAO) UpdateNodeClusterSystemService(tx *dbs.Tx, clusterId
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
-	service, err := this.Query(tx).
+	serviceData, err := this.Query(tx).
 		Pk(clusterId).
 		Result("systemServices").
-		FindStringCol("")
+		FindBytesCol()
 	if err != nil {
 		return err
 	}
 	servicesMap := map[string]maps.Map{}
-	if IsNotNull(service) {
-		err = json.Unmarshal([]byte(service), &servicesMap)
+	if IsNotNull(serviceData) {
+		err = json.Unmarshal(serviceData, &servicesMap)
 		if err != nil {
 			return err
 		}
@@ -766,7 +766,7 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServiceParams(tx *dbs.Tx, clust
 		return nil, err
 	}
 	servicesMap := map[string]maps.Map{}
-	if IsNotNull(service) {
+	if IsNotNull([]byte(service)) {
 		err = json.Unmarshal([]byte(service), &servicesMap)
 		if err != nil {
 			return nil, err
@@ -797,7 +797,7 @@ func (this *NodeClusterDAO) FindNodeClusterSystemServices(tx *dbs.Tx, clusterId 
 		return nil, err
 	}
 	servicesMap := map[string]maps.Map{}
-	if IsNotNull(service) {
+	if IsNotNull([]byte(service)) {
 		err = json.Unmarshal([]byte(service), &servicesMap)
 		if err != nil {
 			return nil, err

@@ -1,11 +1,13 @@
 package regions
 
-//
+import "github.com/iwind/TeaGo/dbs"
+
+// RegionProvider 区域ISP
 type RegionProvider struct {
-	Id    uint32 `field:"id"`    // ID
-	Name  string `field:"name"`  // 名称
-	Codes string `field:"codes"` // 代号
-	State uint8  `field:"state"` // 状态
+	Id    uint32   `field:"id"`    // ID
+	Name  string   `field:"name"`  // 名称
+	Codes dbs.JSON `field:"codes"` // 代号
+	State uint8    `field:"state"` // 状态
 }
 
 type RegionProviderOperator struct {

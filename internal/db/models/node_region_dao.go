@@ -162,8 +162,8 @@ func (this *NodeRegionDAO) UpdateRegionItemPrice(tx *dbs.Tx, regionId int64, ite
 	}
 	prices := one.(*NodeRegion).Prices
 	pricesMap := map[string]float32{}
-	if len(prices) > 0 && prices != "null" {
-		err = json.Unmarshal([]byte(prices), &pricesMap)
+	if IsNotNull(prices) {
+		err = json.Unmarshal(prices, &pricesMap)
 		if err != nil {
 			return err
 		}

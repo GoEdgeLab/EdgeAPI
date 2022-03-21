@@ -148,8 +148,8 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 
 	pbModules := []*pb.AdminModule{}
 	modules := []*systemconfigs.AdminModule{}
-	if len(admin.Modules) > 0 && admin.Modules != "null" {
-		err = json.Unmarshal([]byte(admin.Modules), &modules)
+	if len(admin.Modules) > 0 {
+		err = json.Unmarshal(admin.Modules, &modules)
 		if err != nil {
 			return nil, err
 		}
@@ -281,8 +281,8 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 	result := []*pb.AdminModuleList{}
 	for _, admin := range admins {
 		modules := []*systemconfigs.AdminModule{}
-		if len(admin.Modules) > 0 && admin.Modules != "null" {
-			err = json.Unmarshal([]byte(admin.Modules), &modules)
+		if len(admin.Modules) > 0 {
+			err = json.Unmarshal(admin.Modules, &modules)
 			if err != nil {
 				return nil, err
 			}

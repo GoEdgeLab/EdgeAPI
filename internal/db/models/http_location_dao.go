@@ -189,7 +189,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 	// reverse proxy
 	if IsNotNull(location.ReverseProxy) {
 		ref := &serverconfigs.ReverseProxyRef{}
-		err = json.Unmarshal([]byte(location.ReverseProxy), ref)
+		err = json.Unmarshal(location.ReverseProxy, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -204,9 +204,9 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 	}
 
 	// conds
-	if len(location.Conds) > 0 {
+	if IsNotNull(location.Conds) {
 		conds := &shared.HTTPRequestCondsConfig{}
-		err = json.Unmarshal([]byte(location.Conds), conds)
+		err = json.Unmarshal(location.Conds, conds)
 		if err != nil {
 			return nil, err
 		}
@@ -214,9 +214,9 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 	}
 
 	// domains
-	if len(location.Domains) > 0 {
+	if IsNotNull(location.Domains) {
 		var domains = []string{}
-		err = json.Unmarshal([]byte(location.Domains), &domains)
+		err = json.Unmarshal(location.Domains, &domains)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +241,7 @@ func (this *HTTPLocationDAO) FindLocationReverseProxy(tx *dbs.Tx, locationId int
 	if err != nil {
 		return nil, err
 	}
-	if IsNotNull(refString) {
+	if IsNotNull([]byte(refString)) {
 		ref := &serverconfigs.ReverseProxyRef{}
 		err = json.Unmarshal([]byte(refString), ref)
 		if err != nil {

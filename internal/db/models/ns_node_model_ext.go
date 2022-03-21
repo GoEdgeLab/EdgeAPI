@@ -8,7 +8,7 @@ import (
 
 // DecodeInstallStatus 安装状态
 func (this *NSNode) DecodeInstallStatus() (*NodeInstallStatus, error) {
-	if len(this.InstallStatus) == 0 || this.InstallStatus == "null" {
+	if len(this.InstallStatus) == 0 {
 		return NewNodeInstallStatus(), nil
 	}
 	status := &NodeInstallStatus{}
@@ -29,7 +29,7 @@ func (this *NSNode) DecodeInstallStatus() (*NodeInstallStatus, error) {
 
 // DecodeStatus 节点状态
 func (this *NSNode) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
-	if len(this.Status) == 0 || this.Status == "null" {
+	if len(this.Status) == 0 {
 		return nil, nil
 	}
 	status := &nodeconfigs.NodeStatus{}

@@ -1,11 +1,13 @@
 package nameservers
 
+import "github.com/iwind/TeaGo/dbs"
+
 // NSQuestionOption DNS请求选项
 type NSQuestionOption struct {
-	Id        uint64 `field:"id"`        // ID
-	Name      string `field:"name"`      // 选项名
-	Values    string `field:"values"`    // 选项值
-	CreatedAt uint64 `field:"createdAt"` // 创建时间
+	Id        uint64   `field:"id"`        // ID
+	Name      string   `field:"name"`      // 选项名
+	Values    dbs.JSON `field:"values"`    // 选项值
+	CreatedAt uint64   `field:"createdAt"` // 创建时间
 }
 
 type NSQuestionOptionOperator struct {

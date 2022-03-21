@@ -1,23 +1,25 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // NodeLog 节点日志
 type NodeLog struct {
-	Id          uint64 `field:"id"`          // ID
-	Role        string `field:"role"`        // 节点角色
-	Type        string `field:"type"`        // 类型
-	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
-	Tag         string `field:"tag"`         // 标签
-	Description string `field:"description"` // 描述
-	Level       string `field:"level"`       // 级别
-	NodeId      uint32 `field:"nodeId"`      // 节点ID
-	Day         string `field:"day"`         // 日期
-	ServerId    uint32 `field:"serverId"`    // 服务ID
-	OriginId    uint32 `field:"originId"`    // 源站ID
-	Hash        string `field:"hash"`        // 信息内容Hash
-	Count       uint32 `field:"count"`       // 重复次数
-	IsFixed     uint8  `field:"isFixed"`     // 是否已处理
-	IsRead      uint8  `field:"isRead"`      // 是否已读
-	Params      string `field:"params"`      // 参数
+	Id          uint64   `field:"id"`          // ID
+	Role        string   `field:"role"`        // 节点角色
+	Type        string   `field:"type"`        // 类型
+	CreatedAt   uint64   `field:"createdAt"`   // 创建时间
+	Tag         string   `field:"tag"`         // 标签
+	Description string   `field:"description"` // 描述
+	Level       string   `field:"level"`       // 级别
+	NodeId      uint32   `field:"nodeId"`      // 节点ID
+	Day         string   `field:"day"`         // 日期
+	ServerId    uint32   `field:"serverId"`    // 服务ID
+	OriginId    uint32   `field:"originId"`    // 源站ID
+	Hash        string   `field:"hash"`        // 信息内容Hash
+	Count       uint32   `field:"count"`       // 重复次数
+	IsFixed     uint8    `field:"isFixed"`     // 是否已处理
+	IsRead      uint8    `field:"isRead"`      // 是否已读
+	Params      dbs.JSON `field:"params"`      // 参数
 }
 
 type NodeLogOperator struct {

@@ -1,20 +1,22 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // HTTPAccessLogPolicy 访问日志策略
 type HTTPAccessLogPolicy struct {
-	Id         uint32 `field:"id"`         // ID
-	TemplateId uint32 `field:"templateId"` // 模版ID
-	AdminId    uint32 `field:"adminId"`    // 管理员ID
-	UserId     uint32 `field:"userId"`     // 用户ID
-	State      uint8  `field:"state"`      // 状态
-	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
-	Name       string `field:"name"`       // 名称
-	IsOn       uint8  `field:"isOn"`       // 是否启用
-	Type       string `field:"type"`       // 存储类型
-	Options    string `field:"options"`    // 存储选项
-	Conds      string `field:"conds"`      // 请求条件
-	IsPublic   uint8  `field:"isPublic"`   // 是否为公用
-	Version    uint32 `field:"version"`    // 版本号
+	Id         uint32   `field:"id"`         // ID
+	TemplateId uint32   `field:"templateId"` // 模版ID
+	AdminId    uint32   `field:"adminId"`    // 管理员ID
+	UserId     uint32   `field:"userId"`     // 用户ID
+	State      uint8    `field:"state"`      // 状态
+	CreatedAt  uint64   `field:"createdAt"`  // 创建时间
+	Name       string   `field:"name"`       // 名称
+	IsOn       uint8    `field:"isOn"`       // 是否启用
+	Type       string   `field:"type"`       // 存储类型
+	Options    dbs.JSON `field:"options"`    // 存储选项
+	Conds      dbs.JSON `field:"conds"`      // 请求条件
+	IsPublic   uint8    `field:"isPublic"`   // 是否为公用
+	Version    uint32   `field:"version"`    // 版本号
 }
 
 type HTTPAccessLogPolicyOperator struct {

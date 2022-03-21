@@ -1,22 +1,24 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // SSLPolicy SSL配置策略
 type SSLPolicy struct {
-	Id               uint32 `field:"id"`               // ID
-	AdminId          uint32 `field:"adminId"`          // 管理员ID
-	UserId           uint32 `field:"userId"`           // 用户ID
-	IsOn             uint8  `field:"isOn"`             // 是否启用
-	Certs            string `field:"certs"`            // 证书列表
-	ClientCACerts    string `field:"clientCACerts"`    // 客户端证书
-	ClientAuthType   uint32 `field:"clientAuthType"`   // 客户端认证类型
-	MinVersion       string `field:"minVersion"`       // 支持的SSL最小版本
-	CipherSuitesIsOn uint8  `field:"cipherSuitesIsOn"` // 是否自定义加密算法套件
-	CipherSuites     string `field:"cipherSuites"`     // 加密算法套件
-	Hsts             string `field:"hsts"`             // HSTS设置
-	Http2Enabled     uint8  `field:"http2Enabled"`     // 是否启用HTTP/2
-	OcspIsOn         uint8  `field:"ocspIsOn"`         // 是否启用OCSP
-	State            uint8  `field:"state"`            // 状态
-	CreatedAt        uint64 `field:"createdAt"`        // 创建时间
+	Id               uint32   `field:"id"`               // ID
+	AdminId          uint32   `field:"adminId"`          // 管理员ID
+	UserId           uint32   `field:"userId"`           // 用户ID
+	IsOn             uint8    `field:"isOn"`             // 是否启用
+	Certs            dbs.JSON `field:"certs"`            // 证书列表
+	ClientCACerts    dbs.JSON `field:"clientCACerts"`    // 客户端证书
+	ClientAuthType   uint32   `field:"clientAuthType"`   // 客户端认证类型
+	MinVersion       string   `field:"minVersion"`       // 支持的SSL最小版本
+	CipherSuitesIsOn uint8    `field:"cipherSuitesIsOn"` // 是否自定义加密算法套件
+	CipherSuites     dbs.JSON `field:"cipherSuites"`     // 加密算法套件
+	Hsts             dbs.JSON `field:"hsts"`             // HSTS设置
+	Http2Enabled     uint8    `field:"http2Enabled"`     // 是否启用HTTP/2
+	OcspIsOn         uint8    `field:"ocspIsOn"`         // 是否启用OCSP
+	State            uint8    `field:"state"`            // 状态
+	CreatedAt        uint64   `field:"createdAt"`        // 创建时间
 }
 
 type SSLPolicyOperator struct {

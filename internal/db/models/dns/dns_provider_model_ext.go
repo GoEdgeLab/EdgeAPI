@@ -5,9 +5,9 @@ import (
 	"github.com/iwind/TeaGo/maps"
 )
 
-// 获取API参数
+// DecodeAPIParams 获取API参数
 func (this *DNSProvider) DecodeAPIParams() (maps.Map, error) {
-	if len(this.ApiParams) == 0 || this.ApiParams == "null" {
+	if len(this.ApiParams) == 0 {
 		return maps.Map{}, nil
 	}
 	result := maps.Map{}

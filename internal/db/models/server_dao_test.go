@@ -186,7 +186,7 @@ func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
 		}
 		if len(servers) > 0 {
 			for _, server := range servers {
-				t.Log(domain + ": " + server.ServerNames)
+				t.Log(domain + ": " + string(server.ServerNames))
 			}
 		} else {
 			t.Log(domain + ": not found")

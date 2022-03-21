@@ -1,11 +1,13 @@
 package models
 
-// 系统配置
+import "github.com/iwind/TeaGo/dbs"
+
+// SysSetting 系统配置
 type SysSetting struct {
-	Id     uint32 `field:"id"`     // ID
-	UserId uint32 `field:"userId"` // 用户ID
-	Code   string `field:"code"`   // 代号
-	Value  string `field:"value"`  // 配置值
+	Id     uint32   `field:"id"`     // ID
+	UserId uint32   `field:"userId"` // 用户ID
+	Code   string   `field:"code"`   // 代号
+	Value  dbs.JSON `field:"value"`  // 配置值
 }
 
 type SysSettingOperator struct {

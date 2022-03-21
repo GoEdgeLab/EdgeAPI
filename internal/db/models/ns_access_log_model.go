@@ -1,15 +1,17 @@
 package models
 
+import "github.com/iwind/TeaGo/dbs"
+
 // NSAccessLog 域名服务访问日志
 type NSAccessLog struct {
-	Id         uint64 `field:"id"`         // ID
-	NodeId     uint32 `field:"nodeId"`     // 节点ID
-	DomainId   uint32 `field:"domainId"`   // 域名ID
-	RecordId   uint32 `field:"recordId"`   // 记录ID
-	Content    string `field:"content"`    // 访问数据
-	RequestId  string `field:"requestId"`  // 请求ID
-	CreatedAt  uint64 `field:"createdAt"`  // 创建时间
-	RemoteAddr string `field:"remoteAddr"` // IP
+	Id         uint64   `field:"id"`         // ID
+	NodeId     uint32   `field:"nodeId"`     // 节点ID
+	DomainId   uint32   `field:"domainId"`   // 域名ID
+	RecordId   uint32   `field:"recordId"`   // 记录ID
+	Content    dbs.JSON `field:"content"`    // 访问数据
+	RequestId  string   `field:"requestId"`  // 请求ID
+	CreatedAt  uint64   `field:"createdAt"`  // 创建时间
+	RemoteAddr string   `field:"remoteAddr"` // IP
 }
 
 type NSAccessLogOperator struct {
