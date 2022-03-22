@@ -15,7 +15,7 @@ type Message struct {
 	Body      string   `field:"body"`      // 内容
 	Type      string   `field:"type"`      // 消息类型
 	Params    dbs.JSON `field:"params"`    // 额外的参数
-	IsRead    uint8    `field:"isRead"`    // 是否已读
+	IsRead    bool     `field:"isRead"`    // 是否已读
 	State     uint8    `field:"state"`     // 状态
 	CreatedAt uint64   `field:"createdAt"` // 创建时间
 	Day       string   `field:"day"`       // 日期YYYYMMDD

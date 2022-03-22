@@ -23,7 +23,7 @@ type IPItem struct {
 	SourceHTTPFirewallPolicyId    uint32 `field:"sourceHTTPFirewallPolicyId"`    // 来源策略ID
 	SourceHTTPFirewallRuleGroupId uint32 `field:"sourceHTTPFirewallRuleGroupId"` // 来源规则集分组ID
 	SourceHTTPFirewallRuleSetId   uint32 `field:"sourceHTTPFirewallRuleSetId"`   // 来源规则集ID
-	IsRead                        uint8  `field:"isRead"`                        // 是否已读
+	IsRead                        bool   `field:"isRead"`                        // 是否已读
 }
 
 type IPItemOperator struct {

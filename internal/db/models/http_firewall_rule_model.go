@@ -11,7 +11,7 @@ type HTTPFirewallRule struct {
 	ParamFilters      dbs.JSON `field:"paramFilters"`      // 处理器
 	Operator          string   `field:"operator"`          // 操作符
 	Value             string   `field:"value"`             // 对比值
-	IsCaseInsensitive uint8    `field:"isCaseInsensitive"` // 是否大小写不敏感
+	IsCaseInsensitive bool     `field:"isCaseInsensitive"` // 是否大小写不敏感
 	CheckpointOptions dbs.JSON `field:"checkpointOptions"` // 检查点参数
 	State             uint8    `field:"state"`             // 状态
 	CreatedAt         uint64   `field:"createdAt"`         // 创建时间

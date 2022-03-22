@@ -700,7 +700,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			IncludeNodes:            server.IncludeNodes,
 			ExcludeNodes:            server.ExcludeNodes,
 			ServerNamesJSON:         server.ServerNames,
-			IsAuditing:              server.IsAuditing == 1,
+			IsAuditing:              server.IsAuditing,
 			AuditingAt:              int64(server.AuditingAt),
 			AuditingServerNamesJSON: server.AuditingServerNames,
 			AuditingResult:          auditingResult,

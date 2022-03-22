@@ -126,16 +126,16 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 
 			// 是否超时（N秒内没有更新）
 			if int64(task.UpdatedAt) < time.Now().Unix()-120 {
-				task.IsDone = 1
-				task.IsOk = 0
+				task.IsDone = true
+				task.IsOk = false
 				task.Error = "节点响应超时"
 			}
 
 			pbNodeTasks = append(pbNodeTasks, &pb.NodeTask{
 				Id:        int64(task.Id),
 				Type:      task.Type,
-				IsDone:    task.IsDone == 1,
-				IsOk:      task.IsOk == 1,
+				IsDone:    task.IsDone,
+				IsOk:      task.IsOk,
 				Error:     task.Error,
 				UpdatedAt: int64(task.UpdatedAt),
 				ServerId:  int64(task.ServerId),
@@ -258,8 +258,8 @@ func (this *NodeTaskService) FindNotifyingNodeTasks(ctx context.Context, req *pb
 		pbTasks = append(pbTasks, &pb.NodeTask{
 			Id:        int64(task.Id),
 			Type:      task.Type,
-			IsDone:    task.IsDone == 1,
-			IsOk:      task.IsOk == 1,
+			IsDone:    task.IsDone,
+			IsOk:      task.IsOk,
 			Error:     task.Error,
 			UpdatedAt: int64(task.UpdatedAt),
 			Node:      &pb.Node{Id: int64(task.NodeId)},

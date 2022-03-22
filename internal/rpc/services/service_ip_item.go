@@ -280,7 +280,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 			SourceHTTPFirewallPolicy:      pbSourcePolicy,
 			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
 			SourceHTTPFirewallRuleSet:     pbSourceSet,
-			IsRead:                        item.IsRead == 1,
+			IsRead:                        item.IsRead,
 		})
 	}
 
@@ -383,7 +383,7 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			Type:       item.Type,
 			EventLevel: item.EventLevel,
 			ListType:   list.Type,
-			IsGlobal:   list.IsPublic == 1 && list.IsGlobal == 1,
+			IsGlobal:   list.IsPublic && list.IsGlobal,
 			NodeId:     int64(item.NodeId),
 			ServerId:   int64(item.ServerId),
 		})
@@ -604,7 +604,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			SourceHTTPFirewallRuleGroup:   pbSourceGroup,
 			SourceHTTPFirewallRuleSet:     pbSourceSet,
 			SourceNode:                    pbSourceNode,
-			IsRead:                        item.IsRead == 1,
+			IsRead:                        item.IsRead,
 		}
 
 		// 所属名单
@@ -623,8 +623,8 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			Id:       int64(list.Id),
 			Name:     list.Name,
 			Type:     list.Type,
-			IsPublic: list.IsPublic == 1,
-			IsGlobal: list.IsGlobal == 1,
+			IsPublic: list.IsPublic,
+			IsGlobal: list.IsGlobal,
 		}
 
 		// 所属服务（注意同SourceServer不同）
@@ -632,7 +632,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 
 		// 所属策略（注意同SourceHTTPFirewallPolicy不同）
 		var pbFirewallPolicy *pb.HTTPFirewallPolicy
-		if list.IsPublic == 0 {
+		if !list.IsPublic {
 			policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyWithIPListId(tx, int64(list.Id))
 			if err != nil {
 				return nil, err

@@ -98,7 +98,7 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(tx *dbs.Tx, ruleId int64) (
 
 	config.Operator = rule.Operator
 	config.Value = rule.Value
-	config.IsCaseInsensitive = rule.IsCaseInsensitive == 1
+	config.IsCaseInsensitive = rule.IsCaseInsensitive
 
 	if IsNotNull(rule.CheckpointOptions) {
 		checkpointOptions := map[string]interface{}{}

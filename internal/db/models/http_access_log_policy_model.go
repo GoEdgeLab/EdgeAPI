@@ -15,7 +15,7 @@ type HTTPAccessLogPolicy struct {
 	Type       string   `field:"type"`       // 存储类型
 	Options    dbs.JSON `field:"options"`    // 存储选项
 	Conds      dbs.JSON `field:"conds"`      // 请求条件
-	IsPublic   uint8    `field:"isPublic"`   // 是否为公用
+	IsPublic   bool     `field:"isPublic"`   // 是否为公用
 	Version    uint32   `field:"version"`    // 版本号
 }
 

@@ -161,7 +161,7 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	if oldItem == nil {
 		return nil
 	}
-	oldIsPublic := oldItem.IsPublic == 1
+	oldIsPublic := oldItem.IsPublic
 	var versionChanged = false
 	if strings.Join(oldItem.DecodeKeys(), "&") != strings.Join(keys, "&") || types.Int32(oldItem.Period) != period || oldItem.PeriodUnit != periodUnit || oldItem.Value != value {
 		versionChanged = true

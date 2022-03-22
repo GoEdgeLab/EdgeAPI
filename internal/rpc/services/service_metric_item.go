@@ -69,7 +69,7 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 		Period:     types.Int32(item.Period),
 		PeriodUnit: item.PeriodUnit,
 		Value:      item.Value,
-		IsPublic:   item.IsPublic == 1,
+		IsPublic:   item.IsPublic,
 	}}, nil
 }
 
@@ -112,7 +112,7 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 			Period:     types.Int32(item.Period),
 			PeriodUnit: item.PeriodUnit,
 			Value:      item.Value,
-			IsPublic:   item.IsPublic == 1,
+			IsPublic:   item.IsPublic,
 		})
 	}
 

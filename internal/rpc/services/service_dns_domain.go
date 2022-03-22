@@ -260,8 +260,8 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 			Id:        int64(domain.Id),
 			Name:      domain.Name,
 			IsOn:      domain.IsOn,
-			IsUp:      domain.IsUp == 1,
-			IsDeleted: domain.IsDeleted == 1,
+			IsUp:      domain.IsUp,
+			IsDeleted: domain.IsDeleted,
 		})
 	}
 
@@ -390,8 +390,8 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 		ProviderId:         int64(domain.ProviderId),
 		Name:               domain.Name,
 		IsOn:               domain.IsOn,
-		IsUp:               domain.IsUp == 1,
-		IsDeleted:          domain.IsDeleted == 1,
+		IsUp:               domain.IsUp,
+		IsDeleted:          domain.IsDeleted,
 		DataUpdatedAt:      int64(domain.DataUpdatedAt),
 		CountNodeRecords:   int64(countNodeRecords),
 		NodesChanged:       nodesChanged,
@@ -834,7 +834,7 @@ func (this *DNSDomainService) SyncDNSDomainsFromProvider(ctx context.Context, re
 				return nil, err
 			}
 			hasChanges = true
-		} else if domain.IsUp == 0 {
+		} else if !domain.IsUp {
 			err = dns.SharedDNSDomainDAO.UpdateDomainIsUp(tx, int64(domain.Id), true)
 			if err != nil {
 				return nil, err
@@ -846,7 +846,7 @@ func (this *DNSDomainService) SyncDNSDomainsFromProvider(ctx context.Context, re
 	// 将老的域名置为下线
 	for _, oldDomain := range oldDomains {
 		var domainName = oldDomain.Name
-		if oldDomain.IsUp == 1 && !lists.ContainsString(domainNames, domainName) {
+		if oldDomain.IsUp && !lists.ContainsString(domainNames, domainName) {
 			err = dns.SharedDNSDomainDAO.UpdateDomainIsUp(tx, int64(oldDomain.Id), false)
 			if err != nil {
 				return nil, err

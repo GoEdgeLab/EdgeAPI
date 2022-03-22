@@ -102,7 +102,7 @@ func (this *SSLCertUpdateOCSPTask) Loop(checkLock bool) error {
 
 // UpdateCertOCSP 更新单个证书OCSP
 func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocspData []byte, expiresAt int64, err error) {
-	if certOne.IsCA == 1 || len(certOne.CertData) == 0 || len(certOne.KeyData) == 0 {
+	if certOne.IsCA || len(certOne.CertData) == 0 || len(certOne.KeyData) == 0 {
 		return
 	}
 

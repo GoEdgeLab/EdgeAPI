@@ -18,7 +18,7 @@ type HTTPLocation struct {
 	WebId        uint32   `field:"webId"`        // Web配置ID
 	ReverseProxy dbs.JSON `field:"reverseProxy"` // 反向代理
 	UrlPrefix    string   `field:"urlPrefix"`    // URL前缀
-	IsBreak      uint8    `field:"isBreak"`      // 是否终止匹配
+	IsBreak      bool     `field:"isBreak"`      // 是否终止匹配
 	Conds        dbs.JSON `field:"conds"`        // 匹配条件
 	Domains      dbs.JSON `field:"domains"`      // 专属域名
 }

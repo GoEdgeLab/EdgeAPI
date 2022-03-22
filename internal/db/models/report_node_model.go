@@ -12,7 +12,7 @@ type ReportNode struct {
 	Location  string   `field:"location"`  // 所在区域
 	Isp       string   `field:"isp"`       // 网络服务商
 	AllowIPs  dbs.JSON `field:"allowIPs"`  // 允许的IP
-	IsActive  uint8    `field:"isActive"`  // 是否活跃
+	IsActive  bool     `field:"isActive"`  // 是否活跃
 	Status    dbs.JSON `field:"status"`    // 状态
 	State     uint8    `field:"state"`     // 状态
 	CreatedAt uint64   `field:"createdAt"` // 创建时间

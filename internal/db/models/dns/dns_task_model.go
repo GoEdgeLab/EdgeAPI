@@ -9,8 +9,8 @@ type DNSTask struct {
 	DomainId  uint32 `field:"domainId"`  // 域名ID
 	Type      string `field:"type"`      // 任务类型
 	UpdatedAt uint64 `field:"updatedAt"` // 更新时间
-	IsDone    uint8  `field:"isDone"`    // 是否已完成
-	IsOk      uint8  `field:"isOk"`      // 是否成功
+	IsDone    bool   `field:"isDone"`    // 是否已完成
+	IsOk      bool   `field:"isOk"`      // 是否成功
 	Error     string `field:"error"`     // 错误信息
 }
 

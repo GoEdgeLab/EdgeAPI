@@ -55,8 +55,8 @@ func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.Fi
 		pbTask := &pb.DNSTask{
 			Id:        int64(task.Id),
 			Type:      task.Type,
-			IsDone:    task.IsDone == 1,
-			IsOk:      task.IsOk == 1,
+			IsDone:    task.IsDone,
+			IsOk:      task.IsOk,
 			Error:     task.Error,
 			UpdatedAt: int64(task.UpdatedAt),
 		}

@@ -9,7 +9,7 @@ type HTTPFirewallRuleGroup struct {
 	Name        string   `field:"name"`        // 名称
 	Description string   `field:"description"` // 描述
 	Code        string   `field:"code"`        // 代号
-	IsTemplate  uint8    `field:"isTemplate"`  // 是否为预置模板
+	IsTemplate  bool     `field:"isTemplate"`  // 是否为预置模板
 	AdminId     uint32   `field:"adminId"`     // 管理员ID
 	UserId      uint32   `field:"userId"`      // 用户ID
 	State       uint8    `field:"state"`       // 状态

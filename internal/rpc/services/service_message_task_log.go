@@ -75,7 +75,7 @@ func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req 
 		pbLogs = append(pbLogs, &pb.MessageTaskLog{
 			Id:        int64(log.Id),
 			CreatedAt: int64(log.CreatedAt),
-			IsOk:      log.IsOk == 1,
+			IsOk:      log.IsOk,
 			Error:     log.Error,
 			Response:  log.Response,
 			MessageTask: &pb.MessageTask{

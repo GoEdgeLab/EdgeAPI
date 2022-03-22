@@ -13,10 +13,10 @@ type NodeIPAddress struct {
 	Description       string   `field:"description"`       // 描述
 	State             uint8    `field:"state"`             // 状态
 	Order             uint32   `field:"order"`             // 排序
-	CanAccess         uint8    `field:"canAccess"`         // 是否可以访问
+	CanAccess         bool     `field:"canAccess"`         // 是否可以访问
 	IsOn              bool     `field:"isOn"`              // 是否启用
-	IsUp              uint8    `field:"isUp"`              // 是否上线
-	IsHealthy         uint8    `field:"isHealthy"`         // 是否健康
+	IsUp              bool     `field:"isUp"`              // 是否上线
+	IsHealthy         bool     `field:"isHealthy"`         // 是否健康
 	Thresholds        dbs.JSON `field:"thresholds"`        // 上线阈值
 	Connectivity      dbs.JSON `field:"connectivity"`      // 连通性状态
 	BackupIP          string   `field:"backupIP"`          // 备用IP

@@ -16,13 +16,13 @@ type SSLCert struct {
 	CertData           []byte   `field:"certData"`           // 证书内容
 	KeyData            []byte   `field:"keyData"`            // 密钥内容
 	ServerName         string   `field:"serverName"`         // 证书使用的主机名
-	IsCA               uint8    `field:"isCA"`               // 是否为CA证书
+	IsCA               bool     `field:"isCA"`               // 是否为CA证书
 	GroupIds           dbs.JSON `field:"groupIds"`           // 证书分组
 	TimeBeginAt        uint64   `field:"timeBeginAt"`        // 开始时间
 	TimeEndAt          uint64   `field:"timeEndAt"`          // 结束时间
 	DnsNames           dbs.JSON `field:"dnsNames"`           // DNS名称列表
 	CommonNames        dbs.JSON `field:"commonNames"`        // 发行单位列表
-	IsACME             uint8    `field:"isACME"`             // 是否为ACME自动生成的
+	IsACME             bool     `field:"isACME"`             // 是否为ACME自动生成的
 	AcmeTaskId         uint64   `field:"acmeTaskId"`         // ACME任务ID
 	NotifiedAt         uint64   `field:"notifiedAt"`         // 最后通知时间
 	Ocsp               []byte   `field:"ocsp"`               // OCSP缓存

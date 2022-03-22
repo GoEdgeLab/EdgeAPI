@@ -115,7 +115,7 @@ func (this *NodeIPAddressDAO) FindAddressIsHealthy(tx *dbs.Tx, addressId int64) 
 		return false, err
 	}
 	var addr = one.(*NodeIPAddress)
-	return addr.IsHealthy == 1, nil
+	return addr.IsHealthy, nil
 }
 
 // CreateAddress 创建IP地址
@@ -469,7 +469,7 @@ func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64,
 	if one == nil {
 		return false, nil
 	}
-	oldIsHealthy := one.(*NodeIPAddress).IsHealthy == 1
+	oldIsHealthy := one.(*NodeIPAddress).IsHealthy
 
 	// 如果新老状态一致，则不做任何事情
 	if oldIsHealthy == isUp {

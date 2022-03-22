@@ -12,8 +12,8 @@ type File struct {
 	Order       uint32 `field:"order"`       // 排序
 	Type        string `field:"type"`        // 类型
 	State       uint8  `field:"state"`       // 状态
-	IsFinished  uint8  `field:"isFinished"`  // 是否已完成上传
-	IsPublic    uint8  `field:"isPublic"`    // 是否可以公开访问
+	IsFinished  bool   `field:"isFinished"`  // 是否已完成上传
+	IsPublic    bool   `field:"isPublic"`    // 是否可以公开访问
 }
 
 type FileOperator struct {

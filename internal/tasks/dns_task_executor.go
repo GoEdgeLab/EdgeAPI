@@ -333,7 +333,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		}
 		for _, ipAddress := range ipAddresses {
 			ip := ipAddress.DNSIP()
-			if len(ip) == 0 || ipAddress.CanAccess == 0 || ipAddress.IsUp == 0 || !ipAddress.IsOn {
+			if len(ip) == 0 || !ipAddress.CanAccess || !ipAddress.IsUp || !ipAddress.IsOn {
 				continue
 			}
 			if net.ParseIP(ip) == nil {

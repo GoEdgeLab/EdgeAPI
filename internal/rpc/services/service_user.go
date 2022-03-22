@@ -221,8 +221,8 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 			Remark:       user.Remark,
 			IsOn:         user.IsOn,
 			RegisteredIP: user.RegisteredIP,
-			IsVerified:   user.IsVerified == 1,
-			IsRejected:   user.IsRejected == 1,
+			IsVerified:   user.IsVerified,
+			IsRejected:   user.IsRejected,
 			CreatedAt:    int64(user.CreatedAt),
 			NodeCluster:  pbCluster,
 		})
@@ -272,8 +272,8 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		IsOn:         user.IsOn,
 		CreatedAt:    int64(user.CreatedAt),
 		RegisteredIP: user.RegisteredIP,
-		IsVerified:   user.IsVerified == 1,
-		IsRejected:   user.IsRejected == 1,
+		IsVerified:   user.IsVerified,
+		IsRejected:   user.IsRejected,
 		RejectReason: user.RejectReason,
 		NodeCluster:  pbCluster,
 	}}, nil

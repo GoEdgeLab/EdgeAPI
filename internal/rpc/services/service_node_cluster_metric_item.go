@@ -79,7 +79,7 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 				Period:     types.Int32(item.Period),
 				PeriodUnit: item.PeriodUnit,
 				Value:      item.Value,
-				IsPublic:   item.IsPublic == 1,
+				IsPublic:   item.IsPublic,
 			})
 		}
 	}

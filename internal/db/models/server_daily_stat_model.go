@@ -16,7 +16,7 @@ type ServerDailyStat struct {
 	Hour                string  `field:"hour"`                // YYYYMMDDHH
 	TimeFrom            string  `field:"timeFrom"`            // 开始时间HHMMSS
 	TimeTo              string  `field:"timeTo"`              // 结束时间
-	IsCharged           uint8   `field:"isCharged"`           // 是否已计算费用
+	IsCharged           bool    `field:"isCharged"`           // 是否已计算费用
 	PlanId              uint64  `field:"planId"`              // 套餐ID
 	Fee                 float64 `field:"fee"`                 // 费用
 }

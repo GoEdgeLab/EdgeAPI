@@ -47,7 +47,7 @@ func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx con
 			Type:        policy.Type,
 			OptionsJSON: policy.Options,
 			CondsJSON:   policy.Conds,
-			IsPublic:    policy.IsPublic == 1,
+			IsPublic:    policy.IsPublic,
 		})
 	}
 	return &pb.ListEnabledHTTPAccessLogPoliciesResponse{HttpAccessLogPolicies: pbPolicies}, nil
@@ -125,7 +125,7 @@ func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx conte
 		Type:        policy.Type,
 		OptionsJSON: policy.Options,
 		CondsJSON:   policy.Conds,
-		IsPublic:    policy.IsPublic == 1,
+		IsPublic:    policy.IsPublic,
 	}}, nil
 }
 

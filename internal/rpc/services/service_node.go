@@ -313,7 +313,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			Id:          int64(node.Id),
 			Name:        node.Name,
 			Version:     int64(node.Version),
-			IsInstalled: node.IsInstalled == 1,
+			IsInstalled: node.IsInstalled,
 			StatusJSON:  node.Status,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
@@ -323,7 +323,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			InstallStatus:         installStatusResult,
 			MaxCPU:                types.Int32(node.MaxCPU),
 			IsOn:                  node.IsOn,
-			IsUp:                  node.IsUp == 1,
+			IsUp:                  node.IsUp,
 			NodeGroup:             pbGroup,
 			NodeRegion:            pbRegion,
 			DnsRoutes:             pbRoutes,
@@ -563,7 +563,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		LatestVersion: int64(node.LatestVersion),
 		Secret:        node.Secret,
 		InstallDir:    node.InstallDir,
-		IsInstalled:   node.IsInstalled == 1,
+		IsInstalled:   node.IsInstalled,
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
@@ -573,7 +573,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
 		IsOn:                   node.IsOn,
-		IsUp:                   node.IsUp == 1,
+		IsUp:                   node.IsUp,
 		NodeGroup:              pbGroup,
 		NodeRegion:             pbRegion,
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
@@ -607,7 +607,7 @@ func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindE
 		Id:   int64(node.Id),
 		Name: node.Name,
 		IsOn: node.IsOn,
-		IsUp: node.IsUp == 1,
+		IsUp: node.IsUp,
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
@@ -875,7 +875,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context,
 			Id:          int64(node.Id),
 			Name:        node.Name,
 			Version:     int64(node.Version),
-			IsInstalled: node.IsInstalled == 1,
+			IsInstalled: node.IsInstalled,
 			StatusJSON:  node.Status,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
@@ -948,7 +948,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 				Description: address.Description,
 				State:       int64(address.State),
 				Order:       int64(address.Order),
-				CanAccess:   address.CanAccess == 1,
+				CanAccess:   address.CanAccess,
 			})
 		}
 
@@ -973,7 +973,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 			Id:            int64(node.Id),
 			Name:          node.Name,
 			Version:       int64(node.Version),
-			IsInstalled:   node.IsInstalled == 1,
+			IsInstalled:   node.IsInstalled,
 			StatusJSON:    node.Status,
 			IsOn:          node.IsOn,
 			NodeLogin:     pbLogin,
@@ -1057,7 +1057,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 					Description: address.Description,
 					State:       int64(address.State),
 					Order:       int64(address.Order),
-					CanAccess:   address.CanAccess == 1,
+					CanAccess:   address.CanAccess,
 				})
 			}
 
@@ -1091,7 +1091,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 				Id:            int64(node.Id),
 				Name:          node.Name,
 				Version:       int64(node.Version),
-				IsInstalled:   node.IsInstalled == 1,
+				IsInstalled:   node.IsInstalled,
 				StatusJSON:    node.Status,
 				IsOn:          node.IsOn,
 				IpAddresses:   pbAddresses,
@@ -1452,7 +1452,7 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 		pbNodes = append(pbNodes, &pb.Node{
 			Id:                  int64(node.Id),
 			IsOn:                node.IsOn,
-			IsActive:            node.IsActive == 1,
+			IsActive:            node.IsActive,
 			ConnectedAPINodeIds: connectedAPINodeIds,
 		})
 	}

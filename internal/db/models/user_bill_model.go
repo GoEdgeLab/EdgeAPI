@@ -10,8 +10,8 @@ type UserBill struct {
 	DayFrom     string  `field:"dayFrom"`     // YYYYMMDD
 	DayTo       string  `field:"dayTo"`       // YYYYMMDD
 	Month       string  `field:"month"`       // 帐期YYYYMM
-	CanPay      uint8   `field:"canPay"`      // 是否可以支付
-	IsPaid      uint8   `field:"isPaid"`      // 是否已支付
+	CanPay      bool    `field:"canPay"`      // 是否可以支付
+	IsPaid      bool    `field:"isPaid"`      // 是否已支付
 	PaidAt      uint64  `field:"paidAt"`      // 支付时间
 	Code        string  `field:"code"`        // 账单编号
 	CreatedAt   uint64  `field:"createdAt"`   // 创建时间

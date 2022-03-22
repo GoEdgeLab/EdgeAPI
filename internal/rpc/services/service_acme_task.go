@@ -187,7 +187,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		if taskLog != nil {
 			pbTaskLog = &pb.ACMETaskLog{
 				Id:        int64(taskLog.Id),
-				IsOk:      taskLog.IsOk == 1,
+				IsOk:      taskLog.IsOk,
 				Error:     taskLog.Error,
 				CreatedAt: int64(taskLog.CreatedAt),
 			}

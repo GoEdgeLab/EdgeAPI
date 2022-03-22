@@ -175,7 +175,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 	config.Name = location.Name
 	config.Pattern = location.Pattern
 	config.URLPrefix = location.UrlPrefix
-	config.IsBreak = location.IsBreak == 1
+	config.IsBreak = location.IsBreak
 
 	// web
 	if location.WebId > 0 {

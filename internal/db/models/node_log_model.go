@@ -17,8 +17,8 @@ type NodeLog struct {
 	OriginId    uint32   `field:"originId"`    // 源站ID
 	Hash        string   `field:"hash"`        // 信息内容Hash
 	Count       uint32   `field:"count"`       // 重复次数
-	IsFixed     uint8    `field:"isFixed"`     // 是否已处理
-	IsRead      uint8    `field:"isRead"`      // 是否已读
+	IsFixed     bool     `field:"isFixed"`     // 是否已处理
+	IsRead      bool     `field:"isRead"`      // 是否已读
 	Params      dbs.JSON `field:"params"`      // 参数
 }
 

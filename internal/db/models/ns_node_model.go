@@ -12,12 +12,12 @@ type NSNode struct {
 	Status            dbs.JSON `field:"status"`            // 运行状态
 	UniqueId          string   `field:"uniqueId"`          // 节点ID
 	Secret            string   `field:"secret"`            // 密钥
-	IsUp              uint8    `field:"isUp"`              // 是否运行
-	IsInstalled       uint8    `field:"isInstalled"`       // 是否已安装
+	IsUp              bool     `field:"isUp"`              // 是否运行
+	IsInstalled       bool     `field:"isInstalled"`       // 是否已安装
 	InstallStatus     dbs.JSON `field:"installStatus"`     // 安装状态
 	InstallDir        string   `field:"installDir"`        // 安装目录
 	State             uint8    `field:"state"`             // 状态
-	IsActive          uint8    `field:"isActive"`          // 是否活跃
+	IsActive          bool     `field:"isActive"`          // 是否活跃
 	StatusIsNotified  uint8    `field:"statusIsNotified"`  // 活跃状态已经通知
 	ConnectedAPINodes dbs.JSON `field:"connectedAPINodes"` // 当前连接的API节点
 }

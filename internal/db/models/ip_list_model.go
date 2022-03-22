@@ -16,8 +16,8 @@ type IPList struct {
 	Timeout     dbs.JSON `field:"timeout"`     // 默认超时时间
 	Actions     dbs.JSON `field:"actions"`     // IP触发的动作
 	Description string   `field:"description"` // 描述
-	IsPublic    uint8    `field:"isPublic"`    // 是否公用
-	IsGlobal    uint8    `field:"isGlobal"`    // 是否全局
+	IsPublic    bool     `field:"isPublic"`    // 是否公用
+	IsGlobal    bool     `field:"isGlobal"`    // 是否全局
 }
 
 type IPListOperator struct {

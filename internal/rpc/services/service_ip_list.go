@@ -72,7 +72,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 		Code:        list.Code,
 		TimeoutJSON: list.Timeout,
 		Description: list.Description,
-		IsGlobal:    list.IsGlobal == 1,
+		IsGlobal:    list.IsGlobal,
 	}}, nil
 }
 
@@ -112,9 +112,9 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 			Name:        list.Name,
 			Code:        list.Code,
 			TimeoutJSON: list.Timeout,
-			IsPublic:    list.IsPublic == 1,
+			IsPublic:    list.IsPublic,
 			Description: list.Description,
-			IsGlobal:    list.IsGlobal == 1,
+			IsGlobal:    list.IsGlobal,
 		})
 	}
 	return &pb.ListEnabledIPListsResponse{IpLists: pbLists}, nil
@@ -185,7 +185,7 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 		if list == nil {
 			continue
 		}
-		if list.IsPublic != 1 {
+		if !list.IsPublic {
 			continue
 		}
 		pbLists = append(pbLists, &pb.IPList{
@@ -194,8 +194,8 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 			Type:        list.Type,
 			Name:        list.Name,
 			Code:        list.Code,
-			IsPublic:    list.IsPublic == 1,
-			IsGlobal:    list.IsGlobal == 1,
+			IsPublic:    list.IsPublic,
+			IsGlobal:    list.IsGlobal,
 			Description: "",
 		})
 

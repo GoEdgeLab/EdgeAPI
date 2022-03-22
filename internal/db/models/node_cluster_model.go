@@ -32,7 +32,7 @@ type NodeCluster struct {
 	NodeMaxThreads        uint32   `field:"nodeMaxThreads"`        // 节点最大线程数
 	NodeTCPMaxConnections uint32   `field:"nodeTCPMaxConnections"` // TCP最大连接数
 	AutoOpenPorts         uint8    `field:"autoOpenPorts"`         // 是否自动尝试开放端口
-	IsPinned              uint8    `field:"isPinned"`              // 是否置顶
+	IsPinned              bool     `field:"isPinned"`              // 是否置顶
 }
 
 type NodeClusterOperator struct {

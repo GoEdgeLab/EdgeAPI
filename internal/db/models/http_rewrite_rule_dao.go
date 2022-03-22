@@ -103,7 +103,7 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int
 	config.Mode = rule.Mode
 	config.RedirectStatus = types.Int(rule.RedirectStatus)
 	config.ProxyHost = rule.ProxyHost
-	config.IsBreak = rule.IsBreak == 1
+	config.IsBreak = rule.IsBreak
 	config.WithQuery = rule.WithQuery == 1
 
 	// conds

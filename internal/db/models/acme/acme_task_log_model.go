@@ -1,10 +1,10 @@
 package acme
 
-// ACME任务运行日志
+// ACMETaskLog ACME任务运行日志
 type ACMETaskLog struct {
 	Id        uint64 `field:"id"`        // ID
 	TaskId    uint64 `field:"taskId"`    // 任务ID
-	IsOk      uint8  `field:"isOk"`      // 是否成功
+	IsOk      bool   `field:"isOk"`      // 是否成功
 	Error     string `field:"error"`     // 错误信息
 	CreatedAt uint64 `field:"createdAt"` // 运行时间
 }

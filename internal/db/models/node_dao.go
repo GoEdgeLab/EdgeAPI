@@ -679,7 +679,7 @@ func (this *NodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*NodeInsta
 	}
 
 	installStatus := node.(*Node).InstallStatus
-	isInstalled := node.(*Node).IsInstalled == 1
+	isInstalled := node.(*Node).IsInstalled
 	if len(installStatus) == 0 {
 		return NewNodeInstallStatus(), nil
 	}
@@ -1266,7 +1266,7 @@ func (this *NodeDAO) UpdateNodeUpCount(tx *dbs.Tx, nodeId int64, isUp bool, maxU
 	if one == nil {
 		return false, nil
 	}
-	oldIsUp := one.(*Node).IsUp == 1
+	oldIsUp := one.(*Node).IsUp
 
 	// 如果新老状态一致，则不做任何事情
 	if oldIsUp == isUp {

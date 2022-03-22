@@ -23,9 +23,9 @@ type User struct {
 	ClusterId       uint32   `field:"clusterId"`       // 集群ID
 	Features        dbs.JSON `field:"features"`        // 允许操作的特征
 	RegisteredIP    string   `field:"registeredIP"`    // 注册使用的IP
-	IsRejected      uint8    `field:"isRejected"`      // 是否已拒绝
+	IsRejected      bool     `field:"isRejected"`      // 是否已拒绝
 	RejectReason    string   `field:"rejectReason"`    // 拒绝理由
-	IsVerified      uint8    `field:"isVerified"`      // 是否验证通过
+	IsVerified      bool     `field:"isVerified"`      // 是否验证通过
 	RequirePlans    uint8    `field:"requirePlans"`    // 是否需要购买套餐
 }
 

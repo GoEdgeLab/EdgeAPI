@@ -27,7 +27,7 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 		return &pb.FindEnabledFileResponse{File: nil}, nil
 	}
 
-	if file.IsPublic != 1 {
+	if !file.IsPublic {
 		// 校验权限
 		if userId > 0 && int64(file.UserId) != userId {
 			return nil, this.PermissionError()
@@ -40,7 +40,7 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 			Filename:  file.Filename,
 			Size:      int64(file.Size),
 			CreatedAt: int64(file.CreatedAt),
-			IsPublic:  file.IsPublic == 1,
+			IsPublic:  file.IsPublic,
 		},
 	}, nil
 }

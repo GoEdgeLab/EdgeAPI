@@ -14,7 +14,7 @@ type Server struct {
 	ServerNames         dbs.JSON `field:"serverNames"`         // 域名列表
 	AuditingAt          uint64   `field:"auditingAt"`          // 审核提交时间
 	AuditingServerNames dbs.JSON `field:"auditingServerNames"` // 审核中的域名
-	IsAuditing          uint8    `field:"isAuditing"`          // 是否正在审核
+	IsAuditing          bool     `field:"isAuditing"`          // 是否正在审核
 	AuditingResult      dbs.JSON `field:"auditingResult"`      // 审核结果
 	Http                dbs.JSON `field:"http"`                // HTTP配置
 	Https               dbs.JSON `field:"https"`               // HTTPS配置

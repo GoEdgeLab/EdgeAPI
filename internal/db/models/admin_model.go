@@ -9,7 +9,7 @@ type Admin struct {
 	Username  string   `field:"username"`  // 用户名
 	Password  string   `field:"password"`  // 密码
 	Fullname  string   `field:"fullname"`  // 全名
-	IsSuper   uint8    `field:"isSuper"`   // 是否为超级管理员
+	IsSuper   bool     `field:"isSuper"`   // 是否为超级管理员
 	CreatedAt uint64   `field:"createdAt"` // 创建时间
 	UpdatedAt uint64   `field:"updatedAt"` // 修改时间
 	State     uint8    `field:"state"`     // 状态

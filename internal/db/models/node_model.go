@@ -8,10 +8,10 @@ type Node struct {
 	AdminId                uint32   `field:"adminId"`                // 管理员ID
 	UserId                 uint32   `field:"userId"`                 // 用户ID
 	IsOn                   bool     `field:"isOn"`                   // 是否启用
-	IsUp                   uint8    `field:"isUp"`                   // 是否在线
+	IsUp                   bool     `field:"isUp"`                   // 是否在线
 	CountUp                uint32   `field:"countUp"`                // 连续在线次数
 	CountDown              uint32   `field:"countDown"`              // 连续下线次数
-	IsActive               uint8    `field:"isActive"`               // 是否活跃
+	IsActive               bool     `field:"isActive"`               // 是否活跃
 	UniqueId               string   `field:"uniqueId"`               // 节点ID
 	Secret                 string   `field:"secret"`                 // 密钥
 	Name                   string   `field:"name"`                   // 节点名
@@ -25,7 +25,7 @@ type Node struct {
 	Version                uint32   `field:"version"`                // 当前版本号
 	LatestVersion          uint32   `field:"latestVersion"`          // 最后版本号
 	InstallDir             string   `field:"installDir"`             // 安装目录
-	IsInstalled            uint8    `field:"isInstalled"`            // 是否已安装
+	IsInstalled            bool     `field:"isInstalled"`            // 是否已安装
 	InstallStatus          dbs.JSON `field:"installStatus"`          // 安装状态
 	State                  uint8    `field:"state"`                  // 状态
 	ConnectedAPINodes      dbs.JSON `field:"connectedAPINodes"`      // 当前连接的API节点

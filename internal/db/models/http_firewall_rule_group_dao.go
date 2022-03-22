@@ -95,7 +95,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	config.Name = group.Name
 	config.Description = group.Description
 	config.Code = group.Code
-	config.IsTemplate = group.IsTemplate == 1
+	config.IsTemplate = group.IsTemplate
 
 	if IsNotNull(group.Sets) {
 		setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}

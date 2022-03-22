@@ -8,7 +8,7 @@ type ReportResult struct {
 	TargetDesc   string  `field:"targetDesc"`   // 对象描述
 	UpdatedAt    uint64  `field:"updatedAt"`    // 更新时间
 	ReportNodeId uint32  `field:"reportNodeId"` // 监控节点ID
-	IsOk         uint8   `field:"isOk"`         // 是否可连接
+	IsOk         bool    `field:"isOk"`         // 是否可连接
 	Level        string  `field:"level"`        // 级别
 	CostMs       float64 `field:"costMs"`       // 单次连接花费的时间
 	Error        string  `field:"error"`        // 产生的错误信息

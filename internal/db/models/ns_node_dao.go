@@ -293,7 +293,7 @@ func (this *NSNodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*NodeIns
 	}
 
 	installStatus := node.(*NSNode).InstallStatus
-	isInstalled := node.(*NSNode).IsInstalled == 1
+	isInstalled := node.(*NSNode).IsInstalled
 	if len(installStatus) == 0 {
 		return NewNodeInstallStatus(), nil
 	}

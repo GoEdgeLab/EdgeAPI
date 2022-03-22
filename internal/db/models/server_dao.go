@@ -550,7 +550,7 @@ func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (server
 		return
 	}
 	server := one.(*Server)
-	return server.ServerNames, server.IsAuditing == 1, int64(server.AuditingAt), server.AuditingServerNames, server.AuditingResult, nil
+	return server.ServerNames, server.IsAuditing, int64(server.AuditingAt), server.AuditingServerNames, server.AuditingResult, nil
 }
 
 // UpdateServerNames 修改ServerNames配置

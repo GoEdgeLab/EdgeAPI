@@ -17,7 +17,7 @@ type MessageTask struct {
 	State       uint8    `field:"state"`       // 状态
 	Result      dbs.JSON `field:"result"`      // 结果
 	Day         string   `field:"day"`         // YYYYMMDD
-	IsPrimary   uint8    `field:"isPrimary"`   // 是否优先
+	IsPrimary   bool     `field:"isPrimary"`   // 是否优先
 }
 
 type MessageTaskOperator struct {

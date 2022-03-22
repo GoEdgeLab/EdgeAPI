@@ -16,7 +16,7 @@ type HTTPRewriteRule struct {
 	Mode           string   `field:"mode"`           // 替换模式
 	RedirectStatus uint32   `field:"redirectStatus"` // 跳转的状态码
 	ProxyHost      string   `field:"proxyHost"`      // 代理的主机名
-	IsBreak        uint8    `field:"isBreak"`        // 是否终止解析
+	IsBreak        bool     `field:"isBreak"`        // 是否终止解析
 	WithQuery      uint8    `field:"withQuery"`      // 是否保留URI参数
 	Conds          dbs.JSON `field:"conds"`          // 匹配条件
 }
