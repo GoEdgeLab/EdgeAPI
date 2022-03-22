@@ -8,7 +8,7 @@ import (
 func (this *MetricItem) DecodeKeys() []string {
 	var result []string
 	if len(this.Keys) > 0 {
-		_ = json.Unmarshal([]byte(this.Keys), &result)
+		_ = json.Unmarshal(this.Keys, &result)
 	}
 	return result
 }

@@ -122,7 +122,7 @@ func (this *HTTPAuthPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, c
 
 	var params map[string]interface{}
 	if IsNotNull(policy.Params) {
-		err = json.Unmarshal([]byte(policy.Params), &params)
+		err = json.Unmarshal(policy.Params, &params)
 		if err != nil {
 			return nil, err
 		}

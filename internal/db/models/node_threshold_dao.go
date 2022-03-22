@@ -225,7 +225,7 @@ func (this *NodeThresholdDAO) FireNodeThreshold(tx *dbs.Tx, role string, nodeId 
 			if err != nil {
 				return err
 			}
-			originValue := nodeconfigs.UnmarshalNodeValue([]byte(threshold.Value))
+			originValue := nodeconfigs.UnmarshalNodeValue(threshold.Value)
 			thresholdValue := types.Float64(originValue)
 			isMatched := nodeconfigs.CompareNodeValue(threshold.Operator, paramValue, thresholdValue)
 			if isMatched {

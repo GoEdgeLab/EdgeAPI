@@ -86,7 +86,7 @@ func (this *HTTPFastcgiDAO) ComposeFastcgiConfig(tx *dbs.Tx, fastcgiId int64) (*
 
 	if IsNotNull(fastcgi.Params) {
 		params := []*serverconfigs.HTTPFastcgiParam{}
-		err = json.Unmarshal([]byte(fastcgi.Params), &params)
+		err = json.Unmarshal(fastcgi.Params, &params)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +95,7 @@ func (this *HTTPFastcgiDAO) ComposeFastcgiConfig(tx *dbs.Tx, fastcgiId int64) (*
 
 	if IsNotNull(fastcgi.ReadTimeout) {
 		duration := &shared.TimeDuration{}
-		err = json.Unmarshal([]byte(fastcgi.ReadTimeout), duration)
+		err = json.Unmarshal(fastcgi.ReadTimeout, duration)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (this *HTTPFastcgiDAO) ComposeFastcgiConfig(tx *dbs.Tx, fastcgiId int64) (*
 
 	if IsNotNull(fastcgi.ConnTimeout) {
 		duration := &shared.TimeDuration{}
-		err = json.Unmarshal([]byte(fastcgi.ConnTimeout), duration)
+		err = json.Unmarshal(fastcgi.ConnTimeout, duration)
 		if err != nil {
 			return nil, err
 		}

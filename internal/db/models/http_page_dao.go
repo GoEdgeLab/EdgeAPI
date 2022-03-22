@@ -166,7 +166,7 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 
 	if len(page.StatusList) > 0 {
 		statusList := []string{}
-		err = json.Unmarshal([]byte(page.StatusList), &statusList)
+		err = json.Unmarshal(page.StatusList, &statusList)
 		if err != nil {
 			return nil, err
 		}

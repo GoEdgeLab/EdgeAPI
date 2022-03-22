@@ -11,6 +11,6 @@ func (this *DNSProvider) DecodeAPIParams() (maps.Map, error) {
 		return maps.Map{}, nil
 	}
 	result := maps.Map{}
-	err := json.Unmarshal([]byte(this.ApiParams), &result)
+	err := json.Unmarshal(this.ApiParams, &result)
 	return result, err
 }

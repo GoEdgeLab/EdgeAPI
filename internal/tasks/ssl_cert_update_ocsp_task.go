@@ -106,7 +106,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 		return
 	}
 
-	keyPair, err := tls.X509KeyPair([]byte(certOne.CertData), []byte(certOne.KeyData))
+	keyPair, err := tls.X509KeyPair(certOne.CertData, certOne.KeyData)
 	if err != nil {
 		return nil, 0, errors.New("parse certificate failed: " + err.Error())
 	}

@@ -685,7 +685,7 @@ func (this *NodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*NodeInsta
 	}
 
 	status := &NodeInstallStatus{}
-	err = json.Unmarshal([]byte(installStatus), status)
+	err = json.Unmarshal(installStatus, status)
 	if err != nil {
 		return nil, err
 	}
@@ -853,7 +853,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	// 缓存最大容量设置
 	if len(node.MaxCacheDiskCapacity) > 0 {
 		capacity := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(node.MaxCacheDiskCapacity), capacity)
+		err = json.Unmarshal(node.MaxCacheDiskCapacity, capacity)
 		if err != nil {
 			return nil, err
 		}
@@ -864,7 +864,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 
 	if len(node.MaxCacheMemoryCapacity) > 0 {
 		capacity := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(node.MaxCacheMemoryCapacity), capacity)
+		err = json.Unmarshal(node.MaxCacheMemoryCapacity, capacity)
 		if err != nil {
 			return nil, err
 		}

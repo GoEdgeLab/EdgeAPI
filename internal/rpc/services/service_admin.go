@@ -173,7 +173,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 			pbOtpAuth = &pb.Login{
 				Id:         int64(adminAuth.Id),
 				Type:       adminAuth.Type,
-				ParamsJSON: []byte(adminAuth.Params),
+				ParamsJSON: adminAuth.Params,
 				IsOn:       adminAuth.IsOn == 1,
 			}
 		}
@@ -393,7 +393,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 				pbOtpAuth = &pb.Login{
 					Id:         int64(adminAuth.Id),
 					Type:       adminAuth.Type,
-					ParamsJSON: []byte(adminAuth.Params),
+					ParamsJSON: adminAuth.Params,
 					IsOn:       adminAuth.IsOn == 1,
 				}
 			}

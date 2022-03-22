@@ -101,7 +101,7 @@ func (this *Updater) loop() error {
 		if chunk == nil {
 			continue
 		}
-		_, err = fp.Write([]byte(chunk.Data))
+		_, err = fp.Write(chunk.Data)
 		if err != nil {
 			return err
 		}

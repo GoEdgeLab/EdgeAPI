@@ -105,7 +105,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	// certs
 	if IsNotNull(policy.Certs) {
 		refs := []*sslconfigs.SSLCertRef{}
-		err = json.Unmarshal([]byte(policy.Certs), &refs)
+		err = json.Unmarshal(policy.Certs, &refs)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	// client CA certs
 	if IsNotNull(policy.ClientCACerts) {
 		refs := []*sslconfigs.SSLCertRef{}
-		err = json.Unmarshal([]byte(policy.ClientCACerts), &refs)
+		err = json.Unmarshal(policy.ClientCACerts, &refs)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +150,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	config.CipherSuitesIsOn = policy.CipherSuitesIsOn == 1
 	if IsNotNull(policy.CipherSuites) {
 		cipherSuites := []string{}
-		err = json.Unmarshal([]byte(policy.CipherSuites), &cipherSuites)
+		err = json.Unmarshal(policy.CipherSuites, &cipherSuites)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +160,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	// hsts
 	if IsNotNull(policy.Hsts) {
 		hstsConfig := &sslconfigs.HSTSConfig{}
-		err = json.Unmarshal([]byte(policy.Hsts), hstsConfig)
+		err = json.Unmarshal(policy.Hsts, hstsConfig)
 		if err != nil {
 			return nil, err
 		}

@@ -39,7 +39,7 @@ func (this *DNSDomain) DecodeRecords() ([]*dnstypes.Record, error) {
 		return nil, nil
 	}
 	result := []*dnstypes.Record{}
-	err := json.Unmarshal([]byte(records), &result)
+	err := json.Unmarshal(records, &result)
 	if err != nil {
 		return nil, err
 	}

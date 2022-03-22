@@ -161,7 +161,7 @@ func (this *HTTPAccessLogPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, nam
 		op.Version = dbs.SQL("version+1")
 	} else {
 		var m1 = maps.Map{}
-		_ = json.Unmarshal([]byte(oldPolicy.Options), &m1)
+		_ = json.Unmarshal(oldPolicy.Options, &m1)
 
 		var m2 = maps.Map{}
 		_ = json.Unmarshal(optionsJSON, &m2)

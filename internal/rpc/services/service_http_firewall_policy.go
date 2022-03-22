@@ -41,8 +41,8 @@ func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx co
 			Name:             p.Name,
 			Description:      p.Description,
 			IsOn:             p.IsOn == 1,
-			InboundJSON:      []byte(p.Inbound),
-			OutboundJSON:     []byte(p.Outbound),
+			InboundJSON:      p.Inbound,
+			OutboundJSON:     p.Outbound,
 			Mode:             p.Mode,
 			UseLocalFirewall: p.UseLocalFirewall == 1,
 		})
@@ -390,8 +390,8 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 			Name:             p.Name,
 			Description:      p.Description,
 			IsOn:             p.IsOn == 1,
-			InboundJSON:      []byte(p.Inbound),
-			OutboundJSON:     []byte(p.Outbound),
+			InboundJSON:      p.Inbound,
+			OutboundJSON:     p.Outbound,
 			Mode:             p.Mode,
 			UseLocalFirewall: p.UseLocalFirewall == 1,
 		})
@@ -482,10 +482,10 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context
 		Name:         policy.Name,
 		Description:  policy.Description,
 		IsOn:         policy.IsOn == 1,
-		InboundJSON:  []byte(policy.Inbound),
-		OutboundJSON: []byte(policy.Outbound),
+		InboundJSON:  policy.Inbound,
+		OutboundJSON: policy.Outbound,
 		Mode:         policy.Mode,
-		SynFloodJSON: []byte(policy.SynFlood),
+		SynFloodJSON: policy.SynFlood,
 	}}, nil
 }
 

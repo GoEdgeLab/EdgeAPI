@@ -13,7 +13,7 @@ func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 		return NewNodeInstallStatus(), nil
 	}
 	status := &NodeInstallStatus{}
-	err := json.Unmarshal([]byte(this.InstallStatus), status)
+	err := json.Unmarshal(this.InstallStatus, status)
 	if err != nil {
 		return NewNodeInstallStatus(), err
 	}
@@ -34,7 +34,7 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 		return nil, nil
 	}
 	status := &nodeconfigs.NodeStatus{}
-	err := json.Unmarshal([]byte(this.Status), status)
+	err := json.Unmarshal(this.Status, status)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (this *Node) DNSRouteCodes() map[int64][]string {
 	if len(this.DnsRoutes) == 0 {
 		return routes
 	}
-	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
+	err := json.Unmarshal(this.DnsRoutes, &routes)
 	if err != nil {
 		// 忽略错误
 		return routes
@@ -61,7 +61,7 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 	if len(this.DnsRoutes) == 0 {
 		return nil, nil
 	}
-	err := json.Unmarshal([]byte(this.DnsRoutes), &routes)
+	err := json.Unmarshal(this.DnsRoutes, &routes)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 func (this *Node) DecodeConnectedAPINodeIds() ([]int64, error) {
 	apiNodeIds := []int64{}
 	if IsNotNull(this.ConnectedAPINodes) {
-		err := json.Unmarshal([]byte(this.ConnectedAPINodes), &apiNodeIds)
+		err := json.Unmarshal(this.ConnectedAPINodes, &apiNodeIds)
 		if err != nil {
 			return nil, err
 		}
@@ -93,6 +93,6 @@ func (this *Node) DecodeSecondaryClusterIds() []int64 {
 	}
 	var result = []int64{}
 	// 不需要处理错误
-	_ = json.Unmarshal([]byte(this.SecondaryClusterIds), &result)
+	_ = json.Unmarshal(this.SecondaryClusterIds, &result)
 	return result
 }

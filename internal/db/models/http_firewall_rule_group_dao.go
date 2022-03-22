@@ -99,7 +99,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 
 	if IsNotNull(group.Sets) {
 		setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
-		err = json.Unmarshal([]byte(group.Sets), &setRefs)
+		err = json.Unmarshal(group.Sets, &setRefs)
 		if err != nil {
 			return nil, err
 		}

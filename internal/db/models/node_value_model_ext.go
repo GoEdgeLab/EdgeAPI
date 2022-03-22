@@ -10,7 +10,7 @@ func (this *NodeValue) DecodeMapValue() maps.Map {
 		return maps.Map{}
 	}
 	var m = maps.Map{}
-	err := json.Unmarshal([]byte(this.Value), &m)
+	err := json.Unmarshal(this.Value, &m)
 	if err != nil {
 		// 忽略错误
 		return m

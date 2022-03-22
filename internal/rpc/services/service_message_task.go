@@ -82,8 +82,8 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 					MessageMedia: &pb.MessageMedia{
 						Type: instance.MediaType,
 					},
-					ParamsJSON: []byte(instance.Params),
-					RateJSON:   []byte(instance.Rate),
+					ParamsJSON: instance.Params,
+					RateJSON:   instance.Rate,
 				},
 			}
 		} else { // 没有指定既定的接收人
@@ -107,8 +107,8 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 					MessageMedia: &pb.MessageMedia{
 						Type: instance.MediaType,
 					},
-					ParamsJSON: []byte(instance.Params),
-					RateJSON:   []byte(instance.Rate),
+					ParamsJSON: instance.Params,
+					RateJSON:   instance.Rate,
 				},
 			}
 		}
@@ -232,7 +232,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 				MessageMedia: &pb.MessageMedia{
 					Type: instance.MediaType,
 				},
-				ParamsJSON: []byte(instance.Params),
+				ParamsJSON: instance.Params,
 			},
 		}
 	} else { // 没有指定既定的接收人
@@ -256,14 +256,14 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 				MessageMedia: &pb.MessageMedia{
 					Type: instance.MediaType,
 				},
-				ParamsJSON: []byte(instance.Params),
+				ParamsJSON: instance.Params,
 			},
 		}
 	}
 
 	var result = &pb.MessageTaskResult{}
 	if len(task.Result) > 0 {
-		err = json.Unmarshal([]byte(task.Result), result)
+		err = json.Unmarshal(task.Result, result)
 		if err != nil {
 			return nil, err
 		}
@@ -352,8 +352,8 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 					MessageMedia: &pb.MessageMedia{
 						Type: instance.MediaType,
 					},
-					ParamsJSON: []byte(instance.Params),
-					RateJSON:   []byte(instance.Rate),
+					ParamsJSON: instance.Params,
+					RateJSON:   instance.Rate,
 				},
 			}
 		} else { // 没有指定既定的接收人
@@ -378,15 +378,15 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 					MessageMedia: &pb.MessageMedia{
 						Type: instance.MediaType,
 					},
-					ParamsJSON: []byte(instance.Params),
-					RateJSON:   []byte(instance.Rate),
+					ParamsJSON: instance.Params,
+					RateJSON:   instance.Rate,
 				},
 			}
 		}
 
 		var result = &pb.MessageTaskResult{}
 		if len(task.Result) > 0 {
-			err = json.Unmarshal([]byte(task.Result), result)
+			err = json.Unmarshal(task.Result, result)
 			if err != nil {
 				return nil, err
 			}

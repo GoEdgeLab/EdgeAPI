@@ -131,9 +131,9 @@ func (this *MessageMediaInstanceService) ListEnabledMessageMediaInstances(ctx co
 			Name:         instance.Name,
 			IsOn:         instance.IsOn == 1,
 			MessageMedia: pbMedia,
-			ParamsJSON:   []byte(instance.Params),
+			ParamsJSON:   instance.Params,
 			Description:  instance.Description,
-			RateJSON:     []byte(instance.Rate),
+			RateJSON:     instance.Rate,
 		})
 	}
 
@@ -179,9 +179,9 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 		Name:         instance.Name,
 		IsOn:         instance.IsOn == 1,
 		MessageMedia: pbMedia,
-		ParamsJSON:   []byte(instance.Params),
+		ParamsJSON:   instance.Params,
 		Description:  instance.Description,
-		RateJSON:     []byte(instance.Rate),
+		RateJSON:     instance.Rate,
 		HashLife:     types.Int32(instance.HashLife),
 	}}, nil
 }

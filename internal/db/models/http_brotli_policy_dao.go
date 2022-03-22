@@ -83,7 +83,7 @@ func (this *HTTPBrotliPolicyDAO) ComposeBrotliConfig(tx *dbs.Tx, policyId int64)
 	config.IsOn = policy.IsOn == 1
 	if IsNotNull(policy.MinLength) {
 		minLengthConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(policy.MinLength), minLengthConfig)
+		err = json.Unmarshal(policy.MinLength, minLengthConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func (this *HTTPBrotliPolicyDAO) ComposeBrotliConfig(tx *dbs.Tx, policyId int64)
 	}
 	if IsNotNull(policy.MaxLength) {
 		maxLengthConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(policy.MaxLength), maxLengthConfig)
+		err = json.Unmarshal(policy.MaxLength, maxLengthConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (this *HTTPBrotliPolicyDAO) ComposeBrotliConfig(tx *dbs.Tx, policyId int64)
 
 	if IsNotNull(policy.Conds) {
 		condsConfig := &shared.HTTPRequestCondsConfig{}
-		err = json.Unmarshal([]byte(policy.Conds), condsConfig)
+		err = json.Unmarshal(policy.Conds, condsConfig)
 		if err != nil {
 			return nil, err
 		}

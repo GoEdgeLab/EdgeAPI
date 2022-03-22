@@ -70,7 +70,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 		Type:        list.Type,
 		Name:        list.Name,
 		Code:        list.Code,
-		TimeoutJSON: []byte(list.Timeout),
+		TimeoutJSON: list.Timeout,
 		Description: list.Description,
 		IsGlobal:    list.IsGlobal == 1,
 	}}, nil
@@ -111,7 +111,7 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 			Type:        list.Type,
 			Name:        list.Name,
 			Code:        list.Code,
-			TimeoutJSON: []byte(list.Timeout),
+			TimeoutJSON: list.Timeout,
 			IsPublic:    list.IsPublic == 1,
 			Description: list.Description,
 			IsGlobal:    list.IsGlobal == 1,

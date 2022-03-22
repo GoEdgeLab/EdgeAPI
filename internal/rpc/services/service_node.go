@@ -314,7 +314,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			Name:        node.Name,
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
-			StatusJSON:  []byte(node.Status),
+			StatusJSON:  node.Status,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -356,7 +356,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Contex
 	for _, node := range nodes {
 		apiNodeIds := []int64{}
 		if models.IsNotNull(node.ConnectedAPINodes) {
-			err = json.Unmarshal([]byte(node.ConnectedAPINodes), &apiNodeIds)
+			err = json.Unmarshal(node.ConnectedAPINodes, &apiNodeIds)
 			if err != nil {
 				return nil, err
 			}
@@ -482,7 +482,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			Id:     int64(login.Id),
 			Name:   login.Name,
 			Type:   login.Type,
-			Params: []byte(login.Params),
+			Params: login.Params,
 		}
 	}
 
@@ -536,9 +536,9 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 
 	// 最大硬盘容量
 	var pbMaxCacheDiskCapacity *pb.SizeCapacity
-	if len(node.MaxCacheDiskCapacity) > 0 {
+	if models.IsNotNull(node.MaxCacheDiskCapacity) {
 		pbMaxCacheDiskCapacity = &pb.SizeCapacity{}
-		err = json.Unmarshal([]byte(node.MaxCacheDiskCapacity), pbMaxCacheDiskCapacity)
+		err = json.Unmarshal(node.MaxCacheDiskCapacity, pbMaxCacheDiskCapacity)
 		if err != nil {
 			return nil, err
 		}
@@ -546,9 +546,9 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 
 	// 最大内存容量
 	var pbMaxCacheMemoryCapacity *pb.SizeCapacity
-	if len(node.MaxCacheMemoryCapacity) > 0 {
+	if models.IsNotNull(node.MaxCacheMemoryCapacity) {
 		pbMaxCacheMemoryCapacity = &pb.SizeCapacity{}
-		err = json.Unmarshal([]byte(node.MaxCacheMemoryCapacity), pbMaxCacheMemoryCapacity)
+		err = json.Unmarshal(node.MaxCacheMemoryCapacity, pbMaxCacheMemoryCapacity)
 		if err != nil {
 			return nil, err
 		}
@@ -557,7 +557,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
-		StatusJSON:    []byte(node.Status),
+		StatusJSON:    node.Status,
 		UniqueId:      node.UniqueId,
 		Version:       int64(node.Version),
 		LatestVersion: int64(node.LatestVersion),
@@ -876,7 +876,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context,
 			Name:        node.Name,
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled == 1,
-			StatusJSON:  []byte(node.Status),
+			StatusJSON:  node.Status,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -928,7 +928,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 				Id:     int64(login.Id),
 				Name:   login.Name,
 				Type:   login.Type,
-				Params: []byte(login.Params),
+				Params: login.Params,
 			}
 		}
 
@@ -974,7 +974,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 			Name:          node.Name,
 			Version:       int64(node.Version),
 			IsInstalled:   node.IsInstalled == 1,
-			StatusJSON:    []byte(node.Status),
+			StatusJSON:    node.Status,
 			IsOn:          node.IsOn == 1,
 			NodeLogin:     pbLogin,
 			IpAddresses:   pbAddresses,
@@ -1037,7 +1037,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 					Id:     int64(login.Id),
 					Name:   login.Name,
 					Type:   login.Type,
-					Params: []byte(login.Params),
+					Params: login.Params,
 				}
 			}
 
@@ -1092,7 +1092,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 				Name:          node.Name,
 				Version:       int64(node.Version),
 				IsInstalled:   node.IsInstalled == 1,
-				StatusJSON:    []byte(node.Status),
+				StatusJSON:    node.Status,
 				IsOn:          node.IsOn == 1,
 				IpAddresses:   pbAddresses,
 				NodeLogin:     pbLogin,

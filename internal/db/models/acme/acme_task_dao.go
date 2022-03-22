@@ -330,7 +330,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 	})
 
 	if len(user.Registration) > 0 {
-		err = remoteUser.SetRegistration([]byte(user.Registration))
+		err = remoteUser.SetRegistration(user.Registration)
 		if err != nil {
 			errMsg = "设置注册信息时出错：" + err.Error()
 			return

@@ -16,7 +16,7 @@ func (this *NodeLogin) DecodeSSHParams() (*NodeLoginSSHParams, error) {
 	}
 
 	params := &NodeLoginSSHParams{}
-	err := json.Unmarshal([]byte(this.Params), params)
+	err := json.Unmarshal(this.Params, params)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,7 @@ import (
 func (this *ReportNode) DecodeAllowIPs() []string {
 	var result = []string{}
 	if len(this.AllowIPs) > 0 {
-		err := json.Unmarshal([]byte(this.AllowIPs), &result)
+		err := json.Unmarshal(this.AllowIPs, &result)
 		if err != nil {
 			remotelogs.Error("ReportNode.DecodeGroupIds", err.Error())
 		}
@@ -19,7 +19,7 @@ func (this *ReportNode) DecodeAllowIPs() []string {
 func (this *ReportNode) DecodeGroupIds() []int64 {
 	var result = []int64{}
 	if len(this.GroupIds) > 0 {
-		err := json.Unmarshal([]byte(this.GroupIds), &result)
+		err := json.Unmarshal(this.GroupIds, &result)
 		if err != nil {
 			remotelogs.Error("ReportNode.DecodeGroupIds", err.Error())
 		}

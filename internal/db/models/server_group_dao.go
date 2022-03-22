@@ -315,9 +315,9 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		IsOn: group.IsOn == 1,
 	}
 
-	if len(group.HttpReverseProxy) > 0 {
+	if IsNotNull(group.HttpReverseProxy) {
 		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal([]byte(group.HttpReverseProxy), reverseProxyRef)
+		err := json.Unmarshal(group.HttpReverseProxy, reverseProxyRef)
 		if err != nil {
 			return nil, err
 		}
@@ -332,9 +332,9 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		}
 	}
 
-	if len(group.TcpReverseProxy) > 0 {
+	if IsNotNull(group.TcpReverseProxy) {
 		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal([]byte(group.TcpReverseProxy), reverseProxyRef)
+		err := json.Unmarshal(group.TcpReverseProxy, reverseProxyRef)
 		if err != nil {
 			return nil, err
 		}
@@ -349,9 +349,9 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		}
 	}
 
-	if len(group.UdpReverseProxy) > 0 {
+	if IsNotNull(group.UdpReverseProxy) {
 		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal([]byte(group.UdpReverseProxy), reverseProxyRef)
+		err := json.Unmarshal(group.UdpReverseProxy, reverseProxyRef)
 		if err != nil {
 			return nil, err
 		}

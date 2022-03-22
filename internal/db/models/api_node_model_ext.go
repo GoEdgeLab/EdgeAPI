@@ -13,7 +13,7 @@ func (this *APINode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPProtocolConfig{}
-	err := json.Unmarshal([]byte(this.Http), config)
+	err := json.Unmarshal(this.Http, config)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPSProtocolConfig{}
-	err := json.Unmarshal([]byte(this.Https), config)
+	err := json.Unmarshal(this.Https, config)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (this *APINode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig,
 	}
 
 	addrConfigs := []*serverconfigs.NetworkAddressConfig{}
-	err := json.Unmarshal([]byte(this.AccessAddrs), &addrConfigs)
+	err := json.Unmarshal(this.AccessAddrs, &addrConfigs)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (this *APINode) DecodeRestHTTP() (*serverconfigs.HTTPProtocolConfig, error)
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPProtocolConfig{}
-	err := json.Unmarshal([]byte(this.RestHTTP), config)
+	err := json.Unmarshal(this.RestHTTP, config)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPSProtocolConfig{}
-	err := json.Unmarshal([]byte(this.RestHTTPS), config)
+	err := json.Unmarshal(this.RestHTTPS, config)
 	if err != nil {
 		return nil, err
 	}

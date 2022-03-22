@@ -12,7 +12,7 @@ func (this *UserNode) DecodeHTTP() (*serverconfigs.HTTPProtocolConfig, error) {
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPProtocolConfig{}
-	err := json.Unmarshal([]byte(this.Http), config)
+	err := json.Unmarshal(this.Http, config)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 		return nil, nil
 	}
 	config := &serverconfigs.HTTPSProtocolConfig{}
-	err := json.Unmarshal([]byte(this.Https), config)
+	err := json.Unmarshal(this.Https, config)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (this *UserNode) DecodeAccessAddrs() ([]*serverconfigs.NetworkAddressConfig
 	}
 
 	addrConfigs := []*serverconfigs.NetworkAddressConfig{}
-	err := json.Unmarshal([]byte(this.AccessAddrs), &addrConfigs)
+	err := json.Unmarshal(this.AccessAddrs, &addrConfigs)
 	if err != nil {
 		return nil, err
 	}

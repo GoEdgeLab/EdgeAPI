@@ -13,7 +13,7 @@ func (this *Plan) DecodeTrafficPrice() *serverconfigs.PlanTrafficPriceConfig {
 		return config
 	}
 
-	err := json.Unmarshal([]byte(this.TrafficPrice), config)
+	err := json.Unmarshal(this.TrafficPrice, config)
 	if err != nil {
 		// 忽略错误
 	}
@@ -29,7 +29,7 @@ func (this *Plan) DecodeBandwidthPrice() *serverconfigs.PlanBandwidthPriceConfig
 		return config
 	}
 
-	err := json.Unmarshal([]byte(this.BandwidthPrice), config)
+	err := json.Unmarshal(this.BandwidthPrice, config)
 	if err != nil {
 		// 忽略错误
 	}

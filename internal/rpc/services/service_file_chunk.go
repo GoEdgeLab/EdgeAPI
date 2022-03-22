@@ -67,5 +67,5 @@ func (this *FileChunkService) DownloadFileChunk(ctx context.Context, req *pb.Dow
 	if chunk == nil {
 		return &pb.DownloadFileChunkResponse{FileChunk: nil}, nil
 	}
-	return &pb.DownloadFileChunkResponse{FileChunk: &pb.FileChunk{Data: []byte(chunk.Data)}}, nil
+	return &pb.DownloadFileChunkResponse{FileChunk: &pb.FileChunk{Data: chunk.Data}}, nil
 }

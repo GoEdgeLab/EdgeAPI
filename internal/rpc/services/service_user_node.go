@@ -92,9 +92,9 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 			Secret:          node.Secret,
 			Name:            node.Name,
 			Description:     node.Description,
-			HttpJSON:        []byte(node.Http),
-			HttpsJSON:       []byte(node.Https),
-			AccessAddrsJSON: []byte(node.AccessAddrs),
+			HttpJSON:        node.Http,
+			HttpsJSON:       node.Https,
+			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
 		})
 	}
@@ -147,11 +147,11 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 			Secret:          node.Secret,
 			Name:            node.Name,
 			Description:     node.Description,
-			HttpJSON:        []byte(node.Http),
-			HttpsJSON:       []byte(node.Https),
-			AccessAddrsJSON: []byte(node.AccessAddrs),
+			HttpJSON:        node.Http,
+			HttpsJSON:       node.Https,
+			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
-			StatusJSON:      []byte(node.Status),
+			StatusJSON:      node.Status,
 		})
 	}
 
@@ -188,9 +188,9 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 		Secret:          node.Secret,
 		Name:            node.Name,
 		Description:     node.Description,
-		HttpJSON:        []byte(node.Http),
-		HttpsJSON:       []byte(node.Https),
-		AccessAddrsJSON: []byte(node.AccessAddrs),
+		HttpJSON:        node.Http,
+		HttpsJSON:       node.Https,
+		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindEnabledUserNodeResponse{UserNode: result}, nil
@@ -235,9 +235,9 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		Secret:          node.Secret,
 		Name:            node.Name,
 		Description:     node.Description,
-		HttpJSON:        []byte(node.Http),
-		HttpsJSON:       []byte(node.Https),
-		AccessAddrsJSON: []byte(node.AccessAddrs),
+		HttpJSON:        node.Http,
+		HttpsJSON:       node.Https,
+		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindCurrentUserNodeResponse{UserNode: result}, nil

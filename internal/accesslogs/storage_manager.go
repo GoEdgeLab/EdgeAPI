@@ -92,7 +92,7 @@ func (this *StorageManager) Loop() error {
 				}
 
 				if len(policy.Options) > 0 {
-					err = json.Unmarshal([]byte(policy.Options), storage.Config())
+					err = json.Unmarshal(policy.Options, storage.Config())
 					if err != nil {
 						remotelogs.Error("ACCESS_LOG_STORAGE_MANAGER", "unmarshal policy '"+types.String(policyId)+"' config failed: "+err.Error())
 						storage.SetOk(false)
@@ -110,7 +110,7 @@ func (this *StorageManager) Loop() error {
 				remotelogs.Println("ACCESS_LOG_STORAGE_MANAGER", "restart policy '"+types.String(policyId)+"'")
 			}
 		} else {
-			storage, err := this.createStorage(policy.Type, []byte(policy.Options))
+			storage, err := this.createStorage(policy.Type, policy.Options)
 			if err != nil {
 				remotelogs.Error("ACCESS_LOG_STORAGE_MANAGER", "create policy '"+types.String(policyId)+"' failed: "+err.Error())
 				continue

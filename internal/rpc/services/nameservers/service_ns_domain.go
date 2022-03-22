@@ -109,7 +109,7 @@ func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.Fi
 			Id:        int64(domain.Id),
 			Name:      domain.Name,
 			IsOn:      domain.IsOn == 1,
-			TsigJSON:  []byte(domain.Tsig),
+			TsigJSON:  domain.Tsig,
 			CreatedAt: int64(domain.CreatedAt),
 			NsCluster: &pb.NSCluster{
 				Id:   int64(cluster.Id),
@@ -182,7 +182,7 @@ func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.L
 			Name:      domain.Name,
 			IsOn:      domain.IsOn == 1,
 			CreatedAt: int64(domain.CreatedAt),
-			TsigJSON:  []byte(domain.Tsig),
+			TsigJSON:  domain.Tsig,
 			NsCluster: &pb.NSCluster{
 				Id:   int64(cluster.Id),
 				IsOn: cluster.IsOn == 1,
@@ -220,7 +220,7 @@ func (this *NSDomainService) ListNSDomainsAfterVersion(ctx context.Context, req 
 			IsOn:      domain.IsOn == 1,
 			IsDeleted: domain.State == nameservers.NSDomainStateDisabled,
 			Version:   int64(domain.Version),
-			TsigJSON:  []byte(domain.Tsig),
+			TsigJSON:  domain.Tsig,
 			NsCluster: &pb.NSCluster{Id: int64(domain.ClusterId)},
 			User:      nil,
 		})

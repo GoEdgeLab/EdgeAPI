@@ -8,7 +8,7 @@ func (this *NodeRegion) DecodePriceMap() map[int64]float64 {
 		return m
 	}
 
-	err := json.Unmarshal([]byte(this.Prices), &m)
+	err := json.Unmarshal(this.Prices, &m)
 	if err != nil {
 		// 忽略错误
 		return m

@@ -30,7 +30,7 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 	result := []*pb.RegionCountry{}
 	for _, country := range countries {
 		pinyinStrings := []string{}
-		err = json.Unmarshal([]byte(country.Pinyin), &pinyinStrings)
+		err = json.Unmarshal(country.Pinyin, &pinyinStrings)
 		if err != nil {
 			return nil, err
 		}

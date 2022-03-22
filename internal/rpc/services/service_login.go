@@ -9,12 +9,12 @@ import (
 	"github.com/iwind/TeaGo/maps"
 )
 
-// 管理员认证相关服务
+// LoginService 管理员认证相关服务
 type LoginService struct {
 	BaseService
 }
 
-// 查找认证
+// FindEnabledLogin 查找认证
 func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnabledLoginRequest) (*pb.FindEnabledLoginResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -33,14 +33,14 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 	return &pb.FindEnabledLoginResponse{Login: &pb.Login{
 		Id:         int64(login.Id),
 		Type:       login.Type,
-		ParamsJSON: []byte(login.Params),
+		ParamsJSON: login.Params,
 		IsOn:       login.IsOn == 1,
 		AdminId:    int64(login.AdminId),
 		UserId:     int64(login.UserId),
 	}}, nil
 }
 
-// 修改认证
+// UpdateLogin 修改认证
 func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

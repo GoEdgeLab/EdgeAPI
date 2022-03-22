@@ -108,7 +108,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 			Type:        message.Type,
 			Body:        message.Body,
 			Level:       message.Level,
-			ParamsJSON:  []byte(message.Params),
+			ParamsJSON:  message.Params,
 			IsRead:      message.IsRead == 1,
 			CreatedAt:   int64(message.CreatedAt),
 			NodeCluster: pbCluster,

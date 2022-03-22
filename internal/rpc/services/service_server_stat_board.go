@@ -436,7 +436,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 	}
 	for _, v := range cacheDirValues {
 		result.CacheDirsValues = append(result.CacheDirsValues, &pb.NodeValue{
-			ValueJSON: []byte(v.Value),
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}

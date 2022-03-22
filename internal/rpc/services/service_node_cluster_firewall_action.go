@@ -94,7 +94,7 @@ func (this *NodeClusterFirewallActionService) FindAllEnabledNodeClusterFirewallA
 			Name:          action.Name,
 			EventLevel:    action.EventLevel,
 			Type:          action.Type,
-			ParamsJSON:    []byte(action.Params),
+			ParamsJSON:    action.Params,
 		})
 	}
 	return &pb.FindAllEnabledNodeClusterFirewallActionsResponse{NodeClusterFirewallActions: pbActions}, nil
@@ -121,7 +121,7 @@ func (this *NodeClusterFirewallActionService) FindEnabledNodeClusterFirewallActi
 		Name:          action.Name,
 		EventLevel:    action.EventLevel,
 		Type:          action.Type,
-		ParamsJSON:    []byte(action.Params),
+		ParamsJSON:    action.Params,
 	}}, nil
 }
 

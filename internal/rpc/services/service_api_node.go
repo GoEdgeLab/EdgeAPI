@@ -93,9 +93,9 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 			Secret:          node.Secret,
 			Name:            node.Name,
 			Description:     node.Description,
-			HttpJSON:        []byte(node.Http),
-			HttpsJSON:       []byte(node.Https),
-			AccessAddrsJSON: []byte(node.AccessAddrs),
+			HttpJSON:        node.Http,
+			HttpsJSON:       node.Https,
+			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
 		})
 	}
@@ -166,14 +166,14 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 			Secret:          node.Secret,
 			Name:            node.Name,
 			Description:     node.Description,
-			HttpJSON:        []byte(node.Http),
-			HttpsJSON:       []byte(node.Https),
+			HttpJSON:        node.Http,
+			HttpsJSON:       node.Https,
 			RestIsOn:        node.RestIsOn == 1,
-			RestHTTPJSON:    []byte(node.RestHTTP),
-			RestHTTPSJSON:   []byte(node.RestHTTPS),
-			AccessAddrsJSON: []byte(node.AccessAddrs),
+			RestHTTPJSON:    node.RestHTTP,
+			RestHTTPSJSON:   node.RestHTTPS,
+			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
-			StatusJSON:      []byte(node.Status),
+			StatusJSON:      node.Status,
 		})
 	}
 
@@ -211,12 +211,12 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		Secret:          node.Secret,
 		Name:            node.Name,
 		Description:     node.Description,
-		HttpJSON:        []byte(node.Http),
-		HttpsJSON:       []byte(node.Https),
+		HttpJSON:        node.Http,
+		HttpsJSON:       node.Https,
 		RestIsOn:        node.RestIsOn == 1,
-		RestHTTPJSON:    []byte(node.RestHTTP),
-		RestHTTPSJSON:   []byte(node.RestHTTPS),
-		AccessAddrsJSON: []byte(node.AccessAddrs),
+		RestHTTPJSON:    node.RestHTTP,
+		RestHTTPSJSON:   node.RestHTTPS,
+		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 	}
 	return &pb.FindEnabledAPINodeResponse{ApiNode: result}, nil
@@ -267,7 +267,7 @@ func (this *APINodeService) FindCurrentAPINode(ctx context.Context, req *pb.Find
 		RestIsOn:        false,
 		RestHTTPJSON:    nil,
 		RestHTTPSJSON:   nil,
-		AccessAddrsJSON: []byte(node.AccessAddrs),
+		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 		StatusJSON:      nil,
 	}}, nil

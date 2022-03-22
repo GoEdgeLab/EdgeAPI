@@ -150,7 +150,7 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 			NodeId:                int64(receiver.NodeId),
 			ServerId:              int64(receiver.ServerId),
 			Type:                  receiver.Type,
-			ParamsJSON:            []byte(receiver.Params),
+			ParamsJSON:            receiver.Params,
 			MessageRecipient:      pbRecipient,
 			MessageRecipientGroup: pbRecipientGroup,
 		})

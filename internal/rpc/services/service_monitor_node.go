@@ -133,7 +133,7 @@ func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req
 			Secret:      node.Secret,
 			Name:        node.Name,
 			Description: node.Description,
-			StatusJSON:  []byte(node.Status),
+			StatusJSON:  node.Status,
 		})
 	}
 

@@ -8,7 +8,7 @@ func (this *MetricChart) DecodeIgnoredKeys() []string {
 	}
 
 	var result = []string{}
-	err := json.Unmarshal([]byte(this.IgnoredKeys), &result)
+	err := json.Unmarshal(this.IgnoredKeys, &result)
 	if err != nil {
 		// 这里忽略错误
 		return result

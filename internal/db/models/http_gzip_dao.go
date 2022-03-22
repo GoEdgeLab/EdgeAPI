@@ -91,7 +91,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*servercon
 	config.IsOn = gzip.IsOn == 1
 	if IsNotNull(gzip.MinLength) {
 		minLengthConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(gzip.MinLength), minLengthConfig)
+		err = json.Unmarshal(gzip.MinLength, minLengthConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*servercon
 	}
 	if IsNotNull(gzip.MaxLength) {
 		maxLengthConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(gzip.MaxLength), maxLengthConfig)
+		err = json.Unmarshal(gzip.MaxLength, maxLengthConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +109,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*servercon
 
 	if IsNotNull(gzip.Conds) {
 		condsConfig := &shared.HTTPRequestCondsConfig{}
-		err = json.Unmarshal([]byte(gzip.Conds), condsConfig)
+		err = json.Unmarshal(gzip.Conds, condsConfig)
 		if err != nil {
 			return nil, err
 		}

@@ -62,9 +62,9 @@ func (this *ReverseProxyService) FindEnabledReverseProxy(ctx context.Context, re
 
 	result := &pb.ReverseProxy{
 		Id:                 int64(reverseProxy.Id),
-		SchedulingJSON:     []byte(reverseProxy.Scheduling),
-		PrimaryOriginsJSON: []byte(reverseProxy.PrimaryOrigins),
-		BackupOriginsJSON:  []byte(reverseProxy.BackupOrigins),
+		SchedulingJSON:     reverseProxy.Scheduling,
+		PrimaryOriginsJSON: reverseProxy.PrimaryOrigins,
+		BackupOriginsJSON:  reverseProxy.BackupOrigins,
 	}
 	return &pb.FindEnabledReverseProxyResponse{ReverseProxy: result}, nil
 }

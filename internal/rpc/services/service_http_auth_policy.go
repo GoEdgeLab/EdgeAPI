@@ -64,6 +64,6 @@ func (this *HTTPAuthPolicyService) FindEnabledHTTPAuthPolicy(ctx context.Context
 		IsOn:       policy.IsOn == 1,
 		Name:       policy.Name,
 		Type:       policy.Type,
-		ParamsJSON: []byte(policy.Params),
+		ParamsJSON: policy.Params,
 	}}, nil
 }

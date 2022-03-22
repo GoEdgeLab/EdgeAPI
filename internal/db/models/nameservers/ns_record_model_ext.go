@@ -8,11 +8,11 @@ import (
 func (this *NSRecord) DecodeRouteIds() []string {
 	var routeIds = []string{}
 	if len(this.RouteIds) > 0 {
-		err := json.Unmarshal([]byte(this.RouteIds), &routeIds)
+		err := json.Unmarshal(this.RouteIds, &routeIds)
 		if err != nil {
 			// 检查是否有旧的数据
 			var oldRouteIds = []int64{}
-			err = json.Unmarshal([]byte(this.RouteIds), &oldRouteIds)
+			err = json.Unmarshal(this.RouteIds, &oldRouteIds)
 			if err != nil {
 				return []string{}
 			}

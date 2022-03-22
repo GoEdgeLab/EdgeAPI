@@ -11,7 +11,7 @@ func (this *NodeIPAddressThreshold) DecodeItems() (result []*nodeconfigs.IPAddre
 		return
 	}
 
-	err := json.Unmarshal([]byte(this.Items), &result)
+	err := json.Unmarshal(this.Items, &result)
 	if err != nil {
 		remotelogs.Error("NodeIPAddressThreshold", "decode items: "+err.Error())
 	}
@@ -23,7 +23,7 @@ func (this *NodeIPAddressThreshold) DecodeActions() (result []*nodeconfigs.IPAdd
 		return
 	}
 
-	err := json.Unmarshal([]byte(this.Actions), &result)
+	err := json.Unmarshal(this.Actions, &result)
 	if err != nil {
 		remotelogs.Error("NodeIPAddressThreshold", "decode actions: "+err.Error())
 	}

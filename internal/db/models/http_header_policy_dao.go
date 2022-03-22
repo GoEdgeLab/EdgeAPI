@@ -187,9 +187,9 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 	config.IsOn = policy.IsOn == 1
 
 	// SetHeaders
-	if len(policy.SetHeaders) > 0 {
+	if IsNotNull(policy.SetHeaders) {
 		refs := []*shared.HTTPHeaderRef{}
-		err = json.Unmarshal([]byte(policy.SetHeaders), &refs)
+		err = json.Unmarshal(policy.SetHeaders, &refs)
 		if err != nil {
 			return nil, err
 		}
@@ -211,9 +211,9 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 	}
 
 	// Delete Headers
-	if len(policy.DeleteHeaders) > 0 {
+	if IsNotNull(policy.DeleteHeaders) {
 		headers := []string{}
-		err = json.Unmarshal([]byte(policy.DeleteHeaders), &headers)
+		err = json.Unmarshal(policy.DeleteHeaders, &headers)
 		if err != nil {
 			return nil, err
 		}

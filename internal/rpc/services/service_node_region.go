@@ -6,12 +6,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 节点区域相关服务
+// NodeRegionService 节点区域相关服务
 type NodeRegionService struct {
 	BaseService
 }
 
-// 创建区域
+// CreateNodeRegion 创建区域
 func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.CreateNodeRegionRequest) (*pb.CreateNodeRegionResponse, error) {
 	adminId, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -27,7 +27,7 @@ func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.Cre
 	return &pb.CreateNodeRegionResponse{NodeRegionId: regionId}, nil
 }
 
-// 修改区域
+// UpdateNodeRegion 修改区域
 func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.UpdateNodeRegionRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -43,7 +43,7 @@ func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.Upd
 	return this.Success()
 }
 
-// 删除区域
+// DeleteNodeRegion 删除区域
 func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.DeleteNodeRegionRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -59,7 +59,7 @@ func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.Del
 	return this.Success()
 }
 
-// 查找所有区域
+// FindAllEnabledNodeRegions 查找所有区域
 func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, req *pb.FindAllEnabledNodeRegionsRequest) (*pb.FindAllEnabledNodeRegionsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -79,13 +79,13 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 			IsOn:        region.IsOn == 1,
 			Name:        region.Name,
 			Description: region.Description,
-			PricesJSON:  []byte(region.Prices),
+			PricesJSON:  region.Prices,
 		})
 	}
 	return &pb.FindAllEnabledNodeRegionsResponse{NodeRegions: result}, nil
 }
 
-// 查找所有启用的区域
+// FindAllEnabledAndOnNodeRegions 查找所有启用的区域
 func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Context, req *pb.FindAllEnabledAndOnNodeRegionsRequest) (*pb.FindAllEnabledAndOnNodeRegionsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -105,13 +105,13 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 			IsOn:        region.IsOn == 1,
 			Name:        region.Name,
 			Description: region.Description,
-			PricesJSON:  []byte(region.Prices),
+			PricesJSON:  region.Prices,
 		})
 	}
 	return &pb.FindAllEnabledAndOnNodeRegionsResponse{NodeRegions: result}, nil
 }
 
-// 排序
+// UpdateNodeRegionOrders 排序
 func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *pb.UpdateNodeRegionOrdersRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -127,7 +127,7 @@ func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *
 	return this.Success()
 }
 
-// 查找单个区域信息
+// FindEnabledNodeRegion 查找单个区域信息
 func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *pb.FindEnabledNodeRegionRequest) (*pb.FindEnabledNodeRegionResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -148,11 +148,11 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 		IsOn:        region.IsOn == 1,
 		Name:        region.Name,
 		Description: region.Description,
-		PricesJSON:  []byte(region.Prices),
+		PricesJSON:  region.Prices,
 	}}, nil
 }
 
-// 修改价格项价格
+// UpdateNodeRegionPrice 修改价格项价格
 func (this *NodeRegionService) UpdateNodeRegionPrice(ctx context.Context, req *pb.UpdateNodeRegionPriceRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {

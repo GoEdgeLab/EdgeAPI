@@ -63,7 +63,7 @@ func (this *NodeValueService) ListNodeValues(ctx context.Context, req *pb.ListNo
 	pbValues := []*pb.NodeValue{}
 	for _, value := range values {
 		pbValues = append(pbValues, &pb.NodeValue{
-			ValueJSON: []byte(value.Value),
+			ValueJSON: value.Value,
 			CreatedAt: int64(value.CreatedAt),
 		})
 	}

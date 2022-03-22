@@ -8,7 +8,7 @@ import (
 // ToPB 转换成PB对象
 func (this *NSAccessLog) ToPB() (*pb.NSAccessLog, error) {
 	p := &pb.NSAccessLog{}
-	err := json.Unmarshal([]byte(this.Content), p)
+	err := json.Unmarshal(this.Content, p)
 	if err != nil {
 		return nil, err
 	}

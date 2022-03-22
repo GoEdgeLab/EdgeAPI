@@ -77,9 +77,9 @@ func (this *HTTPFastcgiService) FindEnabledHTTPFastcgi(ctx context.Context, req 
 		Id:              int64(fastcgi.Id),
 		IsOn:            fastcgi.IsOn == 1,
 		Address:         fastcgi.Address,
-		ParamsJSON:      []byte(fastcgi.Params),
-		ReadTimeoutJSON: []byte(fastcgi.ReadTimeout),
-		ConnTimeoutJSON: []byte(fastcgi.ConnTimeout),
+		ParamsJSON:      fastcgi.Params,
+		ReadTimeoutJSON: fastcgi.ReadTimeout,
+		ConnTimeoutJSON: fastcgi.ConnTimeout,
 		PoolSize:        types.Int32(fastcgi.PoolSize),
 		PathInfoPattern: fastcgi.PathInfoPattern,
 	}}, nil

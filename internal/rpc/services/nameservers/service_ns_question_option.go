@@ -57,7 +57,7 @@ func (this *NSQuestionOptionService) FindNSQuestionOption(ctx context.Context, r
 	return &pb.FindNSQuestionOptionResponse{NsQuestionOption: &pb.NSQuestionOption{
 		Id:         int64(option.Id),
 		Name:       option.Name,
-		ValuesJSON: []byte(option.Values),
+		ValuesJSON: option.Values,
 	}}, nil
 }
 

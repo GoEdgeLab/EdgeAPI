@@ -260,7 +260,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	// capacity
 	if IsNotNull(policy.Capacity) {
 		capacityConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(policy.Capacity), capacityConfig)
+		err = json.Unmarshal(policy.Capacity, capacityConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -272,7 +272,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	// max size
 	if IsNotNull(policy.MaxSize) {
 		maxSizeConfig := &shared.SizeCapacity{}
-		err = json.Unmarshal([]byte(policy.MaxSize), maxSizeConfig)
+		err = json.Unmarshal(policy.MaxSize, maxSizeConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +284,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	// options
 	if IsNotNull(policy.Options) {
 		m := map[string]interface{}{}
-		err = json.Unmarshal([]byte(policy.Options), &m)
+		err = json.Unmarshal(policy.Options, &m)
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -294,7 +294,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	// refs
 	if IsNotNull(policy.Refs) {
 		refs := []*serverconfigs.HTTPCacheRef{}
-		err = json.Unmarshal([]byte(policy.Refs), &refs)
+		err = json.Unmarshal(policy.Refs, &refs)
 		if err != nil {
 			return nil, err
 		}

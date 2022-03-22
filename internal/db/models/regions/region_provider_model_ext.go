@@ -10,7 +10,7 @@ func (this *RegionProvider) DecodeCodes() []string {
 		return []string{}
 	}
 	result := []string{}
-	err := json.Unmarshal([]byte(this.Codes), &result)
+	err := json.Unmarshal(this.Codes, &result)
 	if err != nil {
 		logs.Error(err)
 	}

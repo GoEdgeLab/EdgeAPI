@@ -308,7 +308,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.Addr) {
 		addr := &serverconfigs.NetworkAddressConfig{}
-		err = json.Unmarshal([]byte(origin.Addr), addr)
+		err = json.Unmarshal(origin.Addr, addr)
 		if err != nil {
 			return nil, err
 		}
@@ -317,7 +317,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.ConnTimeout) {
 		connTimeout := &shared.TimeDuration{}
-		err = json.Unmarshal([]byte(origin.ConnTimeout), &connTimeout)
+		err = json.Unmarshal(origin.ConnTimeout, &connTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +326,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.ReadTimeout) {
 		readTimeout := &shared.TimeDuration{}
-		err = json.Unmarshal([]byte(origin.ReadTimeout), &readTimeout)
+		err = json.Unmarshal(origin.ReadTimeout, &readTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +335,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.IdleTimeout) {
 		idleTimeout := &shared.TimeDuration{}
-		err = json.Unmarshal([]byte(origin.IdleTimeout), &idleTimeout)
+		err = json.Unmarshal(origin.IdleTimeout, &idleTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +345,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 	// headers
 	if IsNotNull(origin.HttpRequestHeader) {
 		ref := &shared.HTTPHeaderPolicyRef{}
-		err = json.Unmarshal([]byte(origin.HttpRequestHeader), ref)
+		err = json.Unmarshal(origin.HttpRequestHeader, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -364,7 +364,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.HttpResponseHeader) {
 		ref := &shared.HTTPHeaderPolicyRef{}
-		err = json.Unmarshal([]byte(origin.HttpResponseHeader), ref)
+		err = json.Unmarshal(origin.HttpResponseHeader, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -383,7 +383,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.HealthCheck) {
 		healthCheck := &serverconfigs.HealthCheckConfig{}
-		err = json.Unmarshal([]byte(origin.HealthCheck), healthCheck)
+		err = json.Unmarshal(origin.HealthCheck, healthCheck)
 		if err != nil {
 			return nil, err
 		}
@@ -392,7 +392,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	if IsNotNull(origin.Cert) {
 		ref := &sslconfigs.SSLCertRef{}
-		err = json.Unmarshal([]byte(origin.Cert), ref)
+		err = json.Unmarshal(origin.Cert, ref)
 		if err != nil {
 			return nil, err
 		}

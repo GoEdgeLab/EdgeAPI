@@ -109,7 +109,7 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int
 	// conds
 	if len(rule.Conds) > 0 {
 		conds := &shared.HTTPRequestCondsConfig{}
-		err = json.Unmarshal([]byte(rule.Conds), conds)
+		err = json.Unmarshal(rule.Conds, conds)
 		if err != nil {
 			return nil, err
 		}

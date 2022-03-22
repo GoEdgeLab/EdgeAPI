@@ -133,7 +133,7 @@ func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context,
 			Secret:      node.Secret,
 			Name:        node.Name,
 			Description: node.Description,
-			StatusJSON:  []byte(node.Status),
+			StatusJSON:  node.Status,
 		})
 	}
 

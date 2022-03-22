@@ -15,7 +15,7 @@ func (this *NodeCluster) DecodeDNSConfig() (*dnsconfigs.ClusterDNSConfig, error)
 		}, nil
 	}
 	dnsConfig := &dnsconfigs.ClusterDNSConfig{}
-	err := json.Unmarshal([]byte(this.Dns), &dnsConfig)
+	err := json.Unmarshal(this.Dns, &dnsConfig)
 	if err != nil {
 		return nil, err
 	}

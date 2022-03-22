@@ -127,7 +127,7 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 			IsInstalled:   node.IsInstalled == 1,
 			InstallDir:    node.InstallDir,
 			IsUp:          node.IsUp == 1,
-			StatusJSON:    []byte(node.Status),
+			StatusJSON:    node.Status,
 			InstallStatus: installStatusResult,
 			NsCluster:     nil,
 		})
@@ -242,7 +242,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 			Id:     int64(login.Id),
 			Name:   login.Name,
 			Type:   login.Type,
-			Params: []byte(login.Params),
+			Params: login.Params,
 		}
 	}
 
@@ -266,7 +266,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 	return &pb.FindEnabledNSNodeResponse{NsNode: &pb.NSNode{
 		Id:          int64(node.Id),
 		Name:        node.Name,
-		StatusJSON:  []byte(node.Status),
+		StatusJSON:  node.Status,
 		UniqueId:    node.UniqueId,
 		Secret:      node.Secret,
 		IsInstalled: node.IsInstalled == 1,

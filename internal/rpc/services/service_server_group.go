@@ -435,7 +435,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 
 	if len(group.HttpReverseProxy) > 0 {
 		var ref = &serverconfigs.ReverseProxyRef{}
-		err = json.Unmarshal([]byte(group.HttpReverseProxy), ref)
+		err = json.Unmarshal(group.HttpReverseProxy, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 
 	if len(group.TcpReverseProxy) > 0 {
 		var ref = &serverconfigs.ReverseProxyRef{}
-		err = json.Unmarshal([]byte(group.TcpReverseProxy), ref)
+		err = json.Unmarshal(group.TcpReverseProxy, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -453,7 +453,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 
 	if len(group.UdpReverseProxy) > 0 {
 		var ref = &serverconfigs.ReverseProxyRef{}
-		err = json.Unmarshal([]byte(group.UdpReverseProxy), ref)
+		err = json.Unmarshal(group.UdpReverseProxy, ref)
 		if err != nil {
 			return nil, err
 		}

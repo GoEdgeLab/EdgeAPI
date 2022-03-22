@@ -10,7 +10,7 @@ import (
 func (this *NodeIPAddress) DecodeConnectivity() *nodeconfigs.Connectivity {
 	var connectivity = &nodeconfigs.Connectivity{}
 	if len(this.Connectivity) > 0 {
-		err := json.Unmarshal([]byte(this.Connectivity), connectivity)
+		err := json.Unmarshal(this.Connectivity, connectivity)
 		if err != nil {
 			remotelogs.Error("NodeIPAddress.DecodeConnectivity", "decode failed: "+err.Error())
 		}

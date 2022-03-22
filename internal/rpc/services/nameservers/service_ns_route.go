@@ -109,7 +109,7 @@ func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.Find
 		Id:         int64(route.Id),
 		IsOn:       route.IsOn == 1,
 		Name:       route.Name,
-		RangesJSON: []byte(route.Ranges),
+		RangesJSON: route.Ranges,
 		NsCluster:  pbCluster,
 		NsDomain:   pbDomain,
 	}}, nil
@@ -164,7 +164,7 @@ func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.
 			Id:         int64(route.Id),
 			IsOn:       route.IsOn == 1,
 			Name:       route.Name,
-			RangesJSON: []byte(route.Ranges),
+			RangesJSON: route.Ranges,
 			NsCluster:  pbCluster,
 			NsDomain:   pbDomain,
 		})
@@ -218,7 +218,7 @@ func (this *NSRouteService) ListNSRoutesAfterVersion(ctx context.Context, req *p
 			Id:         int64(route.Id),
 			IsOn:       route.IsOn == 1,
 			Name:       "",
-			RangesJSON: []byte(route.Ranges),
+			RangesJSON: route.Ranges,
 			IsDeleted:  route.State == nameservers.NSRouteStateDisabled,
 			Order:      int64(route.Order),
 			Version:    int64(route.Version),

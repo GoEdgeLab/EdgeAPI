@@ -103,7 +103,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 
 	if IsNotNull(set.Rules) {
 		ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
-		err = json.Unmarshal([]byte(set.Rules), &ruleRefs)
+		err = json.Unmarshal(set.Rules, &ruleRefs)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 
 	var actionConfigs = []*firewallconfigs.HTTPFirewallActionConfig{}
 	if len(set.Actions) > 0 {
-		err = json.Unmarshal([]byte(set.Actions), &actionConfigs)
+		err = json.Unmarshal(set.Actions, &actionConfigs)
 		if err != nil {
 			return nil, err
 		}

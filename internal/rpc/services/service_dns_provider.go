@@ -89,7 +89,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 			Name:          provider.Name,
 			Type:          provider.Type,
 			TypeName:      dnsclients.FindProviderTypeName(provider.Type),
-			ApiParamsJSON: []byte(provider.ApiParams),
+			ApiParamsJSON: provider.ApiParams,
 			DataUpdatedAt: int64(provider.DataUpdatedAt),
 		})
 	}
@@ -119,7 +119,7 @@ func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, 
 			Name:          provider.Name,
 			Type:          provider.Type,
 			TypeName:      dnsclients.FindProviderTypeName(provider.Type),
-			ApiParamsJSON: []byte(provider.ApiParams),
+			ApiParamsJSON: provider.ApiParams,
 			DataUpdatedAt: int64(provider.DataUpdatedAt),
 		})
 	}
@@ -168,7 +168,7 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		Name:          provider.Name,
 		Type:          provider.Type,
 		TypeName:      dnsclients.FindProviderTypeName(provider.Type),
-		ApiParamsJSON: []byte(provider.ApiParams),
+		ApiParamsJSON: provider.ApiParams,
 		DataUpdatedAt: int64(provider.DataUpdatedAt),
 	}}, nil
 }

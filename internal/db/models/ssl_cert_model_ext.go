@@ -8,7 +8,7 @@ func (this *SSLCert) DecodeDNSNames() []string {
 	}
 
 	var result = []string{}
-	var err = json.Unmarshal([]byte(this.DnsNames), &result)
+	var err = json.Unmarshal(this.DnsNames, &result)
 	if err != nil {
 		return nil
 	}
@@ -22,7 +22,7 @@ func (this *SSLCert) DecodeCommonNames() []string {
 	}
 
 	var result = []string{}
-	var err = json.Unmarshal([]byte(this.CommonNames), &result)
+	var err = json.Unmarshal(this.CommonNames, &result)
 	if err != nil {
 		return nil
 	}

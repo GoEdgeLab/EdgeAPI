@@ -244,9 +244,9 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 
 	// replace
 	config.ShouldReplace = header.ShouldReplace == 1
-	if len(header.ReplaceValues) > 0 {
+	if IsNotNull(header.ReplaceValues) {
 		var values = []*shared.HTTPHeaderReplaceValue{}
-		err = json.Unmarshal([]byte(header.ReplaceValues), &values)
+		err = json.Unmarshal(header.ReplaceValues, &values)
 		if err != nil {
 			return nil, err
 		}
@@ -254,9 +254,9 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 	}
 
 	// status
-	if len(header.Status) > 0 {
+	if IsNotNull(header.Status) {
 		status := &shared.HTTPStatusConfig{}
-		err = json.Unmarshal([]byte(header.Status), status)
+		err = json.Unmarshal(header.Status, status)
 		if err != nil {
 			return nil, err
 		}
@@ -264,9 +264,9 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 	}
 
 	// methods
-	if len(header.Methods) > 0 {
+	if IsNotNull(header.Methods) {
 		var methods = []string{}
-		err = json.Unmarshal([]byte(header.Methods), &methods)
+		err = json.Unmarshal(header.Methods, &methods)
 		if err != nil {
 			return nil, err
 		}
@@ -274,9 +274,9 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 	}
 
 	// domains
-	if len(header.Domains) > 0 {
+	if IsNotNull(header.Domains) {
 		var domains = []string{}
-		err = json.Unmarshal([]byte(header.Domains), &domains)
+		err = json.Unmarshal(header.Domains, &domains)
 		if err != nil {
 			return nil, err
 		}

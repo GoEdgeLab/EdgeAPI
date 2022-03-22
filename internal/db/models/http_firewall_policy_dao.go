@@ -379,7 +379,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	// Inbound
 	inbound := &firewallconfigs.HTTPFirewallInboundConfig{}
 	if IsNotNull(policy.Inbound) {
-		err = json.Unmarshal([]byte(policy.Inbound), inbound)
+		err = json.Unmarshal(policy.Inbound, inbound)
 		if err != nil {
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	// Outbound
 	outbound := &firewallconfigs.HTTPFirewallOutboundConfig{}
 	if IsNotNull(policy.Outbound) {
-		err = json.Unmarshal([]byte(policy.Outbound), outbound)
+		err = json.Unmarshal(policy.Outbound, outbound)
 		if err != nil {
 			return nil, err
 		}
@@ -435,7 +435,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	// Block动作配置
 	if IsNotNull(policy.BlockOptions) {
 		blockAction := &firewallconfigs.HTTPFirewallBlockAction{}
-		err = json.Unmarshal([]byte(policy.BlockOptions), blockAction)
+		err = json.Unmarshal(policy.BlockOptions, blockAction)
 		if err != nil {
 			return config, err
 		}
@@ -443,9 +443,9 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	}
 
 	// syn flood
-	if len(policy.SynFlood) > 0 {
+	if IsNotNull(policy.SynFlood) {
 		var synFloodConfig = &firewallconfigs.SYNFloodConfig{}
-		err = json.Unmarshal([]byte(policy.SynFlood), synFloodConfig)
+		err = json.Unmarshal(policy.SynFlood, synFloodConfig)
 		if err != nil {
 			return nil, err
 		}

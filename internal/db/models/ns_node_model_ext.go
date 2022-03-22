@@ -12,7 +12,7 @@ func (this *NSNode) DecodeInstallStatus() (*NodeInstallStatus, error) {
 		return NewNodeInstallStatus(), nil
 	}
 	status := &NodeInstallStatus{}
-	err := json.Unmarshal([]byte(this.InstallStatus), status)
+	err := json.Unmarshal(this.InstallStatus, status)
 	if err != nil {
 		return NewNodeInstallStatus(), err
 	}
@@ -33,7 +33,7 @@ func (this *NSNode) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 		return nil, nil
 	}
 	status := &nodeconfigs.NodeStatus{}
-	err := json.Unmarshal([]byte(this.Status), status)
+	err := json.Unmarshal(this.Status, status)
 	if err != nil {
 		return nil, err
 	}

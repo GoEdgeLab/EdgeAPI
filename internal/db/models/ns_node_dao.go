@@ -299,7 +299,7 @@ func (this *NSNodeDAO) FindNodeInstallStatus(tx *dbs.Tx, nodeId int64) (*NodeIns
 	}
 
 	status := &NodeInstallStatus{}
-	err = json.Unmarshal([]byte(installStatus), status)
+	err = json.Unmarshal(installStatus, status)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +407,7 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 		// 集群配置
 		if len(cluster.AccessLog) > 0 {
 			ref := &dnsconfigs.NSAccessLogRef{}
-			err = json.Unmarshal([]byte(cluster.AccessLog), ref)
+			err = json.Unmarshal(cluster.AccessLog, ref)
 			if err != nil {
 				return nil, err
 			}

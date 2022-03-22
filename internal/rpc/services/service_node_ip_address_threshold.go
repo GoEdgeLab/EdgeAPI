@@ -109,8 +109,8 @@ func (this *NodeIPAddressThresholdService) FindAllEnabledNodeIPAddressThresholds
 	for _, threshold := range thresholds {
 		pbThresholds = append(pbThresholds, &pb.NodeIPAddressThreshold{
 			Id:          int64(threshold.Id),
-			ItemsJSON:   []byte(threshold.Items),
-			ActionsJSON: []byte(threshold.Actions),
+			ItemsJSON:   threshold.Items,
+			ActionsJSON: threshold.Actions,
 		})
 	}
 	return &pb.FindAllEnabledNodeIPAddressThresholdsResponse{NodeIPAddressThresholds: pbThresholds}, nil
