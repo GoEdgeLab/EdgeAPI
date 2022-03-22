@@ -6,7 +6,7 @@ import "github.com/iwind/TeaGo/dbs"
 type MessageRecipient struct {
 	Id          uint32   `field:"id"`          // ID
 	AdminId     uint32   `field:"adminId"`     // 管理员ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	InstanceId  uint32   `field:"instanceId"`  // 实例ID
 	User        string   `field:"user"`        // 接收人信息
 	GroupIds    dbs.JSON `field:"groupIds"`    // 分组ID

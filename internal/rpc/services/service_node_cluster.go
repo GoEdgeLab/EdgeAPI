@@ -159,7 +159,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		HttpFirewallPolicyId:  int64(cluster.HttpFirewallPolicyId),
 		DnsName:               cluster.DnsName,
 		DnsDomainId:           int64(cluster.DnsDomainId),
-		IsOn:                  cluster.IsOn == 1,
+		IsOn:                  cluster.IsOn,
 		TimeZone:              cluster.TimeZone,
 		NodeMaxThreads:        int32(cluster.NodeMaxThreads),
 		NodeTCPMaxConnections: int32(cluster.NodeTCPMaxConnections),
@@ -207,7 +207,7 @@ func (this *NodeClusterService) FindAPINodesWithNodeCluster(ctx context.Context,
 				}
 				apiNodes = append(apiNodes, &pb.APINode{
 					Id:            int64(apiNode.Id),
-					IsOn:          apiNode.IsOn == 1,
+					IsOn:          apiNode.IsOn,
 					NodeClusterId: int64(apiNode.ClusterId),
 					Name:          apiNode.Name,
 					Description:   apiNode.Description,
@@ -244,7 +244,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClusters(ctx context.Context, 
 			CreatedAt: int64(cluster.CreatedAt),
 			UniqueId:  cluster.UniqueId,
 			Secret:    cluster.Secret,
-			IsOn:      cluster.IsOn == 1,
+			IsOn:      cluster.IsOn,
 		})
 	}
 
@@ -296,7 +296,7 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 			Secret:      cluster.Secret,
 			DnsName:     cluster.DnsName,
 			DnsDomainId: int64(cluster.DnsDomainId),
-			IsOn:        cluster.IsOn == 1,
+			IsOn:        cluster.IsOn,
 			TimeZone:    cluster.TimeZone,
 			IsPinned:    cluster.IsPinned == 1,
 		})
@@ -412,7 +412,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx co
 			CreatedAt: int64(cluster.CreatedAt),
 			UniqueId:  cluster.UniqueId,
 			Secret:    cluster.Secret,
-			IsOn:      cluster.IsOn == 1,
+			IsOn:      cluster.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithNodeGrantIdResponse{NodeClusters: result}, nil
@@ -471,7 +471,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	pbDomain := &pb.DNSDomain{
 		Id:   int64(domain.Id),
 		Name: domain.Name,
-		IsOn: domain.IsOn == 1,
+		IsOn: domain.IsOn,
 	}
 
 	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
@@ -572,7 +572,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 			Name:        cluster.Name,
 			DnsName:     cluster.DnsName,
 			DnsDomainId: int64(cluster.DnsDomainId),
-			IsOn:        cluster.IsOn == 1,
+			IsOn:        cluster.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse{NodeClusters: result}, nil
@@ -733,7 +733,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPCachePolicyId(
 		result = append(result, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
-			IsOn: cluster.IsOn == 1,
+			IsOn: cluster.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithHTTPCachePolicyIdResponse{
@@ -775,7 +775,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithHTTPFirewallPolicy
 		result = append(result, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
-			IsOn: cluster.IsOn == 1,
+			IsOn: cluster.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithHTTPFirewallPolicyIdResponse{
@@ -953,7 +953,7 @@ func (this *NodeClusterService) FindLatestNodeClusters(ctx context.Context, req 
 		pbClusters = append(pbClusters, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
 			Name: cluster.Name,
-			IsOn: cluster.IsOn == 1,
+			IsOn: cluster.IsOn,
 		})
 	}
 	return &pb.FindLatestNodeClustersResponse{NodeClusters: pbClusters}, nil

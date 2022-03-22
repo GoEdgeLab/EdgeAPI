@@ -147,7 +147,7 @@ func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACME
 				pbUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
 					Id:           int64(account.Id),
 					Name:         account.Name,
-					IsOn:         account.IsOn == 1,
+					IsOn:         account.IsOn,
 					ProviderCode: account.ProviderCode,
 					AcmeProvider: nil,
 				}
@@ -229,7 +229,7 @@ func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.Fi
 			pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
 				Id:           int64(account.Id),
 				Name:         account.Name,
-				IsOn:         account.IsOn == 1,
+				IsOn:         account.IsOn,
 				ProviderCode: account.ProviderCode,
 				AcmeProvider: nil,
 			}

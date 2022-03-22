@@ -47,7 +47,7 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 			Id:          int64(accessKey.Id),
 			UserId:      int64(accessKey.UserId),
 			SubUserId:   int64(accessKey.SubUserId),
-			IsOn:        accessKey.IsOn == 1,
+			IsOn:        accessKey.IsOn,
 			UniqueId:    accessKey.UniqueId,
 			Secret:      accessKey.Secret,
 			Description: accessKey.Description,

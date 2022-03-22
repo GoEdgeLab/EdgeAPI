@@ -7,7 +7,7 @@ type NSDomain struct {
 	Id        uint32   `field:"id"`        // ID
 	ClusterId uint32   `field:"clusterId"` // 集群ID
 	UserId    uint32   `field:"userId"`    // 用户ID
-	IsOn      uint8    `field:"isOn"`      // 是否启用
+	IsOn      bool     `field:"isOn"`      // 是否启用
 	Name      string   `field:"name"`      // 域名
 	CreatedAt uint64   `field:"createdAt"` // 创建时间
 	Version   uint64   `field:"version"`   // 版本

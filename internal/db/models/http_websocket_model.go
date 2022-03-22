@@ -9,7 +9,7 @@ type HTTPWebsocket struct {
 	UserId            uint32   `field:"userId"`            // 用户ID
 	CreatedAt         uint64   `field:"createdAt"`         // 创建时间
 	State             uint8    `field:"state"`             // 状态
-	IsOn              uint8    `field:"isOn"`              // 是否启用
+	IsOn              bool     `field:"isOn"`              // 是否启用
 	HandshakeTimeout  dbs.JSON `field:"handshakeTimeout"`  // 握手超时时间
 	AllowAllOrigins   uint8    `field:"allowAllOrigins"`   // 是否支持所有源
 	AllowedOrigins    dbs.JSON `field:"allowedOrigins"`    // 支持的源域名列表

@@ -123,7 +123,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 				pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
 					Id:           int64(account.Id),
 					Name:         account.Name,
-					IsOn:         account.IsOn == 1,
+					IsOn:         account.IsOn,
 					ProviderCode: account.ProviderCode,
 					AcmeProvider: nil,
 				}
@@ -171,7 +171,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 			}
 			pbCert = &pb.SSLCert{
 				Id:          int64(cert.Id),
-				IsOn:        cert.IsOn == 1,
+				IsOn:        cert.IsOn,
 				Name:        cert.Name,
 				TimeBeginAt: int64(cert.TimeBeginAt),
 				TimeEndAt:   int64(cert.TimeEndAt),
@@ -195,7 +195,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 
 		result = append(result, &pb.ACMETask{
 			Id:                int64(task.Id),
-			IsOn:              task.IsOn == 1,
+			IsOn:              task.IsOn,
 			DnsDomain:         task.DnsDomain,
 			Domains:           task.DecodeDomains(),
 			CreatedAt:         int64(task.CreatedAt),
@@ -370,7 +370,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 					pbACMEUser.AcmeProviderAccount = &pb.ACMEProviderAccount{
 						Id:           int64(account.Id),
 						Name:         account.Name,
-						IsOn:         account.IsOn == 1,
+						IsOn:         account.IsOn,
 						ProviderCode: account.ProviderCode,
 						AcmeProvider: nil,
 					}
@@ -407,7 +407,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 
 	return &pb.FindEnabledACMETaskResponse{AcmeTask: &pb.ACMETask{
 		Id:          int64(task.Id),
-		IsOn:        task.IsOn == 1,
+		IsOn:        task.IsOn,
 		DnsDomain:   task.DnsDomain,
 		Domains:     task.DecodeDomains(),
 		CreatedAt:   int64(task.CreatedAt),

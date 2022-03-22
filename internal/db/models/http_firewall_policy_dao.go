@@ -366,7 +366,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	config := &firewallconfigs.HTTPFirewallPolicy{}
 	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
+	config.IsOn = policy.IsOn
 	config.Name = policy.Name
 	config.Description = policy.Description
 	config.UseLocalFirewall = policy.UseLocalFirewall == 1

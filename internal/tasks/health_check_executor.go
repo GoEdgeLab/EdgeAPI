@@ -57,7 +57,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		return nil, err
 	}
 	for _, node := range nodes {
-		if node.IsOn != 1 {
+		if !node.IsOn {
 			continue
 		}
 		result := &HealthCheckResult{

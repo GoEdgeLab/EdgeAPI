@@ -2,10 +2,10 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
-// 用户节点
+// UserNode 用户节点
 type UserNode struct {
 	Id          uint32   `field:"id"`          // ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	UniqueId    string   `field:"uniqueId"`    // 唯一ID
 	Secret      string   `field:"secret"`      // 密钥
 	Name        string   `field:"name"`        // 名称

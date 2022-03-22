@@ -3,7 +3,7 @@ package nameservers
 // NSKey 密钥管理
 type NSKey struct {
 	Id         uint64 `field:"id"`         // ID
-	IsOn       uint8  `field:"isOn"`       // 状态
+	IsOn       bool   `field:"isOn"`       // 状态
 	Name       string `field:"name"`       // 名称
 	DomainId   uint64 `field:"domainId"`   // 域名ID
 	ZoneId     uint64 `field:"zoneId"`     // 子域ID

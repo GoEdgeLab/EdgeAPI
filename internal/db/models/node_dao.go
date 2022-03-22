@@ -736,7 +736,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		Id:       int64(node.Id),
 		NodeId:   node.UniqueId,
 		Secret:   node.Secret,
-		IsOn:     node.IsOn == 1,
+		IsOn:     node.IsOn,
 		Servers:  nil,
 		Version:  int64(node.Version),
 		Name:     node.Name,
@@ -767,7 +767,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		}
 		config.Servers = append(config.Servers, serverConfig)
 
-		if server.IsOn == 1 && server.SupportCNAME == 1 {
+		if server.IsOn && server.SupportCNAME == 1 {
 			config.SupportCNAME = true
 		}
 	}

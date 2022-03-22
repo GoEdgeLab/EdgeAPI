@@ -81,7 +81,7 @@ func (this *HTTPWebsocketDAO) ComposeWebsocketConfig(tx *dbs.Tx, websocketId int
 	}
 	config := &serverconfigs.HTTPWebsocketConfig{}
 	config.Id = int64(websocket.Id)
-	config.IsOn = websocket.IsOn == 1
+	config.IsOn = websocket.IsOn
 	config.AllowAllOrigins = websocket.AllowAllOrigins == 1
 
 	if IsNotNull(websocket.AllowedOrigins) {

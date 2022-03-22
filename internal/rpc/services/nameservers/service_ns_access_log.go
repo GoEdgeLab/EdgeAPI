@@ -74,7 +74,7 @@ func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.Li
 				if route != nil {
 					a.NsRoutes = append(a.NsRoutes, &pb.NSRoute{
 						Id:        types.Int64(route.Id),
-						IsOn:      route.IsOn == 1,
+						IsOn:      route.IsOn,
 						Name:      route.Name,
 						Code:      routeCode,
 						NsCluster: nil,

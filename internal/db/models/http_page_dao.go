@@ -154,7 +154,7 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 
 	config := &serverconfigs.HTTPPageConfig{}
 	config.Id = int64(page.Id)
-	config.IsOn = page.IsOn == 1
+	config.IsOn = page.IsOn
 	config.NewStatus = int(page.NewStatus)
 	config.URL = page.Url
 	config.Body = page.Body

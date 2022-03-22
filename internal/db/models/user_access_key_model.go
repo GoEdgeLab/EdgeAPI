@@ -6,7 +6,7 @@ type UserAccessKey struct {
 	AdminId     uint32 `field:"adminId"`     // 管理员ID
 	UserId      uint32 `field:"userId"`      // 用户ID
 	SubUserId   uint32 `field:"subUserId"`   // 子用户ID
-	IsOn        uint8  `field:"isOn"`        // 是否启用
+	IsOn        bool   `field:"isOn"`        // 是否启用
 	UniqueId    string `field:"uniqueId"`    // 唯一的Key
 	Secret      string `field:"secret"`      // 密钥
 	Description string `field:"description"` // 备注

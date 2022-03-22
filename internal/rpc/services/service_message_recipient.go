@@ -102,7 +102,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 			Id:       int64(admin.Id),
 			Fullname: admin.Fullname,
 			Username: admin.Username,
-			IsOn:     admin.IsOn == 1,
+			IsOn:     admin.IsOn,
 		}
 
 		// 媒介实例
@@ -115,7 +115,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 		}
 		pbInstance := &pb.MessageMediaInstance{
 			Id:          int64(instance.Id),
-			IsOn:        instance.IsOn == 1,
+			IsOn:        instance.IsOn,
 			Name:        instance.Name,
 			Description: instance.Description,
 		}
@@ -133,7 +133,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 					pbGroups = append(pbGroups, &pb.MessageRecipientGroup{
 						Id:   int64(group.Id),
 						Name: group.Name,
-						IsOn: group.IsOn == 1,
+						IsOn: group.IsOn,
 					})
 				}
 			}
@@ -144,7 +144,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 			Admin:                  pbAdmin,
 			User:                   recipient.User,
 			MessageMediaInstance:   pbInstance,
-			IsOn:                   recipient.IsOn == 1,
+			IsOn:                   recipient.IsOn,
 			MessageRecipientGroups: pbGroups,
 			Description:            recipient.Description,
 			TimeFrom:               recipient.TimeFrom,
@@ -184,7 +184,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 		Id:       int64(admin.Id),
 		Fullname: admin.Fullname,
 		Username: admin.Username,
-		IsOn:     admin.IsOn == 1,
+		IsOn:     admin.IsOn,
 	}
 
 	// 媒介实例
@@ -197,7 +197,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 	}
 	pbInstance := &pb.MessageMediaInstance{
 		Id:          int64(instance.Id),
-		IsOn:        instance.IsOn == 1,
+		IsOn:        instance.IsOn,
 		Name:        instance.Name,
 		Description: instance.Description,
 	}
@@ -215,7 +215,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 				pbGroups = append(pbGroups, &pb.MessageRecipientGroup{
 					Id:   int64(group.Id),
 					Name: group.Name,
-					IsOn: group.IsOn == 1,
+					IsOn: group.IsOn,
 				})
 			}
 		}
@@ -226,7 +226,7 @@ func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Con
 		User:                   recipient.User,
 		Admin:                  pbAdmin,
 		MessageMediaInstance:   pbInstance,
-		IsOn:                   recipient.IsOn == 1,
+		IsOn:                   recipient.IsOn,
 		MessageRecipientGroups: pbGroups,
 		Description:            recipient.Description,
 		TimeFrom:               recipient.TimeFrom,

@@ -97,7 +97,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	}
 	config := &sslconfigs.SSLPolicy{}
 	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
+	config.IsOn = policy.IsOn
 	config.ClientAuthType = int(policy.ClientAuthType)
 	config.HTTP2Enabled = policy.Http2Enabled == 1
 	config.MinVersion = policy.MinVersion

@@ -61,7 +61,7 @@ func (this *HTTPAuthPolicyService) FindEnabledHTTPAuthPolicy(ctx context.Context
 
 	return &pb.FindEnabledHTTPAuthPolicyResponse{HttpAuthPolicy: &pb.HTTPAuthPolicy{
 		Id:         int64(policy.Id),
-		IsOn:       policy.IsOn == 1,
+		IsOn:       policy.IsOn,
 		Name:       policy.Name,
 		Type:       policy.Type,
 		ParamsJSON: policy.Params,

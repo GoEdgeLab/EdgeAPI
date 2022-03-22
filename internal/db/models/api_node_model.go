@@ -2,10 +2,10 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
-// API节点
+// APINode API节点
 type APINode struct {
 	Id          uint32   `field:"id"`          // ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	ClusterId   uint32   `field:"clusterId"`   // 专用集群ID
 	UniqueId    string   `field:"uniqueId"`    // 唯一ID
 	Secret      string   `field:"secret"`      // 密钥

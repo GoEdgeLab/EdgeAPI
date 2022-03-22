@@ -7,7 +7,7 @@ type ACMETask struct {
 	Id            uint64   `field:"id"`            // ID
 	AdminId       uint32   `field:"adminId"`       // 管理员ID
 	UserId        uint32   `field:"userId"`        // 用户ID
-	IsOn          uint8    `field:"isOn"`          // 是否启用
+	IsOn          bool     `field:"isOn"`          // 是否启用
 	AcmeUserId    uint32   `field:"acmeUserId"`    // ACME用户ID
 	DnsDomain     string   `field:"dnsDomain"`     // DNS主域名
 	DnsProviderId uint64   `field:"dnsProviderId"` // DNS服务商

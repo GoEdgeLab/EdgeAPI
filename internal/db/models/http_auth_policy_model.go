@@ -7,7 +7,7 @@ type HTTPAuthPolicy struct {
 	Id      uint64   `field:"id"`      // ID
 	AdminId uint32   `field:"adminId"` // 管理员ID
 	UserId  uint32   `field:"userId"`  // 用户ID
-	IsOn    uint8    `field:"isOn"`    // 是否启用
+	IsOn    bool     `field:"isOn"`    // 是否启用
 	Name    string   `field:"name"`    // 名称
 	Type    string   `field:"type"`    // 类型
 	Params  dbs.JSON `field:"params"`  // 参数

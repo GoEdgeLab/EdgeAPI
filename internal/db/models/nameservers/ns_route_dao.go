@@ -107,7 +107,7 @@ func (this *NSRouteDAO) FindEnabledRouteWithCode(tx *dbs.Tx, code string) (*NSRo
 
 	return &NSRoute{
 		Id:    0,
-		IsOn:  1,
+		IsOn:  true,
 		Name:  route.Name,
 		Code:  route.Code,
 		State: NSRouteStateEnabled,

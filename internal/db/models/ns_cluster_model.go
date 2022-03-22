@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // NSCluster 域名服务器集群
 type NSCluster struct {
 	Id         uint32   `field:"id"`         // ID
-	IsOn       uint8    `field:"isOn"`       // 是否启用
+	IsOn       bool     `field:"isOn"`       // 是否启用
 	Name       string   `field:"name"`       // 集群名
 	InstallDir string   `field:"installDir"` // 安装目录
 	State      uint8    `field:"state"`      // 状态

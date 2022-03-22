@@ -91,7 +91,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	}
 	config := &firewallconfigs.HTTPFirewallRuleGroup{}
 	config.Id = int64(group.Id)
-	config.IsOn = group.IsOn == 1
+	config.IsOn = group.IsOn
 	config.Name = group.Name
 	config.Description = group.Description
 	config.Code = group.Code

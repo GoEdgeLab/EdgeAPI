@@ -131,7 +131,7 @@ func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSet(ctx conte
 		FirewallRuleSet: &pb.HTTPFirewallRuleSet{
 			Id:          int64(set.Id),
 			Name:        set.Name,
-			IsOn:        set.IsOn == 1,
+			IsOn:        set.IsOn,
 			Description: set.Description,
 			Code:        set.Code,
 		},

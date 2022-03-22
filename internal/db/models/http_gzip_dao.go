@@ -88,7 +88,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*servercon
 
 	config := &serverconfigs.HTTPGzipCompressionConfig{}
 	config.Id = int64(gzip.Id)
-	config.IsOn = gzip.IsOn == 1
+	config.IsOn = gzip.IsOn
 	if IsNotNull(gzip.MinLength) {
 		minLengthConfig := &shared.SizeCapacity{}
 		err = json.Unmarshal(gzip.MinLength, minLengthConfig)

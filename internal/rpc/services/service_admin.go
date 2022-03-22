@@ -174,7 +174,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 				Id:         int64(adminAuth.Id),
 				Type:       adminAuth.Type,
 				ParamsJSON: adminAuth.Params,
-				IsOn:       adminAuth.IsOn == 1,
+				IsOn:       adminAuth.IsOn,
 			}
 		}
 	}
@@ -183,7 +183,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		Id:       int64(admin.Id),
 		Fullname: admin.Fullname,
 		Username: admin.Username,
-		IsOn:     admin.IsOn == 1,
+		IsOn:     admin.IsOn,
 		IsSuper:  admin.IsSuper == 1,
 		Modules:  pbModules,
 		OtpLogin: pbOtpAuth,
@@ -394,7 +394,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 					Id:         int64(adminAuth.Id),
 					Type:       adminAuth.Type,
 					ParamsJSON: adminAuth.Params,
-					IsOn:       adminAuth.IsOn == 1,
+					IsOn:       adminAuth.IsOn,
 				}
 			}
 		}
@@ -403,7 +403,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 			Id:        int64(admin.Id),
 			Fullname:  admin.Fullname,
 			Username:  admin.Username,
-			IsOn:      admin.IsOn == 1,
+			IsOn:      admin.IsOn,
 			IsSuper:   admin.IsSuper == 1,
 			CreatedAt: int64(admin.CreatedAt),
 			OtpLogin:  pbOtpAuth,

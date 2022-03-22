@@ -31,7 +31,7 @@ func (this *MessageMediaService) FindAllMessageMedias(ctx context.Context, req *
 			Name:            media.Name,
 			Description:     media.Description,
 			UserDescription: media.UserDescription,
-			IsOn:            media.IsOn == 1,
+			IsOn:            media.IsOn,
 		})
 	}
 	return &pb.FindAllMessageMediasResponse{MessageMedias: pbMedias}, nil

@@ -7,7 +7,7 @@ type HTTPPage struct {
 	Id         uint32   `field:"id"`         // ID
 	AdminId    uint32   `field:"adminId"`    // 管理员ID
 	UserId     uint32   `field:"userId"`     // 用户ID
-	IsOn       uint8    `field:"isOn"`       // 是否启用
+	IsOn       bool     `field:"isOn"`       // 是否启用
 	StatusList dbs.JSON `field:"statusList"` // 状态列表
 	Url        string   `field:"url"`        // 页面URL
 	NewStatus  int32    `field:"newStatus"`  // 新状态码

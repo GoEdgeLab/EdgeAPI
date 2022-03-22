@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // IPList IP名单
 type IPList struct {
 	Id          uint32   `field:"id"`          // ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	Type        string   `field:"type"`        // 类型
 	AdminId     uint32   `field:"adminId"`     // 用户ID
 	UserId      uint32   `field:"userId"`      // 用户ID

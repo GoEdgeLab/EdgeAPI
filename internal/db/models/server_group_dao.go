@@ -312,7 +312,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 	var config = &serverconfigs.ServerGroupConfig{
 		Id:   int64(group.Id),
 		Name: group.Name,
-		IsOn: group.IsOn == 1,
+		IsOn: group.IsOn,
 	}
 
 	if IsNotNull(group.HttpReverseProxy) {

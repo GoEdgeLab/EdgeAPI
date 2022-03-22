@@ -11,7 +11,7 @@ type HTTPAccessLogPolicy struct {
 	State      uint8    `field:"state"`      // 状态
 	CreatedAt  uint64   `field:"createdAt"`  // 创建时间
 	Name       string   `field:"name"`       // 名称
-	IsOn       uint8    `field:"isOn"`       // 是否启用
+	IsOn       bool     `field:"isOn"`       // 是否启用
 	Type       string   `field:"type"`       // 存储类型
 	Options    dbs.JSON `field:"options"`    // 存储选项
 	Conds      dbs.JSON `field:"conds"`      // 请求条件

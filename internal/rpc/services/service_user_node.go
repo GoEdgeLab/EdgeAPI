@@ -87,7 +87,7 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 
 		result = append(result, &pb.UserNode{
 			Id:              int64(node.Id),
-			IsOn:            node.IsOn == 1,
+			IsOn:            node.IsOn,
 			UniqueId:        node.UniqueId,
 			Secret:          node.Secret,
 			Name:            node.Name,
@@ -142,7 +142,7 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 
 		result = append(result, &pb.UserNode{
 			Id:              int64(node.Id),
-			IsOn:            node.IsOn == 1,
+			IsOn:            node.IsOn,
 			UniqueId:        node.UniqueId,
 			Secret:          node.Secret,
 			Name:            node.Name,
@@ -183,7 +183,7 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 
 	result := &pb.UserNode{
 		Id:              int64(node.Id),
-		IsOn:            node.IsOn == 1,
+		IsOn:            node.IsOn,
 		UniqueId:        node.UniqueId,
 		Secret:          node.Secret,
 		Name:            node.Name,
@@ -230,7 +230,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 
 	result := &pb.UserNode{
 		Id:              int64(node.Id),
-		IsOn:            node.IsOn == 1,
+		IsOn:            node.IsOn,
 		UniqueId:        node.UniqueId,
 		Secret:          node.Secret,
 		Name:            node.Name,

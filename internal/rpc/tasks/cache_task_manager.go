@@ -230,7 +230,7 @@ func (this *CacheTaskManager) findAllMetricDataCharts(tx *dbs.Tx) (result []*pb.
 		}
 
 		for _, chart := range charts {
-			if chart.IsOn == 0 {
+			if !chart.IsOn {
 				continue
 			}
 
@@ -240,7 +240,7 @@ func (this *CacheTaskManager) findAllMetricDataCharts(tx *dbs.Tx) (result []*pb.
 				Type:       chart.Type,
 				WidthDiv:   chart.WidthDiv,
 				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
+				IsOn:       chart.IsOn,
 				MaxItems:   types.Int32(chart.MaxItems),
 				MetricItem: &pb.MetricItem{
 					Id:         itemId,
@@ -251,7 +251,7 @@ func (this *CacheTaskManager) findAllMetricDataCharts(tx *dbs.Tx) (result []*pb.
 					Category:   item.Category,
 					Keys:       item.DecodeKeys(),
 					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
+					IsOn:       item.IsOn,
 				},
 			}
 			var pbStats = []*pb.MetricStat{}
@@ -333,7 +333,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 	var metricItemIds = []int64{}
 	var items = []*models.MetricItem{}
 	for _, clusterMetricItem := range clusterMetricItems {
-		if clusterMetricItem.IsOn != 1 {
+		if !clusterMetricItem.IsOn {
 			continue
 		}
 		var itemId = int64(clusterMetricItem.ItemId)
@@ -341,7 +341,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 		if err != nil {
 			return nil, err
 		}
-		if item == nil || item.IsOn == 0 {
+		if item == nil || !item.IsOn {
 			continue
 		}
 		items = append(items, item)
@@ -353,7 +353,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 		return nil, err
 	}
 	for _, item := range publicMetricItems {
-		if item.IsOn != 1 {
+		if !item.IsOn {
 			continue
 		}
 		if lists.ContainsInt64(metricItemIds, int64(item.Id)) {
@@ -370,7 +370,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 		}
 
 		for _, chart := range charts {
-			if chart.IsOn == 0 {
+			if !chart.IsOn {
 				continue
 			}
 
@@ -380,7 +380,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 				Type:       chart.Type,
 				WidthDiv:   chart.WidthDiv,
 				ParamsJSON: nil,
-				IsOn:       chart.IsOn == 1,
+				IsOn:       chart.IsOn,
 				MaxItems:   types.Int32(chart.MaxItems),
 				MetricItem: &pb.MetricItem{
 					Id:         itemId,
@@ -391,7 +391,7 @@ func (this *CacheTaskManager) findNodeClusterMetricDataCharts(tx *dbs.Tx, cluste
 					Category:   item.Category,
 					Keys:       item.DecodeKeys(),
 					Code:       item.Code,
-					IsOn:       item.IsOn == 1,
+					IsOn:       item.IsOn,
 				},
 			}
 			var pbStats = []*pb.MetricStat{}

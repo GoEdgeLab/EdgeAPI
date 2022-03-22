@@ -82,7 +82,7 @@ func (this *AuthorityNodeService) FindAllEnabledAuthorityNodes(ctx context.Conte
 	for _, node := range nodes {
 		result = append(result, &pb.AuthorityNode{
 			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			UniqueId:    node.UniqueId,
 			Secret:      node.Secret,
 			Name:        node.Name,
@@ -128,7 +128,7 @@ func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context,
 	for _, node := range nodes {
 		result = append(result, &pb.AuthorityNode{
 			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			UniqueId:    node.UniqueId,
 			Secret:      node.Secret,
 			Name:        node.Name,
@@ -160,7 +160,7 @@ func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, 
 
 	result := &pb.AuthorityNode{
 		Id:          int64(node.Id),
-		IsOn:        node.IsOn == 1,
+		IsOn:        node.IsOn,
 		UniqueId:    node.UniqueId,
 		Secret:      node.Secret,
 		Name:        node.Name,
@@ -198,7 +198,7 @@ func (this *AuthorityNodeService) FindCurrentAuthorityNode(ctx context.Context, 
 
 	result := &pb.AuthorityNode{
 		Id:          int64(node.Id),
-		IsOn:        node.IsOn == 1,
+		IsOn:        node.IsOn,
 		UniqueId:    node.UniqueId,
 		Secret:      node.Secret,
 		Name:        node.Name,

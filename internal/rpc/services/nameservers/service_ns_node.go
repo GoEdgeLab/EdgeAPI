@@ -44,7 +44,7 @@ func (this *NSNodeService) FindAllEnabledNSNodesWithNSClusterId(ctx context.Cont
 		pbNodes = append(pbNodes, &pb.NSNode{
 			Id:          int64(node.Id),
 			Name:        node.Name,
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			UniqueId:    node.UniqueId,
 			Secret:      node.Secret,
 			IsInstalled: node.IsInstalled == 1,
@@ -120,7 +120,7 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 		pbNodes = append(pbNodes, &pb.NSNode{
 			Id:            int64(node.Id),
 			Name:          node.Name,
-			IsOn:          node.IsOn == 1,
+			IsOn:          node.IsOn,
 			UniqueId:      node.UniqueId,
 			Secret:        node.Secret,
 			IsActive:      node.IsActive == 1,
@@ -276,7 +276,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 			Name: clusterName,
 		},
 		InstallStatus: installStatusResult,
-		IsOn:          node.IsOn == 1,
+		IsOn:          node.IsOn,
 		IsActive:      node.IsActive == 1,
 		NodeLogin:     respLogin,
 	}}, nil

@@ -61,7 +61,7 @@ func (this *HTTPWebService) FindEnabledHTTPWeb(ctx context.Context, req *pb.Find
 
 	result := &pb.HTTPWeb{}
 	result.Id = int64(web.Id)
-	result.IsOn = web.IsOn == 1
+	result.IsOn = web.IsOn
 	return &pb.FindEnabledHTTPWebResponse{HttpWeb: result}, nil
 }
 

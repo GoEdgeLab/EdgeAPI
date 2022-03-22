@@ -80,7 +80,7 @@ func (this *HTTPBrotliPolicyDAO) ComposeBrotliConfig(tx *dbs.Tx, policyId int64)
 
 	config := &serverconfigs.HTTPBrotliCompressionConfig{}
 	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
+	config.IsOn = policy.IsOn
 	if IsNotNull(policy.MinLength) {
 		minLengthConfig := &shared.SizeCapacity{}
 		err = json.Unmarshal(policy.MinLength, minLengthConfig)

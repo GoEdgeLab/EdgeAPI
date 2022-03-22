@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // HTTPFirewallRuleGroup 防火墙规则分组
 type HTTPFirewallRuleGroup struct {
 	Id          uint32   `field:"id"`          // ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	Name        string   `field:"name"`        // 名称
 	Description string   `field:"description"` // 描述
 	Code        string   `field:"code"`        // 代号

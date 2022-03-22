@@ -112,7 +112,7 @@ func (this *NSClusterService) FindEnabledNSCluster(ctx context.Context, req *pb.
 	}
 	return &pb.FindEnabledNSClusterResponse{NsCluster: &pb.NSCluster{
 		Id:         int64(cluster.Id),
-		IsOn:       cluster.IsOn == 1,
+		IsOn:       cluster.IsOn,
 		Name:       cluster.Name,
 		InstallDir: cluster.InstallDir,
 	}}, nil
@@ -147,7 +147,7 @@ func (this *NSClusterService) ListEnabledNSClusters(ctx context.Context, req *pb
 	for _, cluster := range clusters {
 		pbClusters = append(pbClusters, &pb.NSCluster{
 			Id:         int64(cluster.Id),
-			IsOn:       cluster.IsOn == 1,
+			IsOn:       cluster.IsOn,
 			Name:       cluster.Name,
 			InstallDir: cluster.InstallDir,
 		})
@@ -170,7 +170,7 @@ func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req 
 	for _, cluster := range clusters {
 		pbClusters = append(pbClusters, &pb.NSCluster{
 			Id:         int64(cluster.Id),
-			IsOn:       cluster.IsOn == 1,
+			IsOn:       cluster.IsOn,
 			Name:       cluster.Name,
 			InstallDir: cluster.InstallDir,
 		})

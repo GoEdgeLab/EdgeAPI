@@ -890,7 +890,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	config.Id = int64(server.Id)
 	config.ClusterId = int64(server.ClusterId)
 	config.Type = server.Type
-	config.IsOn = server.IsOn == 1
+	config.IsOn = server.IsOn
 	config.Name = server.Name
 	config.Description = server.Description
 
@@ -1085,7 +1085,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 		if err != nil {
 			return nil, err
 		}
-		if userPlan != nil && userPlan.IsOn == 1 {
+		if userPlan != nil && userPlan.IsOn {
 			if len(userPlan.DayTo) == 0 {
 				userPlan.DayTo = DefaultUserPlanMaxDay
 			}

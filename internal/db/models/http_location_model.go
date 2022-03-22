@@ -12,7 +12,7 @@ type HTTPLocation struct {
 	State        uint8    `field:"state"`        // 状态
 	CreatedAt    uint64   `field:"createdAt"`    // 创建时间
 	Pattern      string   `field:"pattern"`      // 匹配规则
-	IsOn         uint8    `field:"isOn"`         // 是否启用
+	IsOn         bool     `field:"isOn"`         // 是否启用
 	Name         string   `field:"name"`         // 名称
 	Description  string   `field:"description"`  // 描述
 	WebId        uint32   `field:"webId"`        // Web配置ID

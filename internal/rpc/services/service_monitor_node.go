@@ -82,7 +82,7 @@ func (this *MonitorNodeService) FindAllEnabledMonitorNodes(ctx context.Context, 
 	for _, node := range nodes {
 		result = append(result, &pb.MonitorNode{
 			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			UniqueId:    node.UniqueId,
 			Secret:      node.Secret,
 			Name:        node.Name,
@@ -128,7 +128,7 @@ func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req
 	for _, node := range nodes {
 		result = append(result, &pb.MonitorNode{
 			Id:          int64(node.Id),
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			UniqueId:    node.UniqueId,
 			Secret:      node.Secret,
 			Name:        node.Name,
@@ -160,7 +160,7 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 
 	result := &pb.MonitorNode{
 		Id:          int64(node.Id),
-		IsOn:        node.IsOn == 1,
+		IsOn:        node.IsOn,
 		UniqueId:    node.UniqueId,
 		Secret:      node.Secret,
 		Name:        node.Name,
@@ -198,7 +198,7 @@ func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req 
 
 	result := &pb.MonitorNode{
 		Id:          int64(node.Id),
-		IsOn:        node.IsOn == 1,
+		IsOn:        node.IsOn,
 		UniqueId:    node.UniqueId,
 		Secret:      node.Secret,
 		Name:        node.Name,

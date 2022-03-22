@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // Admin 管理员
 type Admin struct {
 	Id        uint32   `field:"id"`        // ID
-	IsOn      uint8    `field:"isOn"`      // 是否启用
+	IsOn      bool     `field:"isOn"`      // 是否启用
 	Username  string   `field:"username"`  // 用户名
 	Password  string   `field:"password"`  // 密码
 	Fullname  string   `field:"fullname"`  // 全名

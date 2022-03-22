@@ -97,7 +97,7 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int
 
 	config := &serverconfigs.HTTPRewriteRule{}
 	config.Id = int64(rule.Id)
-	config.IsOn = rule.IsOn == 1
+	config.IsOn = rule.IsOn
 	config.Pattern = rule.Pattern
 	config.Replace = rule.Replace
 	config.Mode = rule.Mode

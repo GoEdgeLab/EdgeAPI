@@ -3,7 +3,7 @@ package acme
 // ACMEProviderAccount ACME提供商
 type ACMEProviderAccount struct {
 	Id           uint64 `field:"id"`           // ID
-	IsOn         uint8  `field:"isOn"`         // 是否启用
+	IsOn         bool   `field:"isOn"`         // 是否启用
 	Name         string `field:"name"`         // 名称
 	ProviderCode string `field:"providerCode"` // 代号
 	Error        string `field:"error"`        // 最后一条错误信息

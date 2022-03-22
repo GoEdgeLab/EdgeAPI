@@ -7,7 +7,7 @@ type SSLPolicy struct {
 	Id               uint32   `field:"id"`               // ID
 	AdminId          uint32   `field:"adminId"`          // 管理员ID
 	UserId           uint32   `field:"userId"`           // 用户ID
-	IsOn             uint8    `field:"isOn"`             // 是否启用
+	IsOn             bool    `field:"isOn"`             // 是否启用
 	Certs            dbs.JSON `field:"certs"`            // 证书列表
 	ClientCACerts    dbs.JSON `field:"clientCACerts"`    // 客户端证书
 	ClientAuthType   uint32   `field:"clientAuthType"`   // 客户端认证类型

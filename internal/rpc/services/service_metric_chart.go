@@ -85,7 +85,7 @@ func (this *MetricChartService) FindEnabledMetricChart(ctx context.Context, req 
 			ParamsJSON:      chart.Params,
 			IgnoreEmptyKeys: chart.IgnoreEmptyKeys == 1,
 			IgnoredKeys:     chart.DecodeIgnoredKeys(),
-			IsOn:            chart.IsOn == 1,
+			IsOn:            chart.IsOn,
 			MetricItem:      &pb.MetricItem{Id: int64(chart.ItemId)},
 		},
 	}, nil
@@ -129,7 +129,7 @@ func (this *MetricChartService) ListEnabledMetricCharts(ctx context.Context, req
 			ParamsJSON:      chart.Params,
 			IgnoreEmptyKeys: chart.IgnoreEmptyKeys == 1,
 			IgnoredKeys:     chart.DecodeIgnoredKeys(),
-			IsOn:            chart.IsOn == 1,
+			IsOn:            chart.IsOn,
 		})
 	}
 	return &pb.ListEnabledMetricChartsResponse{MetricCharts: pbCharts}, nil

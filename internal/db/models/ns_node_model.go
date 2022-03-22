@@ -8,7 +8,7 @@ type NSNode struct {
 	AdminId           uint32   `field:"adminId"`           // 管理员ID
 	ClusterId         uint32   `field:"clusterId"`         // 集群ID
 	Name              string   `field:"name"`              // 节点名称
-	IsOn              uint8    `field:"isOn"`              // 是否启用
+	IsOn              bool     `field:"isOn"`              // 是否启用
 	Status            dbs.JSON `field:"status"`            // 运行状态
 	UniqueId          string   `field:"uniqueId"`          // 节点ID
 	Secret            string   `field:"secret"`            // 密钥

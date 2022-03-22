@@ -123,13 +123,13 @@ func (this *MessageMediaInstanceService) ListEnabledMessageMediaInstances(ctx co
 			Name:            media.Name,
 			Description:     media.Description,
 			UserDescription: media.UserDescription,
-			IsOn:            media.IsOn == 1,
+			IsOn:            media.IsOn,
 		}
 
 		pbInstances = append(pbInstances, &pb.MessageMediaInstance{
 			Id:           int64(instance.Id),
 			Name:         instance.Name,
-			IsOn:         instance.IsOn == 1,
+			IsOn:         instance.IsOn,
 			MessageMedia: pbMedia,
 			ParamsJSON:   instance.Params,
 			Description:  instance.Description,
@@ -171,13 +171,13 @@ func (this *MessageMediaInstanceService) FindEnabledMessageMediaInstance(ctx con
 		Name:            media.Name,
 		Description:     media.Description,
 		UserDescription: media.UserDescription,
-		IsOn:            media.IsOn == 1,
+		IsOn:            media.IsOn,
 	}
 
 	return &pb.FindEnabledMessageMediaInstanceResponse{MessageMediaInstance: &pb.MessageMediaInstance{
 		Id:           int64(instance.Id),
 		Name:         instance.Name,
-		IsOn:         instance.IsOn == 1,
+		IsOn:         instance.IsOn,
 		MessageMedia: pbMedia,
 		ParamsJSON:   instance.Params,
 		Description:  instance.Description,

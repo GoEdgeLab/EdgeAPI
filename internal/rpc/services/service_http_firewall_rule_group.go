@@ -147,7 +147,7 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroup(ctx c
 		FirewallRuleGroup: &pb.HTTPFirewallRuleGroup{
 			Id:          int64(group.Id),
 			Name:        group.Name,
-			IsOn:        group.IsOn == 1,
+			IsOn:        group.IsOn,
 			Description: group.Description,
 			Code:        group.Code,
 		},

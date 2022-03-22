@@ -84,7 +84,7 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(tx *dbs.Tx, ruleId int64) (
 	}
 	config := &firewallconfigs.HTTPFirewallRule{}
 	config.Id = int64(rule.Id)
-	config.IsOn = rule.IsOn == 1
+	config.IsOn = rule.IsOn
 	config.Param = rule.Param
 
 	paramFilters := []*firewallconfigs.ParamFilter{}

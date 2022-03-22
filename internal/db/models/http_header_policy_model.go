@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 //
 type HTTPHeaderPolicy struct {
 	Id             uint32   `field:"id"`             // ID
-	IsOn           uint8    `field:"isOn"`           // 是否启用
+	IsOn           bool     `field:"isOn"`           // 是否启用
 	State          uint8    `field:"state"`          // 状态
 	AdminId        uint32   `field:"adminId"`        // 管理员ID
 	UserId         uint32   `field:"userId"`         // 用户ID

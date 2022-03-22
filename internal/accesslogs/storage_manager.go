@@ -58,7 +58,7 @@ func (this *StorageManager) Loop() error {
 	}
 	var policyIds = []int64{}
 	for _, policy := range policies {
-		if policy.IsOn == 1 {
+		if policy.IsOn {
 			policyIds = append(policyIds, int64(policy.Id))
 		}
 	}

@@ -176,7 +176,7 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 
 	result := &pb.Origin{
 		Id:   int64(origin.Id),
-		IsOn: origin.IsOn == 1,
+		IsOn: origin.IsOn,
 		Name: origin.Name,
 		Addr: &pb.NetworkAddress{
 			Protocol:  addr.Protocol.String(),

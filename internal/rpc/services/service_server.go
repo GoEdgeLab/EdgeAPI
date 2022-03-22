@@ -686,7 +686,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 		result = append(result, &pb.Server{
 			Id:                      int64(server.Id),
-			IsOn:                    server.IsOn == 1,
+			IsOn:                    server.IsOn,
 			Type:                    server.Type,
 			Config:                  configJSON,
 			Name:                    server.Name,
@@ -829,7 +829,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 
 	return &pb.FindEnabledServerResponse{Server: &pb.Server{
 		Id:           int64(server.Id),
-		IsOn:         server.IsOn == 1,
+		IsOn:         server.IsOn,
 		Type:         server.Type,
 		Name:         server.Name,
 		Description:  server.Description,
@@ -1074,7 +1074,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 		result = append(result, &pb.Server{
 			Id:   int64(server.Id),
 			Name: server.Name,
-			IsOn: server.IsOn == 1,
+			IsOn: server.IsOn,
 			Type: server.Type,
 		})
 	}
@@ -1311,7 +1311,7 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 		Id:          int64(server.Id),
 		Name:        server.Name,
 		Description: server.Description,
-		IsOn:        server.IsOn == 1,
+		IsOn:        server.IsOn,
 		Type:        server.Type,
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(server.ClusterId),
@@ -1610,7 +1610,7 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 				pbGroup.Servers = append(pbGroup.Servers, &pb.Server{
 					Id:   int64(server.Id),
 					Name: server.Name,
-					IsOn: server.IsOn == 1,
+					IsOn: server.IsOn,
 				})
 			}
 			pbGroups = append(pbGroups, pbGroup)
@@ -1651,7 +1651,7 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 		pbGroup.Servers = append(pbGroup.Servers, &pb.Server{
 			Id:   int64(server.Id),
 			Name: server.Name,
-			IsOn: server.IsOn == 1,
+			IsOn: server.IsOn,
 		})
 	}
 
@@ -1913,7 +1913,7 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 			UserId: int64(userPlan.UserId),
 			PlanId: int64(userPlan.PlanId),
 			Name:   userPlan.Name,
-			IsOn:   userPlan.IsOn == 1,
+			IsOn:   userPlan.IsOn,
 			DayTo:  userPlan.DayTo,
 			User:   nil,
 			Plan: &pb.Plan{

@@ -96,7 +96,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	config := &serverconfigs.HTTPWebConfig{}
 	config.Id = webId
-	config.IsOn = web.IsOn == 1
+	config.IsOn = web.IsOn
 
 	// root
 	if IsNotNull(web.Root) {

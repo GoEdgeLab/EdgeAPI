@@ -7,7 +7,7 @@ type ReportNode struct {
 	Id        uint32   `field:"id"`        // ID
 	UniqueId  string   `field:"uniqueId"`  // 唯一ID
 	Secret    string   `field:"secret"`    // 密钥
-	IsOn      uint8    `field:"isOn"`      // 是否启用
+	IsOn      bool     `field:"isOn"`      // 是否启用
 	Name      string   `field:"name"`      // 名称
 	Location  string   `field:"location"`  // 所在区域
 	Isp       string   `field:"isp"`       // 网络服务商

@@ -43,7 +43,7 @@ func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx con
 		pbPolicies = append(pbPolicies, &pb.HTTPAccessLogPolicy{
 			Id:          int64(policy.Id),
 			Name:        policy.Name,
-			IsOn:        policy.IsOn == 1,
+			IsOn:        policy.IsOn,
 			Type:        policy.Type,
 			OptionsJSON: policy.Options,
 			CondsJSON:   policy.Conds,
@@ -121,7 +121,7 @@ func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx conte
 	return &pb.FindEnabledHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: &pb.HTTPAccessLogPolicy{
 		Id:          int64(policy.Id),
 		Name:        policy.Name,
-		IsOn:        policy.IsOn == 1,
+		IsOn:        policy.IsOn,
 		Type:        policy.Type,
 		OptionsJSON: policy.Options,
 		CondsJSON:   policy.Conds,

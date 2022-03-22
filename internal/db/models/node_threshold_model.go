@@ -8,7 +8,7 @@ type NodeThreshold struct {
 	Role           string   `field:"role"`           // 节点角色
 	ClusterId      uint32   `field:"clusterId"`      // 集群ID
 	NodeId         uint32   `field:"nodeId"`         // 节点ID
-	IsOn           uint8    `field:"isOn"`           // 是否启用
+	IsOn           bool     `field:"isOn"`           // 是否启用
 	Item           string   `field:"item"`           // 监控项
 	Param          string   `field:"param"`          // 参数
 	Operator       string   `field:"operator"`       // 操作符

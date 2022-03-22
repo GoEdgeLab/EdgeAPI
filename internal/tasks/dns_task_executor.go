@@ -146,7 +146,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, serverId int64) error {
 	recordValue := clusterDNSName + "." + domain + "."
 	recordRoute := manager.DefaultRoute()
 	recordType := dnstypes.RecordTypeCNAME
-	if serverDNS.State == models.ServerStateDisabled || serverDNS.IsOn == 0 {
+	if serverDNS.State == models.ServerStateDisabled || !serverDNS.IsOn {
 		// 检查记录是否已经存在
 		record, err := manager.QueryRecord(domain, recordName, recordType)
 		if err != nil {
@@ -333,7 +333,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		}
 		for _, ipAddress := range ipAddresses {
 			ip := ipAddress.DNSIP()
-			if len(ip) == 0 || ipAddress.CanAccess == 0 || ipAddress.IsUp == 0 || ipAddress.IsOn == 0 {
+			if len(ip) == 0 || ipAddress.CanAccess == 0 || ipAddress.IsUp == 0 || !ipAddress.IsOn {
 				continue
 			}
 			if net.ParseIP(ip) == nil {

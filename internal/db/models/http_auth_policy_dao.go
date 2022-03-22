@@ -116,7 +116,7 @@ func (this *HTTPAuthPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, c
 	var config = &serverconfigs.HTTPAuthPolicy{
 		Id:   int64(policy.Id),
 		Name: policy.Name,
-		IsOn: policy.IsOn == 1,
+		IsOn: policy.IsOn,
 		Type: policy.Type,
 	}
 

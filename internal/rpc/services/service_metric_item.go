@@ -61,7 +61,7 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 	}
 	return &pb.FindEnabledMetricItemResponse{MetricItem: &pb.MetricItem{
 		Id:         int64(item.Id),
-		IsOn:       item.IsOn == 1,
+		IsOn:       item.IsOn,
 		Code:       item.Code,
 		Category:   item.Category,
 		Name:       item.Name,
@@ -104,7 +104,7 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 	for _, item := range items {
 		pbItems = append(pbItems, &pb.MetricItem{
 			Id:         int64(item.Id),
-			IsOn:       item.IsOn == 1,
+			IsOn:       item.IsOn,
 			Code:       item.Code,
 			Category:   item.Category,
 			Name:       item.Name,

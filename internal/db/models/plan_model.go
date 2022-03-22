@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // Plan 用户套餐
 type Plan struct {
 	Id              uint32   `field:"id"`              // ID
-	IsOn            uint8    `field:"isOn"`            // 是否启用
+	IsOn            bool     `field:"isOn"`            // 是否启用
 	Name            string   `field:"name"`            // 套餐名
 	ClusterId       uint32   `field:"clusterId"`       // 集群ID
 	TrafficLimit    dbs.JSON `field:"trafficLimit"`    // 流量限制

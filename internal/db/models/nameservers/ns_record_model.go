@@ -6,7 +6,7 @@ import "github.com/iwind/TeaGo/dbs"
 type NSRecord struct {
 	Id          uint64   `field:"id"`          // ID
 	DomainId    uint32   `field:"domainId"`    // 域名ID
-	IsOn        uint8    `field:"isOn"`        // 是否启用
+	IsOn        bool     `field:"isOn"`        // 是否启用
 	Description string   `field:"description"` // 备注
 	Name        string   `field:"name"`        // 记录名
 	Type        string   `field:"type"`        // 类型

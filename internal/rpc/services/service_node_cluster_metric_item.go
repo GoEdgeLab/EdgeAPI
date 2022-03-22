@@ -71,7 +71,7 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 		if item != nil {
 			pbItems = append(pbItems, &pb.MetricItem{
 				Id:         int64(item.Id),
-				IsOn:       item.IsOn == 1,
+				IsOn:       item.IsOn,
 				Code:       item.Code,
 				Category:   item.Category,
 				Name:       item.Name,

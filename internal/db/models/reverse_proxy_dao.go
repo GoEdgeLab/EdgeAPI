@@ -101,7 +101,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 
 	config := &serverconfigs.ReverseProxyConfig{}
 	config.Id = int64(reverseProxy.Id)
-	config.IsOn = reverseProxy.IsOn == 1
+	config.IsOn = reverseProxy.IsOn
 	config.RequestHostType = types.Int8(reverseProxy.RequestHostType)
 	config.RequestHost = reverseProxy.RequestHost
 	config.RequestURI = reverseProxy.RequestURI

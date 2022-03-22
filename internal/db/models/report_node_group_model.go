@@ -5,7 +5,7 @@ type ReportNodeGroup struct {
 	Id    uint32 `field:"id"`    // ID
 	Name  string `field:"name"`  // 名称
 	State uint8  `field:"state"` // 状态
-	IsOn  uint8  `field:"isOn"`  // 是否启用
+	IsOn  bool   `field:"isOn"`  // 是否启用
 }
 
 type ReportNodeGroupOperator struct {

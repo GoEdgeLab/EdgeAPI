@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // HTTPWeb HTTP Web
 type HTTPWeb struct {
 	Id                 uint32   `field:"id"`                 // ID
-	IsOn               uint8    `field:"isOn"`               // 是否启用
+	IsOn               bool     `field:"isOn"`               // 是否启用
 	TemplateId         uint32   `field:"templateId"`         // 模版ID
 	AdminId            uint32   `field:"adminId"`            // 管理员ID
 	UserId             uint32   `field:"userId"`             // 用户ID

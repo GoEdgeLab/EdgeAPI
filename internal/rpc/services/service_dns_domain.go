@@ -190,7 +190,7 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 	return &pb.FindEnabledBasicDNSDomainResponse{DnsDomain: &pb.DNSDomain{
 		Id:         int64(domain.Id),
 		Name:       domain.Name,
-		IsOn:       domain.IsOn == 1,
+		IsOn:       domain.IsOn,
 		ProviderId: int64(domain.ProviderId),
 	}}, nil
 }
@@ -259,7 +259,7 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 		result = append(result, &pb.DNSDomain{
 			Id:        int64(domain.Id),
 			Name:      domain.Name,
-			IsOn:      domain.IsOn == 1,
+			IsOn:      domain.IsOn,
 			IsUp:      domain.IsUp == 1,
 			IsDeleted: domain.IsDeleted == 1,
 		})
@@ -389,7 +389,7 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 		Id:                 int64(domain.Id),
 		ProviderId:         int64(domain.ProviderId),
 		Name:               domain.Name,
-		IsOn:               domain.IsOn == 1,
+		IsOn:               domain.IsOn,
 		IsUp:               domain.IsUp == 1,
 		IsDeleted:          domain.IsDeleted == 1,
 		DataUpdatedAt:      int64(domain.DataUpdatedAt),

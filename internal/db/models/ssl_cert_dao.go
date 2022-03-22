@@ -219,7 +219,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 
 	config := &sslconfigs.SSLCertConfig{}
 	config.Id = int64(cert.Id)
-	config.IsOn = cert.IsOn == 1
+	config.IsOn = cert.IsOn
 	config.IsCA = cert.IsCA == 1
 	config.IsACME = cert.IsACME == 1
 	config.Name = cert.Name

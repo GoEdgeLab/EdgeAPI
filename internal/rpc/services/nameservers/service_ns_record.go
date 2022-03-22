@@ -120,7 +120,7 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 			Ttl:         types.Int32(record.Ttl),
 			Weight:      types.Int32(record.Weight),
 			CreatedAt:   int64(record.CreatedAt),
-			IsOn:        record.IsOn == 1,
+			IsOn:        record.IsOn,
 			NsDomain:    nil,
 			NsRoutes:    pbRoutes,
 		})
@@ -155,7 +155,7 @@ func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.Fi
 	var pbDomain = &pb.NSDomain{
 		Id:   int64(domain.Id),
 		Name: domain.Name,
-		IsOn: domain.IsOn == 1,
+		IsOn: domain.IsOn,
 	}
 
 	// 线路
@@ -186,7 +186,7 @@ func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.Fi
 		Ttl:         types.Int32(record.Ttl),
 		Weight:      types.Int32(record.Weight),
 		CreatedAt:   int64(record.CreatedAt),
-		IsOn:        record.IsOn == 1,
+		IsOn:        record.IsOn,
 		NsDomain:    pbDomain,
 		NsRoutes:    pbRoutes,
 	}}, nil
@@ -237,7 +237,7 @@ func (this *NSRecordService) ListNSRecordsAfterVersion(ctx context.Context, req 
 			Ttl:         types.Int32(record.Ttl),
 			Weight:      types.Int32(record.Weight),
 			IsDeleted:   record.State == nameservers.NSRecordStateDisabled,
-			IsOn:        record.IsOn == 1,
+			IsOn:        record.IsOn,
 			Version:     int64(record.Version),
 			NsDomain:    &pb.NSDomain{Id: int64(record.DomainId)},
 			NsRoutes:    pbRoutes,

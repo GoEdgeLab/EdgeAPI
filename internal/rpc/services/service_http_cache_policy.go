@@ -30,7 +30,7 @@ func (this *HTTPCachePolicyService) FindAllEnabledHTTPCachePolicies(ctx context.
 		result = append(result, &pb.HTTPCachePolicy{
 			Id:   int64(p.Id),
 			Name: p.Name,
-			IsOn: p.IsOn == 1,
+			IsOn: p.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledHTTPCachePoliciesResponse{CachePolicies: result}, nil
@@ -164,7 +164,7 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Conte
 	return &pb.FindEnabledHTTPCachePolicyResponse{HttpCachePolicy: &pb.HTTPCachePolicy{
 		Id:   int64(policy.Id),
 		Name: policy.Name,
-		IsOn: policy.IsOn == 1,
+		IsOn: policy.IsOn,
 	}}, nil
 }
 

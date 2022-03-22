@@ -7,7 +7,7 @@ type Origin struct {
 	Id                 uint32   `field:"id"`                 // ID
 	AdminId            uint32   `field:"adminId"`            // 管理员ID
 	UserId             uint32   `field:"userId"`             // 用户ID
-	IsOn               uint8    `field:"isOn"`               // 是否启用
+	IsOn               bool     `field:"isOn"`               // 是否启用
 	Name               string   `field:"name"`               // 名称
 	Version            uint32   `field:"version"`            // 版本
 	Addr               dbs.JSON `field:"addr"`               // 地址

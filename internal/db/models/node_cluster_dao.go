@@ -263,7 +263,7 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId
 			return nil, err
 		}
 		for _, apiNode := range apiNodes {
-			if apiNode.IsOn != 1 {
+			if !apiNode.IsOn {
 				continue
 			}
 			addrs, err := apiNode.DecodeAccessAddrStrings()
@@ -288,7 +288,7 @@ func (this *NodeClusterDAO) FindAllAPINodeAddrsWithCluster(tx *dbs.Tx, clusterId
 		if err != nil {
 			return nil, err
 		}
-		if apiNode == nil || apiNode.IsOn != 1 {
+		if apiNode == nil || !apiNode.IsOn {
 			continue
 		}
 		addrs, err := apiNode.DecodeAccessAddrStrings()

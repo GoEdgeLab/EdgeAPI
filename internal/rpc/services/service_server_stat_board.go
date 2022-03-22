@@ -41,7 +41,7 @@ func (this *ServerStatBoardService) FindAllEnabledServerStatBoards(ctx context.C
 		pbBoards = append(pbBoards, &pb.ServerStatBoard{
 			Id:   int64(board.Id),
 			Name: board.Name,
-			IsOn: board.IsOn == 1,
+			IsOn: board.IsOn,
 		})
 	}
 

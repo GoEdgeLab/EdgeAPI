@@ -76,7 +76,7 @@ func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Conte
 	for _, price := range prices {
 		result = append(result, &pb.NodePriceItem{
 			Id:       int64(price.Id),
-			IsOn:     price.IsOn == 1,
+			IsOn:     price.IsOn,
 			Name:     price.Name,
 			Type:     price.Type,
 			BitsFrom: int64(price.BitsFrom),
@@ -87,7 +87,7 @@ func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Conte
 	return &pb.FindAllEnabledNodePriceItemsResponse{NodePriceItems: result}, nil
 }
 
-// 查找所有启用的区域价格
+// FindAllEnabledAndOnNodePriceItems 查找所有启用的区域价格
 func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.Context, req *pb.FindAllEnabledAndOnNodePriceItemsRequest) (*pb.FindAllEnabledAndOnNodePriceItemsResponse, error) {
 	_, err := this.ValidateAdmin(ctx, 0)
 	if err != nil {
@@ -104,7 +104,7 @@ func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.
 	for _, price := range prices {
 		result = append(result, &pb.NodePriceItem{
 			Id:       int64(price.Id),
-			IsOn:     price.IsOn == 1,
+			IsOn:     price.IsOn,
 			Name:     price.Name,
 			Type:     price.Type,
 			BitsFrom: int64(price.BitsFrom),
@@ -133,7 +133,7 @@ func (this *NodePriceItemService) FindEnabledNodePriceItem(ctx context.Context, 
 	}
 	return &pb.FindEnabledNodePriceItemResponse{NodePriceItem: &pb.NodePriceItem{
 		Id:       int64(price.Id),
-		IsOn:     price.IsOn == 1,
+		IsOn:     price.IsOn,
 		Name:     price.Name,
 		Type:     price.Type,
 		BitsFrom: int64(price.BitsFrom),

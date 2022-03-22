@@ -184,7 +184,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 
 	config := &shared.HTTPHeaderPolicy{}
 	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
+	config.IsOn = policy.IsOn
 
 	// SetHeaders
 	if IsNotNull(policy.SetHeaders) {

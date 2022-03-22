@@ -66,7 +66,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 	}
 	return &pb.FindEnabledIPListResponse{IpList: &pb.IPList{
 		Id:          int64(list.Id),
-		IsOn:        list.IsOn == 1,
+		IsOn:        list.IsOn,
 		Type:        list.Type,
 		Name:        list.Name,
 		Code:        list.Code,
@@ -107,7 +107,7 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 	for _, list := range ipLists {
 		pbLists = append(pbLists, &pb.IPList{
 			Id:          int64(list.Id),
-			IsOn:        list.IsOn == 1,
+			IsOn:        list.IsOn,
 			Type:        list.Type,
 			Name:        list.Name,
 			Code:        list.Code,
@@ -190,7 +190,7 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 		}
 		pbLists = append(pbLists, &pb.IPList{
 			Id:          int64(list.Id),
-			IsOn:        list.IsOn == 1,
+			IsOn:        list.IsOn,
 			Type:        list.Type,
 			Name:        list.Name,
 			Code:        list.Code,

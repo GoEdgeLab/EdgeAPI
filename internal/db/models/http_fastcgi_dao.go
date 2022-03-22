@@ -81,7 +81,7 @@ func (this *HTTPFastcgiDAO) ComposeFastcgiConfig(tx *dbs.Tx, fastcgiId int64) (*
 	}
 	config := &serverconfigs.HTTPFastcgiConfig{}
 	config.Id = int64(fastcgi.Id)
-	config.IsOn = fastcgi.IsOn == 1
+	config.IsOn = fastcgi.IsOn
 	config.Address = fastcgi.Address
 
 	if IsNotNull(fastcgi.Params) {

@@ -6,7 +6,7 @@ import "github.com/iwind/TeaGo/dbs"
 type NSZone struct {
 	Id       uint64   `field:"id"`       // ID
 	DomainId uint64   `field:"domainId"` // 域名ID
-	IsOn     uint8    `field:"isOn"`     // 是否启用
+	IsOn     bool     `field:"isOn"`     // 是否启用
 	Order    uint32   `field:"order"`    // 排序
 	Version  uint64   `field:"version"`  // 版本
 	Tsig     dbs.JSON `field:"tsig"`     // TSIG配置

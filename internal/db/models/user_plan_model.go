@@ -5,7 +5,7 @@ type UserPlan struct {
 	Id     uint64 `field:"id"`     // ID
 	UserId uint32 `field:"userId"` // 用户ID
 	PlanId uint32 `field:"planId"` // 套餐ID
-	IsOn   uint8  `field:"isOn"`   // 是否启用
+	IsOn   bool   `field:"isOn"`   // 是否启用
 	Name   string `field:"name"`   // 名称
 	DayTo  string `field:"dayTo"`  // 结束日期
 	State  uint8  `field:"state"`  // 状态

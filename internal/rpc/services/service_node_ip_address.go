@@ -156,7 +156,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 			State:       int64(address.State),
 			Order:       int64(address.Order),
 			CanAccess:   address.CanAccess == 1,
-			IsOn:        address.IsOn == 1,
+			IsOn:        address.IsOn,
 			IsUp:        address.IsUp == 1,
 			BackupIP:    address.DecodeBackupIP(),
 		}
@@ -192,7 +192,7 @@ func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx co
 			State:       int64(address.State),
 			Order:       int64(address.Order),
 			CanAccess:   address.CanAccess == 1,
-			IsOn:        address.IsOn == 1,
+			IsOn:        address.IsOn,
 			IsUp:        address.IsUp == 1,
 			BackupIP:    address.DecodeBackupIP(),
 		})
@@ -242,7 +242,7 @@ func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context
 			Ip:          addr.Ip,
 			Description: addr.Description,
 			CanAccess:   addr.CanAccess == 1,
-			IsOn:        addr.IsOn == 1,
+			IsOn:        addr.IsOn,
 			IsUp:        addr.IsUp == 1,
 			BackupIP:    addr.DecodeBackupIP(),
 		})

@@ -34,7 +34,7 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 		Id:         int64(login.Id),
 		Type:       login.Type,
 		ParamsJSON: login.Params,
-		IsOn:       login.IsOn == 1,
+		IsOn:       login.IsOn,
 		AdminId:    int64(login.AdminId),
 		UserId:     int64(login.UserId),
 	}}, nil

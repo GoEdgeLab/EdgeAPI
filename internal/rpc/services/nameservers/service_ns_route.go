@@ -83,7 +83,7 @@ func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.Find
 		if cluster != nil {
 			pbCluster = &pb.NSCluster{
 				Id:   int64(cluster.Id),
-				IsOn: cluster.IsOn == 1,
+				IsOn: cluster.IsOn,
 				Name: cluster.Name,
 			}
 		}
@@ -100,14 +100,14 @@ func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.Find
 			pbDomain = &pb.NSDomain{
 				Id:   int64(domain.Id),
 				Name: domain.Name,
-				IsOn: domain.IsOn == 1,
+				IsOn: domain.IsOn,
 			}
 		}
 	}
 
 	return &pb.FindEnabledNSRouteResponse{NsRoute: &pb.NSRoute{
 		Id:         int64(route.Id),
-		IsOn:       route.IsOn == 1,
+		IsOn:       route.IsOn,
 		Name:       route.Name,
 		RangesJSON: route.Ranges,
 		NsCluster:  pbCluster,
@@ -138,7 +138,7 @@ func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.
 			if cluster != nil {
 				pbCluster = &pb.NSCluster{
 					Id:   int64(cluster.Id),
-					IsOn: cluster.IsOn == 1,
+					IsOn: cluster.IsOn,
 					Name: cluster.Name,
 				}
 			}
@@ -155,14 +155,14 @@ func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.
 				pbDomain = &pb.NSDomain{
 					Id:   int64(domain.Id),
 					Name: domain.Name,
-					IsOn: domain.IsOn == 1,
+					IsOn: domain.IsOn,
 				}
 			}
 		}
 
 		pbRoutes = append(pbRoutes, &pb.NSRoute{
 			Id:         int64(route.Id),
-			IsOn:       route.IsOn == 1,
+			IsOn:       route.IsOn,
 			Name:       route.Name,
 			RangesJSON: route.Ranges,
 			NsCluster:  pbCluster,
@@ -216,7 +216,7 @@ func (this *NSRouteService) ListNSRoutesAfterVersion(ctx context.Context, req *p
 
 		pbRoutes = append(pbRoutes, &pb.NSRoute{
 			Id:         int64(route.Id),
-			IsOn:       route.IsOn == 1,
+			IsOn:       route.IsOn,
 			Name:       "",
 			RangesJSON: route.Ranges,
 			IsDeleted:  route.State == nameservers.NSRouteStateDisabled,

@@ -238,7 +238,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		for _, secondaryCluster := range secondaryClusters {
 			pbSecondaryClusters = append(pbSecondaryClusters, &pb.NodeCluster{
 				Id:   int64(secondaryCluster.Id),
-				IsOn: secondaryCluster.IsOn == 1,
+				IsOn: secondaryCluster.IsOn,
 				Name: secondaryCluster.Name,
 			})
 		}
@@ -303,7 +303,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			if region != nil {
 				pbRegion = &pb.NodeRegion{
 					Id:   int64(region.Id),
-					IsOn: region.IsOn == 1,
+					IsOn: region.IsOn,
 					Name: region.Name,
 				}
 			}
@@ -322,7 +322,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			SecondaryNodeClusters: pbSecondaryClusters,
 			InstallStatus:         installStatusResult,
 			MaxCPU:                types.Int32(node.MaxCPU),
-			IsOn:                  node.IsOn == 1,
+			IsOn:                  node.IsOn,
 			IsUp:                  node.IsUp == 1,
 			NodeGroup:             pbGroup,
 			NodeRegion:            pbRegion,
@@ -369,7 +369,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Contex
 			Secret:              node.Secret,
 			ConnectedAPINodeIds: apiNodeIds,
 			MaxCPU:              types.Int32(node.MaxCPU),
-			IsOn:                node.IsOn == 1,
+			IsOn:                node.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodesWithNodeClusterIdResponse{Nodes: result}, nil
@@ -466,7 +466,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 		secondaryPBClusters = append(secondaryPBClusters, &pb.NodeCluster{
 			Id:   int64(cluster.Id),
-			IsOn: cluster.IsOn == 1,
+			IsOn: cluster.IsOn,
 			Name: cluster.Name,
 		})
 	}
@@ -528,7 +528,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		if region != nil {
 			pbRegion = &pb.NodeRegion{
 				Id:   int64(region.Id),
-				IsOn: region.IsOn == 1,
+				IsOn: region.IsOn,
 				Name: region.Name,
 			}
 		}
@@ -572,7 +572,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		NodeLogin:              respLogin,
 		InstallStatus:          installStatusResult,
 		MaxCPU:                 types.Int32(node.MaxCPU),
-		IsOn:                   node.IsOn == 1,
+		IsOn:                   node.IsOn,
 		IsUp:                   node.IsUp == 1,
 		NodeGroup:              pbGroup,
 		NodeRegion:             pbRegion,
@@ -606,7 +606,7 @@ func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindE
 	return &pb.FindEnabledBasicNodeResponse{Node: &pb.BasicNode{
 		Id:   int64(node.Id),
 		Name: node.Name,
-		IsOn: node.IsOn == 1,
+		IsOn: node.IsOn,
 		IsUp: node.IsUp == 1,
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
@@ -881,7 +881,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context,
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
 			},
-			IsOn: node.IsOn == 1,
+			IsOn: node.IsOn,
 		})
 	}
 
@@ -975,7 +975,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 			Version:       int64(node.Version),
 			IsInstalled:   node.IsInstalled == 1,
 			StatusJSON:    node.Status,
-			IsOn:          node.IsOn == 1,
+			IsOn:          node.IsOn,
 			NodeLogin:     pbLogin,
 			IpAddresses:   pbAddresses,
 			InstallStatus: pbInstallStatus,
@@ -1093,7 +1093,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 				Version:       int64(node.Version),
 				IsInstalled:   node.IsInstalled == 1,
 				StatusJSON:    node.Status,
-				IsOn:          node.IsOn == 1,
+				IsOn:          node.IsOn,
 				IpAddresses:   pbAddresses,
 				NodeLogin:     pbLogin,
 				InstallStatus: pbInstallStatus,
@@ -1451,7 +1451,7 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 		}
 		pbNodes = append(pbNodes, &pb.Node{
 			Id:                  int64(node.Id),
-			IsOn:                node.IsOn == 1,
+			IsOn:                node.IsOn,
 			IsActive:            node.IsActive == 1,
 			ConnectedAPINodeIds: connectedAPINodeIds,
 		})

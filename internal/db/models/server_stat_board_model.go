@@ -5,7 +5,7 @@ type ServerStatBoard struct {
 	Id        uint64 `field:"id"`        // ID
 	Name      string `field:"name"`      // 名称
 	ClusterId uint32 `field:"clusterId"` // 集群ID
-	IsOn      uint8  `field:"isOn"`      // 是否启用
+	IsOn      bool   `field:"isOn"`      // 是否启用
 	Order     uint32 `field:"order"`     // 排序
 	State     uint8  `field:"state"`     // 状态
 }

@@ -5,7 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // User 用户
 type User struct {
 	Id              uint32   `field:"id"`              // ID
-	IsOn            uint8    `field:"isOn"`            // 是否启用
+	IsOn            bool     `field:"isOn"`            // 是否启用
 	Username        string   `field:"username"`        // 用户名
 	Password        string   `field:"password"`        // 密码
 	Fullname        string   `field:"fullname"`        // 真实姓名

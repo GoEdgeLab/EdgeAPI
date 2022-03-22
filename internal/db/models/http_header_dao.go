@@ -236,7 +236,7 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 
 	config := &shared.HTTPHeaderConfig{}
 	config.Id = int64(header.Id)
-	config.IsOn = header.IsOn == 1
+	config.IsOn = header.IsOn
 	config.Name = header.Name
 	config.Value = header.Value
 	config.DisableRedirect = header.DisableRedirect == 1

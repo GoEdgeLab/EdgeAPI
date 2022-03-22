@@ -252,7 +252,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	}
 	config := &serverconfigs.HTTPCachePolicy{}
 	config.Id = int64(policy.Id)
-	config.IsOn = policy.IsOn == 1
+	config.IsOn = policy.IsOn
 	config.Name = policy.Name
 	config.Description = policy.Description
 	config.SyncCompressionCache = policy.SyncCompressionCache == 1

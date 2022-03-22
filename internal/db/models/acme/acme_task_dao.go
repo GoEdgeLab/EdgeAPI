@@ -271,7 +271,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 		errMsg = "找不到要执行的任务"
 		return
 	}
-	if task.IsOn != 1 {
+	if !task.IsOn {
 		errMsg = "任务没有启用"
 		return
 	}
@@ -453,7 +453,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 			return
 		}
 
-		err = models.SharedSSLCertDAO.UpdateCert(tx, resultCertId, cert.IsOn == 1, cert.Name, cert.Description, cert.ServerName, cert.IsCA == 1, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
+		err = models.SharedSSLCertDAO.UpdateCert(tx, resultCertId, cert.IsOn, cert.Name, cert.Description, cert.ServerName, cert.IsCA == 1, certData, keyData, sslConfig.TimeBeginAt, sslConfig.TimeEndAt, sslConfig.DNSNames, sslConfig.CommonNames)
 		if err != nil {
 			errMsg = "证书生成成功，但是修改数据库中的证书信息时出错：" + err.Error()
 			return

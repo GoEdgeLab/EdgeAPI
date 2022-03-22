@@ -86,11 +86,11 @@ func (this *ServerStatBoardChartService) FindAllEnabledServerStatBoardCharts(ctx
 				Type:       metricChart.Type,
 				WidthDiv:   types.Int32(metricChart.WidthDiv),
 				ParamsJSON: nil,
-				IsOn:       metricChart.IsOn == 1,
+				IsOn:       metricChart.IsOn,
 				MaxItems:   types.Int32(metricChart.MaxItems),
 				MetricItem: &pb.MetricItem{
 					Id:         int64(metricItem.Id),
-					IsOn:       metricItem.IsOn == 1,
+					IsOn:       metricItem.IsOn,
 					Code:       metricItem.Code,
 					Category:   metricItem.Category,
 					Name:       metricItem.Name,

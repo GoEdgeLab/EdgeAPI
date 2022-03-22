@@ -100,7 +100,7 @@ func (this *NodeThresholdService) FindAllEnabledNodeThresholds(ctx context.Conte
 			DurationUnit:   threshold.DurationUnit,
 			SumMethod:      threshold.SumMethod,
 			NotifyDuration: int32(threshold.NotifyDuration),
-			IsOn:           threshold.IsOn == 1,
+			IsOn:           threshold.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeThresholdsResponse{NodeThresholds: pbThresholds}, nil
@@ -166,6 +166,6 @@ func (this *NodeThresholdService) FindEnabledNodeThreshold(ctx context.Context, 
 		DurationUnit:   threshold.DurationUnit,
 		SumMethod:      threshold.SumMethod,
 		NotifyDuration: int32(threshold.NotifyDuration),
-		IsOn:           threshold.IsOn == 1,
+		IsOn:           threshold.IsOn,
 	}}, nil
 }

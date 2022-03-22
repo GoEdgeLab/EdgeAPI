@@ -12,7 +12,7 @@ type MetricChart struct {
 	WidthDiv        int32    `field:"widthDiv"`        // 宽度划分
 	Params          dbs.JSON `field:"params"`          // 图形参数
 	Order           uint32   `field:"order"`           // 排序
-	IsOn            uint8    `field:"isOn"`            // 是否启用
+	IsOn            bool     `field:"isOn"`            // 是否启用
 	State           uint8    `field:"state"`           // 状态
 	MaxItems        uint32   `field:"maxItems"`        // 最多条目
 	IgnoreEmptyKeys uint8    `field:"ignoreEmptyKeys"` // 忽略空的键值

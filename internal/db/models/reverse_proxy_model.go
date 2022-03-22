@@ -8,7 +8,7 @@ type ReverseProxy struct {
 	AdminId         uint32   `field:"adminId"`         // 管理员ID
 	UserId          uint32   `field:"userId"`          // 用户ID
 	TemplateId      uint32   `field:"templateId"`      // 模版ID
-	IsOn            uint8    `field:"isOn"`            // 是否启用
+	IsOn            bool     `field:"isOn"`            // 是否启用
 	Scheduling      dbs.JSON `field:"scheduling"`      // 调度算法
 	PrimaryOrigins  dbs.JSON `field:"primaryOrigins"`  // 主要源站
 	BackupOrigins   dbs.JSON `field:"backupOrigins"`   // 备用源站

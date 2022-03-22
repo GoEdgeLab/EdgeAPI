@@ -3,7 +3,7 @@ package models
 // NodePriceItem 区域计费设置
 type NodePriceItem struct {
 	Id        uint32 `field:"id"`        // ID
-	IsOn      uint8  `field:"isOn"`      // 是否启用
+	IsOn      bool  `field:"isOn"`      // 是否启用
 	Type      string `field:"type"`      // 类型：峰值|流量
 	Name      string `field:"name"`      // 名称
 	BitsFrom  uint64 `field:"bitsFrom"`  // 起始值

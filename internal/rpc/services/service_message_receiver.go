@@ -113,14 +113,14 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 					Id:       int64(admin.Id),
 					Fullname: admin.Fullname,
 					Username: admin.Username,
-					IsOn:     admin.IsOn == 1,
+					IsOn:     admin.IsOn,
 				},
 				MessageMediaInstance: &pb.MessageMediaInstance{
 					Id:   int64(instance.Id),
 					Name: instance.Name,
-					IsOn: instance.IsOn == 1,
+					IsOn: instance.IsOn,
 				},
-				IsOn:                   recipient.IsOn == 1,
+				IsOn:                   recipient.IsOn,
 				MessageRecipientGroups: nil,
 				Description:            "",
 				User:                   "",
@@ -140,7 +140,7 @@ func (this *MessageReceiverService) FindAllEnabledMessageReceivers(ctx context.C
 			pbRecipientGroup = &pb.MessageRecipientGroup{
 				Id:   int64(group.Id),
 				Name: group.Name,
-				IsOn: group.IsOn == 1,
+				IsOn: group.IsOn,
 			}
 		}
 

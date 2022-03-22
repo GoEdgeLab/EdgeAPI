@@ -7,7 +7,7 @@ type NodeCluster struct {
 	Id                    uint32   `field:"id"`                    // ID
 	AdminId               uint32   `field:"adminId"`               // 管理员ID
 	UserId                uint32   `field:"userId"`                // 用户ID
-	IsOn                  uint8    `field:"isOn"`                  // 是否启用
+	IsOn                  bool     `field:"isOn"`                  // 是否启用
 	Name                  string   `field:"name"`                  // 名称
 	UseAllAPINodes        uint8    `field:"useAllAPINodes"`        // 是否使用所有API节点
 	ApiNodes              dbs.JSON `field:"apiNodes"`              // 使用的API节点

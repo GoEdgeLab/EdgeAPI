@@ -51,7 +51,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 			if err != nil {
 				return nil, err
 			}
-			if recipient == nil || recipient.IsOn == 0 {
+			if recipient == nil || !recipient.IsOn {
 				// 如果发送人已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {
@@ -65,7 +65,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 			if err != nil {
 				return nil, err
 			}
-			if instance == nil || instance.IsOn == 0 {
+			if instance == nil || !instance.IsOn {
 				// 如果媒介实例已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {
@@ -92,7 +92,7 @@ func (this *MessageTaskService) FindSendingMessageTasks(ctx context.Context, req
 			if err != nil {
 				return nil, err
 			}
-			if instance == nil || instance.IsOn == 0 {
+			if instance == nil || !instance.IsOn {
 				// 如果媒介实例已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {
@@ -202,7 +202,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		if err != nil {
 			return nil, err
 		}
-		if recipient == nil || recipient.IsOn == 0 {
+		if recipient == nil || !recipient.IsOn {
 			// 如果发送人已经删除或者禁用，则删除此消息
 			err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 			if err != nil {
@@ -216,7 +216,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		if err != nil {
 			return nil, err
 		}
-		if instance == nil || instance.IsOn == 0 {
+		if instance == nil || !instance.IsOn {
 			// 如果媒介实例已经删除或者禁用，则删除此消息
 			err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 			if err != nil {
@@ -241,7 +241,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 		if err != nil {
 			return nil, err
 		}
-		if instance == nil || instance.IsOn == 0 {
+		if instance == nil || !instance.IsOn {
 			// 如果媒介实例已经删除或者禁用，则删除此消息
 			err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 			if err != nil {
@@ -320,7 +320,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 			if err != nil {
 				return nil, err
 			}
-			if recipient == nil || recipient.IsOn == 0 {
+			if recipient == nil || !recipient.IsOn {
 				// 如果发送人已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {
@@ -334,7 +334,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 			if err != nil {
 				return nil, err
 			}
-			if instance == nil || instance.IsOn == 0 {
+			if instance == nil || !instance.IsOn {
 				// 如果媒介实例已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {
@@ -362,7 +362,7 @@ func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, 
 			if err != nil {
 				return nil, err
 			}
-			if instance == nil || instance.IsOn == 0 {
+			if instance == nil || !instance.IsOn {
 				// 如果媒介实例已经删除或者禁用，则删除此消息
 				err = models.SharedMessageTaskDAO.DisableMessageTask(tx, int64(task.Id))
 				if err != nil {

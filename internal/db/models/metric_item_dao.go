@@ -194,7 +194,7 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	}
 
 	// 通知更新
-	if versionChanged || (oldItem.IsOn == 0 && isOn) || (oldItem.IsOn == 1 && !isOn) || oldIsPublic != isPublic {
+	if versionChanged || (!oldItem.IsOn && isOn) || (oldItem.IsOn && !isOn) || oldIsPublic != isPublic {
 		err := this.NotifyUpdate(tx, itemId, isPublic || oldIsPublic)
 		if err != nil {
 			return err
@@ -283,7 +283,7 @@ func (this *MetricItemDAO) ComposeItemConfig(tx *dbs.Tx, itemId int64) (*serverc
 	var item = one.(*MetricItem)
 	var config = &serverconfigs.MetricItemConfig{
 		Id:         int64(item.Id),
-		IsOn:       item.IsOn == 1,
+		IsOn:       item.IsOn,
 		Period:     types.Int(item.Period),
 		PeriodUnit: item.PeriodUnit,
 		Category:   item.Category,
@@ -302,7 +302,7 @@ func (this *MetricItemDAO) ComposeItemConfigWithItem(item *MetricItem) *serverco
 	}
 	var config = &serverconfigs.MetricItemConfig{
 		Id:         int64(item.Id),
-		IsOn:       item.IsOn == 1,
+		IsOn:       item.IsOn,
 		Period:     types.Int(item.Period),
 		PeriodUnit: item.PeriodUnit,
 		Category:   item.Category,

@@ -76,7 +76,7 @@ func (this *NSKeyService) FindEnabledNSKey(ctx context.Context, req *pb.FindEnab
 	return &pb.FindEnabledNSKeyResponse{
 		NsKey: &pb.NSKey{
 			Id:         int64(key.Id),
-			IsOn:       key.IsOn == 1,
+			IsOn:       key.IsOn,
 			Name:       key.Name,
 			Algo:       key.Algo,
 			Secret:     key.Secret,
@@ -116,7 +116,7 @@ func (this *NSKeyService) ListEnabledNSKeys(ctx context.Context, req *pb.ListEna
 	for _, key := range keys {
 		pbKeys = append(pbKeys, &pb.NSKey{
 			Id:         int64(key.Id),
-			IsOn:       key.IsOn == 1,
+			IsOn:       key.IsOn,
 			Name:       key.Name,
 			Algo:       key.Algo,
 			Secret:     key.Secret,
@@ -155,7 +155,7 @@ func (this *NSKeyService) ListNSKeysAfterVersion(ctx context.Context, req *pb.Li
 
 		pbKeys = append(pbKeys, &pb.NSKey{
 			Id:         int64(key.Id),
-			IsOn:       key.IsOn == 1,
+			IsOn:       key.IsOn,
 			Name:       "",
 			Algo:       key.Algo,
 			Secret:     key.Secret,

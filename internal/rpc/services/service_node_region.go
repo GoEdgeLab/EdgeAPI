@@ -76,7 +76,7 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
 			Id:          int64(region.Id),
-			IsOn:        region.IsOn == 1,
+			IsOn:        region.IsOn,
 			Name:        region.Name,
 			Description: region.Description,
 			PricesJSON:  region.Prices,
@@ -102,7 +102,7 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
 			Id:          int64(region.Id),
-			IsOn:        region.IsOn == 1,
+			IsOn:        region.IsOn,
 			Name:        region.Name,
 			Description: region.Description,
 			PricesJSON:  region.Prices,
@@ -145,7 +145,7 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 	}
 	return &pb.FindEnabledNodeRegionResponse{NodeRegion: &pb.NodeRegion{
 		Id:          int64(region.Id),
-		IsOn:        region.IsOn == 1,
+		IsOn:        region.IsOn,
 		Name:        region.Name,
 		Description: region.Description,
 		PricesJSON:  region.Prices,

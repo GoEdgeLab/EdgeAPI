@@ -26,7 +26,7 @@ var DefaultGlobalIPList = &IPList{
 	IsGlobal: 1,
 	Type:     "black",
 	State:    IPListStateEnabled,
-	IsOn:     1,
+	IsOn:     true,
 }
 
 type IPListDAO dbs.DAO

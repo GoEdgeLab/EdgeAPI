@@ -94,7 +94,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 	}
 	config := &firewallconfigs.HTTPFirewallRuleSet{}
 	config.Id = int64(set.Id)
-	config.IsOn = set.IsOn == 1
+	config.IsOn = set.IsOn
 	config.Name = set.Name
 	config.Description = set.Description
 	config.Code = set.Code

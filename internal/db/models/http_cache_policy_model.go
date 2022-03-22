@@ -8,7 +8,7 @@ type HTTPCachePolicy struct {
 	AdminId              uint32   `field:"adminId"`              // 管理员ID
 	UserId               uint32   `field:"userId"`               // 用户ID
 	TemplateId           uint32   `field:"templateId"`           // 模版ID
-	IsOn                 uint8    `field:"isOn"`                 // 是否启用
+	IsOn                 bool     `field:"isOn"`                 // 是否启用
 	Name                 string   `field:"name"`                 // 名称
 	Capacity             dbs.JSON `field:"capacity"`             // 容量数据
 	MaxKeys              uint64   `field:"maxKeys"`              // 最多Key值

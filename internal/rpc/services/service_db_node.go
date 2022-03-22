@@ -104,7 +104,7 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 		status := &pb.DBNodeStatus{}
 
 		// 是否能够连接
-		if node.IsOn == 1 {
+		if node.IsOn {
 			db, err := dbs.NewInstanceFromConfig(node.DBConfig())
 			if err != nil {
 				status.Error = err.Error()
@@ -132,7 +132,7 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 			Id:          int64(node.Id),
 			Name:        node.Name,
 			Description: node.Description,
-			IsOn:        node.IsOn == 1,
+			IsOn:        node.IsOn,
 			Host:        node.Host,
 			Port:        types.Int32(node.Port),
 			Database:    node.Database,
@@ -166,7 +166,7 @@ func (this *DBNodeService) FindEnabledDBNode(ctx context.Context, req *pb.FindEn
 		Id:          int64(node.Id),
 		Name:        node.Name,
 		Description: node.Description,
-		IsOn:        node.IsOn == 1,
+		IsOn:        node.IsOn,
 		Host:        node.Host,
 		Port:        types.Int32(node.Port),
 		Database:    node.Database,
@@ -318,7 +318,7 @@ func (this *DBNodeService) CheckDBNodeStatus(ctx context.Context, req *pb.CheckD
 	status := &pb.DBNodeStatus{}
 
 	// 是否能够连接
-	if node.IsOn == 1 {
+	if node.IsOn {
 		db, err := dbs.NewInstanceFromConfig(node.DBConfig())
 		if err != nil {
 			status.Error = err.Error()

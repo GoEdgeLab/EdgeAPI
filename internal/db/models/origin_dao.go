@@ -292,7 +292,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 
 	var config = &serverconfigs.OriginConfig{
 		Id:           int64(origin.Id),
-		IsOn:         origin.IsOn == 1,
+		IsOn:         origin.IsOn,
 		Version:      int(origin.Version),
 		Name:         origin.Name,
 		Description:  origin.Description,

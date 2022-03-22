@@ -170,7 +170,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 
 	config := &serverconfigs.HTTPLocationConfig{}
 	config.Id = int64(location.Id)
-	config.IsOn = location.IsOn == 1
+	config.IsOn = location.IsOn
 	config.Description = location.Description
 	config.Name = location.Name
 	config.Pattern = location.Pattern

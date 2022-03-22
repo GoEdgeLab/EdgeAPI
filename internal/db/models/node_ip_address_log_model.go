@@ -8,7 +8,7 @@ type NodeIPAddressLog struct {
 	Description string `field:"description"` // 描述
 	CreatedAt   uint64 `field:"createdAt"`   // 操作时间
 	IsUp        uint8  `field:"isUp"`        // 是否在线
-	IsOn        uint8  `field:"isOn"`        // 是否启用
+	IsOn        bool   `field:"isOn"`        // 是否启用
 	CanAccess   uint8  `field:"canAccess"`   // 是否可访问
 	Day         string `field:"day"`         // YYYYMMDD，用来清理
 	BackupIP    string `field:"backupIP"`    // 备用IP

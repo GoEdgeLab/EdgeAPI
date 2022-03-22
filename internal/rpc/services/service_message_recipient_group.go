@@ -60,7 +60,7 @@ func (this *MessageRecipientGroupService) FindAllEnabledMessageRecipientGroups(c
 		pbGroups = append(pbGroups, &pb.MessageRecipientGroup{
 			Id:   int64(group.Id),
 			Name: group.Name,
-			IsOn: group.IsOn == 1,
+			IsOn: group.IsOn,
 		})
 	}
 
@@ -99,7 +99,7 @@ func (this *MessageRecipientGroupService) FindEnabledMessageRecipientGroup(ctx c
 	}
 	pbGroup := &pb.MessageRecipientGroup{
 		Id:   int64(group.Id),
-		IsOn: group.IsOn == 1,
+		IsOn: group.IsOn,
 		Name: group.Name,
 	}
 	return &pb.FindEnabledMessageRecipientGroupResponse{MessageRecipientGroup: pbGroup}, nil

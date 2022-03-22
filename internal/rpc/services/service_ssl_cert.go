@@ -214,7 +214,7 @@ func (this *SSLCertService) ListSSLCertsWithOCSPError(ctx context.Context, req *
 	for _, cert := range certs {
 		pbCerts = append(pbCerts, &pb.SSLCert{
 			Id:            int64(cert.Id),
-			IsOn:          cert.IsOn == 1,
+			IsOn:          cert.IsOn,
 			Name:          cert.Name,
 			TimeBeginAt:   types.Int64(cert.TimeBeginAt),
 			TimeEndAt:     types.Int64(cert.TimeEndAt),
