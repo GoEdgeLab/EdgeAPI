@@ -59,7 +59,15 @@ func (this *HTTPAccessLogManager) FindTableNames(db *dbs.DB, day string) ([]stri
 	}
 
 	// 排序
-	sort.Strings(results)
+	// 这里不能直接使用sort.Strings()，因为表名里面可能大小写混合
+	sort.Slice(results, func(i, j int) bool {
+		var name1 = results[i]
+		var name2 = results[j]
+		if len(name1) < len(name2) {
+			return true
+		}
+		return strings.ToLower(name1) < strings.ToLower(name2)
+	})
 
 	return results, nil
 }
@@ -132,7 +140,8 @@ func (this *HTTPAccessLogManager) FindTable(db *dbs.DB, day string, force bool) 
 	if err != nil {
 		return nil, err
 	}
-	var cacheKey = config.Dsn
+	var cachePrefix = config.Dsn
+	var cacheKey = this.composeTableCacheKey(cachePrefix, day)
 	def, ok := this.currentTableMapping[cacheKey]
 	if ok {
 		return def, nil
@@ -146,6 +155,18 @@ func (this *HTTPAccessLogManager) FindTable(db *dbs.DB, day string, force bool) 
 	// 只有存在的表格才缓存
 	if def != nil && def.Exists {
 		this.currentTableMapping[cacheKey] = def
+
+		// 清除过时缓存
+		for oldCacheKey := range this.currentTableMapping {
+			var dayIndex = strings.LastIndex(oldCacheKey, "_")
+			if dayIndex > 0 {
+				var oldPrefix = oldCacheKey[:dayIndex]
+				var oldDay = oldCacheKey[dayIndex+1:]
+				if oldPrefix == cachePrefix && oldDay < day {
+					delete(this.currentTableMapping, oldCacheKey)
+				}
+			}
+		}
 	}
 	return def, nil
 }
@@ -173,7 +194,7 @@ func (this *HTTPAccessLogManager) ResetTable(db *dbs.DB, day string) {
 	if err != nil {
 		return
 	}
-	delete(this.currentTableMapping, config.Dsn)
+	delete(this.currentTableMapping, this.composeTableCacheKey(config.Dsn, day))
 }
 
 // 查找某个表格
@@ -289,4 +310,10 @@ func (this *HTTPAccessLogManager) checkTableFields(db *dbs.DB, tableName string)
 		}
 	}
 	return
+}
+
+// 组合表格的缓存Key
+func (this *HTTPAccessLogManager) composeTableCacheKey(dsn string, day string) string {
+	// 注意：格式一定要固定，下面清除缓存的时候需要用到
+	return dsn + "_" + day
 }

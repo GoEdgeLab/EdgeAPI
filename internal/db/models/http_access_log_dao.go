@@ -180,7 +180,7 @@ Loop:
 
 // CreateHTTPAccessLog 写入单条访问日志
 func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLogDAO, accessLog *pb.HTTPAccessLog) error {
-	var day = timeutil.Format("Ymd", time.Unix(accessLog.Timestamp, 0))
+	var day = timeutil.FormatTime("Ymd", accessLog.Timestamp)
 	tableDef, err := SharedHTTPAccessLogManager.FindTable(dao.Instance, day, true)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 		}
 	}
 
-	if accessLogEnableAutoPartial && accessLogRowsPerTable > 0 && lastId%accessLogRowsPerTable == 0 {
+	if accessLogEnableAutoPartial && accessLogRowsPerTable > 0 && lastId >= accessLogRowsPerTable {
 		SharedHTTPAccessLogManager.ResetTable(dao.Instance, day)
 	}
 
