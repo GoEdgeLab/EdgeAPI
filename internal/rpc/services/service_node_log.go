@@ -41,7 +41,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, req.OriginId, req.DayFrom, req.DayTo, req.Keyword, req.Level, req.IsUnread, req.Tag)
+	count, err := models.SharedNodeLogDAO.CountNodeLogs(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, req.OriginId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.IsUnread, req.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +62,9 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 		return nil, err
 	}
 
-	hashList := []string{}
+	var hashList = []string{}
 
-	result := []*pb.NodeLog{}
+	var result = []*pb.NodeLog{}
 	for _, log := range logs {
 		// 如果是需要修复的日志，我们需要去重
 		if req.FixedState > 0 {
@@ -104,6 +104,22 @@ func (this *NodeLogService) FixNodeLogs(ctx context.Context, req *pb.FixNodeLogs
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return this.Success()
+}
+
+// FixAllNodeLogs 设置所有日志为已修复
+func (this *NodeLogService) FixAllNodeLogs(ctx context.Context, req *pb.FixAllNodeLogsRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeLogDAO.UpdateAllNodeLogsFixed(tx)
+	if err != nil {
+		return nil, err
 	}
 
 	return this.Success()

@@ -59,7 +59,7 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 		}
 	}
 
-	hash := stringutil.Md5(nodeRole + "@" + types.String(nodeId) + "@" + types.String(serverId) + "@" + types.String(originId) + "@" + level + "@" + tag + "@" + description + "@" + string(paramsJSON))
+	var hash = stringutil.Md5(nodeRole + "@" + types.String(nodeId) + "@" + types.String(serverId) + "@" + types.String(originId) + "@" + level + "@" + tag + "@" + description + "@" + string(paramsJSON))
 
 	// 检查是否在重复最后一条，避免重复创建
 	lastLog, err := this.Query(tx).
@@ -80,7 +80,7 @@ func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nod
 		}
 	}
 
-	op := NewNodeLogOperator()
+	var op = NewNodeLogOperator()
 	op.Role = nodeRole
 	op.NodeId = nodeId
 	op.ServerId = serverId
@@ -139,13 +139,15 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	nodeId int64,
 	serverId int64,
 	originId int64,
+	allServers bool,
 	dayFrom string,
 	dayTo string,
 	keyword string,
 	level string,
+	fixedState configutils.BoolState,
 	isUnread bool,
 	tag string) (int64, error) {
-	query := this.Query(tx)
+	var query = this.Query(tx)
 	if len(role) > 0 {
 		query.Attr("role", role)
 	}
@@ -166,6 +168,8 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	}
 	if serverId > 0 {
 		query.Attr("serverId", serverId)
+	} else if allServers {
+		query.Where("serverId>0")
 	}
 	if originId > 0 {
 		query.Attr("originId", originId)
@@ -184,6 +188,13 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	}
 	if len(level) > 0 {
 		query.Attr("level", level)
+	}
+	if fixedState == configutils.BoolStateYes {
+		query.Attr("isFixed", 1)
+		query.Where("level IN ('error', 'success', 'warning')")
+	} else if fixedState == configutils.BoolStateNo {
+		query.Attr("isFixed", 0)
+		query.Where("level IN ('error', 'success', 'warning')")
 	}
 	if isUnread {
 		query.Attr("isRead", 0)
@@ -212,7 +223,7 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	tag string,
 	offset int64,
 	size int64) (result []*NodeLog, err error) {
-	query := this.Query(tx)
+	var query = this.Query(tx)
 	if len(role) > 0 {
 		query.Attr("role", role)
 	}
@@ -241,8 +252,10 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	}
 	if fixedState == configutils.BoolStateYes {
 		query.Attr("isFixed", 1)
+		query.Where("level IN ('error', 'success', 'warning')")
 	} else if fixedState == configutils.BoolStateNo {
 		query.Attr("isFixed", 0)
+		query.Where("level IN ('error', 'success', 'warning')")
 	}
 	if len(dayFrom) > 0 {
 		dayFrom = strings.ReplaceAll(dayFrom, "-", "")
@@ -308,6 +321,14 @@ func (this *NodeLogDAO) UpdateNodeLogFixed(tx *dbs.Tx, logId int64) error {
 	}
 
 	return nil
+}
+
+// UpdateAllNodeLogsFixed 设置所有节点日志为已修复
+func (this *NodeLogDAO) UpdateAllNodeLogsFixed(tx *dbs.Tx) error {
+	return this.Query(tx).
+		Attr("isFixed", 0).
+		Set("isFixed", 1).
+		UpdateQuickly()
 }
 
 // CountAllUnreadNodeLogs 计算未读的日志数量
