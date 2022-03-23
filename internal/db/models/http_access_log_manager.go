@@ -5,7 +5,6 @@ package models
 import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
@@ -144,7 +143,10 @@ func (this *HTTPAccessLogManager) FindTable(db *dbs.DB, day string, force bool) 
 		return nil, err
 	}
 
-	this.currentTableMapping[cacheKey] = def
+	// 只有存在的表格才缓存
+	if def != nil && def.Exists {
+		this.currentTableMapping[cacheKey] = def
+	}
 	return def, nil
 }
 
@@ -152,14 +154,7 @@ func (this *HTTPAccessLogManager) FindTable(db *dbs.DB, day string, force bool) 
 func (this *HTTPAccessLogManager) CreateTable(db *dbs.DB, tableName string) error {
 	_, err := db.Exec("CREATE TABLE `" + tableName + "` (\n  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',\n  `serverId` int(11) unsigned DEFAULT '0' COMMENT '服务ID',\n  `nodeId` int(11) unsigned DEFAULT '0' COMMENT '节点ID',\n  `status` int(3) unsigned DEFAULT '0' COMMENT '状态码',\n  `createdAt` bigint(11) unsigned DEFAULT '0' COMMENT '创建时间',\n  `content` json DEFAULT NULL COMMENT '日志内容',\n  `requestId` varchar(128) DEFAULT NULL COMMENT '请求ID',\n  `firewallPolicyId` int(11) unsigned DEFAULT '0' COMMENT 'WAF策略ID',\n  `firewallRuleGroupId` int(11) unsigned DEFAULT '0' COMMENT 'WAF分组ID',\n  `firewallRuleSetId` int(11) unsigned DEFAULT '0' COMMENT 'WAF集ID',\n  `firewallRuleId` int(11) unsigned DEFAULT '0' COMMENT 'WAF规则ID',\n  `remoteAddr` varchar(64) DEFAULT NULL COMMENT 'IP地址',\n  `domain` varchar(128) DEFAULT NULL COMMENT '域名',\n  `requestBody` mediumblob COMMENT '请求内容',\n  `responseBody` mediumblob COMMENT '响应内容',\n  PRIMARY KEY (`id`),\n  KEY `serverId` (`serverId`),\n  KEY `nodeId` (`nodeId`),\n  KEY `serverId_status` (`serverId`,`status`),\n  KEY `requestId` (`requestId`),\n  KEY `firewallPolicyId` (`firewallPolicyId`),\n  KEY `firewallRuleGroupId` (`firewallRuleGroupId`),\n  KEY `firewallRuleSetId` (`firewallRuleSetId`),\n  KEY `firewallRuleId` (`firewallRuleId`),\n  KEY `remoteAddr` (`remoteAddr`),\n  KEY `domain` (`domain`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='访问日志';")
 	if err != nil {
-		// 快速判断错误方法
-		mysqlErr, ok := err.(*mysql.MySQLError)
-		if ok && mysqlErr.Number == 1050 { // Error 1050: Table 'xxx' already exists
-			return nil
-		}
-
-		// 防止二次包装过程中错误丢失的保底错误判断方法
-		if strings.Contains(err.Error(), "Error 1050") {
+		if CheckSQLErrCode(err, 1050) { // Error 1050: Table 'xxx' already exists
 			return nil
 		}
 

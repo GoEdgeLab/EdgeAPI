@@ -221,7 +221,23 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 		Sets(fields).
 		Insert()
 	if err != nil {
-		return err
+		// 错误重试
+		if CheckSQLErrCode(err, 1146) { // Error 1146: Table 'xxx' doesn't exist
+			err = SharedHTTPAccessLogManager.CreateTable(dao.Instance, tableDef.Name)
+			if err != nil {
+				return err
+			}
+
+			// 重新尝试
+			lastId, err = dao.Query(tx).
+				Table(tableDef.Name).
+				Sets(fields).
+				Insert()
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if accessLogEnableAutoPartial && accessLogRowsPerTable > 0 && lastId%accessLogRowsPerTable == 0 {

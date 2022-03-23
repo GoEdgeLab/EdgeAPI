@@ -1,7 +1,10 @@
 package models
 
 import (
+	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
+	"strings"
 	"sync"
 )
 
@@ -37,4 +40,24 @@ func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.
 		query.Attr("userId", userId)
 	}
 	return query
+}
+
+// CheckSQLErrCode 检查数据库错误代码
+func CheckSQLErrCode(err error, code uint16) bool {
+	if err == nil {
+		return false
+	}
+
+	// 快速判断错误方法
+	mysqlErr, ok := err.(*mysql.MySQLError)
+	if ok && mysqlErr.Number == code { // Error 1050: Table 'xxx' already exists
+		return true
+	}
+
+	// 防止二次包装过程中错误丢失的保底错误判断方法
+	if strings.Contains(err.Error(), "Error "+types.String(code)) {
+		return true
+	}
+
+	return false
 }
