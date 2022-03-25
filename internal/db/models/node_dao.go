@@ -955,6 +955,12 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 	config.OCSPVersion = ocspVersion
 
+	// 初始化扩展配置
+	err = this.composeExtConfig(tx, config, cacheMap)
+	if err != nil {
+		return nil, err
+	}
+
 	return config, nil
 }
 
