@@ -94,7 +94,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		return nil, nil
 	}
 
-	config := &serverconfigs.HTTPWebConfig{}
+	var config = &serverconfigs.HTTPWebConfig{}
 	config.Id = webId
 	config.IsOn = web.IsOn
 
