@@ -1,6 +1,7 @@
 package models
 
 import (
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -72,7 +73,7 @@ func (this *LogDAO) CountLogs(tx *dbs.Tx, dayFrom string, dayTo string, keyword 
 	}
 	if len(keyword) > 0 {
 		query.Where("(description LIKE :keyword OR ip LIKE :keyword OR action LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 
 	// 用户类型
@@ -100,7 +101,7 @@ func (this *LogDAO) ListLogs(tx *dbs.Tx, offset int64, size int64, dayFrom strin
 	}
 	if len(keyword) > 0 {
 		query.Where("(description LIKE :keyword OR ip LIKE :keyword OR action LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 
 	// 用户类型

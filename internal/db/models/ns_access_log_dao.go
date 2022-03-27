@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
@@ -198,7 +199,7 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 			// keyword
 			if len(keyword) > 0 {
 				query.Where("(JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.questionName') LIKE :keyword OR JSON_EXTRACT(content, '$.recordValue') LIKE :keyword)").
-					Param("keyword", "%"+keyword+"%")
+					Param("keyword", dbutils.QuoteLike(keyword))
 			}
 
 			if !reverse {

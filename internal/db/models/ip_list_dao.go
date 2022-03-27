@@ -1,6 +1,7 @@
 package models
 
 import (
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -221,7 +222,7 @@ func (this *IPListDAO) CountAllEnabledIPLists(tx *dbs.Tx, listType string, isPub
 		Attr("isPublic", isPublic)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	return query.Count()
 }
@@ -234,7 +235,7 @@ func (this *IPListDAO) ListEnabledIPLists(tx *dbs.Tx, listType string, isPublic 
 		Attr("isPublic", isPublic)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.Offset(offset).
 		Limit(size).

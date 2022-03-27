@@ -125,11 +125,11 @@ func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, use
 
 	if len(keyword) > 0 {
 		query.Where("(domains LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(keyword) > 0 {
 		query.Where("domains LIKE :keyword").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 
 	return query.State(ACMETaskStateEnabled).
@@ -155,7 +155,7 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId 
 	}
 	if len(keyword) > 0 {
 		query.Where("(domains LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.
 		State(ACMETaskStateEnabled).

@@ -111,7 +111,7 @@ func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int6
 	var query = dbutils.NewQuery(tx, this, adminId, userId)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	return query.State(DNSProviderStateEnabled).
 		Count()
@@ -122,7 +122,7 @@ func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, u
 	var query = dbutils.NewQuery(tx, this, adminId, userId)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.
 		State(DNSProviderStateEnabled).

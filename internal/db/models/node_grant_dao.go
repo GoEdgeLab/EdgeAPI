@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -129,7 +130,7 @@ func (this *NodeGrantDAO) CountAllEnabledGrants(tx *dbs.Tx, keyword string) (int
 		State(NodeGrantStateEnabled)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR username LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	return query.Count()
 }
@@ -140,7 +141,7 @@ func (this *NodeGrantDAO) ListEnabledGrants(tx *dbs.Tx, keyword string, offset i
 		State(NodeGrantStateEnabled)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR username LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.
 		Offset(offset).

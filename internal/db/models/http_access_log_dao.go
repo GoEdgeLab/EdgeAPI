@@ -3,6 +3,7 @@ package models
 import (
 	"bytes"
 	"encoding/json"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -22,6 +23,7 @@ import (
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
@@ -309,7 +311,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 		return nil, lastRequestId, nil
 	}
 
-	serverIds := []int64{}
+	var serverIds = []int64{}
 	if userId > 0 {
 		serverIds, err = SharedServerDAO.FindAllEnabledServerIdsWithUserId(tx, userId)
 		if err != nil {
@@ -369,6 +371,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 	var statusPrefixReg = regexp.MustCompile(`status:\s*(\d{3})\b`)
 	var statusRangeReg = regexp.MustCompile(`status:\s*(\d{3})-(\d{3})\b`)
+	var urlReg = regexp.MustCompile(`^(http|https)://`)
 
 	var count = len(tableQueries)
 	var wg = &sync.WaitGroup{}
@@ -462,10 +465,13 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 			}
 
 			if len(keyword) > 0 {
-				// remoteAddr
-				if tableQuery.hasRemoteAddrField && net.ParseIP(keyword) != nil {
+				var isSpecialKeyword = false
+
+				if tableQuery.hasRemoteAddrField && net.ParseIP(keyword) != nil { // ip
+					isSpecialKeyword = true
 					query.Attr("remoteAddr", keyword)
-				} else if tableQuery.hasRemoteAddrField && regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
+				} else if tableQuery.hasRemoteAddrField && regexp.MustCompile(`^ip:.+`).MatchString(keyword) { // ip:x.x.x.x
+					isSpecialKeyword = true
 					keyword = keyword[3:]
 					pieces := strings.SplitN(keyword, ",", 2)
 					if len(pieces) == 1 || len(pieces[1]) == 0 {
@@ -473,16 +479,27 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					} else {
 						query.Between("INET_ATON(remoteAddr)", utils.IP2Long(pieces[0]), utils.IP2Long(pieces[1]))
 					}
-				} else if statusRangeReg.MatchString(keyword) {
+				} else if statusRangeReg.MatchString(keyword) { // status:200-400
+					isSpecialKeyword = true
 					var matches = statusRangeReg.FindStringSubmatch(keyword)
 					query.Between("status", types.Int(matches[1]), types.Int(matches[2]))
 
 					// TODO 处理剩余的关键词
-				} else if statusPrefixReg.MatchString(keyword) {
+				} else if statusPrefixReg.MatchString(keyword) { // status:200
+					isSpecialKeyword = true
 					var matches = statusPrefixReg.FindStringSubmatch(keyword)
 					query.Attr("status", matches[1])
 					// TODO 处理剩余的关键词
-				} else {
+				} else if urlReg.MatchString(keyword) { // https://xxx/yyy
+					u, err := url.Parse(keyword)
+					if err == nil {
+						isSpecialKeyword = true
+						query.Attr("domain", u.Host)
+						query.Where("JSON_EXTRACT(content, '$.requestURI') LIKE :keyword").
+							Param("keyword", dbutils.QuoteLikePrefix("\""+u.RequestURI()))
+					}
+				}
+				if !isSpecialKeyword {
 					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
 						keyword = keyword[3:]
 					}
@@ -530,7 +547,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					}
 
 					query.Where("("+where+")").
-						Param("keyword", "%"+keyword+"%")
+						Param("keyword", dbutils.QuoteLike(keyword))
 					if useOriginKeyword {
 						query.Param("originKeyword", keyword)
 					}

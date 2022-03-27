@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -222,7 +223,7 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword s
 	}
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if isVerifying {
 		query.Attr("isVerified", 0)
@@ -247,7 +248,7 @@ func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword strin
 	}
 	if len(keyword) > 0 {
 		query.Where("(username LIKE :keyword OR fullname LIKE :keyword OR mobile LIKE :keyword OR email LIKE :keyword OR tel LIKE :keyword OR remark LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if isVerifying {
 		query.Attr("isVerified", 0)

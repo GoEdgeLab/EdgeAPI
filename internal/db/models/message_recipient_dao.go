@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
@@ -172,7 +173,7 @@ func (this *MessageRecipientDAO) CountAllEnabledRecipients(tx *dbs.Tx, adminId i
 	}
 	if len(keyword) > 0 {
 		query.Where("(`user` LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	return query.
 		State(MessageRecipientStateEnabled).
@@ -197,7 +198,7 @@ func (this *MessageRecipientDAO) ListAllEnabledRecipients(tx *dbs.Tx, adminId in
 	}
 	if len(keyword) > 0 {
 		query.Where("(`user` LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.
 		State(MessageRecipientStateEnabled).

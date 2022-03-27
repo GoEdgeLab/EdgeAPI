@@ -3,6 +3,7 @@ package nameservers
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -177,7 +178,7 @@ func (this *NSRecordDAO) CountAllEnabledDomainRecords(tx *dbs.Tx, domainId int64
 	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(routeCode) > 0 {
 		routeCodeJSON, err := json.Marshal(routeCode)
@@ -207,7 +208,7 @@ func (this *NSRecordDAO) ListEnabledRecords(tx *dbs.Tx, domainId int64, dnsType 
 	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR value LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(routeCode) > 0 {
 		routeCodeJSON, err := json.Marshal(routeCode)

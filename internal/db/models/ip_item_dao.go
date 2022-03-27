@@ -1,6 +1,7 @@
 package models
 
 import (
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -270,7 +271,7 @@ func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, ipFrom s
 		Attr("listId", listId)
 	if len(keyword) > 0 {
 		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(ipFrom) > 0 {
 		query.Attr("ipFrom", ipFrom)
@@ -288,7 +289,7 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword s
 		Attr("listId", listId)
 	if len(keyword) > 0 {
 		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(ipFrom) > 0 {
 		query.Attr("ipFrom", ipFrom)

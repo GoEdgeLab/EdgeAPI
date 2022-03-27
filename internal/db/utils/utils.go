@@ -2,23 +2,11 @@ package dbutils
 
 import (
 	"github.com/iwind/TeaGo/dbs"
+	"strings"
 	"sync"
 )
 
 var SharedCacheLocker = sync.RWMutex{}
-
-// JSONBytes 处理JSON字节Slice
-func JSONBytes(data []byte) []byte {
-	if len(data) == 0 {
-		return []byte("null")
-	}
-	return data
-}
-
-// IsNotNull 判断JSON是否不为空
-func IsNotNull(data string) bool {
-	return len(data) > 0 && data != "null"
-}
 
 // NewQuery 构造Query
 func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {
@@ -30,4 +18,23 @@ func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.
 		query.Attr("userId", userId)
 	}
 	return query
+}
+
+// QuoteLikeKeyword 处理关键词中的特殊字符
+func QuoteLikeKeyword(keyword string) string {
+	keyword = strings.ReplaceAll(keyword, "%", "\\%")
+	keyword = strings.ReplaceAll(keyword, "_", "\\_")
+	return keyword
+}
+
+func QuoteLike(keyword string) string {
+	return "%" + QuoteLikeKeyword(keyword) + "%"
+}
+
+func QuoteLikePrefix(keyword string) string {
+	return QuoteLikeKeyword(keyword) + "%"
+}
+
+func QuoteLikeSuffix(keyword string) string {
+	return "%" + QuoteLikeKeyword(keyword)
 }

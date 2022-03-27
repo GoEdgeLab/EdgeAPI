@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -169,7 +170,7 @@ func (this *ReportNodeDAO) CountAllEnabledReportNodes(tx *dbs.Tx, groupId int64,
 	}
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR location LIKE :keyword OR isp LIKE :keyword OR allowIPs LIKE :keyword OR (status IS NOT NULL AND JSON_EXTRACT(status, 'ip') LIKE :keyword))")
-		query.Param("keyword", "%"+keyword+"%")
+		query.Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	return query.Count()
 }
@@ -201,7 +202,7 @@ func (this *ReportNodeDAO) ListEnabledReportNodes(tx *dbs.Tx, groupId int64, key
 			OR (LENGTH(location)=0 AND JSON_EXTRACT(status, '$.location') LIKE :keyword) 
 			OR (LENGTH(isp)=0 AND JSON_EXTRACT(status, '$.isp') LIKE :keyword)
        ))`)
-		query.Param("keyword", "%"+keyword+"%")
+		query.Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	query.Slice(&result)
 	_, err = query.Asc("isActive").

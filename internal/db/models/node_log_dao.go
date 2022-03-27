@@ -1,6 +1,7 @@
 package models
 
 import (
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -184,7 +185,7 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 	}
 	if len(keyword) > 0 {
 		query.Where("(tag LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(level) > 0 {
 		query.Attr("level", level)
@@ -200,7 +201,7 @@ func (this *NodeLogDAO) CountNodeLogs(tx *dbs.Tx,
 		query.Attr("isRead", 0)
 	}
 	if len(tag) > 0 {
-		query.Like("tag", "%"+tag+"%")
+		query.Like("tag", dbutils.QuoteLikeKeyword(tag))
 	}
 
 	return query.Count()
@@ -267,7 +268,7 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 	}
 	if len(keyword) > 0 {
 		query.Where("(tag LIKE :keyword OR description LIKE :keyword)").
-			Param("keyword", "%"+keyword+"%")
+			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(level) > 0 {
 		var pieces = strings.Split(level, ",")
@@ -281,7 +282,7 @@ func (this *NodeLogDAO) ListNodeLogs(tx *dbs.Tx,
 		query.Attr("isRead", 0)
 	}
 	if len(tag) > 0 {
-		query.Like("tag", "%"+tag+"%")
+		query.Like("tag", dbutils.QuoteLikeKeyword(tag))
 	}
 	_, err = query.
 		Offset(offset).

@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -79,7 +80,7 @@ func (this *UserAccountLogDAO) CountAccountLogs(tx *dbs.Tx, userId int64, accoun
 	}
 	if len(keyword) > 0 {
 		query.Where("(userId IN (SELECT id FROM " + models.SharedUserDAO.Table + " WHERE state=1 AND (username LIKE :keyword OR fullname LIKE :keyword)) OR description LIKE :keyword)")
-		query.Param("keyword", "%"+keyword+"%")
+		query.Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(eventType) > 0 {
 		query.Attr("eventType", eventType)
@@ -98,7 +99,7 @@ func (this *UserAccountLogDAO) ListAccountLogs(tx *dbs.Tx, userId int64, account
 	}
 	if len(keyword) > 0 {
 		query.Where("(userId IN (SELECT id FROM " + models.SharedUserDAO.Table + " WHERE state=1 AND (username LIKE :keyword OR fullname LIKE :keyword)) OR description LIKE :keyword)")
-		query.Param("keyword", "%"+keyword+"%")
+		query.Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if len(eventType) > 0 {
 		query.Attr("eventType", eventType)
