@@ -33,12 +33,13 @@ func TestServerDomainHourlyStatDAO_FindAllPartitionTables(t *testing.T) {
 	t.Log(dao.FindAllPartitionTables())
 }
 
-func TestServerDomainHourlyStatDAO_IncreaseHourlyStat(t *testing.T) {
+func TestServerDomainHourlyStatDAO_InsertManyHourlyStat(t *testing.T) {
 	dbs.NotifyReady()
 
-	for i := 0; i < 1_000_000; i++ {
+	var count = 1
+	for i := 0; i < count; i++ {
 		var f = string([]rune{int32(rands.Int('0', '9'))})
-		if i % 30 > 0 {
+		if i%30 > 0 {
 			f = string([]rune{int32(rands.Int('a', 'z'))})
 		}
 

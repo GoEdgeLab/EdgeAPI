@@ -145,22 +145,6 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 		})
 	}
 
-	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithClusterId(tx, req.NodeClusterId, hourFrom, hourTo, 10)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range topDomainStats {
-		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeServerStatNodeClusterBoardResponse_DomainStat{
-			ServerId:            int64(stat.ServerId),
-			Domain:              stat.Domain,
-			CountRequests:       int64(stat.CountRequests),
-			Bytes:               int64(stat.Bytes),
-			CountAttackRequests: int64(stat.CountAttackRequests),
-			AttackBytes:         int64(stat.AttackBytes),
-		})
-	}
-
 	// CPU、内存、负载
 	cpuValues, err := models.SharedNodeValueDAO.ListValuesWithClusterId(tx, "node", req.NodeClusterId, nodeconfigs.NodeValueItemCPU, "usage", nodeconfigs.NodeValueRangeMinute)
 	if err != nil {
@@ -370,20 +354,6 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		})
 	}
 
-	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithNodeId(tx, req.NodeId, hourFrom, hourTo, 10)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range topDomainStats {
-		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeServerStatNodeBoardResponse_DomainStat{
-			ServerId:      int64(stat.ServerId),
-			Domain:        stat.Domain,
-			CountRequests: int64(stat.CountRequests),
-			Bytes:         int64(stat.Bytes),
-		})
-	}
-
 	// CPU、内存、负载
 	cpuValues, err := models.SharedNodeValueDAO.ListValues(tx, "node", req.NodeId, nodeconfigs.NodeValueItemCPU, nodeconfigs.NodeValueRangeMinute)
 	if err != nil {
@@ -495,22 +465,6 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
-			CountAttackRequests: int64(stat.CountAttackRequests),
-			AttackBytes:         int64(stat.AttackBytes),
-		})
-	}
-
-	// 域名排行
-	topDomainStats, err := stats.SharedServerDomainHourlyStatDAO.FindTopDomainStatsWithServerId(tx, req.ServerId, hourFrom, hourTo, 10)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range topDomainStats {
-		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeServerStatBoardResponse_DomainStat{
-			ServerId:            int64(stat.ServerId),
-			Domain:              stat.Domain,
-			CountRequests:       int64(stat.CountRequests),
-			Bytes:               int64(stat.Bytes),
 			CountAttackRequests: int64(stat.CountAttackRequests),
 			AttackBytes:         int64(stat.AttackBytes),
 		})

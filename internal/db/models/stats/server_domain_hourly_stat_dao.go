@@ -334,7 +334,7 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx
 				Table(table).
 				Attr("serverId", serverId).
 				Between("hour", hourFrom, hourTo).
-				UseIndex("hour").
+				UseIndex("serverId", "hour").
 				Result("domain, MIN(serverId) AS serverId, SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
 				Group("domain").
 				Desc("countRequests").
