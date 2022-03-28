@@ -22,7 +22,7 @@ func (this *MetricItemService) CreateMetricItem(ctx context.Context, req *pb.Cre
 	}
 
 	var tx = this.NullTx()
-	itemId, err := models.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsPublic)
+	itemId, err := models.SharedMetricItemDAO.CreateItem(tx, req.Code, req.Category, req.Name, req.Keys, req.Period, req.PeriodUnit, req.ExpiresPeriod, req.Value, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (this *MetricItemService) UpdateMetricItem(ctx context.Context, req *pb.Upd
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.Value, req.IsOn, req.IsPublic)
+	err = models.SharedMetricItemDAO.UpdateItem(tx, req.MetricItemId, req.Name, req.Keys, req.Period, req.PeriodUnit, req.ExpiresPeriod, req.Value, req.IsOn, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}
@@ -60,16 +60,17 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 		return &pb.FindEnabledMetricItemResponse{MetricItem: nil}, nil
 	}
 	return &pb.FindEnabledMetricItemResponse{MetricItem: &pb.MetricItem{
-		Id:         int64(item.Id),
-		IsOn:       item.IsOn,
-		Code:       item.Code,
-		Category:   item.Category,
-		Name:       item.Name,
-		Keys:       item.DecodeKeys(),
-		Period:     types.Int32(item.Period),
-		PeriodUnit: item.PeriodUnit,
-		Value:      item.Value,
-		IsPublic:   item.IsPublic,
+		Id:            int64(item.Id),
+		IsOn:          item.IsOn,
+		Code:          item.Code,
+		Category:      item.Category,
+		Name:          item.Name,
+		Keys:          item.DecodeKeys(),
+		Period:        types.Int32(item.Period),
+		PeriodUnit:    item.PeriodUnit,
+		ExpiresPeriod: types.Int32(item.ExpiresPeriod),
+		Value:         item.Value,
+		IsPublic:      item.IsPublic,
 	}}, nil
 }
 
@@ -103,16 +104,17 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 	var pbItems = []*pb.MetricItem{}
 	for _, item := range items {
 		pbItems = append(pbItems, &pb.MetricItem{
-			Id:         int64(item.Id),
-			IsOn:       item.IsOn,
-			Code:       item.Code,
-			Category:   item.Category,
-			Name:       item.Name,
-			Keys:       item.DecodeKeys(),
-			Period:     types.Int32(item.Period),
-			PeriodUnit: item.PeriodUnit,
-			Value:      item.Value,
-			IsPublic:   item.IsPublic,
+			Id:            int64(item.Id),
+			IsOn:          item.IsOn,
+			Code:          item.Code,
+			Category:      item.Category,
+			Name:          item.Name,
+			Keys:          item.DecodeKeys(),
+			Period:        types.Int32(item.Period),
+			PeriodUnit:    item.PeriodUnit,
+			ExpiresPeriod: types.Int32(item.ExpiresPeriod),
+			Value:         item.Value,
+			IsPublic:      item.IsPublic,
 		})
 	}
 

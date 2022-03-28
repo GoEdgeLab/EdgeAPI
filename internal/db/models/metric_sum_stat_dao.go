@@ -2,11 +2,11 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -23,7 +23,7 @@ func init() {
 			for range ticker.C {
 				err := SharedMetricSumStatDAO.Clean(nil)
 				if err != nil {
-					logs.Println("SharedMetricSumStatDAO: clean expired data failed: " + err.Error())
+					remotelogs.Error("SharedMetricSumStatDAO", "clean expired data failed: "+err.Error())
 				}
 			}
 		})
@@ -180,9 +180,10 @@ func (this *MetricSumStatDAO) Clean(tx *dbs.Tx) error {
 			}
 			for _, item := range items {
 				var config = &serverconfigs.MetricItemConfig{
-					Id:         int64(item.Id),
-					Period:     int(item.Period),
-					PeriodUnit: item.PeriodUnit,
+					Id:            int64(item.Id),
+					Period:        int(item.Period),
+					PeriodUnit:    item.PeriodUnit,
+					ExpiresPeriod: int(item.ExpiresPeriod),
 				}
 				var expiresDay = config.ServerExpiresDay()
 				_, err := this.Query(tx).

@@ -108,10 +108,10 @@ func (this *MetricItemDAO) FindMetricItemName(tx *dbs.Tx, id int64) (string, err
 }
 
 // CreateItem 创建指标
-func (this *MetricItemDAO) CreateItem(tx *dbs.Tx, code string, category string, name string, keys []string, period int32, periodUnit string, value string, isPublic bool) (int64, error) {
+func (this *MetricItemDAO) CreateItem(tx *dbs.Tx, code string, category string, name string, keys []string, period int32, periodUnit string, expiresPeriod int32, value string, isPublic bool) (int64, error) {
 	sort.Strings(keys)
 
-	op := NewMetricItemOperator()
+	var op = NewMetricItemOperator()
 	op.Code = code
 	op.Category = category
 	op.Name = name
@@ -126,6 +126,7 @@ func (this *MetricItemDAO) CreateItem(tx *dbs.Tx, code string, category string, 
 	}
 	op.Period = period
 	op.PeriodUnit = periodUnit
+	op.ExpiresPeriod = expiresPeriod
 	op.Value = value
 	op.IsPublic = isPublic
 	op.IsOn = true
@@ -146,7 +147,7 @@ func (this *MetricItemDAO) CreateItem(tx *dbs.Tx, code string, category string, 
 }
 
 // UpdateItem 修改\指标
-func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, keys []string, period int32, periodUnit string, value string, isOn bool, isPublic bool) error {
+func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, keys []string, period int32, periodUnit string, expiresPeriod int32, value string, isOn bool, isPublic bool) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
@@ -168,7 +169,7 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	}
 
 	// 保存
-	op := NewMetricItemOperator()
+	var op = NewMetricItemOperator()
 	op.Id = itemId
 	op.Name = name
 	if len(keys) > 0 {
@@ -182,6 +183,7 @@ func (this *MetricItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, key
 	}
 	op.Period = period
 	op.PeriodUnit = periodUnit
+	op.ExpiresPeriod = expiresPeriod
 	op.Value = value
 	op.IsOn = isOn
 	if versionChanged {
@@ -282,14 +284,15 @@ func (this *MetricItemDAO) ComposeItemConfig(tx *dbs.Tx, itemId int64) (*serverc
 	}
 	var item = one.(*MetricItem)
 	var config = &serverconfigs.MetricItemConfig{
-		Id:         int64(item.Id),
-		IsOn:       item.IsOn,
-		Period:     types.Int(item.Period),
-		PeriodUnit: item.PeriodUnit,
-		Category:   item.Category,
-		Value:      item.Value,
-		Keys:       item.DecodeKeys(),
-		Version:    types.Int32(item.Version),
+		Id:            int64(item.Id),
+		IsOn:          item.IsOn,
+		Period:        types.Int(item.Period),
+		PeriodUnit:    item.PeriodUnit,
+		ExpiresPeriod: types.Int(item.ExpiresPeriod),
+		Category:      item.Category,
+		Value:         item.Value,
+		Keys:          item.DecodeKeys(),
+		Version:       types.Int32(item.Version),
 	}
 
 	return config, nil
@@ -301,14 +304,15 @@ func (this *MetricItemDAO) ComposeItemConfigWithItem(item *MetricItem) *serverco
 		return nil
 	}
 	var config = &serverconfigs.MetricItemConfig{
-		Id:         int64(item.Id),
-		IsOn:       item.IsOn,
-		Period:     types.Int(item.Period),
-		PeriodUnit: item.PeriodUnit,
-		Category:   item.Category,
-		Value:      item.Value,
-		Keys:       item.DecodeKeys(),
-		Version:    types.Int32(item.Version),
+		Id:            int64(item.Id),
+		IsOn:          item.IsOn,
+		Period:        types.Int(item.Period),
+		PeriodUnit:    item.PeriodUnit,
+		ExpiresPeriod: types.Int(item.ExpiresPeriod),
+		Category:      item.Category,
+		Value:         item.Value,
+		Keys:          item.DecodeKeys(),
+		Version:       types.Int32(item.Version),
 	}
 
 	return config
