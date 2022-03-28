@@ -19,6 +19,7 @@ type MetricItem struct {
 	State         uint8    `field:"state"`         // 状态
 	Version       uint32   `field:"version"`       // 版本号
 	IsPublic      bool     `field:"isPublic"`      // 是否为公用
+	LastTime      string   `field:"lastTime"`      // 最新时间
 }
 
 type MetricItemOperator struct {
@@ -37,6 +38,7 @@ type MetricItemOperator struct {
 	State         interface{} // 状态
 	Version       interface{} // 版本号
 	IsPublic      interface{} // 是否为公用
+	LastTime      interface{} // 最新时间
 }
 
 func NewMetricItemOperator() *MetricItemOperator {

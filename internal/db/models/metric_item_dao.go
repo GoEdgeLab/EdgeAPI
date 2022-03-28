@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	"sort"
 	"strings"
+	"sync"
 )
 
 const (
@@ -33,6 +34,9 @@ func NewMetricItemDAO() *MetricItemDAO {
 }
 
 var SharedMetricItemDAO *MetricItemDAO
+
+var metricItemLastTimeCacheMap = map[int64]string{} // itemId => time
+var metricItemLastTimeCacheLocker = &sync.Mutex{}
 
 func init() {
 	dbs.OnReady(func() {
@@ -328,6 +332,32 @@ func (this *MetricItemDAO) FindItemVersion(tx *dbs.Tx, itemId int64) (int32, err
 		return 0, err
 	}
 	return types.Int32(version), nil
+}
+
+// UpdateMetricLastTime 更新指标最新数据的时间
+func (this *MetricItemDAO) UpdateMetricLastTime(tx *dbs.Tx, itemId int64, lastTime string) error {
+	metricItemLastTimeCacheLocker.Lock()
+	cachedTime, ok := metricItemLastTimeCacheMap[itemId]
+	if ok && cachedTime == lastTime {
+		metricItemLastTimeCacheLocker.Unlock()
+		return nil
+	}
+
+	metricItemLastTimeCacheMap[itemId] = lastTime
+	metricItemLastTimeCacheLocker.Unlock()
+
+	return this.Query(tx).
+		Pk(itemId).
+		Set("lastTime", lastTime).
+		UpdateQuickly()
+}
+
+// FindMetricLastTime 读取指标最新数据的时间
+func (this *MetricItemDAO) FindMetricLastTime(tx *dbs.Tx, itemId int64) (string, error) {
+	return this.Query(tx).
+		Result("lastTime").
+		Pk(itemId).
+		FindStringCol("")
 }
 
 // NotifyUpdate 通知更新

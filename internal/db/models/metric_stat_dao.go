@@ -11,8 +11,12 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"sort"
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -32,6 +36,8 @@ func init() {
 		})
 	})
 }
+
+const MetricStatTablePartials = 20 // 表格Partial数量
 
 func NewMetricStatDAO() *MetricStatDAO {
 	return dbs.NewDAO(&MetricStatDAO{
@@ -65,7 +71,8 @@ func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, 
 	} else {
 		keysString = "[]"
 	}
-	return this.Query(tx).
+	err := this.Query(tx).
+		Table(this.partialTable(serverId)).
 		Param("value", value).
 		InsertOrUpdateQuickly(maps.Map{
 			"hash":       hash,
@@ -81,57 +88,127 @@ func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, 
 		}, maps.Map{
 			"value": value,
 		})
+	if err != nil {
+		return err
+	}
+
+	return SharedMetricItemDAO.UpdateMetricLastTime(tx, itemId, time)
 }
 
 // DeleteOldVersionItemStats 删除以前版本的统计数据
 func (this *MetricStatDAO) DeleteOldVersionItemStats(tx *dbs.Tx, itemId int64, version int32) error {
-	_, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Where("version<:version").
-		Param("version", version).
-		Delete()
-	return err
+	return this.runBatch(func(table string, locker *sync.Mutex) error {
+		_, err := this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Where("version<:version").
+			Param("version", version).
+			Delete()
+		return err
+	})
 }
 
 // DeleteItemStats 删除某个指标相关的统计数据
 func (this *MetricStatDAO) DeleteItemStats(tx *dbs.Tx, itemId int64) error {
-	_, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Delete()
-	return err
+	return this.runBatch(func(table string, locker *sync.Mutex) error {
+		_, err := this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Delete()
+		return err
+	})
 }
 
 // DeleteNodeItemStats 删除某个节点的统计数据
 func (this *MetricStatDAO) DeleteNodeItemStats(tx *dbs.Tx, nodeId int64, serverId int64, itemId int64, time string) error {
-	_, err := this.Query(tx).
-		Attr("nodeId", nodeId).
-		Attr("serverId", serverId).
-		Attr("itemId", itemId).
-		Attr("time", time).
-		Delete()
+	if serverId > 0 {
+		_, err := this.Query(tx).
+			Table(this.partialTable(serverId)).
+			Attr("nodeId", nodeId).
+			Attr("serverId", serverId).
+			Attr("itemId", itemId).
+			Attr("time", time).
+			Delete()
+		return err
+	}
+
+	err := this.runBatch(func(table string, locker *sync.Mutex) error {
+		_, err := this.Query(tx).
+			Table(table).
+			Attr("nodeId", nodeId).
+			Attr("serverId", serverId).
+			Attr("itemId", itemId).
+			Attr("time", time).
+			Delete()
+		return err
+	})
+
 	return err
 }
 
 // CountItemStats 计算统计数据数量
 func (this *MetricStatDAO) CountItemStats(tx *dbs.Tx, itemId int64, version int32) (int64, error) {
-	return this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		Count()
+	var total int64 = 0
+
+	err := this.runBatch(func(table string, locker *sync.Mutex) error {
+		count, err := this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			Count()
+		if err != nil {
+			return err
+		}
+		atomic.AddInt64(&total, count)
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
 
 // ListItemStats 列出单页统计数据
 func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32, offset int64, size int64) (result []*MetricStat, err error) {
-	_, err = this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		Offset(offset).
-		Limit(size).
-		Desc("time").
-		Desc("serverId").
-		Desc("value").
-		Slice(&result).
-		FindAll()
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		_, err = this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			Offset(offset).
+			Limit(size).
+			Desc("time").
+			Desc("serverId").
+			Desc("value").
+			Slice(&partialResult).
+			FindAll()
+		if err != nil {
+			return err
+		}
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].Time > result[j].Time {
+			return true
+		}
+		if result[i].ServerId > result[j].ServerId {
+			return true
+		}
+		if result[i].Value > result[j].Value {
+			return true
+		}
+		return false
+	})
+
 	return
 }
 
@@ -139,92 +216,123 @@ func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32
 // 适合每条数据中包含不同的Key的场景
 func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
-	statOne, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		DescPk().
-		Find()
+	lastTime, err := SharedMetricItemDAO.FindMetricLastTime(tx, itemId)
+	if err != nil || len(lastTime) == 0 {
+		return nil, err
+	}
+
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			Attr("time", lastTime).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("MIN(time) AS time", "SUM(value) AS value", "keys").
+			Desc("value").
+			Group("keys").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+		}
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if statOne == nil {
-		return nil, nil
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Value > result[j].Value
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
 	}
-	var lastStat = statOne.(*MetricStat)
-	var lastTime = lastStat.Time
-	var query = this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		Attr("time", lastTime).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("MIN(time) AS time", "SUM(value) AS value", "keys").
-		Desc("value").
-		Group("keys").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
-		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
-	}
-	_, err = query.
-		FindAll()
+
 	return
 }
 
 // FindItemStatsWithClusterIdAndLastTime 取得集群最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
 func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clusterId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
-	// 最近一次时间
-	statOne, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		DescPk().
-		Find()
+	lastTime, err := SharedMetricItemDAO.FindMetricLastTime(tx, itemId)
+	if err != nil || len(lastTime) == 0 {
+		return nil, err
+	}
+
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			UseIndex("cluster_item_time").
+			Attr("clusterId", clusterId).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			Attr("time", lastTime).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("MIN(time) AS time", "SUM(value) AS value", "keys").
+			Desc("value").
+			Group("keys").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
+		}
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
+
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	if statOne == nil {
-		return nil, nil
-	}
-	var lastStat = statOne.(*MetricStat)
-	var lastTime = lastStat.Time
 
-	var query = this.Query(tx).
-		UseIndex("cluster_item_time").
-		Attr("clusterId", clusterId).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		Attr("time", lastTime).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("MIN(time) AS time", "SUM(value) AS value", "keys").
-		Desc("value").
-		Group("keys").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
-		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Value > result[j].Value
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
 	}
 
-	_, err = query.
-		FindAll()
 	return
 }
 
@@ -232,68 +340,78 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 // 适合每条数据中包含不同的Key的场景
 func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
-	statOne, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		DescPk().
-		Find()
+	lastTime, err := SharedMetricItemDAO.FindMetricLastTime(tx, itemId)
 	if err != nil {
 		return nil, err
 	}
-	if statOne == nil {
-		return nil, nil
-	}
-	var lastStat = statOne.(*MetricStat)
-	var lastTime = lastStat.Time
-	var query = this.Query(tx).
-		UseIndex("node_item_time").
-		Attr("nodeId", nodeId).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		Attr("time", lastTime).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("MIN(time) AS time", "SUM(value) AS value", "keys").
-		Desc("value").
-		Group("keys").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
+
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			UseIndex("node_item_time").
+			Attr("nodeId", nodeId).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			Attr("time", lastTime).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("MIN(time) AS time", "SUM(value) AS value", "keys").
+			Desc("value").
+			Group("keys").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
 		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
+
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	_, err = query.
-		FindAll()
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Value > result[j].Value
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
+	}
+
 	return
 }
 
-// FindItemStatsWithServerIdAndLastTime 取得节点最近一次计时前 N 个数据
+// FindItemStatsWithServerIdAndLastTime 取得服务最近一次计时前 N 个数据
 // 适合每条数据中包含不同的Key的场景
 func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serverId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	// 最近一次时间
-	statOne, err := this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		DescPk().
-		Find()
-	if err != nil {
+	lastTime, err := SharedMetricItemDAO.FindMetricLastTime(tx, itemId)
+	if err != nil || len(lastTime) == 0 {
 		return nil, err
 	}
-	if statOne == nil {
-		return nil, nil
-	}
-	var lastStat = statOne.(*MetricStat)
-	var lastTime = lastStat.Time
 
 	var query = this.Query(tx).
+		Table(this.partialTable(serverId)).
 		UseIndex("server_item_time").
 		Attr("serverId", serverId).
 		Attr("itemId", itemId).
@@ -326,68 +444,115 @@ func (this *MetricStatDAO) FindItemStatsWithServerIdAndLastTime(tx *dbs.Tx, serv
 // FindLatestItemStats 取得所有集群上最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
 func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
-	var query = this.Query(tx).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
-		Desc("time").
-		Group("time").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
+			Desc("time").
+			Group("time").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
 		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
-	}
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
 
-	_, err = query.
-		FindAll()
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Time > result[j].Time
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
+	}
+
 	lists.Reverse(result)
+
 	return
 }
 
 // FindLatestItemStatsWithClusterId 取得集群最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
 func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
-	var query = this.Query(tx).
-		Attr("clusterId", clusterId).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
-		Desc("time").
-		Group("time").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			Attr("clusterId", clusterId).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
+			Desc("time").
+			Group("time").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
 		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
-	}
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
 
-	_, err = query.
-		FindAll()
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Time > result[j].Time
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
+	}
+
 	lists.Reverse(result)
 	return
 }
@@ -395,34 +560,53 @@ func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterI
 // FindLatestItemStatsWithNodeId 取得节点最近 N 个时间的数据
 // 适合同个Key在不同时间段的变化场景
 func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
-	var query = this.Query(tx).
-		Attr("nodeId", nodeId).
-		Attr("itemId", itemId).
-		Attr("version", version).
-		// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
-		// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
-		Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
-		Desc("time").
-		Group("time").
-		Limit(size).
-		Slice(&result)
-	if ignoreEmptyKeys {
-		query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
-	}
-	if len(ignoreKeys) > 0 {
-		ignoreKeysJSON, err := json.Marshal(ignoreKeys)
-		if err != nil {
-			return nil, err
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		var partialResult = []*MetricStat{}
+		var query = this.Query(tx).
+			Table(table).
+			Attr("nodeId", nodeId).
+			Attr("itemId", itemId).
+			Attr("version", version).
+			// TODO 增加更多聚合算法，比如 AVG、MEDIAN、MIN、MAX 等
+			// TODO 这里的 MIN(`keys`) 在MySQL8中可以换成FIRST_VALUE
+			Result("time", "SUM(value) AS value", "MIN(`keys`) AS `keys`").
+			Desc("time").
+			Group("time").
+			Limit(size).
+			Slice(&partialResult)
+		if ignoreEmptyKeys {
+			query.Where("NOT JSON_CONTAINS(`keys`, '\"\"')")
 		}
-		query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
-		query.Param("ignoredKeys", string(ignoreKeysJSON))
+		if len(ignoreKeys) > 0 {
+			ignoreKeysJSON, err := json.Marshal(ignoreKeys)
+			if err != nil {
+				return err
+			}
+			query.Where("NOT JSON_CONTAINS(:ignoredKeys, JSON_EXTRACT(`keys`, '$[0]'))") // TODO $[0] 需要换成keys中的primary key位置
+			query.Param("ignoredKeys", string(ignoreKeysJSON))
+		}
+
+		_, err = query.
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		locker.Lock()
+		result = append(result, partialResult...)
+		locker.Unlock()
+
+		return nil
+	})
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Time > result[j].Time
+	})
+
+	if len(result) > types.Int(size) {
+		result = result[:types.Int(size)]
 	}
 
-	_, err = query.
-		FindAll()
-	if err != nil {
-		return nil, err
-	}
 	lists.Reverse(result)
 	return
 }
@@ -431,6 +615,7 @@ func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int6
 // 适合同个Key在不同时间段的变化场景
 func (this *MetricStatDAO) FindLatestItemStatsWithServerId(tx *dbs.Tx, serverId int64, itemId int64, ignoreEmptyKeys bool, ignoreKeys []string, version int32, size int64) (result []*MetricStat, err error) {
 	var query = this.Query(tx).
+		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Attr("itemId", itemId).
 		Attr("version", version).
@@ -480,12 +665,16 @@ func (this *MetricStatDAO) Clean(tx *dbs.Tx) error {
 					ExpiresPeriod: int(item.ExpiresPeriod),
 				}
 				var expiresDay = config.ServerExpiresDay()
-				_, err := this.Query(tx).
-					Attr("itemId", item.Id).
-					Lte("createdDay", expiresDay).
-					UseIndex("createdDay").
-					Limit(100_000). // 一次性不要删除太多，防止阻塞其他操作
-					Delete()
+				err := this.runBatch(func(table string, locker *sync.Mutex) error {
+					_, err := this.Query(tx).
+						Table(table).
+						Attr("itemId", item.Id).
+						Lte("createdDay", expiresDay).
+						UseIndex("createdDay").
+						Limit(10_000). // 一次性不要删除太多，防止阻塞其他操作
+						Delete()
+					return err
+				})
 				if err != nil {
 					return err
 				}
@@ -499,4 +688,30 @@ func (this *MetricStatDAO) Clean(tx *dbs.Tx) error {
 		}
 	}
 	return nil
+}
+
+// 获取分区表
+func (this *MetricStatDAO) partialTable(serverId int64) string {
+	return this.Table + "_" + types.String(serverId%int64(MetricStatTablePartials))
+}
+
+// 批量执行
+func (this *MetricStatDAO) runBatch(f func(table string, locker *sync.Mutex) error) error {
+	var locker = &sync.Mutex{}
+	var wg = sync.WaitGroup{}
+	wg.Add(MetricStatTablePartials)
+	var resultErr error
+	for i := 0; i < MetricStatTablePartials; i++ {
+		var table = this.partialTable(int64(i))
+		go func(table string) {
+			defer wg.Done()
+
+			err := f(table, locker)
+			if err != nil {
+				resultErr = err
+			}
+		}(table)
+	}
+	wg.Wait()
+	return resultErr
 }
