@@ -37,7 +37,7 @@ func (this *DBService) FindAllDBTables(ctx context.Context, req *pb.FindAllDBTab
 		if strings.HasPrefix(lowerTableName, "edgehttpaccesslogs_") {
 			canDelete = true
 			canClean = true
-		} else if lists.ContainsString([]string{"edgemessages", "edgelogs", "edgenodelogs", "edgemetricstats", "edgemetricsumstats", "edgeserverdomainhourlystats", "edgeserverregionprovincemonthlystats", "edgeserverregionprovidermonthlystats", "edgeserverregioncountrymonthlystats", "edgeserverregioncountrydailystats", "edgeserverregioncitymonthlystats", "edgeserverhttpfirewallhourlystats", "edgeserverhttpfirewalldailystats", "edgenodeclustertrafficdailystats", "edgenodetrafficdailystats", "edgenodetraffichourlystats", "edgensrecordhourlystats", "edgeserverclientbrowsermonthlystats", "edgeserverclientsystemmonthlystats"}, lowerTableName) {
+		} else if lists.ContainsString([]string{"edgemessages", "edgelogs", "edgenodelogs", "edgemetricstats", "edgemetricsumstats", "edgeserverdomainhourlystats", "edgeserverregionprovincemonthlystats", "edgeserverregionprovidermonthlystats", "edgeserverregioncountrymonthlystats", "edgeserverregioncountrydailystats", "edgeserverregioncitymonthlystats", "edgeserverhttpfirewallhourlystats", "edgeserverhttpfirewalldailystats", "edgenodeclustertrafficdailystats", "edgenodetrafficdailystats", "edgenodetraffichourlystats", "edgensrecordhourlystats", "edgeserverclientbrowsermonthlystats", "edgeserverclientsystemmonthlystats"}, lowerTableName) || strings.HasPrefix(lowerTableName, "edgeserverdomainhourlystats_") || strings.HasPrefix(lowerTableName, "edgemetricstats_") {
 			canClean = true
 		}
 
