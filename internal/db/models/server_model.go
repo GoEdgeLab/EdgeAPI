@@ -46,6 +46,7 @@ type Server struct {
 	TotalTraffic        float64  `field:"totalTraffic"`        // 总流量
 	UserPlanId          uint32   `field:"userPlanId"`          // 所属套餐ID
 	LastUserPlanId      uint32   `field:"lastUserPlanId"`      // 上一次使用的套餐
+	Uam                 dbs.JSON `field:"uam"`                 // UAM设置
 }
 
 type ServerOperator struct {
@@ -91,6 +92,7 @@ type ServerOperator struct {
 	TotalTraffic        interface{} // 总流量
 	UserPlanId          interface{} // 所属套餐ID
 	LastUserPlanId      interface{} // 上一次使用的套餐
+	Uam                 interface{} // UAM设置
 }
 
 func NewServerOperator() *ServerOperator {

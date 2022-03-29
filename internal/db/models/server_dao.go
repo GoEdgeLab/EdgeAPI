@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -1127,6 +1128,18 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 			if status.IsValid() {
 				config.TrafficLimitStatus = status
 			}
+		}
+	}
+
+	// UAM
+	if teaconst.IsPlus && IsNotNull(server.Uam) {
+		var uamConfig = &serverconfigs.UAMConfig{}
+		err = json.Unmarshal(server.Uam, uamConfig)
+		if err != nil {
+			return nil, err
+		}
+		if uamConfig.IsOn {
+			config.UAM = uamConfig
 		}
 	}
 
@@ -2274,6 +2287,35 @@ func (this *ServerDAO) FindServerLastUserPlanIdAndUserId(tx *dbs.Tx, serverId in
 	}
 
 	return int64(one.(*Server).LastUserPlanId), int64(one.(*Server).UserId), nil
+}
+
+// UpdateServerUAM 开启UAM
+func (this *ServerDAO) UpdateServerUAM(tx *dbs.Tx, serverId int64, uamConfig *serverconfigs.UAMConfig) error {
+	if uamConfig == nil {
+		return nil
+	}
+	configJSON, err := json.Marshal(uamConfig)
+	if err != nil {
+		return err
+	}
+
+	err = this.Query(tx).
+		Pk(serverId).
+		Set("uam", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, serverId)
+}
+
+// FindServerUAM 查找服务的UAM配置
+func (this *ServerDAO) FindServerUAM(tx *dbs.Tx, serverId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(serverId).
+		Result("uam").
+		FindJSONCol()
 }
 
 // NotifyUpdate 同步集群
