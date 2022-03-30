@@ -1,7 +1,8 @@
-package dnsclients
+package dnsclients_test
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -9,8 +10,10 @@ import (
 	"testing"
 )
 
+const DNSPodTestDomain = "yun4s.cn"
+
 func TestDNSPodProvider_GetDomains(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, _, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,11 +25,11 @@ func TestDNSPodProvider_GetDomains(t *testing.T) {
 }
 
 func TestDNSPodProvider_GetRoutes(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, _, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
-	routes, err := provider.GetRoutes("yun4s.cn")
+	routes, err := provider.GetRoutes(DNSPodTestDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,11 +37,11 @@ func TestDNSPodProvider_GetRoutes(t *testing.T) {
 }
 
 func TestDNSPodProvider_GetRecords(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, _, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
-	records, err := provider.GetRecords("yun4s.cn")
+	records, err := provider.GetRecords(DNSPodTestDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,17 +51,22 @@ func TestDNSPodProvider_GetRecords(t *testing.T) {
 }
 
 func TestDNSPodProvider_AddRecord(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, isInternational, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = provider.AddRecord("yun4s.cn", &dnstypes.Record{
+	var route = "联通"
+	if isInternational {
+		route = "Default"
+	}
+
+	err = provider.AddRecord(DNSPodTestDomain, &dnstypes.Record{
 		Type:  dnstypes.RecordTypeCNAME,
 		Name:  "hello-forward",
-		Value: "hello.yun4s.cn",
-		Route: "联通",
-		TTL:   300,
+		Value: "hello." + DNSPodTestDomain,
+		Route: route,
+		TTL:   600,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -67,18 +75,25 @@ func TestDNSPodProvider_AddRecord(t *testing.T) {
 }
 
 func TestDNSPodProvider_UpdateRecord(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, isInternational, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = provider.UpdateRecord("yun4s.cn", &dnstypes.Record{
-		Id: "697036856",
+	var route = "联通"
+	var id = "1093875360"
+	if isInternational {
+		route = "Default"
+		id = "28507333"
+	}
+
+	err = provider.UpdateRecord(DNSPodTestDomain, &dnstypes.Record{
+		Id: id,
 	}, &dnstypes.Record{
 		Type:  dnstypes.RecordTypeA,
 		Name:  "hello",
 		Value: "192.168.1.102",
-		Route: "联通",
+		Route: route,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -87,13 +102,17 @@ func TestDNSPodProvider_UpdateRecord(t *testing.T) {
 }
 
 func TestDNSPodProvider_DeleteRecord(t *testing.T) {
-	provider, err := testDNSPodProvider()
+	provider, isInternational, err := testDNSPodProvider()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = provider.DeleteRecord("yun4s.cn", &dnstypes.Record{
-		Id: "697040986",
+	var id = "1093875360"
+	if isInternational {
+		id = "28507333"
+	}
+	err = provider.DeleteRecord(DNSPodTestDomain, &dnstypes.Record{
+		Id: id,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -101,24 +120,24 @@ func TestDNSPodProvider_DeleteRecord(t *testing.T) {
 	t.Log("ok")
 }
 
-func testDNSPodProvider() (ProviderInterface, error) {
+func testDNSPodProvider() (provider dnsclients.ProviderInterface, isInternational bool, err error) {
 	db, err := dbs.Default()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='dnspod' ORDER BY id DESC")
+	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='dnspod' AND id='14' ORDER BY id DESC")
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	apiParams := maps.Map{}
 	err = json.Unmarshal([]byte(one.GetString("apiParams")), &apiParams)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	provider := &DNSPodProvider{}
+	provider = &dnsclients.DNSPodProvider{}
 	err = provider.Auth(apiParams)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return provider, nil
+	return provider, apiParams.GetString("region") == "international", nil
 }

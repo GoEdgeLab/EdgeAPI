@@ -1,6 +1,7 @@
 package dnsclients
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
@@ -11,12 +12,22 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const (
 	DNSPodMaxTTL        int32 = 604800
 	DNSPodInternational       = "international"
 )
+
+var dnsPodHTTPClient = &http.Client{
+	Timeout: 10 * time.Second,
+	Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	},
+}
 
 // DNSPodProvider DNSPod服务商
 type DNSPodProvider struct {
@@ -46,8 +57,9 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 	offset := 0
 	size := 100
+
 	for {
-		domainsResp, err := this.post("/Domain.list", map[string]string{
+		domainsResp, err := this.post("/Domain.List", map[string]string{
 			"offset": numberutils.FormatInt(offset),
 			"length": numberutils.FormatInt(size),
 		})
@@ -81,7 +93,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 	offset := 0
 	size := 100
 	for {
-		recordsResp, err := this.post("/Record.list", map[string]string{
+		recordsResp, err := this.post("/Record.List", map[string]string{
 			"domain": domain,
 			"offset": numberutils.FormatInt(offset),
 			"length": numberutils.FormatInt(size),
@@ -117,7 +129,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 
 // GetRoutes 读取线路数据
 func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
-	infoResp, err := this.post("/Domain.info", map[string]string{
+	infoResp, err := this.post("/Domain.Info", map[string]string{
 		"domain": domain,
 	})
 	if err != nil {
@@ -234,32 +246,35 @@ func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record)
 // 发送请求
 func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Map, error) {
 	var apiHost = "https://dnsapi.cn"
-	if this.region == DNSPodInternational { // 国际版
+	var lang = "cn"
+	if this.isInternational() { // 国际版
 		apiHost = "https://api.dnspod.com"
+		lang = "en"
 	}
 	var query = url.Values{
 		"login_token": []string{this.apiId + "," + this.apiToken},
 		"format":      []string{"json"},
-		"lang":        []string{"cn"},
+		"lang":        []string{lang},
 	}
+
 	for p, v := range params {
 		query[p] = []string{v}
 	}
+
 	req, err := http.NewRequest(http.MethodPost, apiHost+path, strings.NewReader(query.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "GoEdge-Client/1.0.0 (iwind.liu@gmail.com)")
+	req.Header.Set("Accept", "*/*")
 
-	var client = http.Client{}
-	resp, err := client.Do(req)
+	resp, err := dnsPodHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
 		_ = resp.Body.Close()
-		client.CloseIdleConnections()
 	}()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -273,7 +288,7 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 	var status = m.GetMap("status")
 	var code = status.GetString("code")
 	if code != "1" {
-		return nil, errors.New("code: " + code + ", message: " + status.GetString("message"))
+		return nil, errors.New("API response error: code: " + code + ", message: " + status.GetString("message"))
 	}
 
 	return m, nil
@@ -281,5 +296,12 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 
 // DefaultRoute 默认线路
 func (this *DNSPodProvider) DefaultRoute() string {
+	if this.isInternational() {
+		return "Default"
+	}
 	return "默认"
+}
+
+func (this *DNSPodProvider) isInternational() bool {
+	return this.region == DNSPodInternational
 }
