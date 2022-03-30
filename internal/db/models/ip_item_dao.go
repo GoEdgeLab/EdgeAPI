@@ -265,7 +265,7 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 }
 
 // CountIPItemsWithListId 计算IP数量
-func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, keyword string) (int64, error) {
+func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, ipFrom string, ipTo string, keyword string, eventLevel string) (int64, error) {
 	var query = this.Query(tx).
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
@@ -278,12 +278,15 @@ func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, ipFrom s
 	}
 	if len(ipTo) > 0 {
 		query.Attr("ipTo", ipTo)
+	}
+	if len(eventLevel) > 0 {
+		query.Attr("eventLevel", eventLevel)
 	}
 	return query.Count()
 }
 
 // ListIPItemsWithListId 查找IP列表
-func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword string, ipFrom string, ipTo string, offset int64, size int64) (result []*IPItem, err error) {
+func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword string, ipFrom string, ipTo string, eventLevel string, offset int64, size int64) (result []*IPItem, err error) {
 	var query = this.Query(tx).
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
@@ -296,6 +299,9 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, keyword s
 	}
 	if len(ipTo) > 0 {
 		query.Attr("ipTo", ipTo)
+	}
+	if len(eventLevel) > 0 {
+		query.Attr("eventLevel", eventLevel)
 	}
 	_, err = query.
 		DescPk().
@@ -372,7 +378,7 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 }
 
 // CountAllEnabledIPItems 计算数量
-func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool) (int64, error) {
+func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool, eventLevel string) (int64, error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
@@ -384,6 +390,9 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int6
 	}
 	if unread {
 		query.Attr("isRead", 0)
+	}
+	if len(eventLevel) > 0 {
+		query.Attr("eventLevel", eventLevel)
 	}
 	return query.
 		State(IPItemStateEnabled).
@@ -393,7 +402,7 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, ip string, listId int6
 }
 
 // ListAllEnabledIPItems 搜索所有IP
-func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool, offset int64, size int64) (result []*IPItem, err error) {
+func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64, unread bool, eventLevel string, offset int64, size int64) (result []*IPItem, err error) {
 	var query = this.Query(tx)
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
@@ -405,6 +414,9 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, ip string, listId int64
 	}
 	if unread {
 		query.Attr("isRead", 0)
+	}
+	if len(eventLevel) > 0 {
+		query.Attr("eventLevel", eventLevel)
 	}
 	_, err = query.
 		State(IPItemStateEnabled).
