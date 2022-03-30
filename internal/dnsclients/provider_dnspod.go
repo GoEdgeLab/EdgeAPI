@@ -14,13 +14,15 @@ import (
 )
 
 const (
-	DNSPodMaxTTL int32 = 604800
+	DNSPodMaxTTL        int32 = 604800
+	DNSPodInternational       = "international"
 )
 
 // DNSPodProvider DNSPod服务商
 type DNSPodProvider struct {
 	BaseProvider
 
+	region   string
 	apiId    string
 	apiToken string
 }
@@ -29,6 +31,7 @@ type DNSPodProvider struct {
 func (this *DNSPodProvider) Auth(params maps.Map) error {
 	this.apiId = params.GetString("id")
 	this.apiToken = params.GetString("token")
+	this.region = params.GetString("region")
 
 	if len(this.apiId) == 0 {
 		return errors.New("'id' should be not empty")
@@ -230,8 +233,11 @@ func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record)
 
 // 发送请求
 func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Map, error) {
-	apiHost := "https://dnsapi.cn"
-	query := url.Values{
+	var apiHost = "https://dnsapi.cn"
+	if this.region == DNSPodInternational { // 国际版
+		apiHost = "https://api.dnspod.com"
+	}
+	var query = url.Values{
 		"login_token": []string{this.apiId + "," + this.apiToken},
 		"format":      []string{"json"},
 		"lang":        []string{"cn"},
@@ -244,9 +250,9 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "GoEdge Client/1.0.0 (iwind.liu@gmail.com)")
+	req.Header.Set("User-Agent", "GoEdge-Client/1.0.0 (iwind.liu@gmail.com)")
 
-	client := http.Client{}
+	var client = http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -259,13 +265,13 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 	if err != nil {
 		return nil, err
 	}
-	m := maps.Map{}
+	var m = maps.Map{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		return nil, err
 	}
-	status := m.GetMap("status")
-	code := status.GetString("code")
+	var status = m.GetMap("status")
+	var code = status.GetString("code")
 	if code != "1" {
 		return nil, errors.New("code: " + code + ", message: " + status.GetString("message"))
 	}
