@@ -59,7 +59,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 
 	tx := this.NullTx()
 
-	count, err := dns.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword)
+	count, err := dns.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword, req.Domain)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 
 	tx := this.NullTx()
 
-	providers, err := dns.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword, req.Offset, req.Size)
+	providers, err := dns.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword, req.Domain, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
