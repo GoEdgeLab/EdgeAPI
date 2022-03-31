@@ -77,8 +77,9 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 }
 
 // CreatePage 创建Page
-func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) (pageId int64, err error) {
+func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) (pageId int64, err error) {
 	op := NewHTTPPageOperator()
+	op.UserId = userId
 	op.IsOn = true
 	op.State = HTTPPageStateEnabled
 
@@ -180,6 +181,26 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 	}
 
 	return config, nil
+}
+
+// CheckUserPage 检查用户页面
+func (this *HTTPPageDAO) CheckUserPage(tx *dbs.Tx, userId int64, pageId int64) error {
+	if userId <= 0 || pageId <= 0 {
+		return ErrNotFound
+	}
+
+	b, err := this.Query(tx).
+		Pk(pageId).
+		Attr("userId", userId).
+		State(HTTPPageStateEnabled).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !b {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // NotifyUpdate 通知更新

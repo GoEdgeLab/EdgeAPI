@@ -622,5 +622,9 @@ func (this *APINode) unaryInterceptor(ctx context.Context, req interface{}, info
 
 		return
 	}
-	return handler(ctx, req)
+	result, err := handler(ctx, req)
+	if err != nil {
+		err = errors.New("'" + info.FullMethod + "()' says: " + err.Error())
+	}
+	return result, err
 }
