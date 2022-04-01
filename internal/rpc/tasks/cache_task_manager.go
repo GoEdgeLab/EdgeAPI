@@ -82,7 +82,9 @@ func (this *CacheTaskManager) Loop() error {
 			return err
 		}
 		this.locker.Lock()
-		this.cacheMap[CacheKeyFindAllMetricDataCharts] = value
+		if len(value) > 0 {
+			this.cacheMap[CacheKeyFindAllMetricDataCharts] = value
+		}
 		this.locker.Unlock()
 	}
 
@@ -98,7 +100,9 @@ func (this *CacheTaskManager) Loop() error {
 		var composedKey = CacheKeyFindGlobalTopDomains
 
 		this.locker.Lock()
-		this.cacheMap[composedKey] = value
+		if len(value) > 0 {
+			this.cacheMap[composedKey] = value
+		}
 		this.locker.Unlock()
 	}
 
@@ -118,7 +122,9 @@ func (this *CacheTaskManager) Loop() error {
 				return err
 			}
 			this.locker.Lock()
-			this.cacheMap[composedKey] = value
+			if len(value) > 0 {
+				this.cacheMap[composedKey] = value
+			}
 			this.locker.Unlock()
 		}
 
@@ -140,7 +146,9 @@ func (this *CacheTaskManager) Loop() error {
 						return err
 					}
 					this.locker.Lock()
-					this.cacheMap[composedKey] = value
+					if len(value) > 0 {
+						this.cacheMap[composedKey] = value
+					}
 					this.locker.Unlock()
 				}
 			}
