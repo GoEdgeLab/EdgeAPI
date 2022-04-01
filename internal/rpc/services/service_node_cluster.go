@@ -1025,6 +1025,18 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	}
 	result.HasMetricItems = countMetricItems > 0
 
+	// webp
+	if models.IsNotNull(cluster.Webp) {
+		var webpPolicy = &nodeconfigs.WebPImagePolicy{}
+		err = json.Unmarshal(cluster.Webp, webpPolicy)
+		if err != nil {
+			return nil, err
+		}
+		result.WebpIsOn = webpPolicy.IsOn
+	} else {
+		result.WebpIsOn = nodeconfigs.DefaultWebPImagePolicy.IsOn
+	}
+
 	return result, nil
 }
 
@@ -1041,5 +1053,47 @@ func (this *NodeClusterService) UpdateNodeClusterPinned(ctx context.Context, req
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// FindEnabledNodeClusterWebPPolicy 读取集群WebP策略
+func (this *NodeClusterService) FindEnabledNodeClusterWebPPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterWebPPolicyRequest) (*pb.FindEnabledNodeClusterWebPPolicyResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	webpPolicy, err := models.SharedNodeClusterDAO.FindClusterWebPPolicy(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+	webpPolicyJSON, err := json.Marshal(webpPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledNodeClusterWebPPolicyResponse{
+		WebpPolicyJSON: webpPolicyJSON,
+	}, nil
+}
+
+// UpdateNodeClusterWebPPolicy 设置集群WebP策略
+func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context, req *pb.UpdateNodeClusterWebPPolicyRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var webpPolicy = &nodeconfigs.WebPImagePolicy{}
+	err = json.Unmarshal(req.WebpPolicyJSON, webpPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedNodeClusterDAO.UpdateClusterWebPPolicy(tx, req.NodeClusterId, webpPolicy)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }

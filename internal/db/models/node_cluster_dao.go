@@ -898,7 +898,8 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
-		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts").
+		State(NodeClusterStateEnabled).
+		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "isOn").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -907,6 +908,65 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 		cacheMap.Put(cacheKey, cluster)
 	}
 	return cluster.(*NodeCluster), nil
+}
+
+// UpdateClusterWebPPolicy 修改WebP设置
+func (this *NodeClusterDAO) UpdateClusterWebPPolicy(tx *dbs.Tx, clusterId int64, webpPolicy *nodeconfigs.WebPImagePolicy) error {
+	if webpPolicy == nil {
+		err := this.Query(tx).
+			Pk(clusterId).
+			Set("webp", dbs.SQL("null")).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		return this.NotifyUpdate(tx, clusterId)
+	}
+
+	webpPolicyJSON, err := json.Marshal(webpPolicy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("webp", webpPolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, clusterId)
+}
+
+// FindClusterWebPPolicy 查询WebP设置
+func (this *NodeClusterDAO) FindClusterWebPPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.WebPImagePolicy, error) {
+	var cacheKey = this.Table + ":FindClusterWebPPolicy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.WebPImagePolicy), nil
+		}
+	}
+
+	webpJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("webp").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(webpJSON) {
+		return nodeconfigs.DefaultWebPImagePolicy, nil
+	}
+
+	var policy = &nodeconfigs.WebPImagePolicy{}
+	err = json.Unmarshal(webpJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	return policy, nil
 }
 
 // NotifyUpdate 通知更新

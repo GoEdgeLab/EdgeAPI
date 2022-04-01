@@ -733,7 +733,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		return nil, errors.New("node not found '" + strconv.FormatInt(nodeId, 10) + "'")
 	}
 
-	config := &nodeconfigs.NodeConfig{
+	var config = &nodeconfigs.NodeConfig{
 		Id:       int64(node.Id),
 		NodeId:   node.UniqueId,
 		Secret:   node.Secret,
@@ -801,12 +801,13 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	var clusterIds = []int64{primaryClusterId}
 	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
 	var clusterIndex = 0
+	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
 	for _, clusterId := range clusterIds {
 		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
-		if nodeCluster == nil {
+		if nodeCluster == nil || !nodeCluster.IsOn {
 			continue
 		}
 
@@ -846,6 +847,16 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)
 			config.TCPMaxConnections = int(nodeCluster.NodeTCPMaxConnections)
 			config.AutoOpenPorts = nodeCluster.AutoOpenPorts == 1
+		}
+
+		// webp
+		if IsNotNull(nodeCluster.Webp) {
+			var webpPolicy = &nodeconfigs.WebPImagePolicy{}
+			err = json.Unmarshal(nodeCluster.Webp, webpPolicy)
+			if err != nil {
+				return nil, err
+			}
+			config.WebPImagePolicies[clusterId] = webpPolicy
 		}
 
 		clusterIndex++

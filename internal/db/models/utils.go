@@ -30,6 +30,17 @@ func IsNotNull(data []byte) bool {
 	return true
 }
 
+// IsNull 判断JSON是否为空
+func IsNull(data []byte) bool {
+	if len(data) == 0 {
+		return true
+	}
+	if len(data) == 4 && string(data) == "null" {
+		return true
+	}
+	return false
+}
+
 // NewQuery 构造Query
 func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {
 	query := dao.Object().Query(tx)

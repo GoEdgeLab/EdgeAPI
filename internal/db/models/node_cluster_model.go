@@ -33,6 +33,7 @@ type NodeCluster struct {
 	NodeTCPMaxConnections uint32   `field:"nodeTCPMaxConnections"` // TCP最大连接数
 	AutoOpenPorts         uint8    `field:"autoOpenPorts"`         // 是否自动尝试开放端口
 	IsPinned              bool     `field:"isPinned"`              // 是否置顶
+	Webp                  dbs.JSON `field:"webp"`                  // WebP设置
 }
 
 type NodeClusterOperator struct {
@@ -65,6 +66,7 @@ type NodeClusterOperator struct {
 	NodeTCPMaxConnections interface{} // TCP最大连接数
 	AutoOpenPorts         interface{} // 是否自动尝试开放端口
 	IsPinned              interface{} // 是否置顶
+	Webp                  interface{} // WebP设置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {
