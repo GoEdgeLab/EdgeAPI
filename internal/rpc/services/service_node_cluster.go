@@ -1058,7 +1058,7 @@ func (this *NodeClusterService) UpdateNodeClusterPinned(ctx context.Context, req
 
 // FindEnabledNodeClusterWebPPolicy 读取集群WebP策略
 func (this *NodeClusterService) FindEnabledNodeClusterWebPPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterWebPPolicyRequest) (*pb.FindEnabledNodeClusterWebPPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
