@@ -12,7 +12,7 @@ require (
 	github.com/go-acme/lego/v4 v4.5.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
-	github.com/iwind/TeaGo v0.0.0-20220321132348-7da816422f25 // indirect
+	github.com/iwind/TeaGo v0.0.0-20220322141208-22f88d04004d
 	github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mozillazg/go-pinyin v0.18.0
