@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
@@ -155,5 +156,15 @@ func TestHTTPAccessLogDAO_ListAccessLogs_Page_NotExists(t *testing.T) {
 		if times > 10 {
 			break
 		}
+	}
+}
+
+func BenchmarkHTTPAccessLogDAO_JSONEncode(b *testing.B) {
+	var accessLog = &pb.HTTPAccessLog{
+		RequestPath: "/hello/world",
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, _ = json.Marshal(accessLog)
 	}
 }
