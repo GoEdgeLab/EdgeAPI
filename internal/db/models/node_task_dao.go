@@ -18,6 +18,7 @@ const (
 	NodeTaskTypeIPItemChanged      NodeTaskType = "ipItemChanged"
 	NodeTaskTypeNodeVersionChanged NodeTaskType = "nodeVersionChanged"
 	NodeTaskTypeScriptsChanged     NodeTaskType = "scriptsChanged"
+	NodeTaskTypeNodeLevelChanged   NodeTaskType = "nodeLevelChanged"
 
 	// NS相关
 

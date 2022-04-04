@@ -1,16 +1,23 @@
-package models
+//go:build plus
+// +build plus
+
+package models_test
 
 import (
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"testing"
 	"time"
 )
 
 func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
 	var tx *dbs.Tx
-	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(tx, 1, true, 0)
+	dbs.NotifyReady()
+	nodeIds, err := models.SharedNodeDAO.FindAllNodeIdsMatch(tx, 1, true, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +27,7 @@ func TestNodeDAO_FindAllNodeIdsMatch(t *testing.T) {
 func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	err := SharedNodeDAO.UpdateNodeUp(tx, 57, false)
+	err := models.SharedNodeDAO.UpdateNodeUp(tx, 57, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +37,7 @@ func TestNodeDAO_UpdateNodeUp(t *testing.T) {
 func TestNodeDAO_FindEnabledNodeClusterIds(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	clusterIds, err := NewNodeDAO().FindEnabledAndOnNodeClusterIds(tx, 48)
+	clusterIds, err := models.NewNodeDAO().FindEnabledAndOnNodeClusterIds(tx, 48)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +54,7 @@ func TestNodeDAO_ComposeNodeConfig(t *testing.T) {
 
 	var tx *dbs.Tx
 	var cacheMap = utils.NewCacheMap()
-	nodeConfig, err := SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,4 +62,18 @@ func TestNodeDAO_ComposeNodeConfig(t *testing.T) {
 	t.Log(cacheMap.Len(), "items")
 
 	// old: 77ms => new: 56ms
+}
+
+func TestNodeDAO_ComposeNodeConfig_ParentNodes(t *testing.T) {
+	dbs.NotifyReady()
+
+	teaconst.IsPlus = true
+
+	var tx *dbs.Tx
+	var cacheMap = utils.NewCacheMap()
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(nodeConfig.ParentNodes, t)
 }

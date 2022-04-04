@@ -96,3 +96,15 @@ func (this *Node) DecodeSecondaryClusterIds() []int64 {
 	_ = json.Unmarshal(this.SecondaryClusterIds, &result)
 	return result
 }
+
+func (this *Node) AllClusterIds() []int64 {
+	var result = []int64{}
+
+	if this.ClusterId > 0 {
+		result = append(result, int64(this.ClusterId))
+	}
+
+	result = append(result, this.DecodeSecondaryClusterIds()...)
+
+	return result
+}

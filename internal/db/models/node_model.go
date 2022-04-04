@@ -7,6 +7,7 @@ type Node struct {
 	Id                     uint32   `field:"id"`                     // ID
 	AdminId                uint32   `field:"adminId"`                // 管理员ID
 	UserId                 uint32   `field:"userId"`                 // 用户ID
+	Level                  uint8    `field:"level"`                  // 级别
 	IsOn                   bool     `field:"isOn"`                   // 是否启用
 	IsUp                   bool     `field:"isUp"`                   // 是否在线
 	CountUp                uint32   `field:"countUp"`                // 连续在线次数
@@ -40,6 +41,7 @@ type NodeOperator struct {
 	Id                     interface{} // ID
 	AdminId                interface{} // 管理员ID
 	UserId                 interface{} // 用户ID
+	Level                  interface{} // 级别
 	IsOn                   interface{} // 是否启用
 	IsUp                   interface{} // 是否在线
 	CountUp                interface{} // 连续在线次数

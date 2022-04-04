@@ -61,13 +61,13 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	var result = &pb.ComposeServerStatNodeClusterBoardResponse{}
 
 	// 统计数字
-	countActiveNodes, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.BoolStateAll, configutils.BoolStateYes, "", 0, 0, true)
+	countActiveNodes, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.BoolStateAll, configutils.BoolStateYes, "", 0, 0, 0, true)
 	if err != nil {
 		return nil, err
 	}
 	result.CountActiveNodes = countActiveNodes
 
-	countInactiveNodes, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.BoolStateAll, configutils.BoolStateNo, "", 0, 0, true)
+	countInactiveNodes, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.BoolStateAll, configutils.BoolStateNo, "", 0, 0, 0, true)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,6 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 )
 
-func (this *NodeDAO) composeExtConfig(tx *dbs.Tx, config *nodeconfigs.NodeConfig, cacheMap *utils.CacheMap) error {
+func (this *NodeDAO) composeExtConfig(tx *dbs.Tx, config *nodeconfigs.NodeConfig, clusterIds []int64, cacheMap *utils.CacheMap) error {
 	return nil
 }

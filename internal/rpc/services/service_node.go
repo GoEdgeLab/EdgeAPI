@@ -18,6 +18,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/andybalholm/brotli"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -164,7 +165,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 
 	tx := this.NullTx()
 
-	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, true)
+	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, req.Level, true)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		order = "trafficOutDesc"
 	}
 
-	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, true, order, req.Offset, req.Size)
+	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, req.Level, true, order, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -327,6 +328,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			NodeGroup:             pbGroup,
 			NodeRegion:            pbRegion,
 			DnsRoutes:             pbRoutes,
+			Level:                 int32(node.Level),
 		})
 	}
 
@@ -423,7 +425,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn)
+	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn, int(req.Level))
 	if err != nil {
 		return nil, err
 	}
@@ -579,6 +581,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
 		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
 		CacheDiskDir:           node.CacheDiskDir,
+		Level:                  int32(node.Level),
 	}}, nil
 }
 
@@ -604,10 +607,11 @@ func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindE
 	}
 
 	return &pb.FindEnabledBasicNodeResponse{Node: &pb.BasicNode{
-		Id:   int64(node.Id),
-		Name: node.Name,
-		IsOn: node.IsOn,
-		IsUp: node.IsUp,
+		Id:    int64(node.Id),
+		Name:  node.Name,
+		IsOn:  node.IsOn,
+		IsUp:  node.IsUp,
+		Level: int32(node.Level),
 		NodeCluster: &pb.NodeCluster{
 			Id:   int64(node.ClusterId),
 			Name: clusterName,
@@ -994,7 +998,7 @@ func (this *NodeService) CountAllUpgradeNodesWithNodeClusterId(ctx context.Conte
 
 	tx := this.NullTx()
 
-	deployFiles := installers.SharedDeployManager.LoadNodeFiles()
+	var deployFiles = installers.SharedDeployManager.LoadNodeFiles()
 	total := int64(0)
 	for _, deployFile := range deployFiles {
 		count, err := models.SharedNodeDAO.CountAllLowerVersionNodesWithClusterId(tx, req.NodeClusterId, deployFile.OS, deployFile.Arch, deployFile.Version)
@@ -1615,4 +1619,39 @@ func (this *NodeService) findClusterCacheMap(clusterId int64, version int64) *ut
 		nodeVersionCacheMap[clusterId] = cache
 		return cacheMap
 	}
+}
+
+// FindNodeLevelInfo 读取节点级别信息
+func (this *NodeService) FindNodeLevelInfo(ctx context.Context, req *pb.FindNodeLevelInfoRequest) (*pb.FindNodeLevelInfoResponse, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *dbs.Tx
+	node, err := models.SharedNodeDAO.FindNodeLevelInfo(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return &pb.FindNodeLevelInfoResponse{}, nil
+	}
+
+	var result = &pb.FindNodeLevelInfoResponse{
+		Level: types.Int32(node.Level),
+	}
+
+	if node.Level == 1 {
+		parentNodes, err := models.SharedNodeDAO.FindParentNodeConfigs(tx, nodeId, int64(node.GroupId), node.AllClusterIds(), types.Int(node.Level))
+		if err != nil {
+			return nil, err
+		}
+		parentNodesJSON, err := json.Marshal(parentNodes)
+		if err != nil {
+			return nil, err
+		}
+		result.ParentNodesMapJSON = parentNodesJSON
+	}
+
+	return result, nil
 }

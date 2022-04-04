@@ -540,9 +540,21 @@ func (this *NodeIPAddressDAO) NotifyUpdate(tx *dbs.Tx, addressId int64) error {
 	switch role {
 	case nodeconfigs.NodeRoleNode:
 		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, nodeId, dns.DNSTaskTypeNodeChange)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		// 检查是否为L2以上级别
+		level, err := SharedNodeDAO.FindNodeLevel(tx, nodeId)
+		if err != nil {
+			return err
+		}
+		if level > 1 {
+			err = SharedNodeDAO.NotifyLevelUpdate(tx, nodeId)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
