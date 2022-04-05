@@ -1647,7 +1647,7 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 
 	if len(parentNodes) > 0 {
 		for _, node := range parentNodes {
-			addrs, err := SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+			addrs, err := SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 			if err != nil {
 				return nil, err
 			}
