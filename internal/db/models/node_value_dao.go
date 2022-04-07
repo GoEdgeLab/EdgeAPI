@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -9,6 +10,7 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"strings"
 	"time"
 )
 
@@ -35,9 +37,9 @@ func init() {
 
 // CreateValue 创建值
 func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconfigs.NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
-	day := timeutil.FormatTime("Ymd", createdAt)
-	hour := timeutil.FormatTime("YmdH", createdAt)
-	minute := timeutil.FormatTime("YmdHi", createdAt)
+	var day = timeutil.FormatTime("Ymd", createdAt)
+	var hour = timeutil.FormatTime("YmdH", createdAt)
+	var minute = timeutil.FormatTime("YmdHi", createdAt)
 
 	return this.Query(tx).
 		InsertOrUpdateQuickly(maps.Map{
@@ -171,6 +173,34 @@ func (this *NodeValueDAO) ListValuesForNSNodes(tx *dbs.Tx, item string, key stri
 	return
 }
 
+// SumAllNodeValues 计算所有节点的某项参数值
+func (this *NodeValueDAO) SumAllNodeValues(tx *dbs.Tx, role string, item nodeconfigs.NodeValueItem, param string, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit) (total float64, avg float64, max float64, err error) {
+	if duration <= 0 {
+		return 0, 0, 0, nil
+	}
+
+	var query = this.Query(tx).
+		Result("SUM(JSON_EXTRACT(value, '$."+param+"')) AS sumValue", "AVG(JSON_EXTRACT(value, '$."+param+"')) AS avgValue", "MAX(JSON_EXTRACT(value, '$."+param+"')) AS maxValueResult"). // maxValue 是个MySQL Keyword，这里使用maxValueResult代替
+		Attr("role", role).
+		Attr("item", item)
+
+	switch durationUnit {
+	case nodeconfigs.NodeValueDurationUnitMinute:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration*60))
+		query.Attr("minute", fromMinute)
+	default:
+		fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(duration*60))
+		query.Attr("minute", fromMinute)
+	}
+
+	m, _, err := query.FindOne()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return m.GetFloat64("sumValue"), m.GetFloat64("avgValue"), m.GetFloat64("maxValueResult"), nil
+}
+
 // SumNodeValues 计算节点的某项参数值
 func (this *NodeValueDAO) SumNodeValues(tx *dbs.Tx, role string, nodeId int64, item string, param string, method nodeconfigs.NodeValueSumMethod, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit) (float64, error) {
 	if duration <= 0 {
@@ -261,11 +291,13 @@ func (this *NodeValueDAO) SumNodeClusterValues(tx *dbs.Tx, role string, clusterI
 
 // FindLatestNodeValue 获取最近一条数据
 func (this *NodeValueDAO) FindLatestNodeValue(tx *dbs.Tx, role string, nodeId int64, item string) (*NodeValue, error) {
+	fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(60))
+
 	one, err := this.Query(tx).
 		Attr("role", role).
 		Attr("nodeId", nodeId).
 		Attr("item", item).
-		DescPk().
+		Attr("minute", fromMinute).
 		Find()
 	if err != nil {
 		return nil, err
@@ -274,4 +306,63 @@ func (this *NodeValueDAO) FindLatestNodeValue(tx *dbs.Tx, role string, nodeId in
 		return nil, nil
 	}
 	return one.(*NodeValue), nil
+}
+
+// ComposeNodeStatus 组合节点状态值
+func (this *NodeValueDAO) ComposeNodeStatus(tx *dbs.Tx, role string, nodeId int64, statusConfig *nodeconfigs.NodeStatus) error {
+	var items = []string{
+		nodeconfigs.NodeValueItemCPU,
+		nodeconfigs.NodeValueItemMemory,
+		nodeconfigs.NodeValueItemLoad,
+		nodeconfigs.NodeValueItemTrafficOut,
+		nodeconfigs.NodeValueItemTrafficIn,
+	}
+	ones, err := this.Query(tx).
+		Result("item", "value").
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		Attr("minute", timeutil.FormatTime("YmdHi", time.Now().Unix()-60)).
+		Where("item IN ('" + strings.Join(items, "', '") + "')").
+		FindAll()
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var oneValue = one.(*NodeValue)
+		var valueMap = oneValue.DecodeMapValue()
+		switch oneValue.Item {
+		case nodeconfigs.NodeValueItemCPU:
+			statusConfig.CPUUsage = valueMap.GetFloat64("usage")
+		case nodeconfigs.NodeValueItemMemory:
+			statusConfig.MemoryUsage = valueMap.GetFloat64("usage")
+		case nodeconfigs.NodeValueItemLoad:
+			statusConfig.Load1m = valueMap.GetFloat64("load1m")
+			statusConfig.Load5m = valueMap.GetFloat64("load5m")
+			statusConfig.Load15m = valueMap.GetFloat64("load15m")
+		case nodeconfigs.NodeValueItemTrafficOut:
+			statusConfig.TrafficOutBytes = valueMap.GetUint64("total")
+		case nodeconfigs.NodeValueItemTrafficIn:
+			statusConfig.TrafficInBytes = valueMap.GetUint64("total")
+		}
+	}
+
+	return nil
+}
+
+// ComposeNodeStatusJSON 组合节点状态值，并转换为JSON数据
+func (this *NodeValueDAO) ComposeNodeStatusJSON(tx *dbs.Tx, role string, nodeId int64, statusJSON []byte) ([]byte, error) {
+	var statusConfig = &nodeconfigs.NodeStatus{}
+	if len(statusJSON) > 0 {
+		err := json.Unmarshal(statusJSON, statusConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err := this.ComposeNodeStatus(tx, role, nodeId, statusConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(statusConfig)
 }

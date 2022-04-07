@@ -385,6 +385,10 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
 	case "trafficOutDesc":
 		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
+	case "loadAsc":
+		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.load1m'), 0), 0)")
+	case "loadDesc":
+		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.load1m'), 0), 0)")
 	default:
 		query.Desc("level")
 	}

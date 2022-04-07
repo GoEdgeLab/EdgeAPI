@@ -19,6 +19,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/andybalholm/brotli"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
@@ -181,19 +182,21 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 
 	tx := this.NullTx()
 
-	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
-	if err != nil {
-		return nil, err
-	}
+	var dnsDomainId = int64(0)
+	var domainRoutes = []*dnstypes.Route{}
 
-	dnsDomainId := int64(0)
-	domainRoutes := []*dnstypes.Route{}
-	if clusterDNS != nil {
-		dnsDomainId = int64(clusterDNS.DnsDomainId)
-		if clusterDNS.DnsDomainId > 0 {
-			domainRoutes, err = dns.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
-			if err != nil {
-				return nil, err
+	if req.NodeClusterId > 0 {
+		clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if clusterDNS != nil {
+			dnsDomainId = int64(clusterDNS.DnsDomainId)
+			if clusterDNS.DnsDomainId > 0 {
+				domainRoutes, err = dns.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -216,13 +219,18 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		order = "trafficOutAsc"
 	} else if req.TrafficOutDesc {
 		order = "trafficOutDesc"
+	} else if req.LoadAsc {
+		order = "loadAsc"
+	} else if req.LoadDesc {
+		order = "loadDesc"
 	}
 
 	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, req.Level, true, order, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.Node{}
+	var result = []*pb.Node{}
+	var cacheMap = utils.NewCacheMap()
 	for _, node := range nodes {
 		// 主集群信息
 		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(node.ClusterId))
@@ -277,19 +285,54 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		}
 
 		// DNS线路
-		routeCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
-		if err != nil {
-			return nil, err
-		}
-		pbRoutes := []*pb.DNSRoute{}
-		for _, routeCode := range routeCodes {
-			for _, route := range domainRoutes {
-				if route.Code == routeCode {
-					pbRoutes = append(pbRoutes, &pb.DNSRoute{
-						Name: route.Name,
-						Code: route.Code,
-					})
-					break
+		var pbRoutes = []*pb.DNSRoute{}
+		if dnsDomainId > 0 {
+			routeCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, routeCode := range routeCodes {
+				for _, route := range domainRoutes {
+					if route.Code == routeCode {
+						pbRoutes = append(pbRoutes, &pb.DNSRoute{
+							Name: route.Name,
+							Code: route.Code,
+						})
+						break
+					}
+				}
+			}
+		} else if req.NodeClusterId == 0 {
+			var clusterDomainIds = []int64{}
+			for _, clusterId := range node.AllClusterIds() {
+				clusterDNSInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if clusterDNSInfo != nil && clusterDNSInfo.DnsDomainId > 0 {
+					clusterDomainIds = append(clusterDomainIds, int64(clusterDNSInfo.DnsDomainId))
+				}
+			}
+
+			for domainId, routeCodes := range node.DNSRouteCodes() {
+				if domainId == 0 {
+					continue
+				}
+				if !lists.ContainsInt64(clusterDomainIds, domainId) {
+					continue
+				}
+				for _, routeCode := range routeCodes {
+					routeName, err := dns.SharedDNSDomainDAO.FindDomainRouteName(tx, domainId, routeCode)
+					if err != nil {
+						return nil, err
+					}
+					if len(routeName) > 0 {
+						pbRoutes = append(pbRoutes, &pb.DNSRoute{
+							Name: routeName,
+							Code: routeCode,
+						})
+					}
 				}
 			}
 		}
@@ -310,12 +353,18 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			}
 		}
 
+		// 状态
+		statusJSON, err := models.SharedNodeValueDAO.ComposeNodeStatusJSON(tx, nodeconfigs.NodeRoleNode, int64(node.Id), node.Status)
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.Node{
 			Id:          int64(node.Id),
 			Name:        node.Name,
 			Version:     int64(node.Version),
 			IsInstalled: node.IsInstalled,
-			StatusJSON:  node.Status,
+			StatusJSON:  statusJSON,
 			NodeCluster: &pb.NodeCluster{
 				Id:   int64(node.ClusterId),
 				Name: clusterName,
@@ -455,6 +504,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	if err != nil {
 		return nil, err
 	}
+	var clusterIds = []int64{int64(node.ClusterId)}
 
 	// 从集群信息
 	var secondaryPBClusters []*pb.NodeCluster
@@ -471,6 +521,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 			IsOn: cluster.IsOn,
 			Name: cluster.Name,
 		})
+		clusterIds = append(clusterIds, int64(cluster.Id))
 	}
 
 	// 认证信息
@@ -556,10 +607,49 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 线路
+	var pbRoutes = []*pb.DNSRoute{}
+	var clusterDomainIds = []int64{}
+	for _, clusterId := range node.AllClusterIds() {
+		clusterDNSInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if clusterDNSInfo != nil && clusterDNSInfo.DnsDomainId > 0 {
+			clusterDomainIds = append(clusterDomainIds, int64(clusterDNSInfo.DnsDomainId))
+		}
+	}
+	for domainId, routeCodes := range node.DNSRouteCodes() {
+		if domainId == 0 {
+			continue
+		}
+		if !lists.ContainsInt64(clusterDomainIds, domainId) {
+			continue
+		}
+		for _, routeCode := range routeCodes {
+			routeName, err := dns.SharedDNSDomainDAO.FindDomainRouteName(tx, domainId, routeCode)
+			if err != nil {
+				return nil, err
+			}
+			if len(routeName) > 0 {
+				pbRoutes = append(pbRoutes, &pb.DNSRoute{
+					Name: routeName,
+					Code: routeCode,
+				})
+			}
+		}
+	}
+
+	// 监控状态
+	statusJSON, err := models.SharedNodeValueDAO.ComposeNodeStatusJSON(tx, nodeconfigs.NodeRoleNode, int64(node.Id), node.Status)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.FindEnabledNodeResponse{Node: &pb.Node{
 		Id:            int64(node.Id),
 		Name:          node.Name,
-		StatusJSON:    node.Status,
+		StatusJSON:    statusJSON,
 		UniqueId:      node.UniqueId,
 		Version:       int64(node.Version),
 		LatestVersion: int64(node.LatestVersion),
@@ -582,6 +672,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
 		CacheDiskDir:           node.CacheDiskDir,
 		Level:                  int32(node.Level),
+		DnsRoutes:              pbRoutes,
 	}}, nil
 }
 

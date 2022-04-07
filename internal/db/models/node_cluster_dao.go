@@ -97,6 +97,7 @@ func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeClu
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
 		Slice(&result).
+		Desc("isPinned").
 		Desc("order").
 		DescPk().
 		FindAll()

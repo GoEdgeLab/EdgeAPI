@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
@@ -51,4 +52,30 @@ func TestNodeValueDAO_CreateManyValues(t *testing.T) {
 		}
 	}
 	t.Log("finished")
+}
+
+func TestNodeValueDAO_SumAllNodeValues(t *testing.T) {
+	var dao = models.NewNodeValueDAO()
+	sum, avg, max, err := dao.SumAllNodeValues(nil, nodeconfigs.NodeRoleNode, nodeconfigs.NodeValueItemCPU, "usage", 1, nodeconfigs.NodeValueDurationUnitMinute)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("sum:", sum, "avg:", avg, "max:", max)
+}
+
+func TestNodeValueDAO_ComposeNodeStatus(t *testing.T) {
+	var dao = models.NewNodeValueDAO()
+	one, err := dao.Query(nil).DescPk().Find()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if one != nil {
+		var config = &nodeconfigs.NodeStatus{}
+		err = dao.ComposeNodeStatus(nil, one.(*models.NodeValue).Role, int64(one.(*models.NodeValue).NodeId), config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.PrintAsJSON(config, t)
+	}
 }
