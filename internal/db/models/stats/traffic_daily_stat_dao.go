@@ -112,6 +112,18 @@ func (this *TrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, dayFrom string, dayT
 	return result, nil
 }
 
+// FindDailyStat 查找某天的统计
+func (this *TrafficDailyStatDAO) FindDailyStat(tx *dbs.Tx, day string) (*TrafficDailyStat, error) {
+	one, err := this.Query(tx).
+		Attr("day", day).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*TrafficDailyStat), nil
+}
+
 // Clean 清理历史数据
 func (this *TrafficDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))

@@ -564,6 +564,12 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 
+	{
+		instance := this.serviceInstance(&services.TrafficDailyStatService{}).(*services.TrafficDailyStatService)
+		pb.RegisterTrafficDailyStatServiceServer(server, instance)
+		this.rest(instance)
+	}
+
 	APINodeServicesRegister(this, server)
 
 	// TODO check service names
