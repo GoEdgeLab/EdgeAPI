@@ -11,6 +11,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"github.com/iwind/gosock/pkg/gosock"
 	"log"
 	"os"
@@ -97,6 +98,31 @@ func main() {
 			}
 		}
 	})
+	app.On("db.stmt.prepare", func() {
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "db.stmt.prepare"})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			var isOn = maps.NewMap(reply.Params).GetBool("isOn")
+			if isOn {
+				fmt.Println("show statements: on")
+			} else {
+				fmt.Println("show statements: off")
+			}
+		}
+	})
+	app.On("db.stmt.count", func() {
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "db.stmt.count"})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			var count = maps.NewMap(reply.Params).GetInt("count")
+			fmt.Println("prepared statements count: " + types.String(count))
+		}
+	})
+
 	app.Run(func() {
 		nodes.NewAPINode().Start()
 	})

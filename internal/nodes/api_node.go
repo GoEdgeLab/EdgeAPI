@@ -585,8 +585,22 @@ func (this *APINode) listenSock() error {
 				_ = cmd.Reply(&gosock.Command{
 					Params: map[string]interface{}{"debug": teaconst.Debug},
 				})
-			case "db.stmt":
-				dbs.ShowPreparedStatements = true
+			case "db.stmt.prepare":
+				dbs.ShowPreparedStatements = !dbs.ShowPreparedStatements
+				_ = cmd.Reply(&gosock.Command{
+					Params: map[string]interface{}{"isOn": dbs.ShowPreparedStatements},
+				})
+			case "db.stmt.count":
+				db, _ := dbs.Default()
+				if db != nil {
+					_ = cmd.Reply(&gosock.Command{
+						Params: map[string]interface{}{"count": db.StmtManager().Len()},
+					})
+				} else {
+					_ = cmd.Reply(&gosock.Command{
+						Params: map[string]interface{}{"count": 0},
+					})
+				}
 			}
 		})
 
