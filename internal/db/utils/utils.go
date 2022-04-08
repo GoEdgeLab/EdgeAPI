@@ -3,10 +3,7 @@ package dbutils
 import (
 	"github.com/iwind/TeaGo/dbs"
 	"strings"
-	"sync"
 )
-
-var SharedCacheLocker = sync.RWMutex{}
 
 // NewQuery 构造Query
 func NewQuery(tx *dbs.Tx, dao dbs.DAOWrapper, adminId int64, userId int64) *dbs.Query {

@@ -237,7 +237,7 @@ func (this *DBNodeInitializer) loop() error {
 		}
 
 		if db == nil {
-			config := &dbs.DBConfig{
+			var config = &dbs.DBConfig{
 				Driver: "mysql",
 				Dsn:    dsn,
 				Prefix: "edge",

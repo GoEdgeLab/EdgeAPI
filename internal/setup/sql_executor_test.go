@@ -28,6 +28,9 @@ func TestSQLExecutor_checkCluster(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	err = executor.checkCluster(db)
 	if err != nil {
@@ -46,6 +49,9 @@ func TestSQLExecutor_checkMetricItems(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	err = executor.checkMetricItems(db)
 	if err != nil {
@@ -64,6 +70,9 @@ func TestSQLExecutor_checkNS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	err = executor.checkNS(db)
 	if err != nil {

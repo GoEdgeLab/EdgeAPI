@@ -30,6 +30,9 @@ func TestNewHTTPAccessLogManager(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	var manager = models.SharedHTTPAccessLogManager
 	err = manager.CreateTable(db, "accessLog_1")
@@ -58,6 +61,9 @@ func TestHTTPAccessLogManager_FindTableNames(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	for i := 0; i < 3; i++ {
 		var before = time.Now()
@@ -73,7 +79,6 @@ func TestHTTPAccessLogManager_FindTableNames(t *testing.T) {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}
 }
-
 
 func TestHTTPAccessLogManager_FindTables(t *testing.T) {
 	var config = &dbs.DBConfig{
@@ -95,6 +100,9 @@ func TestHTTPAccessLogManager_FindTables(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	for i := 0; i < 3; i++ {
 		var before = time.Now()
@@ -131,6 +139,9 @@ func TestHTTPAccessLogManager_FindTable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	for i := 0; i < 3; i++ {
 		var before = time.Now()

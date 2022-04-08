@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	_ "github.com/iwind/TeaGo/bootstrap"
@@ -41,4 +42,14 @@ func TestDB_Instance(t *testing.T) {
 		}(db, i)
 	}
 	time.Sleep(100 * time.Second)
+}
+
+func TestDB_Reuse(t *testing.T) {
+	var dao = models.NewVersionDAO()
+	for i := 0; i < 20_000; i++ {
+		_, _, err := dao.Query(nil).Attr("version", i).Reuse(true).FindOne()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 }

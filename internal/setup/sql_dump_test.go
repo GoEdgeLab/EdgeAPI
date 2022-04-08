@@ -12,6 +12,12 @@ func TestSQLDump_Dump(t *testing.T) {
 		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge?charset=utf8mb4&timeout=30s",
 		Prefix: "edge",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	dump := NewSQLDump()
 	result, err := dump.Dump(db)
@@ -49,6 +55,12 @@ func TestSQLDump_Apply(t *testing.T) {
 		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge?charset=utf8mb4&timeout=30s",
 		Prefix: "edge",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = db.Close()
+	}()
 
 	dump := NewSQLDump()
 	result, err := dump.Dump(db)
@@ -64,6 +76,9 @@ func TestSQLDump_Apply(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db2.Close()
+	}()
 	ops, err := dump.Apply(db2, result, false)
 	if err != nil {
 		t.Fatal(err)

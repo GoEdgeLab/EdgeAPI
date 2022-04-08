@@ -284,6 +284,9 @@ func (this *APINode) autoUpgrade() error {
 	if err != nil {
 		return errors.New("load database failed: " + err.Error())
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	one, err := db.FindOne("SELECT version FROM edgeVersions LIMIT 1")
 	if err != nil {
 		return errors.New("query version failed: " + err.Error())

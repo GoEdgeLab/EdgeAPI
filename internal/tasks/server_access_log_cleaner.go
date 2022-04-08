@@ -77,18 +77,27 @@ func (this *ServerAccessLogCleaner) Loop() error {
 		return err
 	}
 	for _, node := range nodes {
-		dbConfig := node.DBConfig()
-		db, err := dbs.NewInstanceFromConfig(dbConfig)
-		if err != nil {
-			return err
-		}
-		err = this.cleanDB(db, endDay)
-		if err != nil {
-			_ = db.Close()
-			return err
-		}
+		err := func(node *models.DBNode) error {
+			var dbConfig = node.DBConfig()
+			nodeDB, err := dbs.NewInstanceFromConfig(dbConfig)
+			if err != nil {
+				return err
+			}
 
-		_ = db.Close()
+			defer func() {
+				_ = nodeDB.Close()
+			}()
+
+			err = this.cleanDB(nodeDB, endDay)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}(node)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

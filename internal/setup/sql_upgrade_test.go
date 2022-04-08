@@ -14,6 +14,9 @@ func TestUpgradeSQLData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = UpgradeSQLData(db)
 	if err != nil {
 		t.Fatal(err)
@@ -30,6 +33,9 @@ func TestUpgradeSQLData_v0_3_1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_3_1(db)
 	if err != nil {
 		t.Fatal(err)
@@ -46,6 +52,9 @@ func TestUpgradeSQLData_v0_3_2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_3_2(db)
 	if err != nil {
 		t.Fatal(err)
@@ -62,6 +71,9 @@ func TestUpgradeSQLData_v0_3_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_3_3(db)
 	if err != nil {
 		t.Fatal(err)
@@ -78,6 +90,9 @@ func TestUpgradeSQLData_v0_3_7(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_3_7(db)
 	if err != nil {
 		t.Fatal(err)
@@ -94,6 +109,9 @@ func TestUpgradeSQLData_v0_4_0(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_4_0(db)
 	if err != nil {
 		t.Fatal(err)
@@ -110,6 +128,9 @@ func TestUpgradeSQLData_v0_4_1(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_4_1(db)
 	if err != nil {
 		t.Fatal(err)
@@ -127,6 +148,9 @@ func TestUpgradeSQLData_v0_4_5(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = db.Close()
+	}()
 	err = upgradeV0_4_5(db)
 	if err != nil {
 		t.Fatal(err)
