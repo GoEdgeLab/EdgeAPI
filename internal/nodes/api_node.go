@@ -585,6 +585,8 @@ func (this *APINode) listenSock() error {
 				_ = cmd.Reply(&gosock.Command{
 					Params: map[string]interface{}{"debug": teaconst.Debug},
 				})
+			case "db.stmt":
+				dbs.ShowPreparedStatements = true
 			}
 		})
 

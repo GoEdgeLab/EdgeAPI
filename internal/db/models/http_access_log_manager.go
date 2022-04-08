@@ -38,7 +38,7 @@ func (this *HTTPAccessLogManager) FindTableNames(db *dbs.DB, day string) ([]stri
 
 	// 需要防止用户设置了表名自动小写
 	for _, prefix := range []string{"edgeHTTPAccessLogs_" + day + "%", "edgehttpaccesslogs_" + day + "%"} {
-		ones, columnNames, err := db.FindOnes(`SHOW TABLES LIKE '` + prefix + `'`)
+		ones, columnNames, err := db.FindPreparedOnes(`SHOW TABLES LIKE '` + prefix + `'`)
 		if err != nil {
 			return nil, errors.New("query table names error: " + err.Error())
 		}
@@ -77,9 +77,15 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 	var results = []*httpAccessLogDefinition{}
 	var tableNames = []string{}
 
+	config, err := db.Config()
+	if err != nil {
+		return nil, err
+	}
+	var cachePrefix = config.Dsn
+
 	// 需要防止用户设置了表名自动小写
 	for _, prefix := range []string{"edgeHTTPAccessLogs_" + day + "%", "edgehttpaccesslogs_" + day + "%"} {
-		ones, columnNames, err := db.FindOnes(`SHOW TABLES LIKE '` + prefix + `'`)
+		ones, columnNames, err := db.FindPreparedOnes(`SHOW TABLES LIKE '` + prefix + `'`)
 		if err != nil {
 			return nil, errors.New("query table names error: " + err.Error())
 		}
@@ -96,17 +102,26 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 			if accessLogTableMainReg.MatchString(tableName) {
 				tableNames = append(tableNames, tableName)
 
-				hasRemoteAddrField, hasDomainField, err := this.checkTableFields(db, tableName)
-				if err != nil {
-					return nil, err
-				}
+				var tableDay = tableName[strings.LastIndex(tableName, "_")+1:]
+				var cacheKey = this.composeTableCacheKey(cachePrefix, tableDay)
+				this.locker.Lock()
+				currentTableDef, ok := this.currentTableMapping[cacheKey]
+				this.locker.Unlock()
+				if ok {
+					results = append(results, currentTableDef)
+				} else {
+					hasRemoteAddrField, hasDomainField, err := this.checkTableFields(db, tableName)
+					if err != nil {
+						return nil, err
+					}
 
-				results = append(results, &httpAccessLogDefinition{
-					Name:          tableName,
-					HasRemoteAddr: hasRemoteAddrField,
-					HasDomain:     hasDomainField,
-					Exists:        true,
-				})
+					results = append(results, &httpAccessLogDefinition{
+						Name:          tableName,
+						HasRemoteAddr: hasRemoteAddrField,
+						HasDomain:     hasDomainField,
+						Exists:        true,
+					})
+				}
 			} else if accessLogTablePartialReg.MatchString(tableName) {
 				tableNames = append(tableNames, tableName)
 
@@ -296,7 +311,7 @@ func (this *HTTPAccessLogManager) findTableWithoutCache(db *dbs.DB, day string, 
 
 // TODO 考虑缓存检查结果
 func (this *HTTPAccessLogManager) checkTableFields(db *dbs.DB, tableName string) (hasRemoteAddrField bool, hasDomainField bool, err error) {
-	fields, _, err := db.FindOnes("SHOW FIELDS FROM " + tableName)
+	fields, _, err := db.FindPreparedOnes("SHOW FIELDS FROM " + tableName)
 	if err != nil {
 		return false, false, err
 	}

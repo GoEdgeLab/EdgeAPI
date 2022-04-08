@@ -104,7 +104,7 @@ func (this *ServerAccessLogCleaner) Loop() error {
 }
 
 func (this *ServerAccessLogCleaner) cleanDB(db *dbs.DB, endDay string) error {
-	ones, columnNames, err := db.FindOnes("SHOW TABLES")
+	ones, columnNames, err := db.FindPreparedOnes("SHOW TABLES")
 	if err != nil {
 		return err
 	}

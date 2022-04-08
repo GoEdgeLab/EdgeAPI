@@ -25,7 +25,7 @@ func (this *DBService) FindAllDBTables(ctx context.Context, req *pb.FindAllDBTab
 	if err != nil {
 		return nil, err
 	}
-	ones, _, err := db.FindOnes("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
+	ones, _, err := db.FindPreparedOnes("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
 	if err != nil {
 		return nil, err
 	}

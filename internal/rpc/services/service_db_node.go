@@ -199,7 +199,7 @@ func (this *DBNodeService) FindAllDBNodeTables(ctx context.Context, req *pb.Find
 		_ = db.Close()
 	}()
 
-	ones, _, err := db.FindOnes("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
+	ones, _, err := db.FindPreparedOnes("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA=?", db.Name())
 	if err != nil {
 		return nil, err
 	}
