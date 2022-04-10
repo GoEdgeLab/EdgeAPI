@@ -119,7 +119,7 @@ func TestHTTPAccessLogManager_FindTables(t *testing.T) {
 	}
 }
 
-func TestHTTPAccessLogManager_FindTable(t *testing.T) {
+func TestHTTPAccessLogManager_FindLastTable(t *testing.T) {
 	var config = &dbs.DBConfig{
 		Driver: "mysql",
 		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge_log?charset=utf8mb4&timeout=30s",
@@ -145,7 +145,7 @@ func TestHTTPAccessLogManager_FindTable(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		var before = time.Now()
-		tableDef, err := models.SharedHTTPAccessLogManager.FindTable(db, "20220306", false)
+		tableDef, err := models.SharedHTTPAccessLogManager.FindLastTable(db, "20220306", false)
 		if err != nil {
 			t.Fatal(err)
 		}

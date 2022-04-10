@@ -102,13 +102,19 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 			if accessLogTableMainReg.MatchString(tableName) {
 				tableNames = append(tableNames, tableName)
 
+				// 查找已有的表格信息，避免SHOW FIELDS
 				var tableDay = tableName[strings.LastIndex(tableName, "_")+1:]
 				var cacheKey = this.composeTableCacheKey(cachePrefix, tableDay)
 				this.locker.Lock()
 				currentTableDef, ok := this.currentTableMapping[cacheKey]
 				this.locker.Unlock()
 				if ok {
-					results = append(results, currentTableDef)
+					results = append(results, &httpAccessLogDefinition{
+						Name:          tableName,
+						HasRemoteAddr: currentTableDef.HasRemoteAddr,
+						HasDomain:     currentTableDef.HasDomain,
+						Exists:        true,
+					})
 				} else {
 					hasRemoteAddrField, hasDomainField, err := this.checkTableFields(db, tableName)
 					if err != nil {
@@ -143,11 +149,11 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 	return results, nil
 }
 
-// FindTable 根据日期获取表名
+// FindLastTable 根据日期获取上一个可以使用的表名
 // 表名组成
 //   - PREFIX_DAY
 //   - PREFIX_DAY_0001
-func (this *HTTPAccessLogManager) FindTable(db *dbs.DB, day string, force bool) (*httpAccessLogDefinition, error) {
+func (this *HTTPAccessLogManager) FindLastTable(db *dbs.DB, day string, force bool) (*httpAccessLogDefinition, error) {
 	this.locker.Lock()
 	defer this.locker.Unlock()
 

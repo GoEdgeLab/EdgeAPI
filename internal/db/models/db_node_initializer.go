@@ -251,7 +251,7 @@ func (this *DBNodeInitializer) loop() error {
 			// 检查表是否存在
 			// httpAccessLog
 			{
-				tableDef, err := SharedHTTPAccessLogManager.FindTable(db, timeutil.Format("Ymd"), true)
+				tableDef, err := SharedHTTPAccessLogManager.FindLastTable(db, timeutil.Format("Ymd"), true)
 				if err != nil {
 					remotelogs.Error("DB_NODE", "create first table in database node failed: "+err.Error())
 
