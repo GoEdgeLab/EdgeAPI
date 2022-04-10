@@ -112,6 +112,31 @@ func (this *TrafficHourlyStatDAO) FindHourlyStats(tx *dbs.Tx, hourFrom string, h
 	return result, nil
 }
 
+// FindHourlyStat 查FindHourlyStat 找单个小时的统计
+func (this *TrafficHourlyStatDAO) FindHourlyStat(tx *dbs.Tx, hour string) (*TrafficHourlyStat, error) {
+	one, err := this.Query(tx).
+		Attr("hour", hour).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*TrafficHourlyStat), err
+}
+
+// SumHourlyStats 计算多个小时的统计总和
+func (this *TrafficHourlyStatDAO) SumHourlyStats(tx *dbs.Tx, hourFrom string, hourTo string) (*TrafficHourlyStat, error) {
+	one, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes").
+		Between("hour", hourFrom, hourTo).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*TrafficHourlyStat), nil
+}
+
 // Clean 清理历史数据
 func (this *TrafficHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
 	var hour = timeutil.Format("Ymd00", time.Now().AddDate(0, 0, -days))

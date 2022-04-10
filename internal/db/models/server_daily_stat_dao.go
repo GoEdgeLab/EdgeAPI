@@ -309,6 +309,40 @@ func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day str
 	return
 }
 
+// SumDailyStatBeforeMinute 获取某天内某个时间之前的流量
+// 用于同期流量对比
+// day 格式为YYYYMMDD
+// minute 格式为HHIISS
+func (this *ServerDailyStatDAO) SumDailyStatBeforeMinute(tx *dbs.Tx, serverId int64, day string, minute string) (stat *pb.ServerDailyStat, err error) {
+	stat = &pb.ServerDailyStat{}
+
+	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
+		return nil, errors.New("invalid day '" + day + "'")
+	}
+
+	one, _, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
+		Attr("serverId", serverId).
+		Attr("day", day).
+		Lte("minute", minute).
+		FindOne()
+	if err != nil {
+		return nil, err
+	}
+
+	if one == nil {
+		return
+	}
+
+	stat.Bytes = one.GetInt64("bytes")
+	stat.CachedBytes = one.GetInt64("cachedBytes")
+	stat.CountRequests = one.GetInt64("countRequests")
+	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
+	stat.AttackBytes = one.GetInt64("attackBytes")
+	return
+}
+
 // SumMonthlyStat 获取某月内的流量
 // month 格式为YYYYMM
 func (this *ServerDailyStatDAO) SumMonthlyStat(tx *dbs.Tx, serverId int64, month string) (stat *pb.ServerDailyStat, err error) {
