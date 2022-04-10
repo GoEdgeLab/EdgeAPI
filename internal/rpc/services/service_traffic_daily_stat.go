@@ -61,13 +61,13 @@ func (this *TrafficDailyStatService) FindTrafficDailyStatWithDay(ctx context.Con
 			return nil, err
 		}
 		if hourStat != nil {
-			var seconds = types.Int(req.Minute[2:4])*60 + types.Int(req.Minute[4:]) + 1 /** 因为是0-59，所以+1 **/
-			stat.Bytes += hourStat.Bytes * uint64(seconds) / 3600
-			stat.CachedBytes += hourStat.CachedBytes * uint64(seconds) / 3600
-			stat.CountRequests += hourStat.CountRequests * uint64(seconds) / 3600
-			stat.CountCachedRequests += hourStat.CountCachedRequests * uint64(seconds) / 3600
-			stat.CountAttackRequests += hourStat.CountAttackRequests * uint64(seconds) / 3600
-			stat.AttackBytes += hourStat.AttackBytes * uint64(seconds) / 3600
+			var minutes = types.Int(req.Minute[2:4])/10 + 1 // 这里使用10分钟（所以下面是6），而不是秒，以便于让数据不至于变化太大，毕竟流量不是事实统计的
+			stat.Bytes += hourStat.Bytes * uint64(minutes) / 6
+			stat.CachedBytes += hourStat.CachedBytes * uint64(minutes) / 6
+			stat.CountRequests += hourStat.CountRequests * uint64(minutes) / 6
+			stat.CountCachedRequests += hourStat.CountCachedRequests * uint64(minutes) / 6
+			stat.CountAttackRequests += hourStat.CountAttackRequests * uint64(minutes) / 6
+			stat.AttackBytes += hourStat.AttackBytes * uint64(minutes) / 6
 		}
 	} else {
 		stat, err = stats.SharedTrafficDailyStatDAO.FindDailyStat(tx, day)
