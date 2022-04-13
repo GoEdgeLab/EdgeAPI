@@ -609,12 +609,16 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 // ListEnabledServersMatch 列出单页服务
 func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.ListEnabledServersMatchRequest) (*pb.ListEnabledServersMatchResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := this.NullTx()
+
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, utils.SplitStrings(req.ProtocolFamily, ","))
 	if err != nil {
@@ -644,8 +648,9 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 					continue
 				}
 				pbGroups = append(pbGroups, &pb.ServerGroup{
-					Id:   int64(group.Id),
-					Name: group.Name,
+					Id:     int64(group.Id),
+					Name:   group.Name,
+					UserId: int64(group.UserId),
 				})
 			}
 		}
