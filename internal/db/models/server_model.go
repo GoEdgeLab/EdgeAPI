@@ -11,6 +11,7 @@ type Server struct {
 	Type                string   `field:"type"`                // 服务类型
 	Name                string   `field:"name"`                // 名称
 	Description         string   `field:"description"`         // 描述
+	PlainServerNames    dbs.JSON `field:"plainServerNames"`    // 扁平化域名列表
 	ServerNames         dbs.JSON `field:"serverNames"`         // 域名列表
 	AuditingAt          uint64   `field:"auditingAt"`          // 审核提交时间
 	AuditingServerNames dbs.JSON `field:"auditingServerNames"` // 审核中的域名
@@ -57,6 +58,7 @@ type ServerOperator struct {
 	Type                interface{} // 服务类型
 	Name                interface{} // 名称
 	Description         interface{} // 描述
+	PlainServerNames    interface{} // 扁平化域名列表
 	ServerNames         interface{} // 域名列表
 	AuditingAt          interface{} // 审核提交时间
 	AuditingServerNames interface{} // 审核中的域名

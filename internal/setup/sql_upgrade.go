@@ -72,6 +72,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.5", upgradeV0_4_5,
 	},
+	{
+		"0.4.7", upgradeV0_4_7,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -620,18 +623,49 @@ func upgradeV0_4_5(db *dbs.DB) error {
 		}
 	}
 
-	// 升级一个SQL注入规则
+	// 升级一个防SQL注入规则
 	{
-		var dao = models.NewHTTPFirewallRuleDAO()
-		ones, _, err := dao.Instance.FindOnes(`SELECT id FROM edgeHTTPFirewallRules WHERE value=?`, "(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\\s*\\(")
+		ones, _, err := db.FindOnes(`SELECT id FROM edgeHTTPFirewallRules WHERE value=?`, "(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\\s*\\(")
 		if err != nil {
 			return err
 		}
 		for _, one := range ones {
 			var ruleId = one.GetInt64("id")
-			_, err = dao.Instance.Exec(`UPDATE edgeHTTPFirewallRules SET value=? WHERE id=? LIMIT 1`, `\b(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\s*\(.*\)`, ruleId)
+			_, err = db.Exec(`UPDATE edgeHTTPFirewallRules SET value=? WHERE id=? LIMIT 1`, `\b(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\s*\(.*\)`, ruleId)
 			if err != nil {
 				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// v0.4.7
+func upgradeV0_4_7(db *dbs.DB) error {
+	// 升级 edgeServers 中的 plainServerNames
+	{
+		ones, _, err := db.FindOnes("SELECT id,serverNames FROM edgeServers WHERE state=1")
+		if err != nil {
+			return err
+		}
+		for _, one := range ones {
+			var serverId = one.GetInt64("id")
+			var serverNamesJSON = one.GetBytes("serverNames")
+			if len(serverNamesJSON) > 0 {
+				var serverNames = []*serverconfigs.ServerNameConfig{}
+				err = json.Unmarshal(serverNamesJSON, &serverNames)
+				if err != nil {
+					return err
+				}
+				plainServerNamesJSON, err := json.Marshal(serverconfigs.PlainServerNames(serverNames))
+				if err != nil {
+					return err
+				}
+				_, err = db.Exec("UPDATE edgeServers SET plainServerNames=? WHERE id=?", plainServerNamesJSON, serverId)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

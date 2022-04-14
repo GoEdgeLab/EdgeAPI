@@ -160,15 +160,27 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	excludeNodesJSON string,
 	groupIds []int64,
 	userPlanId int64) (serverId int64, err error) {
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.UserId = userId
 	op.AdminId = adminId
 	op.Name = name
 	op.Type = serverType
 	op.Description = description
 
-	if len(serverNamesJSON) > 0 {
+	if IsNotNull(serverNamesJSON) {
+		var serverNames = []*serverconfigs.ServerNameConfig{}
+		err := json.Unmarshal(serverNamesJSON, &serverNames)
+		if err != nil {
+			return 0, err
+		}
+
 		op.ServerNames = serverNamesJSON
+
+		plainServerNamesJSON, err := json.Marshal(serverconfigs.PlainServerNames(serverNames))
+		if err != nil {
+			return 0, err
+		}
+		op.PlainServerNames = plainServerNamesJSON
 	}
 	op.IsAuditing = isAuditing
 	op.AuditingAt = time.Now().Unix()
@@ -556,7 +568,7 @@ func (this *ServerDAO) FindServerServerNames(tx *dbs.Tx, serverId int64) (server
 }
 
 // UpdateServerNames 修改ServerNames配置
-func (this *ServerDAO) UpdateServerNames(tx *dbs.Tx, serverId int64, serverNames []byte) error {
+func (this *ServerDAO) UpdateServerNames(tx *dbs.Tx, serverId int64, serverNamesJSON []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -564,10 +576,23 @@ func (this *ServerDAO) UpdateServerNames(tx *dbs.Tx, serverId int64, serverNames
 	op := NewServerOperator()
 	op.Id = serverId
 
-	if len(serverNames) == 0 {
-		serverNames = []byte("[]")
+	if IsNull(serverNamesJSON) {
+		serverNamesJSON = []byte("[]")
+	} else {
+		var serverNames = []*serverconfigs.ServerNameConfig{}
+		err := json.Unmarshal(serverNamesJSON, &serverNames)
+		if err != nil {
+			return err
+		}
+
+		op.ServerNames = serverNamesJSON
+		plainServerNamesJSON, err := json.Marshal(serverconfigs.PlainServerNames(serverNames))
+		if err != nil {
+			return err
+		}
+		op.PlainServerNames = plainServerNamesJSON
 	}
-	op.ServerNames = serverNames
+	op.ServerNames = serverNamesJSON
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -587,7 +612,7 @@ func (this *ServerDAO) UpdateAuditingServerNames(tx *dbs.Tx, serverId int64, isA
 	if isAuditing {
 		op.AuditingAt = time.Now().Unix()
 	}
-	if len(auditingServerNamesJSON) == 0 {
+	if IsNull(auditingServerNamesJSON) {
 		op.AuditingServerNames = "[]"
 	} else {
 		op.AuditingServerNames = auditingServerNamesJSON
@@ -615,12 +640,35 @@ func (this *ServerDAO) UpdateServerAuditing(tx *dbs.Tx, serverId int64, result *
 		return err
 	}
 
-	op := NewServerOperator()
+	auditingServerNamesJSON, err := this.Query(tx).
+		Pk(serverId).
+		Result("auditingServerNames").
+		FindJSONCol()
+	if err != nil {
+		return err
+	}
+
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.IsAuditing = false
 	op.AuditingResult = resultJSON
 	if result.IsOk {
 		op.ServerNames = dbs.SQL("auditingServerNames")
+
+		if IsNotNull(auditingServerNamesJSON) {
+			var serverNames = []*serverconfigs.ServerNameConfig{}
+			err := json.Unmarshal(auditingServerNamesJSON, &serverNames)
+			if err != nil {
+				return err
+			}
+			plainServerNamesJSON, err := json.Marshal(serverconfigs.PlainServerNames(serverNames))
+			if err != nil {
+				return err
+			}
+			op.PlainServerNames = plainServerNamesJSON
+		} else {
+			op.PlainServerNames = "[]"
+		}
 	}
 	err = this.Save(tx, op)
 	if err != nil {
