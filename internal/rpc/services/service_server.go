@@ -591,12 +591,16 @@ func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.Re
 // CountAllEnabledServersMatch 计算服务数量
 func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), utils.SplitStrings(req.ProtocolFamily, ","))
 	if err != nil {
@@ -614,7 +618,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		req.UserId = userId

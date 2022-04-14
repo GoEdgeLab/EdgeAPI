@@ -707,12 +707,16 @@ func (this *ServerDAO) CountAllEnabledServers(tx *dbs.Tx) (int64, error) {
 }
 
 // CountAllEnabledServersMatch 计算所有可用服务数量
+// 参数：
+//   groupId 分组ID，如果为-1，则搜索没有分组的服务
 func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamilies []string) (int64, error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled)
 	if groupId > 0 {
 		query.Where("JSON_CONTAINS(groupIds, :groupId)").
 			Param("groupId", numberutils.FormatInt64(groupId))
+	} else if groupId < 0 { // 特殊的groupId
+		query.Where("JSON_LENGTH(groupIds)=0")
 	}
 	if len(keyword) > 0 {
 		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
@@ -753,6 +757,8 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 }
 
 // ListEnabledServersMatch 列出单页的服务
+// 参数：
+//   groupId 分组ID，如果为-1，则搜索没有分组的服务
 func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamilies []string) (result []*Server, err error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled).
@@ -764,6 +770,8 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	if groupId > 0 {
 		query.Where("JSON_CONTAINS(groupIds, :groupId)").
 			Param("groupId", numberutils.FormatInt64(groupId))
+	} else if groupId < 0 { // 特殊的groupId
+		query.Where("JSON_LENGTH(groupIds)=0")
 	}
 	if len(keyword) > 0 {
 		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
