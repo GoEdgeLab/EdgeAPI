@@ -139,6 +139,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 	if teaconst.MaxNodes > 0 {
 		count, err := this.Query(tx).
 			State(NodeStateEnabled).
+			Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)").
 			Count()
 		if err != nil {
 			return 0, err
