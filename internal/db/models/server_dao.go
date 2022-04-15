@@ -759,12 +759,11 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 // ListEnabledServersMatch 列出单页的服务
 // 参数：
 //   groupId 分组ID，如果为-1，则搜索没有分组的服务
-func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamilies []string) (result []*Server, err error) {
+func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamilies []string, order string) (result []*Server, err error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled).
 		Offset(offset).
 		Limit(size).
-		DescPk().
 		Slice(&result)
 
 	if groupId > 0 {
@@ -807,7 +806,52 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 		query.Where("(" + strings.Join(protocolConds, " OR ") + ")")
 	}
 
+	// 排序
+	var day = timeutil.Format("Ymd")
+	var minute = timeutil.FormatTime("His", time.Now().Unix()/300*300-300)
+	var selfTable = this.Table
+	var statTable = SharedServerDailyStatDAO.Table
+	var hasOnlyIds = false
+	switch order {
+	case "trafficOutAsc":
+		query.Result("id")
+		query.Join(SharedServerDailyStatDAO, dbs.QueryJoinLeft, selfTable+".id="+statTable+".serverId AND "+statTable+".day=:day AND "+statTable+".timeFrom=:minute")
+		query.Param("day", day)
+		query.Param("minute", minute)
+		query.Group(selfTable + ".id")
+		query.Asc("SUM(" + statTable + ".bytes)").
+			DescPk()
+		hasOnlyIds = true
+	case "trafficOutDesc":
+		query.Result("id")
+		query.Join(SharedServerDailyStatDAO, dbs.QueryJoinLeft, selfTable+".id="+statTable+".serverId AND "+statTable+".day=:day AND "+statTable+".timeFrom=:minute")
+		query.Param("day", day)
+		query.Param("minute", minute)
+		query.Group(selfTable + ".id")
+		query.Desc("SUM(" + statTable + ".bytes)").
+			DescPk()
+		hasOnlyIds = true
+	default:
+		query.DescPk()
+	}
+
 	_, err = query.FindAll()
+
+	if hasOnlyIds {
+		var newResult = []*Server{}
+		for _, one := range result {
+			server, err := this.Find(tx, one.Id)
+			if err != nil {
+				return nil, err
+			}
+			if server == nil {
+				continue
+			}
+			newResult = append(newResult, server.(*Server))
+		}
+		result = newResult
+	}
+
 	return
 }
 

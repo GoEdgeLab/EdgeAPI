@@ -132,6 +132,23 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 	return nil
 }
 
+// SumCurrentDailyStat 查找当前时刻的数据统计
+func (this *ServerDailyStatDAO) SumCurrentDailyStat(tx *dbs.Tx, serverId int64) (*ServerDailyStat, error) {
+	var day = timeutil.Format("Ymd")
+	var minute = timeutil.FormatTime("His", time.Now().Unix()/300*300-300)
+	one, err := this.Query(tx).
+		Result("MIN(id)", "MIN(serverId)", "SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(attackBytes) AS attackBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests").
+		Attr("serverId", serverId).
+		Attr("day", day).
+		Attr("timeFrom", minute).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*ServerDailyStat), nil
+}
+
 // SumServerMonthlyWithRegion 根据服务计算某月合计
 // month 格式为YYYYMM
 func (this *ServerDailyStatDAO) SumServerMonthlyWithRegion(tx *dbs.Tx, serverId int64, regionId int64, month string) (int64, error) {

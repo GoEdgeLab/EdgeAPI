@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
 	"time"
@@ -219,4 +220,37 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 		}
 	}
 	return &pb.FindLatestServerDailyStatsResponse{Stats: result}, nil
+}
+
+// SumCurrentServerDailyStats 查找单个服务当前统计数据
+func (this *ServerDailyStatService) SumCurrentServerDailyStats(ctx context.Context, req *pb.SumCurrentServerDailyStatsRequest) (*pb.SumCurrentServerDailyStatsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *dbs.Tx
+	stat, err := models.SharedServerDailyStatDAO.SumCurrentDailyStat(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbStat = &pb.ServerDailyStat{
+		ServerId: req.ServerId,
+	}
+	if stat != nil {
+		pbStat = &pb.ServerDailyStat{
+			ServerId:            req.ServerId,
+			Bytes:               int64(stat.Bytes),
+			CachedBytes:         int64(stat.CachedBytes),
+			CountRequests:       int64(stat.CountRequests),
+			CountCachedRequests: int64(stat.CountCachedRequests),
+			CountAttackRequests: int64(stat.CountAttackRequests),
+			AttackBytes:         int64(stat.AttackBytes),
+		}
+	}
+
+	return &pb.SumCurrentServerDailyStatsResponse{
+		ServerDailyStat: pbStat,
+	}, nil
 }

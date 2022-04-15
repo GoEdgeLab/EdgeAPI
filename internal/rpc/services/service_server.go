@@ -624,7 +624,14 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		req.UserId = userId
 	}
 
-	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, utils.SplitStrings(req.ProtocolFamily, ","))
+	var order = ""
+	if req.TrafficOutAsc {
+		order = "trafficOutAsc"
+	} else if req.TrafficOutDesc {
+		order = "trafficOutDesc"
+	}
+
+	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, utils.SplitStrings(req.ProtocolFamily, ","), order)
 	if err != nil {
 		return nil, err
 	}
@@ -693,6 +700,27 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			return nil, err
 		}
 
+		// 当前统计
+		dailyStat, err := models.SharedServerDailyStatDAO.SumCurrentDailyStat(tx, int64(server.Id))
+		if err != nil {
+			return nil, err
+		}
+		var pbDailyStat *pb.ServerDailyStat
+		if dailyStat != nil {
+			pbDailyStat = &pb.ServerDailyStat{
+				Bytes:               int64(dailyStat.Bytes),
+				CachedBytes:         int64(dailyStat.CachedBytes),
+				AttackBytes:         int64(dailyStat.AttackBytes),
+				CountRequests:       int64(dailyStat.CountRequests),
+				CountCachedRequests: int64(dailyStat.CountCachedRequests),
+				CountAttackRequests: int64(dailyStat.CountAttackRequests),
+				Day:                 dailyStat.Day,
+				Hour:                dailyStat.Hour,
+				TimeFrom:            dailyStat.TimeFrom,
+				TimeTo:              dailyStat.TimeTo,
+			}
+		}
+
 		result = append(result, &pb.Server{
 			Id:                      int64(server.Id),
 			IsOn:                    server.IsOn,
@@ -720,8 +748,9 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
-			ServerGroups: pbGroups,
-			User:         pbUser,
+			ServerGroups:          pbGroups,
+			User:                  pbUser,
+			LatestServerDailyStat: pbDailyStat,
 		})
 	}
 
