@@ -4,7 +4,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
@@ -14,7 +13,6 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -151,12 +149,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 		return nil, err
 	}
 	for _, v := range cpuValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.CpuNodeValues = append(result.CpuNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
@@ -166,27 +160,19 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 		return nil, err
 	}
 	for _, v := range memoryValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.MemoryNodeValues = append(result.MemoryNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
 
-	loadValues, err := models.SharedNodeValueDAO.ListValuesWithClusterId(tx, "node", req.NodeClusterId, nodeconfigs.NodeValueItemLoad, "load5m", nodeconfigs.NodeValueRangeMinute)
+	loadValues, err := models.SharedNodeValueDAO.ListValuesWithClusterId(tx, "node", req.NodeClusterId, nodeconfigs.NodeValueItemLoad, "load1m", nodeconfigs.NodeValueRangeMinute)
 	if err != nil {
 		return nil, err
 	}
 	for _, v := range loadValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.LoadNodeValues = append(result.LoadNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
@@ -360,12 +346,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		return nil, err
 	}
 	for _, v := range cpuValues {
-		valueJSON, err := json.Marshal(types.Float32(v.DecodeMapValue().GetFloat32("usage")))
-		if err != nil {
-			return nil, err
-		}
 		result.CpuNodeValues = append(result.CpuNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
@@ -375,12 +357,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		return nil, err
 	}
 	for _, v := range memoryValues {
-		valueJSON, err := json.Marshal(types.Float32(v.DecodeMapValue().GetFloat32("usage")))
-		if err != nil {
-			return nil, err
-		}
 		result.MemoryNodeValues = append(result.MemoryNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
@@ -390,12 +368,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		return nil, err
 	}
 	for _, v := range loadValues {
-		valueJSON, err := json.Marshal(types.Float32(v.DecodeMapValue().GetFloat32("load5m")))
-		if err != nil {
-			return nil, err
-		}
 		result.LoadNodeValues = append(result.LoadNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}

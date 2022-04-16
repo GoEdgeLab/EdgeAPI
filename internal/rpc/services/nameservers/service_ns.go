@@ -4,13 +4,11 @@ package nameservers
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/nameservers"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -144,12 +142,8 @@ func (this *NSService) ComposeNSBoard(ctx context.Context, req *pb.ComposeNSBoar
 		return nil, err
 	}
 	for _, v := range cpuValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.CpuNodeValues = append(result.CpuNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
@@ -159,27 +153,19 @@ func (this *NSService) ComposeNSBoard(ctx context.Context, req *pb.ComposeNSBoar
 		return nil, err
 	}
 	for _, v := range memoryValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.MemoryNodeValues = append(result.MemoryNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}
 
-	loadValues, err := models.SharedNodeValueDAO.ListValuesForNSNodes(tx, nodeconfigs.NodeValueItemLoad, "load5m", nodeconfigs.NodeValueRangeMinute)
+	loadValues, err := models.SharedNodeValueDAO.ListValuesForNSNodes(tx, nodeconfigs.NodeValueItemLoad, "load1m", nodeconfigs.NodeValueRangeMinute)
 	if err != nil {
 		return nil, err
 	}
 	for _, v := range loadValues {
-		valueJSON, err := json.Marshal(types.Float32(v.Value))
-		if err != nil {
-			return nil, err
-		}
 		result.LoadNodeValues = append(result.LoadNodeValues, &pb.NodeValue{
-			ValueJSON: valueJSON,
+			ValueJSON: v.Value,
 			CreatedAt: int64(v.CreatedAt),
 		})
 	}

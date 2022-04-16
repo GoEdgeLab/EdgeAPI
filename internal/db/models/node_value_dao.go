@@ -122,6 +122,17 @@ func (this *NodeValueDAO) ListValuesWithClusterId(tx *dbs.Tx, role string, clust
 
 	_, err = query.Slice(&result).
 		FindAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, nodeValue := range result {
+		nodeValue.Value, _ = json.Marshal(maps.Map{
+			key: types.Float32(string(nodeValue.Value)),
+		})
+	}
+
 	return
 }
 
@@ -146,6 +157,17 @@ func (this *NodeValueDAO) ListValuesForUserNodes(tx *dbs.Tx, item string, key st
 
 	_, err = query.Slice(&result).
 		FindAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, nodeValue := range result {
+		nodeValue.Value, _ = json.Marshal(maps.Map{
+			key: types.Float32(string(nodeValue.Value)),
+		})
+	}
+
 	return
 }
 
@@ -170,6 +192,17 @@ func (this *NodeValueDAO) ListValuesForNSNodes(tx *dbs.Tx, item string, key stri
 
 	_, err = query.Slice(&result).
 		FindAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, nodeValue := range result {
+		nodeValue.Value, _ = json.Marshal(maps.Map{
+			key: types.Float32(string(nodeValue.Value)),
+		})
+	}
+
 	return
 }
 
