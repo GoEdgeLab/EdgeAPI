@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/sizes"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -22,8 +23,10 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -309,6 +312,7 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	offset int64,
 	size int64) (result []*Node, err error) {
 	query := this.Query(tx).
+		Result(this.Table + ".*"). // must have table name for table joins below
 		State(NodeStateEnabled).
 		Offset(offset).
 		Limit(size).
@@ -317,14 +321,14 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	// 集群
 	if clusterId > 0 {
 		if includeSecondaryNodes {
-			query.Where("(clusterId=:primaryClusterId OR JSON_CONTAINS(secondaryClusterIds, :primaryClusterIdString))").
+			query.Where("("+this.Table+".clusterId=:primaryClusterId OR JSON_CONTAINS(secondaryClusterIds, :primaryClusterIdString))").
 				Param("primaryClusterId", clusterId).
 				Param("primaryClusterIdString", types.String(clusterId))
 		} else {
-			query.Attr("clusterId", clusterId)
+			query.Attr(this.Table+".clusterId", clusterId)
 		}
 	} else {
-		query.Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
+		query.Where(this.Table + ".clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
 	}
 
 	// 安装状态
@@ -369,30 +373,78 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	}
 
 	// 排序
+	var minute = timeutil.FormatTime("YmdHi", time.Now().Unix()-60)
+	var nodeValueTable = SharedNodeValueDAO.Table
+	var valueItem = ""
+	var valueField = ""
+	var isAsc = false
+	var ifNullValue int64 = 0
 	switch order {
 	case "cpuAsc":
-		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.cpuUsage'), 0), 0)")
+		valueItem = "cpu"
+		valueField = "usage"
+		isAsc = true
+		ifNullValue = 100
 	case "cpuDesc":
-		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.cpuUsage'), 0), 0)")
+		valueItem = "cpu"
+		valueField = "usage"
+		isAsc = false
+		ifNullValue = -1
 	case "memoryAsc":
-		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.memoryUsage'), 0), 0)")
+		valueItem = "memory"
+		valueField = "usage"
+		isAsc = true
+		ifNullValue = 100
 	case "memoryDesc":
-		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.memoryUsage'), 0), 0)")
+		valueItem = "memory"
+		valueField = "usage"
+		isAsc = false
+		ifNullValue = -1
 	case "trafficInAsc":
-		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficInBytes'), 0), 0)")
+		valueItem = "trafficIn"
+		valueField = "total"
+		isAsc = true
+		ifNullValue = 60 * sizes.G
 	case "trafficInDesc":
-		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficInBytes'), 0), 0)")
+		valueItem = "trafficIn"
+		valueField = "total"
+		isAsc = false
+		ifNullValue = -1
 	case "trafficOutAsc":
-		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
+		valueItem = "trafficOut"
+		valueField = "total"
+		isAsc = true
+		ifNullValue = sizes.G
 	case "trafficOutDesc":
-		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.trafficOutBytes'), 0), 0)")
+		valueItem = "trafficOut"
+		valueField = "total"
+		isAsc = false
+		ifNullValue = -1
 	case "loadAsc":
-		query.Asc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.load1m'), 0), 0)")
+		valueItem = "load"
+		valueField = "load1m"
+		isAsc = true
+		ifNullValue = 1000
 	case "loadDesc":
-		query.Desc("IF(JSON_EXTRACT(status, '$.updatedAt')>UNIX_TIMESTAMP()-120, IFNULL(JSON_EXTRACT(status, '$.load1m'), 0), 0)")
+		valueItem = "load"
+		valueField = "load1m"
+		isAsc = false
+		ifNullValue = -1
 	default:
 		query.Desc("level")
 	}
+
+	if len(valueItem) > 0 {
+		query.Join(SharedNodeValueDAO, dbs.QueryJoinLeft, this.Table+".id="+nodeValueTable+".nodeId AND "+nodeValueTable+".role='"+nodeconfigs.NodeRoleNode+"' AND "+nodeValueTable+".item='"+valueItem+"' "+" AND "+nodeValueTable+".minute=:minute")
+		query.Param("minute", minute)
+		var ifNullSQL = "IFNULL(CAST(JSON_EXTRACT(value, '$." + valueField + "') AS DECIMAL (20, 6)), " + types.String(ifNullValue) + ")"
+		if isAsc {
+			query.Asc(ifNullSQL)
+		} else {
+			query.Desc(ifNullSQL)
+		}
+	}
+
 	query.DescPk()
 
 	_, err = query.FindAll()
