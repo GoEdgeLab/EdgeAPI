@@ -250,7 +250,9 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
+func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx,
+	partition int32,
+	lastRequestId string,
 	size int64,
 	day string,
 	hourFrom string,
@@ -277,18 +279,19 @@ func (this *HTTPAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string,
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, partition, lastRequestId, size, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
+	moreResult, _, _ := this.listAccessLogs(tx, partition, nextLastRequestId, 1, day, hourFrom, hourTo, clusterId, nodeId, serverId, reverse, hasError, firewallPolicyId, firewallRuleGroupId, firewallRuleSetId, hasFirewallPolicy, userId, keyword, ip, domain)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
 func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
+	partition int32,
 	lastRequestId string,
 	size int64,
 	day string,
@@ -341,7 +344,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	if clusterId > 0 {
 		nodeIds, err = SharedNodeDAO.FindAllEnabledNodeIdsWithClusterId(tx, clusterId)
 		if err != nil {
-			remotelogs.Error("DBNODE", err.Error())
+			remotelogs.Error("DB_NODE", err.Error())
 			return
 		}
 		sort.Slice(nodeIds, func(i, j int) bool {
@@ -353,18 +356,25 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	var tableQueries = []*accessLogTableQuery{}
 	for _, daoWrapper := range daoList {
 		var instance = daoWrapper.DAO.Instance
-		tableDefs, err := SharedHTTPAccessLogManager.FindTables(instance, day)
+		def, err := SharedHTTPAccessLogManager.FindPartitionTable(instance, day, partition)
 		if err != nil {
 			return nil, "", err
 		}
-		for _, def := range tableDefs {
-			tableQueries = append(tableQueries, &accessLogTableQuery{
-				daoWrapper:         daoWrapper,
-				name:               def.Name,
-				hasRemoteAddrField: def.HasRemoteAddr,
-				hasDomainField:     def.HasDomain,
-			})
+		if !def.Exists {
+			continue
 		}
+
+		tableQueries = append(tableQueries, &accessLogTableQuery{
+			daoWrapper:         daoWrapper,
+			name:               def.Name,
+			hasRemoteAddrField: def.HasRemoteAddr,
+			hasDomainField:     def.HasDomain,
+		})
+		logs.Println("query:", def.Name) // TODO
+	}
+
+	if len(tableQueries) == 0 {
+		return nil, "", nil
 	}
 
 	var locker = sync.Mutex{}

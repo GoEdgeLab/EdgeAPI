@@ -15,6 +15,7 @@ import (
 )
 
 // 访问日志的两个表格形式
+// 括号位置需要固定，会用来读取日期和分区
 var accessLogTableMainReg = regexp.MustCompile(`_(\d{8})$`)
 var accessLogTablePartialReg = regexp.MustCompile(`_(\d{8})_(\d{4})$`)
 
@@ -149,6 +150,50 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 	return results, nil
 }
 
+func (this *HTTPAccessLogManager) FindPartitionTable(db *dbs.DB, day string, partition int32) (*httpAccessLogDefinition, error) {
+	var tableNames []string
+	if partition < 0 {
+		tableList, err := this.FindTables(db, day)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(tableList) > 0 {
+			return tableList[len(tableList)-1], nil
+		}
+
+		return &httpAccessLogDefinition{
+			Name:          "",
+			HasRemoteAddr: false,
+			HasDomain:     false,
+			Exists:        false,
+		}, nil
+	} else if partition == 0 {
+		tableNames = []string{"edgeHTTPAccessLogs_" + day, "edgehttpaccesslogs_" + day}
+	} else {
+		tableNames = []string{"edgeHTTPAccessLogs_" + day + "_" + fmt.Sprintf("%04d", partition), "edgehttpaccesslogs_" + day + "_" + fmt.Sprintf("%04d", partition)}
+	}
+	for _, tableName := range tableNames {
+		hasRemoteField, hasDomainField, err := this.checkTableFields(db, tableName)
+		if err != nil {
+			continue
+		}
+		return &httpAccessLogDefinition{
+			Name:          tableName,
+			HasRemoteAddr: hasRemoteField,
+			HasDomain:     hasDomainField,
+			Exists:        true,
+		}, nil
+	}
+
+	return &httpAccessLogDefinition{
+		Name:          "",
+		HasRemoteAddr: false,
+		HasDomain:     false,
+		Exists:        false,
+	}, nil
+}
+
 // FindLastTable 根据日期获取上一个可以使用的表名
 // 表名组成
 //   - PREFIX_DAY
@@ -216,6 +261,60 @@ func (this *HTTPAccessLogManager) ResetTable(db *dbs.DB, day string) {
 		return
 	}
 	delete(this.currentTableMapping, this.composeTableCacheKey(config.Dsn, day))
+}
+
+// TablePartition 从表名中获取分区
+func (this *HTTPAccessLogManager) TablePartition(tableName string) (partition int32) {
+	if accessLogTablePartialReg.MatchString(tableName) {
+		return types.Int32(accessLogTablePartialReg.FindStringSubmatch(tableName)[2])
+	}
+
+	return 0
+}
+
+// FindLatestPartition 读取最后一个分区
+func (this *HTTPAccessLogManager) FindLatestPartition(day string) (int32, error) {
+	var dbList = AllAccessLogDBs()
+	if len(dbList) == 0 {
+		return 0, errors.New("no valid database")
+	}
+
+	var partitions = []int32{}
+	var locker sync.Mutex
+
+	var wg = sync.WaitGroup{}
+	wg.Add(len(dbList))
+
+	var lastErr error
+	for _, db := range dbList {
+		go func(db *dbs.DB) {
+			defer wg.Done()
+
+			names, err := this.FindTableNames(db, day)
+			if err != nil {
+				lastErr = err
+			}
+			for _, name := range names {
+				var partition = this.TablePartition(name)
+				locker.Lock()
+				if !lists.Contains(partitions, partition) {
+					partitions = append(partitions, partition)
+				}
+				locker.Unlock()
+			}
+		}(db)
+	}
+	wg.Wait()
+
+	if lastErr != nil {
+		return 0, lastErr
+	}
+
+	if len(partitions) == 0 {
+		return 0, nil
+	}
+
+	return partitions[len(partitions)-1], nil
 }
 
 // 查找某个表格

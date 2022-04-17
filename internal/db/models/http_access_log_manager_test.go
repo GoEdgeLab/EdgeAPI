@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/iwind/TeaGo/dbs"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
 	"time"
 )
@@ -156,4 +157,33 @@ func TestHTTPAccessLogManager_FindLastTable(t *testing.T) {
 		t.Log(string(data))
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}
+}
+
+func TestHTTPAccessLogManager_FindPartitionTable(t *testing.T) {
+	var config = &dbs.DBConfig{
+		Driver: "mysql",
+		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge_log?charset=utf8mb4&timeout=30s",
+		Prefix: "edge",
+		Connections: struct {
+			Pool         int           `yaml:"pool"`
+			Max          int           `yaml:"max"`
+			Life         string        `yaml:"life"`
+			LifeDuration time.Duration `yaml:",omitempty"`
+		}{},
+		Models: struct {
+			Package string `yaml:"package"`
+		}{},
+	}
+
+	db, err := dbs.NewInstanceFromConfig(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = db.Close()
+	}()
+
+	t.Log(models.SharedHTTPAccessLogManager.FindPartitionTable(db, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -1)), -1))
+	t.Log(models.SharedHTTPAccessLogManager.FindPartitionTable(db, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -1)), 0))
+	t.Log(models.SharedHTTPAccessLogManager.FindPartitionTable(db, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -1)), 1))
 }

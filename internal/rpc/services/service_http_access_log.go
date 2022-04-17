@@ -4,8 +4,13 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
+	"regexp"
+	"sync"
 )
 
 // HTTPAccessLogService 访问日志相关服务
@@ -72,7 +77,7 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 		}
 	}
 
-	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.HourFrom, req.HourTo, req.NodeClusterId, req.NodeId, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId, req.HasFirewallPolicy, req.UserId, req.Keyword, req.Ip, req.Domain)
+	accessLogs, requestId, hasMore, err := models.SharedHTTPAccessLogDAO.ListAccessLogs(tx, req.Partition, req.RequestId, req.Size, req.Day, req.HourFrom, req.HourTo, req.NodeClusterId, req.NodeId, req.ServerId, req.Reverse, req.HasError, req.FirewallPolicyId, req.FirewallRuleGroupId, req.FirewallRuleSetId, req.HasFirewallPolicy, req.UserId, req.Keyword, req.Ip, req.Domain)
 	if err != nil {
 		return nil, err
 	}
@@ -164,4 +169,64 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 		return nil, err
 	}
 	return &pb.FindHTTPAccessLogResponse{HttpAccessLog: a}, nil
+}
+
+// FindHTTPAccessLogPartitions 查找日志分区
+func (this *HTTPAccessLogService) FindHTTPAccessLogPartitions(ctx context.Context, req *pb.FindHTTPAccessLogPartitionsRequest) (*pb.FindHTTPAccessLogPartitionsResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	if !regexp.MustCompile(`^\d{8}$`).MatchString(req.Day) {
+		return nil, errors.New("invalid 'day': " + req.Day)
+	}
+
+	var dbList = models.AllAccessLogDBs()
+	if len(dbList) == 0 {
+		return &pb.FindHTTPAccessLogPartitionsResponse{
+			Partitions: nil,
+		}, nil
+	}
+
+	var partitions = []int32{}
+	var locker sync.Mutex
+
+	var wg = sync.WaitGroup{}
+	wg.Add(len(dbList))
+
+	var lastErr error
+	for _, db := range dbList {
+		go func(db *dbs.DB) {
+			defer wg.Done()
+
+			names, err := models.SharedHTTPAccessLogManager.FindTableNames(db, req.Day)
+			if err != nil {
+				lastErr = err
+			}
+			for _, name := range names {
+				var partition = models.SharedHTTPAccessLogManager.TablePartition(name)
+				locker.Lock()
+				if !lists.Contains(partitions, partition) {
+					partitions = append(partitions, partition)
+				}
+				locker.Unlock()
+			}
+		}(db)
+	}
+	wg.Wait()
+
+	if lastErr != nil {
+		return nil, lastErr
+	}
+
+	var reversePartitions = []int32{}
+	for i := len(partitions) - 1; i >= 0; i-- {
+		reversePartitions = append(reversePartitions, partitions[i])
+	}
+
+	return &pb.FindHTTPAccessLogPartitionsResponse{
+		Partitions:        partitions,
+		ReversePartitions: partitions,
+	}, nil
 }

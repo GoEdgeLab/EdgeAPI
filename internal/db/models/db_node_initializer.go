@@ -56,6 +56,17 @@ func init() {
 	})
 }
 
+func AllAccessLogDBs() []*dbs.DB {
+	accessLogLocker.Lock()
+	defer accessLogLocker.Unlock()
+
+	var result = []*dbs.DB{}
+	for _, db := range accessLogDBMapping {
+		result = append(result, db)
+	}
+	return result
+}
+
 // 获取获取DAO
 func randomHTTPAccessLogDAO() (dao *HTTPAccessLogDAOWrapper) {
 	accessLogLocker.RLock()
