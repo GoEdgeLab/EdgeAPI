@@ -370,7 +370,6 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 			hasRemoteAddrField: def.HasRemoteAddr,
 			hasDomainField:     def.HasDomain,
 		})
-		logs.Println("query:", def.Name) // TODO
 	}
 
 	if len(tableQueries) == 0 {
