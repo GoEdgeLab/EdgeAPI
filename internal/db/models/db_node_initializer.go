@@ -64,6 +64,14 @@ func AllAccessLogDBs() []*dbs.DB {
 	for _, db := range accessLogDBMapping {
 		result = append(result, db)
 	}
+
+	if len(result) == 0 {
+		db, _ := dbs.Default()
+		if db != nil {
+			result = append(result, db)
+		}
+	}
+
 	return result
 }
 
