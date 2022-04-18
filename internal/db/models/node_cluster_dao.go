@@ -471,7 +471,29 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
-	op := NewNodeClusterOperator()
+
+	// 删除老的域名中相关记录
+	oldOne, err := this.Query(tx).
+		Pk(clusterId).
+		Result("dnsName", "dnsDomainId").
+		Find()
+	if err != nil {
+		return err
+	}
+	if oldOne == nil {
+		return nil
+	}
+
+	var oldCluster = oldOne.(*NodeCluster)
+	var oldDNSDomainId = int64(oldCluster.DnsDomainId)
+	if (oldDNSDomainId > 0 && oldDNSDomainId != dnsDomainId) || (oldCluster.DnsName != dnsName) {
+		err = dns.SharedDNSTaskDAO.CreateClusterRemoveTask(tx, clusterId, oldDNSDomainId, oldCluster.DnsName)
+		if err != nil {
+			return err
+		}
+	}
+
+	var op = NewNodeClusterOperator()
 	op.Id = clusterId
 	op.DnsName = dnsName
 	op.DnsDomainId = dnsDomainId
@@ -480,7 +502,7 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 		cnameRecords = []string{}
 	}
 
-	dnsConfig := &dnsconfigs.ClusterDNSConfig{
+	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
 		NodesAutoSync:   nodesAutoSync,
 		ServersAutoSync: serversAutoSync,
 		CNameRecords:    cnameRecords,

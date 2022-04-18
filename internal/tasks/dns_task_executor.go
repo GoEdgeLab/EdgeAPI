@@ -87,6 +87,14 @@ func (this *DNSTaskExecutor) Loop() error {
 					return err
 				}
 			}
+		case dnsmodels.DNSTaskTypeClusterRemoveDomain:
+			err = this.doClusterRemove(taskId, int64(task.ClusterId), int64(task.DomainId), task.RecordName)
+			if err != nil {
+				err = dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskError(nil, taskId, err.Error())
+				if err != nil {
+					return err
+				}
+			}
 		case dnsmodels.DNSTaskTypeDomainChange:
 			err = this.doDomainWithTask(taskId, int64(task.DomainId))
 			if err != nil {
@@ -133,14 +141,14 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 	var recordType = dnstypes.RecordTypeCNAME
 
 	// 新的DNS设置
-	manager, newDomainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, int64(serverDNS.ClusterId))
+	manager, newDomainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManagerWithClusterId(tx, int64(serverDNS.ClusterId))
 	if err != nil {
 		return err
 	}
 
 	// 如果集群发生了变化，则从老的集群中删除
 	if oldClusterId > 0 && int64(serverDNS.ClusterId) != oldClusterId {
-		oldManager, oldDomainId, oldDomain, _, _, err := this.findDNSManager(tx, oldClusterId)
+		oldManager, oldDomainId, oldDomain, _, _, err := this.findDNSManagerWithClusterId(tx, oldClusterId)
 		if err != nil {
 			return err
 		}
@@ -312,7 +320,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}()
 
 	var tx *dbs.Tx
-	manager, domainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, clusterId)
+	manager, domainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManagerWithClusterId(tx, clusterId)
 	if err != nil {
 		return err
 	}
@@ -505,6 +513,83 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	return nil
 }
 
+func (this *DNSTaskExecutor) doClusterRemove(taskId int64, clusterId int64, domainId int64, dnsName string) error {
+	var isOk = false
+	defer func() {
+		if isOk {
+			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(nil, taskId)
+			if err != nil {
+				remotelogs.Error("DNSTaskExecutor", err.Error())
+			}
+		}
+	}()
+
+	var tx *dbs.Tx
+	if len(dnsName) == 0 {
+		dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
+		if err != nil {
+			return err
+		}
+		if dnsInfo == nil {
+			isOk = true
+			return nil
+		}
+		dnsName = dnsInfo.DnsName
+		if len(dnsName) == 0 {
+			isOk = true
+			return nil
+		}
+	}
+
+	domain, manager, err := this.findDNSManagerWithDomainId(tx, domainId)
+	if err != nil {
+		return err
+	}
+	if domain == nil {
+		isOk = true
+		return nil
+	}
+	var fullName = dnsName + "." + domain.Name
+
+	records, err := domain.DecodeRecords()
+	if err != nil {
+		return err
+	}
+
+	var isChanged bool
+
+	for _, record := range records {
+		// node A
+		if (record.Type == dnstypes.RecordTypeA || record.Type == dnstypes.RecordTypeAAAA) && record.Name == dnsName {
+			err = manager.DeleteRecord(domain.Name, record)
+			if err != nil {
+				return err
+			}
+			isChanged = true
+		}
+
+		// server CNAME
+		if record.Type == dnstypes.RecordTypeCNAME && strings.TrimRight(record.Value, ".") == fullName {
+			err = manager.DeleteRecord(domain.Name, record)
+			if err != nil {
+				return err
+			}
+			isChanged = true
+		}
+	}
+
+	if isChanged {
+		err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, domainId, dnsmodels.DNSTaskTypeDomainChange)
+		if err != nil {
+			return err
+		}
+	}
+
+	isOk = true
+
+	return nil
+}
+
 func (this *DNSTaskExecutor) doDomain(domainId int64) error {
 	return this.doDomainWithTask(0, domainId)
 }
@@ -577,7 +662,7 @@ func (this *DNSTaskExecutor) doDomainWithTask(taskId int64, domainId int64) erro
 	return nil
 }
 
-func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manager dnsclients.ProviderInterface, domainId int64, domain string, clusterDNSName string, dnsConfig *dnsconfigs.ClusterDNSConfig, err error) {
+func (this *DNSTaskExecutor) findDNSManagerWithClusterId(tx *dbs.Tx, clusterId int64) (manager dnsclients.ProviderInterface, domainId int64, domain string, clusterDNSName string, dnsConfig *dnsconfigs.ClusterDNSConfig, err error) {
 	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return nil, 0, "", "", nil, err
@@ -591,39 +676,51 @@ func (this *DNSTaskExecutor) findDNSManager(tx *dbs.Tx, clusterId int64) (manage
 		return nil, 0, "", "", nil, err
 	}
 
-	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), nil)
+	dnsDomain, manager, err := this.findDNSManagerWithDomainId(tx, int64(clusterDNS.DnsDomainId))
 	if err != nil {
 		return nil, 0, "", "", nil, err
 	}
+
 	if dnsDomain == nil {
-		return nil, 0, "", "", nil, nil
+		return nil, 0, "", clusterDNS.DnsName, dnsConfig, nil
+	}
+
+	return manager, int64(dnsDomain.Id), dnsDomain.Name, clusterDNS.DnsName, dnsConfig, nil
+}
+
+func (this *DNSTaskExecutor) findDNSManagerWithDomainId(tx *dbs.Tx, domainId int64) (*dnsmodels.DNSDomain, dnsclients.ProviderInterface, error) {
+	dnsDomain, err := dnsmodels.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	if dnsDomain == nil {
+		return nil, nil, nil
 	}
 	providerId := int64(dnsDomain.ProviderId)
 	if providerId <= 0 {
-		return nil, 0, "", "", nil, nil
+		return nil, nil, nil
 	}
 
 	provider, err := dnsmodels.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, providerId)
 	if err != nil {
-		return nil, 0, "", "", nil, err
+		return nil, nil, err
 	}
 	if provider == nil {
-		return nil, 0, "", "", nil, nil
+		return nil, nil, nil
 	}
 
-	manager = dnsclients.FindProvider(provider.Type)
+	var manager = dnsclients.FindProvider(provider.Type)
 	if manager == nil {
 		remotelogs.Error("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
-		return nil, 0, "", "", nil, nil
+		return nil, nil, nil
 	}
 	params, err := provider.DecodeAPIParams()
 	if err != nil {
-		return nil, 0, "", "", nil, err
+		return nil, nil, err
 	}
 	err = manager.Auth(params)
 	if err != nil {
-		return nil, 0, "", "", nil, err
+		return nil, nil, err
 	}
-
-	return manager, int64(dnsDomain.Id), dnsDomain.Name, clusterDNS.DnsName, dnsConfig, nil
+	return dnsDomain, manager, nil
 }

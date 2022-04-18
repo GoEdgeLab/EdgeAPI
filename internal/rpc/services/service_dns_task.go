@@ -62,7 +62,7 @@ func (this *DNSTaskService) FindAllDoingDNSTasks(ctx context.Context, req *pb.Fi
 		}
 
 		switch task.Type {
-		case dns.DNSTaskTypeClusterChange:
+		case dns.DNSTaskTypeClusterChange, dns.DNSTaskTypeClusterRemoveDomain:
 			clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(task.ClusterId))
 			if err != nil {
 				return nil, err
