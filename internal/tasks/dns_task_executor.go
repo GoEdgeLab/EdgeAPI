@@ -132,29 +132,39 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 	var recordName = serverDNS.DnsName
 	var recordType = dnstypes.RecordTypeCNAME
 
+	// 新的DNS设置
+	manager, newDomainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, int64(serverDNS.ClusterId))
+	if err != nil {
+		return err
+	}
+
 	// 如果集群发生了变化，则从老的集群中删除
 	if oldClusterId > 0 && int64(serverDNS.ClusterId) != oldClusterId {
 		oldManager, oldDomainId, oldDomain, _, _, err := this.findDNSManager(tx, oldClusterId)
 		if err != nil {
 			return err
 		}
-		if oldManager != nil {
-			oldRecord, err := oldManager.QueryRecord(oldDomain, recordName, recordType)
-			if err != nil {
-				return err
-			}
-			if oldRecord != nil {
-				// 删除记录
-				err = oldManager.DeleteRecord(oldDomain, oldRecord)
+
+		// 如果域名发生了变化
+		if oldDomainId != newDomainId {
+			if oldManager != nil {
+				oldRecord, err := oldManager.QueryRecord(oldDomain, recordName, recordType)
 				if err != nil {
 					return err
 				}
+				if oldRecord != nil {
+					// 删除记录
+					err = oldManager.DeleteRecord(oldDomain, oldRecord)
+					if err != nil {
+						return err
+					}
 
-				// 更新域名中记录缓存
-				// 这里不创建域名更新任务，而是直接更新，避免影响其他任务的执行
-				err = this.doDomain(oldDomainId)
-				if err != nil {
-					return err
+					// 更新域名中记录缓存
+					// 这里不创建域名更新任务，而是直接更新，避免影响其他任务的执行
+					err = this.doDomain(oldDomainId)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -164,10 +174,6 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 	}
 
 	// 处理新的集群
-	manager, domainId, domain, clusterDNSName, dnsConfig, err := this.findDNSManager(tx, int64(serverDNS.ClusterId))
-	if err != nil {
-		return err
-	}
 	if manager == nil {
 		isOk = true
 		return nil
@@ -191,7 +197,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 			if err != nil {
 				return err
 			}
-			err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, domainId, dnsmodels.DNSTaskTypeDomainChange)
+			err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, newDomainId, dnsmodels.DNSTaskTypeDomainChange)
 			if err != nil {
 				return err
 			}
@@ -200,7 +206,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 		isOk = true
 	} else {
 		// 是否已存在
-		exist, err := dnsmodels.SharedDNSDomainDAO.ExistDomainRecord(tx, domainId, recordName, recordType, recordRoute, recordValue)
+		exist, err := dnsmodels.SharedDNSDomainDAO.ExistDomainRecord(tx, newDomainId, recordName, recordType, recordRoute, recordValue)
 		if err != nil {
 			return err
 		}
@@ -225,7 +231,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 			if err != nil {
 				return err
 			}
-			err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, domainId, dnsmodels.DNSTaskTypeDomainChange)
+			err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, newDomainId, dnsmodels.DNSTaskTypeDomainChange)
 			if err != nil {
 				return err
 			}
@@ -243,7 +249,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 			return err
 		}
 
-		err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, domainId, dnsmodels.DNSTaskTypeDomainChange)
+		err = dnsmodels.SharedDNSTaskDAO.CreateDomainTask(tx, newDomainId, dnsmodels.DNSTaskTypeDomainChange)
 		if err != nil {
 			return err
 		}
