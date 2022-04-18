@@ -74,8 +74,8 @@ func (this *DNSTaskDAO) CreateNodeTask(tx *dbs.Tx, nodeId int64, taskType DNSTas
 }
 
 // CreateServerTask 生成服务任务
-func (this *DNSTaskDAO) CreateServerTask(tx *dbs.Tx, serverId int64, taskType DNSTaskType) error {
-	return this.CreateDNSTask(tx, 0, serverId, 0, 0, taskType)
+func (this *DNSTaskDAO) CreateServerTask(tx *dbs.Tx, clusterId int64, serverId int64, taskType DNSTaskType) error {
+	return this.CreateDNSTask(tx, clusterId, serverId, 0, 0, taskType)
 }
 
 // CreateDomainTask 生成域名更新任务

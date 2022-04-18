@@ -270,7 +270,7 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 }
 
 // UpdateServerBasic 修改服务基本信息
-func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string, description string, clusterId int64, keepOldChanges bool, isOn bool, groupIds []int64) error {
+func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string, description string, clusterId int64, keepOldConfigs bool, isOn bool, groupIds []int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
@@ -320,7 +320,7 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 
 	if clusterId != oldClusterId {
 		// 服务配置更新
-		if !keepOldChanges {
+		if !keepOldConfigs {
 			err = this.NotifyClusterUpdate(tx, oldClusterId, serverId)
 			if err != nil {
 				return err
@@ -328,7 +328,11 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 		}
 
 		// DNS更新
-		// TODO
+		// 这里不受 keepOldConfigs 的限制
+		err = this.NotifyClusterDNSUpdate(tx, oldClusterId, serverId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -2467,7 +2471,7 @@ func (this *ServerDAO) NotifyClusterUpdate(tx *dbs.Tx, clusterId, serverId int64
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
 }
 
-// NotifyDNSUpdate 通知DNS更新
+// NotifyDNSUpdate 通知当前集群DNS更新
 func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
 	clusterId, err := this.Query(tx).
 		Pk(serverId).
@@ -2489,7 +2493,22 @@ func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
 	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId <= 0 {
 		return nil
 	}
-	return dns.SharedDNSTaskDAO.CreateServerTask(tx, serverId, dns.DNSTaskTypeServerChange)
+	return dns.SharedDNSTaskDAO.CreateServerTask(tx, clusterId, serverId, dns.DNSTaskTypeServerChange)
+}
+
+// NotifyClusterDNSUpdate 通知某个集群中的DNS更新
+func (this *ServerDAO) NotifyClusterDNSUpdate(tx *dbs.Tx, clusterId int64, serverId int64) error {
+	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
+	if err != nil {
+		return err
+	}
+	if dnsInfo == nil {
+		return nil
+	}
+	if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId <= 0 {
+		return nil
+	}
+	return dns.SharedDNSTaskDAO.CreateServerTask(tx, clusterId, serverId, dns.DNSTaskTypeServerChange)
 }
 
 // NotifyDisable 通知禁用
