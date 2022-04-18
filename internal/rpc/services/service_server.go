@@ -185,7 +185,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("can not find server")
 	}
 
-	err = models.SharedServerDAO.UpdateServerBasic(tx, req.ServerId, req.Name, req.Description, req.NodeClusterId, req.IsOn, req.ServerGroupIds)
+	err = models.SharedServerDAO.UpdateServerBasic(tx, req.ServerId, req.Name, req.Description, req.NodeClusterId, req.KeepOldConfigs, req.IsOn, req.ServerGroupIds)
 	if err != nil {
 		return nil, err
 	}
@@ -1965,12 +1965,30 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 
 // ComposeServerConfig 获取服务配置
 func (this *ServerService) ComposeServerConfig(ctx context.Context, req *pb.ComposeServerConfigRequest) (*pb.ComposeServerConfigResponse, error) {
-	_, err := this.ValidateNode(ctx)
+	nodeId, err := this.ValidateNode(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	//读取节点的所有集群
+	clusterIds, err := models.SharedNodeDAO.FindEnabledNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 读取服务所在集群
+	serverClusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果不在当前节点的集群中，则返回nil
+	if !lists.ContainsInt64(clusterIds, serverClusterId) {
+		return &pb.ComposeServerConfigResponse{ServerConfigJSON: nil}, nil
+	}
+
 	serverConfig, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, true)
 	if err != nil {
 		if err == models.ErrNotFound {

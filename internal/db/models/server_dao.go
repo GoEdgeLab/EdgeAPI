@@ -270,11 +270,21 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 }
 
 // UpdateServerBasic 修改服务基本信息
-func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string, description string, clusterId int64, isOn bool, groupIds []int64) error {
+func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string, description string, clusterId int64, keepOldChanges bool, isOn bool, groupIds []int64) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	op := NewServerOperator()
+
+	// 老的集群ID
+	oldClusterId, err := this.Query(tx).
+		Pk(serverId).
+		Result("clusterId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.Name = name
 	op.Description = description
@@ -291,7 +301,7 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 		op.GroupIds = groupIdsJSON
 	}
 
-	err := this.Save(tx, op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}
@@ -303,7 +313,25 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 	}
 
 	// 因为可能有isOn的原因，所以需要修改
-	return this.NotifyDNSUpdate(tx, serverId)
+	err = this.NotifyDNSUpdate(tx, serverId)
+	if err != nil {
+		return err
+	}
+
+	if clusterId != oldClusterId {
+		// 服务配置更新
+		if !keepOldChanges {
+			err = this.NotifyClusterUpdate(tx, oldClusterId, serverId)
+			if err != nil {
+				return err
+			}
+		}
+
+		// DNS更新
+		// TODO
+	}
+
+	return nil
 }
 
 // UpdateUserServerBasic 设置用户相关的基本信息
@@ -2418,7 +2446,7 @@ func (this *ServerDAO) FindServerUAM(tx *dbs.Tx, serverId int64) ([]byte, error)
 		FindJSONCol()
 }
 
-// NotifyUpdate 同步集群
+// NotifyUpdate 同步服务所在的集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	// 创建任务
 	clusterId, err := this.FindServerClusterId(tx, serverId)
@@ -2426,6 +2454,14 @@ func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 		return err
 	}
 	if clusterId == 0 {
+		return nil
+	}
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
+}
+
+// NotifyClusterUpdate 同步指定的集群
+func (this *ServerDAO) NotifyClusterUpdate(tx *dbs.Tx, clusterId, serverId int64) error {
+	if clusterId <= 0 {
 		return nil
 	}
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
