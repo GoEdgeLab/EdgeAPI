@@ -355,10 +355,10 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		for _, listen := range httpConfig.Listen {
 			for _, addr := range listen.Addresses() {
 				// 收集Port
-				_, port, _ := net.SplitHostPort(addr)
-				var portInt = types.Int(port)
-				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
-					ports = append(ports, portInt)
+				_, portString, _ := net.SplitHostPort(addr)
+				var port = types.Int(portString)
+				if port > 0 && !lists.ContainsInt(ports, port) {
+					ports = append(ports, port)
 				}
 
 				listener, err := net.Listen("tcp", addr)
@@ -410,10 +410,10 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		for _, listen := range httpsConfig.Listen {
 			for _, addr := range listen.Addresses() {
 				// 收集Port
-				_, port, _ := net.SplitHostPort(addr)
-				var portInt = types.Int(port)
-				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
-					ports = append(ports, portInt)
+				_, portString, _ := net.SplitHostPort(addr)
+				var port = types.Int(portString)
+				if port > 0 && !lists.ContainsInt(ports, port) {
+					ports = append(ports, port)
 				}
 
 				listener, err := net.Listen("tcp", addr)
@@ -456,10 +456,10 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		for _, listen := range restHTTPConfig.Listen {
 			for _, addr := range listen.Addresses() {
 				// 收集Port
-				_, port, _ := net.SplitHostPort(addr)
-				var portInt = types.Int(port)
-				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
-					ports = append(ports, portInt)
+				_, portString, _ := net.SplitHostPort(addr)
+				var port = types.Int(portString)
+				if port > 0 && !lists.ContainsInt(ports, port) {
+					ports = append(ports, port)
 				}
 
 				listener, err := net.Listen("tcp", addr)
@@ -496,10 +496,10 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		for _, listen := range restHTTPSConfig.Listen {
 			for _, addr := range listen.Addresses() {
 				// 收集Port
-				_, port, _ := net.SplitHostPort(addr)
-				var portInt = types.Int(port)
-				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
-					ports = append(ports, portInt)
+				_, portString, _ := net.SplitHostPort(addr)
+				var port = types.Int(portString)
+				if port > 0 && !lists.ContainsInt(ports, port) {
+					ports = append(ports, port)
 				}
 
 				listener, err := net.Listen("tcp", addr)
