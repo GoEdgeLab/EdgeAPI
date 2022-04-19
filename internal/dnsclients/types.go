@@ -1,7 +1,6 @@
 package dnsclients
 
 import (
-	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/iwind/TeaGo/maps"
 )
 
@@ -49,21 +48,7 @@ func FindAllProviderTypes() []maps.Map {
 		},
 	}
 
-	if teaconst.IsPlus {
-		typeMaps = append(typeMaps, []maps.Map{
-			{
-				"name":        "EdgeDNS",
-				"code":        ProviderTypeLocalEdgeDNS,
-				"description": "GoEdge商业版提供的智能DNS服务。",
-			},
-			// TODO 需要实现用户使用AccessId/AccessKey来连接DNS服务
-			/**{
-				"name":        "用户EdgeDNS",
-				"code":        ProviderTypeUserEdgeDNS,
-				"description": "通过API连接企业版提供的DNS服务。",
-			},**/
-		}...)
-	}
+	typeMaps = filterTypeMaps(typeMaps)
 
 	typeMaps = append(typeMaps, maps.Map{
 		"name":        "自定义HTTP DNS",
@@ -91,7 +76,8 @@ func FindProvider(providerType ProviderType) ProviderInterface {
 	case ProviderTypeCustomHTTP:
 		return &CustomHTTPProvider{}
 	}
-	return nil
+
+	return filterProvider(providerType)
 }
 
 // FindProviderTypeName 查找服务商名称

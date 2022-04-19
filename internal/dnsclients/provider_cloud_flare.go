@@ -279,13 +279,13 @@ func (this *CloudFlareProvider) doAPI(method string, apiPath string, args map[st
 		return errors.New("invalid response status '" + strconv.Itoa(resp.StatusCode) + "', response '" + string(data) + "'")
 	}
 
-	err = json.Unmarshal(data, respPtr)
-	if err != nil {
-		return err
-	}
-
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("response error: " + string(data))
+	}
+
+	err = json.Unmarshal(data, respPtr)
+	if err != nil {
+		return errors.New("decode json failed: " + err.Error() + ", response text: " + string(data))
 	}
 
 	return nil
