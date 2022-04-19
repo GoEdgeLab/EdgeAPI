@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	"github.com/iwind/TeaGo/types"
@@ -23,7 +24,14 @@ func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSL
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+
+	if req.TimeBeginAt < 0 {
+		return nil, errors.New("invalid TimeBeginAt")
+	}
+	if req.TimeEndAt < 0 {
+		return nil, errors.New("invalid TimeEndAt")
+	}
 
 	certId, err := models.SharedSSLCertDAO.CreateCert(tx, adminId, userId, req.IsOn, req.Name, req.Description, req.ServerName, req.IsCA, req.CertData, req.KeyData, req.TimeBeginAt, req.TimeEndAt, req.DnsNames, req.CommonNames)
 	if err != nil {
@@ -41,7 +49,14 @@ func (this *SSLCertService) UpdateSSLCert(ctx context.Context, req *pb.UpdateSSL
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+
+	if req.TimeBeginAt < 0 {
+		return nil, errors.New("invalid TimeBeginAt")
+	}
+	if req.TimeEndAt < 0 {
+		return nil, errors.New("invalid TimeEndAt")
+	}
 
 	// 检查权限
 	if userId > 0 {
