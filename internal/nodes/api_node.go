@@ -349,10 +349,18 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		remotelogs.Error("API_NODE", "decode http config: "+err.Error())
 		return
 	}
+	var ports = []int{}
 	isListening = false
 	if httpConfig != nil && httpConfig.IsOn && len(httpConfig.Listen) > 0 {
 		for _, listen := range httpConfig.Listen {
 			for _, addr := range listen.Addresses() {
+				// 收集Port
+				_, port, _ := net.SplitHostPort(addr)
+				var portInt = types.Int(port)
+				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
+					ports = append(ports, portInt)
+				}
+
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
 					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error()+", we will try to listen port only")
@@ -401,6 +409,13 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 
 		for _, listen := range httpsConfig.Listen {
 			for _, addr := range listen.Addresses() {
+				// 收集Port
+				_, port, _ := net.SplitHostPort(addr)
+				var portInt = types.Int(port)
+				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
+					ports = append(ports, portInt)
+				}
+
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
 					remotelogs.Error("API_NODE", "listening '"+addr+"' failed: "+err.Error()+", we will try to listen port only")
@@ -440,6 +455,13 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 	if restHTTPConfig != nil && restHTTPConfig.IsOn && len(restHTTPConfig.Listen) > 0 {
 		for _, listen := range restHTTPConfig.Listen {
 			for _, addr := range listen.Addresses() {
+				// 收集Port
+				_, port, _ := net.SplitHostPort(addr)
+				var portInt = types.Int(port)
+				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
+					ports = append(ports, portInt)
+				}
+
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
 					remotelogs.Error("API_NODE", "listening REST 'http://"+addr+"' failed: "+err.Error())
@@ -473,6 +495,13 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 		len(restHTTPSConfig.SSLPolicy.Certs) > 0 {
 		for _, listen := range restHTTPSConfig.Listen {
 			for _, addr := range listen.Addresses() {
+				// 收集Port
+				_, port, _ := net.SplitHostPort(addr)
+				var portInt = types.Int(port)
+				if portInt > 0 && !lists.ContainsInt(ports, portInt) {
+					ports = append(ports, portInt)
+				}
+
 				listener, err := net.Listen("tcp", addr)
 				if err != nil {
 					remotelogs.Error("API_NODE", "listening REST 'https://"+addr+"' failed: "+err.Error())
@@ -498,6 +527,11 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 				isListening = true
 			}
 		}
+	}
+
+	// add to local firewall
+	if len(ports) > 0 {
+		utils.AddPortsToFirewall(ports)
 	}
 
 	return
