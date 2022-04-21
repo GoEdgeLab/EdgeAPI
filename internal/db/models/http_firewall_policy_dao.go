@@ -365,7 +365,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 		return nil, nil
 	}
 
-	config := &firewallconfigs.HTTPFirewallPolicy{}
+	var config = &firewallconfigs.HTTPFirewallPolicy{}
 	config.Id = int64(policy.Id)
 	config.IsOn = policy.IsOn
 	config.Name = policy.Name
@@ -451,6 +451,18 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 			return nil, err
 		}
 		config.SYNFlood = synFloodConfig
+	}
+
+	// log
+	if IsNotNull(policy.Log) {
+		var logConfig = &firewallconfigs.HTTPFirewallPolicyLogConfig{}
+		err = json.Unmarshal(policy.Log, logConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Log = logConfig
+	} else {
+		config.Log = firewallconfigs.DefaultHTTPFirewallPolicyLogConfig
 	}
 
 	if cacheMap != nil {

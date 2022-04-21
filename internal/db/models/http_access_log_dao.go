@@ -326,7 +326,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	}
 
 	accessLogLocker.RLock()
-	daoList := []*HTTPAccessLogDAOWrapper{}
+	var daoList = []*HTTPAccessLogDAOWrapper{}
 	for _, daoWrapper := range httpAccessLogDAOMapping {
 		daoList = append(daoList, daoWrapper)
 	}
@@ -386,7 +386,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	var wg = &sync.WaitGroup{}
 	wg.Add(count)
 	for _, tableQuery := range tableQueries {
-		go func(tableQuery *accessLogTableQuery) {
+		go func(tableQuery *accessLogTableQuery, keyword string) {
 			defer wg.Done()
 
 			var dao = tableQuery.daoWrapper.DAO
@@ -483,7 +483,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					isSpecialKeyword = true
 					keyword = keyword[3:]
 					pieces := strings.SplitN(keyword, ",", 2)
-					if len(pieces) == 1 || len(pieces[1]) == 0 {
+					if len(pieces) == 1 || len(pieces[1]) == 0 || pieces[0] == pieces[1] {
 						query.Attr("remoteAddr", pieces[0])
 					} else {
 						query.Between("INET_ATON(remoteAddr)", utils.IP2Long(pieces[0]), utils.IP2Long(pieces[1]))
@@ -600,7 +600,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 				Limit(size).
 				FindAll()
 			if err != nil {
-				logs.Println("[DB_NODE]" + err.Error())
+				remotelogs.Println("DB_NODE", err.Error())
 				return
 			}
 
@@ -610,7 +610,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 				result = append(result, accessLog)
 			}
 			locker.Unlock()
-		}(tableQuery)
+		}(tableQuery, keyword)
 	}
 	wg.Wait()
 
