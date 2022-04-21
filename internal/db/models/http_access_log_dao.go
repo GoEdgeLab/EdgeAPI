@@ -354,6 +354,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 	// 准备查询
 	var tableQueries = []*accessLogTableQuery{}
+	var maxTableName = ""
 	for _, daoWrapper := range daoList {
 		var instance = daoWrapper.DAO.Instance
 		def, err := SharedHTTPAccessLogManager.FindPartitionTable(instance, day, partition)
@@ -364,12 +365,28 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 			continue
 		}
 
+		if len(maxTableName) == 0 || def.Name > maxTableName {
+			maxTableName = def.Name
+		}
+
 		tableQueries = append(tableQueries, &accessLogTableQuery{
 			daoWrapper:         daoWrapper,
 			name:               def.Name,
 			hasRemoteAddrField: def.HasRemoteAddr,
 			hasDomainField:     def.HasDomain,
 		})
+	}
+
+	// 检查各个分表是否一致
+	if partition < 0 {
+		var newTableQueries = []*accessLogTableQuery{}
+		for _, tableQuery := range tableQueries {
+			if tableQuery.name != maxTableName {
+				continue
+			}
+			newTableQueries = append(newTableQueries, tableQuery)
+		}
+		tableQueries = newTableQueries
 	}
 
 	if len(tableQueries) == 0 {
@@ -606,7 +623,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 			locker.Lock()
 			for _, one := range ones {
-				accessLog := one.(*HTTPAccessLog)
+				var accessLog = one.(*HTTPAccessLog)
 				result = append(result, accessLog)
 			}
 			locker.Unlock()

@@ -260,7 +260,18 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 }
 
 // UpdateFirewallPolicy 修改策略
-func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte, blockOptionsJSON []byte, mode firewallconfigs.FirewallMode, useLocalFirewall bool, synFloodConfig *firewallconfigs.SYNFloodConfig) error {
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
+	policyId int64,
+	isOn bool,
+	name string,
+	description string,
+	inboundJSON []byte,
+	outboundJSON []byte,
+	blockOptionsJSON []byte,
+	mode firewallconfigs.FirewallMode,
+	useLocalFirewall bool,
+	synFloodConfig *firewallconfigs.SYNFloodConfig,
+	logConfig *firewallconfigs.HTTPFirewallPolicyLogConfig) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -292,6 +303,16 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx, policyId int
 		op.SynFlood = synFloodConfigJSON
 	} else {
 		op.SynFlood = "null"
+	}
+
+	if logConfig != nil {
+		logJSON, err := json.Marshal(logConfig)
+		if err != nil {
+			return err
+		}
+		op.Log = logJSON
+	} else {
+		op.Log = "null"
 	}
 
 	op.UseLocalFirewall = useLocalFirewall

@@ -293,7 +293,15 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		}
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig)
+	var logConfig = &firewallconfigs.HTTPFirewallPolicyLogConfig{}
+	if len(req.LogJSON) > 0 {
+		err = json.Unmarshal(req.LogJSON, logConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig, logConfig)
 	if err != nil {
 		return nil, err
 	}
