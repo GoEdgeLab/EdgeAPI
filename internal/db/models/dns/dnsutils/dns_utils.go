@@ -153,7 +153,7 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSI
 		}
 
 		// 检查IP地址
-		ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, nodeconfigs.NodeRoleNode)
+		ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, true, nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}

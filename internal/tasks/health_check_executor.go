@@ -7,7 +7,6 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -45,13 +44,13 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		return nil, errors.New("health check config is not found")
 	}
 
-	healthCheckConfig := &serverconfigs.HealthCheckConfig{}
+	var healthCheckConfig = &serverconfigs.HealthCheckConfig{}
 	err = json.Unmarshal(cluster.HealthCheck, healthCheckConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	results := []*HealthCheckResult{}
+	var results = []*HealthCheckResult{}
 	nodes, err := models.NewNodeDAO().FindAllEnabledNodesWithClusterId(nil, this.clusterId)
 	if err != nil {
 		return nil, err
@@ -64,7 +63,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 			Node: node,
 		}
 
-		ipAddr, ipAddrId, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id), nodeconfigs.NodeRoleNode)
+		ipAddr, ipAddrId, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id), false, nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +78,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	}
 
 	// 并行检查
-	preparedResults := []*HealthCheckResult{}
+	var preparedResults = []*HealthCheckResult{}
 	for _, result := range results {
 		if len(result.NodeAddr) > 0 {
 			preparedResults = append(preparedResults, result)
@@ -90,13 +89,13 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		return results, nil
 	}
 
-	countResults := len(preparedResults)
-	queue := make(chan *HealthCheckResult, countResults)
+	var countResults = len(preparedResults)
+	var queue = make(chan *HealthCheckResult, countResults)
 	for _, result := range preparedResults {
 		queue <- result
 	}
 
-	countTries := types.Int(healthCheckConfig.CountTries)
+	var countTries = types.Int(healthCheckConfig.CountTries)
 	if countTries > 10 { // 限定最多尝试10次 TODO 应该在管理界面提示用户
 		countTries = 10
 	}
@@ -104,7 +103,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		countTries = 3
 	}
 
-	tryDelay := 1 * time.Second
+	var tryDelay = 1 * time.Second
 	if healthCheckConfig.TryDelay != nil {
 		tryDelay = healthCheckConfig.TryDelay.Duration()
 
@@ -113,103 +112,105 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		}
 	}
 
-	countRoutines := 10
+	var concurrent = 128
+
 	wg := sync.WaitGroup{}
 	wg.Add(countResults)
-	for i := 0; i < countRoutines; i++ {
-		goman.New(func() {
+	for i := 0; i < concurrent; i++ {
+		go func() {
 			for {
 				select {
 				case result := <-queue:
-					func() {
-						for i := 1; i <= countTries; i++ {
-							before := time.Now()
-							err := this.checkNode(healthCheckConfig, result)
-							result.CostMs = time.Since(before).Seconds() * 1000
-							if err != nil {
-								result.Error = err.Error()
-							}
-							if result.IsOk {
-								break
-							}
-							if tryDelay > 0 {
-								time.Sleep(tryDelay)
-							}
-						}
-
-						// 修改节点IP状态
-						if teaconst.IsPlus {
-							isChanged, err := models.SharedNodeIPAddressDAO.UpdateAddressHealthCount(nil, result.NodeAddrId, result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
-							if err != nil {
-								remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
-								return
-							}
-
-							if isChanged {
-								// 发送消息
-								var message = ""
-								var messageType string
-								var messageLevel string
-								if result.IsOk {
-									message = "健康检查成功，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已恢复上线"
-									messageType = models.MessageTypeHealthCheckNodeUp
-									messageLevel = models.MessageLevelSuccess
-								} else {
-									message = "健康检查失败，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已自动下线"
-									messageType = models.MessageTypeHealthCheckNodeDown
-									messageLevel = models.MessageLevelError
-								}
-
-								err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
-								if err != nil {
-									remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
-									return
-								}
-
-								// 触发阈值
-								err = models.SharedNodeIPAddressDAO.FireThresholds(nil, nodeconfigs.NodeRoleNode, int64(result.Node.Id))
-								if err != nil {
-									remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
-									return
-								}
-							}
-
-							// 我们只处理IP的上下线，不修改节点的状态
-							return
-						}
-
-						// 修改节点状态
-						if healthCheckConfig.AutoDown {
-							isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
-							if err != nil {
-								remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
-							} else if isChanged {
-								// 通知恢复或下线
-								if result.IsOk {
-									message := "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
-									err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
-								} else {
-									message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
-									err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
-								}
-							}
-						}
-					}()
-
+					this.runNode(healthCheckConfig, result, countTries, tryDelay)
 					wg.Done()
 				default:
 					return
 				}
 			}
-		})
+		}()
 	}
 	wg.Wait()
 
 	return results, nil
 }
 
+func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult, countTries int, tryDelay time.Duration) {
+	for i := 1; i <= countTries; i++ {
+		var before = time.Now()
+		err := this.runNodeOnce(healthCheckConfig, result)
+		result.CostMs = time.Since(before).Seconds() * 1000
+		if err != nil {
+			result.Error = err.Error()
+		}
+		if result.IsOk {
+			break
+		}
+		if tryDelay > 0 {
+			time.Sleep(tryDelay)
+		}
+	}
+
+	// 修改节点IP状态
+	if teaconst.IsPlus {
+		isChanged, err := models.SharedNodeIPAddressDAO.UpdateAddressHealthCount(nil, result.NodeAddrId, result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown, healthCheckConfig.AutoDown)
+		if err != nil {
+			remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+			return
+		}
+
+		if isChanged {
+			// 发送消息
+			var message = ""
+			var messageType string
+			var messageLevel string
+			if result.IsOk {
+				message = "健康检查成功，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已恢复上线"
+				messageType = models.MessageTypeHealthCheckNodeUp
+				messageLevel = models.MessageLevelSuccess
+			} else {
+				message = "健康检查失败，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已自动下线"
+				messageType = models.MessageTypeHealthCheckNodeDown
+				messageLevel = models.MessageLevelError
+			}
+
+			err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
+			if err != nil {
+				remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+				return
+			}
+
+			// 触发阈值
+			err = models.SharedNodeIPAddressDAO.FireThresholds(nil, nodeconfigs.NodeRoleNode, int64(result.Node.Id))
+			if err != nil {
+				remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+				return
+			}
+		}
+
+		// 我们只处理IP的上下线，不修改节点的状态
+		return
+	}
+
+	// 修改节点状态
+	if healthCheckConfig.AutoDown {
+		isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
+		if err != nil {
+			remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+		} else if isChanged {
+			// 通知恢复或下线
+			if result.IsOk {
+				message := "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
+				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
+			} else {
+				message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
+				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
+			}
+		}
+	}
+}
+
 // 检查单个节点
-func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult) error {
+func (this *HealthCheckExecutor) runNodeOnce(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult) error {
 	// 支持IPv6
 	if utils.IsIPv6(result.NodeAddr) {
 		result.NodeAddr = "[" + result.NodeAddr + "]"
@@ -219,7 +220,7 @@ func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.Heal
 		healthCheckConfig.URL = "http://${host}/"
 	}
 
-	url := strings.ReplaceAll(healthCheckConfig.URL, "${host}", result.NodeAddr)
+	var url = strings.ReplaceAll(healthCheckConfig.URL, "${host}", result.NodeAddr)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -238,22 +239,18 @@ func (this *HealthCheckExecutor) checkNode(healthCheckConfig *serverconfigs.Heal
 	}
 	req.Header.Set(serverconfigs.HealthCheckHeaderName, key)
 
-	timeout := 5 * time.Second
+	var timeout = 5 * time.Second
 	if healthCheckConfig.Timeout != nil {
 		timeout = healthCheckConfig.Timeout.Duration()
 	}
 
-	client := &http.Client{
+	var client = &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				_, port, err := net.SplitHostPort(addr)
 				if err != nil {
 					return nil, err
-				}
-				conn, err := net.Dial(network, configutils.QuoteIP(result.NodeAddr)+":"+port)
-				if err == nil {
-					return conn, nil
 				}
 				return net.DialTimeout(network, configutils.QuoteIP(result.NodeAddr)+":"+port, timeout)
 			},

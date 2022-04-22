@@ -125,7 +125,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 		role = nodeconfigs.NodeRoleNode
 	}
 
-	op := NewNodeIPAddressOperator()
+	var op = NewNodeIPAddressOperator()
 	op.NodeId = nodeId
 	op.Role = role
 	op.Name = name
@@ -234,17 +234,20 @@ func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(tx *dbs.Tx, nodeId
 }
 
 // FindFirstNodeAccessIPAddress 查找节点的第一个可访问的IP地址
-func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (ip string, addrId int64, err error) {
+func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId int64, mustUp bool, role nodeconfigs.NodeRole) (ip string, addrId int64, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
-	one, err := this.Query(tx).
+	var query = this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("role", role).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
-		Attr("isOn", true).
-		Attr("isUp", true).
+		Attr("isOn", true)
+	if mustUp {
+		query.Attr("isUp", true)
+	}
+	one, err := query.
 		Desc("order").
 		AscPk().
 		Result("id", "ip").
@@ -456,13 +459,13 @@ func (this *NodeIPAddressDAO) UpdateAddressBackupIP(tx *dbs.Tx, addressId int64,
 }
 
 // UpdateAddressHealthCount 计算IP健康状态
-func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64, isUp bool, maxUp int, maxDown int) (changed bool, err error) {
+func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64, newIsUp bool, maxUp int, maxDown int, autoUpDown bool) (changed bool, err error) {
 	if addrId <= 0 {
 		return false, errors.New("invalid address id")
 	}
 	one, err := this.Query(tx).
 		Pk(addrId).
-		Result("isHealthy", "countUp", "countDown").
+		Result("isHealthy", "isUp", "countUp", "countDown").
 		Find()
 	if err != nil {
 		return false, err
@@ -470,26 +473,57 @@ func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64,
 	if one == nil {
 		return false, nil
 	}
-	oldIsHealthy := one.(*NodeIPAddress).IsHealthy
+	var oldIsHealthy = one.(*NodeIPAddress).IsHealthy
+	var oldIsUp = one.(*NodeIPAddress).IsUp
 
 	// 如果新老状态一致，则不做任何事情
-	if oldIsHealthy == isUp {
+	if oldIsHealthy == newIsUp {
+		// 如果自动上下线，则健康状况和是否在线保持一致
+		if autoUpDown {
+			if oldIsUp != oldIsHealthy {
+				err = this.Query(tx).
+					Pk(addrId).
+					Set("isUp", newIsUp).
+					UpdateQuickly()
+				if err != nil {
+					return false, err
+				}
+				err = this.NotifyUpdate(tx, addrId)
+				if err != nil {
+					return false, err
+				}
+
+				// 创建日志
+				if newIsUp {
+					err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, addrId, "健康检查上线")
+				} else {
+					err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, addrId, "健康检查下线")
+				}
+				if err != nil {
+					return true, err
+				}
+
+				return true, nil
+			}
+		}
 		return false, nil
 	}
 
-	countUp := int(one.(*NodeIPAddress).CountUp)
-	countDown := int(one.(*NodeIPAddress).CountDown)
+	var countUp = int(one.(*NodeIPAddress).CountUp)
+	var countDown = int(one.(*NodeIPAddress).CountDown)
 
-	op := NewNodeIPAddressOperator()
+	var op = NewNodeIPAddressOperator()
 	op.Id = addrId
 
-	if isUp {
+	if newIsUp {
 		countUp++
 		countDown = 0
 
 		if countUp >= maxUp {
 			changed = true
-			//op.IsUp = true
+			if autoUpDown {
+				op.IsUp = true
+			}
 			op.IsHealthy = true
 		}
 	} else {
@@ -498,7 +532,9 @@ func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64,
 
 		if countDown >= maxDown {
 			changed = true
-			//op.IsUp = false
+			if autoUpDown {
+				op.IsUp = false
+			}
 			op.IsHealthy = false
 		}
 	}
@@ -514,6 +550,15 @@ func (this *NodeIPAddressDAO) UpdateAddressHealthCount(tx *dbs.Tx, addrId int64,
 		err = this.NotifyUpdate(tx, addrId)
 		if err != nil {
 			return true, err
+		}
+
+		// 创建日志
+		if autoUpDown {
+			if newIsUp {
+				err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, addrId, "健康检查上线")
+			} else {
+				err = SharedNodeIPAddressLogDAO.CreateLog(tx, 0, addrId, "健康检查下线")
+			}
 		}
 	}
 

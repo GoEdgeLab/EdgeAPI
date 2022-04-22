@@ -158,6 +158,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 			CanAccess:   address.CanAccess,
 			IsOn:        address.IsOn,
 			IsUp:        address.IsUp,
+			IsHealthy:   address.IsHealthy,
 			BackupIP:    address.DecodeBackupIP(),
 		}
 	}
@@ -194,6 +195,7 @@ func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx co
 			CanAccess:   address.CanAccess,
 			IsOn:        address.IsOn,
 			IsUp:        address.IsUp,
+			IsHealthy:   address.IsHealthy,
 			BackupIP:    address.DecodeBackupIP(),
 		})
 	}
@@ -218,7 +220,7 @@ func (this *NodeIPAddressService) CountAllEnabledNodeIPAddresses(ctx context.Con
 	return this.SuccessCount(count)
 }
 
-// ListEnabledIPAddresses 列出单页IP地址
+// ListEnabledNodeIPAddresses 列出单页IP地址
 func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context, req *pb.ListEnabledNodeIPAddressesRequest) (*pb.ListEnabledNodeIPAddressesResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx, 0)
@@ -244,6 +246,7 @@ func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context
 			CanAccess:   addr.CanAccess,
 			IsOn:        addr.IsOn,
 			IsUp:        addr.IsUp,
+			IsHealthy:   addr.IsHealthy,
 			BackupIP:    addr.DecodeBackupIP(),
 		})
 	}
