@@ -12,6 +12,9 @@ type StorageInterface interface {
 	// SetVersion 设置版本
 	SetVersion(version int)
 
+	// SetFirewallOnly 设置是否只处理防火墙相关的访问日志
+	SetFirewallOnly(firewallOnly bool)
+
 	IsOk() bool
 
 	SetOk(ok bool)

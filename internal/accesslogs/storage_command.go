@@ -61,6 +61,10 @@ func (this *CommandStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 		return err
 	}
 	for _, accessLog := range accessLogs {
+		if this.firewallOnly && accessLog.FirewallPolicyId == 0 {
+			continue
+		}
+
 		data, err := this.Marshal(accessLog)
 		if err != nil {
 			logs.Error(err)

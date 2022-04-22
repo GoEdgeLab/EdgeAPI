@@ -12,8 +12,9 @@ import (
 )
 
 type BaseStorage struct {
-	isOk    bool
-	version int
+	isOk         bool
+	version      int
+	firewallOnly bool
 }
 
 func (this *BaseStorage) SetVersion(version int) {
@@ -30,6 +31,10 @@ func (this *BaseStorage) IsOk() bool {
 
 func (this *BaseStorage) SetOk(isOk bool) {
 	this.isOk = isOk
+}
+
+func (this *BaseStorage) SetFirewallOnly(firewallOnly bool) {
+	this.firewallOnly = firewallOnly
 }
 
 // Marshal 对日志进行编码

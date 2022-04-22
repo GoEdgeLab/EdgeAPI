@@ -60,6 +60,9 @@ func (this *TCPStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 	defer this.writeLocker.Unlock()
 
 	for _, accessLog := range accessLogs {
+		if this.firewallOnly && accessLog.FirewallPolicyId == 0 {
+			continue
+		}
 		data, err := this.Marshal(accessLog)
 		if err != nil {
 			logs.Error(err)

@@ -101,6 +101,7 @@ func (this *StorageManager) Loop() error {
 				}
 
 				storage.SetVersion(types.Int(policy.Version))
+				storage.SetFirewallOnly(policy.FirewallOnly == 1)
 				err := storage.Start()
 				if err != nil {
 					remotelogs.Error("ACCESS_LOG_STORAGE_MANAGER", "start policy '"+types.String(policyId)+"' failed: "+err.Error())
@@ -116,6 +117,7 @@ func (this *StorageManager) Loop() error {
 				continue
 			}
 			storage.SetVersion(types.Int(policy.Version))
+			storage.SetFirewallOnly(policy.FirewallOnly == 1)
 			this.storageMap[policyId] = storage
 			err = storage.Start()
 			if err != nil {

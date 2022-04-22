@@ -41,13 +41,14 @@ func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx con
 	var pbPolicies = []*pb.HTTPAccessLogPolicy{}
 	for _, policy := range policies {
 		pbPolicies = append(pbPolicies, &pb.HTTPAccessLogPolicy{
-			Id:          int64(policy.Id),
-			Name:        policy.Name,
-			IsOn:        policy.IsOn,
-			Type:        policy.Type,
-			OptionsJSON: policy.Options,
-			CondsJSON:   policy.Conds,
-			IsPublic:    policy.IsPublic,
+			Id:           int64(policy.Id),
+			Name:         policy.Name,
+			IsOn:         policy.IsOn,
+			Type:         policy.Type,
+			OptionsJSON:  policy.Options,
+			CondsJSON:    policy.Conds,
+			IsPublic:     policy.IsPublic,
+			FirewallOnly: policy.FirewallOnly == 1,
 		})
 	}
 	return &pb.ListEnabledHTTPAccessLogPoliciesResponse{HttpAccessLogPolicies: pbPolicies}, nil
@@ -71,7 +72,7 @@ func (this *HTTPAccessLogPolicyService) CreateHTTPAccessLogPolicy(ctx context.Co
 	}
 
 	// 创建
-	policyId, err := models.SharedHTTPAccessLogPolicyDAO.CreatePolicy(tx, req.Name, req.Type, req.OptionsJSON, req.CondsJSON, req.IsPublic)
+	policyId, err := models.SharedHTTPAccessLogPolicyDAO.CreatePolicy(tx, req.Name, req.Type, req.OptionsJSON, req.CondsJSON, req.IsPublic, req.FirewallOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +97,7 @@ func (this *HTTPAccessLogPolicyService) UpdateHTTPAccessLogPolicy(ctx context.Co
 	}
 
 	// 保存修改
-	err = models.SharedHTTPAccessLogPolicyDAO.UpdatePolicy(tx, req.HttpAccessLogPolicyId, req.Name, req.OptionsJSON, req.CondsJSON, req.IsPublic, req.IsOn)
+	err = models.SharedHTTPAccessLogPolicyDAO.UpdatePolicy(tx, req.HttpAccessLogPolicyId, req.Name, req.OptionsJSON, req.CondsJSON, req.IsPublic, req.FirewallOnly, req.IsOn)
 	if err != nil {
 		return nil, err
 	}
@@ -119,13 +120,14 @@ func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx conte
 		return &pb.FindEnabledHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: nil}, nil
 	}
 	return &pb.FindEnabledHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: &pb.HTTPAccessLogPolicy{
-		Id:          int64(policy.Id),
-		Name:        policy.Name,
-		IsOn:        policy.IsOn,
-		Type:        policy.Type,
-		OptionsJSON: policy.Options,
-		CondsJSON:   policy.Conds,
-		IsPublic:    policy.IsPublic,
+		Id:           int64(policy.Id),
+		Name:         policy.Name,
+		IsOn:         policy.IsOn,
+		Type:         policy.Type,
+		OptionsJSON:  policy.Options,
+		CondsJSON:    policy.Conds,
+		IsPublic:     policy.IsPublic,
+		FirewallOnly: policy.FirewallOnly == 1,
 	}}, nil
 }
 

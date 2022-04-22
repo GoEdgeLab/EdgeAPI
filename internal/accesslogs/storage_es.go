@@ -59,6 +59,10 @@ func (this *ESStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 	indexName := this.FormatVariables(this.config.Index)
 	typeName := this.FormatVariables(this.config.MappingType)
 	for _, accessLog := range accessLogs {
+		if this.firewallOnly && accessLog.FirewallPolicyId == 0 {
+			continue
+		}
+
 		if len(accessLog.RequestId) == 0 {
 			continue
 		}
