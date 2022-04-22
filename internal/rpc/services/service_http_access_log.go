@@ -227,6 +227,6 @@ func (this *HTTPAccessLogService) FindHTTPAccessLogPartitions(ctx context.Contex
 
 	return &pb.FindHTTPAccessLogPartitionsResponse{
 		Partitions:        partitions,
-		ReversePartitions: partitions,
+		ReversePartitions: reversePartitions,
 	}, nil
 }
