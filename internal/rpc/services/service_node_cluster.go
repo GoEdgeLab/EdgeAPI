@@ -1037,6 +1037,20 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		result.WebpIsOn = nodeconfigs.DefaultWebPImagePolicy.IsOn
 	}
 
+	// system service
+	if models.IsNotNull(cluster.SystemServices) {
+		var servicesMap = map[string]maps.Map{}
+		err = json.Unmarshal(cluster.SystemServices, &servicesMap)
+		if err != nil {
+			return nil, err
+		}
+		for _, serviceMap := range servicesMap {
+			if serviceMap.GetBool("isOn") {
+				result.HasSystemServices = true
+			}
+		}
+	}
+
 	return result, nil
 }
 
