@@ -313,11 +313,14 @@ func (this *NodeClusterService) FindNodeClusterHealthCheckConfig(ctx context.Con
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	config, err := models.SharedNodeClusterDAO.FindClusterHealthCheckConfig(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
+	}
+	if config == nil {
+		return &pb.FindNodeClusterHealthCheckConfigResponse{HealthCheckJSON: nil}, nil
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {

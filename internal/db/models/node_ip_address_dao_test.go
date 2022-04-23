@@ -56,7 +56,7 @@ func TestNodeIPAddressDAO_UpdateAddressHealthCount(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	isChanged, err := SharedNodeIPAddressDAO.UpdateAddressHealthCount(tx, 1, true, 3, 3)
+	isChanged, err := SharedNodeIPAddressDAO.UpdateAddressHealthCount(tx, 1, true, 3, 3, false)
 	if err != nil {
 		t.Fatal(err)
 	}
