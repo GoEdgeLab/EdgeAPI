@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/configs"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -49,7 +51,10 @@ func (this *APINodeDAO) EnableAPINode(tx *dbs.Tx, id int64) error {
 		Pk(id).
 		Set("state", APINodeStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, id)
 }
 
 // DisableAPINode 禁用条目
@@ -58,7 +63,10 @@ func (this *APINodeDAO) DisableAPINode(tx *dbs.Tx, id int64) error {
 		Pk(id).
 		Set("state", APINodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, id)
 }
 
 // FindEnabledAPINode 查找启用中的条目
@@ -149,16 +157,33 @@ func (this *APINodeDAO) CreateAPINode(tx *dbs.Tx, name string, description strin
 		return
 	}
 
+	err = this.NotifyUpdate(tx, types.Int64(op.Id))
+	if err != nil {
+		remotelogs.Error("API_NODE_DAO", err.Error())
+	}
+
 	return types.Int64(op.Id), nil
 }
 
 // UpdateAPINode 修改API节点
-func (this *APINodeDAO) UpdateAPINode(tx *dbs.Tx, nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool) error {
+func (this *APINodeDAO) UpdateAPINode(tx *dbs.Tx, nodeId int64, name string, description string, httpJSON []byte, httpsJSON []byte, restIsOn bool, restHTTPJSON []byte, restHTTPSJSON []byte, accessAddrsJSON []byte, isOn bool, isPrimary bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewAPINodeOperator()
+	// 取消别的Primary
+	if isPrimary {
+		err := this.Query(tx).
+			Neq("id", nodeId).
+			Attr("isPrimary", true).
+			Set("isPrimary", false).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+
+	var op = NewAPINodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.Description = description
@@ -191,8 +216,13 @@ func (this *APINodeDAO) UpdateAPINode(tx *dbs.Tx, nodeId int64, name string, des
 		op.AccessAddrs = "[]"
 	}
 
+	op.IsPrimary = isPrimary
+
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // FindAllEnabledAPINodes 列出所有可用API节点
@@ -294,23 +324,6 @@ func (this *APINodeDAO) UpdateAPINodeStatus(tx *dbs.Tx, apiNodeId int64, statusJ
 	return err
 }
 
-// 生成唯一ID
-func (this *APINodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
-	for {
-		uniqueId := rands.HexString(32)
-		ok, err := this.Query(tx).
-			Attr("uniqueId", uniqueId).
-			Exist()
-		if err != nil {
-			return "", err
-		}
-		if ok {
-			continue
-		}
-		return uniqueId, nil
-	}
-}
-
 // CountAllLowerVersionNodes 计算所有节点中低于某个版本的节点数量
 func (this *APINodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
@@ -383,4 +396,115 @@ func (this *APINodeDAO) FindAllEnabledAPIAccessIPs(tx *dbs.Tx, cacheMap *utils.C
 	}
 
 	return result, nil
+}
+
+// CheckAPINodeIsPrimary 检查当前节点是否为Primary节点
+func (this *APINodeDAO) CheckAPINodeIsPrimary(tx *dbs.Tx) (bool, error) {
+	config, err := configs.SharedAPIConfig()
+	if err != nil {
+		return false, err
+	}
+
+	isPrimary, err := this.Query(tx).
+		State(APINodeStateEnabled).
+		Attr("uniqueId", config.NodeId).
+		Attr("isPrimary", true).
+		Exist()
+	if err != nil {
+		return false, err
+	}
+
+	if isPrimary {
+		return true, nil
+	}
+
+	// 检查是否有别的Primary节点
+	count, err := this.Query(tx).
+		State(APINodeStateEnabled).
+		Attr("isOn", true).
+		Attr("isPrimary", true).
+		Count()
+	if err != nil {
+		return false, err
+	}
+
+	if count == 0 {
+		err = this.ResetPrimaryAPINode(tx)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+// CheckAPINodeIsPrimaryWithoutErr 检查当前节点是否为Primary节点，并忽略错误
+func (this *APINodeDAO) CheckAPINodeIsPrimaryWithoutErr() bool {
+	b, err := this.CheckAPINodeIsPrimary(nil)
+	return b && err == nil
+}
+
+// ResetPrimaryAPINode 重置Primary节点
+func (this *APINodeDAO) ResetPrimaryAPINode(tx *dbs.Tx) error {
+	// 当前是否有Primary节点
+	apiNode, err := this.Query(tx).
+		State(APINodeStateEnabled).
+		Attr("isOn", true).
+		Attr("isPrimary", true).
+		Find()
+	if err != nil {
+		return err
+	}
+	if apiNode == nil {
+		// 选择一个作为Primary
+		// TODO 将来需要考虑API节点离线的情况
+		apiNodeId, err := this.Query(tx).
+			State(APINodeStateEnabled).
+			Attr("isOn", true).
+			ResultPk().
+			FindInt64Col(0)
+		if err != nil {
+			return err
+		}
+		if apiNodeId > 0 {
+			err = this.Query(tx).
+				Pk(apiNodeId).
+				Set("isPrimary", true).
+				UpdateQuickly()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// NotifyUpdate 通知变更
+func (this *APINodeDAO) NotifyUpdate(tx *dbs.Tx, apiNodeId int64) error {
+	// suppress IDE warning
+	_ = apiNodeId
+
+	err := this.ResetPrimaryAPINode(tx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 生成唯一ID
+func (this *APINodeDAO) genUniqueId(tx *dbs.Tx) (string, error) {
+	for {
+		uniqueId := rands.HexString(32)
+		ok, err := this.Query(tx).
+			Attr("uniqueId", uniqueId).
+			Exist()
+		if err != nil {
+			return "", err
+		}
+		if ok {
+			continue
+		}
+		return uniqueId, nil
+	}
 }

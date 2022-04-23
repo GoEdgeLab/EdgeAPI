@@ -4,9 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/acme"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strconv"
@@ -16,48 +14,39 @@ import (
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewSSLCertExpireCheckExecutor().Start()
+			NewSSLCertExpireCheckExecutor(1 * time.Hour).Start()
 		})
 	})
 }
 
 // SSLCertExpireCheckExecutor 证书检查任务
 type SSLCertExpireCheckExecutor struct {
+	BaseTask
+
+	ticker *time.Ticker
 }
 
-func NewSSLCertExpireCheckExecutor() *SSLCertExpireCheckExecutor {
-	return &SSLCertExpireCheckExecutor{}
+func NewSSLCertExpireCheckExecutor(duration time.Duration) *SSLCertExpireCheckExecutor {
+	return &SSLCertExpireCheckExecutor{
+		ticker: time.NewTicker(duration),
+	}
 }
 
 // Start 启动任务
 func (this *SSLCertExpireCheckExecutor) Start() {
-	seconds := int64(3600)
-	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
-	for range ticker.C {
-		err := this.loop(seconds)
+	for range this.ticker.C {
+		err := this.Loop()
 		if err != nil {
-			logs.Println("[ERROR][SSLCertExpireCheckExecutor]" + err.Error())
+			this.logErr("SSLCertExpireCheckExecutor", err.Error())
 		}
 	}
 }
 
-// 单次执行
-func (this *SSLCertExpireCheckExecutor) loop(seconds int64) error {
-	// 检查上次运行时间，防止重复运行
-	settingKey := "sslCertExpiringCheckLoop"
-	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
-	if err != nil {
-		return err
-	}
-	if c > 0 {
+// Loop 单次执行
+func (this *SSLCertExpireCheckExecutor) Loop() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
-	}
-
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
 	}
 
 	// 查找需要自动更新的证书

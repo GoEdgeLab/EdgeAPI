@@ -5,50 +5,52 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
-	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewHealthCheckTask().Run()
+			NewHealthCheckTask(1 * time.Minute).Start()
 		})
 	})
 }
 
 // HealthCheckTask 节点健康检查任务
 type HealthCheckTask struct {
+	BaseTask
+
+	ticker   *time.Ticker
 	tasksMap map[int64]*HealthCheckClusterTask // taskId => task
 }
 
-func NewHealthCheckTask() *HealthCheckTask {
+func NewHealthCheckTask(duration time.Duration) *HealthCheckTask {
 	return &HealthCheckTask{
+		ticker:   time.NewTicker(duration),
 		tasksMap: map[int64]*HealthCheckClusterTask{},
 	}
 }
 
-func (this *HealthCheckTask) Run() {
-	err := this.loop()
+func (this *HealthCheckTask) Start() {
+	err := this.Loop()
 	if err != nil {
-		logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+		this.logErr("HealthCheckTask", err.Error())
 	}
 
-	ticker := utils.NewTicker(60 * time.Second)
-	for ticker.Wait() {
-		err := this.loop()
+	for range this.ticker.C {
+		err := this.Loop()
 		if err != nil {
-			logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+			this.logErr("HealthCheckTask", err.Error())
 		}
 	}
 }
 
-func (this *HealthCheckTask) loop() error {
+func (this *HealthCheckTask) Loop() error {
 	clusters, err := models.NewNodeClusterDAO().FindAllEnableClusters(nil)
 	if err != nil {
 		return err
@@ -74,7 +76,7 @@ func (this *HealthCheckTask) loop() error {
 		if len(cluster.HealthCheck) > 0 {
 			err = json.Unmarshal(cluster.HealthCheck, config)
 			if err != nil {
-				logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+				this.logErr("HealthCheckTask", err.Error())
 				continue
 			}
 		}
@@ -85,7 +87,7 @@ func (this *HealthCheckTask) loop() error {
 			newJSON, _ := json.Marshal(config)
 			oldJSON, _ := json.Marshal(task.Config())
 			if bytes.Compare(oldJSON, newJSON) != 0 {
-				logs.Println("[TASK][HEALTH_CHECK]update cluster '" + numberutils.FormatInt64(clusterId) + "'")
+				remotelogs.Println("TASK", "[HealthCheckTask]update cluster '"+numberutils.FormatInt64(clusterId)+"'")
 				goman.New(func() {
 					task.Reset(config)
 				})

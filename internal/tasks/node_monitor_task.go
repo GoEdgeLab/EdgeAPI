@@ -3,11 +3,8 @@ package tasks
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	"strings"
 	"time"
@@ -15,55 +12,43 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		var task = NewNodeMonitorTask(60)
-		var ticker = time.NewTicker(60 * time.Second)
 		goman.New(func() {
-			for range ticker.C {
-				err := task.loop()
-				if err != nil {
-					logs.Println("[TASK][NODE_MONITOR]" + err.Error())
-				}
-			}
+			NewNodeMonitorTask(1 * time.Minute).Start()
 		})
 	})
 }
 
 // NodeMonitorTask 边缘节点监控任务
 type NodeMonitorTask struct {
-	intervalSeconds int
+	BaseTask
+
+	ticker *time.Ticker
 
 	inactiveMap map[string]int  // cluster@nodeId => count
 	notifiedMap map[int64]int64 // nodeId => timestamp
 }
 
-func NewNodeMonitorTask(intervalSeconds int) *NodeMonitorTask {
+func NewNodeMonitorTask(duration time.Duration) *NodeMonitorTask {
 	return &NodeMonitorTask{
-		intervalSeconds: intervalSeconds,
-		inactiveMap:     map[string]int{},
-		notifiedMap:     map[int64]int64{},
+		ticker:      time.NewTicker(duration),
+		inactiveMap: map[string]int{},
+		notifiedMap: map[int64]int64{},
 	}
 }
 
-func (this *NodeMonitorTask) Run() {
-
+func (this *NodeMonitorTask) Start() {
+	for range this.ticker.C {
+		err := this.Loop()
+		if err != nil {
+			this.logErr("NodeMonitorTask", err.Error())
+		}
+	}
 }
 
-func (this *NodeMonitorTask) loop() error {
-	// 检查上次运行时间，防止重复运行
-	settingKey := systemconfigs.SettingCodeNodeMonitor + "Loop"
-	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-int64(this.intervalSeconds))
-	if err != nil {
-		return err
-	}
-	if c > 0 {
+func (this *NodeMonitorTask) Loop() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
-	}
-
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
 	}
 
 	clusters, err := models.SharedNodeClusterDAO.FindAllEnableClusters(nil)
@@ -71,7 +56,7 @@ func (this *NodeMonitorTask) loop() error {
 		return err
 	}
 	for _, cluster := range clusters {
-		err := this.monitorCluster(cluster)
+		err := this.MonitorCluster(cluster)
 		if err != nil {
 			return err
 		}
@@ -80,8 +65,8 @@ func (this *NodeMonitorTask) loop() error {
 	return nil
 }
 
-func (this *NodeMonitorTask) monitorCluster(cluster *models.NodeCluster) error {
-	clusterId := int64(cluster.Id)
+func (this *NodeMonitorTask) MonitorCluster(cluster *models.NodeCluster) error {
+	var clusterId = int64(cluster.Id)
 
 	// 检查离线节点
 	inactiveNodes, err := models.SharedNodeDAO.FindAllInactiveNodesWithClusterId(nil, clusterId)

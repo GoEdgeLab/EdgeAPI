@@ -39,7 +39,7 @@ func (this *APINodeService) UpdateAPINode(ctx context.Context, req *pb.UpdateAPI
 
 	tx := this.NullTx()
 
-	err = models.SharedAPINodeDAO.UpdateAPINode(tx, req.ApiNodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn)
+	err = models.SharedAPINodeDAO.UpdateAPINode(tx, req.ApiNodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.RestIsOn, req.RestHTTPJSON, req.RestHTTPSJSON, req.AccessAddrsJSON, req.IsOn, req.IsPrimary)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +97,7 @@ func (this *APINodeService) FindAllEnabledAPINodes(ctx context.Context, req *pb.
 			HttpsJSON:       node.Https,
 			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
+			IsPrimary:       node.IsPrimary,
 		})
 	}
 
@@ -174,6 +175,7 @@ func (this *APINodeService) ListEnabledAPINodes(ctx context.Context, req *pb.Lis
 			AccessAddrsJSON: node.AccessAddrs,
 			AccessAddrs:     accessAddrs,
 			StatusJSON:      node.Status,
+			IsPrimary:       node.IsPrimary,
 		})
 	}
 
@@ -218,6 +220,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		RestHTTPSJSON:   node.RestHTTPS,
 		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
+		IsPrimary:       node.IsPrimary,
 	}
 	return &pb.FindEnabledAPINodeResponse{ApiNode: result}, nil
 }
@@ -270,6 +273,7 @@ func (this *APINodeService) FindCurrentAPINode(ctx context.Context, req *pb.Find
 		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 		StatusJSON:      nil,
+		IsPrimary:       node.IsPrimary,
 	}}, nil
 }
 

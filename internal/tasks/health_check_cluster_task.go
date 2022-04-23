@@ -9,14 +9,14 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"time"
 )
 
 // HealthCheckClusterTask 单个集群的健康检查任务
 type HealthCheckClusterTask struct {
+	BaseTask
+
 	clusterId int64
 	config    *serverconfigs.HealthCheckConfig
 	ticker    *utils.Ticker
@@ -37,12 +37,12 @@ func (this *HealthCheckClusterTask) Reset(config *serverconfigs.HealthCheckConfi
 	// 检查是否有变化
 	oldJSON, err := json.Marshal(this.config)
 	if err != nil {
-		logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+		this.logErr("HealthCheckClusterTask", err.Error())
 		return
 	}
 	newJSON, err := json.Marshal(config)
 	if err != nil {
-		logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+		this.logErr("HealthCheckClusterTask", err.Error())
 		return
 	}
 	if bytes.Compare(oldJSON, newJSON) != 0 {
@@ -71,9 +71,9 @@ func (this *HealthCheckClusterTask) Run() {
 	ticker := utils.NewTicker(duration)
 	goman.New(func() {
 		for ticker.Wait() {
-			err := this.loop(int64(duration.Seconds()))
+			err := this.Loop()
 			if err != nil {
-				logs.Println("[TASK][HEALTH_CHECK]" + err.Error())
+				this.logErr("HealthCheckClusterTask", err.Error())
 			}
 		}
 	})
@@ -89,33 +89,21 @@ func (this *HealthCheckClusterTask) Stop() {
 	this.ticker = nil
 }
 
-// 单个循环任务
-func (this *HealthCheckClusterTask) loop(seconds int64) error {
-	// 检查上次运行时间，防止重复运行
-	settingKey := systemconfigs.SettingCodeClusterHealthCheck + "Loop" + numberutils.FormatInt64(this.clusterId)
-	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
-	if err != nil {
-		return err
-	}
-	if c > 0 {
+// Loop 单个循环任务
+func (this *HealthCheckClusterTask) Loop() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
 	}
 
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
-	}
-
 	// 开始运行
-	executor := NewHealthCheckExecutor(this.clusterId)
+	var executor = NewHealthCheckExecutor(this.clusterId)
 	results, err := executor.Run()
 	if err != nil {
 		return err
 	}
 
-	failedResults := []maps.Map{}
+	var failedResults = []maps.Map{}
 	for _, result := range results {
 		if !result.IsOk {
 			failedResults = append(failedResults, maps.Map{
@@ -139,7 +127,7 @@ func (this *HealthCheckClusterTask) loop(seconds int64) error {
 			if err != nil {
 				return err
 			}
-			message := "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
+			var message = "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
 			err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
 			if err != nil {
 				return err

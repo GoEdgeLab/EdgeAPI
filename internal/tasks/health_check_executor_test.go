@@ -1,10 +1,11 @@
 //go:build plus
 // +build plus
 
-package tasks
+package tasks_test
 
 import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
+	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/iwind/TeaGo/dbs"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestHealthCheckExecutor_Run(t *testing.T) {
 	teaconst.IsPlus = true
 	dbs.NotifyReady()
 
-	executor := NewHealthCheckExecutor(35)
+	executor := tasks.NewHealthCheckExecutor(35)
 	results, err := executor.Run()
 	if err != nil {
 		t.Fatal(err)

@@ -3,42 +3,44 @@ package tasks
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewMessageTask().Run()
+			NewMessageTask(24 * time.Hour).Start()
 		})
 	})
 }
 
 // MessageTask 消息相关任务
 type MessageTask struct {
+	BaseTask
+
+	ticker *time.Ticker
 }
 
 // NewMessageTask 获取新对象
-func NewMessageTask() *MessageTask {
-	return &MessageTask{}
+func NewMessageTask(duration time.Duration) *MessageTask {
+	return &MessageTask{
+		ticker: time.NewTicker(duration),
+	}
 }
 
-// Run 运行
-func (this *MessageTask) Run() {
-	ticker := utils.NewTicker(24 * time.Hour)
-	for ticker.Wait() {
-		err := this.loop()
+// Start 开始运行
+func (this *MessageTask) Start() {
+	for range this.ticker.C {
+		err := this.Loop()
 		if err != nil {
-			logs.Println("[TASK][MESSAGE]" + err.Error())
+			this.logErr("MessageTask", err.Error())
 		}
 	}
 }
 
-// 单次运行
-func (this *MessageTask) loop() error {
+// Loop 单次运行
+func (this *MessageTask) Loop() error {
 	dayTime := time.Now().AddDate(0, 0, -30) // TODO 这个30天应该可以在界面上设置
 	return models.NewMessageDAO().DeleteMessagesBeforeDay(nil, dayTime)
 }

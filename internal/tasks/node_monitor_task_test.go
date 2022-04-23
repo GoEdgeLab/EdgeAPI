@@ -1,16 +1,18 @@
-package tasks
+package tasks_test
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/iwind/TeaGo/dbs"
 	"testing"
+	"time"
 )
 
 func TestNodeMonitorTask_loop(t *testing.T) {
 	dbs.NotifyReady()
 
-	var task = NewNodeMonitorTask(60)
-	err := task.loop()
+	var task = tasks.NewNodeMonitorTask(60 * time.Second)
+	err := task.Loop()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,9 +21,9 @@ func TestNodeMonitorTask_loop(t *testing.T) {
 
 func TestNodeMonitorTask_Monitor(t *testing.T) {
 	dbs.NotifyReady()
-	var task = NewNodeMonitorTask(60)
+	var task = tasks.NewNodeMonitorTask(60 * time.Second)
 	for i := 0; i < 5; i++ {
-		err := task.monitorCluster(&models.NodeCluster{
+		err := task.MonitorCluster(&models.NodeCluster{
 			Id: 42,
 		})
 		if err != nil {

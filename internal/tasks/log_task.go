@@ -5,49 +5,53 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewLogTask().Run()
+			NewLogTask(24*time.Hour, 1*time.Minute).Start()
 		})
 	})
 }
 
 type LogTask struct {
+	BaseTask
+
+	cleanTicker   *time.Ticker
+	monitorTicker *time.Ticker
 }
 
-func NewLogTask() *LogTask {
-	return &LogTask{}
+func NewLogTask(cleanDuration time.Duration, monitorDuration time.Duration) *LogTask {
+	return &LogTask{
+		cleanTicker:   time.NewTicker(cleanDuration),
+		monitorTicker: time.NewTicker(monitorDuration),
+	}
 }
 
-func (this *LogTask) Run() {
+func (this *LogTask) Start() {
 	goman.New(func() {
-		this.runClean()
+		this.RunClean()
 	})
 	goman.New(func() {
-		this.runMonitor()
+		this.RunMonitor()
 	})
 }
 
-func (this *LogTask) runClean() {
-	var ticker = utils.NewTicker(24 * time.Hour)
-	for ticker.Wait() {
-		err := this.loopClean()
+func (this *LogTask) RunClean() {
+	for range this.cleanTicker.C {
+		err := this.LoopClean()
 		if err != nil {
-			logs.Println("[TASK][LOG]" + err.Error())
+			this.logErr("LogTask", err.Error())
 		}
 	}
 }
 
-func (this *LogTask) loopClean() error {
+func (this *LogTask) LoopClean() error {
 	var configKey = "adminLogConfig"
 	valueJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, configKey)
 	if err != nil {
@@ -71,32 +75,19 @@ func (this *LogTask) loopClean() error {
 	return nil
 }
 
-func (this *LogTask) runMonitor() {
-	var ticker = utils.NewTicker(1 * time.Minute)
-	for ticker.Wait() {
-		err := this.loopMonitor(60)
+func (this *LogTask) RunMonitor() {
+	for range this.monitorTicker.C {
+		err := this.LoopMonitor()
 		if err != nil {
-			logs.Println("[TASK][LOG]" + err.Error())
+			this.logErr("LogTask", err.Error())
 		}
 	}
 }
 
-func (this *LogTask) loopMonitor(seconds int64) error {
-	// 检查上次运行时间，防止重复运行
-	var settingKey = "logTaskMonitorLoop"
-	var timestamp = time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-seconds)
-	if err != nil {
-		return err
-	}
-	if c > 0 {
+func (this *LogTask) LoopMonitor() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
-	}
-
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
 	}
 
 	var configKey = "adminLogConfig"

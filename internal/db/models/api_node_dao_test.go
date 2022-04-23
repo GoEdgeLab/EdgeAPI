@@ -34,6 +34,16 @@ func TestAPINodeDAO_FindAllEnabledAPIAccessIPs(t *testing.T) {
 	t.Log(NewAPINodeDAO().FindAllEnabledAPIAccessIPs(nil, cacheMap))
 }
 
+func TestAPINodeDAO_CheckAPINodeIsPrimary(t *testing.T) {
+	var dao = NewAPINodeDAO()
+	t.Log(dao.CheckAPINodeIsPrimary(nil))
+}
+
+func TestAPINodeDAO_ResetPrimaryAPINode(t *testing.T) {
+	var dao = NewAPINodeDAO()
+	t.Log(dao.ResetPrimaryAPINode(nil))
+}
+
 func BenchmarkAPINodeDAO_New(b *testing.B) {
 	runtime.GOMAXPROCS(1)
 	for i := 0; i < b.N; i++ {

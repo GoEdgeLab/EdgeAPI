@@ -3,60 +3,45 @@ package tasks
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	"time"
 )
 
 func init() {
 	dbs.OnReadyDone(func() {
-		task := NewNSNodeMonitorTask(60)
-		ticker := time.NewTicker(60 * time.Second)
 		goman.New(func() {
-			for range ticker.C {
-				err := task.loop()
-				if err != nil {
-					logs.Println("[TASK][NS_NODE_MONITOR]" + err.Error())
-				}
-			}
+			NewNSNodeMonitorTask(1 * time.Minute).Start()
 		})
 	})
 }
 
 // NSNodeMonitorTask 边缘节点监控任务
 type NSNodeMonitorTask struct {
-	intervalSeconds int
+	BaseTask
+
+	ticker *time.Ticker
 }
 
-func NewNSNodeMonitorTask(intervalSeconds int) *NSNodeMonitorTask {
+func NewNSNodeMonitorTask(duration time.Duration) *NSNodeMonitorTask {
 	return &NSNodeMonitorTask{
-		intervalSeconds: intervalSeconds,
+		ticker: time.NewTicker(duration),
 	}
 }
 
-func (this *NSNodeMonitorTask) Run() {
-
+func (this *NSNodeMonitorTask) Start() {
+	for range this.ticker.C {
+		err := this.Loop()
+		if err != nil {
+			this.logErr("NS_NODE_MONITOR", err.Error())
+		}
+	}
 }
 
-func (this *NSNodeMonitorTask) loop() error {
-	// 检查上次运行时间，防止重复运行
-	settingKey := systemconfigs.SettingCodeNSNodeMonitor + "Loop"
-	timestamp := time.Now().Unix()
-	c, err := models.SharedSysSettingDAO.CompareInt64Setting(nil, settingKey, timestamp-int64(this.intervalSeconds))
-	if err != nil {
-		return err
-	}
-	if c > 0 {
+func (this *NSNodeMonitorTask) Loop() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
-	}
-
-	// 记录时间
-	err = models.SharedSysSettingDAO.UpdateSetting(nil, settingKey, []byte(numberutils.FormatInt64(timestamp)))
-	if err != nil {
-		return err
 	}
 
 	clusters, err := models.SharedNSClusterDAO.FindAllEnabledClusters(nil)

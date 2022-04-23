@@ -264,17 +264,20 @@ func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId in
 }
 
 // FindFirstNodeAccessIPAddressId 查找节点的第一个可访问的IP地址ID
-func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (int64, error) {
+func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId int64, mustUp bool, role nodeconfigs.NodeRole) (int64, error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
-	return this.Query(tx).
+	var query = this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("role", role).
 		State(NodeIPAddressStateEnabled).
 		Attr("canAccess", true).
-		Attr("isOn", true).
-		Attr("isUp", true).
+		Attr("isOn", true)
+	if mustUp {
+		query.Attr("isUp", true)
+	}
+	return query.
 		Desc("order").
 		AscPk().
 		Result("id").

@@ -7,7 +7,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/logs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 	"strings"
@@ -16,27 +15,30 @@ import (
 
 func init() {
 	dbs.OnReadyDone(func() {
-		task := NewServerAccessLogCleaner()
 		goman.New(func() {
-			task.Start()
+			NewServerAccessLogCleaner(12 * time.Hour).Start()
 		})
 	})
 }
 
 // ServerAccessLogCleaner 服务访问日志自动清理
 type ServerAccessLogCleaner struct {
+	BaseTask
+
+	ticker *time.Ticker
 }
 
-func NewServerAccessLogCleaner() *ServerAccessLogCleaner {
-	return &ServerAccessLogCleaner{}
+func NewServerAccessLogCleaner(duration time.Duration) *ServerAccessLogCleaner {
+	return &ServerAccessLogCleaner{
+		ticker: time.NewTicker(duration),
+	}
 }
 
 func (this *ServerAccessLogCleaner) Start() {
-	ticker := time.NewTicker(12 * time.Hour)
-	for range ticker.C {
+	for range this.ticker.C {
 		err := this.Loop()
 		if err != nil {
-			logs.Println("[TASK][ServerAccessLogCleaner]Error: " + err.Error())
+			this.logErr("[TASK][ServerAccessLogCleaner]", err.Error())
 		}
 	}
 }

@@ -1,6 +1,7 @@
-package tasks
+package tasks_test
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/tasks"
 	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
@@ -16,8 +17,8 @@ func TestSSLCertExpireCheckExecutor_loop(t *testing.T) {
 	t.Log("3 days later: ", timeutil.FormatTime("Y-m-d", time.Now().Unix()+3*86400), time.Now().Unix()+3*86400)
 	t.Log("today: ", timeutil.FormatTime("Y-m-d", time.Now().Unix()), time.Now().Unix())
 
-	executor := NewSSLCertExpireCheckExecutor()
-	err := executor.loop(0)
+	var task = tasks.NewSSLCertExpireCheckExecutor(1 * time.Hour)
+	err := task.Loop()
 	if err != nil {
 		t.Fatal(err)
 	}

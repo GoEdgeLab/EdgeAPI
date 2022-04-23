@@ -23,6 +23,7 @@ type APINode struct {
 	AdminId     uint32   `field:"adminId"`     // 管理员ID
 	Weight      uint32   `field:"weight"`      // 权重
 	Status      dbs.JSON `field:"status"`      // 运行状态
+	IsPrimary   bool     `field:"isPrimary"`   // 是否为主API节点
 }
 
 type APINodeOperator struct {
@@ -45,6 +46,7 @@ type APINodeOperator struct {
 	AdminId     interface{} // 管理员ID
 	Weight      interface{} // 权重
 	Status      interface{} // 运行状态
+	IsPrimary   interface{} // 是否为主API节点
 }
 
 func NewAPINodeOperator() *APINodeOperator {

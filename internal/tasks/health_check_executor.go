@@ -7,7 +7,6 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -25,6 +24,8 @@ import (
 )
 
 type HealthCheckExecutor struct {
+	BaseTask
+
 	clusterId int64
 }
 
@@ -154,7 +155,7 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 	if teaconst.IsPlus {
 		isChanged, err := models.SharedNodeIPAddressDAO.UpdateAddressHealthCount(nil, result.NodeAddrId, result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown, healthCheckConfig.AutoDown)
 		if err != nil {
-			remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+			this.logErr("HealthCheckExecutor", err.Error())
 			return
 		}
 
@@ -175,14 +176,14 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 
 			err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
 			if err != nil {
-				remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+				this.logErr("HealthCheckExecutor", err.Error())
 				return
 			}
 
 			// 触发阈值
 			err = models.SharedNodeIPAddressDAO.FireThresholds(nil, nodeconfigs.NodeRoleNode, int64(result.Node.Id))
 			if err != nil {
-				remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+				this.logErr("HealthCheckExecutor", err.Error())
 				return
 			}
 		}
@@ -195,7 +196,7 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 	if healthCheckConfig.AutoDown {
 		isChanged, err := models.SharedNodeDAO.UpdateNodeUpCount(nil, int64(result.Node.Id), result.IsOk, healthCheckConfig.CountUp, healthCheckConfig.CountDown)
 		if err != nil {
-			remotelogs.Error("HEALTH_CHECK_EXECUTOR", err.Error())
+			this.logErr("HealthCheckExecutor", err.Error())
 		} else if isChanged {
 			// 通知恢复或下线
 			if result.IsOk {

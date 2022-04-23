@@ -7,7 +7,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -21,41 +20,42 @@ import (
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewDNSTaskExecutor().Start()
+			NewDNSTaskExecutor(10 * time.Second).Start()
 		})
 	})
 }
 
 // DNSTaskExecutor DNS任务执行器
 type DNSTaskExecutor struct {
+	BaseTask
+
+	ticker *time.Ticker
 }
 
-func NewDNSTaskExecutor() *DNSTaskExecutor {
-	return &DNSTaskExecutor{}
+func NewDNSTaskExecutor(duration time.Duration) *DNSTaskExecutor {
+	return &DNSTaskExecutor{
+		ticker: time.NewTicker(duration),
+	}
 }
 
 func (this *DNSTaskExecutor) Start() {
-	ticker := time.NewTicker(10 * time.Second)
-	for range ticker.C {
-		err := this.LoopWithLocker(10)
+	for range this.ticker.C {
+		err := this.Loop()
 		if err != nil {
-			remotelogs.Error("DNSTaskExecutor", err.Error())
+			this.logErr("DNSTaskExecutor", err.Error())
 		}
 	}
 }
 
-func (this *DNSTaskExecutor) LoopWithLocker(seconds int64) error {
-	ok, err := models.SharedSysLockerDAO.Lock(nil, "dns_task_executor", seconds-1) // 假设执行时间为1秒
-	if err != nil {
-		return err
-	}
-	if !ok {
+func (this *DNSTaskExecutor) Loop() error {
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
 		return nil
 	}
-	return this.Loop()
+
+	return this.loop()
 }
 
-func (this *DNSTaskExecutor) Loop() error {
+func (this *DNSTaskExecutor) loop() error {
 	tasks, err := dnsmodels.SharedDNSTaskDAO.FindAllDoingTasks(nil)
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 		if isOk {
 			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(tx, taskId)
 			if err != nil {
-				remotelogs.Error("DNSTaskExecutor", err.Error())
+				this.logErr("DNSTaskExecutor", err.Error())
 			}
 		}
 	}()
@@ -275,7 +275,7 @@ func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
 		if isOk {
 			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(nil, taskId)
 			if err != nil {
-				remotelogs.Error("DNSTaskExecutor", err.Error())
+				this.logErr("DNSTaskExecutor", err.Error())
 			}
 		}
 	}()
@@ -314,7 +314,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		if isOk {
 			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(nil, taskId)
 			if err != nil {
-				remotelogs.Error("DNSTaskExecutor", err.Error())
+				this.logErr("DNSTaskExecutor", err.Error())
 			}
 		}
 	}()
@@ -519,7 +519,7 @@ func (this *DNSTaskExecutor) doClusterRemove(taskId int64, clusterId int64, doma
 		if isOk {
 			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(nil, taskId)
 			if err != nil {
-				remotelogs.Error("DNSTaskExecutor", err.Error())
+				this.logErr("DNSTaskExecutor", err.Error())
 			}
 		}
 	}()
@@ -603,7 +603,7 @@ func (this *DNSTaskExecutor) doDomainWithTask(taskId int64, domainId int64) erro
 			if taskId > 0 {
 				err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(tx, taskId)
 				if err != nil {
-					remotelogs.Error("DNSTaskExecutor", err.Error())
+					this.logErr("DNSTaskExecutor", err.Error())
 				}
 			}
 		}
@@ -634,7 +634,7 @@ func (this *DNSTaskExecutor) doDomainWithTask(taskId int64, domainId int64) erro
 
 	manager := dnsclients.FindProvider(provider.Type)
 	if manager == nil {
-		remotelogs.Error("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
+		this.logErr("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
 		isOk = true
 		return nil
 	}
@@ -711,7 +711,7 @@ func (this *DNSTaskExecutor) findDNSManagerWithDomainId(tx *dbs.Tx, domainId int
 
 	var manager = dnsclients.FindProvider(provider.Type)
 	if manager == nil {
-		remotelogs.Error("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
+		this.logErr("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
 		return nil, nil, nil
 	}
 	params, err := provider.DecodeAPIParams()

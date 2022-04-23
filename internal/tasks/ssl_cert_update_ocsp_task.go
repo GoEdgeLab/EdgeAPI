@@ -23,41 +23,38 @@ import (
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewSSLCertUpdateOCSPTask().Start()
+			NewSSLCertUpdateOCSPTask(1 * time.Minute).Start()
 		})
 	})
 }
 
 type SSLCertUpdateOCSPTask struct {
+	BaseTask
+
 	ticker     *time.Ticker
 	httpClient *http.Client
 }
 
-func NewSSLCertUpdateOCSPTask() *SSLCertUpdateOCSPTask {
+func NewSSLCertUpdateOCSPTask(duration time.Duration) *SSLCertUpdateOCSPTask {
 	return &SSLCertUpdateOCSPTask{
-		ticker:     time.NewTicker(1 * time.Minute),
+		ticker:     time.NewTicker(duration),
 		httpClient: utils.SharedHttpClient(5 * time.Second),
 	}
 }
 
 func (this *SSLCertUpdateOCSPTask) Start() {
 	for range this.ticker.C {
-		err := this.Loop(true)
+		err := this.Loop()
 		if err != nil {
-			remotelogs.Error("SSLCertUpdateOCSPTask", err.Error())
+			this.logErr("SSLCertUpdateOCSPTask", err.Error())
 		}
 	}
 }
 
-func (this *SSLCertUpdateOCSPTask) Loop(checkLock bool) error {
-	if checkLock {
-		ok, err := models.SharedSysLockerDAO.Lock(nil, "ssl_cert_update_ocsp_task", 60-1) // 假设执行时间为1秒
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return nil
-		}
+func (this *SSLCertUpdateOCSPTask) Loop() error {
+	// 检查是否为主节点
+	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+		return nil
 	}
 
 	var tx *dbs.Tx
