@@ -202,6 +202,8 @@ func (this *MetricStatDAO) ListItemStats(tx *dbs.Tx, itemId int64, version int32
 		return nil, err
 	}
 
+	result = this.mergeStats(result)
+
 	sort.Slice(result, func(i, j int) bool {
 		if result[i].Time > result[j].Time {
 			return true
@@ -268,6 +270,8 @@ func (this *MetricStatDAO) FindItemStatsAtLastTime(tx *dbs.Tx, itemId int64, ign
 		return nil, err
 	}
 
+	result = this.mergeStats(result)
+
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Value > result[j].Value
 	})
@@ -330,6 +334,8 @@ func (this *MetricStatDAO) FindItemStatsWithClusterIdAndLastTime(tx *dbs.Tx, clu
 	if err != nil {
 		return nil, err
 	}
+
+	result = this.mergeStats(result)
 
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Value > result[j].Value
@@ -395,6 +401,8 @@ func (this *MetricStatDAO) FindItemStatsWithNodeIdAndLastTime(tx *dbs.Tx, nodeId
 	if err != nil {
 		return nil, err
 	}
+
+	result = this.mergeStats(result)
 
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Value > result[j].Value
@@ -492,6 +500,8 @@ func (this *MetricStatDAO) FindLatestItemStats(tx *dbs.Tx, itemId int64, ignoreE
 		return nil, err
 	}
 
+	result = this.mergeStats(result)
+
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Time > result[j].Time
 	})
@@ -551,6 +561,8 @@ func (this *MetricStatDAO) FindLatestItemStatsWithClusterId(tx *dbs.Tx, clusterI
 		return nil, err
 	}
 
+	result = this.mergeStats(result)
+
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Time > result[j].Time
 	})
@@ -604,6 +616,8 @@ func (this *MetricStatDAO) FindLatestItemStatsWithNodeId(tx *dbs.Tx, nodeId int6
 
 		return nil
 	})
+
+	result = this.mergeStats(result)
 
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Time > result[j].Time
@@ -720,4 +734,20 @@ func (this *MetricStatDAO) runBatch(f func(table string, locker *sync.Mutex) err
 	}
 	wg.Wait()
 	return resultErr
+}
+
+// 合并统计数据
+func (this *MetricStatDAO) mergeStats(stats []*MetricStat) (result []*MetricStat) {
+	var m = map[string]*MetricStat{} // key+time => *MetricStat
+	for _, stat := range stats {
+		var uniqueKey = stat.Time + "@" + string(stat.Keys)
+		oldStat, ok := m[uniqueKey]
+		if !ok {
+			result = append(result, stat)
+			m[uniqueKey] = stat
+		} else {
+			oldStat.Value += stat.Value
+		}
+	}
+	return result
 }
