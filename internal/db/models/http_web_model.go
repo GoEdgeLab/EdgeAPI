@@ -37,6 +37,7 @@ type HTTPWeb struct {
 	MergeSlashes       uint8    `field:"mergeSlashes"`       // 是否合并路径中的斜杠
 	RequestLimit       dbs.JSON `field:"requestLimit"`       // 请求限制
 	RequestScripts     dbs.JSON `field:"requestScripts"`     // 请求脚本
+	Uam                dbs.JSON `field:"uam"`                // UAM设置
 }
 
 type HTTPWebOperator struct {
@@ -73,6 +74,7 @@ type HTTPWebOperator struct {
 	MergeSlashes       interface{} // 是否合并路径中的斜杠
 	RequestLimit       interface{} // 请求限制
 	RequestScripts     interface{} // 请求脚本
+	Uam                interface{} // UAM设置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

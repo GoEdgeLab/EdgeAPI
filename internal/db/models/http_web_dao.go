@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
@@ -444,6 +445,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 			}
 			config.RequestScripts = requestScriptsConfig
 		}
+	}
+
+	// UAM
+	if teaconst.IsPlus && IsNotNull(web.Uam) {
+		var uamConfig = &serverconfigs.UAMConfig{}
+		err = json.Unmarshal(web.Uam, uamConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.UAM = uamConfig
 	}
 
 	if cacheMap != nil {
@@ -1166,6 +1177,35 @@ func (this *HTTPWebDAO) FindWebRequestScripts(tx *dbs.Tx, webId int64) (*serverc
 		return nil, err
 	}
 	return config, nil
+}
+
+// UpdateWebUAM 开启UAM
+func (this *HTTPWebDAO) UpdateWebUAM(tx *dbs.Tx, webId int64, uamConfig *serverconfigs.UAMConfig) error {
+	if uamConfig == nil {
+		return nil
+	}
+	configJSON, err := json.Marshal(uamConfig)
+	if err != nil {
+		return err
+	}
+
+	err = this.Query(tx).
+		Pk(webId).
+		Set("uam", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebUAM 查找服务的UAM配置
+func (this *HTTPWebDAO) FindWebUAM(tx *dbs.Tx, webId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(webId).
+		Result("uam").
+		FindJSONCol()
 }
 
 // NotifyUpdate 通知更新
