@@ -1746,3 +1746,46 @@ func (this *NodeService) FindNodeLevelInfo(ctx context.Context, req *pb.FindNode
 
 	return result, nil
 }
+
+// FindNodeDNSResolver 读取节点DNS Resolver
+func (this *NodeService) FindNodeDNSResolver(ctx context.Context, req *pb.FindNodeDNSResolverRequest) (*pb.FindNodeDNSResolverResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	config, err := models.SharedNodeDAO.FindNodeDNSResolver(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNodeDNSResolverResponse{
+		DnsResolverJSON: configJSON,
+	}, nil
+}
+
+// UpdateNodeDNSResolver 修改DNS Resolver
+func (this *NodeService) UpdateNodeDNSResolver(ctx context.Context, req *pb.UpdateNodeDNSResolverRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var config = nodeconfigs.DefaultDNSResolverConfig()
+	err = json.Unmarshal(req.DnsResolverJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	err = models.SharedNodeDAO.UpdateNodeDNSResolver(tx, req.NodeId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}

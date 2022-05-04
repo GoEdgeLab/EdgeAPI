@@ -1070,6 +1070,16 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		config.SystemServices = services
 	}
 
+	// DNS Resolver
+	if IsNotNull(node.DnsResolver) {
+		var dnsResolverConfig = nodeconfigs.DefaultDNSResolverConfig()
+		err = json.Unmarshal(node.DnsResolver, dnsResolverConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.DNSResolver = dnsResolverConfig
+	}
+
 	// 防火墙动作
 	actions, err := SharedNodeClusterFirewallActionDAO.FindAllEnabledFirewallActions(tx, primaryClusterId, cacheMap)
 	if err != nil {
@@ -1398,6 +1408,49 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 	}
 
 	return nil
+}
+
+// FindNodeDNSResolver 查找域名DNS Resolver
+func (this *NodeDAO) FindNodeDNSResolver(tx *dbs.Tx, nodeId int64) (*nodeconfigs.DNSResolverConfig, error) {
+	configJSON, err := this.Query(tx).
+		Pk(nodeId).
+		Result("dnsResolver").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+	if IsNull(configJSON) {
+		return nodeconfigs.DefaultDNSResolverConfig(), nil
+	}
+
+	var config = nodeconfigs.DefaultDNSResolverConfig()
+	err = json.Unmarshal(configJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// UpdateNodeDNSResolver 修改域名DNS Resolver
+func (this *NodeDAO) UpdateNodeDNSResolver(tx *dbs.Tx, nodeId int64, dnsResolverConfig *nodeconfigs.DNSResolverConfig) error {
+	if nodeId <= 0 {
+		return ErrNotFound
+	}
+
+	configJSON, err := json.Marshal(dnsResolverConfig)
+	if err != nil {
+		return err
+	}
+
+	var op = NewNodeOperator()
+	op.Id = nodeId
+	op.DnsResolver = configJSON
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // UpdateNodeSystem 设置系统信息
