@@ -4,6 +4,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -55,7 +56,7 @@ func init() {
 
 // UpdateSum 更新统计数据
 func (this *MetricSumStatDAO) UpdateSum(tx *dbs.Tx, clusterId int64, nodeId int64, serverId int64, time string, itemId int64, version int32, count int64, total float32) error {
-	return this.Query(tx).
+	err := this.Query(tx).
 		Table(this.partialTable(serverId)).
 		InsertOrUpdateQuickly(maps.Map{
 			"clusterId":  clusterId,
@@ -71,6 +72,10 @@ func (this *MetricSumStatDAO) UpdateSum(tx *dbs.Tx, clusterId int64, nodeId int6
 			"count": count,
 			"total": total,
 		})
+	if this.canIgnore(err) {
+		return nil
+	}
+	return err
 }
 
 // FindNodeServerSum 查找某个服务在某个节点上的统计数据
@@ -276,4 +281,19 @@ func (this *MetricSumStatDAO) runBatch(f func(table string, locker *sync.Mutex) 
 	}
 	wg.Wait()
 	return resultErr
+}
+
+// 检查错误是否可以忽略
+func (this *MetricSumStatDAO) canIgnore(err error) bool {
+	if err == nil {
+		return true
+	}
+
+	// 忽略 Error 1213: Deadlock found 错误
+	mysqlErr, ok := err.(*mysql.MySQLError)
+	if ok && mysqlErr.Number == 1213 {
+		return true
+	}
+
+	return false
 }

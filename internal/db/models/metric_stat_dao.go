@@ -90,9 +90,7 @@ func (this *MetricStatDAO) CreateStat(tx *dbs.Tx, hash string, clusterId int64, 
 			"value": value,
 		})
 	if err != nil {
-		// 忽略 Error 1213: Deadlock found 错误
-		mysqlErr, ok := err.(*mysql.MySQLError)
-		if ok && mysqlErr.Number == 1213 {
+		if this.canIgnore(err) {
 			return nil
 		}
 		return err
@@ -135,6 +133,9 @@ func (this *MetricStatDAO) DeleteNodeItemStats(tx *dbs.Tx, nodeId int64, serverI
 			Attr("itemId", itemId).
 			Attr("time", time).
 			Delete()
+		if this.canIgnore(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -750,4 +751,19 @@ func (this *MetricStatDAO) mergeStats(stats []*MetricStat) (result []*MetricStat
 		}
 	}
 	return result
+}
+
+// 检查错误是否可以忽略
+func (this *MetricStatDAO) canIgnore(err error) bool {
+	if err == nil {
+		return true
+	}
+
+	// 忽略 Error 1213: Deadlock found 错误
+	mysqlErr, ok := err.(*mysql.MySQLError)
+	if ok && mysqlErr.Number == 1213 {
+		return true
+	}
+
+	return false
 }
