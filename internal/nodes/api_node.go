@@ -154,7 +154,7 @@ func (this *APINode) Start() {
 
 // Daemon 实现守护进程
 func (this *APINode) Daemon() {
-	path := os.TempDir() + "/edge-api.sock"
+	path := os.TempDir() + "/" + teaconst.ProcessName + ".sock"
 	isDebug := lists.ContainsString(os.Args, "debug")
 	isDebug = true
 	for {

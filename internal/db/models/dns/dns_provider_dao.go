@@ -107,7 +107,7 @@ func (this *DNSProviderDAO) UpdateDNSProvider(tx *dbs.Tx, dnsProviderId int64, n
 }
 
 // CountAllEnabledDNSProviders 计算服务商数量
-func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string, domain string) (int64, error) {
+func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string, domain string, providerType string) (int64, error) {
 	var query = dbutils.NewQuery(tx, this, adminId, userId)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
@@ -117,6 +117,10 @@ func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int6
 	if len(domain) > 0 {
 		query.Where("id IN (SELECT providerId FROM " + SharedDNSDomainDAO.Table + " WHERE state=1 AND name=:domain)")
 		query.Param("domain", domain)
+	}
+
+	if len(providerType) > 0 {
+		query.Attr("type", providerType)
 	}
 
 	return query.State(DNSProviderStateEnabled).
@@ -124,7 +128,7 @@ func (this *DNSProviderDAO) CountAllEnabledDNSProviders(tx *dbs.Tx, adminId int6
 }
 
 // ListEnabledDNSProviders 列出单页服务商
-func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string, domain string, offset int64, size int64) (result []*DNSProvider, err error) {
+func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, userId int64, keyword string, domain string, providerType string, offset int64, size int64) (result []*DNSProvider, err error) {
 	var query = dbutils.NewQuery(tx, this, adminId, userId)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword)").
@@ -133,6 +137,9 @@ func (this *DNSProviderDAO) ListEnabledDNSProviders(tx *dbs.Tx, adminId int64, u
 	if len(domain) > 0 {
 		query.Where("id IN (SELECT providerId FROM " + SharedDNSDomainDAO.Table + " WHERE state=1 AND name=:domain)")
 		query.Param("domain", domain)
+	}
+	if len(providerType) > 0 {
+		query.Attr("type", providerType)
 	}
 	_, err = query.
 		State(DNSProviderStateEnabled).
