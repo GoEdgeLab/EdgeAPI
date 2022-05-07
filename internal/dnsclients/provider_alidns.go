@@ -17,18 +17,26 @@ type AliDNSProvider struct {
 
 	accessKeyId     string
 	accessKeySecret string
+	regionId        string
 }
 
 // Auth 认证
 func (this *AliDNSProvider) Auth(params maps.Map) error {
 	this.accessKeyId = params.GetString("accessKeyId")
 	this.accessKeySecret = params.GetString("accessKeySecret")
+	this.regionId = params.GetString("regionId")
+
 	if len(this.accessKeyId) == 0 {
 		return errors.New("'accessKeyId' should not be empty")
 	}
 	if len(this.accessKeySecret) == 0 {
 		return errors.New("'accessKeySecret' should not be empty")
 	}
+
+	if len(this.regionId) == 0 {
+		this.regionId = "cn-hangzhou"
+	}
+
 	return nil
 }
 
@@ -196,7 +204,7 @@ func (this *AliDNSProvider) DefaultRoute() string {
 func (this *AliDNSProvider) doAPI(req requests.AcsRequest, resp responses.AcsResponse) error {
 	req.SetScheme("https")
 
-	client, err := alidns.NewClientWithAccessKey("cn-hangzhou", this.accessKeyId, this.accessKeySecret)
+	client, err := alidns.NewClientWithAccessKey(this.regionId, this.accessKeyId, this.accessKeySecret)
 	if err != nil {
 		return err
 	}
