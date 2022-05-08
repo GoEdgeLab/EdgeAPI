@@ -360,6 +360,8 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 	// 分组
 	if groupId > 0 {
 		query.Attr("groupId", groupId)
+	} else if groupId < 0 {
+		query.Attr("groupId", 0)
 	}
 
 	// 区域
@@ -757,6 +759,8 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
 	// 分组
 	if groupId > 0 {
 		query.Attr("groupId", groupId)
+	} else if groupId < 0 {
+		query.Attr("groupId", 0)
 	}
 
 	// 区域

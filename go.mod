@@ -4,15 +4,18 @@ go 1.16
 
 replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 
+replace github.com/TeaOSLab/EdgePlus => ../EdgePlus
+
 require (
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
+	github.com/TeaOSLab/EdgePlus v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1183
 	github.com/andybalholm/brotli v1.0.4
 	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/go-acme/lego/v4 v4.5.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
-	github.com/iwind/TeaGo v0.0.0-20220408064305-92be81dc2f7c
+	github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570
 	github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mozillazg/go-pinyin v0.18.0
