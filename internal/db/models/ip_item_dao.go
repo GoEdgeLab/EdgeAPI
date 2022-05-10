@@ -93,6 +93,71 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64) error {
 	return this.NotifyUpdate(tx, id)
 }
 
+// DisableIPItemsWithIP 禁用某个IP相关条目
+func (this *IPItemDAO) DisableIPItemsWithIP(tx *dbs.Tx, ipFrom string, ipTo string, userId int64, listId int64) error {
+	if len(ipFrom) == 0 {
+		return errors.New("invalid 'ipFrom'")
+	}
+
+	var query = this.Query(tx).
+		Result("id", "listId").
+		Attr("ipFrom", ipFrom).
+		Attr("ipTo", ipTo).
+		State(IPItemStateEnabled)
+
+	if listId > 0 {
+		if userId > 0 {
+			err := SharedIPListDAO.CheckUserIPList(tx, userId, listId)
+			if err != nil {
+				return err
+			}
+		}
+
+		query.Attr("listId", listId)
+	}
+
+	ones, err := query.FindAll()
+	if err != nil {
+		return err
+	}
+
+	var itemIds = []int64{}
+	for _, one := range ones {
+		var item = one.(*IPItem)
+		var itemId = int64(item.Id)
+		var itemListId = int64(item.ListId)
+		if itemListId != listId && userId > 0 {
+			err = SharedIPListDAO.CheckUserIPList(tx, userId, itemListId)
+			if err != nil {
+				// ignore error
+				continue
+			}
+		}
+		itemIds = append(itemIds, itemId)
+	}
+
+	for _, itemId := range itemIds {
+		version, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return err
+		}
+
+		_, err = this.Query(tx).
+			Pk(itemId).
+			Set("state", IPItemStateDisabled).
+			Set("version", version).
+			Update()
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(itemIds) > 0 {
+		return this.NotifyUpdate(tx, itemIds[len(itemIds)-1])
+	}
+	return nil
+}
+
 // DisableIPItemsWithListId 禁用某个IP名单内的所有IP
 func (this *IPItemDAO) DisableIPItemsWithListId(tx *dbs.Tx, listId int64) error {
 	for {

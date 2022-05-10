@@ -114,23 +114,42 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	if userId > 0 {
-		listId, err := models.SharedIPItemDAO.FindItemListId(tx, req.IpItemId)
-		if err != nil {
-			return nil, err
+	// 如果是使用IPItemId删除
+	if req.IpItemId > 0 {
+		if userId > 0 {
+			listId, err := models.SharedIPItemDAO.FindItemListId(tx, req.IpItemId)
+			if err != nil {
+				return nil, err
+			}
+
+			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, listId)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, listId)
+		err = models.SharedIPItemDAO.DisableIPItem(tx, req.IpItemId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err = models.SharedIPItemDAO.DisableIPItem(tx, req.IpItemId)
-	if err != nil {
-		return nil, err
+	// 如果是使用ipFrom+ipTo删除
+	if len(req.IpFrom) > 0 {
+		// 检查IP列表
+		if req.IpListId > 0 && userId > 0 {
+			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		err = models.SharedIPItemDAO.DisableIPItemsWithIP(tx, req.IpFrom, req.IpTo, userId, req.IpListId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return this.Success()
