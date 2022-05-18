@@ -71,7 +71,7 @@ func TestAliDNSProvider_AddRecord(t *testing.T) {
 		Name:  "test",
 		Type:  dnstypes.RecordTypeA,
 		Value: "192.168.1.100",
-		Route: "unicom",
+		Route: "aliyun_r_cn-beijing",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +103,7 @@ func testAliDNSProvider() (ProviderInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='alidns' ORDER BY id DESC")
+	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='alidns' AND state=1 ORDER BY id DESC")
 	if err != nil {
 		return nil, err
 	}

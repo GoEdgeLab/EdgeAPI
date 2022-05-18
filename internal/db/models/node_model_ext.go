@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"sort"
 	"time"
 )
@@ -97,6 +99,7 @@ func (this *Node) DecodeSecondaryClusterIds() []int64 {
 	return result
 }
 
+// AllClusterIds 获取所属集群IDs
 func (this *Node) AllClusterIds() []int64 {
 	var result = []int64{}
 
@@ -107,4 +110,61 @@ func (this *Node) AllClusterIds() []int64 {
 	result = append(result, this.DecodeSecondaryClusterIds()...)
 
 	return result
+}
+
+// DecodeDDoSProtection 解析DDoS Protection设置
+func (this *Node) DecodeDDoSProtection() *ddosconfigs.ProtectionConfig {
+	if IsNull(this.DdosProtection) {
+		return nil
+	}
+
+	var result = &ddosconfigs.ProtectionConfig{}
+	err := json.Unmarshal(this.DdosProtection, &result)
+	if err != nil {
+		// ignore err
+	}
+	return result
+}
+
+// HasDDoSProtection 检查是否有DDOS设置
+func (this *Node) HasDDoSProtection() bool {
+	var config = this.DecodeDDoSProtection()
+	if config != nil {
+		return !config.IsPriorEmpty()
+	}
+	return false
+}
+
+func (this *Node) DecodeMaxCacheDiskCapacity() *shared.SizeCapacity {
+	if this.MaxCacheDiskCapacity.IsNull() {
+		return nil
+	}
+
+	// ignore error
+	capacity, _ := shared.DecodeSizeCapacityJSON(this.MaxCacheDiskCapacity)
+	return capacity
+}
+
+func (this *Node) DecodeMaxCacheMemoryCapacity() *shared.SizeCapacity {
+	if this.MaxCacheMemoryCapacity.IsNull() {
+		return nil
+	}
+
+	// ignore error
+	capacity, _ := shared.DecodeSizeCapacityJSON(this.MaxCacheMemoryCapacity)
+	return capacity
+}
+
+// DecodeDNSResolver 解析DNS解析主机配置
+func (this *Node) DecodeDNSResolver() *nodeconfigs.DNSResolverConfig {
+	if this.DnsResolver.IsNull() {
+		return nil
+	}
+
+	var resolverConfig = nodeconfigs.DefaultDNSResolverConfig()
+	err := json.Unmarshal(this.DnsResolver, resolverConfig)
+	if err != nil {
+		// ignore error
+	}
+	return resolverConfig
 }

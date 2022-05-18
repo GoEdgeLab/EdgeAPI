@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
@@ -83,7 +84,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	tx := this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.NodeTCPMaxConnections, req.AutoOpenPorts)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts)
 	if err != nil {
 		return nil, err
 	}
@@ -148,22 +149,21 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 	}
 
 	return &pb.FindEnabledNodeClusterResponse{NodeCluster: &pb.NodeCluster{
-		Id:                    int64(cluster.Id),
-		Name:                  cluster.Name,
-		CreatedAt:             int64(cluster.CreatedAt),
-		InstallDir:            cluster.InstallDir,
-		NodeGrantId:           int64(cluster.GrantId),
-		UniqueId:              cluster.UniqueId,
-		Secret:                cluster.Secret,
-		HttpCachePolicyId:     int64(cluster.CachePolicyId),
-		HttpFirewallPolicyId:  int64(cluster.HttpFirewallPolicyId),
-		DnsName:               cluster.DnsName,
-		DnsDomainId:           int64(cluster.DnsDomainId),
-		IsOn:                  cluster.IsOn,
-		TimeZone:              cluster.TimeZone,
-		NodeMaxThreads:        int32(cluster.NodeMaxThreads),
-		NodeTCPMaxConnections: int32(cluster.NodeTCPMaxConnections),
-		AutoOpenPorts:         cluster.AutoOpenPorts == 1,
+		Id:                   int64(cluster.Id),
+		Name:                 cluster.Name,
+		CreatedAt:            int64(cluster.CreatedAt),
+		InstallDir:           cluster.InstallDir,
+		NodeGrantId:          int64(cluster.GrantId),
+		UniqueId:             cluster.UniqueId,
+		Secret:               cluster.Secret,
+		HttpCachePolicyId:    int64(cluster.CachePolicyId),
+		HttpFirewallPolicyId: int64(cluster.HttpFirewallPolicyId),
+		DnsName:              cluster.DnsName,
+		DnsDomainId:          int64(cluster.DnsDomainId),
+		IsOn:                 cluster.IsOn,
+		TimeZone:             cluster.TimeZone,
+		NodeMaxThreads:       int32(cluster.NodeMaxThreads),
+		AutoOpenPorts:        cluster.AutoOpenPorts == 1,
 	}}, nil
 }
 
@@ -1054,6 +1054,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		}
 	}
 
+	// ddos
+	result.HasDDoSProtection = cluster.HasDDoSProtection()
+
 	return result, nil
 }
 
@@ -1109,6 +1112,54 @@ func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context,
 	}
 
 	err = models.SharedNodeClusterDAO.UpdateClusterWebPPolicy(tx, req.NodeClusterId, webpPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// FindNodeClusterDDoSProtection 获取集群的DDOS设置
+func (this *NodeClusterService) FindNodeClusterDDoSProtection(ctx context.Context, req *pb.FindNodeClusterDDoSProtectionRequest) (*pb.FindNodeClusterDDoSProtectionResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *dbs.Tx
+	ddosProtection, err := models.SharedNodeClusterDAO.FindClusterDDoSProtection(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if ddosProtection == nil {
+		ddosProtection = ddosconfigs.DefaultProtectionConfig()
+	}
+	ddosProtectionJSON, err := json.Marshal(ddosProtection)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = &pb.FindNodeClusterDDoSProtectionResponse{
+		DdosProtectionJSON: ddosProtectionJSON,
+	}
+
+	return result, nil
+}
+
+// UpdateNodeClusterDDoSProtection 修改集群的DDOS设置
+func (this *NodeClusterService) UpdateNodeClusterDDoSProtection(ctx context.Context, req *pb.UpdateNodeClusterDDoSProtectionRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var ddosProtection = &ddosconfigs.ProtectionConfig{}
+	err = json.Unmarshal(req.DdosProtectionJSON, ddosProtection)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *dbs.Tx
+	err = models.SharedNodeClusterDAO.UpdateClusterDDoSProtection(tx, req.NodeClusterId, ddosProtection)
 	if err != nil {
 		return nil, err
 	}

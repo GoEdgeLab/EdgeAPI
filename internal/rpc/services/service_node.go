@@ -16,6 +16,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/andybalholm/brotli"
 	"github.com/iwind/TeaGo/dbs"
@@ -767,6 +768,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		NodeJSON:     data,
 		DataSize:     int64(len(data)),
 		IsCompressed: isCompressed,
+		Timestamp:    time.Now().Unix(),
 	}, nil
 }
 
@@ -1788,4 +1790,162 @@ func (this *NodeService) UpdateNodeDNSResolver(ctx context.Context, req *pb.Upda
 	}
 
 	return this.Success()
+}
+
+// FindNodeDDoSProtection 获取集群的DDoS设置
+func (this *NodeService) FindNodeDDoSProtection(ctx context.Context, req *pb.FindNodeDDoSProtectionRequest) (*pb.FindNodeDDoSProtectionResponse, error) {
+	var nodeId = req.NodeId
+	var isFromNode = false
+
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		// 检查是否来自节点
+		currentNodeId, err2 := this.ValidateNode(ctx)
+		if err2 != nil {
+			return nil, err
+		}
+
+		if nodeId > 0 && currentNodeId != nodeId {
+			return nil, errors.New("invalid 'nodeId'")
+		}
+
+		nodeId = currentNodeId
+		isFromNode = true
+	}
+
+	var tx *dbs.Tx
+	ddosProtection, err := models.SharedNodeDAO.FindNodeDDoSProtection(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	if ddosProtection == nil {
+		ddosProtection = ddosconfigs.DefaultProtectionConfig()
+	}
+
+	// 组合父级节点配置
+	// 只有从节点读取配置时才需要组合
+	if isFromNode {
+		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+		if err != nil {
+			return nil, err
+		}
+
+		if clusterId > 0 {
+			clusterDDoSProtection, err := models.SharedNodeClusterDAO.FindClusterDDoSProtection(tx, clusterId)
+			if err != nil {
+				return nil, err
+			}
+			if clusterDDoSProtection == nil {
+				clusterDDoSProtection = ddosconfigs.DefaultProtectionConfig()
+			}
+
+			clusterDDoSProtection.Merge(ddosProtection)
+			ddosProtection = clusterDDoSProtection
+		}
+	}
+
+	ddosProtectionJSON, err := json.Marshal(ddosProtection)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = &pb.FindNodeDDoSProtectionResponse{
+		DdosProtectionJSON: ddosProtectionJSON,
+	}
+
+	return result, nil
+}
+
+// UpdateNodeDDoSProtection 修改集群的DDOS设置
+func (this *NodeService) UpdateNodeDDoSProtection(ctx context.Context, req *pb.UpdateNodeDDoSProtectionRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var ddosProtection = &ddosconfigs.ProtectionConfig{}
+	err = json.Unmarshal(req.DdosProtectionJSON, ddosProtection)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *dbs.Tx
+	err = models.SharedNodeDAO.UpdateNodeDDoSProtection(tx, req.NodeId, ddosProtection)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// FindEnabledNodeConfigInfo 取得节点的配置概要信息
+func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.FindEnabledNodeConfigInfoRequest) (*pb.FindEnabledNodeConfigInfoResponse, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var result = &pb.FindEnabledNodeConfigInfoResponse{}
+	node, err := models.SharedNodeDAO.FindEnabledNode(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		// 总是返回非空
+		return result, nil
+	}
+
+	// dns
+	if len(node.DNSRouteCodes()) > 0 {
+		result.HasDNSInfo = true
+	}
+
+	// cache
+	if len(node.CacheDiskDir) > 0 {
+		result.HasCacheInfo = true
+	} else {
+		var diskCapacity = node.DecodeMaxCacheDiskCapacity()
+		var memoryCapacity = node.DecodeMaxCacheMemoryCapacity()
+		if (diskCapacity != nil && diskCapacity.IsNotEmpty()) || (memoryCapacity != nil && memoryCapacity.IsNotEmpty()) {
+			result.HasCacheInfo = true
+		}
+	}
+
+	// thresholds
+	countThresholds, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, nodeconfigs.NodeRoleNode, 0, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	result.HasThresholds = countThresholds > 0
+
+	// ssh
+	nodeLogin, err := models.SharedNodeLoginDAO.FindEnabledNodeLoginWithNodeId(tx, nodeconfigs.NodeRoleNode, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if nodeLogin != nil {
+		sshParams, err := nodeLogin.DecodeSSHParams()
+		if err != nil {
+			return nil, err
+		}
+		if sshParams != nil {
+			result.HasSSH = len(sshParams.Host) > 0 || sshParams.Port > 0
+		}
+	}
+
+	// systemSettings
+	if node.MaxCPU > 0 {
+		result.HasSystemSettings = true
+	} else {
+		// dns resolver
+		var dnsResolverConfig = node.DecodeDNSResolver()
+		if dnsResolverConfig != nil {
+			result.HasSystemSettings = dnsResolverConfig.Type != nodeconfigs.DNSResolverTypeDefault
+		}
+	}
+
+	// ddos protection
+	result.HasDDoSProtection = node.HasDDoSProtection()
+
+	return result, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -180,7 +181,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, nodeTCPMaxConnections int32, autoOpenPorts bool) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -195,11 +196,6 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 		nodeMaxThreads = 0
 	}
 	op.NodeMaxThreads = nodeMaxThreads
-
-	if nodeTCPMaxConnections < 0 {
-		nodeTCPMaxConnections = 0
-	}
-	op.NodeTCPMaxConnections = nodeTCPMaxConnections
 	op.AutoOpenPorts = autoOpenPorts
 
 	err := this.Save(tx, op)
@@ -922,7 +918,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("timeZone", "nodeMaxThreads", "nodeTCPMaxConnections", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "isOn").
+		Result("id", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "isOn", "ddosProtection").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -990,6 +986,45 @@ func (this *NodeClusterDAO) FindClusterWebPPolicy(tx *dbs.Tx, clusterId int64, c
 		return nil, err
 	}
 	return policy, nil
+}
+
+// FindClusterDDoSProtection 获取集群的DDoS设置
+func (this *NodeClusterDAO) FindClusterDDoSProtection(tx *dbs.Tx, clusterId int64) (*ddosconfigs.ProtectionConfig, error) {
+	one, err := this.Query(tx).
+		Result("ddosProtection").
+		Pk(clusterId).
+		Find()
+	if one == nil || err != nil {
+		return nil, err
+	}
+
+	return one.(*NodeCluster).DecodeDDoSProtection(), nil
+}
+
+// UpdateClusterDDoSProtection 设置集群的DDOS设置
+func (this *NodeClusterDAO) UpdateClusterDDoSProtection(tx *dbs.Tx, clusterId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
+	if clusterId <= 0 {
+		return ErrNotFound
+	}
+
+	var op = NewNodeClusterOperator()
+	op.Id = clusterId
+
+	if ddosProtection == nil {
+		op.DdosProtection = "{}"
+	} else {
+		ddosProtectionJSON, err := json.Marshal(ddosProtection)
+		if err != nil {
+			return err
+		}
+		op.DdosProtection = ddosProtectionJSON
+	}
+
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeDDosProtectionChanged)
 }
 
 // NotifyUpdate 通知更新

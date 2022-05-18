@@ -14,6 +14,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -973,6 +974,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
 	var clusterIndex = 0
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
+	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
 		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
 		if err != nil {
@@ -982,6 +984,21 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 			continue
 		}
 
+		// 节点IP地址
+		nodeIPAddresses, err := SharedNodeIPAddressDAO.FindAllAccessibleIPAddressesWithClusterId(tx, nodeconfigs.NodeRoleNode, clusterId, cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		for _, address := range nodeIPAddresses {
+			var ip = address.Ip
+			_, ok := allowIPMaps[ip]
+			if !ok {
+				allowIPMaps[ip] = true
+				config.AllowedIPs = append(config.AllowedIPs, ip)
+			}
+		}
+
+		// 防火墙
 		var httpFirewallPolicyId = int64(nodeCluster.HttpFirewallPolicyId)
 		if httpFirewallPolicyId > 0 {
 			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId, cacheMap)
@@ -1016,7 +1033,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		// 最大线程数、TCP连接数
 		if clusterIndex == 0 {
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)
-			config.TCPMaxConnections = int(nodeCluster.NodeTCPMaxConnections)
+			config.DDOSProtection = nodeCluster.DecodeDDoSProtection()
 			config.AutoOpenPorts = nodeCluster.AutoOpenPorts == 1
 		}
 
@@ -1147,6 +1164,16 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		return nil, err
 	}
 	config.OCSPVersion = ocspVersion
+
+	// DDOS Protection
+	var ddosProtection = node.DecodeDDoSProtection()
+	if ddosProtection != nil {
+		if config.DDOSProtection == nil {
+			config.DDOSProtection = ddosProtection
+		} else {
+			config.DDOSProtection.Merge(ddosProtection)
+		}
+	}
 
 	// 初始化扩展配置
 	err = this.composeExtConfig(tx, config, clusterIds, cacheMap)
@@ -1792,6 +1819,53 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 	}
 
 	return
+}
+
+// FindNodeDDoSProtection 获取节点的DDOS设置
+func (this *NodeDAO) FindNodeDDoSProtection(tx *dbs.Tx, nodeId int64) (*ddosconfigs.ProtectionConfig, error) {
+	one, err := this.Query(tx).
+		Result("ddosProtection").
+		Pk(nodeId).
+		Find()
+	if one == nil || err != nil {
+		return nil, err
+	}
+
+	return one.(*Node).DecodeDDoSProtection(), nil
+}
+
+// UpdateNodeDDoSProtection 设置集群的DDOS设置
+func (this *NodeDAO) UpdateNodeDDoSProtection(tx *dbs.Tx, nodeId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
+	if nodeId <= 0 {
+		return ErrNotFound
+	}
+
+	var op = NewNodeOperator()
+	op.Id = nodeId
+
+	if ddosProtection == nil {
+		op.DdosProtection = "{}"
+	} else {
+		ddosProtectionJSON, err := json.Marshal(ddosProtection)
+		if err != nil {
+			return err
+		}
+		op.DdosProtection = ddosProtectionJSON
+	}
+
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	clusterId, err := this.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return err
+	}
+	if clusterId > 0 {
+		return SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, 0, NodeTaskTypeDDosProtectionChanged, 0)
+	}
+	return nil
 }
 
 // NotifyUpdate 通知节点相关更新

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -375,7 +376,15 @@ func (this *NodeIPAddressDAO) ListEnabledIPAddresses(tx *dbs.Tx, role string, no
 }
 
 // FindAllAccessibleIPAddressesWithClusterId 列出所有的正在启用的IP地址
-func (this *NodeIPAddressDAO) FindAllAccessibleIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64) (result []*NodeIPAddress, err error) {
+func (this *NodeIPAddressDAO) FindAllAccessibleIPAddressesWithClusterId(tx *dbs.Tx, role string, clusterId int64, cacheMap *utils.CacheMap) (result []*NodeIPAddress, err error) {
+	var cacheKey = this.Table + ":FindAllAccessibleIPAddressesWithClusterId:" + role + ":" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.([]*NodeIPAddress), nil
+		}
+	}
+
 	_, err = this.Query(tx).
 		State(NodeIPAddressStateEnabled).
 		Attr("role", role).
@@ -385,6 +394,14 @@ func (this *NodeIPAddressDAO) FindAllAccessibleIPAddressesWithClusterId(tx *dbs.
 		Param("clusterId", clusterId).
 		Slice(&result).
 		FindAll()
+	if err != nil {
+		return
+	}
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
 	return
 }
 

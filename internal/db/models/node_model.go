@@ -31,6 +31,8 @@ type Node struct {
 	State                  uint8    `field:"state"`                  // 状态
 	ConnectedAPINodes      dbs.JSON `field:"connectedAPINodes"`      // 当前连接的API节点
 	MaxCPU                 uint32   `field:"maxCPU"`                 // 可以使用的最多CPU
+	MaxThreads             uint32   `field:"maxThreads"`             // 最大线程数
+	DdosProtection         dbs.JSON `field:"ddosProtection"`         // DDOS配置
 	DnsRoutes              dbs.JSON `field:"dnsRoutes"`              // DNS线路设置
 	MaxCacheDiskCapacity   dbs.JSON `field:"maxCacheDiskCapacity"`   // 硬盘缓存容量
 	MaxCacheMemoryCapacity dbs.JSON `field:"maxCacheMemoryCapacity"` // 内存缓存容量
@@ -66,6 +68,8 @@ type NodeOperator struct {
 	State                  interface{} // 状态
 	ConnectedAPINodes      interface{} // 当前连接的API节点
 	MaxCPU                 interface{} // 可以使用的最多CPU
+	MaxThreads             interface{} // 最大线程数
+	DdosProtection         interface{} // DDOS配置
 	DnsRoutes              interface{} // DNS线路设置
 	MaxCacheDiskCapacity   interface{} // 硬盘缓存容量
 	MaxCacheMemoryCapacity interface{} // 内存缓存容量
