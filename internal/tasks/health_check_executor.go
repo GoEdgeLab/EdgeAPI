@@ -234,6 +234,7 @@ func (this *HealthCheckExecutor) runNodeOnce(healthCheckConfig *serverconfigs.He
 
 	key, err := nodeutils.Base64EncodeMap(maps.Map{
 		"onlyBasicRequest": healthCheckConfig.OnlyBasicRequest,
+		"accessLogIsOn":    healthCheckConfig.AccessLogIsOn,
 	})
 	if err != nil {
 		return err

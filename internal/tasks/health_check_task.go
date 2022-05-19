@@ -72,7 +72,7 @@ func (this *HealthCheckTask) Loop() error {
 	for _, cluster := range clusters {
 		clusterId := int64(cluster.Id)
 
-		config := &serverconfigs.HealthCheckConfig{}
+		var config = &serverconfigs.HealthCheckConfig{}
 		if len(cluster.HealthCheck) > 0 {
 			err = json.Unmarshal(cluster.HealthCheck, config)
 			if err != nil {
