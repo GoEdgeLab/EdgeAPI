@@ -173,7 +173,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
+	var templatePolicy = firewallconfigs.HTTPFirewallTemplate()
 
 	tx := this.NullTx()
 
@@ -186,18 +186,18 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		return nil, errors.New("can not found firewall policy")
 	}
 
-	inboundConfig := firewallPolicy.Inbound
+	var inboundConfig = firewallPolicy.Inbound
 	if inboundConfig == nil {
 		inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
 	}
 
-	outboundConfig := firewallPolicy.Outbound
+	var outboundConfig = firewallPolicy.Outbound
 	if outboundConfig == nil {
 		outboundConfig = &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
 	}
 
 	// 更新老的
-	oldCodes := []string{}
+	var oldCodes = []string{}
 	if firewallPolicy.Inbound != nil {
 		for _, g := range firewallPolicy.Inbound.Groups {
 			if len(g.Code) > 0 {
@@ -301,7 +301,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		}
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig, logConfig)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.CaptchaOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig, logConfig)
 	if err != nil {
 		return nil, err
 	}

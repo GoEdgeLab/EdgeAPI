@@ -18,6 +18,7 @@ type HTTPFirewallPolicy struct {
 	Inbound          dbs.JSON `field:"inbound"`          // 入站规则
 	Outbound         dbs.JSON `field:"outbound"`         // 出站规则
 	BlockOptions     dbs.JSON `field:"blockOptions"`     // BLOCK选项
+	CaptchaOptions   dbs.JSON `field:"captchaOptions"`   // 验证码选项
 	Mode             string   `field:"mode"`             // 模式
 	UseLocalFirewall uint8    `field:"useLocalFirewall"` // 是否自动使用本地防火墙
 	SynFlood         dbs.JSON `field:"synFlood"`         // SynFlood防御设置
@@ -39,6 +40,7 @@ type HTTPFirewallPolicyOperator struct {
 	Inbound          interface{} // 入站规则
 	Outbound         interface{} // 出站规则
 	BlockOptions     interface{} // BLOCK选项
+	CaptchaOptions   interface{} // 验证码选项
 	Mode             interface{} // 模式
 	UseLocalFirewall interface{} // 是否自动使用本地防火墙
 	SynFlood         interface{} // SynFlood防御设置

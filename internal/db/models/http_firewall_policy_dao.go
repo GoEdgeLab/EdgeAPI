@@ -268,6 +268,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	inboundJSON []byte,
 	outboundJSON []byte,
 	blockOptionsJSON []byte,
+	captchaOptionsJSON []byte,
 	mode firewallconfigs.FirewallMode,
 	useLocalFirewall bool,
 	synFloodConfig *firewallconfigs.SYNFloodConfig,
@@ -275,7 +276,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPFirewallPolicyOperator()
+	var op = NewHTTPFirewallPolicyOperator()
 	op.Id = policyId
 	op.IsOn = isOn
 	op.Name = name
@@ -291,8 +292,11 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	} else {
 		op.Outbound = "null"
 	}
-	if len(blockOptionsJSON) > 0 {
+	if IsNotNull(blockOptionsJSON) {
 		op.BlockOptions = blockOptionsJSON
+	}
+	if IsNotNull(captchaOptionsJSON) {
+		op.CaptchaOptions = captchaOptionsJSON
 	}
 
 	if synFloodConfig != nil {
@@ -456,12 +460,22 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	// Block动作配置
 	if IsNotNull(policy.BlockOptions) {
-		blockAction := &firewallconfigs.HTTPFirewallBlockAction{}
+		var blockAction = &firewallconfigs.HTTPFirewallBlockAction{}
 		err = json.Unmarshal(policy.BlockOptions, blockAction)
 		if err != nil {
 			return config, err
 		}
 		config.BlockOptions = blockAction
+	}
+
+	// Captcha动作配置
+	if IsNotNull(policy.CaptchaOptions) {
+		var captchaAction = &firewallconfigs.HTTPFirewallCaptchaAction{}
+		err = json.Unmarshal(policy.CaptchaOptions, captchaAction)
+		if err != nil {
+			return config, err
+		}
+		config.CaptchaOptions = captchaAction
 	}
 
 	// syn flood
