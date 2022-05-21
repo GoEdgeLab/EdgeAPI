@@ -117,7 +117,7 @@ func (this *HTTPFirewallPolicyDAO) FindAllEnabledFirewallPolicies(tx *dbs.Tx) (r
 
 // CreateFirewallPolicy 创建策略
 func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64, serverGroupId int64, serverId int64, isOn bool, name string, description string, inboundJSON []byte, outboundJSON []byte) (int64, error) {
-	op := NewHTTPFirewallPolicyOperator()
+	var op = NewHTTPFirewallPolicyOperator()
 	op.UserId = userId
 	op.GroupId = serverGroupId
 	op.ServerId = serverId
@@ -131,14 +131,31 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 	if len(outboundJSON) > 0 {
 		op.Outbound = outboundJSON
 	}
-	op.UseLocalFirewall = true
 
-	{
-		synFloodJSON, err := json.Marshal(firewallconfigs.DefaultSYNFloodConfig())
+	if userId <= 0 && serverGroupId <=0 && serverId <= 0 {
+		// synFlood
+		var synFloodConfig = firewallconfigs.DefaultSYNFloodConfig()
+		synFloodJSON, err := json.Marshal(synFloodConfig)
 		if err != nil {
 			return 0, err
 		}
 		op.SynFlood = synFloodJSON
+
+		// block options
+		var blockOptions = firewallconfigs.DefaultHTTPFirewallBlockAction()
+		blockOptionsJSON, err := json.Marshal(blockOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.BlockOptions = blockOptionsJSON
+
+		// captcha options
+		var captchaOptions = firewallconfigs.DefaultHTTPFirewallCaptchaAction()
+		captchaOptionsJSON, err := json.Marshal(captchaOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.CaptchaOptions = captchaOptionsJSON
 	}
 
 	err := this.Save(tx, op)
@@ -160,8 +177,8 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 		groupCodes = append(groupCodes, group.Code)
 	}
 
-	inboundConfig := &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
-	outboundConfig := &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
+	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	var outboundConfig = &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
 	if templatePolicy.Inbound != nil {
 		for _, group := range templatePolicy.Inbound.Groups {
 			isOn := lists.ContainsString(groupCodes, group.Code)
@@ -207,6 +224,7 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 	if err != nil {
 		return 0, err
 	}
+
 	return policyId, nil
 }
 
