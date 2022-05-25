@@ -400,7 +400,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Contex
 
 	tx := this.NullTx()
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(tx, req.NodeClusterId)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(tx, req.NodeClusterId, req.IncludeSecondary)
 	if err != nil {
 		return nil, err
 	}

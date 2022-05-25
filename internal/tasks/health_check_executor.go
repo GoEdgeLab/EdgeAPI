@@ -52,7 +52,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	}
 
 	var results = []*HealthCheckResult{}
-	nodes, err := models.NewNodeDAO().FindAllEnabledNodesWithClusterId(nil, this.clusterId)
+	nodes, err := models.NewNodeDAO().FindAllEnabledNodesWithClusterId(nil, this.clusterId, false)
 	if err != nil {
 		return nil, err
 	}

@@ -1650,6 +1650,7 @@ func (this *ServerDAO) CheckUserServer(tx *dbs.Tx, userId int64, serverId int64)
 func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldClusterId, newClusterId int64) error {
 	_, err := this.Query(tx).
 		Attr("userId", userId).
+		Attr("userPlanId", 0).
 		Set("clusterId", newClusterId).
 		Update()
 	if err != nil {

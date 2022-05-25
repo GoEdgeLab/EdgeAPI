@@ -664,13 +664,23 @@ func (this *NodeDAO) FindAllNodeIdsMatch(tx *dbs.Tx, clusterId int64, includeSec
 }
 
 // FindAllEnabledNodesWithClusterId 获取一个集群的所有节点
-func (this *NodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId int64) (result []*Node, err error) {
-	_, err = this.Query(tx).
+func (this *NodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondary bool) (result []*Node, err error) {
+	var query = this.Query(tx)
+
+	if includeSecondary {
+		query.Where("(clusterId=:primaryClusterId OR JSON_CONTAINS(secondaryClusterIds, :primaryClusterIdString))").
+			Param("primaryClusterId", clusterId).
+			Param("primaryClusterIdString", types.String(clusterId))
+	} else {
+		query.Attr("clusterId", clusterId)
+	}
+
+	_, err = query.
 		State(NodeStateEnabled).
-		Attr("clusterId", clusterId).
 		DescPk().
 		Slice(&result).
 		FindAll()
+
 	return
 }
 

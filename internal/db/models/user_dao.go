@@ -169,7 +169,7 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
-	op := NewUserOperator()
+	var op = NewUserOperator()
 	op.Id = userId
 	op.Username = username
 	if len(password) > 0 {
