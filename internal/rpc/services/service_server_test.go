@@ -18,11 +18,11 @@ func TestServerService_UploadServerHTTPRequestStat(t *testing.T) {
 		Month: timeutil.Format("Ym"),
 		RegionCities: []*pb.UploadServerHTTPRequestStatRequest_RegionCity{
 			{
-				ServerId:     1,
-				CountryName:  "中国",
-				ProvinceName: "安徽省",
-				CityName:     "阜阳市",
-				Count:        1,
+				ServerId:      1,
+				CountryName:   "中国",
+				ProvinceName:  "安徽省",
+				CityName:      "阜阳市",
+				CountRequests: 1,
 			},
 		},
 		RegionProviders: []*pb.UploadServerHTTPRequestStatRequest_RegionProvider{

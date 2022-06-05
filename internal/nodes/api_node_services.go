@@ -570,6 +570,18 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 
+	{
+		instance := this.serviceInstance(&services.HTTPCacheTaskKeyService{}).(*services.HTTPCacheTaskKeyService)
+		pb.RegisterHTTPCacheTaskKeyServiceServer(server, instance)
+		this.rest(instance)
+	}
+
+	{
+		instance := this.serviceInstance(&services.HTTPCacheTaskService{}).(*services.HTTPCacheTaskService)
+		pb.RegisterHTTPCacheTaskServiceServer(server, instance)
+		this.rest(instance)
+	}
+
 	APINodeServicesRegister(this, server)
 
 	// TODO check service names

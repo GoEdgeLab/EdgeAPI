@@ -9,7 +9,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
-	"github.com/TeaOSLab/EdgeCommon/pkg/messageconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/lists"
@@ -154,7 +153,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UnixJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, string(req.IncludeNodesJSON), string(req.ExcludeNodesJSON), req.ServerGroupIds, req.UserPlanId)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UnixJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, req.IncludeNodesJSON, req.ExcludeNodesJSON, req.ServerGroupIds, req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
@@ -1710,79 +1709,88 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 		}
 	}
 
-	if len(req.Domains) == 0 {
-		return nil, errors.New("'domains' field is required")
-	}
-
 	if len(req.Keys) == 0 && len(req.Prefixes) == 0 {
 		return &pb.PurgeServerCacheResponse{IsOk: true}, nil
 	}
 
-	var tx = this.NullTx()
-	var cacheMap = utils.NewCacheMap()
 	var purgeResponse = &pb.PurgeServerCacheResponse{}
 
-	for _, domain := range req.Domains {
-		servers, err := models.SharedServerDAO.FindAllEnabledServersWithDomain(tx, domain)
+	var tx = this.NullTx()
+
+	var taskType = "purge"
+
+	var tasks = []*pb.CreateHTTPCacheTaskRequest{}
+	if len(req.Keys) > 0 {
+		tasks = append(tasks, &pb.CreateHTTPCacheTaskRequest{
+			Type:    taskType,
+			KeyType: "key",
+			Keys:    req.Keys,
+		})
+	}
+	if len(req.Prefixes) > 0 {
+		tasks = append(tasks, &pb.CreateHTTPCacheTaskRequest{
+			Type:    taskType,
+			KeyType: "prefix",
+			Keys:    req.Prefixes,
+		})
+	}
+
+	var domainMap = map[string]*models.Server{} // domain name => *Server
+
+	for _, pbTask := range tasks {
+		// 创建任务
+		taskId, err := models.SharedHTTPCacheTaskDAO.CreateTask(tx, 0, pbTask.Type, pbTask.KeyType, "调用PURGE API")
 		if err != nil {
 			return nil, err
 		}
 
-		for _, server := range servers {
-			clusterId := int64(server.ClusterId)
-			if clusterId > 0 {
-				nodeIds, err := models.SharedNodeDAO.FindAllEnabledNodeIdsWithClusterId(tx, clusterId)
-				if err != nil {
-					return nil, err
-				}
+		var countKeys = 0
 
-				cachePolicyId, err := models.SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
-				if err != nil {
-					return nil, err
-				}
-				if cachePolicyId == 0 {
-					continue
-				}
-
-				cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, cachePolicyId, cacheMap)
-				if err != nil {
-					return nil, err
-				}
-				if cachePolicy == nil {
-					continue
-				}
-				cachePolicyJSON, err := json.Marshal(cachePolicy)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, nodeId := range nodeIds {
-					msg := &messageconfigs.PurgeCacheMessage{
-						CachePolicyJSON: cachePolicyJSON,
-					}
-					if len(req.Prefixes) > 0 {
-						msg.Type = messageconfigs.PurgeCacheMessageTypeDir
-						msg.Keys = req.Prefixes
-					} else {
-						msg.Type = messageconfigs.PurgeCacheMessageTypeFile
-						msg.Keys = req.Keys
-					}
-					msgJSON, err := json.Marshal(msg)
-					if err != nil {
-						return nil, err
-					}
-
-					resp, err := SendCommandToNode(nodeId, NextCommandRequestId(), messageconfigs.MessageCodePurgeCache, msgJSON, 10, false)
-					if err != nil {
-						return nil, err
-					}
-					if !resp.IsOk {
-						purgeResponse.IsOk = false
-						purgeResponse.Message = resp.Message
-						return purgeResponse, nil
-					}
-				}
+		for _, key := range req.Keys {
+			if len(key) == 0 {
+				continue
 			}
+
+			// 获取域名
+			var domain = utils.ParseDomainFromKey(key)
+			if len(domain) == 0 {
+				continue
+			}
+
+			// 查询所在集群
+			server, ok := domainMap[domain]
+			if !ok {
+				server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, domain)
+				if err != nil {
+					return nil, err
+				}
+				if server == nil {
+					continue
+				}
+				domainMap[domain] = server
+			}
+
+			var serverClusterId = int64(server.ClusterId)
+			if serverClusterId == 0 {
+				continue
+			}
+
+			_, err = models.SharedHTTPCacheTaskKeyDAO.CreateKey(tx, taskId, key, pbTask.Type, pbTask.KeyType, serverClusterId)
+			if err != nil {
+				return nil, err
+			}
+
+			countKeys++
+		}
+
+		if countKeys == 0 {
+			// 如果没有有效的Key，则直接完成
+			err = models.SharedHTTPCacheTaskDAO.UpdateTaskStatus(tx, taskId, true, true)
+		} else {
+			err = models.SharedHTTPCacheTaskDAO.UpdateTaskReady(tx, taskId)
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
 

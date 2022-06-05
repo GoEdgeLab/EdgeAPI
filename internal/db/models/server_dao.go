@@ -156,8 +156,8 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	webId int64,
 	reverseProxyJSON []byte,
 	clusterId int64,
-	includeNodesJSON string,
-	excludeNodesJSON string,
+	includeNodesJSON []byte,
+	excludeNodesJSON []byte,
 	groupIds []int64,
 	userPlanId int64) (serverId int64, err error) {
 	var op = NewServerOperator()
@@ -206,15 +206,15 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 		op.Udp = udpJSON
 	}
 	op.WebId = webId
-	if len(reverseProxyJSON) > 0 {
+	if IsNotNull(reverseProxyJSON) {
 		op.ReverseProxy = reverseProxyJSON
 	}
 
 	op.ClusterId = clusterId
-	if len(includeNodesJSON) > 0 {
+	if IsNotNull(includeNodesJSON) {
 		op.IncludeNodes = includeNodesJSON
 	}
-	if len(excludeNodesJSON) > 0 {
+	if IsNotNull(excludeNodesJSON) {
 		op.ExcludeNodes = excludeNodesJSON
 	}
 
@@ -1476,6 +1476,7 @@ func (this *ServerDAO) FindAllServersDNSWithClusterId(tx *dbs.Tx, clusterId int6
 }
 
 // FindAllEnabledServersWithDomain 根据域名查找服务
+// TODO 需要改成使用plainServerNames
 func (this *ServerDAO) FindAllEnabledServersWithDomain(tx *dbs.Tx, domain string) (result []*Server, err error) {
 	if len(domain) == 0 {
 		return
@@ -1517,6 +1518,49 @@ func (this *ServerDAO) FindAllEnabledServersWithDomain(tx *dbs.Tx, domain string
 			}
 		} else {
 			break
+		}
+	}
+
+	return
+}
+
+// FindEnabledServerWithDomain 根据域名查找服务集群ID
+func (this *ServerDAO) FindEnabledServerWithDomain(tx *dbs.Tx, domain string) (server *Server, err error) {
+	if len(domain) == 0 {
+		return
+	}
+
+	one, err := this.Query(tx).
+		State(ServerStateEnabled).
+		Where("JSON_CONTAINS(plainServerNames, :domain)").
+		Param("domain", strconv.Quote(domain)).
+		Result("id", "userId", "clusterId").
+		AscPk().
+		Find()
+	if err != nil {
+		return nil, err
+	}
+
+	if one != nil {
+		return one.(*Server), nil
+	}
+
+	// 尝试泛解析
+	var dotIndex = strings.Index(domain, ".")
+	if dotIndex > 0 {
+		var wildcardDomain = "*." + domain[dotIndex+1:]
+		one, err = this.Query(tx).
+			State(ServerStateEnabled).
+			Where("JSON_CONTAINS(plainServerNames, :domain)").
+			Param("domain", strconv.Quote(wildcardDomain)).
+			Result("id", "userId", "clusterId").
+			AscPk().
+			Find()
+		if err != nil {
+			return nil, err
+		}
+		if one != nil {
+			return one.(*Server), nil
 		}
 	}
 

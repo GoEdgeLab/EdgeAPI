@@ -570,12 +570,12 @@ func (this *NodeDAO) FindEnabledNodeClusterIds(tx *dbs.Tx, nodeId int64) (result
 		result = append(result, clusterId)
 	}
 
-	for _, clusterId := range one.(*Node).DecodeSecondaryClusterIds() {
-		if lists.ContainsInt64(result, clusterId) {
+	for _, secondaryClusterId := range one.(*Node).DecodeSecondaryClusterIds() {
+		if lists.ContainsInt64(result, secondaryClusterId) {
 			continue
 		}
 
-		result = append(result, clusterId)
+		result = append(result, secondaryClusterId)
 	}
 	return
 }
@@ -682,6 +682,31 @@ func (this *NodeDAO) FindAllEnabledNodesWithClusterId(tx *dbs.Tx, clusterId int6
 		FindAll()
 
 	return
+}
+
+// FindEnabledAndOnNodeIdsWithClusterId 查找某个集群下的所有启用的节点IDs
+func (this *NodeDAO) FindEnabledAndOnNodeIdsWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondary bool) ([]int64, error) {
+	var query = this.Query(tx)
+	if includeSecondary {
+		query.Where("(clusterId=:primaryClusterId OR JSON_CONTAINS(secondaryClusterIds, :primaryClusterIdString))").
+			Param("primaryClusterId", clusterId).
+			Param("primaryClusterIdString", types.String(clusterId))
+	} else {
+		query.Attr("clusterId", clusterId)
+	}
+	ones, err := query.
+		Attr("isOn", true).
+		State(NodeStateEnabled).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*Node).Id))
+	}
+	return result, nil
 }
 
 // FindAllEnabledNodeIdsWithClusterId 获取一个集群的所有节点Ids

@@ -3,6 +3,7 @@ package models_test
 import (
 	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -10,9 +11,35 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
 	"testing"
 	"time"
 )
+
+func TestServerDAO_CreateManyServers(t *testing.T) {
+	dbs.NotifyReady()
+
+	var dao = models.NewServerDAO()
+	var tx *dbs.Tx
+	var count = 10000
+	for i := 0; i < count; i++ {
+		var serverNames = []*serverconfigs.ServerNameConfig{
+			{
+				Name: "s" + types.String(i) + ".teaos.cn",
+			},
+		}
+		serverNamesJSON, err := json.Marshal(serverNames)
+		if err != nil {
+			t.Fatal(err)
+		}
+		serverId, err := dao.CreateServer(tx, 0, 0, serverconfigs.ServerTypeHTTPProxy, "TEST"+types.String(i), "", serverNamesJSON, false, nil, nil, nil, nil, nil, nil, nil, 0, nil, 1, nil, nil, nil, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = serverId
+	}
+}
 
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	dbs.NotifyReady()
@@ -191,6 +218,25 @@ func TestServerDAO_FindAllEnabledServersWithDomain(t *testing.T) {
 			}
 		} else {
 			t.Log(domain + ": not found")
+		}
+	}
+}
+
+func TestServerDAO_FindEnabledServerWithDomain(t *testing.T) {
+	var dao = models.NewServerDAO()
+	var tx *dbs.Tx
+
+	for _, domain := range []string{"a", "a.com", "teaos.cn", "www.teaos.cn", "cdn.teaos.cn", "google.com"} {
+		var before = time.Now()
+		server, err := dao.FindEnabledServerWithDomain(tx, domain)
+		var costMs = time.Since(before).Seconds() * 1000
+		if err != nil {
+			t.Fatal(err)
+		}
+		if server == nil {
+			t.Log(domain, "NULL", fmt.Sprintf("%.2fms", costMs))
+		} else {
+			t.Log(domain, string(maps.Map{"id": server.Id, "clusterId": server.ClusterId, "userId": server.UserId}.AsJSON()), fmt.Sprintf("%.2fms", costMs))
 		}
 	}
 }
