@@ -6,11 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
-	"github.com/iwind/TeaGo/types"
 )
 
 // HTTPCacheTaskKeyService 缓存任务Key管理
@@ -30,11 +28,6 @@ func (this *HTTPCacheTaskKeyService) ValidateHTTPCacheTaskKeys(ctx context.Conte
 	// 检查Key数量
 	var clusterId int64
 	if userId > 0 {
-		// TODO 限制当日刷新总条数（配额）
-		if len(req.Keys) > models.MaxKeysPerTask {
-			return nil, errors.New("too many keys (current:" + types.String(len(req.Keys)) + ", max:" + types.String(models.MaxKeysPerTask) + ")")
-		}
-
 		clusterId, err = models.SharedUserDAO.FindUserClusterId(tx, userId)
 		if err != nil {
 			return nil, err

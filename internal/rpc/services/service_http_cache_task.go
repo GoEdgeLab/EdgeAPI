@@ -8,7 +8,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 )
 
 // HTTPCacheTaskService 缓存任务管理
@@ -33,9 +35,50 @@ func (this *HTTPCacheTaskService) CreateHTTPCacheTask(ctx context.Context, req *
 	// 检查Key数量
 	var clusterId int64
 	if userId > 0 {
-		// TODO 限制当日刷新总条数（配额）
-		if len(req.Keys) > models.MaxKeysPerTask {
-			return nil, errors.New("too many keys (current:" + types.String(len(req.Keys)) + ", max:" + types.String(models.MaxKeysPerTask) + ")")
+		// 限制单次
+		var maxKeysPerTask = userconfigs.MaxCacheKeysPerTask
+		var maxKeysPerDay = userconfigs.MaxCacheKeysPerDay
+
+		serverConfig, err := models.SharedSysSettingDAO.ReadUserServerConfig(tx)
+		if err != nil {
+			return nil, err
+		}
+
+		if serverConfig != nil {
+			switch req.Type {
+			case models.HTTPCacheTaskTypePurge:
+				if serverConfig.HTTPCacheTaskPurgeConfig != nil {
+					if serverConfig.HTTPCacheTaskPurgeConfig.MaxKeysPerTask > 0 {
+						maxKeysPerTask = serverConfig.HTTPCacheTaskPurgeConfig.MaxKeysPerTask
+					}
+					if serverConfig.HTTPCacheTaskPurgeConfig.MaxKeysPerDay > 0 {
+						maxKeysPerDay = serverConfig.HTTPCacheTaskPurgeConfig.MaxKeysPerDay
+					}
+				}
+			case models.HTTPCacheTaskTypeFetch:
+				if serverConfig.HTTPCacheTaskFetchConfig != nil {
+					if serverConfig.HTTPCacheTaskFetchConfig.MaxKeysPerTask > 0 {
+						maxKeysPerTask = serverConfig.HTTPCacheTaskFetchConfig.MaxKeysPerTask
+					}
+					if serverConfig.HTTPCacheTaskFetchConfig.MaxKeysPerDay > 0 {
+						maxKeysPerDay = serverConfig.HTTPCacheTaskFetchConfig.MaxKeysPerDay
+					}
+				}
+			}
+		}
+
+		if maxKeysPerTask > 0 && len(req.Keys) > types.Int(maxKeysPerTask) {
+			return nil, errors.New("too many keys in task (current:" + types.String(len(req.Keys)) + ", max:" + types.String(maxKeysPerTask) + ")")
+		}
+
+		if maxKeysPerDay > 0 {
+			countInDay, err := models.SharedHTTPCacheTaskKeyDAO.CountUserTasksInDay(tx, userId, timeutil.Format("Ymd"), req.Type)
+			if err != nil {
+				return nil, err
+			}
+			if types.Int(countInDay)+len(req.Keys) > types.Int(maxKeysPerDay) {
+				return nil, errors.New("too many keys in today (current:" + types.String(types.Int(countInDay)+len(req.Keys)) + ", max:" + types.String(maxKeysPerDay) + ")")
+			}
 		}
 
 		clusterId, err = models.SharedUserDAO.FindUserClusterId(tx, userId)

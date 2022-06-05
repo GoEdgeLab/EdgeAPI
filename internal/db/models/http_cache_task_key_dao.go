@@ -187,6 +187,22 @@ func (this *HTTPCacheTaskKeyDAO) ResetCacheKeysWithTaskId(tx *dbs.Tx, taskId int
 		UpdateQuickly()
 }
 
+// CountUserTasksInDay 读取某个用户当前数量
+// day YYYYMMDD
+func (this *HTTPCacheTaskKeyDAO) CountUserTasksInDay(tx *dbs.Tx, userId int64, day string, taskType HTTPCacheTaskType) (int64, error) {
+	if userId <= 0 {
+		return 0, nil
+	}
+
+	// 这里需要包含已删除的
+	return this.Query(tx).
+		Where("taskId IN (SELECT id FROM "+SharedHTTPCacheTaskDAO.Table+" WHERE userId=:userId AND day=:day AND type=:type)").
+		Param("userId", userId).
+		Param("day", day).
+		Param("type", taskType).
+		Count()
+}
+
 // Clean 清理以往的任务
 func (this *HTTPCacheTaskKeyDAO) Clean(tx *dbs.Tx, days int) error {
 	if days <= 0 {

@@ -25,11 +25,6 @@ const (
 	HTTPCacheTaskTypeFetch HTTPCacheTaskType = "fetch"
 )
 
-const (
-	MaxKeysPerTask      = 2000 // TODO 需要可以配置
-	MaxKeysPerDayByUser = 2000 // TODO 需要可以配置
-)
-
 type HTTPCacheTaskDAO dbs.DAO
 
 func init() {
