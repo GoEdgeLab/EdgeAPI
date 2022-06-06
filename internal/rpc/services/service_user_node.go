@@ -2,11 +2,14 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc/metadata"
+	"time"
 )
 
 type UserNodeService struct {
@@ -259,9 +262,18 @@ func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.U
 		return nil, errors.New("'nodeId' should be greater than 0")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	err = models.SharedUserNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
+	// 修改时间戳
+	var nodeStatus = &nodeconfigs.NodeStatus{}
+	err = json.Unmarshal(req.StatusJSON, nodeStatus)
+	if err != nil {
+		return nil, errors.New("decode node status json failed: " + err.Error())
+	}
+	nodeStatus.UpdatedAt = time.Now().Unix()
+
+	// 保存
+	err = models.SharedUserNodeDAO.UpdateNodeStatus(tx, nodeId, nodeStatus)
 	if err != nil {
 		return nil, err
 	}

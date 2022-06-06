@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/installers"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
@@ -21,7 +22,6 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
-	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"io"
@@ -775,7 +775,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 // UpdateNodeStatus 更新节点状态
 func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNodeStatusRequest) (*pb.RPCSuccess, error) {
 	// 校验节点
-	_, _, nodeId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeNode)
+	nodeId, err := this.ValidateNode(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -788,9 +788,18 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 		return nil, errors.New("'nodeId' should be greater than 0")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	err = models.SharedNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
+	// 修改时间戳
+	var nodeStatus = &nodeconfigs.NodeStatus{}
+	err = json.Unmarshal(req.StatusJSON, nodeStatus)
+	if err != nil {
+		return nil, errors.New("decode node status json failed: " + err.Error())
+	}
+	nodeStatus.UpdatedAt = time.Now().Unix()
+
+	// 保存
+	err = models.SharedNodeDAO.UpdateNodeStatus(tx, nodeId, nodeStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -825,7 +834,7 @@ func (this *NodeService) InstallNode(ctx context.Context, req *pb.InstallNodeReq
 	goman.New(func() {
 		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, false)
 		if err != nil {
-			logs.Println("[RPC]install node:" + err.Error())
+			remotelogs.Error("NODE_SERVICE", "install node failed:"+err.Error())
 		}
 	})
 
@@ -865,7 +874,7 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 	goman.New(func() {
 		err = installers.SharedNodeQueue().InstallNodeProcess(req.NodeId, true)
 		if err != nil {
-			logs.Println("[RPC]install node:" + err.Error())
+			remotelogs.Error("NODE_SERVICE", "install node:"+err.Error())
 		}
 	})
 

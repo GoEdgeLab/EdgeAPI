@@ -254,13 +254,19 @@ func (this *UserNodeDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 }
 
 // UpdateNodeStatus 更改节点状态
-func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
-	if len(statusJSON) == 0 {
+func (this *UserNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *nodeconfigs.NodeStatus) error {
+	if nodeStatus == nil {
 		return nil
 	}
-	_, err := this.Query(tx).
+
+	nodeStatusJSON, err := json.Marshal(nodeStatus)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
 		Pk(nodeId).
-		Set("status", string(statusJSON)).
+		Set("status", nodeStatusJSON).
 		Update()
 	return err
 }

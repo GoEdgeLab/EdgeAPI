@@ -264,13 +264,19 @@ func (this *ReportNodeDAO) FindEnabledNodeIdWithUniqueId(tx *dbs.Tx, uniqueId st
 }
 
 // UpdateNodeStatus 更改节点状态
-func (this ReportNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
-	if statusJSON == nil {
+func (this ReportNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *reporterconfigs.Status) error {
+	if nodeStatus == nil {
 		return nil
 	}
-	_, err := this.Query(tx).
+
+	nodeStatusJSON, err := json.Marshal(nodeStatus)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
 		Pk(nodeId).
-		Set("status", string(statusJSON)).
+		Set("status", nodeStatusJSON).
 		Update()
 	return err
 }

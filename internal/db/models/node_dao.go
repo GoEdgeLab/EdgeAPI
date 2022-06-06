@@ -813,11 +813,20 @@ func (this *NodeDAO) CountAllEnabledNodesMatch(tx *dbs.Tx,
 }
 
 // UpdateNodeStatus 更改节点状态
-func (this *NodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSON []byte) error {
-	_, err := this.Query(tx).
+func (this *NodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *nodeconfigs.NodeStatus) error {
+	if nodeStatus == nil {
+		return nil
+	}
+
+	nodeStatusJSON, err := json.Marshal(nodeStatus)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
 		Pk(nodeId).
 		Set("isActive", true).
-		Set("status", string(statusJSON)).
+		Set("status", nodeStatusJSON).
 		Update()
 	return err
 }

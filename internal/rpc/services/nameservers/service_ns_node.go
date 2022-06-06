@@ -18,6 +18,7 @@ import (
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"io"
 	"path/filepath"
+	"time"
 )
 
 // NSNodeService 域名服务器节点服务
@@ -398,9 +399,18 @@ func (this *NSNodeService) UpdateNSNodeStatus(ctx context.Context, req *pb.Updat
 		return nil, errors.New("'nodeId' should be greater than 0")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	err = models.SharedNSNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
+	// 修改时间戳
+	var nodeStatus = &nodeconfigs.NodeStatus{}
+	err = json.Unmarshal(req.StatusJSON, nodeStatus)
+	if err != nil {
+		return nil, errors.New("decode node status json failed: " + err.Error())
+	}
+	nodeStatus.UpdatedAt = time.Now().Unix()
+
+	// 保存
+	err = models.SharedNSNodeDAO.UpdateNodeStatus(tx, nodeId, nodeStatus)
 	if err != nil {
 		return nil, err
 	}
