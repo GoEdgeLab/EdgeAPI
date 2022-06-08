@@ -4,11 +4,8 @@ go 1.16
 
 replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 
-replace github.com/TeaOSLab/EdgePlus => ../EdgePlus
-
 require (
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
-	github.com/TeaOSLab/EdgePlus v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1183
 	github.com/andybalholm/brotli v1.0.4
 	github.com/cespare/xxhash/v2 v2.1.1
