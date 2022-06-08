@@ -3,6 +3,7 @@ package nodes
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
@@ -15,6 +16,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -35,6 +37,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -51,12 +54,18 @@ type APINode struct {
 	sock *gosock.Sock
 
 	isStarting bool
+
+	issues     []*StartIssue
+	issuesFile string
 }
 
 func NewAPINode() *APINode {
 	return &APINode{
 		serviceInstanceMap: map[string]interface{}{},
 		sock:               gosock.NewTmpSock(teaconst.ProcessName),
+
+		issues:     []*StartIssue{},
+		issuesFile: Tea.LogFile("issues.log"),
 	}
 }
 
@@ -65,18 +74,27 @@ func (this *APINode) Start() {
 
 	logs.Println("[API_NODE]start api node, pid: " + strconv.Itoa(os.Getpid()))
 
-	// 检查数据库连接
-	err := this.checkDB()
-	if err != nil {
-		logs.Println("[API_NODE]" + err.Error())
-		return
-	}
+	// 保存启动过程中的问题，以便于查看
+	defer func() {
+		this.saveIssues()
+	}()
 
 	// 本地Sock
 	logs.Println("[API_NODE]listening sock ...")
-	err = this.listenSock()
+	err := this.listenSock()
 	if err != nil {
-		logs.Println("[API_NODE]" + err.Error())
+		var errString = "start local sock failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("sock", errString, "")
+		return
+	}
+
+	// 检查数据库连接
+	err = this.checkDB()
+	if err != nil {
+		var errString = "check database connection failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("db", errString, this.dbIssueSuggestion(err.Error()))
 		return
 	}
 
@@ -84,7 +102,9 @@ func (this *APINode) Start() {
 	logs.Println("[API_NODE]auto upgrading ...")
 	err = this.autoUpgrade()
 	if err != nil {
-		logs.Println("[API_NODE]auto upgrade failed: " + err.Error())
+		var errString = "auto upgrade failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("db", errString, this.dbIssueSuggestion(err.Error()))
 		return
 	}
 
@@ -105,7 +125,9 @@ func (this *APINode) Start() {
 	logs.Println("[API_NODE]reading api config ...")
 	config, err := configs.SharedAPIConfig()
 	if err != nil {
-		logs.Println("[API_NODE]start failed: " + err.Error())
+		var errString = "read api config failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("config", errString, "")
 		return
 	}
 	sharedAPIConfig = config
@@ -113,14 +135,22 @@ func (this *APINode) Start() {
 	// 校验
 	apiNode, err := models.SharedAPINodeDAO.FindEnabledAPINodeWithUniqueIdAndSecret(nil, config.NodeId, config.Secret)
 	if err != nil {
-		logs.Println("[API_NODE]start failed: read api node from database failed: " + err.Error())
+		var errString = "start failed: read api node from database failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("db", errString, "")
 		return
 	}
 	if apiNode == nil {
-		logs.Println("[API_NODE]can not start node, wrong 'nodeId' or 'secret'")
+		var errString = "can not start node, wrong 'nodeId' or 'secret'"
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("config", errString, "请在api.yaml配置文件中填写正确的`nodeId`和`secret`，如果数据库或者管理节点或API节点是从别的服务器迁移过来的，请将老的系统配置拷贝到当前节点配置下")
 		return
 	}
 	config.SetNumberId(int64(apiNode.Id))
+
+	// 清除上一次启动错误
+	// 这个错误文件可能不存在，不需要处理错误
+	_ = os.Remove(this.issuesFile)
 
 	// 设置rlimit
 	_ = utils.SetRLimit(1024 * 1024)
@@ -138,10 +168,12 @@ func (this *APINode) Start() {
 	// 监听RPC服务
 	remotelogs.Println("API_NODE", "starting RPC server ...")
 
-	isListening := this.listenPorts(apiNode)
+	var isListening = this.listenPorts(apiNode)
 
 	if !isListening {
-		remotelogs.Error("API_NODE", "the api node require at least one listening address")
+		var errString = "the api node require at least one listening address"
+		remotelogs.Error("API_NODE", errString)
+		this.addStartIssue("config", errString, "请给当前API节点设置一个监听端口")
 		return
 	}
 
@@ -154,9 +186,8 @@ func (this *APINode) Start() {
 
 // Daemon 实现守护进程
 func (this *APINode) Daemon() {
-	path := os.TempDir() + "/" + teaconst.ProcessName + ".sock"
-	isDebug := lists.ContainsString(os.Args, "debug")
-	isDebug = true
+	var path = os.TempDir() + "/" + teaconst.ProcessName + ".sock"
+	var isDebug = lists.ContainsString(os.Args, "debug")
 	for {
 		conn, err := net.DialTimeout("unix", path, 1*time.Second)
 		if err != nil {
@@ -199,14 +230,14 @@ func (this *APINode) Daemon() {
 
 // InstallSystemService 安装系统服务
 func (this *APINode) InstallSystemService() error {
-	shortName := teaconst.SystemdServiceName
+	var shortName = teaconst.SystemdServiceName
 
 	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
 
-	manager := utils.NewServiceManager(shortName, teaconst.ProductName)
+	var manager = utils.NewServiceManager(shortName, teaconst.ProductName)
 	err = manager.Install(exe, []string{})
 	if err != nil {
 		return err
@@ -242,21 +273,33 @@ func (this *APINode) checkDB() error {
 		return err
 	}
 
-	maxTries := 600
-	for i := 0; i <= maxTries; i++ {
-		_, err := db.Exec("SELECT 1")
-		if err != nil {
-			if i == maxTries-1 {
-				return err
-			} else {
-				if i%10 == 0 { // 这让提示不会太多
-					logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i*100)/float32(maxTries+1)) + "%) ...")
+	// 第一次测试连接
+	_, err = db.Exec("SELECT 1")
+	if err != nil {
+		var errString = "check database connection failed: " + err.Error()
+		logs.Println("[API_NODE]" + errString)
+		this.addStartIssue("db", errString, this.dbIssueSuggestion(errString))
+
+		// 多次尝试
+		var maxTries = 600
+		if Tea.IsTesting() {
+			maxTries = 600
+		}
+		for i := 0; i <= maxTries; i++ {
+			_, err := db.Exec("SELECT 1")
+			if err != nil {
+				if i == maxTries-1 {
+					return err
+				} else {
+					if i%10 == 0 { // 这让提示不会太多
+						logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i*100)/float32(maxTries+1)) + "%) ...")
+					}
+					time.Sleep(1 * time.Second)
 				}
-				time.Sleep(1 * time.Second)
+			} else {
+				logs.Println("[API_NODE]database connected")
+				return nil
 			}
-		} else {
-			logs.Println("[API_NODE]database connected")
-			return nil
 		}
 	}
 
@@ -270,7 +313,7 @@ func (this *APINode) autoUpgrade() error {
 	}
 
 	// 执行SQL
-	config := &dbs.Config{}
+	var config = &dbs.Config{}
 	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return errors.New("read database config file failed: " + err.Error())
@@ -680,4 +723,63 @@ func (this *APINode) unaryInterceptor(ctx context.Context, req interface{}, info
 		err = errors.New("'" + info.FullMethod + "()' says: " + err.Error())
 	}
 	return result, err
+}
+
+// 添加启动相关的Issue
+func (this *APINode) addStartIssue(code string, message string, suggestion string) {
+	this.issues = append(this.issues, NewStartIssue(code, message, suggestion))
+	this.saveIssues()
+}
+
+// 增加数据库建议
+func (this *APINode) dbIssueSuggestion(errString string) string {
+	// 数据库配置
+	db, err := dbs.Default()
+	if err != nil {
+		return ""
+	}
+	config, err := db.Config()
+	if err != nil {
+		return ""
+	}
+
+	var dsn = config.Dsn
+	dsnConfig, err := mysql.ParseDSN(dsn)
+	if err != nil {
+		return ""
+	}
+	var addr = dsnConfig.Addr
+
+	// 配置文件位置
+	var dbConfigPath = Tea.ConfigFile("db.yaml")
+
+	// 连接被拒绝
+	if strings.Contains(errString, "connection refused") {
+		// 本机
+		if strings.HasPrefix(addr, "127.0.0.1:") || strings.HasPrefix(addr, "localhost:") {
+			return "试图连接到数据库被拒绝，请检查：1）本地数据库服务是否已经启动；2）数据库IP和端口（" + addr + "）是否正确；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
+		} else {
+			return "试图连接到数据库被拒绝，请检查：1）数据库服务是否已经启动；2）数据库IP和端口（" + addr + "）是否正确；3）防火墙设置；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
+		}
+	}
+
+	// 权限错误
+	if strings.Contains(errString, "Error 1045") {
+		return "使用的用户和密码没有权限连接到指定数据库，请检查：数据库配置文件中的用户名（" + dsnConfig.User + "）和密码（" + dsnConfig.Passwd + "）是否正确；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
+	}
+
+	// 数据库名称错误
+	if strings.Contains(errString, "Error 1049") {
+		return "数据库名称配置错误，请检查：数据库配置文件中数据库名称（" + dsnConfig.DBName + "）是否正确；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
+	}
+
+	return ""
+}
+
+// 保存issues
+func (this *APINode) saveIssues() {
+	issuesJSON, err := json.Marshal(this.issues)
+	if err == nil {
+		_ = ioutil.WriteFile(this.issuesFile, issuesJSON, 0666)
+	}
 }
