@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
@@ -292,7 +291,7 @@ func (this *APINode) checkDB() error {
 					return err
 				} else {
 					if i%10 == 0 { // 这让提示不会太多
-						logs.Println("[API_NODE]reconnecting to database (" + fmt.Sprintf("%.1f", float32(i*100)/float32(maxTries+1)) + "%) ...")
+						logs.Println("[API_NODE]check database connection failed: " + err.Error() + ", reconnecting to database ...")
 					}
 					time.Sleep(1 * time.Second)
 				}
@@ -764,8 +763,8 @@ func (this *APINode) dbIssueSuggestion(errString string) string {
 	}
 
 	// 权限错误
-	if strings.Contains(errString, "Error 1045") {
-		return "使用的用户和密码没有权限连接到指定数据库，请检查：数据库配置文件中的用户名（" + dsnConfig.User + "）和密码（" + dsnConfig.Passwd + "）是否正确；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
+	if strings.Contains(errString, "Error 1045") || strings.Contains(errString, "Error 1044") {
+		return "使用的用户和密码没有权限连接到指定数据库，请检查：1）数据库配置文件中的用户名（" + dsnConfig.User + "）和密码（" + dsnConfig.Passwd + "）是否正确；2）使用的用户是否已经在数据库中设置了正确的权限；（当前数据库配置为：" + dsn + "，配置文件位置：" + dbConfigPath + "）。"
 	}
 
 	// 数据库名称错误

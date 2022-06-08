@@ -22,7 +22,7 @@ const (
 	UserNodeVersion      = "0.3.4"
 	AuthorityNodeVersion = "0.0.2"
 	MonitorNodeVersion   = "0.0.3"
-	DNSNodeVersion       = "0.2.2"
+	DNSNodeVersion       = "0.2.3"
 	ReportNodeVersion    = "0.1.0"
 
 	// SQLVersion SQL版本号

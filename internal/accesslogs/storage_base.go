@@ -44,7 +44,7 @@ func (this *BaseStorage) Marshal(accessLog *pb.HTTPAccessLog) ([]byte, error) {
 
 // FormatVariables 格式化字符串中的变量
 func (this *BaseStorage) FormatVariables(s string) string {
-	now := time.Now()
+	var now = time.Now()
 	return configutils.ParseVariables(s, func(varName string) (value string) {
 		switch varName {
 		case "year":
