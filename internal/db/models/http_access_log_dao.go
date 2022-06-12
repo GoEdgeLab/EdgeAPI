@@ -395,9 +395,14 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 	var locker = sync.Mutex{}
 
+	// 这里正则表达式中的括号不能轻易变更，因为后面有引用
+	// TODO 支持多个查询条件的组合，比如 status:200 proto:HTTP/1.1
 	var statusPrefixReg = regexp.MustCompile(`status:\s*(\d{3})\b`)
 	var statusRangeReg = regexp.MustCompile(`status:\s*(\d{3})-(\d{3})\b`)
 	var urlReg = regexp.MustCompile(`^(http|https)://`)
+	var requestPathReg = regexp.MustCompile(`requestPath:(\S+)`)
+	var protoReg = regexp.MustCompile(`proto:(\S+)`)
+	var schemeReg = regexp.MustCompile(`scheme:(\S+)`)
 
 	var count = len(tableQueries)
 	var wg = &sync.WaitGroup{}
@@ -509,13 +514,25 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					isSpecialKeyword = true
 					var matches = statusRangeReg.FindStringSubmatch(keyword)
 					query.Between("status", types.Int(matches[1]), types.Int(matches[2]))
-
-					// TODO 处理剩余的关键词
 				} else if statusPrefixReg.MatchString(keyword) { // status:200
 					isSpecialKeyword = true
 					var matches = statusPrefixReg.FindStringSubmatch(keyword)
 					query.Attr("status", matches[1])
-					// TODO 处理剩余的关键词
+				} else if requestPathReg.MatchString(keyword) {
+					isSpecialKeyword = true
+					var matches = requestPathReg.FindStringSubmatch(keyword)
+					query.Where("JSON_EXTRACT(content, '$.requestPath')=:keyword").
+						Param("keyword", matches[1])
+				} else if protoReg.MatchString(keyword) {
+					isSpecialKeyword = true
+					var matches = protoReg.FindStringSubmatch(keyword)
+					query.Where("JSON_EXTRACT(content, '$.proto')=:keyword").
+						Param("keyword", strings.ToUpper(matches[1]))
+				} else if schemeReg.MatchString(keyword) {
+					isSpecialKeyword = true
+					var matches = schemeReg.FindStringSubmatch(keyword)
+					query.Where("JSON_EXTRACT(content, '$.scheme')=:keyword").
+						Param("keyword", strings.ToLower(matches[1]))
 				} else if urlReg.MatchString(keyword) { // https://xxx/yyy
 					u, err := url.Parse(keyword)
 					if err == nil {
