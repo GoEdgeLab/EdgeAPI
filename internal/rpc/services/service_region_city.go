@@ -27,12 +27,39 @@ func (this *RegionCityService) FindAllEnabledRegionCities(ctx context.Context, r
 	}
 
 	var pbCities = []*pb.RegionCity{}
+
+	var provincesMap = map[int64]*regions.RegionProvince{} // provinceId => RegionProvince
+
 	for _, city := range cities {
+		var provinceId = int64(city.ProvinceId)
+
+		var pbProvince = &pb.RegionProvince{Id: provinceId}
+		if req.IncludeRegionProvince {
+			province, ok := provincesMap[provinceId]
+			if !ok {
+				province, err = regions.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, provinceId)
+				if err != nil {
+					return nil, err
+				}
+				if province == nil {
+					continue
+				}
+				provincesMap[provinceId] = province
+			}
+
+			pbProvince = &pb.RegionProvince{
+				Id:    int64(province.Id),
+				Name:  province.Name,
+				Codes: province.DecodeCodes(),
+			}
+		}
+
 		pbCities = append(pbCities, &pb.RegionCity{
 			Id:               int64(city.Id),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),
+			RegionProvince:   pbProvince,
 		})
 	}
 
