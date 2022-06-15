@@ -558,6 +558,7 @@ func (this *HTTPFirewallPolicyDAO) CheckUserFirewallPolicy(tx *dbs.Tx, userId in
 }
 
 // FindEnabledFirewallPolicyIdsWithIPListId 查找包含某个IPList的所有策略
+// TODO 改成通过 serverId 查询
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *dbs.Tx, ipListId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		ResultPk().
@@ -576,6 +577,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 }
 
 // FindEnabledFirewallPolicyWithIPListId 查找使用某个IPList的策略
+// TODO 改成通过 serverId 查询
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyWithIPListId(tx *dbs.Tx, ipListId int64) (*HTTPFirewallPolicy, error) {
 	one, err := this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).

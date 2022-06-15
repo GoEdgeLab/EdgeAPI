@@ -21,9 +21,20 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic, req.IsGlobal)
+	// 检查用户相关信息
+	if userId > 0 {
+		// 检查服务ID
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.ServerId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic, req.IsGlobal)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +61,18 @@ func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPLis
 // FindEnabledIPList 查找IP列表
 func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEnabledIPListRequest) (*pb.FindEnabledIPListResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	list, err := models.SharedIPListDAO.FindEnabledIPList(tx, req.IpListId, nil)
 	if err != nil {

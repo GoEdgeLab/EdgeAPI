@@ -20,6 +20,39 @@ func TestIPListDAO_IncreaseVersion(t *testing.T) {
 	t.Log("version:", version)
 }
 
+func TestIPListDAO_CheckUserIPList(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+
+	{
+		err := NewIPListDAO().CheckUserIPList(tx, 1, 100)
+		if err == ErrNotFound {
+			t.Log("not found")
+		} else {
+			t.Log(err)
+		}
+	}
+
+	{
+		err := NewIPListDAO().CheckUserIPList(tx, 1, 85)
+		if err == ErrNotFound {
+			t.Log("not found")
+		} else {
+			t.Log(err)
+		}
+	}
+
+	{
+		err := NewIPListDAO().CheckUserIPList(tx, 1, 17)
+		if err == ErrNotFound {
+			t.Log("not found")
+		} else {
+			t.Log(err)
+		}
+	}
+}
+
 func BenchmarkIPListDAO_IncreaseVersion(b *testing.B) {
 	runtime.GOMAXPROCS(1)
 
@@ -32,3 +65,4 @@ func BenchmarkIPListDAO_IncreaseVersion(b *testing.B) {
 		_, _ = dao.IncreaseVersion(tx)
 	}
 }
+

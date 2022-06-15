@@ -26,5 +26,5 @@ const (
 	ReportNodeVersion    = "0.1.0"
 
 	// SQLVersion SQL版本号
-	SQLVersion = "10"
+	SQLVersion = "11"
 )

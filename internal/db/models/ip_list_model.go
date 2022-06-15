@@ -9,6 +9,7 @@ type IPList struct {
 	Type        string   `field:"type"`        // 类型
 	AdminId     uint32   `field:"adminId"`     // 用户ID
 	UserId      uint32   `field:"userId"`      // 用户ID
+	ServerId    uint64   `field:"serverId"`    // 服务ID
 	Name        string   `field:"name"`        // 列表名
 	Code        string   `field:"code"`        // 代号
 	State       uint8    `field:"state"`       // 状态
@@ -26,6 +27,7 @@ type IPListOperator struct {
 	Type        interface{} // 类型
 	AdminId     interface{} // 用户ID
 	UserId      interface{} // 用户ID
+	ServerId    interface{} // 服务ID
 	Name        interface{} // 列表名
 	Code        interface{} // 代号
 	State       interface{} // 状态

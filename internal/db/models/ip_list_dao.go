@@ -138,10 +138,11 @@ func (this *IPListDAO) FindIPListCacheable(tx *dbs.Tx, listId int64) (*IPList, e
 }
 
 // CreateIPList 创建名单
-func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte, description string, isPublic bool, isGlobal bool) (int64, error) {
-	op := NewIPListOperator()
+func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, serverId int64, listType ipconfigs.IPListType, name string, code string, timeoutJSON []byte, description string, isPublic bool, isGlobal bool) (int64, error) {
+	var op = NewIPListOperator()
 	op.IsOn = true
 	op.UserId = userId
+	op.ServerId = serverId
 	op.State = IPListStateEnabled
 	op.Type = listType
 	op.Name = name
@@ -189,26 +190,25 @@ func (this *IPListDAO) CheckUserIPList(tx *dbs.Tx, userId int64, listId int64) e
 		return ErrNotFound
 	}
 
-	ok, err := this.Query(tx).
+	// 获取名单信息
+	listOne, err := this.Query(tx).
 		Pk(listId).
-		Attr("userId", userId).
-		Exist()
+		Result("userId", "serverId").
+		Find()
 	if err != nil {
 		return err
 	}
-	if ok {
+	if listOne == nil {
+		return ErrNotFound
+	}
+	var list = listOne.(*IPList)
+	if int64(list.UserId) == userId {
 		return nil
 	}
 
-	// 检查是否被用户的服务所使用
-	policyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
-	if err != nil {
-		return err
-	}
-	for _, policyId := range policyIds {
-		if SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(tx, userId, policyId) == nil {
-			return nil
-		}
+	var serverId = int64(list.ServerId)
+	if serverId > 0 {
+		return SharedServerDAO.CheckUserServer(tx, userId, serverId)
 	}
 
 	return ErrNotFound

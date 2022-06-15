@@ -75,6 +75,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.7", upgradeV0_4_7,
 	},
+	{
+		"0.4.8", upgradeV0_4_8,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -665,6 +668,58 @@ func upgradeV0_4_7(db *dbs.DB) error {
 				_, err = db.Exec("UPDATE edgeServers SET plainServerNames=? WHERE id=?", plainServerNamesJSON, serverId)
 				if err != nil {
 					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// v0.4.7
+func upgradeV0_4_8(db *dbs.DB) error {
+	// 设置edgeIPLists中的serverId
+	{
+		firewallPolicyOnes, _, err := db.FindOnes("SELECT inbound,serverId FROM edgeHTTPFirewallPolicies WHERE serverId>0")
+		if err != nil {
+			return err
+		}
+		for _, one := range firewallPolicyOnes {
+			var inboundBytes = one.GetBytes("inbound")
+			var serverId = one.GetInt64("serverId")
+
+			var listIds = []int64{}
+
+			if len(inboundBytes) > 0 {
+				var inbound = &firewallconfigs.HTTPFirewallInboundConfig{}
+				err = json.Unmarshal(inboundBytes, inbound)
+				if err == nil { // we ignore errors
+					if inbound.AllowListRef != nil && inbound.AllowListRef.ListId > 0 {
+						listIds = append(listIds, inbound.AllowListRef.ListId)
+					}
+					if inbound.DenyListRef != nil && inbound.DenyListRef.ListId > 0 {
+						listIds = append(listIds, inbound.DenyListRef.ListId)
+					}
+					if inbound.GreyListRef != nil && inbound.GreyListRef.ListId > 0 {
+						listIds = append(listIds, inbound.GreyListRef.ListId)
+					}
+				}
+			}
+
+			if len(listIds) == 0 {
+				continue
+			}
+			for _, listId := range listIds {
+				isPublicCol, err := db.FindCol(0, "SELECT isPublic FROM edgeIPLists WHERE id=? LIMIT 1", listId)
+				if err != nil {
+					return err
+				}
+				var isPublic = types.Bool(isPublicCol)
+				if !isPublic {
+					_, err = db.Exec("UPDATE edgeIPLists SET serverId=? WHERE id=?", serverId, listId)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
