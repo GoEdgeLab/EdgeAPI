@@ -306,12 +306,14 @@ func (this *HTTPCacheTaskService) FindEnabledHTTPCacheTask(ctx context.Context, 
 	}
 	var pbKeys = []*pb.HTTPCacheTaskKey{}
 	for _, key := range keys {
+
 		pbKeys = append(pbKeys, &pb.HTTPCacheTaskKey{
 			Id:         int64(key.Id),
 			TaskId:     int64(key.TaskId),
 			Key:        key.Key,
 			KeyType:    key.KeyType,
 			IsDone:     key.IsDone,
+			IsDoing:    !key.IsDone && len(key.DecodeNodes()) > 0,
 			ErrorsJSON: key.Errors,
 		})
 	}
