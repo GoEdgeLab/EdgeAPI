@@ -1963,9 +1963,11 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 			DayTo:  userPlan.DayTo,
 			User:   nil,
 			Plan: &pb.Plan{
-				Id:        int64(plan.Id),
-				Name:      plan.Name,
-				PriceType: plan.PriceType,
+				Id:               int64(plan.Id),
+				Name:             plan.Name,
+				PriceType:        plan.PriceType,
+				TrafficPriceJSON: plan.TrafficPrice,
+				TrafficLimitJSON: plan.TrafficLimit,
 			},
 		},
 	}, nil

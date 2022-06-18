@@ -9,6 +9,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
+	"regexp"
 	"time"
 )
 
@@ -224,12 +225,22 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 
 // SumCurrentServerDailyStats 查找单个服务当前统计数据
 func (this *ServerDailyStatService) SumCurrentServerDailyStats(ctx context.Context, req *pb.SumCurrentServerDailyStatsRequest) (*pb.SumCurrentServerDailyStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	var tx *dbs.Tx
+	var tx *dbs.Tx = this.NullTx()
+
+	// 检查用户
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 按日
 	stat, err := models.SharedServerDailyStatDAO.SumCurrentDailyStat(tx, req.ServerId)
 	if err != nil {
 		return nil, err
@@ -250,7 +261,97 @@ func (this *ServerDailyStatService) SumCurrentServerDailyStats(ctx context.Conte
 		}
 	}
 
-	return &pb.SumCurrentServerDailyStatsResponse{
-		ServerDailyStat: pbStat,
-	}, nil
+	return &pb.SumCurrentServerDailyStatsResponse{ServerDailyStat: pbStat}, nil
+}
+
+// SumServerDailyStats 计算单个服务的日统计
+func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req *pb.SumServerDailyStatsRequest) (*pb.SumServerDailyStatsResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 检查用户
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 某日统计
+	var day = timeutil.Format("Ymd")
+	if regexp.MustCompile(`^\d{8}$`).MatchString(req.Day) {
+		day = req.Day
+	}
+
+	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.ServerId, day)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbStat = &pb.ServerDailyStat{
+		ServerId: req.ServerId,
+	}
+	if stat != nil {
+		pbStat = &pb.ServerDailyStat{
+			ServerId:            req.ServerId,
+			Bytes:               stat.Bytes,
+			CachedBytes:         stat.CachedBytes,
+			CountRequests:       stat.CountRequests,
+			CountCachedRequests: stat.CountCachedRequests,
+			CountAttackRequests: stat.CountAttackRequests,
+			AttackBytes:         stat.AttackBytes,
+		}
+	}
+	return &pb.SumServerDailyStatsResponse{ServerDailyStat: pbStat}, nil
+}
+
+// SumServerMonthlyStats 计算单个服务的月统计
+func (this *ServerDailyStatService) SumServerMonthlyStats(ctx context.Context, req *pb.SumServerMonthlyStatsRequest) (*pb.SumServerMonthlyStatsResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 检查用户
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 某月统计
+	var month = timeutil.Format("Ym")
+	if regexp.MustCompile(`^\d{6}$`).MatchString(req.Month) {
+		month = req.Month
+	}
+
+	// 按月
+	stat, err := models.SharedServerDailyStatDAO.SumMonthlyStat(tx, req.ServerId, month)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbStat = &pb.ServerDailyStat{
+		ServerId: req.ServerId,
+	}
+	if stat != nil {
+		pbStat = &pb.ServerDailyStat{
+			ServerId:            req.ServerId,
+			Bytes:               stat.Bytes,
+			CachedBytes:         stat.CachedBytes,
+			CountRequests:       stat.CountRequests,
+			CountCachedRequests: stat.CountCachedRequests,
+			CountAttackRequests: stat.CountAttackRequests,
+			AttackBytes:         stat.AttackBytes,
+		}
+	}
+
+	return &pb.SumServerMonthlyStatsResponse{ServerMonthlyStat: pbStat}, nil
 }
