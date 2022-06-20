@@ -18,12 +18,12 @@ const (
 
 	// 其他节点版本号，用来检测是否有需要升级的节点
 
-	NodeVersion          = "0.4.8"
+	NodeVersion          = "0.4.8.1"
 	UserNodeVersion      = "0.3.4"
 	AuthorityNodeVersion = "0.0.2"
-	MonitorNodeVersion   = "0.0.3"
+	MonitorNodeVersion   = "0.0.4"
 	DNSNodeVersion       = "0.2.3"
-	ReportNodeVersion    = "0.1.0"
+	ReportNodeVersion    = "0.1.1"
 
 	// SQLVersion SQL版本号
 	SQLVersion = "11"
