@@ -1077,7 +1077,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		// 最大线程数、TCP连接数
 		if clusterIndex == 0 {
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)
-			config.DDOSProtection = nodeCluster.DecodeDDoSProtection()
+			config.DDoSProtection = nodeCluster.DecodeDDoSProtection()
 			config.AutoOpenPorts = nodeCluster.AutoOpenPorts == 1
 		}
 
@@ -1212,10 +1212,10 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	// DDOS Protection
 	var ddosProtection = node.DecodeDDoSProtection()
 	if ddosProtection != nil {
-		if config.DDOSProtection == nil {
-			config.DDOSProtection = ddosProtection
+		if config.DDoSProtection == nil {
+			config.DDoSProtection = ddosProtection
 		} else {
-			config.DDOSProtection.Merge(ddosProtection)
+			config.DDoSProtection.Merge(ddosProtection)
 		}
 	}
 
