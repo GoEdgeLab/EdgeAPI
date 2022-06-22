@@ -207,14 +207,35 @@ func (this *IPItemDAO) FindEnabledIPItem(tx *dbs.Tx, id int64) (*IPItem, error) 
 
 // DeleteOldItem 根据IP删除以前的旧记录
 func (this *IPItemDAO) DeleteOldItem(tx *dbs.Tx, listId int64, ipFrom string, ipTo string) error {
-	_, err := this.Query(tx).
+	ones, err := this.Query(tx).
+		ResultPk().
 		UseIndex("ipFrom").
 		Attr("listId", listId).
 		Attr("ipFrom", ipFrom).
 		Attr("ipTo", ipTo).
-		Delete()
-	// 这里不通知更新
-	return err
+		Set("state", IPItemStateEnabled).
+		FindAll()
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var itemId = int64(one.(*IPItem).Id)
+		version, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return err
+		}
+
+		err = this.Query(tx).
+			Pk(itemId).
+			Set("version", version).
+			Set("state", IPItemStateDisabled).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CreateIPItem 创建IP
@@ -267,6 +288,8 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	}
 
 	op.State = IPItemStateEnabled
+	op.UpdatedAt = time.Now().Unix()
+
 	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
