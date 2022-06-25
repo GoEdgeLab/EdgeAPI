@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
@@ -43,6 +44,12 @@ func init() {
 		// 导入统计数据
 		goman.New(func() {
 			var duration = 30 * time.Minute
+
+			// 小内存的要快速处理
+			if utils.SystemMemoryGB() <= 2 {
+				duration = 15 * time.Minute
+			}
+
 			if Tea.IsTesting() {
 				// 测试条件下缩短时间，以便进行观察
 				duration = 10 * time.Second
