@@ -32,7 +32,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 		return nil, err
 	}
 
-	pbTasks := []*pb.NodeTask{}
+	var pbTasks = []*pb.NodeTask{}
 	for _, task := range tasks {
 		pbTasks = append(pbTasks, &pb.NodeTask{
 			Id:        int64(task.Id),
@@ -44,7 +44,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 	}
 
 	// 边缘节点版本更新任务
-	if nodeType == rpcutils.UserTypeNode {
+	if nodeType == rpcutils.UserTypeNode && installers.SharedUpgradeLimiter.CanUpgrade() {
 		status, err := models.SharedNodeDAO.FindNodeStatus(tx, nodeId)
 		if err != nil {
 			return nil, err

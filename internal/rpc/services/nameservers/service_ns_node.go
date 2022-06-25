@@ -462,12 +462,12 @@ func (this *NSNodeService) CheckNSNodeLatestVersion(ctx context.Context, req *pb
 
 // DownloadNSNodeInstallationFile 下载最新DNS节点安装文件
 func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, req *pb.DownloadNSNodeInstallationFileRequest) (*pb.DownloadNSNodeInstallationFileResponse, error) {
-	_, err := this.ValidateNSNode(ctx)
+	nodeId, err := this.ValidateNSNode(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	file := installers.SharedDeployManager.FindNSNodeFile(req.Os, req.Arch)
+	var file = installers.SharedDeployManager.FindNSNodeFile(req.Os, req.Arch)
 	if file == nil {
 		return &pb.DownloadNSNodeInstallationFileResponse{}, nil
 	}
@@ -481,6 +481,9 @@ func (this *NSNodeService) DownloadNSNodeInstallationFile(ctx context.Context, r
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
+
+	// 增加下载速度监控
+	installers.SharedUpgradeLimiter.UpdateNodeBytes(nodeconfigs.NodeRoleDNS, nodeId, int64(len(data)))
 
 	return &pb.DownloadNSNodeInstallationFileResponse{
 		Sum:       sum,

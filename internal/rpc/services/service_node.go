@@ -1602,12 +1602,12 @@ func (this *NodeService) UpdateNodeUp(ctx context.Context, req *pb.UpdateNodeUpR
 
 // DownloadNodeInstallationFile 下载最新边缘节点安装文件
 func (this *NodeService) DownloadNodeInstallationFile(ctx context.Context, req *pb.DownloadNodeInstallationFileRequest) (*pb.DownloadNodeInstallationFileResponse, error) {
-	_, err := this.ValidateNode(ctx)
+	nodeId, err := this.ValidateNode(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	file := installers.SharedDeployManager.FindNodeFile(req.Os, req.Arch)
+	var file = installers.SharedDeployManager.FindNodeFile(req.Os, req.Arch)
 	if file == nil {
 		return &pb.DownloadNodeInstallationFileResponse{}, nil
 	}
@@ -1621,6 +1621,9 @@ func (this *NodeService) DownloadNodeInstallationFile(ctx context.Context, req *
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
+
+	// 增加下载速度监控
+	installers.SharedUpgradeLimiter.UpdateNodeBytes(nodeconfigs.NodeRoleNode, nodeId, int64(len(data)))
 
 	return &pb.DownloadNodeInstallationFileResponse{
 		Sum:       sum,
