@@ -338,12 +338,31 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 	return nil
 }
 
+// UpdateServerGroupIds 修改服务所在分组
+func (this *ServerDAO) UpdateServerGroupIds(tx *dbs.Tx, serverId int64, groupIds []int64) error {
+	if groupIds == nil {
+		groupIds = []int64{}
+	}
+	groupIdsJSON, err := json.Marshal(groupIds)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(serverId).
+		Set("groupIds", groupIdsJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, serverId)
+}
+
 // UpdateUserServerBasic 设置用户相关的基本信息
 func (this *ServerDAO) UpdateUserServerBasic(tx *dbs.Tx, serverId int64, name string) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.Name = name
 

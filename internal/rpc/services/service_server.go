@@ -192,6 +192,56 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 	return this.Success()
 }
 
+// UpdateServerGroupIds 修改服务所在分组
+func (this *ServerService) UpdateServerGroupIds(ctx context.Context, req *pb.UpdateServerGroupIdsRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 检查分组IDs
+	for _, groupId := range req.ServerGroupIds {
+		if userId > 0 {
+			err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, groupId)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			b, err := models.SharedServerGroupDAO.ExistsGroup(tx, groupId)
+			if err != nil {
+				return nil, err
+			}
+			if !b {
+				continue
+			}
+		}
+	}
+
+	// 增加默认分组
+	if userId > 0 {
+		config, err := models.SharedSysSettingDAO.ReadUserServerConfig(tx)
+		if err == nil && config.GroupId > 0 && !lists.ContainsInt64(req.ServerGroupIds, config.GroupId) {
+			req.ServerGroupIds = append(req.ServerGroupIds, config.GroupId)
+		}
+	}
+
+	// 修改
+	err = models.SharedServerDAO.UpdateServerGroupIds(tx, req.ServerId, req.ServerGroupIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // UpdateServerIsOn 修改服务是否启用
 func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateServerIsOnRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
@@ -199,7 +249,7 @@ func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateS
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -832,8 +882,9 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 				continue
 			}
 			pbGroups = append(pbGroups, &pb.ServerGroup{
-				Id:   int64(group.Id),
-				Name: group.Name,
+				Id:     int64(group.Id),
+				Name:   group.Name,
+				UserId: int64(group.UserId),
 			})
 		}
 	}
