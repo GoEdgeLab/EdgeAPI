@@ -214,7 +214,7 @@ func (this *NSRouteDAO) FindAllEnabledRoutes(tx *dbs.Tx, clusterId int64, domain
 		State(NSRouteStateEnabled).
 		Slice(&result).
 		Desc("order").
-		DescPk()
+		AscPk()
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
 	} else {
