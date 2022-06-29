@@ -7,7 +7,7 @@ function build() {
 	OS=${1}
 	ARCH=${2}
 	TAG=${3}
-	NODE_ARCHITECTS=("amd64" "386" "arm64" "mips64" "mips64le")
+	NODE_ARCHITECTS=("amd64" "arm64")
 
 	if [ -z "$OS" ]; then
 		echo "usage: build.sh OS ARCH"
@@ -62,7 +62,7 @@ function build() {
 			fi
 			cd "$ROOT""/../../EdgeDNS/build" || exit
 			echo "=============================="
-			architects=("amd64")
+			architects=("amd64" "arm64")
 			for arch in "${architects[@]}"; do
 				./build.sh linux "$arch" $TAG
 			done
@@ -100,7 +100,7 @@ function build() {
 
 	# building edge installer
 	echo "building node installer ..."
-	architects=("amd64" "386" "arm64")
+	architects=("amd64" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
 		env GOOS=linux GOARCH="${arch}" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$ROOT"/installers/edge-installer-helper-linux-"${arch}" "$ROOT"/../cmd/installer-helper/main.go
@@ -108,7 +108,7 @@ function build() {
 
 	# building edge dns installer
 	echo "building dns node installer ..."
-	architects=("amd64" "386" "arm64")
+	architects=("amd64" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
 		env GOOS=linux GOARCH="${arch}" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$ROOT"/installers/edge-installer-dns-helper-linux-"${arch}" "$ROOT"/../cmd/installer-dns-helper/main.go
