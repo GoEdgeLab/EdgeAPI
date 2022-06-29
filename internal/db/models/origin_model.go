@@ -29,6 +29,7 @@ type Origin struct {
 	Ftp                dbs.JSON `field:"ftp"`                // FTP相关设置
 	CreatedAt          uint64   `field:"createdAt"`          // 创建时间
 	Domains            dbs.JSON `field:"domains"`            // 所属域名
+	FollowPort         bool     `field:"followPort"`         // 端口跟随
 	State              uint8    `field:"state"`              // 状态
 }
 
@@ -58,6 +59,7 @@ type OriginOperator struct {
 	Ftp                interface{} // FTP相关设置
 	CreatedAt          interface{} // 创建时间
 	Domains            interface{} // 所属域名
+	FollowPort         interface{} // 端口跟随
 	State              interface{} // 状态
 }
 
