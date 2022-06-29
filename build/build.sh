@@ -103,7 +103,7 @@ function build() {
 	architects=("amd64" "386" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
-		env GOOS=linux GOARCH=${arch} go build -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-helper-linux-${arch} $ROOT/../cmd/installer-helper/main.go
+		env GOOS=linux GOARCH=${arch} go build -trimpath -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-helper-linux-${arch} $ROOT/../cmd/installer-helper/main.go
 	done
 
 	# building edge dns installer
@@ -111,11 +111,11 @@ function build() {
 	architects=("amd64" "386" "arm64")
 	for arch in "${architects[@]}"; do
 		# TODO support arm, mips ...
-		env GOOS=linux GOARCH=${arch} go build -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-dns-helper-linux-${arch} $ROOT/../cmd/installer-dns-helper/main.go
+		env GOOS=linux GOARCH=${arch} go build -trimpath -tags $TAG --ldflags="-s -w" -o $ROOT/installers/edge-installer-dns-helper-linux-${arch} $ROOT/../cmd/installer-dns-helper/main.go
 	done
 
 	# building api node
-	env GOOS=$OS GOARCH=$ARCH go build -tags $TAG --ldflags="-s -w" -o $DIST/bin/edge-api $ROOT/../cmd/edge-api/main.go
+	env GOOS=$OS GOARCH=$ARCH go build -trimpath -tags $TAG --ldflags="-s -w" -o $DIST/bin/edge-api $ROOT/../cmd/edge-api/main.go
 
 	# delete hidden files
 	find $DIST -name ".DS_Store" -delete
