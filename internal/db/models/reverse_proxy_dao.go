@@ -99,17 +99,18 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		return nil, nil
 	}
 
-	config := &serverconfigs.ReverseProxyConfig{}
+	var config = &serverconfigs.ReverseProxyConfig{}
 	config.Id = int64(reverseProxy.Id)
 	config.IsOn = reverseProxy.IsOn
 	config.RequestHostType = types.Int8(reverseProxy.RequestHostType)
 	config.RequestHost = reverseProxy.RequestHost
+	config.RequestHostExcludingPort = reverseProxy.RequestHostExcludingPort
 	config.RequestURI = reverseProxy.RequestURI
 	config.StripPrefix = reverseProxy.StripPrefix
 	config.AutoFlush = reverseProxy.AutoFlush == 1
 	config.FollowRedirects = reverseProxy.FollowRedirects == 1
 
-	schedulingConfig := &serverconfigs.SchedulingConfig{}
+	var schedulingConfig = &serverconfigs.SchedulingConfig{}
 	if IsNotNull(reverseProxy.Scheduling) {
 		err = json.Unmarshal(reverseProxy.Scheduling, schedulingConfig)
 		if err != nil {
@@ -118,7 +119,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		config.Scheduling = schedulingConfig
 	}
 	if IsNotNull(reverseProxy.PrimaryOrigins) {
-		originRefs := []*serverconfigs.OriginRef{}
+		var originRefs = []*serverconfigs.OriginRef{}
 		err = json.Unmarshal(reverseProxy.PrimaryOrigins, &originRefs)
 		if err != nil {
 			return nil, err
@@ -135,13 +136,13 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	}
 
 	if IsNotNull(reverseProxy.BackupOrigins) {
-		originRefs := []*serverconfigs.OriginRef{}
+		var originRefs = []*serverconfigs.OriginRef{}
 		err = json.Unmarshal(reverseProxy.BackupOrigins, &originRefs)
 		if err != nil {
 			return nil, err
 		}
-		for _, originConfig := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, originConfig.OriginId, cacheMap)
+		for _, ref := range originRefs {
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -153,7 +154,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 
 	// add headers
 	if IsNotNull(reverseProxy.AddHeaders) {
-		addHeaders := []string{}
+		var addHeaders = []string{}
 		err = json.Unmarshal(reverseProxy.AddHeaders, &addHeaders)
 		if err != nil {
 			return nil, err
@@ -166,7 +167,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	config.MaxIdleConns = int(reverseProxy.MaxIdleConns)
 
 	if IsNotNull(reverseProxy.ConnTimeout) {
-		connTimeout := &shared.TimeDuration{}
+		var connTimeout = &shared.TimeDuration{}
 		err = json.Unmarshal(reverseProxy.ConnTimeout, &connTimeout)
 		if err != nil {
 			return nil, err
@@ -175,7 +176,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	}
 
 	if IsNotNull(reverseProxy.ReadTimeout) {
-		readTimeout := &shared.TimeDuration{}
+		var readTimeout = &shared.TimeDuration{}
 		err = json.Unmarshal(reverseProxy.ReadTimeout, &readTimeout)
 		if err != nil {
 			return nil, err
@@ -184,7 +185,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	}
 
 	if IsNotNull(reverseProxy.IdleTimeout) {
-		idleTimeout := &shared.TimeDuration{}
+		var idleTimeout = &shared.TimeDuration{}
 		err = json.Unmarshal(reverseProxy.IdleTimeout, &idleTimeout)
 		if err != nil {
 			return nil, err
@@ -304,6 +305,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	reverseProxyId int64,
 	requestHostType int8,
 	requestHost string,
+	requestHostExcludingPort bool,
 	requestURI string,
 	stripPrefix string,
 	autoFlush bool,
@@ -328,6 +330,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	op.RequestHostType = requestHostType
 
 	op.RequestHost = requestHost
+	op.RequestHostExcludingPort = requestHostExcludingPort
 	op.RequestURI = requestURI
 	op.StripPrefix = stripPrefix
 	op.AutoFlush = autoFlush

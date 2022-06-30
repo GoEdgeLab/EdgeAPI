@@ -84,7 +84,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, req.ReverseProxyId, nil)
 	if err != nil {
@@ -189,7 +189,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 校验参数
 	var connTimeout = &shared.TimeDuration{}
@@ -216,7 +216,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		}
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.ProxyProtocolJSON, req.FollowRedirects)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestHostExcludingPort, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.ProxyProtocolJSON, req.FollowRedirects)
 	if err != nil {
 		return nil, err
 	}
