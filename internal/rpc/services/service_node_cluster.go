@@ -1040,6 +1040,18 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		result.WebpIsOn = nodeconfigs.DefaultWebPImagePolicy.IsOn
 	}
 
+	// UAM
+	if models.IsNotNull(cluster.Uam) {
+		var uamPolicy = &nodeconfigs.UAMPolicy{}
+		err = json.Unmarshal(cluster.Uam, uamPolicy)
+		if err != nil {
+			return nil, err
+		}
+		result.UamIsOn = uamPolicy.IsOn
+	} else {
+		result.UamIsOn = nodeconfigs.DefaultUAMPolicy.IsOn
+	}
+
 	// system service
 	if models.IsNotNull(cluster.SystemServices) {
 		var servicesMap = map[string]maps.Map{}
@@ -1104,14 +1116,66 @@ func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context,
 		return nil, err
 	}
 
-	var tx = this.NullTx()
 	var webpPolicy = &nodeconfigs.WebPImagePolicy{}
 	err = json.Unmarshal(req.WebpPolicyJSON, webpPolicy)
 	if err != nil {
 		return nil, err
 	}
 
+	err = webpPolicy.Init()
+	if err != nil {
+		return nil, errors.New("validate webp policy failed: " + err.Error())
+	}
+
+	var tx = this.NullTx()
 	err = models.SharedNodeClusterDAO.UpdateClusterWebPPolicy(tx, req.NodeClusterId, webpPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+// FindEnabledNodeClusterUAMPolicy 读取集群UAM策略
+func (this *NodeClusterService) FindEnabledNodeClusterUAMPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterUAMPolicyRequest) (*pb.FindEnabledNodeClusterUAMPolicyResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	uamPolicy, err := models.SharedNodeClusterDAO.FindClusterUAMPolicy(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+	uamPolicyJSON, err := json.Marshal(uamPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledNodeClusterUAMPolicyResponse{
+		UamPolicyJSON: uamPolicyJSON,
+	}, nil
+}
+
+// UpdateNodeClusterUAMPolicy 设置集群的UAM策略
+func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, req *pb.UpdateNodeClusterUAMPolicyRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var uamPolicy = &nodeconfigs.UAMPolicy{}
+	err = json.Unmarshal(req.UamPolicyJSON, uamPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = uamPolicy.Init()
+	if err != nil {
+		return nil, errors.New("validate uam policy failed: " + err.Error())
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateClusterUAMPolicy(tx, req.NodeClusterId, uamPolicy)
 	if err != nil {
 		return nil, err
 	}

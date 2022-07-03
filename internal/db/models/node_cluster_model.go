@@ -34,6 +34,7 @@ type NodeCluster struct {
 	AutoOpenPorts        uint8    `field:"autoOpenPorts"`        // 是否自动尝试开放端口
 	IsPinned             bool     `field:"isPinned"`             // 是否置顶
 	Webp                 dbs.JSON `field:"webp"`                 // WebP设置
+	Uam                  dbs.JSON `field:"uam"`                  // UAM设置
 }
 
 type NodeClusterOperator struct {
@@ -67,6 +68,7 @@ type NodeClusterOperator struct {
 	AutoOpenPorts        interface{} // 是否自动尝试开放端口
 	IsPinned             interface{} // 是否置顶
 	Webp                 interface{} // WebP设置
+	Uam                  interface{} // UAM设置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

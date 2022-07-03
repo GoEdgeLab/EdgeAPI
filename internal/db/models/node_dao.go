@@ -1018,6 +1018,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
 	var clusterIndex = 0
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
+	config.UAMPolicies = map[int64]*nodeconfigs.UAMPolicy{}
 	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
 		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
@@ -1089,6 +1090,16 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 				return nil, err
 			}
 			config.WebPImagePolicies[clusterId] = webpPolicy
+		}
+
+		// UAM
+		if IsNotNull(nodeCluster.Uam) {
+			var uamPolicy = &nodeconfigs.UAMPolicy{}
+			err = json.Unmarshal(nodeCluster.Uam, uamPolicy)
+			if err != nil {
+				return nil, err
+			}
+			config.UAMPolicies[clusterId] = uamPolicy
 		}
 
 		clusterIndex++

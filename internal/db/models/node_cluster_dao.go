@@ -918,7 +918,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "isOn", "ddosProtection").
+		Result("id", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "isOn", "ddosProtection").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -982,6 +982,65 @@ func (this *NodeClusterDAO) FindClusterWebPPolicy(tx *dbs.Tx, clusterId int64, c
 
 	var policy = &nodeconfigs.WebPImagePolicy{}
 	err = json.Unmarshal(webpJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	return policy, nil
+}
+
+// UpdateClusterUAMPolicy 修改UAM设置
+func (this *NodeClusterDAO) UpdateClusterUAMPolicy(tx *dbs.Tx, clusterId int64, uamPolicy *nodeconfigs.UAMPolicy) error {
+	if uamPolicy == nil {
+		err := this.Query(tx).
+			Pk(clusterId).
+			Set("uam", dbs.SQL("null")).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		return this.NotifyUpdate(tx, clusterId)
+	}
+
+	uamPolicyJSON, err := json.Marshal(uamPolicy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("uam", uamPolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, clusterId)
+}
+
+// FindClusterUAMPolicy 查询设置
+func (this *NodeClusterDAO) FindClusterUAMPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.UAMPolicy, error) {
+	var cacheKey = this.Table + ":FindClusterUAMPolicy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.UAMPolicy), nil
+		}
+	}
+
+	uamJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("uam").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(uamJSON) {
+		return nodeconfigs.DefaultUAMPolicy, nil
+	}
+
+	var policy = &nodeconfigs.UAMPolicy{}
+	err = json.Unmarshal(uamJSON, policy)
 	if err != nil {
 		return nil, err
 	}
