@@ -1,9 +1,13 @@
-package utils
+package utils_test
 
-import "testing"
+import (
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"testing"
+	"time"
+)
 
 func TestRangeDays(t *testing.T) {
-	days, err := RangeDays("20210101", "20210115")
+	days, err := utils.RangeDays("20210101", "20210115")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -11,7 +15,7 @@ func TestRangeDays(t *testing.T) {
 }
 
 func TestRangeMonth(t *testing.T) {
-	days, err := RangeMonths("20200101", "20210115")
+	days, err := utils.RangeMonths("20200101", "20210115")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +24,7 @@ func TestRangeMonth(t *testing.T) {
 
 func TestRangeHours(t *testing.T) {
 	{
-		hours, err := RangeHours("2021010100", "2021010123")
+		hours, err := utils.RangeHours("2021010100", "2021010123")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -28,10 +32,49 @@ func TestRangeHours(t *testing.T) {
 	}
 
 	{
-		hours, err := RangeHours("2021010105", "2021010112")
+		hours, err := utils.RangeHours("2021010105", "2021010112")
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Log(hours)
+	}
+}
+
+func TestRangeMinutes(t *testing.T) {
+	{
+		var minutes = utils.RangeMinutes(time.Now(), 5, 5)
+		t.Log(minutes)
+	}
+
+	{
+		var minutes = utils.RangeMinutes(time.Now(), 5, 3)
+		t.Log(minutes)
+	}
+
+	{
+		var now = time.Now()
+		var hour = now.Hour()
+		var minute = now.Minute()
+		now = now.Add(-time.Duration(hour) * time.Hour)
+		now = now.Add(-time.Duration(minute-7) * time.Minute) // 后一天的 00:07 开始往前计算
+		var minutes = utils.RangeMinutes(now, 5, 5)
+		t.Log(minutes)
+	}
+}
+
+func TestGroupMinuteRanges(t *testing.T) {
+	{
+		var minutes = utils.GroupMinuteRanges(utils.RangeMinutes(time.Now(), 5, 5))
+		t.Log(minutes)
+	}
+
+	{
+		var now = time.Now()
+		var hour = now.Hour()
+		var minute = now.Minute()
+		now = now.Add(-time.Duration(hour) * time.Hour)
+		now = now.Add(-time.Duration(minute-7) * time.Minute) // 后一天的 00:07 开始往前计算
+		var minutes = utils.GroupMinuteRanges(utils.RangeMinutes(now, 5, 5))
+		t.Log(minutes)
 	}
 }

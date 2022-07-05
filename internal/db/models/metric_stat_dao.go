@@ -691,7 +691,6 @@ func (this *MetricStatDAO) Clean(tx *dbs.Tx) error {
 						Table(table).
 						Attr("itemId", item.Id).
 						Lte("createdDay", expiresDay).
-						UseIndex("createdDay").
 						Limit(10_000). // 一次性不要删除太多，防止阻塞其他操作
 						Delete()
 					return err

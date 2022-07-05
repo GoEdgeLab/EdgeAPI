@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/tasks"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -84,7 +85,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	result.CountServers = countServers
 
 	// 按日流量统计
-	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
+	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
 	dailyTrafficStats, err := stats.SharedNodeClusterTrafficDailyStatDAO.FindDailyStats(tx, req.NodeClusterId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
@@ -102,8 +103,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 
 	// 小时流量统计
-	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
-	hourTo := timeutil.Format("YmdH")
+	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	var hourTo = timeutil.Format("YmdH")
 	hourlyTrafficStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindHourlyStatsWithClusterId(tx, req.NodeClusterId, hourFrom, hourTo)
 	if err != nil {
 		return nil, err
@@ -304,7 +305,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 	}
 
 	// 按日流量统计
-	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
+	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
 	dailyTrafficStats, err := stats.SharedNodeTrafficDailyStatDAO.FindDailyStats(tx, "node", req.NodeId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
@@ -322,8 +323,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 	}
 
 	// 小时流量统计
-	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
-	hourTo := timeutil.Format("YmdH")
+	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	var hourTo = timeutil.Format("YmdH")
 	hourlyTrafficStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindHourlyStatsWithNodeId(tx, "node", req.NodeId, hourFrom, hourTo)
 	if err != nil {
 		return nil, err
@@ -407,8 +408,45 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	var result = &pb.ComposeServerStatBoardResponse{}
 	var tx = this.NullTx()
 
+	// 带宽统计
+	{
+		var bandwidthMinutes = utils.RangeMinutes(time.Now(), 12, 5)
+		var bandwidthStatMap = map[string]*pb.ServerBandwidthStat{}
+		for _, r := range utils.GroupMinuteRanges(bandwidthMinutes) {
+			bandwidthStats, err := stats.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo)
+			if err != nil {
+				return nil, err
+			}
+			for _, stat := range bandwidthStats {
+				bandwidthStatMap[stat.Day+"@"+stat.TimeAt] = &pb.ServerBandwidthStat{
+					Id:       int64(stat.Id),
+					ServerId: int64(stat.ServerId),
+					Day:      stat.Day,
+					TimeAt:   stat.TimeAt,
+					Bytes:    int64(stat.Bytes),
+				}
+			}
+		}
+		var pbBandwidthStats = []*pb.ServerBandwidthStat{}
+		for _, minute := range bandwidthMinutes {
+			stat, ok := bandwidthStatMap[minute.Day+"@"+minute.Minute]
+			if ok {
+				pbBandwidthStats = append(pbBandwidthStats, stat)
+			} else {
+				pbBandwidthStats = append(pbBandwidthStats, &pb.ServerBandwidthStat{
+					Id:       0,
+					ServerId: req.ServerId,
+					Day:      minute.Day,
+					TimeAt:   minute.Minute,
+					Bytes:    0,
+				})
+			}
+		}
+		result.ServerBandwidthStats = pbBandwidthStats
+	}
+
 	// 按日流量统计
-	dayFrom := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
+	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
 	dailyTrafficStats, err := models.SharedServerDailyStatDAO.FindDailyStats(tx, req.ServerId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
@@ -426,8 +464,8 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	}
 
 	// 小时流量统计
-	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
-	hourTo := timeutil.Format("YmdH")
+	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	var hourTo = timeutil.Format("YmdH")
 	hourlyTrafficStats, err := models.SharedServerDailyStatDAO.FindHourlyStats(tx, req.ServerId, hourFrom, hourTo)
 	if err != nil {
 		return nil, err
