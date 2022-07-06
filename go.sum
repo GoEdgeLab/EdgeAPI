@@ -66,7 +66,6 @@ github.com/c-bata/go-prompt v0.2.5/go.mod h1:vFnjEGDIIA/Lib7giyE4E9c50Lvl8j0S+7F
 github.com/cenkalti/backoff/v4 v4.1.1 h1:G2HAfAmvm/GcKan2oOQpBXOd2tT2G57ZnZGWa1PxPBQ=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
-github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
@@ -238,10 +237,6 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/infobloxopen/infoblox-go-client v1.1.1/go.mod h1:BXiw7S2b9qJoM8MS40vfgCNB2NLHGusk1DtO16BD9zI=
 github.com/iwind/TeaGo v0.0.0-20210411134150-ddf57e240c2f/go.mod h1:KU4mS7QNiZ7QWEuDBk1zw0/Q2LrAPZv3tycEFBsuUwc=
 github.com/iwind/TeaGo v0.0.0-20220304043459-0dd944a5b475/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
-github.com/iwind/TeaGo v0.0.0-20220322141208-22f88d04004d h1:e8fkTKras/RXQWECApM9fKlFWujjYjEClpshkmZmtYg=
-github.com/iwind/TeaGo v0.0.0-20220322141208-22f88d04004d/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
-github.com/iwind/TeaGo v0.0.0-20220408064305-92be81dc2f7c h1:ugjYZ74FJGWlfDKKraNgMyDTeS4vbXHe89JGUVQIJMo=
-github.com/iwind/TeaGo v0.0.0-20220408064305-92be81dc2f7c/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
 github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570 h1:zqz2FiMMkSHXWO1EsTRJDPTwX9xQ4uuyD5GAE4JGlhM=
 github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
 github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3 h1:aBSonas7vFcgTj9u96/bWGILGv1ZbUSTLiOzcI1ZT6c=
@@ -561,7 +556,6 @@ golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4/go.mod h1:p54w0d4576C0XHj96b
 golang.org/x/net v0.0.0-20210428140749-89ef3d95e781/go.mod h1:OJAsFXCWl8Ukc7SiCT/9KSuxbyM7479/AVlXFRxuMCk=
 golang.org/x/net v0.0.0-20210510120150-4163338589ed/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210614182718-04defd469f4e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
-golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20220225172249-27dd8689420f h1:oA4XRj0qtSt8Yo1Zms0CUlsT3KG69V2UGQWPBxujDmc=
 golang.org/x/net v0.0.0-20220225172249-27dd8689420f/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
