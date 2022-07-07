@@ -78,6 +78,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.8", upgradeV0_4_8,
 	},
+	{
+		"0.4.9", upgradeV0_4_9,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -676,7 +679,7 @@ func upgradeV0_4_7(db *dbs.DB) error {
 	return nil
 }
 
-// v0.4.7
+// v0.4.8
 func upgradeV0_4_8(db *dbs.DB) error {
 	// 设置edgeIPLists中的serverId
 	{
@@ -719,6 +722,40 @@ func upgradeV0_4_8(db *dbs.DB) error {
 					_, err = db.Exec("UPDATE edgeIPLists SET serverId=? WHERE id=?", serverId, listId)
 					if err != nil {
 						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// v0.4.9
+func upgradeV0_4_9(db *dbs.DB) error {
+	// 升级用户UI配置
+	{
+		one, err := db.FindOne("SELECT value FROM edgeSysSettings WHERE code=?", systemconfigs.SettingCodeUserUIConfig)
+		if err != nil {
+			return err
+		}
+		if one != nil {
+			var valueJSON = one.GetBytes("value")
+			if len(valueJSON) > 0 {
+				var config = &systemconfigs.UserUIConfig{}
+				err = json.Unmarshal(valueJSON, config)
+				if err == nil {
+					config.ShowTrafficCharts = true
+					config.ShowBandwidthCharts = true
+					config.BandwidthUnit = systemconfigs.BandwidthUnitBit
+					configJSON, err := json.Marshal(config)
+					if err != nil {
+						return errors.New("encode UserUIConfig failed: " + err.Error())
+					} else {
+						_, err := db.Exec("UPDATE edgeSysSettings SET value=? WHERE code=?", configJSON, systemconfigs.SettingCodeUserUIConfig)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}
