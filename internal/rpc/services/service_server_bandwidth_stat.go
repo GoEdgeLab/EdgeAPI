@@ -54,6 +54,25 @@ func init() {
 	})
 }
 
+// ServerBandwidthCacheKey 组合缓存Key
+func ServerBandwidthCacheKey(serverId int64, day string, timeAt string) string {
+	return types.String(serverId) + "@" + day + "@" + timeAt
+}
+
+func ServerBandwidthGetCacheBytes(serverId int64, day string, timeAt string) int64 {
+	var key = ServerBandwidthCacheKey(serverId, day, timeAt)
+	var bytes int64 = 0
+
+	serverBandwidthStatsLocker.Lock()
+	stat, ok := serverBandwidthStatsMap[key]
+	if ok {
+		bytes = stat.Bytes
+	}
+	serverBandwidthStatsLocker.Unlock()
+
+	return bytes
+}
+
 type ServerBandwidthStatService struct {
 	BaseService
 }
@@ -66,7 +85,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 	}
 
 	for _, stat := range req.ServerBandwidthStats {
-		var key = types.String(stat.ServerId) + "@" + stat.Day + "@" + stat.TimeAt
+		var key = ServerBandwidthCacheKey(stat.ServerId, stat.Day, stat.TimeAt)
 		serverBandwidthStatsLocker.Lock()
 		oldStat, ok := serverBandwidthStatsMap[key]
 		if ok {

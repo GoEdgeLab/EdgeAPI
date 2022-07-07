@@ -76,6 +76,39 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 		})
 }
 
+// FindMinutelyPeekBandwidthBytes 获取某分钟的带宽峰值
+// day YYYYMMDD
+// minute HHII
+func (this *ServerBandwidthStatDAO) FindMinutelyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string, minute string) (int64, error) {
+	return this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("bytes").
+		Attr("serverId", serverId).
+		Attr("day", day).
+		Attr("timeAt", minute).
+		FindInt64Col(0)
+}
+
+// FindDailyPeekBandwidthBytes 获取某天的带宽峰值
+// day YYYYMMDD
+func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string) (int64, error) {
+	return this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("day", day).
+		Result("MAX(bytes)").
+		FindInt64Col(0)
+}
+
+// FindMonthlyPeekBandwidthBytes 获取某月的带宽峰值
+// month YYYYMM
+func (this *ServerBandwidthStatDAO) FindMonthlyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, month string) (int64, error) {
+	return this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Between("day", month+"01", month+"31").
+		Result("MAX(bytes)").
+		FindInt64Col(0)
+}
+
 // FindServerStats 查找某个时间段的带宽统计
 // 参数：
 //   - day YYYYMMDD
