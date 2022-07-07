@@ -762,5 +762,33 @@ func upgradeV0_4_9(db *dbs.DB) error {
 		}
 	}
 
+	// 升级管理配置
+	{
+		one, err := db.FindOne("SELECT value FROM edgeSysSettings WHERE code=?", systemconfigs.SettingCodeAdminSecurityConfig)
+		if err != nil {
+			return err
+		}
+		if one != nil {
+			var valueJSON = one.GetBytes("value")
+			if len(valueJSON) > 0 {
+				var config = &systemconfigs.SecurityConfig{}
+				err = json.Unmarshal(valueJSON, config)
+				if err == nil {
+					config.DenySearchEngines = true
+					config.DenySpiders = true
+					configJSON, err := json.Marshal(config)
+					if err != nil {
+						return errors.New("encode SecurityConfig failed: " + err.Error())
+					} else {
+						_, err := db.Exec("UPDATE edgeSysSettings SET value=? WHERE code=?", configJSON, systemconfigs.SettingCodeAdminSecurityConfig)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
