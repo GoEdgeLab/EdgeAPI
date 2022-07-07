@@ -100,7 +100,8 @@ func (this *NodeDAO) DisableNode(tx *dbs.Tx, nodeId int64) (err error) {
 		return err
 	}
 
-	return nil
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleNode, nodeId)
 }
 
 // FindEnabledNode 查找启用中的条目

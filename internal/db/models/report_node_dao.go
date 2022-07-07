@@ -50,12 +50,17 @@ func (this *ReportNodeDAO) EnableReportNode(tx *dbs.Tx, id int64) error {
 }
 
 // DisableReportNode 禁用条目
-func (this *ReportNodeDAO) DisableReportNode(tx *dbs.Tx, id int64) error {
+func (this *ReportNodeDAO) DisableReportNode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", ReportNodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleReport, nodeId)
 }
 
 // FindEnabledReportNode 查找启用中的条目

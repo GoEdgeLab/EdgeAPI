@@ -47,12 +47,17 @@ func (this *MonitorNodeDAO) EnableMonitorNode(tx *dbs.Tx, id int64) error {
 }
 
 // DisableMonitorNode 禁用条目
-func (this *MonitorNodeDAO) DisableMonitorNode(tx *dbs.Tx, id int64) error {
+func (this *MonitorNodeDAO) DisableMonitorNode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", MonitorNodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleMonitor, nodeId)
 }
 
 // FindEnabledMonitorNode 查找启用中的条目

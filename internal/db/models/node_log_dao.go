@@ -360,3 +360,12 @@ func (this *NodeLogDAO) UpdateAllNodeLogsRead(tx *dbs.Tx) error {
 		Set("isRead", true).
 		UpdateQuickly()
 }
+
+// DeleteNodeLogs 删除某个节点上的日志
+func (this *NodeLogDAO) DeleteNodeLogs(tx *dbs.Tx, role nodeconfigs.NodeRole, nodeId int64) error {
+	_, err := this.Query(tx).
+		Attr("nodeId", nodeId).
+		Attr("role", role).
+		Delete()
+	return err
+}

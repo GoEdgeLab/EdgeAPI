@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/TeaOSLab/EdgeAPI/internal/encrypt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -49,12 +50,17 @@ func (this *DBNodeDAO) EnableDBNode(tx *dbs.Tx, id int64) error {
 }
 
 // DisableDBNode 禁用条目
-func (this *DBNodeDAO) DisableDBNode(tx *dbs.Tx, id int64) error {
+func (this *DBNodeDAO) DisableDBNode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", DBNodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleDatabase, nodeId)
 }
 
 // FindEnabledDBNode 查找启用中的条目

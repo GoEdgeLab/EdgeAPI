@@ -52,16 +52,23 @@ func (this *NSNodeDAO) EnableNSNode(tx *dbs.Tx, id int64) error {
 }
 
 // DisableNSNode 禁用条目
-func (this *NSNodeDAO) DisableNSNode(tx *dbs.Tx, id int64) error {
+func (this *NSNodeDAO) DisableNSNode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", NSNodeStateDisabled).
 		Update()
 
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, id)
+
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleDNS, nodeId)
 }
 
 // FindEnabledNSNode 查找启用中的条目

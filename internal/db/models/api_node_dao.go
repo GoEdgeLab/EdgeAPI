@@ -58,15 +58,22 @@ func (this *APINodeDAO) EnableAPINode(tx *dbs.Tx, id int64) error {
 }
 
 // DisableAPINode 禁用条目
-func (this *APINodeDAO) DisableAPINode(tx *dbs.Tx, id int64) error {
+func (this *APINodeDAO) DisableAPINode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", APINodeStateDisabled).
 		Update()
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, id)
+
+	err = this.NotifyUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleAPI, nodeId)
 }
 
 // FindEnabledAPINode 查找启用中的条目

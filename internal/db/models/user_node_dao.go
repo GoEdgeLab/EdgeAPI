@@ -51,12 +51,17 @@ func (this *UserNodeDAO) EnableUserNode(tx *dbs.Tx, id uint32) error {
 }
 
 // DisableUserNode 禁用条目
-func (this *UserNodeDAO) DisableUserNode(tx *dbs.Tx, id int64) error {
+func (this *UserNodeDAO) DisableUserNode(tx *dbs.Tx, nodeId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(nodeId).
 		Set("state", UserNodeStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 删除运行日志
+	return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleUser, nodeId)
 }
 
 // FindEnabledUserNode 查找启用中的条目
