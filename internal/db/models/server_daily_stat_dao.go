@@ -12,7 +12,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
-	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -403,45 +402,6 @@ func (this *ServerDailyStatDAO) SumMonthlyBytes(tx *dbs.Tx, serverId int64, mont
 		Attr("serverId", serverId).
 		Between("day", month+"01", month+"31").
 		FindInt64Col(0)
-}
-
-// FindMonthlyPercentile 获取某月内百分位
-func (this *ServerDailyStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int) (result int64, err error) {
-	if percentile <= 0 {
-		percentile = 95
-	}
-	if percentile > 100 {
-		percentile = 100
-	}
-
-	total, err := this.Query(tx).
-		Attr("serverId", serverId).
-		Between("day", month+"01", month+"31").
-		Count()
-	if err != nil {
-		return 0, err
-	}
-	if total == 0 {
-		return 0, nil
-	}
-
-	var offset int64
-
-	if total > 1 {
-		offset = int64(math.Ceil(float64(total) * float64(100-percentile) / 100))
-	}
-	result, err = this.Query(tx).
-		Result("bytes").
-		Attr("serverId", serverId).
-		Between("day", month+"01", month+"31").
-		Desc("bytes").
-		Offset(offset).
-		Limit(1).
-		FindInt64Col(0)
-
-	// 因为是5分钟统计，所以需要除以300
-	result = result / 300
-	return
 }
 
 // FindDailyStats 按天统计

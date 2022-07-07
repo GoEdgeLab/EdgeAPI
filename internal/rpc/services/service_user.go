@@ -387,16 +387,16 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 
 // ComposeUserDashboard 取得用户Dashboard数据
 func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if userId != req.UserId {
-		return nil, this.PermissionError()
+	if userId > 0 {
+		req.UserId = userId
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 网站数量
 	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll, []string{})
@@ -404,61 +404,81 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		return nil, err
 	}
 
+	// 时间相关
+	var currentMonth = timeutil.Format("Ym")
+	var currentDay = timeutil.Format("Ymd")
+
 	// 本月总流量
-	month := timeutil.Format("Ym")
-	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, month)
+	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, currentMonth)
 	if err != nil {
 		return nil, err
 	}
 
 	// 本月带宽峰值
-	monthlyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthlyPeek(tx, req.UserId, 0, month)
-	if err != nil {
-		return nil, err
+	var monthlyPeekBandwidthBytes int64 = 0
+	{
+		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInMonth(tx, req.UserId, currentMonth)
+		if err != nil {
+			return nil, err
+		}
+		if stat != nil {
+			monthlyPeekBandwidthBytes = int64(stat.Bytes)
+		}
+	}
+
+	// 本日带宽峰值
+	var dailyPeekBandwidthBytes int64 = 0
+	{
+		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, currentDay)
+		if err != nil {
+			return nil, err
+		}
+		if stat != nil {
+			dailyPeekBandwidthBytes = int64(stat.Bytes)
+		}
 	}
 
 	// 今日总流量
-	day := timeutil.Format("Ymd")
-	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
-	if err != nil {
-		return nil, err
-	}
-
-	// 今日带宽峰值
-	dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(tx, req.UserId, 0, day)
+	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, currentDay)
 	if err != nil {
 		return nil, err
 	}
 
 	// 近 15 日流量带宽趋势
-	dailyTrafficStats := []*pb.ComposeUserDashboardResponse_DailyStat{}
-	dailyPeekTrafficStats := []*pb.ComposeUserDashboardResponse_DailyStat{}
+	var dailyTrafficStats = []*pb.ComposeUserDashboardResponse_DailyTrafficStat{}
+	var dailyPeekBandwidthStats = []*pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{}
 
 	for i := 14; i >= 0; i-- {
-		day := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
+		var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
 
-		dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
+		// 流量
+		trafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
 		if err != nil {
 			return nil, err
 		}
 
-		dailyPeekTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDailyPeek(tx, req.UserId, 0, day)
+		// 峰值带宽
+		peekBandwidthBytesStat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, day)
 		if err != nil {
 			return nil, err
 		}
+		var peekBandwidthBytes int64 = 0
+		if peekBandwidthBytesStat != nil {
+			peekBandwidthBytes = int64(peekBandwidthBytesStat.Bytes)
+		}
 
-		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyStat{Day: day, Count: dailyTrafficBytes})
-		dailyPeekTrafficStats = append(dailyPeekTrafficStats, &pb.ComposeUserDashboardResponse_DailyStat{Day: day, Count: dailyPeekTrafficBytes})
+		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyTrafficStat{Day: day, Bytes: trafficBytes})
+		dailyPeekBandwidthStats = append(dailyPeekBandwidthStats, &pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{Day: day, Bytes: peekBandwidthBytes})
 	}
 
 	return &pb.ComposeUserDashboardResponse{
-		CountServers:            countServers,
-		MonthlyTrafficBytes:     monthlyTrafficBytes,
-		MonthlyPeekTrafficBytes: monthlyPeekTrafficBytes,
-		DailyTrafficBytes:       dailyTrafficBytes,
-		DailyPeekTrafficBytes:   dailyPeekTrafficBytes,
-		DailyTrafficStats:       dailyTrafficStats,
-		DailyPeekTrafficStats:   dailyPeekTrafficStats,
+		CountServers:              countServers,
+		MonthlyTrafficBytes:       monthlyTrafficBytes,
+		MonthlyPeekBandwidthBytes: monthlyPeekBandwidthBytes,
+		DailyTrafficBytes:         dailyTrafficBytes,
+		DailyPeekBandwidthBytes:   dailyPeekBandwidthBytes,
+		DailyTrafficStats:         dailyTrafficStats,
+		DailyPeekBandwidthStats:   dailyPeekBandwidthStats,
 	}, nil
 }
 

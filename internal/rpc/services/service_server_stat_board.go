@@ -413,7 +413,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 		var bandwidthMinutes = utils.RangeMinutes(time.Now(), 12, 5)
 		var bandwidthStatMap = map[string]*pb.ServerBandwidthStat{}
 		for _, r := range utils.GroupMinuteRanges(bandwidthMinutes) {
-			bandwidthStats, err := stats.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo)
+			bandwidthStats, err := models.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo)
 			if err != nil {
 				return nil, err
 			}

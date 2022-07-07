@@ -236,7 +236,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 
 					// 百分位
 					var percentile = 95
-					percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+					percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 					if err != nil {
 						return err
 					}
@@ -257,7 +257,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 							percentile = 100
 						}
 					}
-					percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+					percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 					if err != nil {
 						return err
 					}
@@ -306,7 +306,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 
 				// 百分位
 				var percentile = 95
-				percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+				percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 				if err != nil {
 					return err
 				}
@@ -343,7 +343,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 
 				// 百分位
 				var percentile = 95
-				percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+				percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 				if err != nil {
 					return err
 				}
@@ -361,7 +361,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 
 				// 百分位
 				var percentile = 95
-				percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+				percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 				if err != nil {
 					return err
 				}
@@ -382,7 +382,7 @@ func (this *UserBillDAO) GenerateBills(tx *dbs.Tx, month string) error {
 						percentile = 100
 					}
 				}
-				percentileBytes, err := SharedServerDailyStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
+				percentileBytes, err := SharedServerBandwidthStatDAO.FindMonthlyPercentile(tx, serverId, month, percentile)
 				if err != nil {
 					return err
 				}

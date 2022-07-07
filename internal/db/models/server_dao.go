@@ -1039,9 +1039,10 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 		return cache.(*serverconfigs.ServerConfig), nil
 	}
 
-	config := &serverconfigs.ServerConfig{}
+	var config = &serverconfigs.ServerConfig{}
 	config.Id = int64(server.Id)
 	config.ClusterId = int64(server.ClusterId)
+	config.UserId = int64(server.UserId)
 	config.Type = server.Type
 	config.IsOn = server.IsOn
 	config.Name = server.Name
@@ -1063,7 +1064,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// ServerNames
 	if IsNotNull(server.ServerNames) {
-		serverNames := []*serverconfigs.ServerNameConfig{}
+		var serverNames = []*serverconfigs.ServerNameConfig{}
 		err := json.Unmarshal(server.ServerNames, &serverNames)
 		if err != nil {
 			return nil, err
@@ -1092,7 +1093,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// HTTP
 	if IsNotNull(server.Http) {
-		httpConfig := &serverconfigs.HTTPProtocolConfig{}
+		var httpConfig = &serverconfigs.HTTPProtocolConfig{}
 		err := json.Unmarshal(server.Http, httpConfig)
 		if err != nil {
 			return nil, err
@@ -1102,7 +1103,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// HTTPS
 	if IsNotNull(server.Https) {
-		httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
+		var httpsConfig = &serverconfigs.HTTPSProtocolConfig{}
 		err := json.Unmarshal(server.Https, httpsConfig)
 		if err != nil {
 			return nil, err
@@ -1124,7 +1125,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// TCP
 	if IsNotNull(server.Tcp) {
-		tcpConfig := &serverconfigs.TCPProtocolConfig{}
+		var tcpConfig = &serverconfigs.TCPProtocolConfig{}
 		err := json.Unmarshal(server.Tcp, tcpConfig)
 		if err != nil {
 			return nil, err
@@ -1134,7 +1135,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// TLS
 	if IsNotNull(server.Tls) {
-		tlsConfig := &serverconfigs.TLSProtocolConfig{}
+		var tlsConfig = &serverconfigs.TLSProtocolConfig{}
 		err := json.Unmarshal(server.Tls, tlsConfig)
 		if err != nil {
 			return nil, err
@@ -1156,7 +1157,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// Unix
 	if IsNotNull(server.Unix) {
-		unixConfig := &serverconfigs.UnixProtocolConfig{}
+		var unixConfig = &serverconfigs.UnixProtocolConfig{}
 		err := json.Unmarshal(server.Unix, unixConfig)
 		if err != nil {
 			return nil, err
@@ -1166,7 +1167,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// UDP
 	if IsNotNull(server.Udp) {
-		udpConfig := &serverconfigs.UDPProtocolConfig{}
+		var udpConfig = &serverconfigs.UDPProtocolConfig{}
 		err := json.Unmarshal(server.Udp, udpConfig)
 		if err != nil {
 			return nil, err
@@ -1187,7 +1188,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	// ReverseProxy
 	if IsNotNull(server.ReverseProxy) {
-		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
+		var reverseProxyRef = &serverconfigs.ReverseProxyRef{}
 		err := json.Unmarshal(server.ReverseProxy, reverseProxyRef)
 		if err != nil {
 			return nil, err
@@ -1204,7 +1205,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// WAF策略
-	clusterId := int64(server.ClusterId)
+	var clusterId = int64(server.ClusterId)
 	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
 	if err != nil {
 		return nil, err

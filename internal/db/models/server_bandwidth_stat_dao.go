@@ -1,4 +1,4 @@
-package stats
+package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
@@ -11,6 +11,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"math"
 	"sync"
 	"time"
 )
@@ -56,7 +57,7 @@ func init() {
 }
 
 // UpdateServerBandwidth 写入数据
-func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, day string, timeAt string, bytes int64) error {
+func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, day string, timeAt string, bytes int64) error {
 	if serverId <= 0 {
 		return errors.New("invalid server id '" + types.String(serverId) + "'")
 	}
@@ -65,6 +66,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId i
 		Table(this.partialTable(serverId)).
 		Param("bytes", bytes).
 		InsertOrUpdateQuickly(maps.Map{
+			"userId":   userId,
 			"serverId": serverId,
 			"day":      day,
 			"timeAt":   timeAt,
@@ -86,6 +88,58 @@ func (this *ServerBandwidthStatDAO) FindServerStats(tx *dbs.Tx, serverId int64, 
 		Between("timeAt", timeFrom, timeTo).
 		Slice(&result).
 		FindAll()
+	return
+}
+
+// FindMonthlyPercentile 获取某月内百分位
+func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int) (result int64, err error) {
+	if percentile <= 0 {
+		percentile = 95
+	}
+
+	// 如果是100%以上，则快速返回
+	if percentile >= 100 {
+		result, err = this.Query(tx).
+			Table(this.partialTable(serverId)).
+			Result("bytes").
+			Attr("serverId", serverId).
+			Between("day", month+"01", month+"31").
+			Desc("bytes").
+			Limit(1).
+			FindInt64Col(0)
+		return
+	}
+
+	// 总数量
+	total, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		Count()
+	if err != nil {
+		return 0, err
+	}
+	if total == 0 {
+		return 0, nil
+	}
+
+	var offset int64
+
+	if total > 1 {
+		offset = int64(math.Ceil(float64(total) * float64(100-percentile) / 100))
+	}
+
+	// 查询 nth 位置
+	result, err = this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("bytes").
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		Desc("bytes").
+		Offset(offset).
+		Limit(1).
+		FindInt64Col(0)
+
 	return
 }
 

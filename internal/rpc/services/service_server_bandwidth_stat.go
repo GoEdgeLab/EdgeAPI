@@ -4,7 +4,7 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -36,9 +36,16 @@ func init() {
 					serverBandwidthStatsLocker.Unlock()
 
 					for _, stat := range m {
-						err := stats.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes)
+						err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes)
 						if err != nil {
 							remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
+						}
+
+						if stat.UserId > 0 {
+							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.Day, stat.TimeAt, stat.Bytes)
+							if err != nil {
+								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
+							}
 						}
 					}
 				}()
@@ -67,6 +74,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
 				Id:       0,
+				UserId:   stat.UserId,
 				ServerId: stat.ServerId,
 				Day:      stat.Day,
 				TimeAt:   stat.TimeAt,

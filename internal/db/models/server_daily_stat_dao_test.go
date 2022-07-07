@@ -83,13 +83,3 @@ func TestServerDailyStatDAO_FindDistinctPlanServerIdsBetweenDay(t *testing.T) {
 	}
 	t.Log(serverIds)
 }
-
-func TestServerDailyStatDAO_FindMonthlyPercentile(t *testing.T) {
-	var tx *dbs.Tx
-	var dao = NewServerDailyStatDAO()
-	result, err := dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("result:", result)
-}

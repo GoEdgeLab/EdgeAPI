@@ -1,8 +1,8 @@
-package stats_test
+package models_test
 
 import (
 	"fmt"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
@@ -13,9 +13,9 @@ import (
 )
 
 func TestServerBandwidthStatDAO_UpdateServerBandwidth(t *testing.T) {
-	var dao = stats.NewServerBandwidthStatDAO()
+	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
-	err := dao.UpdateServerBandwidth(tx, 1, timeutil.Format("Ymd"), timeutil.Format("Hi"), 1024)
+	err := dao.UpdateServerBandwidth(tx, 1, 1, timeutil.Format("Ymd"), timeutil.Format("Hi"), 1024)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,12 +23,13 @@ func TestServerBandwidthStatDAO_UpdateServerBandwidth(t *testing.T) {
 }
 
 func TestSeverBandwidthStatDAO_InsertManyStats(t *testing.T) {
-	var dao = stats.NewServerBandwidthStatDAO()
+	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
-	for i := 0; i < 1_000_000; i++ {
+	var count = 1 // 测试时将此值设为一个比较大的数字
+	for i := 0; i < count; i++ {
 		var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -rands.Int(0, 200)))
 		var minute = fmt.Sprintf("%02d%02d", rands.Int(0, 23), rands.Int(0, 59))
-		err := dao.UpdateServerBandwidth(tx, 1, day, minute, 1024)
+		err := dao.UpdateServerBandwidth(tx, 1, 1, day, minute, 1024)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -36,8 +37,14 @@ func TestSeverBandwidthStatDAO_InsertManyStats(t *testing.T) {
 	t.Log("ok")
 }
 
+func TestServerBandwidthStatDAO_FindMonthlyPercentile(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95))
+}
+
 func TestServerBandwidthStatDAO_Clean(t *testing.T) {
-	var dao = stats.NewServerBandwidthStatDAO()
+	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
 	var before = time.Now()
 	err := dao.Clean(tx)
