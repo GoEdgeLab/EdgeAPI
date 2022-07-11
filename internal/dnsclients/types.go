@@ -11,7 +11,6 @@ const (
 	ProviderTypeDNSPod       ProviderType = "dnspod"       // DNSPod
 	ProviderTypeAliDNS       ProviderType = "alidns"       // 阿里云DNS
 	ProviderTypeHuaweiDNS    ProviderType = "huaweiDNS"    // 华为DNS
-	ProviderTypeDNSCom       ProviderType = "dnscom"       // dns.com
 	ProviderTypeCloudFlare   ProviderType = "cloudFlare"   // CloudFlare DNS
 	ProviderTypeLocalEdgeDNS ProviderType = "localEdgeDNS" // 和当前系统集成的EdgeDNS
 	ProviderTypeUserEdgeDNS  ProviderType = "userEdgeDNS"  // 通过API连接的EdgeDNS
@@ -36,11 +35,6 @@ func FindAllProviderTypes() []maps.Map {
 			"code":        ProviderTypeHuaweiDNS,
 			"description": "华为云解析DNS。",
 		},
-		/**{
-			"name": "帝恩思DNS.COM",
-			"code": ProviderTypeDNSCom,
-			"description": "DNS.com提供的DNS服务。",
-		},**/
 		{
 			"name":        "CloudFlare DNS",
 			"code":        ProviderTypeCloudFlare,
