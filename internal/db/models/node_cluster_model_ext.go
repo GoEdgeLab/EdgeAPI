@@ -13,9 +13,12 @@ func (this *NodeCluster) DecodeDNSConfig() (*dnsconfigs.ClusterDNSConfig, error)
 		return &dnsconfigs.ClusterDNSConfig{
 			NodesAutoSync:   false,
 			ServersAutoSync: false,
+			CNameAsDomain:   true,
 		}, nil
 	}
-	dnsConfig := &dnsconfigs.ClusterDNSConfig{}
+	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
+		CNameAsDomain: true,
+	}
 	err := json.Unmarshal(this.Dns, &dnsConfig)
 	if err != nil {
 		return nil, err

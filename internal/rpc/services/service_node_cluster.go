@@ -429,7 +429,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
@@ -457,6 +457,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			ServersAutoSync: dnsConfig.ServersAutoSync,
 			CnameRecords:    dnsConfig.CNameRecords,
 			Ttl:             dnsConfig.TTL,
+			CnameAsDomain:   dnsConfig.CNameAsDomain,
 		}, nil
 	}
 
@@ -471,7 +472,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			Provider: nil,
 		}, nil
 	}
-	pbDomain := &pb.DNSDomain{
+	var pbDomain = &pb.DNSDomain{
 		Id:   int64(domain.Id),
 		Name: domain.Name,
 		IsOn: domain.IsOn,
@@ -515,6 +516,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		ServersAutoSync: dnsConfig.ServersAutoSync,
 		CnameRecords:    dnsConfig.CNameRecords,
 		Ttl:             dnsConfig.TTL,
+		CnameAsDomain:   dnsConfig.CNameAsDomain,
 		DefaultRoute:    defaultRoute,
 	}, nil
 }
@@ -527,7 +529,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSProviderId(ctx
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSProviderId(tx, req.DnsProviderId)
 	if err != nil {
@@ -544,7 +546,7 @@ func (this *NodeClusterService) CountAllEnabledNodeClustersWithDNSDomainId(ctx c
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeClusterDAO.CountAllEnabledClustersWithDNSDomainId(tx, req.DnsDomainId)
 	if err != nil {
@@ -561,7 +563,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	clusters, err := models.SharedNodeClusterDAO.FindAllEnabledClustersWithDNSDomainId(tx, req.DnsDomainId)
 	if err != nil {
@@ -589,7 +591,7 @@ func (this *NodeClusterService) CheckNodeClusterDNSName(ctx context.Context, req
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	exists, err := models.SharedNodeClusterDAO.ExistClusterDNSName(tx, req.DnsName, req.NodeClusterId)
 	if err != nil {
@@ -606,9 +608,9 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords, req.Ttl)
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords, req.Ttl, req.CnameAsDomain)
 	if err != nil {
 		return nil, err
 	}
