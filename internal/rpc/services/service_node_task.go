@@ -50,7 +50,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 			return nil, err
 		}
 		if status != nil && len(status.OS) > 0 && len(status.Arch) > 0 && len(status.BuildVersion) > 0 {
-			deployFile := installers.SharedDeployManager.FindNodeFile(status.OS, status.Arch)
+			var deployFile = installers.SharedDeployManager.FindNodeFile(status.OS, status.Arch)
 			if deployFile != nil {
 				if stringutil.VersionCompare(deployFile.Version, status.BuildVersion) > 0 {
 					pbTasks = append(pbTasks, &pb.NodeTask{

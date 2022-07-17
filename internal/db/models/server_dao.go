@@ -1086,13 +1086,16 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 			if err != nil {
 				return nil, err
 			}
-			if clusterDNSConfig.CNameAsDomain {
-				domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), cacheMap)
-				if err != nil {
-					return nil, err
-				}
-				if domain != nil {
-					var cname = server.DnsName + "." + domain.Name
+
+			domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if domain != nil {
+				var cname = server.DnsName + "." + domain.Name
+				config.CNameDomain = cname
+				if clusterDNSConfig.CNameAsDomain {
+					config.CNameAsDomain = true
 					config.AliasServerNames = append(config.AliasServerNames, cname)
 				}
 			}
