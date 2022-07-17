@@ -771,8 +771,9 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 	}
 	if len(keyword) > 0 {
 		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
-			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
+			query.Where("(id=:serverId OR name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
 				Param("portRange", maps.Map{"portRange": keyword}.AsJSON()).
+				Param("serverId", keyword).
 				Param("keyword", dbutils.QuoteLike(keyword))
 		} else {
 			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
@@ -825,8 +826,9 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	}
 	if len(keyword) > 0 {
 		if regexp.MustCompile(`^\d+$`).MatchString(keyword) {
-			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
+			query.Where("(id=:serverId OR name LIKE :keyword OR serverNames LIKE :keyword OR JSON_CONTAINS(http, :portRange, '$.listen') OR JSON_CONTAINS(https, :portRange, '$.listen') OR JSON_CONTAINS(tcp, :portRange, '$.listen') OR JSON_CONTAINS(tls, :portRange, '$.listen'))").
 				Param("portRange", string(maps.Map{"portRange": keyword}.AsJSON())).
+				Param("serverId", keyword).
 				Param("keyword", dbutils.QuoteLike(keyword))
 		} else {
 			query.Where("(name LIKE :keyword OR serverNames LIKE :keyword)").
