@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -33,7 +34,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableFile 启用条目
 func (this *FileDAO) EnableFile(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -42,7 +43,7 @@ func (this *FileDAO) EnableFile(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableFile 禁用条目
 func (this *FileDAO) DisableFile(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +52,7 @@ func (this *FileDAO) DisableFile(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledFile 查找启用中的条目
 func (this *FileDAO) FindEnabledFile(tx *dbs.Tx, id int64) (*File, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -63,9 +64,9 @@ func (this *FileDAO) FindEnabledFile(tx *dbs.Tx, id int64) (*File, error) {
 	return result.(*File), err
 }
 
-// 创建文件
+// CreateFile 创建文件
 func (this *FileDAO) CreateFile(tx *dbs.Tx, adminId int64, userId int64, businessType, description string, filename string, size int64, isPublic bool) (int64, error) {
-	op := NewFileOperator()
+	var op = NewFileOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.Type = businessType
@@ -74,6 +75,7 @@ func (this *FileDAO) CreateFile(tx *dbs.Tx, adminId int64, userId int64, busines
 	op.Size = size
 	op.Filename = filename
 	op.IsPublic = isPublic
+	op.Code = utils.Sha1RandomString()
 	err := this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -82,7 +84,7 @@ func (this *FileDAO) CreateFile(tx *dbs.Tx, adminId int64, userId int64, busines
 	return types.Int64(op.Id), nil
 }
 
-// 将文件置为已完成
+// UpdateFileIsFinished 将文件置为已完成
 func (this *FileDAO) UpdateFileIsFinished(tx *dbs.Tx, fileId int64) error {
 	_, err := this.Query(tx).
 		Pk(fileId).

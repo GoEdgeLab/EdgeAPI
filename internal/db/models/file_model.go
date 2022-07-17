@@ -1,9 +1,10 @@
 package models
 
-// 文件管理
+// File 文件管理
 type File struct {
 	Id          uint32 `field:"id"`          // ID
 	AdminId     uint32 `field:"adminId"`     // 管理员ID
+	Code        string `field:"code"`        // 代号
 	UserId      uint32 `field:"userId"`      // 用户ID
 	Description string `field:"description"` // 文件描述
 	Filename    string `field:"filename"`    // 文件名
@@ -19,6 +20,7 @@ type File struct {
 type FileOperator struct {
 	Id          interface{} // ID
 	AdminId     interface{} // 管理员ID
+	Code        interface{} // 代号
 	UserId      interface{} // 用户ID
 	Description interface{} // 文件描述
 	Filename    interface{} // 文件名

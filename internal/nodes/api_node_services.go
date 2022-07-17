@@ -339,6 +339,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		var instance = this.serviceInstance(&services.UserIdentityService{}).(*services.UserIdentityService)
+		pb.RegisterUserIdentityServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		var instance = this.serviceInstance(&services.ServerDailyStatService{}).(*services.ServerDailyStatService)
 		pb.RegisterServerDailyStatServiceServer(server, instance)
 		this.rest(instance)

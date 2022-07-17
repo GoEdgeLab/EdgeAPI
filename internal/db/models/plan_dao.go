@@ -217,7 +217,7 @@ func (this *PlanDAO) ListEnabledPlans(tx *dbs.Tx, offset int64, size int64) (res
 		Limit(size).
 		Slice(&result).
 		Desc("order").
-		DescPk().
+		AscPk().
 		FindAll()
 	return
 }
