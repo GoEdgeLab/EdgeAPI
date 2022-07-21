@@ -58,6 +58,8 @@ func (this *NodeStatusExecutor) update() {
 	status.BuildVersionCode = utils.VersionToLong(teaconst.Version)
 	status.OS = runtime.GOOS
 	status.Arch = runtime.GOARCH
+	exe, _ := os.Executable()
+	status.ExePath = exe
 	status.ConfigVersion = 0
 	status.IsActive = true
 	status.ConnectionCount = 0 // TODO 实现连接数计算

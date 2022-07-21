@@ -221,6 +221,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
 		IsPrimary:       node.IsPrimary,
+		StatusJSON:      node.Status,
 	}
 	return &pb.FindEnabledAPINodeResponse{ApiNode: result}, nil
 }
