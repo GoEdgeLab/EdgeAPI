@@ -13,7 +13,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
 	github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570
-	github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3
+	github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62
 	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/pkg/sftp v1.12.0
 	github.com/shirou/gopsutil/v3 v3.22.2
