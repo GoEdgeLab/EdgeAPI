@@ -677,6 +677,12 @@ func (this *APINode) listenSock() error {
 						Params: map[string]interface{}{"count": 0},
 					})
 				}
+			case "instance":
+				_ = cmd.Reply(&gosock.Command{
+					Params: map[string]interface{}{
+						"code": teaconst.InstanceCode,
+					},
+				})
 			}
 		})
 

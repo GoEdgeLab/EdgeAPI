@@ -273,8 +273,9 @@ func (this *APINodeService) FindCurrentAPINode(ctx context.Context, req *pb.Find
 		RestHTTPSJSON:   nil,
 		AccessAddrsJSON: node.AccessAddrs,
 		AccessAddrs:     accessAddrs,
-		StatusJSON:      nil,
+		StatusJSON:      node.Status,
 		IsPrimary:       node.IsPrimary,
+		InstanceCode:    teaconst.InstanceCode,
 	}}, nil
 }
 

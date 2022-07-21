@@ -161,6 +161,20 @@ func main() {
 			}
 		}
 	})
+	app.On("instance", func() {
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "instance"})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			replyJSON, err := json.MarshalIndent(reply.Params, "", "  ")
+			if err != nil {
+				fmt.Println("[ERROR]marshal result failed: " + err.Error())
+			} else {
+				fmt.Println(string(replyJSON))
+			}
+		}
+	})
 
 	app.Run(func() {
 		nodes.NewAPINode().Start()
