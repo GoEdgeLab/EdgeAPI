@@ -19,7 +19,7 @@ func (this *HTTPCachePolicyService) FindAllEnabledHTTPCachePolicies(ctx context.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	policies, err := models.SharedHTTPCachePolicyDAO.FindAllEnabledCachePolicies(tx)
 	if err != nil {
@@ -44,7 +44,7 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
 	if err != nil {
@@ -61,7 +61,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
 	if err != nil {
@@ -79,7 +79,7 @@ func (this *HTTPCachePolicyService) DeleteHTTPCachePolicy(ctx context.Context, r
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedHTTPCachePolicyDAO.DisableHTTPCachePolicy(tx, req.HttpCachePolicyId)
 	if err != nil {
@@ -97,7 +97,7 @@ func (this *HTTPCachePolicyService) CountAllEnabledHTTPCachePolicies(ctx context
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedHTTPCachePolicyDAO.CountAllEnabledHTTPCachePolicies(tx, req.NodeClusterId, req.Keyword, req.Type)
 	if err != nil {
@@ -114,7 +114,7 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	cachePolicies, err := models.SharedHTTPCachePolicyDAO.ListEnabledHTTPCachePolicies(tx, req.NodeClusterId, req.Keyword, req.Type, req.Offset, req.Size)
 	if err != nil {
@@ -130,12 +130,12 @@ func (this *HTTPCachePolicyService) ListEnabledHTTPCachePolicies(ctx context.Con
 // FindEnabledHTTPCachePolicyConfig 查找单个缓存策略配置
 func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPCachePolicyConfigRequest) (*pb.FindEnabledHTTPCachePolicyConfigResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	cachePolicy, err := models.SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, req.HttpCachePolicyId, nil)
 	if err != nil {
@@ -152,7 +152,7 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Conte
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	policy, err := models.SharedHTTPCachePolicyDAO.FindEnabledHTTPCachePolicy(tx, req.HttpCachePolicyId)
 	if err != nil {
@@ -175,7 +175,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicyRefs(ctx context.Contex
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 	err = models.SharedHTTPCachePolicyDAO.UpdatePolicyRefs(tx, req.HttpCachePolicyId, req.RefsJSON)
 	if err != nil {
 		return nil, err

@@ -16,7 +16,7 @@ type HTTPHeaderService struct {
 // CreateHTTPHeader 创建Header
 func (this *HTTPHeaderService) CreateHTTPHeader(ctx context.Context, req *pb.CreateHTTPHeaderRequest) (*pb.CreateHTTPHeaderResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (this *HTTPHeaderService) CreateHTTPHeader(ctx context.Context, req *pb.Cre
 		// TODO 检查用户权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// status
 	var newStatus = []int{}
@@ -53,7 +53,7 @@ func (this *HTTPHeaderService) CreateHTTPHeader(ctx context.Context, req *pb.Cre
 // UpdateHTTPHeader 修改Header
 func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.UpdateHTTPHeaderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.Upd
 		// TODO 检查用户权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// status
 	var newStatus = []int{}
@@ -90,7 +90,7 @@ func (this *HTTPHeaderService) UpdateHTTPHeader(ctx context.Context, req *pb.Upd
 // FindEnabledHTTPHeaderConfig 查找配置
 func (this *HTTPHeaderService) FindEnabledHTTPHeaderConfig(ctx context.Context, req *pb.FindEnabledHTTPHeaderConfigRequest) (*pb.FindEnabledHTTPHeaderConfigResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (this *HTTPHeaderService) FindEnabledHTTPHeaderConfig(ctx context.Context, 
 		// TODO 检查用户权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	config, err := models.SharedHTTPHeaderDAO.ComposeHeaderConfig(tx, req.HeaderId)
 	if err != nil {

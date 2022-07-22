@@ -24,7 +24,7 @@ func (this *NodeGrantService) CreateNodeGrant(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	grantId, err := models.SharedNodeGrantDAO.CreateGrant(tx, adminId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId, req.Su)
 	if err != nil {
@@ -46,7 +46,7 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 		return nil, errors.New("wrong grantId")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId, req.Su)
 	return this.Success()
@@ -59,7 +59,7 @@ func (this *NodeGrantService) DisableNodeGrant(ctx context.Context, req *pb.Disa
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeGrantDAO.DisableNodeGrant(tx, req.NodeGrantId)
 	return &pb.DisableNodeGrantResponse{}, err
@@ -72,7 +72,7 @@ func (this *NodeGrantService) CountAllEnabledNodeGrants(ctx context.Context, req
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeGrantDAO.CountAllEnabledGrants(tx, req.Keyword)
 	if err != nil {
@@ -88,7 +88,7 @@ func (this *NodeGrantService) ListEnabledNodeGrants(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	grants, err := models.SharedNodeGrantDAO.ListEnabledGrants(tx, req.Keyword, req.Offset, req.Size)
 	if err != nil {

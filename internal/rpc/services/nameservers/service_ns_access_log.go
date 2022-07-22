@@ -27,7 +27,7 @@ func (this *NSAccessLogService) CreateNSAccessLogs(ctx context.Context, req *pb.
 		return &pb.CreateNSAccessLogsResponse{}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNSAccessLogDAO.CreateNSAccessLogs(tx, req.NsAccessLogs)
 	if err != nil {
@@ -40,12 +40,12 @@ func (this *NSAccessLogService) CreateNSAccessLogs(ctx context.Context, req *pb.
 // ListNSAccessLogs 列出单页访问日志
 func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.ListNSAccessLogsRequest) (*pb.ListNSAccessLogsResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查服务ID
 	if userId > 0 {
@@ -97,12 +97,12 @@ func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.Li
 // FindNSAccessLog 查找单个日志
 func (this *NSAccessLogService) FindNSAccessLog(ctx context.Context, req *pb.FindNSAccessLogRequest) (*pb.FindNSAccessLogResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	accessLog, err := models.SharedNSAccessLogDAO.FindAccessLogWithRequestId(tx, req.RequestId)
 	if err != nil {

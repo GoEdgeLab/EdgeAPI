@@ -15,12 +15,12 @@ type DNSProviderService struct {
 // CreateDNSProvider 创建服务商
 func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.CreateDNSProviderRequest) (*pb.CreateDNSProviderResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	providerId, err := dns.SharedDNSProviderDAO.CreateDNSProvider(tx, adminId, userId, req.Type, req.Name, req.ApiParamsJSON)
 	if err != nil {
@@ -33,14 +33,14 @@ func (this *DNSProviderService) CreateDNSProvider(ctx context.Context, req *pb.C
 // UpdateDNSProvider 修改服务商
 func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.UpdateDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO 校验权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = dns.SharedDNSProviderDAO.UpdateDNSProvider(tx, req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
@@ -52,12 +52,15 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 // CountAllEnabledDNSProviders 计算服务商数量
 func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context, req *pb.CountAllEnabledDNSProvidersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	count, err := dns.SharedDNSProviderDAO.CountAllEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword, req.Domain, req.Type)
 	if err != nil {
@@ -69,7 +72,7 @@ func (this *DNSProviderService) CountAllEnabledDNSProviders(ctx context.Context,
 // ListEnabledDNSProviders 列出单页服务商信息
 func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req *pb.ListEnabledDNSProvidersRequest) (*pb.ListEnabledDNSProvidersResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +80,9 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 	// TODO 校验权限
 
 	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	providers, err := dns.SharedDNSProviderDAO.ListEnabledDNSProviders(tx, req.AdminId, req.UserId, req.Keyword, req.Domain, req.Type, req.Offset, req.Size)
 	if err != nil {
@@ -99,14 +105,18 @@ func (this *DNSProviderService) ListEnabledDNSProviders(ctx context.Context, req
 // FindAllEnabledDNSProviders 查找所有的DNS服务商
 func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, req *pb.FindAllEnabledDNSProvidersRequest) (*pb.FindAllEnabledDNSProvidersResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO 校验权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	providers, err := dns.SharedDNSProviderDAO.FindAllEnabledDNSProviders(tx, req.AdminId, req.UserId)
 	if err != nil {
@@ -129,14 +139,16 @@ func (this *DNSProviderService) FindAllEnabledDNSProviders(ctx context.Context, 
 // DeleteDNSProvider 删除服务商
 func (this *DNSProviderService) DeleteDNSProvider(ctx context.Context, req *pb.DeleteDNSProviderRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO 校验权限
+	var tx = this.NullTx()
 
-	tx := this.NullTx()
+	if userId > 0 {
+		// TODO 校验权限
+	}
 
 	err = dns.SharedDNSProviderDAO.DisableDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
@@ -153,7 +165,7 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
 	if err != nil {
@@ -200,7 +212,7 @@ func (this *DNSProviderService) FindAllEnabledDNSProvidersWithType(ctx context.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	providers, err := dns.SharedDNSProviderDAO.FindAllEnabledDNSProvidersWithType(tx, req.ProviderTypeCode)
 	if err != nil {

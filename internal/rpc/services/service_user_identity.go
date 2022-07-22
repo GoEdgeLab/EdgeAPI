@@ -42,7 +42,7 @@ func (this *UserIdentityService) CreateUserIdentity(ctx context.Context, req *pb
 
 // FindUserEnabledUserIdentityWithType 查看身份认证信息
 func (this *UserIdentityService) FindUserEnabledUserIdentityWithType(ctx context.Context, req *pb.FindUserEnabledUserIdentityWithTypeRequest) (*pb.FindUserEnabledUserIdentityWithTypeResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

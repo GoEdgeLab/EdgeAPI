@@ -20,7 +20,7 @@ func (this *MonitorNodeService) CreateMonitorNode(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodeId, err := models.SharedMonitorNodeDAO.CreateMonitorNode(tx, req.Name, req.Description, req.IsOn)
 	if err != nil {
@@ -37,7 +37,7 @@ func (this *MonitorNodeService) UpdateMonitorNode(ctx context.Context, req *pb.U
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedMonitorNodeDAO.UpdateMonitorNode(tx, req.MonitorNodeId, req.Name, req.Description, req.IsOn)
 	if err != nil {
@@ -54,7 +54,7 @@ func (this *MonitorNodeService) DeleteMonitorNode(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedMonitorNodeDAO.DisableMonitorNode(tx, req.MonitorNodeId)
 	if err != nil {
@@ -71,7 +71,7 @@ func (this *MonitorNodeService) FindAllEnabledMonitorNodes(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedMonitorNodeDAO.FindAllEnabledMonitorNodes(tx)
 	if err != nil {
@@ -100,7 +100,7 @@ func (this *MonitorNodeService) CountAllEnabledMonitorNodes(ctx context.Context,
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedMonitorNodeDAO.CountAllEnabledMonitorNodes(tx)
 	if err != nil {
@@ -117,7 +117,7 @@ func (this *MonitorNodeService) ListEnabledMonitorNodes(ctx context.Context, req
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedMonitorNodeDAO.ListEnabledMonitorNodes(tx, req.Offset, req.Size)
 	if err != nil {
@@ -147,7 +147,7 @@ func (this *MonitorNodeService) FindEnabledMonitorNode(ctx context.Context, req 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedMonitorNodeDAO.FindEnabledMonitorNode(tx, req.MonitorNodeId)
 	if err != nil {
@@ -176,7 +176,7 @@ func (this *MonitorNodeService) FindCurrentMonitorNode(ctx context.Context, req 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -223,7 +223,7 @@ func (this *MonitorNodeService) UpdateMonitorNodeStatus(ctx context.Context, req
 		return nil, errors.New("'nodeId' should be greater than 0")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedMonitorNodeDAO.UpdateNodeStatus(tx, nodeId, req.StatusJSON)
 	if err != nil {

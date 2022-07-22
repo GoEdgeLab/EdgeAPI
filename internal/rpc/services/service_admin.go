@@ -41,7 +41,7 @@ func (this *AdminService) LoginAdmin(ctx context.Context, req *pb.LoginAdminRequ
 		}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	adminId, err := models.SharedAdminDAO.CheckAdminPassword(tx, req.Username, req.Password)
 	if err != nil {
@@ -76,7 +76,7 @@ func (this *AdminService) CheckAdminExists(ctx context.Context, req *pb.CheckAdm
 		}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	ok, err := models.SharedAdminDAO.ExistEnabledAdmin(tx, req.AdminId)
 	if err != nil {
@@ -96,7 +96,7 @@ func (this *AdminService) CheckAdminUsername(ctx context.Context, req *pb.CheckA
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	exists, err := models.SharedAdminDAO.CheckAdminUsername(tx, req.AdminId, req.Username)
 	if err != nil {
@@ -114,7 +114,7 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	fullname, err := models.SharedAdminDAO.FindAdminFullname(tx, req.AdminId)
 	if err != nil {
@@ -136,7 +136,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	admin, err := models.SharedAdminDAO.FindEnabledAdmin(tx, req.AdminId)
 	if err != nil {
@@ -200,7 +200,7 @@ func (this *AdminService) CreateOrUpdateAdmin(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(tx, req.Username)
 	if err != nil {
@@ -228,7 +228,7 @@ func (this *AdminService) UpdateAdminInfo(ctx context.Context, req *pb.UpdateAdm
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedAdminDAO.UpdateAdminInfo(tx, req.AdminId, req.Fullname)
 	if err != nil {
@@ -245,7 +245,7 @@ func (this *AdminService) UpdateAdminLogin(ctx context.Context, req *pb.UpdateAd
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	exists, err := models.SharedAdminDAO.CheckAdminUsername(tx, req.AdminId, req.Username)
 	if err != nil {
@@ -271,7 +271,7 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	admins, err := models.SharedAdminDAO.FindAllAdminModules(tx)
 	if err != nil {
@@ -318,7 +318,7 @@ func (this *AdminService) CreateAdmin(ctx context.Context, req *pb.CreateAdminRe
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	adminId, err := models.SharedAdminDAO.CreateAdmin(tx, req.Username, req.CanLogin, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON)
 	if err != nil {
@@ -337,7 +337,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedAdminDAO.UpdateAdmin(tx, req.AdminId, req.Username, req.CanLogin, req.Password, req.Fullname, req.IsSuper, req.ModulesJSON, req.IsOn)
 	if err != nil {
@@ -356,7 +356,7 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx)
 	if err != nil {
@@ -374,7 +374,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Offset, req.Size)
 	if err != nil {
@@ -423,7 +423,7 @@ func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRe
 
 	// TODO 检查权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// TODO 超级管理员用户是不能删除的，或者要至少留一个超级管理员用户
 
@@ -446,7 +446,7 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	adminId, err := models.SharedAdminDAO.FindAdminIdWithUsername(tx, req.Username)
 	if err != nil {

@@ -32,7 +32,7 @@ func (this *BaseService) ValidateAdmin(ctx context.Context) (adminId int64, err 
 }
 
 // ValidateAdminAndUser 校验管理员和用户
-func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminId int64, requireUserId int64) (adminId int64, userId int64, err error) {
+func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int64, userId int64, err error) {
 	reqUserType, _, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return
@@ -47,18 +47,10 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context, requireAdminI
 			err = errors.New("invalid 'adminId'")
 			return
 		}
-		if requireAdminId > 0 && adminId != requireAdminId {
-			err = this.PermissionError()
-			return
-		}
 	case rpcutils.UserTypeUser:
 		userId = reqUserId
-		if requireUserId >= 0 && userId <= 0 {
+		if userId < 0 { // 允许等于0
 			err = errors.New("invalid 'userId'")
-			return
-		}
-		if requireUserId > 0 && userId != requireUserId {
-			err = this.PermissionError()
 			return
 		}
 	default:

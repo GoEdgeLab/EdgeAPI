@@ -19,7 +19,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.IsUp, 0)
 	if err != nil {
@@ -37,7 +37,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddresses(ctx context.Context, req
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 创建分组
 	groupId, err := models.SharedNodeIPAddressGroupDAO.CreateGroup(tx, req.GroupValue, req.GroupValue)
@@ -65,7 +65,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, adminId, req.NodeIPAddressId, req.Name, req.Ip, req.CanAccess, req.IsOn, req.IsUp)
 	if err != nil {
@@ -83,7 +83,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context,
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeIPAddressDAO.UpdateAddressNodeId(tx, req.NodeIPAddressId, req.NodeId)
 	if err != nil {
@@ -101,7 +101,7 @@ func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeIPAddressDAO.DisableAddress(tx, req.NodeIPAddressId)
 	if err != nil {
@@ -119,7 +119,7 @@ func (this *NodeIPAddressService) DisableAllNodeIPAddressesWithNodeId(ctx contex
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeIPAddressDAO.DisableAllAddressesWithNodeId(tx, req.NodeId, req.Role)
 	if err != nil {
@@ -137,7 +137,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	address, err := models.SharedNodeIPAddressDAO.FindEnabledAddress(tx, req.NodeIPAddressId)
 	if err != nil {
@@ -174,7 +174,7 @@ func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx co
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	addresses, err := models.SharedNodeIPAddressDAO.FindAllEnabledAddressesWithNode(tx, req.NodeId, req.Role)
 	if err != nil {

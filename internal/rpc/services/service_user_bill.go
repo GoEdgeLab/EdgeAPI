@@ -33,7 +33,7 @@ func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.G
 		return nil, errors.New("invalid month '" + req.Month + "'")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserBillDAO.GenerateBills(tx, req.Month)
 	if err != nil {
@@ -45,12 +45,15 @@ func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.G
 
 // CountAllUserBills 计算所有账单数量
 func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.CountAllUserBillsRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	count, err := models.SharedUserBillDAO.CountAllUserBills(tx, req.PaidFlag, req.UserId, req.Month)
 	if err != nil {
@@ -61,12 +64,15 @@ func (this *UserBillService) CountAllUserBills(ctx context.Context, req *pb.Coun
 
 // ListUserBills 列出单页账单
 func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUserBillsRequest) (*pb.ListUserBillsResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	bills, err := models.SharedUserBillDAO.ListUserBills(tx, req.PaidFlag, req.UserId, req.Month, req.Offset, req.Size)
 	if err != nil {
@@ -106,7 +112,7 @@ func (this *UserBillService) ListUserBills(ctx context.Context, req *pb.ListUser
 
 // FindUserBill 查找账单信息
 func (this *UserBillService) FindUserBill(ctx context.Context, req *pb.FindUserBillRequest) (*pb.FindUserBillResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +169,7 @@ func (this *UserBillService) FindUserBill(ctx context.Context, req *pb.FindUserB
 
 // PayUserBill 支付账单
 func (this *UserBillService) PayUserBill(ctx context.Context, req *pb.PayUserBillRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +237,7 @@ func (this *UserBillService) PayUserBill(ctx context.Context, req *pb.PayUserBil
 
 // SumUserUnpaidBills 计算用户所有未支付账单总额
 func (this *UserBillService) SumUserUnpaidBills(ctx context.Context, req *pb.SumUserUnpaidBillsRequest) (*pb.SumUserUnpaidBillsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

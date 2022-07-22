@@ -118,7 +118,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 
 	//logs.Println("[RPC]accepted ns node '" + types.String(nodeId) + "' connection")
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 标记为活跃状态
 	oldIsActive, err := models.SharedNSNodeDAO.FindNodeActive(tx, nodeId)
@@ -227,7 +227,7 @@ func (this *NSNodeService) NsNodeStream(server pb.NSNodeService_NsNodeStreamServ
 // SendCommandToNSNode 向节点发送命令
 func (this *NSNodeService) SendCommandToNSNode(ctx context.Context, req *pb.NSNodeStreamMessage) (*pb.NSNodeStreamMessage, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

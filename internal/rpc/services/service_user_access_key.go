@@ -13,12 +13,15 @@ type UserAccessKeyService struct {
 
 // CreateUserAccessKey 创建AccessKey
 func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *pb.CreateUserAccessKeyRequest) (*pb.CreateUserAccessKeyResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	userAccessKeyId, err := models.SharedUserAccessKeyDAO.CreateAccessKey(tx, req.AdminId, req.UserId, req.Description)
 	if err != nil {
@@ -29,12 +32,15 @@ func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *
 
 // FindAllEnabledUserAccessKeys 查找所有的AccessKey
 func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Context, req *pb.FindAllEnabledUserAccessKeysRequest) (*pb.FindAllEnabledUserAccessKeysResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	accessKeys, err := models.SharedUserAccessKeyDAO.FindAllEnabledAccessKeys(tx, req.AdminId, req.UserId)
 	if err != nil {
@@ -60,12 +66,12 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 
 // DeleteUserAccessKey 删除AccessKey
 func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *pb.DeleteUserAccessKeyRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, 0, userId, req.UserAccessKeyId)
@@ -86,12 +92,12 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 
 // UpdateUserAccessKeyIsOn 设置是否启用AccessKey
 func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, req *pb.UpdateUserAccessKeyIsOnRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		ok, err := models.SharedUserAccessKeyDAO.CheckUserAccessKey(tx, 0, userId, req.UserAccessKeyId)
@@ -112,12 +118,16 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 
 // CountAllEnabledUserAccessKeys 计算AccessKey数量
 func (this *UserAccessKeyService) CountAllEnabledUserAccessKeys(ctx context.Context, req *pb.CountAllEnabledUserAccessKeysRequest) (*pb.RPCCountResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
+
 	count, err := models.SharedUserAccessKeyDAO.CountAllEnabledAccessKeys(tx, req.AdminId, req.UserId)
 	if err != nil {
 		return nil, err

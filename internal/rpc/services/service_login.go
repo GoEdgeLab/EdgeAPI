@@ -21,7 +21,7 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	login, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, req.AdminId, req.Type)
 	if err != nil {
@@ -51,7 +51,7 @@ func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRe
 		return nil, errors.New("'login' should not be nil")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if req.Login.IsOn {
 		params := maps.Map{}

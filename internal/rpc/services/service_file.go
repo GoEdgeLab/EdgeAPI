@@ -13,7 +13,7 @@ type FileService struct {
 
 // FindEnabledFile 查找文件
 func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnabledFileRequest) (*pb.FindEnabledFileResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, -1)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +49,12 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 
 // CreateFile 创建文件
 func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileRequest) (*pb.CreateFileResponse, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	fileId, err := models.SharedFileDAO.CreateFile(tx, adminId, userId, "ipLibrary", "", req.Filename, req.Size, req.IsPublic)
 	if err != nil {
@@ -70,7 +70,7 @@ func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateF
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedFileDAO.UpdateFileIsFinished(tx, req.FileId)
 	if err != nil {

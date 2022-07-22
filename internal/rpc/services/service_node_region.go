@@ -18,7 +18,7 @@ func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.Cre
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	regionId, err := models.SharedNodeRegionDAO.CreateRegion(tx, adminId, req.Name, req.Description)
 	if err != nil {
@@ -34,7 +34,7 @@ func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeRegionDAO.UpdateRegion(tx, req.NodeRegionId, req.Name, req.Description, req.IsOn)
 	if err != nil {
@@ -50,7 +50,7 @@ func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.Del
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeRegionDAO.DisableNodeRegion(tx, req.NodeRegionId)
 	if err != nil {
@@ -66,7 +66,7 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	regions, err := models.SharedNodeRegionDAO.FindAllEnabledRegions(tx)
 	if err != nil {
@@ -92,7 +92,7 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	regions, err := models.SharedNodeRegionDAO.FindAllEnabledAndOnRegions(tx)
 	if err != nil {
@@ -118,7 +118,7 @@ func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeRegionDAO.UpdateRegionOrders(tx, req.NodeRegionIds)
 	if err != nil {
@@ -134,7 +134,7 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(tx, req.NodeRegionId)
 	if err != nil {
@@ -159,7 +159,7 @@ func (this *NodeRegionService) UpdateNodeRegionPrice(ctx context.Context, req *p
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeRegionDAO.UpdateRegionItemPrice(tx, req.NodeRegionId, req.NodeItemId, req.Price)
 	if err != nil {

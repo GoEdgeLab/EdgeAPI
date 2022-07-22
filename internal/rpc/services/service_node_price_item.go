@@ -18,7 +18,7 @@ func (this *NodePriceItemService) CreateNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	itemId, err := models.SharedNodePriceItemDAO.CreateItem(tx, req.Name, req.Type, req.BitsFrom, req.BitsTo)
 	if err != nil {
@@ -34,7 +34,7 @@ func (this *NodePriceItemService) UpdateNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodePriceItemDAO.UpdateItem(tx, req.NodePriceItemId, req.Name, req.BitsFrom, req.BitsTo)
 	if err != nil {
@@ -50,7 +50,7 @@ func (this *NodePriceItemService) DeleteNodePriceItem(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodePriceItemDAO.DisableNodePriceItem(tx, req.NodePriceItemId)
 	if err != nil {
@@ -66,7 +66,7 @@ func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Conte
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledRegionPrices(tx, req.Type)
 	if err != nil {
@@ -94,7 +94,7 @@ func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	prices, err := models.SharedNodePriceItemDAO.FindAllEnabledAndOnRegionPrices(tx, req.Type)
 	if err != nil {
@@ -122,7 +122,7 @@ func (this *NodePriceItemService) FindEnabledNodePriceItem(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	price, err := models.SharedNodePriceItemDAO.FindEnabledNodePriceItem(tx, req.NodePriceItemId)
 	if err != nil {

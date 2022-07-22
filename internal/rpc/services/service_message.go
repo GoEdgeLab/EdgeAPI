@@ -15,12 +15,12 @@ type MessageService struct {
 // CountUnreadMessages 计算未读消息数
 func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.CountUnreadMessagesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedMessageDAO.CountUnreadMessages(tx, adminId, userId)
 	if err != nil {
@@ -32,12 +32,12 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 // ListUnreadMessages 列出单页未读消息
 func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.ListUnreadMessagesRequest) (*pb.ListUnreadMessagesResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	messages, err := models.SharedMessageDAO.ListUnreadMessages(tx, adminId, userId, req.Offset, req.Size)
 	if err != nil {
@@ -122,12 +122,12 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 // UpdateMessageRead 设置消息已读状态
 func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.UpdateMessageReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 校验权限
 	exists, err := models.SharedMessageDAO.CheckMessageUser(tx, req.MessageId, adminId, userId)
@@ -148,12 +148,12 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 // UpdateMessagesRead 设置一组消息已读状态
 func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.UpdateMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 校验权限
 	for _, messageId := range req.MessageIds {
@@ -177,12 +177,12 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.UpdateAllMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedMessageDAO.UpdateAllMessagesRead(tx, adminId, userId)
 	if err != nil {

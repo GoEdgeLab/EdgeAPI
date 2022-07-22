@@ -20,7 +20,7 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedLogDAO.CreateLog(tx, userType, userId, req.Level, req.Description, req.Action, req.Ip)
 	if err != nil {
@@ -37,7 +37,7 @@ func (this *LogService) CountLogs(ctx context.Context, req *pb.CountLogRequest) 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedLogDAO.CountLogs(tx, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
@@ -54,7 +54,7 @@ func (this *LogService) ListLogs(ctx context.Context, req *pb.ListLogsRequest) (
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	logs, err := models.SharedLogDAO.ListLogs(tx, req.Offset, req.Size, req.DayFrom, req.DayTo, req.Keyword, req.UserType)
 	if err != nil {
@@ -103,7 +103,7 @@ func (this *LogService) DeleteLogPermanently(ctx context.Context, req *pb.Delete
 
 	// TODO 校验权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 执行物理删除
 	err = models.SharedLogDAO.DeleteLogPermanently(tx, req.LogId)
@@ -123,7 +123,7 @@ func (this *LogService) DeleteLogsPermanently(ctx context.Context, req *pb.Delet
 
 	// TODO 校验权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 执行物理删除
 	for _, logId := range req.LogIds {
@@ -145,7 +145,7 @@ func (this *LogService) CleanLogsPermanently(ctx context.Context, req *pb.CleanL
 
 	// TODO 校验权限
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if req.ClearAll {
 		err = models.SharedLogDAO.DeleteAllLogsPermanently(tx)

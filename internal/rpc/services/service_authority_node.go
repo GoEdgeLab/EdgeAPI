@@ -23,7 +23,7 @@ func (this *AuthorityNodeService) CreateAuthorityNode(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodeId, err := authority.SharedAuthorityNodeDAO.CreateAuthorityNode(tx, req.Name, req.Description, req.IsOn)
 	if err != nil {
@@ -40,7 +40,7 @@ func (this *AuthorityNodeService) UpdateAuthorityNode(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = authority.SharedAuthorityNodeDAO.UpdateAuthorityNode(tx, req.AuthorityNodeId, req.Name, req.Description, req.IsOn)
 	if err != nil {
@@ -57,7 +57,7 @@ func (this *AuthorityNodeService) DeleteAuthorityNode(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = authority.SharedAuthorityNodeDAO.DisableAuthorityNode(tx, req.AuthorityNodeId)
 	if err != nil {
@@ -74,7 +74,7 @@ func (this *AuthorityNodeService) FindAllEnabledAuthorityNodes(ctx context.Conte
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := authority.SharedAuthorityNodeDAO.FindAllEnabledAuthorityNodes(tx)
 	if err != nil {
@@ -103,7 +103,7 @@ func (this *AuthorityNodeService) CountAllEnabledAuthorityNodes(ctx context.Cont
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := authority.SharedAuthorityNodeDAO.CountAllEnabledAuthorityNodes(tx)
 	if err != nil {
@@ -120,7 +120,7 @@ func (this *AuthorityNodeService) ListEnabledAuthorityNodes(ctx context.Context,
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := authority.SharedAuthorityNodeDAO.ListEnabledAuthorityNodes(tx, req.Offset, req.Size)
 	if err != nil {
@@ -150,7 +150,7 @@ func (this *AuthorityNodeService) FindEnabledAuthorityNode(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := authority.SharedAuthorityNodeDAO.FindEnabledAuthorityNode(tx, req.AuthorityNodeId)
 	if err != nil {
@@ -179,7 +179,7 @@ func (this *AuthorityNodeService) FindCurrentAuthorityNode(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

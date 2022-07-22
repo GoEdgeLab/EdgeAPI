@@ -19,7 +19,7 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	provinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvincesWithCountryId(tx, req.RegionCountryId)
 	if err != nil {
@@ -47,7 +47,7 @@ func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	province, err := regions.SharedRegionProvinceDAO.FindEnabledRegionProvince(tx, req.RegionProvinceId)
 	if err != nil {

@@ -23,7 +23,7 @@ func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateU
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodeId, err := models.SharedUserNodeDAO.CreateUserNode(tx, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
@@ -40,7 +40,7 @@ func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateU
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserNodeDAO.UpdateUserNode(tx, req.UserNodeId, req.Name, req.Description, req.HttpJSON, req.HttpsJSON, req.AccessAddrsJSON, req.IsOn)
 	if err != nil {
@@ -57,7 +57,7 @@ func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteU
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserNodeDAO.DisableUserNode(tx, req.UserNodeId)
 	if err != nil {
@@ -74,7 +74,7 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedUserNodeDAO.FindAllEnabledUserNodes(tx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedUserNodeDAO.CountAllEnabledUserNodes(tx)
 	if err != nil {
@@ -129,7 +129,7 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedUserNodeDAO.ListEnabledUserNodes(tx, req.Offset, req.Size)
 	if err != nil {
@@ -168,7 +168,7 @@ func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedUserNodeDAO.FindEnabledUserNode(tx, req.UserNodeId)
 	if err != nil {
@@ -206,7 +206,7 @@ func (this *UserNodeService) FindCurrentUserNode(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

@@ -24,12 +24,15 @@ type ServerService struct {
 // CreateServer 创建服务
 func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	// 校验用户相关数据
 	if userId > 0 {
@@ -173,7 +176,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 		return nil, errors.New("invalid serverId")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 查询老的节点信息
 	server, err := models.SharedServerDAO.FindEnabledServer(tx, req.ServerId)
@@ -194,7 +197,7 @@ func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.Update
 
 // UpdateServerGroupIds 修改服务所在分组
 func (this *ServerService) UpdateServerGroupIds(ctx context.Context, req *pb.UpdateServerGroupIdsRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +247,7 @@ func (this *ServerService) UpdateServerGroupIds(ctx context.Context, req *pb.Upd
 
 // UpdateServerIsOn 修改服务是否启用
 func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateServerIsOnRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -267,12 +270,12 @@ func (this *ServerService) UpdateServerIsOn(ctx context.Context, req *pb.UpdateS
 // UpdateServerHTTP 修改HTTP服务
 func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateServerHTTPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -293,12 +296,12 @@ func (this *ServerService) UpdateServerHTTP(ctx context.Context, req *pb.UpdateS
 // UpdateServerHTTPS 修改HTTPS服务
 func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.UpdateServerHTTPSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -319,7 +322,7 @@ func (this *ServerService) UpdateServerHTTPS(ctx context.Context, req *pb.Update
 // UpdateServerTCP 修改TCP服务
 func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateServerTCPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +334,7 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerTCP(tx, req.ServerId, req.TcpJSON)
@@ -345,7 +348,7 @@ func (this *ServerService) UpdateServerTCP(ctx context.Context, req *pb.UpdateSe
 // UpdateServerTLS 修改TLS服务
 func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateServerTLSRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +360,7 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerTLS(tx, req.ServerId, req.TlsJSON)
@@ -380,7 +383,7 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 		return nil, errors.New("invalid serverId")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerUnix(tx, req.ServerId, req.UnixJSON)
@@ -394,7 +397,7 @@ func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateS
 // UpdateServerUDP 修改UDP服务
 func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateServerUDPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +413,7 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 		return nil, errors.New("invalid serverId")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerUDP(tx, req.ServerId, req.UdpJSON)
@@ -424,12 +427,12 @@ func (this *ServerService) UpdateServerUDP(ctx context.Context, req *pb.UpdateSe
 // UpdateServerWeb 修改Web服务
 func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateServerWebRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -450,12 +453,12 @@ func (this *ServerService) UpdateServerWeb(ctx context.Context, req *pb.UpdateSe
 // UpdateServerReverseProxy 修改反向代理服务
 func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb.UpdateServerReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -475,12 +478,12 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 
 // FindServerNames 查找服务的域名设置
 func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServerNamesRequest) (*pb.FindServerNamesResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -517,12 +520,12 @@ func (this *ServerService) FindServerNames(ctx context.Context, req *pb.FindServ
 // UpdateServerNames 修改域名服务
 func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.UpdateServerNamesRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查用户
 	if userId > 0 {
@@ -572,7 +575,7 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 		return nil, errors.New("'result' should not be nil")
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedServerDAO.UpdateServerAuditing(tx, req.ServerId, req.AuditingResult)
 	if err != nil {
@@ -640,7 +643,7 @@ func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.Re
 // CountAllEnabledServersMatch 计算服务数量
 func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req *pb.CountAllEnabledServersMatchRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -662,7 +665,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 // ListEnabledServersMatch 列出单页服务
 func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.ListEnabledServersMatchRequest) (*pb.ListEnabledServersMatchResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -809,12 +812,12 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 // DeleteServer 禁用某服务
 func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServerRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -835,12 +838,12 @@ func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServe
 // FindEnabledServer 查找单个服务
 func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEnabledServerRequest) (*pb.FindEnabledServerResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查权限
 	if userId > 0 {
@@ -951,12 +954,12 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 // FindEnabledServerConfig 查找服务配置
 func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.FindEnabledServerConfigRequest) (*pb.FindEnabledServerConfigResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查权限
 	if userId > 0 {
@@ -984,12 +987,12 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 // FindEnabledServerType 查找服务的服务类型
 func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.FindEnabledServerTypeRequest) (*pb.FindEnabledServerTypeResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查权限
 	if userId > 0 {
@@ -1010,12 +1013,12 @@ func (this *ServerService) FindEnabledServerType(ctx context.Context, req *pb.Fi
 // FindAndInitServerReverseProxyConfig 查找反向代理设置
 func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerReverseProxyConfigRequest) (*pb.FindAndInitServerReverseProxyConfigResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	reverseProxyRef, err := models.SharedServerDAO.FindReverseProxyRef(tx, req.ServerId)
 	if err != nil {
@@ -1063,12 +1066,12 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 // FindAndInitServerWebConfig 初始化Web设置
 func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *pb.FindAndInitServerWebConfigRequest) (*pb.FindAndInitServerWebConfigResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -1104,7 +1107,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 // CountAllEnabledServersWithSSLCertId 计算使用某个SSL证书的服务数量
 func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledServersWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1112,7 +1115,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 		// TODO 校验权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, req.SslCertId)
 	if err != nil {
@@ -1134,7 +1137,7 @@ func (this *ServerService) CountAllEnabledServersWithSSLCertId(ctx context.Conte
 // FindAllEnabledServersWithSSLCertId 查找使用某个SSL证书的所有服务
 func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Context, req *pb.FindAllEnabledServersWithSSLCertIdRequest) (*pb.FindAllEnabledServersWithSSLCertIdResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1143,7 +1146,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 		// TODO 校验权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, req.SslCertId)
 	if err != nil {
@@ -1177,7 +1180,7 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersWithNodeClusterId(tx, req.NodeClusterId)
 	if err != nil {
@@ -1189,12 +1192,12 @@ func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.C
 // CountAllEnabledServersWithServerGroupId 计算使用某个分组的服务数量
 func (this *ServerService) CountAllEnabledServersWithServerGroupId(ctx context.Context, req *pb.CountAllEnabledServersWithServerGroupIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.ServerGroupId, userId)
 	if err != nil {
@@ -1211,7 +1214,7 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, _ *pb.Notify
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	clusterIds, err := models.SharedNodeClusterDAO.FindAllEnableClusterIds(tx)
 	if err != nil {
@@ -1235,7 +1238,7 @@ func (this *ServerService) FindAllEnabledServersDNSWithNodeClusterId(ctx context
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	servers, err := models.SharedServerDAO.FindAllServersDNSWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
@@ -1266,12 +1269,12 @@ func (this *ServerService) FindAllEnabledServersDNSWithNodeClusterId(ctx context
 // FindEnabledServerDNS 查找单个服务的DNS信息
 func (this *ServerService) FindEnabledServerDNS(ctx context.Context, req *pb.FindEnabledServerDNSRequest) (*pb.FindEnabledServerDNSResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	dnsName, err := models.SharedServerDAO.FindServerDNSName(tx, req.ServerId)
 	if err != nil {
@@ -1324,7 +1327,7 @@ func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUse
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 	if err != nil {
@@ -1335,12 +1338,15 @@ func (this *ServerService) CheckUserServer(ctx context.Context, req *pb.CheckUse
 
 // FindAllEnabledServerNamesWithUserId 查找一个用户下的所有域名列表
 func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Context, req *pb.FindAllEnabledServerNamesWithUserIdRequest) (*pb.FindAllEnabledServerNamesWithUserIdResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	servers, err := models.SharedServerDAO.FindAllEnabledServersWithUserId(tx, req.UserId)
 	if err != nil {
@@ -1368,7 +1374,7 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 
 // FindEnabledUserServerBasic 查找服务基本信息
 func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *pb.FindEnabledUserServerBasicRequest) (*pb.FindEnabledUserServerBasicResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1410,7 +1416,7 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 
 // UpdateEnabledUserServerBasic 修改用户服务基本信息
 func (this *ServerService) UpdateEnabledUserServerBasic(ctx context.Context, req *pb.UpdateEnabledUserServerBasicRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1615,7 +1621,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 
 // CheckServerNameDuplicationInNodeCluster 检查域名是否已经存在
 func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.Context, req *pb.CheckServerNameDuplicationInNodeClusterRequest) (*pb.CheckServerNameDuplicationInNodeClusterResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1852,7 +1858,7 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 
 // FindEnabledServerTrafficLimit 查找流量限制
 func (this *ServerService) FindEnabledServerTrafficLimit(ctx context.Context, req *pb.FindEnabledServerTrafficLimitRequest) (*pb.FindEnabledServerTrafficLimitResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1896,7 +1902,7 @@ func (this *ServerService) UpdateServerTrafficLimit(ctx context.Context, req *pb
 
 // UpdateServerUserPlan 修改服务套餐
 func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.UpdateServerUserPlanRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1965,7 +1971,7 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 
 // FindServerUserPlan 获取服务套餐信息
 func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindServerUserPlanRequest) (*pb.FindServerUserPlanResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

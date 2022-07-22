@@ -20,7 +20,7 @@ func (this *FileChunkService) CreateFileChunk(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	chunkId, err := models.SharedFileChunkDAO.CreateFileChunk(tx, req.FileId, req.Data)
 	if err != nil {
@@ -39,7 +39,7 @@ func (this *FileChunkService) FindAllFileChunkIds(ctx context.Context, req *pb.F
 
 	// TODO 校验用户
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(tx, req.FileId)
 	if err != nil {
@@ -58,7 +58,7 @@ func (this *FileChunkService) DownloadFileChunk(ctx context.Context, req *pb.Dow
 
 	// TODO 校验用户
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	chunk, err := models.SharedFileChunkDAO.FindFileChunk(tx, req.FileChunkId)
 	if err != nil {

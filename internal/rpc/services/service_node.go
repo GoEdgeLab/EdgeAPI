@@ -52,7 +52,7 @@ func (this *NodeService) CreateNode(ctx context.Context, req *pb.CreateNodeReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodeId, err := models.SharedNodeDAO.CreateNode(tx, adminId, req.Name, req.NodeClusterId, req.NodeGroupId, req.NodeRegionId)
 	if err != nil {
@@ -103,7 +103,7 @@ func (this *NodeService) RegisterClusterNode(ctx context.Context, req *pb.Regist
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	adminId, err := models.SharedNodeClusterDAO.FindClusterAdminId(tx, clusterId)
 	if err != nil {
@@ -148,7 +148,7 @@ func (this *NodeService) CountAllEnabledNodes(ctx context.Context, req *pb.Count
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
@@ -165,7 +165,7 @@ func (this *NodeService) CountAllEnabledNodesMatch(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeDAO.CountAllEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, req.Level, true)
 	if err != nil {
@@ -181,7 +181,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	var dnsDomainId = int64(0)
 	var domainRoutes = []*dnstypes.Route{}
@@ -389,7 +389,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 
 // FindAllEnabledNodesWithNodeClusterId 查找一个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledNodesWithNodeClusterIdRequest) (*pb.FindAllEnabledNodesWithNodeClusterIdResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +398,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Contex
 		// TODO 检查权限
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithClusterId(tx, req.NodeClusterId, req.IncludeSecondary)
 	if err != nil {
@@ -434,7 +434,7 @@ func (this *NodeService) DeleteNode(ctx context.Context, req *pb.DeleteNodeReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeDAO.DisableNode(tx, req.NodeId)
 	if err != nil {
@@ -457,7 +457,7 @@ func (this *NodeService) DeleteNodeFromNodeCluster(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 	err = models.SharedNodeDAO.DeleteNodeFromCluster(tx, req.NodeId, req.NodeClusterId)
 	if err != nil {
 		return nil, err
@@ -473,7 +473,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn, int(req.Level))
 	if err != nil {
@@ -490,7 +490,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedNodeDAO.FindEnabledNode(tx, req.NodeId)
 	if err != nil {
@@ -684,7 +684,7 @@ func (this *NodeService) FindEnabledBasicNode(ctx context.Context, req *pb.FindE
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 	node, err := models.SharedNodeDAO.FindEnabledBasicNode(tx, req.NodeId)
 	if err != nil {
 		return nil, err
@@ -719,7 +719,7 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查版本号
 	currentVersion, err := models.SharedNodeDAO.FindNodeVersion(tx, nodeId)
@@ -813,7 +813,7 @@ func (this *NodeService) UpdateNodeIsInstalled(ctx context.Context, req *pb.Upda
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeDAO.UpdateNodeIsInstalled(tx, req.NodeId, req.IsInstalled)
 	if err != nil {
@@ -849,7 +849,7 @@ func (this *NodeService) UpgradeNode(ctx context.Context, req *pb.UpgradeNodeReq
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeDAO.UpdateNodeIsInstalled(tx, req.NodeId, false)
 	if err != nil {
@@ -927,7 +927,7 @@ func (this *NodeService) UpdateNodeConnectedAPINodes(ctx context.Context, req *p
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeDAO.UpdateNodeConnectedAPINodes(tx, nodeId, req.ApiNodeIds)
 	if err != nil {
@@ -945,7 +945,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGrantId(ctx context.Context
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
@@ -962,7 +962,7 @@ func (this *NodeService) FindAllEnabledNodesWithNodeGrantId(ctx context.Context,
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesWithGrantId(tx, req.NodeGrantId)
 	if err != nil {
@@ -1000,7 +1000,7 @@ func (this *NodeService) CountAllNotInstalledNodesWithNodeClusterId(ctx context.
 	if err != nil {
 		return nil, err
 	}
-	tx := this.NullTx()
+	var tx = this.NullTx()
 	count, err := models.SharedNodeDAO.CountAllNotInstalledNodesWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
@@ -1015,7 +1015,7 @@ func (this *NodeService) FindAllNotInstalledNodesWithNodeClusterId(ctx context.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedNodeDAO.FindAllNotInstalledNodesWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
@@ -1098,7 +1098,7 @@ func (this *NodeService) CountAllUpgradeNodesWithNodeClusterId(ctx context.Conte
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	var deployFiles = installers.SharedDeployManager.LoadNodeFiles()
 	total := int64(0)
@@ -1121,7 +1121,7 @@ func (this *NodeService) FindAllUpgradeNodesWithNodeClusterId(ctx context.Contex
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 获取当前能升级到的最新版本
 	deployFiles := installers.SharedDeployManager.LoadNodeFiles()
@@ -1227,7 +1227,7 @@ func (this *NodeService) FindNodeInstallStatus(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	installStatus, err := models.SharedNodeDAO.FindNodeInstallStatus(tx, req.NodeId)
 	if err != nil {
@@ -1256,7 +1256,7 @@ func (this *NodeService) UpdateNodeLogin(ctx context.Context, req *pb.UpdateNode
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	if req.NodeLogin.Id <= 0 {
 		_, err := models.SharedNodeLoginDAO.CreateNodeLogin(tx, nodeconfigs.NodeRoleNode, req.NodeId, req.NodeLogin.Name, req.NodeLogin.Type, req.NodeLogin.Params)
@@ -1278,7 +1278,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeGroupId(ctx context.Context
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithGroupId(tx, req.NodeGroupId)
 	if err != nil {
@@ -1295,7 +1295,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	clusterDNS, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
 	if err != nil {
@@ -1368,7 +1368,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedNodeDAO.FindEnabledNodeDNS(tx, req.NodeId)
 	if err != nil {
@@ -1444,7 +1444,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedNodeDAO.FindEnabledNodeDNS(tx, req.NodeId)
 	if err != nil {
@@ -1527,7 +1527,7 @@ func (this *NodeService) CountAllEnabledNodesWithNodeRegionId(ctx context.Contex
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedNodeDAO.CountAllEnabledNodesWithRegionId(tx, req.NodeRegionId)
 	if err != nil {
@@ -1543,7 +1543,7 @@ func (this *NodeService) FindEnabledNodesWithIds(ctx context.Context, req *pb.Fi
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedNodeDAO.FindEnabledNodesWithIds(tx, req.NodeIds)
 	if err != nil {

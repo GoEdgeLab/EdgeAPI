@@ -24,7 +24,7 @@ func (this *DBNodeService) CreateDBNode(ctx context.Context, req *pb.CreateDBNod
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodeId, err := models.SharedDBNodeDAO.CreateDBNode(tx, req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
 	if err != nil {
@@ -41,7 +41,7 @@ func (this *DBNodeService) UpdateDBNode(ctx context.Context, req *pb.UpdateDBNod
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedDBNodeDAO.UpdateNode(tx, req.DbNodeId, req.IsOn, req.Name, req.Description, req.Host, req.Port, req.Database, req.Username, req.Password, req.Charset)
 	if err != nil {
@@ -58,7 +58,7 @@ func (this *DBNodeService) DeleteDBNode(ctx context.Context, req *pb.DeleteDBNod
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedDBNodeDAO.DisableDBNode(tx, req.DbNodeId)
 	if err != nil {
@@ -75,7 +75,7 @@ func (this *DBNodeService) CountAllEnabledDBNodes(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedDBNodeDAO.CountAllEnabledNodes(tx)
 	if err != nil {
@@ -92,7 +92,7 @@ func (this *DBNodeService) ListEnabledDBNodes(ctx context.Context, req *pb.ListE
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	nodes, err := models.SharedDBNodeDAO.ListEnabledNodes(tx, req.Offset, req.Size)
 	if err != nil {
@@ -153,7 +153,7 @@ func (this *DBNodeService) FindEnabledDBNode(ctx context.Context, req *pb.FindEn
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	node, err := models.SharedDBNodeDAO.FindEnabledDBNode(tx, req.DbNodeId)
 	if err != nil {

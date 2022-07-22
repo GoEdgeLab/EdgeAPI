@@ -17,7 +17,7 @@ type HTTPFastcgiService struct {
 
 // CreateHTTPFastcgi 创建Fastcgi
 func (this *HTTPFastcgiService) CreateHTTPFastcgi(ctx context.Context, req *pb.CreateHTTPFastcgiRequest) (*pb.CreateHTTPFastcgiResponse, error) {
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *HTTPFastcgiService) CreateHTTPFastcgi(ctx context.Context, req *pb.C
 
 // UpdateHTTPFastcgi 修改Fastcgi
 func (this *HTTPFastcgiService) UpdateHTTPFastcgi(ctx context.Context, req *pb.UpdateHTTPFastcgiRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (this *HTTPFastcgiService) UpdateHTTPFastcgi(ctx context.Context, req *pb.U
 
 // FindEnabledHTTPFastcgi 获取Fastcgi详情
 func (this *HTTPFastcgiService) FindEnabledHTTPFastcgi(ctx context.Context, req *pb.FindEnabledHTTPFastcgiRequest) (*pb.FindEnabledHTTPFastcgiResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (this *HTTPFastcgiService) FindEnabledHTTPFastcgi(ctx context.Context, req 
 
 // FindEnabledHTTPFastcgiConfig 获取Fastcgi配置
 func (this *HTTPFastcgiService) FindEnabledHTTPFastcgiConfig(ctx context.Context, req *pb.FindEnabledHTTPFastcgiConfigRequest) (*pb.FindEnabledHTTPFastcgiConfigResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

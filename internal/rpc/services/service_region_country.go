@@ -20,7 +20,7 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	countries, err := regions.SharedRegionCountryDAO.FindAllEnabledCountriesOrderByPinyin(tx)
 	if err != nil {
@@ -58,7 +58,7 @@ func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	country, err := regions.SharedRegionCountryDAO.FindEnabledRegionCountry(tx, req.RegionCountryId)
 	if err != nil {

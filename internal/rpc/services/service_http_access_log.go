@@ -30,7 +30,7 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 		return &pb.CreateHTTPAccessLogsResponse{}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.HttpAccessLogs)
 	if err != nil {
@@ -55,18 +55,16 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 // ListHTTPAccessLogs 列出单页访问日志
 func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *pb.ListHTTPAccessLogsRequest) (*pb.ListHTTPAccessLogsResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查服务ID
 	if userId > 0 {
-		if req.UserId > 0 && userId != req.UserId {
-			return nil, this.PermissionError()
-		}
+		req.UserId = userId
 
 		// 这里不用担心serverId <= 0 的情况，因为如果userId>0，则只会查询当前用户下的服务，不会产生安全问题
 		if req.ServerId > 0 {
@@ -82,7 +80,7 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 		return nil, err
 	}
 
-	result := []*pb.HTTPAccessLog{}
+	var result = []*pb.HTTPAccessLog{}
 	var pbNodeMap = map[int64]*pb.Node{}
 	var pbClusterMap = map[int64]*pb.NodeCluster{}
 	for _, accessLog := range accessLogs {
@@ -141,12 +139,12 @@ func (this *HTTPAccessLogService) ListHTTPAccessLogs(ctx context.Context, req *p
 // FindHTTPAccessLog 查找单个日志
 func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb.FindHTTPAccessLogRequest) (*pb.FindHTTPAccessLogResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	accessLog, err := models.SharedHTTPAccessLogDAO.FindAccessLogWithRequestId(tx, req.RequestId)
 	if err != nil {

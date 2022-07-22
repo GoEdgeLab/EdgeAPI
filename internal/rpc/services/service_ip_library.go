@@ -22,7 +22,7 @@ func (this *IPLibraryService) CreateIPLibrary(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	ipLibraryId, err := models.SharedIPLibraryDAO.CreateIPLibrary(tx, req.Type, req.FileId)
 	if err != nil {
@@ -42,7 +42,7 @@ func (this *IPLibraryService) FindEnabledIPLibrary(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	ipLibrary, err := models.SharedIPLibraryDAO.FindEnabledIPLibrary(tx, req.IpLibraryId)
 	if err != nil {
@@ -84,7 +84,7 @@ func (this *IPLibraryService) FindLatestIPLibraryWithType(ctx context.Context, r
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	ipLibrary, err := models.SharedIPLibraryDAO.FindLatestIPLibraryWithType(tx, req.Type)
 	if err != nil {
@@ -126,7 +126,7 @@ func (this *IPLibraryService) FindAllEnabledIPLibrariesWithType(ctx context.Cont
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	ipLibraries, err := models.SharedIPLibraryDAO.FindAllEnabledIPLibrariesWithType(tx, req.Type)
 	if err != nil {
@@ -166,7 +166,7 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedIPLibraryDAO.DisableIPLibrary(tx, req.IpLibraryId)
 	if err != nil {
@@ -178,7 +178,7 @@ func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.Delet
 // LookupIPRegion 查询某个IP信息
 func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.LookupIPRegionRequest) (*pb.LookupIPRegionResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		return &pb.LookupIPRegionResponse{IpRegion: nil}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, result.Country)
 	if err != nil {
@@ -218,7 +218,7 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 // LookupIPRegions 查询一组IP信息
 func (this *IPLibraryService) LookupIPRegions(ctx context.Context, req *pb.LookupIPRegionsRequest) (*pb.LookupIPRegionsResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

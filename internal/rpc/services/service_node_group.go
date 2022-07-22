@@ -19,7 +19,7 @@ func (this *NodeGroupService) CreateNodeGroup(ctx context.Context, req *pb.Creat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	groupId, err := models.SharedNodeGroupDAO.CreateNodeGroup(tx, req.NodeClusterId, req.Name)
 	if err != nil {
@@ -36,7 +36,7 @@ func (this *NodeGroupService) UpdateNodeGroup(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeGroupDAO.UpdateNodeGroup(tx, req.NodeGroupId, req.Name)
 	if err != nil {
@@ -54,7 +54,7 @@ func (this *NodeGroupService) DeleteNodeGroup(ctx context.Context, req *pb.Delet
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	_, err = models.SharedNodeGroupDAO.DisableNodeGroup(tx, req.NodeGroupId)
 	if err != nil {
@@ -72,7 +72,7 @@ func (this *NodeGroupService) FindAllEnabledNodeGroupsWithNodeClusterId(ctx cont
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	groups, err := models.SharedNodeGroupDAO.FindAllEnabledGroupsWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
@@ -96,7 +96,7 @@ func (this *NodeGroupService) UpdateNodeGroupOrders(ctx context.Context, req *pb
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedNodeGroupDAO.UpdateGroupOrders(tx, req.NodeGroupIds)
 	if err != nil {
@@ -113,7 +113,7 @@ func (this *NodeGroupService) FindEnabledNodeGroup(ctx context.Context, req *pb.
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	group, err := models.SharedNodeGroupDAO.FindEnabledNodeGroup(tx, req.NodeGroupId)
 	if err != nil {

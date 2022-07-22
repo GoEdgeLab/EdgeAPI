@@ -15,7 +15,7 @@ type ServerRegionCountryMonthlyStatService struct {
 
 // 查找前N个地区
 func (this *ServerRegionCountryMonthlyStatService) FindTopServerRegionCountryMonthlyStats(ctx context.Context, req *pb.FindTopServerRegionCountryMonthlyStatsRequest) (*pb.FindTopServerRegionCountryMonthlyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

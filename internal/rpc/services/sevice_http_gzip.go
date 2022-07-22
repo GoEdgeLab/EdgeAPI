@@ -42,7 +42,7 @@ func (this *HTTPGzipService) CreateHTTPGzip(ctx context.Context, req *pb.CreateH
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	gzipId, err := models.SharedHTTPGzipDAO.CreateGzip(tx, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
 	if err != nil {
@@ -60,7 +60,7 @@ func (this *HTTPGzipService) FindEnabledHTTPGzipConfig(ctx context.Context, req 
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	config, err := models.SharedHTTPGzipDAO.ComposeGzipConfig(tx, req.HttpGzipId)
 	if err != nil {
@@ -104,7 +104,7 @@ func (this *HTTPGzipService) UpdateHTTPGzip(ctx context.Context, req *pb.UpdateH
 		}
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedHTTPGzipDAO.UpdateGzip(tx, req.HttpGzipId, int(req.Level), minLengthJSON, maxLengthJSON, req.CondsJSON)
 	if err != nil {

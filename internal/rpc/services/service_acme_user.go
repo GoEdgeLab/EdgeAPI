@@ -15,12 +15,12 @@ type ACMEUserService struct {
 // CreateACMEUser 创建用户
 func (this *ACMEUserService) CreateACMEUser(ctx context.Context, req *pb.CreateACMEUserRequest) (*pb.CreateACMEUserResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	acmeUserId, err := acmemodels.SharedACMEUserDAO.CreateACMEUser(tx, adminId, userId, req.AcmeProviderCode, req.AcmeProviderAccountId, req.Email, req.Description)
 	if err != nil {
@@ -32,12 +32,12 @@ func (this *ACMEUserService) CreateACMEUser(ctx context.Context, req *pb.CreateA
 // UpdateACMEUser 修改用户
 func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateACMEUserRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查是否有权限
 	b, err := acmemodels.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
@@ -58,12 +58,12 @@ func (this *ACMEUserService) UpdateACMEUser(ctx context.Context, req *pb.UpdateA
 // DeleteACMEUser 删除用户
 func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteACMEUserRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查是否有权限
 	b, err := acmemodels.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
@@ -84,14 +84,17 @@ func (this *ACMEUserService) DeleteACMEUser(ctx context.Context, req *pb.DeleteA
 // CountACMEUsers 计算用户数量
 func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAcmeUsersRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
-	count, err := acmemodels.SharedACMEUserDAO.CountACMEUsersWithAdminId(tx, adminId, userId, req.AcmeProviderAccountId)
+	count, err := acmemodels.SharedACMEUserDAO.CountACMEUsersWithAdminId(tx, adminId, req.UserId, req.AcmeProviderAccountId)
 	if err != nil {
 		return nil, err
 	}
@@ -101,18 +104,22 @@ func (this *ACMEUserService) CountACMEUsers(ctx context.Context, req *pb.CountAc
 // ListACMEUsers 列出单页用户
 func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACMEUsersRequest) (*pb.ListACMEUsersResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	acmeUsers, err := acmemodels.SharedACMEUserDAO.ListACMEUsers(tx, adminId, userId, req.Offset, req.Size)
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	acmeUsers, err := acmemodels.SharedACMEUserDAO.ListACMEUsers(tx, adminId, req.UserId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.ACMEUser{}
+	var result = []*pb.ACMEUser{}
 	for _, user := range acmeUsers {
 		var pbUser = &pb.ACMEUser{
 			Id:               int64(user.Id),
@@ -173,12 +180,12 @@ func (this *ACMEUserService) ListACMEUsers(ctx context.Context, req *pb.ListACME
 // FindEnabledACMEUser 查找单个用户
 func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.FindEnabledACMEUserRequest) (*pb.FindEnabledACMEUserResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 检查是否有权限
 	b, err := acmemodels.SharedACMEUserDAO.CheckACMEUser(tx, req.AcmeUserId, adminId, userId)
@@ -253,18 +260,22 @@ func (this *ACMEUserService) FindEnabledACMEUser(ctx context.Context, req *pb.Fi
 // FindAllACMEUsers 查找所有用户
 func (this *ACMEUserService) FindAllACMEUsers(ctx context.Context, req *pb.FindAllACMEUsersRequest) (*pb.FindAllACMEUsersResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
-	acmeUsers, err := acmemodels.SharedACMEUserDAO.FindAllACMEUsers(tx, adminId, userId, req.AcmeProviderCode)
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	acmeUsers, err := acmemodels.SharedACMEUserDAO.FindAllACMEUsers(tx, adminId, req.UserId, req.AcmeProviderCode)
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.ACMEUser{}
+	var result = []*pb.ACMEUser{}
 	for _, user := range acmeUsers {
 		result = append(result, &pb.ACMEUser{
 			Id:               int64(user.Id),

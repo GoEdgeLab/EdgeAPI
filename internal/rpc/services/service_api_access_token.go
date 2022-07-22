@@ -15,7 +15,7 @@ type APIAccessTokenService struct {
 // GetAPIAccessToken 获取AccessToken
 func (this *APIAccessTokenService) GetAPIAccessToken(ctx context.Context, req *pb.GetAPIAccessTokenRequest) (*pb.GetAPIAccessTokenResponse, error) {
 	if req.Type == "user" || req.Type == "admin" { // 用户或管理员
-		tx := this.NullTx()
+		var tx = this.NullTx()
 
 		accessKey, err := models.SharedUserAccessKeyDAO.FindAccessKeyWithUniqueId(tx, req.AccessKeyId)
 		if err != nil {

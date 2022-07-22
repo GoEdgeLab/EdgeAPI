@@ -14,7 +14,7 @@ type ServerClientSystemMonthlyStatService struct {
 
 // FindTopServerClientSystemMonthlyStats 查找前N个操作系统
 func (this *ServerClientSystemMonthlyStatService) FindTopServerClientSystemMonthlyStats(ctx context.Context, req *pb.FindTopServerClientSystemMonthlyStatsRequest) (*pb.FindTopServerClientSystemMonthlyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}

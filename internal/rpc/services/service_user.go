@@ -31,7 +31,7 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	userId, err := models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.Source, req.NodeClusterId, nil, "", true)
 	if err != nil {
@@ -116,7 +116,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	oldClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, req.UserId)
 	if err != nil {
@@ -145,7 +145,7 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	// 删除其下的Server
 	serverIds, err := models.SharedServerDAO.FindAllEnabledServerIdsWithUserId(tx, req.UserId)
@@ -173,7 +173,7 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	count, err := models.SharedUserDAO.CountAllEnabledUsers(tx, 0, req.Keyword, req.IsVerifying)
 	if err != nil {
@@ -189,7 +189,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	users, err := models.SharedUserDAO.ListEnabledUsers(tx, 0, req.Keyword, req.IsVerifying, req.Offset, req.Size)
 	if err != nil {
@@ -233,12 +233,12 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 // FindEnabledUser 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, _, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	user, err := models.SharedUserDAO.FindEnabledUser(tx, req.UserId, nil)
 	if err != nil {
@@ -291,7 +291,7 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 		return nil, this.PermissionError()
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	b, err := models.SharedUserDAO.ExistUser(tx, req.UserId, req.Username)
 	if err != nil {
@@ -323,7 +323,7 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 		}, nil
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	userId, err := models.SharedUserDAO.CheckUserPassword(tx, req.Username, req.Password)
 	if err != nil {
@@ -356,7 +356,7 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 		return nil, this.PermissionError()
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserDAO.UpdateUserInfo(tx, req.UserId, req.Fullname, req.Mobile, req.Email)
 	if err != nil {
@@ -376,7 +376,7 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 		return nil, this.PermissionError()
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserDAO.UpdateUserLogin(tx, req.UserId, req.Username, req.Password)
 	if err != nil {
@@ -387,7 +387,7 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 
 // ComposeUserDashboard 取得用户Dashboard数据
 func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -484,12 +484,15 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 
 // FindUserNodeClusterId 获取用户所在的集群ID
 func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.FindUserNodeClusterIdRequest) (*pb.FindUserNodeClusterIdResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	clusterId, err := models.SharedUserDAO.FindUserClusterId(tx, req.UserId)
 	if err != nil {
@@ -510,7 +513,7 @@ func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateU
 		return nil, err
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	err = models.SharedUserDAO.UpdateUserFeatures(tx, req.UserId, featuresJSON)
 	if err != nil {
@@ -521,7 +524,7 @@ func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateU
 
 // FindUserFeatures 获取用户所有的功能列表
 func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, 0, req.UserId)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +532,7 @@ func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserF
 		req.UserId = userId
 	}
 
-	tx := this.NullTx()
+	var tx = this.NullTx()
 
 	features, err := models.SharedUserDAO.FindUserFeatures(tx, req.UserId)
 	if err != nil {
