@@ -16,7 +16,7 @@ type MetricItemService struct {
 
 // CreateMetricItem 创建指标
 func (this *MetricItemService) CreateMetricItem(ctx context.Context, req *pb.CreateMetricItemRequest) (*pb.CreateMetricItemResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (this *MetricItemService) CreateMetricItem(ctx context.Context, req *pb.Cre
 
 // UpdateMetricItem 修改指标
 func (this *MetricItemService) UpdateMetricItem(ctx context.Context, req *pb.UpdateMetricItemRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (this *MetricItemService) UpdateMetricItem(ctx context.Context, req *pb.Upd
 
 // FindEnabledMetricItem 查找单个指标信息
 func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *pb.FindEnabledMetricItemRequest) (*pb.FindEnabledMetricItemResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (this *MetricItemService) FindEnabledMetricItem(ctx context.Context, req *p
 
 // CountAllEnabledMetricItems 计算指标数量
 func (this *MetricItemService) CountAllEnabledMetricItems(ctx context.Context, req *pb.CountAllEnabledMetricItemsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (this *MetricItemService) CountAllEnabledMetricItems(ctx context.Context, r
 
 // ListEnabledMetricItems 列出单页指标
 func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *pb.ListEnabledMetricItemsRequest) (*pb.ListEnabledMetricItemsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (this *MetricItemService) ListEnabledMetricItems(ctx context.Context, req *
 
 // DeleteMetricItem 删除指标
 func (this *MetricItemService) DeleteMetricItem(ctx context.Context, req *pb.DeleteMetricItemRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

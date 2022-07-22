@@ -18,7 +18,7 @@ type MetricChartService struct {
 
 // CreateMetricChart 创建图表
 func (this *MetricChartService) CreateMetricChart(ctx context.Context, req *pb.CreateMetricChartRequest) (*pb.CreateMetricChartResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (this *MetricChartService) CreateMetricChart(ctx context.Context, req *pb.C
 
 // UpdateMetricChart 修改图表
 func (this *MetricChartService) UpdateMetricChart(ctx context.Context, req *pb.UpdateMetricChartRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (this *MetricChartService) UpdateMetricChart(ctx context.Context, req *pb.U
 
 // FindEnabledMetricChart 查找单个图表
 func (this *MetricChartService) FindEnabledMetricChart(ctx context.Context, req *pb.FindEnabledMetricChartRequest) (*pb.FindEnabledMetricChartResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (this *MetricChartService) FindEnabledMetricChart(ctx context.Context, req 
 
 // CountEnabledMetricCharts 计算图表数量
 func (this *MetricChartService) CountEnabledMetricCharts(ctx context.Context, req *pb.CountEnabledMetricChartsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (this *MetricChartService) CountEnabledMetricCharts(ctx context.Context, re
 
 // ListEnabledMetricCharts 列出单页图表
 func (this *MetricChartService) ListEnabledMetricCharts(ctx context.Context, req *pb.ListEnabledMetricChartsRequest) (*pb.ListEnabledMetricChartsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (this *MetricChartService) ListEnabledMetricCharts(ctx context.Context, req
 
 // DeleteMetricChart 删除图表
 func (this *MetricChartService) DeleteMetricChart(ctx context.Context, req *pb.DeleteMetricChartRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

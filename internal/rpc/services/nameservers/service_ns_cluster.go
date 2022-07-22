@@ -19,7 +19,7 @@ type NSClusterService struct {
 
 // CreateNSCluster 创建集群
 func (this *NSClusterService) CreateNSCluster(ctx context.Context, req *pb.CreateNSClusterRequest) (*pb.CreateNSClusterResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (this *NSClusterService) CreateNSCluster(ctx context.Context, req *pb.Creat
 
 // UpdateNSCluster 修改集群
 func (this *NSClusterService) UpdateNSCluster(ctx context.Context, req *pb.UpdateNSClusterRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (this *NSClusterService) UpdateNSCluster(ctx context.Context, req *pb.Updat
 
 // FindNSClusterAccessLog 查找集群访问日志配置
 func (this *NSClusterService) FindNSClusterAccessLog(ctx context.Context, req *pb.FindNSClusterAccessLogRequest) (*pb.FindNSClusterAccessLogResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (this *NSClusterService) FindNSClusterAccessLog(ctx context.Context, req *p
 
 // UpdateNSClusterAccessLog 修改集群访问日志配置
 func (this *NSClusterService) UpdateNSClusterAccessLog(ctx context.Context, req *pb.UpdateNSClusterAccessLogRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (this *NSClusterService) UpdateNSClusterAccessLog(ctx context.Context, req 
 
 // DeleteNSCluster 删除集群
 func (this *NSClusterService) DeleteNSCluster(ctx context.Context, req *pb.DeleteNSCluster) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (this *NSClusterService) DeleteNSCluster(ctx context.Context, req *pb.Delet
 
 // FindEnabledNSCluster 查找单个可用集群信息
 func (this *NSClusterService) FindEnabledNSCluster(ctx context.Context, req *pb.FindEnabledNSClusterRequest) (*pb.FindEnabledNSClusterResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (this *NSClusterService) FindEnabledNSCluster(ctx context.Context, req *pb.
 
 // CountAllEnabledNSClusters 计算所有可用集群的数量
 func (this *NSClusterService) CountAllEnabledNSClusters(ctx context.Context, req *pb.CountAllEnabledNSClustersRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (this *NSClusterService) CountAllEnabledNSClusters(ctx context.Context, req
 
 // ListEnabledNSClusters 列出单页可用集群
 func (this *NSClusterService) ListEnabledNSClusters(ctx context.Context, req *pb.ListEnabledNSClustersRequest) (*pb.ListEnabledNSClustersResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (this *NSClusterService) ListEnabledNSClusters(ctx context.Context, req *pb
 
 // FindAllEnabledNSClusters 查找所有可用集群
 func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req *pb.FindAllEnabledNSClustersRequest) (*pb.FindAllEnabledNSClustersResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (this *NSClusterService) FindAllEnabledNSClusters(ctx context.Context, req 
 
 // UpdateNSClusterRecursionConfig 设置递归DNS配置
 func (this *NSClusterService) UpdateNSClusterRecursionConfig(ctx context.Context, req *pb.UpdateNSClusterRecursionConfigRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (this *NSClusterService) UpdateNSClusterRecursionConfig(ctx context.Context
 
 // FindNSClusterRecursionConfig 读取递归DNS配置
 func (this *NSClusterService) FindNSClusterRecursionConfig(ctx context.Context, req *pb.FindNSClusterRecursionConfigRequest) (*pb.FindNSClusterRecursionConfigResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ type NodeRegionService struct {
 
 // CreateNodeRegion 创建区域
 func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.CreateNodeRegionRequest) (*pb.CreateNodeRegionResponse, error) {
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (this *NodeRegionService) CreateNodeRegion(ctx context.Context, req *pb.Cre
 
 // UpdateNodeRegion 修改区域
 func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.UpdateNodeRegionRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (this *NodeRegionService) UpdateNodeRegion(ctx context.Context, req *pb.Upd
 
 // DeleteNodeRegion 删除区域
 func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.DeleteNodeRegionRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.Del
 
 // FindAllEnabledNodeRegions 查找所有区域
 func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, req *pb.FindAllEnabledNodeRegionsRequest) (*pb.FindAllEnabledNodeRegionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 
 // FindAllEnabledAndOnNodeRegions 查找所有启用的区域
 func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Context, req *pb.FindAllEnabledAndOnNodeRegionsRequest) (*pb.FindAllEnabledAndOnNodeRegionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 
 // UpdateNodeRegionOrders 排序
 func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *pb.UpdateNodeRegionOrdersRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *
 
 // FindEnabledNodeRegion 查找单个区域信息
 func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *pb.FindEnabledNodeRegionRequest) (*pb.FindEnabledNodeRegionResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *p
 
 // UpdateNodeRegionPrice 修改价格项价格
 func (this *NodeRegionService) UpdateNodeRegionPrice(ctx context.Context, req *pb.UpdateNodeRegionPriceRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

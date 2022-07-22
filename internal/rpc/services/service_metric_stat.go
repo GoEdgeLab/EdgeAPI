@@ -116,7 +116,7 @@ func (this *MetricStatService) UploadMetricStats(ctx context.Context, req *pb.Up
 
 // CountMetricStats 计算指标数据数量
 func (this *MetricStatService) CountMetricStats(ctx context.Context, req *pb.CountMetricStatsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (this *MetricStatService) CountMetricStats(ctx context.Context, req *pb.Cou
 
 // ListMetricStats 读取单页指标数据
 func (this *MetricStatService) ListMetricStats(ctx context.Context, req *pb.ListMetricStatsRequest) (*pb.ListMetricStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -6,17 +6,19 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 文件相关服务
+// FileService 文件相关服务
 type FileService struct {
 	BaseService
 }
 
-// 查找文件
+// FindEnabledFile 查找文件
 func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnabledFileRequest) (*pb.FindEnabledFileResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, 0, -1)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO 检查用户权限
 
 	var tx = this.NullTx()
 	file, err := models.SharedFileDAO.FindEnabledFile(tx, req.FileId)
@@ -45,7 +47,7 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 	}, nil
 }
 
-// 创建文件
+// CreateFile 创建文件
 func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileRequest) (*pb.CreateFileResponse, error) {
 	adminId, userId, err := this.ValidateAdminAndUser(ctx, 0, 0)
 	if err != nil {
@@ -61,9 +63,9 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 	return &pb.CreateFileResponse{FileId: fileId}, nil
 }
 
-// 将文件置为已完成
+// UpdateFileFinished 将文件置为已完成
 func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateFileFinishedRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

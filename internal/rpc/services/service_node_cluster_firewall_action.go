@@ -15,7 +15,7 @@ type NodeClusterFirewallActionService struct {
 
 // CreateNodeClusterFirewallAction 创建动作
 func (this *NodeClusterFirewallActionService) CreateNodeClusterFirewallAction(ctx context.Context, req *pb.CreateNodeClusterFirewallActionRequest) (*pb.NodeClusterFirewallActionResponse, error) {
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (this *NodeClusterFirewallActionService) CreateNodeClusterFirewallAction(ct
 
 // UpdateNodeClusterFirewallAction 修改动作
 func (this *NodeClusterFirewallActionService) UpdateNodeClusterFirewallAction(ctx context.Context, req *pb.UpdateNodeClusterFirewallActionRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (this *NodeClusterFirewallActionService) UpdateNodeClusterFirewallAction(ct
 
 // DeleteNodeClusterFirewallAction 删除动作
 func (this *NodeClusterFirewallActionService) DeleteNodeClusterFirewallAction(ctx context.Context, req *pb.DeleteNodeClusterFirewallActionRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (this *NodeClusterFirewallActionService) DeleteNodeClusterFirewallAction(ct
 
 // FindAllEnabledNodeClusterFirewallActions 查询集群的所有动作
 func (this *NodeClusterFirewallActionService) FindAllEnabledNodeClusterFirewallActions(ctx context.Context, req *pb.FindAllEnabledNodeClusterFirewallActionsRequest) (*pb.FindAllEnabledNodeClusterFirewallActionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (this *NodeClusterFirewallActionService) FindAllEnabledNodeClusterFirewallA
 
 // FindEnabledNodeClusterFirewallAction 查询单个动作
 func (this *NodeClusterFirewallActionService) FindEnabledNodeClusterFirewallAction(ctx context.Context, req *pb.FindEnabledNodeClusterFirewallActionRequest) (*pb.FindEnabledNodeClusterFirewallActionResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (this *NodeClusterFirewallActionService) FindEnabledNodeClusterFirewallActi
 
 // CountAllEnabledNodeClusterFirewallActions 计算动作数量
 func (this *NodeClusterFirewallActionService) CountAllEnabledNodeClusterFirewallActions(ctx context.Context, req *pb.CountAllEnabledNodeClusterFirewallActionsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ type MessageRecipientGroupService struct {
 
 // 创建分组
 func (this *MessageRecipientGroupService) CreateMessageRecipientGroup(ctx context.Context, req *pb.CreateMessageRecipientGroupRequest) (*pb.CreateMessageRecipientGroupResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (this *MessageRecipientGroupService) CreateMessageRecipientGroup(ctx contex
 
 // 修改分组
 func (this *MessageRecipientGroupService) UpdateMessageRecipientGroup(ctx context.Context, req *pb.UpdateMessageRecipientGroupRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (this *MessageRecipientGroupService) UpdateMessageRecipientGroup(ctx contex
 
 // 查找所有可用的分组
 func (this *MessageRecipientGroupService) FindAllEnabledMessageRecipientGroups(ctx context.Context, req *pb.FindAllEnabledMessageRecipientGroupsRequest) (*pb.FindAllEnabledMessageRecipientGroupsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (this *MessageRecipientGroupService) FindAllEnabledMessageRecipientGroups(c
 
 // 删除分组
 func (this *MessageRecipientGroupService) DeleteMessageRecipientGroup(ctx context.Context, req *pb.DeleteMessageRecipientGroupRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (this *MessageRecipientGroupService) DeleteMessageRecipientGroup(ctx contex
 
 // 查找单个分组信息
 func (this *MessageRecipientGroupService) FindEnabledMessageRecipientGroup(ctx context.Context, req *pb.FindEnabledMessageRecipientGroupRequest) (*pb.FindEnabledMessageRecipientGroupResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

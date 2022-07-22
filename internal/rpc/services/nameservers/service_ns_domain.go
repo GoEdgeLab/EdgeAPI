@@ -19,7 +19,7 @@ type NSDomainService struct {
 
 // CreateNSDomain 创建域名
 func (this *NSDomainService) CreateNSDomain(ctx context.Context, req *pb.CreateNSDomainRequest) (*pb.CreateNSDomainResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (this *NSDomainService) CreateNSDomain(ctx context.Context, req *pb.CreateN
 
 // UpdateNSDomain 修改域名
 func (this *NSDomainService) UpdateNSDomain(ctx context.Context, req *pb.UpdateNSDomainRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (this *NSDomainService) UpdateNSDomain(ctx context.Context, req *pb.UpdateN
 
 // DeleteNSDomain 删除域名
 func (this *NSDomainService) DeleteNSDomain(ctx context.Context, req *pb.DeleteNSDomainRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (this *NSDomainService) DeleteNSDomain(ctx context.Context, req *pb.DeleteN
 
 // FindEnabledNSDomain 查找单个域名
 func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.FindEnabledNSDomainRequest) (*pb.FindEnabledNSDomainResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (this *NSDomainService) FindEnabledNSDomain(ctx context.Context, req *pb.Fi
 
 // CountAllEnabledNSDomains 计算域名数量
 func (this *NSDomainService) CountAllEnabledNSDomains(ctx context.Context, req *pb.CountAllEnabledNSDomainsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (this *NSDomainService) CountAllEnabledNSDomains(ctx context.Context, req *
 
 // ListEnabledNSDomains 列出单页域名
 func (this *NSDomainService) ListEnabledNSDomains(ctx context.Context, req *pb.ListEnabledNSDomainsRequest) (*pb.ListEnabledNSDomainsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (this *NSDomainService) ListNSDomainsAfterVersion(ctx context.Context, req 
 
 // FindEnabledNSDomainTSIG 查找TSIG配置
 func (this *NSDomainService) FindEnabledNSDomainTSIG(ctx context.Context, req *pb.FindEnabledNSDomainTSIGRequest) (*pb.FindEnabledNSDomainTSIGResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (this *NSDomainService) FindEnabledNSDomainTSIG(ctx context.Context, req *p
 
 // UpdateNSDomainTSIG 修改TSIG配置
 func (this *NSDomainService) UpdateNSDomainTSIG(ctx context.Context, req *pb.UpdateNSDomainTSIGRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

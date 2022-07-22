@@ -23,13 +23,10 @@ type BaseService struct {
 }
 
 // ValidateAdmin 校验管理员
-func (this *BaseService) ValidateAdmin(ctx context.Context, reqAdminId int64) (adminId int64, err error) {
+func (this *BaseService) ValidateAdmin(ctx context.Context) (adminId int64, err error) {
 	_, _, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin)
 	if err != nil {
 		return
-	}
-	if reqAdminId > 0 && reqUserId != reqAdminId {
-		return 0, this.PermissionError()
 	}
 	return reqUserId, nil
 }

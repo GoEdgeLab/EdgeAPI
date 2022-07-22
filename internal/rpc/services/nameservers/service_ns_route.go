@@ -18,7 +18,7 @@ type NSRouteService struct {
 
 // CreateNSRoute 创建线路
 func (this *NSRouteService) CreateNSRoute(ctx context.Context, req *pb.CreateNSRouteRequest) (*pb.CreateNSRouteResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *NSRouteService) CreateNSRoute(ctx context.Context, req *pb.CreateNSR
 
 // UpdateNSRoute 修改线路
 func (this *NSRouteService) UpdateNSRoute(ctx context.Context, req *pb.UpdateNSRouteRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (this *NSRouteService) UpdateNSRoute(ctx context.Context, req *pb.UpdateNSR
 
 // DeleteNSRoute 删除线路
 func (this *NSRouteService) DeleteNSRoute(ctx context.Context, req *pb.DeleteNSRouteRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (this *NSRouteService) DeleteNSRoute(ctx context.Context, req *pb.DeleteNSR
 
 // FindEnabledNSRoute 获取单个路线信息
 func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.FindEnabledNSRouteRequest) (*pb.FindEnabledNSRouteResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (this *NSRouteService) FindEnabledNSRoute(ctx context.Context, req *pb.Find
 
 // FindAllEnabledNSRoutes 读取所有线路
 func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.FindAllEnabledNSRoutesRequest) (*pb.FindAllEnabledNSRoutesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (this *NSRouteService) FindAllEnabledNSRoutes(ctx context.Context, req *pb.
 
 // UpdateNSRouteOrders 设置线路排序
 func (this *NSRouteService) UpdateNSRouteOrders(ctx context.Context, req *pb.UpdateNSRouteOrdersRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

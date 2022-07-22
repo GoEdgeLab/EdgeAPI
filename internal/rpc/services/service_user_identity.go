@@ -177,7 +177,7 @@ func (this *UserIdentityService) CancelUserIdentity(ctx context.Context, req *pb
 
 // RejectUserIdentity 拒绝用户身份认证信息
 func (this *UserIdentityService) RejectUserIdentity(ctx context.Context, req *pb.RejectUserIdentityRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (this *UserIdentityService) RejectUserIdentity(ctx context.Context, req *pb
 
 // VerifyUserIdentity 通过用户身份认证信息
 func (this *UserIdentityService) VerifyUserIdentity(ctx context.Context, req *pb.VerifyUserIdentityRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

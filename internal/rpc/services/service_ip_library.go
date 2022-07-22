@@ -161,7 +161,7 @@ func (this *IPLibraryService) FindAllEnabledIPLibrariesWithType(ctx context.Cont
 // DeleteIPLibrary 删除IP库
 func (this *IPLibraryService) DeleteIPLibrary(ctx context.Context, req *pb.DeleteIPLibraryRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

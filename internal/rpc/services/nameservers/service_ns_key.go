@@ -16,7 +16,7 @@ type NSKeyService struct {
 
 // CreateNSKey 创建密钥
 func (this *NSKeyService) CreateNSKey(ctx context.Context, req *pb.CreateNSKeyRequest) (*pb.CreateNSKeyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (this *NSKeyService) CreateNSKey(ctx context.Context, req *pb.CreateNSKeyRe
 
 // UpdateNSKey 修改密钥
 func (this *NSKeyService) UpdateNSKey(ctx context.Context, req *pb.UpdateNSKeyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (this *NSKeyService) UpdateNSKey(ctx context.Context, req *pb.UpdateNSKeyRe
 
 // DeleteNSKey 删除密钥
 func (this *NSKeyService) DeleteNSKey(ctx context.Context, req *pb.DeleteNSKeyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (this *NSKeyService) DeleteNSKey(ctx context.Context, req *pb.DeleteNSKeyRe
 
 // FindEnabledNSKey 查找单个密钥
 func (this *NSKeyService) FindEnabledNSKey(ctx context.Context, req *pb.FindEnabledNSKeyRequest) (*pb.FindEnabledNSKeyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (this *NSKeyService) FindEnabledNSKey(ctx context.Context, req *pb.FindEnab
 
 // CountAllEnabledNSKeys 计算密钥数量
 func (this *NSKeyService) CountAllEnabledNSKeys(ctx context.Context, req *pb.CountAllEnabledNSKeysRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (this *NSKeyService) CountAllEnabledNSKeys(ctx context.Context, req *pb.Cou
 
 // ListEnabledNSKeys 列出单页密钥
 func (this *NSKeyService) ListEnabledNSKeys(ctx context.Context, req *pb.ListEnabledNSKeysRequest) (*pb.ListEnabledNSKeysResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

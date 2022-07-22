@@ -17,7 +17,7 @@ type MessageTaskService struct {
 
 // CreateMessageTask 创建任务
 func (this *MessageTaskService) CreateMessageTask(ctx context.Context, req *pb.CreateMessageTaskRequest) (*pb.CreateMessageTaskResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (this *MessageTaskService) UpdateMessageTaskStatus(ctx context.Context, req
 
 // DeleteMessageTask 删除消息任务
 func (this *MessageTaskService) DeleteMessageTask(ctx context.Context, req *pb.DeleteMessageTaskRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (this *MessageTaskService) DeleteMessageTask(ctx context.Context, req *pb.D
 
 // FindEnabledMessageTask 读取消息任务状态
 func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req *pb.FindEnabledMessageTaskRequest) (*pb.FindEnabledMessageTaskResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (this *MessageTaskService) FindEnabledMessageTask(ctx context.Context, req 
 
 // CountMessageTasksWithStatus 计算某个状态的消息任务数量
 func (this *MessageTaskService) CountMessageTasksWithStatus(ctx context.Context, req *pb.CountMessageTasksWithStatusRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func (this *MessageTaskService) CountMessageTasksWithStatus(ctx context.Context,
 
 // ListMessageTasksWithStatus 根据状态列出某页任务
 func (this *MessageTaskService) ListMessageTasksWithStatus(ctx context.Context, req *pb.ListMessageTasksWithStatusRequest) (*pb.ListMessageTasksWithStatusResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

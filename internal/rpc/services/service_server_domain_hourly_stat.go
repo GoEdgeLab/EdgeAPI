@@ -15,7 +15,7 @@ type ServerDomainHourlyStatService struct {
 
 // ListTopServerDomainStatsWithServerId 读取域名排行
 func (this *ServerDomainHourlyStatService) ListTopServerDomainStatsWithServerId(ctx context.Context, req *pb.ListTopServerDomainStatsWithServerIdRequest) (*pb.ListTopServerDomainStatsWithServerIdResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

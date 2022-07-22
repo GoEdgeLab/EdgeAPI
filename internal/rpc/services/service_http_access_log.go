@@ -173,7 +173,7 @@ func (this *HTTPAccessLogService) FindHTTPAccessLog(ctx context.Context, req *pb
 
 // FindHTTPAccessLogPartitions 查找日志分区
 func (this *HTTPAccessLogService) FindHTTPAccessLogPartitions(ctx context.Context, req *pb.FindHTTPAccessLogPartitionsRequest) (*pb.FindHTTPAccessLogPartitionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

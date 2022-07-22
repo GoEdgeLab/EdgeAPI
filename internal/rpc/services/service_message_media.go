@@ -14,7 +14,7 @@ type MessageMediaService struct {
 
 // FindAllMessageMedias 获取所有支持的媒介
 func (this *MessageMediaService) FindAllMessageMedias(ctx context.Context, req *pb.FindAllMessageMediasRequest) (*pb.FindAllMessageMediasResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

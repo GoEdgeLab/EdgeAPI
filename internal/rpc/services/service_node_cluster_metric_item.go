@@ -16,7 +16,7 @@ type NodeClusterMetricItemService struct {
 
 // EnableNodeClusterMetricItem 启用某个指标
 func (this *NodeClusterMetricItemService) EnableNodeClusterMetricItem(ctx context.Context, req *pb.EnableNodeClusterMetricItemRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (this *NodeClusterMetricItemService) EnableNodeClusterMetricItem(ctx contex
 
 // DisableNodeClusterMetricItem 禁用某个指标
 func (this *NodeClusterMetricItemService) DisableNodeClusterMetricItem(ctx context.Context, req *pb.DisableNodeClusterMetricItemRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (this *NodeClusterMetricItemService) DisableNodeClusterMetricItem(ctx conte
 
 // FindAllNodeClusterMetricItems 查找集群中所有指标
 func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx context.Context, req *pb.FindAllNodeClusterMetricItemsRequest) (*pb.FindAllNodeClusterMetricItemsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (this *NodeClusterMetricItemService) FindAllNodeClusterMetricItems(ctx cont
 
 // ExistsNodeClusterMetricItem 检查是否已添加某个指标
 func (this *NodeClusterMetricItemService) ExistsNodeClusterMetricItem(ctx context.Context, req *pb.ExistsNodeClusterMetricItemRequest) (*pb.RPCExists, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (this *NodeClusterMetricItemService) ExistsNodeClusterMetricItem(ctx contex
 
 // FindAllNodeClustersWithMetricItemId 查找使用指标的集群
 func (this *NodeClusterMetricItemService) FindAllNodeClustersWithMetricItemId(ctx context.Context, req *pb.FindAllNodeClustersWithMetricItemIdRequest) (*pb.FindAllNodeClustersWithMetricItemIdResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

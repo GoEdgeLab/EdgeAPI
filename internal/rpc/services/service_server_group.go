@@ -161,7 +161,7 @@ func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req 
 // FindAndInitServerGroupHTTPReverseProxyConfig 查找HTTP反向代理设置
 func (this *ServerGroupService) FindAndInitServerGroupHTTPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupHTTPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupHTTPReverseProxyConfigResponse, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (this *ServerGroupService) FindAndInitServerGroupHTTPReverseProxyConfig(ctx
 // FindAndInitServerGroupTCPReverseProxyConfig 查找反向代理设置
 func (this *ServerGroupService) FindAndInitServerGroupTCPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupTCPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupTCPReverseProxyConfigResponse, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ func (this *ServerGroupService) FindAndInitServerGroupTCPReverseProxyConfig(ctx 
 // FindAndInitServerGroupUDPReverseProxyConfig 查找反向代理设置
 func (this *ServerGroupService) FindAndInitServerGroupUDPReverseProxyConfig(ctx context.Context, req *pb.FindAndInitServerGroupUDPReverseProxyConfigRequest) (*pb.FindAndInitServerGroupUDPReverseProxyConfigResponse, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +320,7 @@ func (this *ServerGroupService) FindAndInitServerGroupUDPReverseProxyConfig(ctx 
 // UpdateServerGroupHTTPReverseProxy 修改服务的反向代理设置
 func (this *ServerGroupService) UpdateServerGroupHTTPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupHTTPReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +339,7 @@ func (this *ServerGroupService) UpdateServerGroupHTTPReverseProxy(ctx context.Co
 // UpdateServerGroupTCPReverseProxy 修改服务的反向代理设置
 func (this *ServerGroupService) UpdateServerGroupTCPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupTCPReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func (this *ServerGroupService) UpdateServerGroupTCPReverseProxy(ctx context.Con
 // UpdateServerGroupUDPReverseProxy 修改服务的反向代理设置
 func (this *ServerGroupService) UpdateServerGroupUDPReverseProxy(ctx context.Context, req *pb.UpdateServerGroupUDPReverseProxyRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -492,7 +492,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 
 // FindAndInitServerGroupWebConfig 初始化Web设置
 func (this *ServerGroupService) FindAndInitServerGroupWebConfig(ctx context.Context, req *pb.FindAndInitServerGroupWebConfigRequest) (*pb.FindAndInitServerGroupWebConfigResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

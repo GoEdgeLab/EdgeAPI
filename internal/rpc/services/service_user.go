@@ -26,7 +26,7 @@ type UserService struct {
 
 // CreateUser 创建用户
 func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (this *UserService) RegisterUser(ctx context.Context, req *pb.RegisterUserR
 
 // VerifyUser 审核用户
 func (this *UserService) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (this *UserService) VerifyUser(ctx context.Context, req *pb.VerifyUserReque
 
 // UpdateUser 修改用户
 func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 
 // DeleteUser 删除用户
 func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 
 // CountAllEnabledUsers 计算用户数量
 func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.CountAllEnabledUsersRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (this *UserService) CountAllEnabledUsers(ctx context.Context, req *pb.Count
 
 // ListEnabledUsers 列出单页用户
 func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabledUsersRequest) (*pb.ListEnabledUsersResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +500,7 @@ func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.Find
 
 // UpdateUserFeatures 设置用户能使用的功能
 func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateUserFeaturesRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +546,7 @@ func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserF
 
 // FindAllUserFeatureDefinitions 获取所有的功能定义
 func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req *pb.FindAllUserFeatureDefinitionsRequest) (*pb.FindAllUserFeatureDefinitionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +561,7 @@ func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req 
 
 // ComposeUserGlobalBoard 组合全局的看板数据
 func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.ComposeUserGlobalBoardRequest) (*pb.ComposeUserGlobalBoardResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

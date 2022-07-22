@@ -13,7 +13,7 @@ type HTTPAccessLogPolicyService struct {
 
 // CountAllEnabledHTTPAccessLogPolicies 计算访问日志策略数量
 func (this *HTTPAccessLogPolicyService) CountAllEnabledHTTPAccessLogPolicies(ctx context.Context, req *pb.CountAllEnabledHTTPAccessLogPoliciesRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (this *HTTPAccessLogPolicyService) CountAllEnabledHTTPAccessLogPolicies(ctx
 
 // ListEnabledHTTPAccessLogPolicies 列出单页访问日志策略
 func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx context.Context, req *pb.ListEnabledHTTPAccessLogPoliciesRequest) (*pb.ListEnabledHTTPAccessLogPoliciesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx con
 
 // CreateHTTPAccessLogPolicy 创建访问日志策略
 func (this *HTTPAccessLogPolicyService) CreateHTTPAccessLogPolicy(ctx context.Context, req *pb.CreateHTTPAccessLogPolicyRequest) (*pb.CreateHTTPAccessLogPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (this *HTTPAccessLogPolicyService) CreateHTTPAccessLogPolicy(ctx context.Co
 
 // UpdateHTTPAccessLogPolicy 修改访问日志策略
 func (this *HTTPAccessLogPolicyService) UpdateHTTPAccessLogPolicy(ctx context.Context, req *pb.UpdateHTTPAccessLogPolicyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (this *HTTPAccessLogPolicyService) UpdateHTTPAccessLogPolicy(ctx context.Co
 
 // FindEnabledHTTPAccessLogPolicy 查找单个访问日志策略
 func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx context.Context, req *pb.FindEnabledHTTPAccessLogPolicyRequest) (*pb.FindEnabledHTTPAccessLogPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx conte
 
 // DeleteHTTPAccessLogPolicy 删除访问日志策略
 func (this *HTTPAccessLogPolicyService) DeleteHTTPAccessLogPolicy(ctx context.Context, req *pb.DeleteHTTPAccessLogPolicyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (this *HTTPAccessLogPolicyService) DeleteHTTPAccessLogPolicy(ctx context.Co
 
 // WriteHTTPAccessLogPolicy 测试写入某个访问日志策略
 func (this *HTTPAccessLogPolicyService) WriteHTTPAccessLogPolicy(ctx context.Context, req *pb.WriteHTTPAccessLogPolicyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

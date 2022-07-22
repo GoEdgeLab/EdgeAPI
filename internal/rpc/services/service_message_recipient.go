@@ -14,7 +14,7 @@ type MessageRecipientService struct {
 
 // CreateMessageRecipient 创建接收人
 func (this *MessageRecipientService) CreateMessageRecipient(ctx context.Context, req *pb.CreateMessageRecipientRequest) (*pb.CreateMessageRecipientResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (this *MessageRecipientService) CreateMessageRecipient(ctx context.Context,
 
 // UpdateMessageRecipient 修改接收人
 func (this *MessageRecipientService) UpdateMessageRecipient(ctx context.Context, req *pb.UpdateMessageRecipientRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (this *MessageRecipientService) UpdateMessageRecipient(ctx context.Context,
 
 // DeleteMessageRecipient 删除接收人
 func (this *MessageRecipientService) DeleteMessageRecipient(ctx context.Context, req *pb.DeleteMessageRecipientRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (this *MessageRecipientService) DeleteMessageRecipient(ctx context.Context,
 
 // CountAllEnabledMessageRecipients 计算接收人数量
 func (this *MessageRecipientService) CountAllEnabledMessageRecipients(ctx context.Context, req *pb.CountAllEnabledMessageRecipientsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (this *MessageRecipientService) CountAllEnabledMessageRecipients(ctx contex
 
 // ListEnabledMessageRecipients 列出单页接收人
 func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Context, req *pb.ListEnabledMessageRecipientsRequest) (*pb.ListEnabledMessageRecipientsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (this *MessageRecipientService) ListEnabledMessageRecipients(ctx context.Co
 
 // FindEnabledMessageRecipient 查找单个接收人信息
 func (this *MessageRecipientService) FindEnabledMessageRecipient(ctx context.Context, req *pb.FindEnabledMessageRecipientRequest) (*pb.FindEnabledMessageRecipientResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

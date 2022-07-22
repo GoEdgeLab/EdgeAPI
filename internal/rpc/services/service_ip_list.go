@@ -44,7 +44,7 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 // UpdateIPList 修改IP列表
 func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPListRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 
 // CountAllEnabledIPLists 计算名单数量
 func (this *IPListService) CountAllEnabledIPLists(ctx context.Context, req *pb.CountAllEnabledIPListsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (this *IPListService) CountAllEnabledIPLists(ctx context.Context, req *pb.C
 
 // ListEnabledIPLists 列出单页名单
 func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListEnabledIPListsRequest) (*pb.ListEnabledIPListsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (this *IPListService) ListEnabledIPLists(ctx context.Context, req *pb.ListE
 
 // DeleteIPList 删除IP名单
 func (this *IPListService) DeleteIPList(ctx context.Context, req *pb.DeleteIPListRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (this *IPListService) DeleteIPList(ctx context.Context, req *pb.DeleteIPLis
 
 // ExistsEnabledIPList 检查IPList是否存在
 func (this *IPListService) ExistsEnabledIPList(ctx context.Context, req *pb.ExistsEnabledIPListRequest) (*pb.ExistsEnabledIPListResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (this *IPListService) ExistsEnabledIPList(ctx context.Context, req *pb.Exis
 
 // FindEnabledIPListContainsIP 根据IP来搜索IP名单
 func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req *pb.FindEnabledIPListContainsIPRequest) (*pb.FindEnabledIPListContainsIPResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,7 @@ type NSQuestionOptionService struct {
 
 // CreateNSQuestionOption 创建选项
 func (this *NSQuestionOptionService) CreateNSQuestionOption(ctx context.Context, req *pb.CreateNSQuestionOptionRequest) (*pb.CreateNSQuestionOptionResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (this *NSQuestionOptionService) FindNSQuestionOption(ctx context.Context, r
 
 // DeleteNSQuestionOption 删除选项
 func (this *NSQuestionOptionService) DeleteNSQuestionOption(ctx context.Context, req *pb.DeleteNSQuestionOptionRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

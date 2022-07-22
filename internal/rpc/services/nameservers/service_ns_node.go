@@ -28,7 +28,7 @@ type NSNodeService struct {
 
 // FindAllEnabledNSNodesWithNSClusterId 根据集群查找所有节点
 func (this *NSNodeService) FindAllEnabledNSNodesWithNSClusterId(ctx context.Context, req *pb.FindAllEnabledNSNodesWithNSClusterIdRequest) (*pb.FindAllEnabledNSNodesWithNSClusterIdResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (this *NSNodeService) FindAllEnabledNSNodesWithNSClusterId(ctx context.Cont
 
 // CountAllEnabledNSNodes 所有可用的节点数量
 func (this *NSNodeService) CountAllEnabledNSNodes(ctx context.Context, req *pb.CountAllEnabledNSNodesRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (this *NSNodeService) CountAllEnabledNSNodes(ctx context.Context, req *pb.C
 
 // CountAllEnabledNSNodesMatch 计算匹配的节点数量
 func (this *NSNodeService) CountAllEnabledNSNodesMatch(ctx context.Context, req *pb.CountAllEnabledNSNodesMatchRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (this *NSNodeService) CountAllEnabledNSNodesMatch(ctx context.Context, req 
 
 // ListEnabledNSNodesMatch 列出单页节点
 func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.ListEnabledNSNodesMatchRequest) (*pb.ListEnabledNSNodesMatchResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (this *NSNodeService) ListEnabledNSNodesMatch(ctx context.Context, req *pb.
 // CountAllUpgradeNSNodesWithNSClusterId 计算需要升级的节点数量
 func (this *NSNodeService) CountAllUpgradeNSNodesWithNSClusterId(ctx context.Context, req *pb.CountAllUpgradeNSNodesWithNSClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (this *NSNodeService) CountAllUpgradeNSNodesWithNSClusterId(ctx context.Con
 
 // CreateNSNode 创建节点
 func (this *NSNodeService) CreateNSNode(ctx context.Context, req *pb.CreateNSNodeRequest) (*pb.CreateNSNodeResponse, error) {
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (this *NSNodeService) CreateNSNode(ctx context.Context, req *pb.CreateNSNod
 
 // DeleteNSNode 删除节点
 func (this *NSNodeService) DeleteNSNode(ctx context.Context, req *pb.DeleteNSNodeRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (this *NSNodeService) DeleteNSNode(ctx context.Context, req *pb.DeleteNSNod
 
 // FindEnabledNSNode 查询单个节点信息
 func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEnabledNSNodeRequest) (*pb.FindEnabledNSNodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func (this *NSNodeService) FindEnabledNSNode(ctx context.Context, req *pb.FindEn
 
 // UpdateNSNode 修改节点
 func (this *NSNodeService) UpdateNSNode(ctx context.Context, req *pb.UpdateNSNodeRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (this *NSNodeService) UpdateNSNode(ctx context.Context, req *pb.UpdateNSNod
 
 // InstallNSNode 安装节点
 func (this *NSNodeService) InstallNSNode(ctx context.Context, req *pb.InstallNSNodeRequest) (*pb.InstallNSNodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func (this *NSNodeService) InstallNSNode(ctx context.Context, req *pb.InstallNSN
 // FindNSNodeInstallStatus 读取节点安装状态
 func (this *NSNodeService) FindNSNodeInstallStatus(ctx context.Context, req *pb.FindNSNodeInstallStatusRequest) (*pb.FindNSNodeInstallStatusResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +368,7 @@ func (this *NSNodeService) FindNSNodeInstallStatus(ctx context.Context, req *pb.
 
 // UpdateNSNodeIsInstalled 修改节点安装状态
 func (this *NSNodeService) UpdateNSNodeIsInstalled(ctx context.Context, req *pb.UpdateNSNodeIsInstalledRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -515,7 +515,7 @@ func (this *NSNodeService) UpdateNSNodeConnectedAPINodes(ctx context.Context, re
 // UpdateNSNodeLogin 修改节点登录信息
 func (this *NSNodeService) UpdateNSNodeLogin(ctx context.Context, req *pb.UpdateNSNodeLoginRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -537,7 +537,7 @@ func (this *NSNodeService) UpdateNSNodeLogin(ctx context.Context, req *pb.Update
 // StartNSNode 启动节点
 func (this *NSNodeService) StartNSNode(ctx context.Context, req *pb.StartNSNodeRequest) (*pb.StartNSNodeResponse, error) {
 	// 校验节点
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func (this *NSNodeService) StartNSNode(ctx context.Context, req *pb.StartNSNodeR
 // StopNSNode 停止节点
 func (this *NSNodeService) StopNSNode(ctx context.Context, req *pb.StopNSNodeRequest) (*pb.StopNSNodeResponse, error) {
 	// 校验节点
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

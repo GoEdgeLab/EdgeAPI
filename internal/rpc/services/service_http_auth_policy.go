@@ -15,7 +15,7 @@ type HTTPAuthPolicyService struct {
 
 // CreateHTTPAuthPolicy 创建策略
 func (this *HTTPAuthPolicyService) CreateHTTPAuthPolicy(ctx context.Context, req *pb.CreateHTTPAuthPolicyRequest) (*pb.CreateHTTPAuthPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (this *HTTPAuthPolicyService) CreateHTTPAuthPolicy(ctx context.Context, req
 
 // UpdateHTTPAuthPolicy 修改策略
 func (this *HTTPAuthPolicyService) UpdateHTTPAuthPolicy(ctx context.Context, req *pb.UpdateHTTPAuthPolicyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (this *HTTPAuthPolicyService) UpdateHTTPAuthPolicy(ctx context.Context, req
 
 // FindEnabledHTTPAuthPolicy 查找策略信息
 func (this *HTTPAuthPolicyService) FindEnabledHTTPAuthPolicy(ctx context.Context, req *pb.FindEnabledHTTPAuthPolicyRequest) (*pb.FindEnabledHTTPAuthPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

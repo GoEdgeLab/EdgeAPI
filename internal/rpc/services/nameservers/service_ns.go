@@ -20,7 +20,7 @@ type NSService struct {
 
 // ComposeNSBoard 组合看板数据
 func (this *NSService) ComposeNSBoard(ctx context.Context, req *pb.ComposeNSBoardRequest) (*pb.ComposeNSBoardResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

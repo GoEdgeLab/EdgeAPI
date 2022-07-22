@@ -164,7 +164,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 // UpdateServerBasic 修改服务基本信息
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 // UpdateServerUnix 修改Unix服务
 func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 // UpdateServerNamesAuditing 审核服务的域名设置
 func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *pb.UpdateServerNamesAuditingRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -608,7 +608,7 @@ func (this *ServerService) UpdateServerNamesAuditing(ctx context.Context, req *p
 
 // UpdateServerDNS 修改服务的DNS相关设置
 func (this *ServerService) UpdateServerDNS(ctx context.Context, req *pb.UpdateServerDNSRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -624,7 +624,7 @@ func (this *ServerService) UpdateServerDNS(ctx context.Context, req *pb.UpdateSe
 
 // RegenerateServerCNAME 重新生成CNAME
 func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.RegenerateServerCNAMERequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1172,7 +1172,7 @@ func (this *ServerService) FindAllEnabledServersWithSSLCertId(ctx context.Contex
 // CountAllEnabledServersWithNodeClusterId 计算运行在某个集群上的所有服务数量
 func (this *ServerService) CountAllEnabledServersWithNodeClusterId(ctx context.Context, req *pb.CountAllEnabledServersWithNodeClusterIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1206,7 +1206,7 @@ func (this *ServerService) CountAllEnabledServersWithServerGroupId(ctx context.C
 // NotifyServersChange 通知更新
 func (this *ServerService) NotifyServersChange(ctx context.Context, _ *pb.NotifyServersChangeRequest) (*pb.NotifyServersChangeResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1230,7 +1230,7 @@ func (this *ServerService) NotifyServersChange(ctx context.Context, _ *pb.Notify
 // FindAllEnabledServersDNSWithNodeClusterId 取得某个集群下的所有服务相关的DNS
 func (this *ServerService) FindAllEnabledServersDNSWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledServersDNSWithNodeClusterIdRequest) (*pb.FindAllEnabledServersDNSWithNodeClusterIdResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1642,7 +1642,7 @@ func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.C
 
 // FindLatestServers 查找最近访问的服务
 func (this *ServerService) FindLatestServers(ctx context.Context, req *pb.FindLatestServersRequest) (*pb.FindLatestServersResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1664,7 +1664,7 @@ func (this *ServerService) FindLatestServers(ctx context.Context, req *pb.FindLa
 
 // FindNearbyServers 查找某个服务附近的服务
 func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNearbyServersRequest) (*pb.FindNearbyServersResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1751,7 +1751,7 @@ func (this *ServerService) FindNearbyServers(ctx context.Context, req *pb.FindNe
 
 // PurgeServerCache 清除缓存
 func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeServerCacheRequest) (*pb.PurgeServerCacheResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		// 检查是否为节点
 		_, err = this.ValidateNode(ctx)
@@ -1875,7 +1875,7 @@ func (this *ServerService) FindEnabledServerTrafficLimit(ctx context.Context, re
 
 // UpdateServerTrafficLimit 设置流量限制
 func (this *ServerService) UpdateServerTrafficLimit(ctx context.Context, req *pb.UpdateServerTrafficLimitRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

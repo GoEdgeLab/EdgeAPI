@@ -663,7 +663,7 @@ func (this *HTTPWebService) UpdateHTTPWebCommon(ctx context.Context, req *pb.Upd
 
 // UpdateHTTPWebRequestLimit 修改请求限制
 func (this *HTTPWebService) UpdateHTTPWebRequestLimit(ctx context.Context, req *pb.UpdateHTTPWebRequestLimitRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -686,7 +686,7 @@ func (this *HTTPWebService) UpdateHTTPWebRequestLimit(ctx context.Context, req *
 
 // FindHTTPWebRequestLimit 查找请求限制
 func (this *HTTPWebService) FindHTTPWebRequestLimit(ctx context.Context, req *pb.FindHTTPWebRequestLimitRequest) (*pb.FindHTTPWebRequestLimitResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -707,7 +707,7 @@ func (this *HTTPWebService) FindHTTPWebRequestLimit(ctx context.Context, req *pb
 
 // UpdateHTTPWebRequestScripts 修改请求脚本
 func (this *HTTPWebService) UpdateHTTPWebRequestScripts(ctx context.Context, req *pb.UpdateHTTPWebRequestScriptsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -729,7 +729,7 @@ func (this *HTTPWebService) UpdateHTTPWebRequestScripts(ctx context.Context, req
 
 // FindHTTPWebRequestScripts 查找请求脚本
 func (this *HTTPWebService) FindHTTPWebRequestScripts(ctx context.Context, req *pb.FindHTTPWebRequestScriptsRequest) (*pb.FindHTTPWebRequestScriptsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -20,7 +20,7 @@ type UserBillService struct {
 
 // GenerateAllUserBills 手工生成订单
 func (this *UserBillService) GenerateAllUserBills(ctx context.Context, req *pb.GenerateAllUserBillsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

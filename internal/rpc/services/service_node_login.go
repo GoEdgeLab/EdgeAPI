@@ -20,7 +20,7 @@ type NodeLoginService struct {
 
 // FindNodeLoginSuggestPorts 读取建议的端口
 func (this *NodeLoginService) FindNodeLoginSuggestPorts(ctx context.Context, req *pb.FindNodeLoginSuggestPortsRequest) (*pb.FindNodeLoginSuggestPortsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

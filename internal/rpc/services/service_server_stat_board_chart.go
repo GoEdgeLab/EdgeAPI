@@ -16,7 +16,7 @@ type ServerStatBoardChartService struct {
 
 // EnableServerStatBoardChart 添加图表
 func (this *ServerStatBoardChartService) EnableServerStatBoardChart(ctx context.Context, req *pb.EnableServerStatBoardChartRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *ServerStatBoardChartService) EnableServerStatBoardChart(ctx context.
 
 // DisableServerStatBoardChart 取消图表
 func (this *ServerStatBoardChartService) DisableServerStatBoardChart(ctx context.Context, req *pb.DisableServerStatBoardChartRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (this *ServerStatBoardChartService) DisableServerStatBoardChart(ctx context
 
 // FindAllEnabledServerStatBoardCharts 读取看板中的图表
 func (this *ServerStatBoardChartService) FindAllEnabledServerStatBoardCharts(ctx context.Context, req *pb.FindAllEnabledServerStatBoardChartsRequest) (*pb.FindAllEnabledServerStatBoardChartsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

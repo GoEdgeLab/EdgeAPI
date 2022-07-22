@@ -106,7 +106,7 @@ func (this *ServerDailyStatService) UploadServerDailyStats(ctx context.Context, 
 
 // FindLatestServerHourlyStats 按小时读取统计数据
 func (this *ServerDailyStatService) FindLatestServerHourlyStats(ctx context.Context, req *pb.FindLatestServerHourlyStatsRequest) (*pb.FindLatestServerHourlyStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (this *ServerDailyStatService) FindLatestServerHourlyStats(ctx context.Cont
 
 // FindLatestServerMinutelyStats 按分钟读取统计数据
 func (this *ServerDailyStatService) FindLatestServerMinutelyStats(ctx context.Context, req *pb.FindLatestServerMinutelyStatsRequest) (*pb.FindLatestServerMinutelyStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (this *ServerDailyStatService) FindLatestServerMinutelyStats(ctx context.Co
 
 // FindLatestServerDailyStats 按天读取统计数据
 func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Context, req *pb.FindLatestServerDailyStatsRequest) (*pb.FindLatestServerDailyStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ type LatestItemService struct {
 
 // IncreaseLatestItem 记录最近使用的条目
 func (this *LatestItemService) IncreaseLatestItem(ctx context.Context, req *pb.IncreaseLatestItemRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

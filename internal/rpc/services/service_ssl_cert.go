@@ -199,7 +199,7 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 
 // CountAllSSLCertsWithOCSPError 计算有OCSP错误的证书数量
 func (this *SSLCertService) CountAllSSLCertsWithOCSPError(ctx context.Context, req *pb.CountAllSSLCertsWithOCSPErrorRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (this *SSLCertService) CountAllSSLCertsWithOCSPError(ctx context.Context, r
 
 // ListSSLCertsWithOCSPError 列出有OCSP错误的证书
 func (this *SSLCertService) ListSSLCertsWithOCSPError(ctx context.Context, req *pb.ListSSLCertsWithOCSPErrorRequest) (*pb.ListSSLCertsWithOCSPErrorResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (this *SSLCertService) ListSSLCertsWithOCSPError(ctx context.Context, req *
 
 // IgnoreSSLCertsWithOCSPError 忽略一组OCSP证书错误
 func (this *SSLCertService) IgnoreSSLCertsWithOCSPError(ctx context.Context, req *pb.IgnoreSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (this *SSLCertService) IgnoreSSLCertsWithOCSPError(ctx context.Context, req
 
 // ResetSSLCertsWithOCSPError 重置一组证书OCSP错误状态
 func (this *SSLCertService) ResetSSLCertsWithOCSPError(ctx context.Context, req *pb.ResetSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func (this *SSLCertService) ResetSSLCertsWithOCSPError(ctx context.Context, req 
 
 // ResetAllSSLCertsWithOCSPError 重置所有证书OCSP错误状态
 func (this *SSLCertService) ResetAllSSLCertsWithOCSPError(ctx context.Context, req *pb.ResetAllSSLCertsWithOCSPErrorRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

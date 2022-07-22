@@ -14,7 +14,7 @@ type NodeIPAddressService struct {
 // CreateNodeIPAddress 创建IP地址
 func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *pb.CreateNodeIPAddressRequest) (*pb.CreateNodeIPAddressResponse, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 // CreateNodeIPAddresses 批量创建IP地址
 func (this *NodeIPAddressService) CreateNodeIPAddresses(ctx context.Context, req *pb.CreateNodeIPAddressesRequest) (*pb.CreateNodeIPAddressesResponse, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddresses(ctx context.Context, req
 // UpdateNodeIPAddress 修改IP地址
 func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *pb.UpdateNodeIPAddressRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 // UpdateNodeIPAddressNodeId 修改IP地址所属节点
 func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context, req *pb.UpdateNodeIPAddressNodeIdRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressNodeId(ctx context.Context,
 // DisableNodeIPAddress 禁用单个IP地址
 func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req *pb.DisableNodeIPAddressRequest) (*pb.DisableNodeIPAddressResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (this *NodeIPAddressService) DisableNodeIPAddress(ctx context.Context, req 
 // DisableAllNodeIPAddressesWithNodeId 禁用某个节点的IP地址
 func (this *NodeIPAddressService) DisableAllNodeIPAddressesWithNodeId(ctx context.Context, req *pb.DisableAllNodeIPAddressesWithNodeIdRequest) (*pb.DisableAllNodeIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (this *NodeIPAddressService) DisableAllNodeIPAddressesWithNodeId(ctx contex
 // FindEnabledNodeIPAddress 查找单个IP地址
 func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, req *pb.FindEnabledNodeIPAddressRequest) (*pb.FindEnabledNodeIPAddressResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 // FindAllEnabledNodeIPAddressesWithNodeId 查找节点的所有地址
 func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx context.Context, req *pb.FindAllEnabledNodeIPAddressesWithNodeIdRequest) (*pb.FindAllEnabledNodeIPAddressesWithNodeIdResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx co
 // CountAllEnabledNodeIPAddresses 计算IP地址数量
 func (this *NodeIPAddressService) CountAllEnabledNodeIPAddresses(ctx context.Context, req *pb.CountAllEnabledNodeIPAddressesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (this *NodeIPAddressService) CountAllEnabledNodeIPAddresses(ctx context.Con
 // ListEnabledNodeIPAddresses 列出单页IP地址
 func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context, req *pb.ListEnabledNodeIPAddressesRequest) (*pb.ListEnabledNodeIPAddressesResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context
 // UpdateNodeIPAddressIsUp 设置上下线状态
 func (this *NodeIPAddressService) UpdateNodeIPAddressIsUp(ctx context.Context, req *pb.UpdateNodeIPAddressIsUpRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddressIsUp(ctx context.Context, r
 // RestoreNodeIPAddressBackupIP 还原备用IP状态
 func (this *NodeIPAddressService) RestoreNodeIPAddressBackupIP(ctx context.Context, req *pb.RestoreNodeIPAddressBackupIPRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, err := this.ValidateAdmin(ctx, 0)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

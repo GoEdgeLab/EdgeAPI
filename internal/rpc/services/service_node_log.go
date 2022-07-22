@@ -34,7 +34,7 @@ func (this *NodeLogService) CreateNodeLogs(ctx context.Context, req *pb.CreateNo
 
 // CountNodeLogs 查询日志数量
 func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNodeLogsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *NodeLogService) CountNodeLogs(ctx context.Context, req *pb.CountNode
 
 // ListNodeLogs 列出单页日志
 func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLogsRequest) (*pb.ListNodeLogsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (this *NodeLogService) ListNodeLogs(ctx context.Context, req *pb.ListNodeLo
 
 // FixNodeLogs 设置日志为已修复
 func (this *NodeLogService) FixNodeLogs(ctx context.Context, req *pb.FixNodeLogsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (this *NodeLogService) FixNodeLogs(ctx context.Context, req *pb.FixNodeLogs
 
 // FixAllNodeLogs 设置所有日志为已修复
 func (this *NodeLogService) FixAllNodeLogs(ctx context.Context, req *pb.FixAllNodeLogsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (this *NodeLogService) FixAllNodeLogs(ctx context.Context, req *pb.FixAllNo
 
 // CountAllUnreadNodeLogs 计算未读的日志数量
 func (this *NodeLogService) CountAllUnreadNodeLogs(ctx context.Context, req *pb.CountAllUnreadNodeLogsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (this *NodeLogService) CountAllUnreadNodeLogs(ctx context.Context, req *pb.
 
 // UpdateNodeLogsRead 设置日志为已读
 func (this *NodeLogService) UpdateNodeLogsRead(ctx context.Context, req *pb.UpdateNodeLogsReadRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (this *NodeLogService) UpdateNodeLogsRead(ctx context.Context, req *pb.Upda
 
 // UpdateAllNodeLogsRead 设置所有日志未已读
 func (this *NodeLogService) UpdateAllNodeLogsRead(ctx context.Context, req *pb.UpdateAllNodeLogsReadRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ type ACMEProviderAccountService struct {
 
 // CreateACMEProviderAccount 创建服务商账号
 func (this *ACMEProviderAccountService) CreateACMEProviderAccount(ctx context.Context, req *pb.CreateACMEProviderAccountRequest) (*pb.CreateACMEProviderAccountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (this *ACMEProviderAccountService) CreateACMEProviderAccount(ctx context.Co
 
 // FindAllACMEProviderAccountsWithProviderCode 使用代号查找服务商账号
 func (this *ACMEProviderAccountService) FindAllACMEProviderAccountsWithProviderCode(ctx context.Context, req *pb.FindAllACMEProviderAccountsWithProviderCodeRequest) (*pb.FindAllACMEProviderAccountsWithProviderCodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (this *ACMEProviderAccountService) FindAllACMEProviderAccountsWithProviderC
 
 // UpdateACMEProviderAccount 修改服务商账号
 func (this *ACMEProviderAccountService) UpdateACMEProviderAccount(ctx context.Context, req *pb.UpdateACMEProviderAccountRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (this *ACMEProviderAccountService) UpdateACMEProviderAccount(ctx context.Co
 
 // DeleteACMEProviderAccount 删除服务商账号
 func (this *ACMEProviderAccountService) DeleteACMEProviderAccount(ctx context.Context, req *pb.DeleteACMEProviderAccountRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (this *ACMEProviderAccountService) DeleteACMEProviderAccount(ctx context.Co
 
 // FindEnabledACMEProviderAccount 查找单个服务商账号
 func (this *ACMEProviderAccountService) FindEnabledACMEProviderAccount(ctx context.Context, req *pb.FindEnabledACMEProviderAccountRequest) (*pb.FindEnabledACMEProviderAccountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (this *ACMEProviderAccountService) FindEnabledACMEProviderAccount(ctx conte
 
 // CountAllEnabledACMEProviderAccounts 计算所有服务商账号数量
 func (this *ACMEProviderAccountService) CountAllEnabledACMEProviderAccounts(ctx context.Context, req *pb.CountAllEnabledACMEProviderAccountsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (this *ACMEProviderAccountService) CountAllEnabledACMEProviderAccounts(ctx 
 
 // ListEnabledACMEProviderAccounts 列出单页服务商账号
 func (this *ACMEProviderAccountService) ListEnabledACMEProviderAccounts(ctx context.Context, req *pb.ListEnabledACMEProviderAccountsRequest) (*pb.ListEnabledACMEProviderAccountsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

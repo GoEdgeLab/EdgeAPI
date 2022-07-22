@@ -52,7 +52,7 @@ func (this *NodeValueService) CreateNodeValue(ctx context.Context, req *pb.Creat
 
 // ListNodeValues 读取数据
 func (this *NodeValueService) ListNodeValues(ctx context.Context, req *pb.ListNodeValuesRequest) (*pb.ListNodeValuesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (this *NodeValueService) ListNodeValues(ctx context.Context, req *pb.ListNo
 
 // SumAllNodeValueStats 读取所有节点的最新数据
 func (this *NodeValueService) SumAllNodeValueStats(ctx context.Context, req *pb.SumAllNodeValueStatsRequest) (*pb.SumAllNodeValueStatsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

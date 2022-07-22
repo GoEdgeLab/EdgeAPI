@@ -14,7 +14,7 @@ type MessageTaskLogService struct {
 
 // CountMessageTaskLogs 计算日志数量
 func (this *MessageTaskLogService) CountMessageTaskLogs(ctx context.Context, req *pb.CountMessageTaskLogsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (this *MessageTaskLogService) CountMessageTaskLogs(ctx context.Context, req
 
 // ListMessageTaskLogs 列出当页日志
 func (this *MessageTaskLogService) ListMessageTaskLogs(ctx context.Context, req *pb.ListMessageTaskLogsRequest) (*pb.ListMessageTaskLogsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

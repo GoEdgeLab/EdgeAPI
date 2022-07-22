@@ -17,7 +17,7 @@ type APIMethodStatService struct {
 
 // FindAPIMethodStatsWithDay 查找某天的统计
 func (this *APIMethodStatService) FindAPIMethodStatsWithDay(ctx context.Context, req *pb.FindAPIMethodStatsWithDayRequest) (*pb.FindAPIMethodStatsWithDayResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (this *APIMethodStatService) FindAPIMethodStatsWithDay(ctx context.Context,
 
 // CountAPIMethodStatsWithDay 检查是否有统计数据
 func (this *APIMethodStatService) CountAPIMethodStatsWithDay(ctx context.Context, req *pb.CountAPIMethodStatsWithDayRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

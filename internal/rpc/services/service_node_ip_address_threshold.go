@@ -18,7 +18,7 @@ type NodeIPAddressThresholdService struct {
 
 // CreateNodeIPAddressThreshold 创建阈值
 func (this *NodeIPAddressThresholdService) CreateNodeIPAddressThreshold(ctx context.Context, req *pb.CreateNodeIPAddressThresholdRequest) (*pb.CreateNodeIPAddressThresholdResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (this *NodeIPAddressThresholdService) CreateNodeIPAddressThreshold(ctx cont
 
 // UpdateNodeIPAddressThreshold 修改阈值
 func (this *NodeIPAddressThresholdService) UpdateNodeIPAddressThreshold(ctx context.Context, req *pb.UpdateNodeIPAddressThresholdRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (this *NodeIPAddressThresholdService) UpdateNodeIPAddressThreshold(ctx cont
 
 // DeleteNodeIPAddressThreshold 删除阈值
 func (this *NodeIPAddressThresholdService) DeleteNodeIPAddressThreshold(ctx context.Context, req *pb.DeleteNodeIPAddressThresholdRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (this *NodeIPAddressThresholdService) DeleteNodeIPAddressThreshold(ctx cont
 
 // FindAllEnabledNodeIPAddressThresholds 查找IP的所有阈值
 func (this *NodeIPAddressThresholdService) FindAllEnabledNodeIPAddressThresholds(ctx context.Context, req *pb.FindAllEnabledNodeIPAddressThresholdsRequest) (*pb.FindAllEnabledNodeIPAddressThresholdsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (this *NodeIPAddressThresholdService) FindAllEnabledNodeIPAddressThresholds
 
 // CountAllEnabledNodeIPAddressThresholds 计算IP阈值的数量
 func (this *NodeIPAddressThresholdService) CountAllEnabledNodeIPAddressThresholds(ctx context.Context, req *pb.CountAllEnabledNodeIPAddressThresholdsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (this *NodeIPAddressThresholdService) CountAllEnabledNodeIPAddressThreshold
 
 // UpdateAllNodeIPAddressThresholds 批量更新阈值
 func (this *NodeIPAddressThresholdService) UpdateAllNodeIPAddressThresholds(ctx context.Context, req *pb.UpdateAllNodeIPAddressThresholdsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

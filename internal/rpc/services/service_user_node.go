@@ -18,7 +18,7 @@ type UserNodeService struct {
 
 // CreateUserNode 创建用户节点
 func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateUserNodeRequest) (*pb.CreateUserNodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (this *UserNodeService) CreateUserNode(ctx context.Context, req *pb.CreateU
 
 // UpdateUserNode 修改用户节点
 func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateUserNodeRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (this *UserNodeService) UpdateUserNode(ctx context.Context, req *pb.UpdateU
 
 // DeleteUserNode 删除用户节点
 func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteUserNodeRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (this *UserNodeService) DeleteUserNode(ctx context.Context, req *pb.DeleteU
 
 // FindAllEnabledUserNodes 列出所有可用用户节点
 func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *pb.FindAllEnabledUserNodesRequest) (*pb.FindAllEnabledUserNodesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (this *UserNodeService) FindAllEnabledUserNodes(ctx context.Context, req *p
 
 // CountAllEnabledUserNodes 计算用户节点数量
 func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *pb.CountAllEnabledUserNodesRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (this *UserNodeService) CountAllEnabledUserNodes(ctx context.Context, req *
 
 // ListEnabledUserNodes 列出单页的用户节点
 func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.ListEnabledUserNodesRequest) (*pb.ListEnabledUserNodesResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (this *UserNodeService) ListEnabledUserNodes(ctx context.Context, req *pb.L
 
 // FindEnabledUserNode 根据ID查找节点
 func (this *UserNodeService) FindEnabledUserNode(ctx context.Context, req *pb.FindEnabledUserNodeRequest) (*pb.FindEnabledUserNodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func (this *UserNodeService) UpdateUserNodeStatus(ctx context.Context, req *pb.U
 
 // CountAllEnabledUserNodesWithSSLCertId 计算使用某个SSL证书的用户节点数量
 func (this *UserNodeService) CountAllEnabledUserNodesWithSSLCertId(ctx context.Context, req *pb.CountAllEnabledUserNodesWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

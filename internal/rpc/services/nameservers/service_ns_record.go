@@ -20,7 +20,7 @@ type NSRecordService struct {
 
 // CreateNSRecord 创建记录
 func (this *NSRecordService) CreateNSRecord(ctx context.Context, req *pb.CreateNSRecordRequest) (*pb.CreateNSRecordResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (this *NSRecordService) CreateNSRecord(ctx context.Context, req *pb.CreateN
 
 // UpdateNSRecord 修改记录
 func (this *NSRecordService) UpdateNSRecord(ctx context.Context, req *pb.UpdateNSRecordRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (this *NSRecordService) UpdateNSRecord(ctx context.Context, req *pb.UpdateN
 
 // DeleteNSRecord 删除记录
 func (this *NSRecordService) DeleteNSRecord(ctx context.Context, req *pb.DeleteNSRecordRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (this *NSRecordService) DeleteNSRecord(ctx context.Context, req *pb.DeleteN
 
 // CountAllEnabledNSRecords 计算记录数量
 func (this *NSRecordService) CountAllEnabledNSRecords(ctx context.Context, req *pb.CountAllEnabledNSRecordsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (this *NSRecordService) CountAllEnabledNSRecords(ctx context.Context, req *
 
 // ListEnabledNSRecords 读取单页记录
 func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.ListEnabledNSRecordsRequest) (*pb.ListEnabledNSRecordsResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (this *NSRecordService) ListEnabledNSRecords(ctx context.Context, req *pb.L
 
 // FindEnabledNSRecord 查询单个记录信息
 func (this *NSRecordService) FindEnabledNSRecord(ctx context.Context, req *pb.FindEnabledNSRecordRequest) (*pb.FindEnabledNSRecordResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

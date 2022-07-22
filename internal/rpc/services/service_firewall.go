@@ -24,7 +24,7 @@ type FirewallService struct {
 
 // ComposeFirewallGlobalBoard 组合看板数据
 func (this *FirewallService) ComposeFirewallGlobalBoard(ctx context.Context, req *pb.ComposeFirewallGlobalBoardRequest) (*pb.ComposeFirewallGlobalBoardResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (this *FirewallService) NotifyHTTPFirewallEvent(ctx context.Context, req *p
 
 // CountFirewallDailyBlocks 读取当前Block动作次数
 func (this *FirewallService) CountFirewallDailyBlocks(ctx context.Context, req *pb.CountFirewallDailyBlocksRequest) (*pb.CountFirewallDailyBlocksResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

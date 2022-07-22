@@ -18,7 +18,7 @@ type TrafficDailyStatService struct {
 
 // FindTrafficDailyStatWithDay 查找某日统计
 func (this *TrafficDailyStatService) FindTrafficDailyStatWithDay(ctx context.Context, req *pb.FindTrafficDailyStatWithDayRequest) (*pb.FindTrafficDailyStatWithDayResponse, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}

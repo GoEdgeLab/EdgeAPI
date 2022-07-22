@@ -360,7 +360,7 @@ func (this *HTTPCacheTaskService) DeleteHTTPCacheTask(ctx context.Context, req *
 // ResetHTTPCacheTask 重置任务状态
 // 只允许管理员重置，用于调试
 func (this *HTTPCacheTaskService) ResetHTTPCacheTask(ctx context.Context, req *pb.ResetHTTPCacheTaskRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx, 0)
+	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
