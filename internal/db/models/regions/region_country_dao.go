@@ -133,7 +133,7 @@ func (this *RegionCountryDAO) FindCountryIdWithNameCacheable(tx *dbs.Tx, country
 
 // CreateCountry 根据数据ID创建国家
 func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId string) (int64, error) {
-	op := NewRegionCountryOperator()
+	var op = NewRegionCountryOperator()
 	op.Name = name
 
 	pinyinPieces := pinyin.Pinyin(name, pinyin.NewArgs())

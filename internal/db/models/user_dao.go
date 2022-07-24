@@ -129,7 +129,7 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string,
 	features []string,
 	registeredIP string,
 	isVerified bool) (int64, error) {
-	op := NewUserOperator()
+	var op = NewUserOperator()
 	op.Username = username
 	op.Password = stringutil.Md5(password)
 	op.Fullname = fullname
@@ -191,7 +191,7 @@ func (this *UserDAO) UpdateUserInfo(tx *dbs.Tx, userId int64, fullname string, m
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
-	op := NewUserOperator()
+	var op = NewUserOperator()
 	op.Id = userId
 	op.Fullname = fullname
 	op.Mobile = mobile
@@ -204,7 +204,7 @@ func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, 
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
-	op := NewUserOperator()
+	var op = NewUserOperator()
 	op.Id = userId
 	op.Username = username
 	if len(password) > 0 {

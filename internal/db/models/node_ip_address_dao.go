@@ -161,7 +161,7 @@ func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId
 		return errors.New("invalid addressId")
 	}
 
-	op := NewNodeIPAddressOperator()
+	var op = NewNodeIPAddressOperator()
 	op.Id = addressId
 	op.Name = name
 	op.Ip = ip
@@ -189,7 +189,7 @@ func (this *NodeIPAddressDAO) UpdateAddressIP(tx *dbs.Tx, addressId int64, ip st
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
-	op := NewNodeIPAddressOperator()
+	var op = NewNodeIPAddressOperator()
 	op.Id = addressId
 	op.Ip = ip
 	err := this.Save(tx, op)

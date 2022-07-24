@@ -624,7 +624,7 @@ func (this *ServerDAO) UpdateServerNames(tx *dbs.Tx, serverId int64, serverNames
 		return errors.New("serverId should not be smaller than 0")
 	}
 
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.Id = serverId
 
 	if IsNull(serverNamesJSON) {
@@ -657,7 +657,7 @@ func (this *ServerDAO) UpdateAuditingServerNames(tx *dbs.Tx, serverId int64, isA
 		return errors.New("serverId should not be smaller than 0")
 	}
 
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.IsAuditing = isAuditing
 	if isAuditing {
@@ -739,7 +739,7 @@ func (this *ServerDAO) UpdateServerReverseProxy(tx *dbs.Tx, serverId int64, conf
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.ReverseProxy = JSONBytes(config)
 	err := this.Save(tx, op)
@@ -1607,7 +1607,7 @@ func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string
 	if err != nil {
 		return "", err
 	}
-	op := NewServerOperator()
+	var op = NewServerOperator()
 	op.Id = serverId
 	op.DnsName = dnsName
 	err = this.Save(tx, op)

@@ -47,7 +47,7 @@ func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, 
 
 		// 如果没有锁，则创建
 		if one == nil {
-			op := NewSysLockerOperator()
+			var op = NewSysLockerOperator()
 			op.Key = key
 			op.TimeoutAt = time.Now().Unix() + timeout
 			op.Version = 1
@@ -70,7 +70,7 @@ func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, 
 		}
 
 		// 修改
-		op := NewSysLockerOperator()
+		var op = NewSysLockerOperator()
 		op.Id = locker.Id
 		op.Version = locker.Version + 1
 		op.TimeoutAt = time.Now().Unix() + timeout

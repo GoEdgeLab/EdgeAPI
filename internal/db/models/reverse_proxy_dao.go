@@ -212,7 +212,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 
 // CreateReverseProxy 创建反向代理
 func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userId int64, schedulingJSON []byte, primaryOriginsJSON []byte, backupOriginsJSON []byte) (int64, error) {
-	op := NewReverseProxyOperator()
+	var op = NewReverseProxyOperator()
 	op.IsOn = true
 	op.State = ReverseProxyStateEnabled
 	op.AdminId = adminId
@@ -248,7 +248,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reversePro
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
-	op := NewReverseProxyOperator()
+	var op = NewReverseProxyOperator()
 	op.Id = reverseProxyId
 	if len(schedulingJSON) > 0 {
 		op.Scheduling = string(schedulingJSON)
@@ -267,7 +267,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, revers
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
-	op := NewReverseProxyOperator()
+	var op = NewReverseProxyOperator()
 	op.Id = reverseProxyId
 	if len(origins) > 0 {
 		op.PrimaryOrigins = origins
@@ -286,7 +286,7 @@ func (this *ReverseProxyDAO) UpdateReverseProxyBackupOrigins(tx *dbs.Tx, reverse
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
-	op := NewReverseProxyOperator()
+	var op = NewReverseProxyOperator()
 	op.Id = reverseProxyId
 	if len(origins) > 0 {
 		op.BackupOrigins = origins

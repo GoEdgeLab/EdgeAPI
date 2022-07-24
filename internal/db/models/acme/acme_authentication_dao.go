@@ -29,7 +29,7 @@ func init() {
 
 // 创建认证信息
 func (this *ACMEAuthenticationDAO) CreateAuth(tx *dbs.Tx, taskId int64, domain string, token string, key string) error {
-	op := NewACMEAuthenticationOperator()
+	var op = NewACMEAuthenticationOperator()
 	op.TaskId = taskId
 	op.Domain = domain
 	op.Token = token

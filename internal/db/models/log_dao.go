@@ -36,7 +36,7 @@ func init() {
 
 // CreateLog 创建管理员日志
 func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level string, description string, action string, ip string) error {
-	op := NewLogOperator()
+	var op = NewLogOperator()
 	op.Level = level
 	op.Description = description
 	op.Action = action

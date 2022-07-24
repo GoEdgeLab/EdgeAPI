@@ -112,7 +112,7 @@ func (this *ApiTokenDAO) FindEnabledTokenWithRole(tx *dbs.Tx, role string) (*Api
 
 // CreateAPIToken 保存API Token
 func (this *ApiTokenDAO) CreateAPIToken(tx *dbs.Tx, nodeId string, secret string, role nodeconfigs.NodeRole) error {
-	op := NewApiTokenOperator()
+	var op = NewApiTokenOperator()
 	op.NodeId = nodeId
 	op.Secret = secret
 	op.Role = role

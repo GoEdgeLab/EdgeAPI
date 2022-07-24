@@ -113,7 +113,7 @@ func (this *HTTPBrotliPolicyDAO) ComposeBrotliConfig(tx *dbs.Tx, policyId int64)
 
 // CreatePolicy 创建策略
 func (this *HTTPBrotliPolicyDAO) CreatePolicy(tx *dbs.Tx, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
-	op := NewHTTPBrotliPolicyOperator()
+	var op = NewHTTPBrotliPolicyOperator()
 	op.State = HTTPBrotliPolicyStateEnabled
 	op.IsOn = true
 	op.Level = level
@@ -138,7 +138,7 @@ func (this *HTTPBrotliPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, level 
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPBrotliPolicyOperator()
+	var op = NewHTTPBrotliPolicyOperator()
 	op.Id = policyId
 	op.Level = level
 	if len(minLengthJSON) > 0 {

@@ -121,7 +121,7 @@ func (this *HTTPGzipDAO) ComposeGzipConfig(tx *dbs.Tx, gzipId int64) (*servercon
 
 // CreateGzip 创建Gzip
 func (this *HTTPGzipDAO) CreateGzip(tx *dbs.Tx, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
-	op := NewHTTPGzipOperator()
+	var op = NewHTTPGzipOperator()
 	op.State = HTTPGzipStateEnabled
 	op.IsOn = true
 	op.Level = level
@@ -146,7 +146,7 @@ func (this *HTTPGzipDAO) UpdateGzip(tx *dbs.Tx, gzipId int64, level int, minLeng
 	if gzipId <= 0 {
 		return errors.New("invalid gzipId")
 	}
-	op := NewHTTPGzipOperator()
+	var op = NewHTTPGzipOperator()
 	op.Id = gzipId
 	op.Level = level
 	if len(minLengthJSON) > 0 {

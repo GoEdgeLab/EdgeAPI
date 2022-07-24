@@ -125,7 +125,7 @@ func (this *ClientSystemDAO) CreateSystem(tx *dbs.Tx, systemName string) (int64,
 		return systemId, nil
 	}
 
-	op := NewClientSystemOperator()
+	var op = NewClientSystemOperator()
 	op.Name = systemName
 
 	codes := []string{systemName}

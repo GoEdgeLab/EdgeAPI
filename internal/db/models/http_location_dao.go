@@ -87,7 +87,7 @@ func (this *HTTPLocationDAO) FindHTTPLocationName(tx *dbs.Tx, id int64) (string,
 
 // CreateLocation 创建路由规则
 func (this *HTTPLocationDAO) CreateLocation(tx *dbs.Tx, parentId int64, name string, pattern string, description string, isBreak bool, condsJSON []byte, domains []string) (int64, error) {
-	op := NewHTTPLocationOperator()
+	var op = NewHTTPLocationOperator()
 	op.IsOn = true
 	op.State = HTTPLocationStateEnabled
 	op.ParentId = parentId
@@ -121,7 +121,7 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
 	}
-	op := NewHTTPLocationOperator()
+	var op = NewHTTPLocationOperator()
 	op.Id = locationId
 	op.Name = name
 	op.Pattern = pattern
@@ -257,7 +257,7 @@ func (this *HTTPLocationDAO) UpdateLocationReverseProxy(tx *dbs.Tx, locationId i
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
 	}
-	op := NewHTTPLocationOperator()
+	var op = NewHTTPLocationOperator()
 	op.Id = locationId
 	op.ReverseProxy = JSONBytes(reverseProxyJSON)
 	err := this.Save(tx, op)
@@ -281,7 +281,7 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, web
 	if locationId <= 0 {
 		return errors.New("invalid locationId")
 	}
-	op := NewHTTPLocationOperator()
+	var op = NewHTTPLocationOperator()
 	op.Id = locationId
 	op.WebId = webId
 	err := this.Save(tx, op)

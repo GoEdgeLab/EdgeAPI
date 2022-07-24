@@ -43,6 +43,8 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 			Size:      int64(file.Size),
 			CreatedAt: int64(file.CreatedAt),
 			IsPublic:  file.IsPublic,
+			MimeType:  file.MimeType,
+			Type:      file.Type,
 		},
 	}, nil
 }
@@ -56,7 +58,7 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 
 	var tx = this.NullTx()
 
-	fileId, err := models.SharedFileDAO.CreateFile(tx, adminId, userId, "ipLibrary", "", req.Filename, req.Size, req.IsPublic)
+	fileId, err := models.SharedFileDAO.CreateFile(tx, adminId, userId, req.Type, "", req.Filename, req.Size, req.MimeType, req.IsPublic)
 	if err != nil {
 		return nil, err
 	}

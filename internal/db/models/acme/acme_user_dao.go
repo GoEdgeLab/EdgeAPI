@@ -83,7 +83,7 @@ func (this *ACMEUserDAO) CreateACMEUser(tx *dbs.Tx, adminId int64, userId int64,
 	}
 	privateKeyText := base64.StdEncoding.EncodeToString(privateKeyData)
 
-	op := NewACMEUserOperator()
+	var op = NewACMEUserOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.ProviderCode = providerCode
@@ -104,7 +104,7 @@ func (this *ACMEUserDAO) UpdateACMEUser(tx *dbs.Tx, acmeUserId int64, descriptio
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
 	}
-	op := NewACMEUserOperator()
+	var op = NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Description = description
 	err := this.Save(tx, op)
@@ -116,7 +116,7 @@ func (this *ACMEUserDAO) UpdateACMEUserRegistration(tx *dbs.Tx, acmeUserId int64
 	if acmeUserId <= 0 {
 		return errors.New("invalid acmeUserId")
 	}
-	op := NewACMEUserOperator()
+	var op = NewACMEUserOperator()
 	op.Id = acmeUserId
 	op.Registration = registrationJSON
 	err := this.Save(tx, op)

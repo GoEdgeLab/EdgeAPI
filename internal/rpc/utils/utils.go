@@ -118,7 +118,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 		return UserTypeNone, 0, 0, errors.New("invalid token")
 	}
 
-	m := maps.Map{}
+	var m = maps.Map{}
 	err = json.Unmarshal(data, &m)
 	if err != nil {
 		return UserTypeNone, 0, 0, errors.New("decode token error: " + err.Error())

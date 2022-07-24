@@ -466,7 +466,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 // CreateWeb 创建Web配置
 func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJSON []byte) (int64, error) {
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.State = HTTPWebStateEnabled
 	op.AdminId = adminId
 	op.UserId = userId
@@ -485,7 +485,7 @@ func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) erro
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Root = JSONBytes(rootJSON)
 	err := this.Save(tx, op)
@@ -501,7 +501,7 @@ func (this *HTTPWebDAO) UpdateWebCompression(tx *dbs.Tx, webId int64, compressio
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Compression = JSONBytes(compressionConfig)
 	err := this.Save(tx, op)
@@ -517,7 +517,7 @@ func (this *HTTPWebDAO) UpdateWebWebP(tx *dbs.Tx, webId int64, webpConfig []byte
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Webp = JSONBytes(webpConfig)
 	err := this.Save(tx, op)
@@ -548,7 +548,7 @@ func (this *HTTPWebDAO) UpdateWebCharset(tx *dbs.Tx, webId int64, charsetJSON []
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Charset = JSONBytes(charsetJSON)
 	err := this.Save(tx, op)
@@ -564,7 +564,7 @@ func (this *HTTPWebDAO) UpdateWebRequestHeaderPolicy(tx *dbs.Tx, webId int64, he
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.RequestHeader = JSONBytes(headerPolicyJSON)
 	err := this.Save(tx, op)
@@ -580,7 +580,7 @@ func (this *HTTPWebDAO) UpdateWebResponseHeaderPolicy(tx *dbs.Tx, webId int64, h
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.ResponseHeader = JSONBytes(headerPolicyJSON)
 	err := this.Save(tx, op)
@@ -596,7 +596,7 @@ func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
 	err := this.Save(tx, op)
@@ -612,7 +612,7 @@ func (this *HTTPWebDAO) UpdateWebShutdown(tx *dbs.Tx, webId int64, shutdownJSON 
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Shutdown = JSONBytes(shutdownJSON)
 	err := this.Save(tx, op)
@@ -628,7 +628,7 @@ func (this *HTTPWebDAO) UpdateWebAccessLogConfig(tx *dbs.Tx, webId int64, access
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.AccessLog = JSONBytes(accessLogJSON)
 	err := this.Save(tx, op)
@@ -644,7 +644,7 @@ func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) 
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Stat = JSONBytes(statJSON)
 	err := this.Save(tx, op)
@@ -660,7 +660,7 @@ func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Cache = JSONBytes(cacheJSON)
 	err := this.Save(tx, op)
@@ -676,7 +676,7 @@ func (this *HTTPWebDAO) UpdateWebFirewall(tx *dbs.Tx, webId int64, firewallJSON 
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Firewall = JSONBytes(firewallJSON)
 	err := this.Save(tx, op)
@@ -692,7 +692,7 @@ func (this *HTTPWebDAO) UpdateWebLocations(tx *dbs.Tx, webId int64, locationsJSO
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Locations = JSONBytes(locationsJSON)
 	err := this.Save(tx, op)
@@ -708,7 +708,7 @@ func (this *HTTPWebDAO) UpdateWebRedirectToHTTPS(tx *dbs.Tx, webId int64, redire
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.RedirectToHttps = JSONBytes(redirectToHTTPSJSON)
 	err := this.Save(tx, op)
@@ -724,7 +724,7 @@ func (this *HTTPWebDAO) UpdateWebsocket(tx *dbs.Tx, webId int64, websocketJSON [
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Websocket = JSONBytes(websocketJSON)
 	err := this.Save(tx, op)
@@ -740,7 +740,7 @@ func (this *HTTPWebDAO) UpdateWebFastcgi(tx *dbs.Tx, webId int64, fastcgiJSON []
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Fastcgi = JSONBytes(fastcgiJSON)
 	err := this.Save(tx, op)
@@ -756,7 +756,7 @@ func (this *HTTPWebDAO) UpdateWebRewriteRules(tx *dbs.Tx, webId int64, rewriteRu
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.RewriteRules = JSONBytes(rewriteRulesJSON)
 	err := this.Save(tx, op)
@@ -772,7 +772,7 @@ func (this *HTTPWebDAO) UpdateWebAuth(tx *dbs.Tx, webId int64, authJSON []byte) 
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
-	op := NewHTTPWebOperator()
+	var op = NewHTTPWebOperator()
 	op.Id = webId
 	op.Auth = JSONBytes(authJSON)
 	err := this.Save(tx, op)

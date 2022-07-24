@@ -125,7 +125,7 @@ func (this *ClientBrowserDAO) CreateBrowser(tx *dbs.Tx, browserName string) (int
 		return browserId, nil
 	}
 
-	op := NewClientBrowserOperator()
+	var op = NewClientBrowserOperator()
 	op.Name = browserName
 	codes := []string{browserName}
 	codesJSON, err := json.Marshal(codes)

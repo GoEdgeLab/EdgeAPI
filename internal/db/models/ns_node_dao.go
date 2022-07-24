@@ -226,7 +226,7 @@ func (this *NSNodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, cluste
 		return
 	}
 
-	op := NewNSNodeOperator()
+	var op = NewNSNodeOperator()
 	op.AdminId = adminId
 	op.Name = name
 	op.UniqueId = uniqueId
@@ -260,7 +260,7 @@ func (this *NSNodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, cluster
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
-	op := NewNSNodeOperator()
+	var op = NewNSNodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.ClusterId = clusterId
@@ -487,7 +487,7 @@ func (this *NSNodeDAO) UpdateNodeConnectedAPINodes(tx *dbs.Tx, nodeId int64, api
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewNSNodeOperator()
+	var op = NewNSNodeOperator()
 	op.Id = nodeId
 
 	if len(apiNodeIds) > 0 {

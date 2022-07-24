@@ -120,7 +120,7 @@ func (this *AuthorityNodeDAO) CreateAuthorityNode(tx *dbs.Tx, name string, descr
 		return
 	}
 
-	op := NewAuthorityNodeOperator()
+	var op = NewAuthorityNodeOperator()
 	op.IsOn = isOn
 	op.UniqueId = uniqueId
 	op.Secret = secret
@@ -141,7 +141,7 @@ func (this *AuthorityNodeDAO) UpdateAuthorityNode(tx *dbs.Tx, nodeId int64, name
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewAuthorityNodeOperator()
+	var op = NewAuthorityNodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.Description = description

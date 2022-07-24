@@ -15,12 +15,20 @@ type FileChunkService struct {
 // CreateFileChunk 创建文件片段
 func (this *FileChunkService) CreateFileChunk(ctx context.Context, req *pb.CreateFileChunkRequest) (*pb.CreateFileChunkResponse, error) {
 	// 校验请求
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedFileDAO.CheckUserFile(tx, userId, req.FileId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	chunkId, err := models.SharedFileChunkDAO.CreateFileChunk(tx, req.FileId, req.Data)
 	if err != nil {
@@ -37,9 +45,10 @@ func (this *FileChunkService) FindAllFileChunkIds(ctx context.Context, req *pb.F
 		return nil, err
 	}
 
-	// TODO 校验用户
-
 	var tx = this.NullTx()
+
+	// 校验用户
+	// TODO
 
 	chunkIds, err := models.SharedFileChunkDAO.FindAllFileChunkIds(tx, req.FileId)
 	if err != nil {

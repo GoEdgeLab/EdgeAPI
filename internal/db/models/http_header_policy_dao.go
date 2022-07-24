@@ -77,7 +77,7 @@ func (this *HTTPHeaderPolicyDAO) FindEnabledHTTPHeaderPolicy(tx *dbs.Tx, id int6
 
 // CreateHeaderPolicy 创建策略
 func (this *HTTPHeaderPolicyDAO) CreateHeaderPolicy(tx *dbs.Tx) (int64, error) {
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.IsOn = true
 	op.State = HTTPHeaderPolicyStateEnabled
 	err := this.Save(tx, op)
@@ -93,7 +93,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingHeaders(tx *dbs.Tx, policyId int64,
 		return errors.New("invalid policyId")
 	}
 
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddHeaders = headersJSON
 	err := this.Save(tx, op)
@@ -109,7 +109,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateSettingHeaders(tx *dbs.Tx, policyId int64
 		return errors.New("invalid policyId")
 	}
 
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.SetHeaders = headersJSON
 	err := this.Save(tx, op)
@@ -125,7 +125,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateReplacingHeaders(tx *dbs.Tx, policyId int
 		return errors.New("invalid policyId")
 	}
 
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.ReplaceHeaders = headersJSON
 	err := this.Save(tx, op)
@@ -141,7 +141,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateAddingTrailers(tx *dbs.Tx, policyId int64
 		return errors.New("invalid policyId")
 	}
 
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.AddTrailers = headersJSON
 	err := this.Save(tx, op)
@@ -162,7 +162,7 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int6
 		return err
 	}
 
-	op := NewHTTPHeaderPolicyOperator()
+	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
 	op.DeleteHeaders = string(namesJSON)
 	err = this.Save(tx, op)

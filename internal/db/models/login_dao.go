@@ -78,7 +78,7 @@ func (this *LoginDAO) CreateLogin(tx *dbs.Tx, Id int64, loginType LoginType, par
 	if params == nil {
 		params = maps.Map{}
 	}
-	op := NewLoginOperator()
+	var op = NewLoginOperator()
 	op.Id = Id
 	op.Type = loginType
 	op.Params = params.AsJSON()
@@ -99,7 +99,7 @@ func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, loginType LoginType
 	if err != nil {
 		return err
 	}
-	op := NewLoginOperator()
+	var op = NewLoginOperator()
 	if loginId > 0 {
 		op.Id = loginId
 	} else {

@@ -86,7 +86,7 @@ func (this *MessageRecipientDAO) FindEnabledMessageRecipient(tx *dbs.Tx, recipie
 
 // CreateRecipient 创建接收人
 func (this *MessageRecipientDAO) CreateRecipient(tx *dbs.Tx, adminId int64, instanceId int64, user string, groupIds []int64, description string, timeFrom string, timeTo string) (int64, error) {
-	op := NewMessageRecipientOperator()
+	var op = NewMessageRecipientOperator()
 	op.AdminId = adminId
 	op.InstanceId = instanceId
 	op.User = user
@@ -122,7 +122,7 @@ func (this *MessageRecipientDAO) UpdateRecipient(tx *dbs.Tx, recipientId int64, 
 		return errors.New("invalid recipientId")
 	}
 
-	op := NewMessageRecipientOperator()
+	var op = NewMessageRecipientOperator()
 	op.Id = recipientId
 	op.AdminId = adminId
 	op.InstanceId = instanceId

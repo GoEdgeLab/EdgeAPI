@@ -167,7 +167,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 		return
 	}
 
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.AdminId = adminId
 	op.Name = name
 	op.UniqueId = uniqueId
@@ -1246,7 +1246,7 @@ func (this *NodeDAO) UpdateNodeConnectedAPINodes(tx *dbs.Tx, nodeId int64, apiNo
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.Id = nodeId
 
 	if len(apiNodeIds) > 0 {
@@ -1476,7 +1476,7 @@ func (this *NodeDAO) UpdateNodeDNS(tx *dbs.Tx, nodeId int64, routes map[int64][]
 	if err != nil {
 		return err
 	}
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.Id = nodeId
 	op.DnsRoutes = routesJSON
 	err = this.Save(tx, op)
@@ -1601,7 +1601,7 @@ func (this *NodeDAO) UpdateNodeUpCount(tx *dbs.Tx, nodeId int64, isUp bool, maxU
 	countUp := int(one.(*Node).CountUp)
 	countDown := int(one.(*Node).CountDown)
 
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.Id = nodeId
 
 	if isUp {
@@ -1645,7 +1645,7 @@ func (this *NodeDAO) UpdateNodeUp(tx *dbs.Tx, nodeId int64, isUp bool) error {
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.Id = nodeId
 	op.IsUp = isUp
 	op.CountUp = 0
@@ -1767,7 +1767,7 @@ func (this *NodeDAO) DeleteNodeFromCluster(tx *dbs.Tx, nodeId int64, clusterId i
 	if err != nil {
 		return err
 	}
-	op := NewNodeOperator()
+	var op = NewNodeOperator()
 	op.Id = nodeId
 	op.ClusterId = newClusterId
 	op.SecondaryClusterIds = secondaryClusterIdsJSON

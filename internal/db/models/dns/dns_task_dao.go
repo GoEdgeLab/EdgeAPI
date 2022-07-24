@@ -143,7 +143,7 @@ func (this *DNSTaskDAO) UpdateDNSTaskError(tx *dbs.Tx, taskId int64, err string)
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
 	}
-	op := NewDNSTaskOperator()
+	var op = NewDNSTaskOperator()
 	op.Id = taskId
 	op.IsDone = true
 	op.Error = err
@@ -156,7 +156,7 @@ func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64) error {
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
 	}
-	op := NewDNSTaskOperator()
+	var op = NewDNSTaskOperator()
 	op.Id = taskId
 	op.IsDone = true
 	op.IsOk = true

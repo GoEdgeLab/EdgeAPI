@@ -79,7 +79,7 @@ func (this *NSKeyDAO) FindNSKeyName(tx *dbs.Tx, id int64) (string, error) {
 
 // CreateKey 创建Key
 func (this *NSKeyDAO) CreateKey(tx *dbs.Tx, domainId int64, zoneId int64, name string, algo dnsconfigs.KeyAlgorithmType, secret string, secretType string) (int64, error) {
-	op := NewNSKeyOperator()
+	var op = NewNSKeyOperator()
 	op.DomainId = domainId
 	op.ZoneId = zoneId
 	op.Name = name
@@ -105,7 +105,7 @@ func (this *NSKeyDAO) UpdateKey(tx *dbs.Tx, keyId int64, name string, algo dnsco
 	if keyId <= 0 {
 		return errors.New("invalid keyId")
 	}
-	op := NewNSKeyOperator()
+	var op = NewNSKeyOperator()
 	op.Id = keyId
 	op.Name = name
 	op.Algo = algo

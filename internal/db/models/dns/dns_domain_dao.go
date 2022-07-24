@@ -91,7 +91,7 @@ func (this *DNSDomainDAO) FindDNSDomainName(tx *dbs.Tx, id int64) (string, error
 
 // CreateDomain 创建域名
 func (this *DNSDomainDAO) CreateDomain(tx *dbs.Tx, adminId int64, userId int64, providerId int64, name string) (int64, error) {
-	op := NewDNSDomainOperator()
+	var op = NewDNSDomainOperator()
 	op.ProviderId = providerId
 	op.AdminId = adminId
 	op.UserId = userId
@@ -111,7 +111,7 @@ func (this *DNSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, name string, 
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
-	op := NewDNSDomainOperator()
+	var op = NewDNSDomainOperator()
 	op.Id = domainId
 	op.Name = name
 	op.IsOn = isOn
@@ -146,7 +146,7 @@ func (this *DNSDomainDAO) UpdateDomainData(tx *dbs.Tx, domainId int64, data stri
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
-	op := NewDNSDomainOperator()
+	var op = NewDNSDomainOperator()
 	op.Id = domainId
 	op.Data = data
 	err := this.Save(tx, op)
@@ -158,7 +158,7 @@ func (this *DNSDomainDAO) UpdateDomainRecords(tx *dbs.Tx, domainId int64, record
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
-	op := NewDNSDomainOperator()
+	var op = NewDNSDomainOperator()
 	op.Id = domainId
 	op.Records = recordsJSON
 	op.DataUpdatedAt = time.Now().Unix()
@@ -171,7 +171,7 @@ func (this *DNSDomainDAO) UpdateDomainRoutes(tx *dbs.Tx, domainId int64, routesJ
 	if domainId <= 0 {
 		return errors.New("invalid domainId")
 	}
-	op := NewDNSDomainOperator()
+	var op = NewDNSDomainOperator()
 	op.Id = domainId
 	op.Routes = routesJSON
 	op.DataUpdatedAt = time.Now().Unix()

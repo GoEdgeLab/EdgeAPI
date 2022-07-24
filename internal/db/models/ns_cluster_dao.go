@@ -75,7 +75,7 @@ func (this *NSClusterDAO) FindEnabledNSClusterName(tx *dbs.Tx, id int64) (string
 
 // CreateCluster 创建集群
 func (this *NSClusterDAO) CreateCluster(tx *dbs.Tx, name string, accessLogRefJSON []byte) (int64, error) {
-	op := NewNSClusterOperator()
+	var op = NewNSClusterOperator()
 	op.Name = name
 
 	if len(accessLogRefJSON) > 0 {
@@ -92,7 +92,7 @@ func (this *NSClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
-	op := NewNSClusterOperator()
+	var op = NewNSClusterOperator()
 	op.Id = clusterId
 	op.Name = name
 	op.IsOn = isOn

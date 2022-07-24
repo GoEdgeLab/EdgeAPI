@@ -49,7 +49,7 @@ func init() {
 
 // CreateLog 创建日志
 func (this *MessageTaskLogDAO) CreateLog(tx *dbs.Tx, taskId int64, isOk bool, errMsg string, response string) error {
-	op := NewMessageTaskLogOperator()
+	var op = NewMessageTaskLogOperator()
 	op.TaskId = taskId
 	op.IsOk = isOk
 	op.Error = errMsg

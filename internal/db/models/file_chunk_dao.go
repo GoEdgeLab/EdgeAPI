@@ -29,9 +29,9 @@ func init() {
 	})
 }
 
-// 创建文件Chunk
+// CreateFileChunk 创建文件Chunk
 func (this *FileChunkDAO) CreateFileChunk(tx *dbs.Tx, fileId int64, data []byte) (int64, error) {
-	op := NewFileChunkOperator()
+	var op = NewFileChunkOperator()
 	op.FileId = fileId
 	op.Data = data
 	err := this.Save(tx, op)
@@ -41,7 +41,7 @@ func (this *FileChunkDAO) CreateFileChunk(tx *dbs.Tx, fileId int64, data []byte)
 	return types.Int64(op.Id), nil
 }
 
-// 列出所有的文件Chunk
+// FindAllFileChunks 列出所有的文件Chunk
 func (this *FileChunkDAO) FindAllFileChunks(tx *dbs.Tx, fileId int64) (result []*FileChunk, err error) {
 	_, err = this.Query(tx).
 		Attr("fileId", fileId).
@@ -51,7 +51,7 @@ func (this *FileChunkDAO) FindAllFileChunks(tx *dbs.Tx, fileId int64) (result []
 	return
 }
 
-// 读取文件的所有片段ID
+// FindAllFileChunkIds 读取文件的所有片段ID
 func (this *FileChunkDAO) FindAllFileChunkIds(tx *dbs.Tx, fileId int64) ([]int64, error) {
 	ones, err := this.Query(tx).
 		Attr("fileId", fileId).
@@ -68,7 +68,7 @@ func (this *FileChunkDAO) FindAllFileChunkIds(tx *dbs.Tx, fileId int64) ([]int64
 	return result, nil
 }
 
-// 删除以前的文件
+// DeleteFileChunks 删除以前的文件
 func (this *FileChunkDAO) DeleteFileChunks(tx *dbs.Tx, fileId int64) error {
 	if fileId <= 0 {
 		return errors.New("invalid fileId")
@@ -79,7 +79,7 @@ func (this *FileChunkDAO) DeleteFileChunks(tx *dbs.Tx, fileId int64) error {
 	return err
 }
 
-// 根据ID查找片段
+// FindFileChunk 根据ID查找片段
 func (this *FileChunkDAO) FindFileChunk(tx *dbs.Tx, chunkId int64) (*FileChunk, error) {
 	one, err := this.Query(tx).
 		Pk(chunkId).

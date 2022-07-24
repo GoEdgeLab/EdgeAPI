@@ -84,7 +84,7 @@ func (this *MessageMediaInstanceDAO) FindEnabledMessageMediaInstance(tx *dbs.Tx,
 
 // CreateMediaInstance 创建媒介实例
 func (this *MessageMediaInstanceDAO) CreateMediaInstance(tx *dbs.Tx, name string, mediaType string, params maps.Map, description string, rateJSON []byte, hashLifeSeconds int32) (int64, error) {
-	op := NewMessageMediaInstanceOperator()
+	var op = NewMessageMediaInstanceOperator()
 	op.Name = name
 	op.MediaType = mediaType
 
@@ -116,7 +116,7 @@ func (this *MessageMediaInstanceDAO) UpdateMediaInstance(tx *dbs.Tx, instanceId 
 		return errors.New("invalid instanceId")
 	}
 
-	op := NewMessageMediaInstanceOperator()
+	var op = NewMessageMediaInstanceOperator()
 	op.Id = instanceId
 	op.Name = name
 	op.MediaType = mediaType

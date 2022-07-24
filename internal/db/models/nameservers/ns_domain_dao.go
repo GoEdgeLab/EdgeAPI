@@ -93,7 +93,7 @@ func (this *NSDomainDAO) CreateDomain(tx *dbs.Tx, clusterId int64, userId int64,
 		return 0, err
 	}
 
-	op := NewNSDomainOperator()
+	var op = NewNSDomainOperator()
 	op.ClusterId = clusterId
 	op.UserId = userId
 	op.Name = name
@@ -131,7 +131,7 @@ func (this *NSDomainDAO) UpdateDomain(tx *dbs.Tx, domainId int64, clusterId int6
 		return err
 	}
 
-	op := NewNSDomainOperator()
+	var op = NewNSDomainOperator()
 	op.Id = domainId
 	op.ClusterId = clusterId
 	op.UserId = userId

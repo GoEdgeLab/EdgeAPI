@@ -98,7 +98,7 @@ func (this *ReportNodeDAO) CreateReportNode(tx *dbs.Tx, name string, location st
 		return 0, err
 	}
 
-	op := NewReportNodeOperator()
+	var op = NewReportNodeOperator()
 	op.UniqueId = uniqueId
 	op.Secret = secret
 	op.Name = name
@@ -136,7 +136,7 @@ func (this *ReportNodeDAO) UpdateReportNode(tx *dbs.Tx, nodeId int64, name strin
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewReportNodeOperator()
+	var op = NewReportNodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.Location = location

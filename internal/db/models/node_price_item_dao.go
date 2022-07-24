@@ -75,7 +75,7 @@ func (this *NodePriceItemDAO) FindNodePriceItemName(tx *dbs.Tx, id int64) (strin
 
 // CreateItem 创建价格
 func (this *NodePriceItemDAO) CreateItem(tx *dbs.Tx, name string, itemType string, bitsFrom, bitsTo int64) (int64, error) {
-	op := NewNodePriceItemOperator()
+	var op = NewNodePriceItemOperator()
 	op.Name = name
 	op.Type = itemType
 	op.BitsFrom = bitsFrom
@@ -90,7 +90,7 @@ func (this *NodePriceItemDAO) UpdateItem(tx *dbs.Tx, itemId int64, name string, 
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
 	}
-	op := NewNodePriceItemOperator()
+	var op = NewNodePriceItemOperator()
 	op.Id = itemId
 	op.Name = name
 	op.BitsFrom = bitsFrom

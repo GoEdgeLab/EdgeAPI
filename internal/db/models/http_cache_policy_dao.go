@@ -97,7 +97,7 @@ func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies(tx *dbs.Tx) (result 
 
 // CreateCachePolicy 创建缓存策略
 func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) (int64, error) {
-	op := NewHTTPCachePolicyOperator()
+	var op = NewHTTPCachePolicyOperator()
 	op.State = HTTPCachePolicyStateEnabled
 	op.IsOn = isOn
 	op.Name = name
@@ -209,7 +209,7 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 		return errors.New("invalid policyId")
 	}
 
-	op := NewHTTPCachePolicyOperator()
+	var op = NewHTTPCachePolicyOperator()
 	op.Id = policyId
 	op.IsOn = isOn
 	op.Name = name

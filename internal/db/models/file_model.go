@@ -9,6 +9,7 @@ type File struct {
 	Description string `field:"description"` // 文件描述
 	Filename    string `field:"filename"`    // 文件名
 	Size        uint32 `field:"size"`        // 文件尺寸
+	MimeType    string `field:"mimeType"`    // Mime类型
 	CreatedAt   uint64 `field:"createdAt"`   // 创建时间
 	Order       uint32 `field:"order"`       // 排序
 	Type        string `field:"type"`        // 类型
@@ -25,6 +26,7 @@ type FileOperator struct {
 	Description interface{} // 文件描述
 	Filename    interface{} // 文件名
 	Size        interface{} // 文件尺寸
+	MimeType    interface{} // Mime类型
 	CreatedAt   interface{} // 创建时间
 	Order       interface{} // 排序
 	Type        interface{} // 类型

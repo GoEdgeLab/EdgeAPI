@@ -95,7 +95,7 @@ func (this *NSRecordDAO) CreateRecord(tx *dbs.Tx, domainId int64, description st
 		return 0, err
 	}
 
-	op := NewNSRecordOperator()
+	var op = NewNSRecordOperator()
 	op.DomainId = domainId
 	op.Description = description
 	op.Name = name
@@ -139,7 +139,7 @@ func (this *NSRecordDAO) UpdateRecord(tx *dbs.Tx, recordId int64, description st
 		return err
 	}
 
-	op := NewNSRecordOperator()
+	var op = NewNSRecordOperator()
 	op.Id = recordId
 	op.Description = description
 	op.Name = name

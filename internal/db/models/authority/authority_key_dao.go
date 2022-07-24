@@ -42,7 +42,7 @@ func (this *AuthorityKeyDAO) UpdateKey(tx *dbs.Tx, value string, dayFrom string,
 	if err != nil {
 		return err
 	}
-	op := NewAuthorityKeyOperator()
+	var op = NewAuthorityKeyOperator()
 	if one != nil {
 		op.Id = one.(*AuthorityKey).Id
 	}

@@ -113,7 +113,7 @@ func (this *HTTPDeflatePolicyDAO) ComposeDeflateConfig(tx *dbs.Tx, policyId int6
 
 // CreatePolicy 创建策略
 func (this *HTTPDeflatePolicyDAO) CreatePolicy(tx *dbs.Tx, level int, minLengthJSON []byte, maxLengthJSON []byte, condsJSON []byte) (int64, error) {
-	op := NewHTTPDeflatePolicyOperator()
+	var op = NewHTTPDeflatePolicyOperator()
 	op.State = HTTPDeflatePolicyStateEnabled
 	op.IsOn = true
 	op.Level = level
@@ -138,7 +138,7 @@ func (this *HTTPDeflatePolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, level
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPDeflatePolicyOperator()
+	var op = NewHTTPDeflatePolicyOperator()
 	op.Id = policyId
 	op.Level = level
 	if len(minLengthJSON) > 0 {

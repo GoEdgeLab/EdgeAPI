@@ -169,7 +169,7 @@ func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId 
 
 // CreateACMETask 创建任务
 func (this *ACMETaskDAO) CreateACMETask(tx *dbs.Tx, adminId int64, userId int64, authType acmeutils.AuthType, acmeUserId int64, dnsProviderId int64, dnsDomain string, domains []string, autoRenew bool, authURL string) (int64, error) {
-	op := NewACMETaskOperator()
+	var op = NewACMETaskOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.AuthType = authType
@@ -204,7 +204,7 @@ func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId
 		return errors.New("invalid acmeTaskId")
 	}
 
-	op := NewACMETaskOperator()
+	var op = NewACMETaskOperator()
 	op.Id = acmeTaskId
 	op.AcmeUserId = acmeUserId
 	op.DnsProviderId = dnsProviderId
@@ -240,7 +240,7 @@ func (this *ACMETaskDAO) UpdateACMETaskCert(tx *dbs.Tx, taskId int64, certId int
 		return errors.New("invalid taskId")
 	}
 
-	op := NewACMETaskOperator()
+	var op = NewACMETaskOperator()
 	op.Id = taskId
 	op.CertId = certId
 	err := this.Save(tx, op)

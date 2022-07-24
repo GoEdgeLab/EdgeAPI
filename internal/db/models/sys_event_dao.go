@@ -35,7 +35,7 @@ func (this *SysEventDAO) CreateEvent(tx *dbs.Tx, event EventInterface) error {
 		return errors.New("event should not be nil")
 	}
 
-	op := NewSysEventOperator()
+	var op = NewSysEventOperator()
 	op.Type = event.Type()
 
 	eventJSON, err := json.Marshal(event)

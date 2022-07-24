@@ -89,7 +89,7 @@ func (this *SSLCertDAO) FindSSLCertName(tx *dbs.Tx, id int64) (string, error) {
 
 // CreateCert 创建证书
 func (this *SSLCertDAO) CreateCert(tx *dbs.Tx, adminId int64, userId int64, isOn bool, name string, description string, serverName string, isCA bool, certData []byte, keyData []byte, timeBeginAt int64, timeEndAt int64, dnsNames []string, commonNames []string) (int64, error) {
-	op := NewSSLCertOperator()
+	var op = NewSSLCertOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.State = SSLCertStateEnabled
@@ -343,7 +343,7 @@ func (this *SSLCertDAO) UpdateCertACME(tx *dbs.Tx, certId int64, acmeTaskId int6
 	if certId <= 0 {
 		return errors.New("invalid certId")
 	}
-	op := NewSSLCertOperator()
+	var op = NewSSLCertOperator()
 	op.Id = certId
 	op.AcmeTaskId = acmeTaskId
 	op.IsACME = true

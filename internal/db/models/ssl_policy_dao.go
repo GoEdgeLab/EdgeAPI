@@ -200,7 +200,7 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(tx *dbs.Tx, certId i
 
 // CreatePolicy 创建Policy
 func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
-	op := NewSSLPolicyOperator()
+	var op = NewSSLPolicyOperator()
 	op.State = SSLPolicyStateEnabled
 	op.IsOn = true
 	op.AdminId = adminId
@@ -244,7 +244,7 @@ func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled 
 		return errors.New("invalid policyId")
 	}
 
-	op := NewSSLPolicyOperator()
+	var op = NewSSLPolicyOperator()
 	op.Id = policyId
 	op.Http2Enabled = http2Enabled
 	op.MinVersion = minVersion

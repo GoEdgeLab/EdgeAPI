@@ -81,7 +81,7 @@ func (this *HTTPHeaderDAO) FindHTTPHeaderName(tx *dbs.Tx, id int64) (string, err
 
 // CreateHeader 创建Header
 func (this *HTTPHeaderDAO) CreateHeader(tx *dbs.Tx, userId int64, name string, value string, status []int, disableRedirect bool, shouldAppend bool, shouldReplace bool, replaceValues []*shared.HTTPHeaderReplaceValue, methods []string, domains []string) (int64, error) {
-	op := NewHTTPHeaderOperator()
+	var op = NewHTTPHeaderOperator()
 	op.UserId = userId
 	op.State = HTTPHeaderStateEnabled
 	op.IsOn = true
@@ -156,7 +156,7 @@ func (this *HTTPHeaderDAO) UpdateHeader(tx *dbs.Tx, headerId int64, name string,
 		return errors.New("invalid headerId")
 	}
 
-	op := NewHTTPHeaderOperator()
+	var op = NewHTTPHeaderOperator()
 	op.Id = headerId
 	op.Name = name
 	op.Value = value

@@ -121,7 +121,7 @@ func (this *HTTPFastcgiDAO) ComposeFastcgiConfig(tx *dbs.Tx, fastcgiId int64) (*
 
 // CreateFastcgi 创建Fastcgi
 func (this *HTTPFastcgiDAO) CreateFastcgi(tx *dbs.Tx, adminId int64, userId int64, isOn bool, address string, paramsJSON []byte, readTimeoutJSON []byte, connTimeoutJSON []byte, poolSize int32, pathInfoPattern string) (int64, error) {
-	op := NewHTTPFastcgiOperator()
+	var op = NewHTTPFastcgiOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.IsOn = isOn
@@ -147,7 +147,7 @@ func (this *HTTPFastcgiDAO) UpdateFastcgi(tx *dbs.Tx, fastcgiId int64, isOn bool
 	if fastcgiId <= 0 {
 		return errors.New("invalid 'fastcgiId'")
 	}
-	op := NewHTTPFastcgiOperator()
+	var op = NewHTTPFastcgiOperator()
 	op.Id = fastcgiId
 	op.IsOn = isOn
 	op.Address = address

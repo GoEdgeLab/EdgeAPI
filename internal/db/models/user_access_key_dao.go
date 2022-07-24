@@ -70,7 +70,7 @@ func (this *UserAccessKeyDAO) CreateAccessKey(tx *dbs.Tx, adminId int64, userId 
 	if adminId <= 0 && userId <= 0 {
 		return 0, errors.New("invalid adminId or userId")
 	}
-	op := NewUserAccessKeyOperator()
+	var op = NewUserAccessKeyOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.Description = description

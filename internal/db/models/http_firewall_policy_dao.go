@@ -233,7 +233,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *db
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPFirewallPolicyOperator()
+	var op = NewHTTPFirewallPolicyOperator()
 	op.Id = policyId
 	if len(inboundJSON) > 0 {
 		op.Inbound = inboundJSON
@@ -262,7 +262,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPFirewallPolicyOperator()
+	var op = NewHTTPFirewallPolicyOperator()
 	op.Id = policyId
 	if len(inboundJSON) > 0 {
 		op.Inbound = inboundJSON

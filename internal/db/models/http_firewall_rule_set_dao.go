@@ -133,7 +133,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 
 // CreateOrUpdateSetFromConfig 从配置中创建规则集
 func (this *HTTPFirewallRuleSetDAO) CreateOrUpdateSetFromConfig(tx *dbs.Tx, setConfig *firewallconfigs.HTTPFirewallRuleSet) (int64, error) {
-	op := NewHTTPFirewallRuleSetOperator()
+	var op = NewHTTPFirewallRuleSetOperator()
 	op.State = HTTPFirewallRuleSetStateEnabled
 	op.Id = setConfig.Id
 	op.IsOn = setConfig.IsOn

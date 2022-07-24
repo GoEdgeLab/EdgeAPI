@@ -69,7 +69,7 @@ func (this *HTTPAuthPolicyDAO) FindEnabledHTTPAuthPolicy(tx *dbs.Tx, id int64) (
 
 // CreateHTTPAuthPolicy 创建策略
 func (this *HTTPAuthPolicyDAO) CreateHTTPAuthPolicy(tx *dbs.Tx, name string, methodType string, paramsJSON []byte) (int64, error) {
-	op := NewHTTPAuthPolicyOperator()
+	var op = NewHTTPAuthPolicyOperator()
 	op.Name = name
 	op.Type = methodType
 	op.Params = paramsJSON
@@ -83,7 +83,7 @@ func (this *HTTPAuthPolicyDAO) UpdateHTTPAuthPolicy(tx *dbs.Tx, policyId int64, 
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
-	op := NewHTTPAuthPolicyOperator()
+	var op = NewHTTPAuthPolicyOperator()
 	op.Id = policyId
 	op.Name = name
 	op.Params = paramsJSON

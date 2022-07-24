@@ -165,7 +165,7 @@ func (this *IPListDAO) UpdateIPList(tx *dbs.Tx, listId int64, name string, code 
 	if listId <= 0 {
 		return errors.New("invalid listId")
 	}
-	op := NewIPListOperator()
+	var op = NewIPListOperator()
 	op.Id = listId
 	op.Name = name
 	op.Code = code

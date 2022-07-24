@@ -133,7 +133,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 		return 0, err
 	}
 
-	op := NewNodeClusterOperator()
+	var op = NewNodeClusterOperator()
 	op.AdminId = adminId
 	op.Name = name
 	op.GrantId = grantId
@@ -186,7 +186,7 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
-	op := NewNodeClusterOperator()
+	var op = NewNodeClusterOperator()
 	op.Id = clusterId
 	op.Name = name
 	op.GrantId = grantId
@@ -325,7 +325,7 @@ func (this *NodeClusterDAO) UpdateClusterHealthCheck(tx *dbs.Tx, clusterId int64
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId '" + strconv.FormatInt(clusterId, 10) + "'")
 	}
-	op := NewNodeClusterOperator()
+	var op = NewNodeClusterOperator()
 	op.Id = clusterId
 	op.HealthCheck = healthCheckJSON
 	// 不需要通知更新
@@ -570,7 +570,7 @@ func (this *NodeClusterDAO) UpdateClusterTOA(tx *dbs.Tx, clusterId int64, toaJSO
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
-	op := NewNodeClusterOperator()
+	var op = NewNodeClusterOperator()
 	op.Id = clusterId
 	op.Toa = toaJSON
 	err := this.Save(tx, op)

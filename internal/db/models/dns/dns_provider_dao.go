@@ -68,7 +68,7 @@ func (this *DNSProviderDAO) FindEnabledDNSProvider(tx *dbs.Tx, id int64) (*DNSPr
 
 // CreateDNSProvider 创建服务商
 func (this *DNSProviderDAO) CreateDNSProvider(tx *dbs.Tx, adminId int64, userId int64, providerType string, name string, apiParamsJSON []byte) (int64, error) {
-	op := NewDNSProviderOperator()
+	var op = NewDNSProviderOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.Type = providerType
@@ -90,7 +90,7 @@ func (this *DNSProviderDAO) UpdateDNSProvider(tx *dbs.Tx, dnsProviderId int64, n
 		return errors.New("invalid dnsProviderId")
 	}
 
-	op := NewDNSProviderOperator()
+	var op = NewDNSProviderOperator()
 	op.Id = dnsProviderId
 	op.Name = name
 

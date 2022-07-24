@@ -73,7 +73,7 @@ func (this *MessageRecipientGroupDAO) FindMessageRecipientGroupName(tx *dbs.Tx, 
 
 // 创建分组
 func (this *MessageRecipientGroupDAO) CreateGroup(tx *dbs.Tx, name string) (int64, error) {
-	op := NewMessageRecipientGroupOperator()
+	var op = NewMessageRecipientGroupOperator()
 	op.Name = name
 	op.IsOn = true
 	op.State = MessageRecipientStateEnabled
@@ -85,7 +85,7 @@ func (this *MessageRecipientGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, nam
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
-	op := NewMessageRecipientGroupOperator()
+	var op = NewMessageRecipientGroupOperator()
 	op.Id = groupId
 	op.Name = name
 	op.IsOn = isOn

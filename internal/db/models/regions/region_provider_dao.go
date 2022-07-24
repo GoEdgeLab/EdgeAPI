@@ -102,7 +102,7 @@ func (this *RegionProviderDAO) FindProviderIdWithNameCacheable(tx *dbs.Tx, provi
 
 // CreateProvider 创建Provider
 func (this *RegionProviderDAO) CreateProvider(tx *dbs.Tx, name string) (int64, error) {
-	op := NewRegionProviderOperator()
+	var op = NewRegionProviderOperator()
 	op.Name = name
 
 	codesJSON, err := json.Marshal([]string{name})

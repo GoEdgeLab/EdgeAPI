@@ -104,7 +104,7 @@ func (this *MessageMediaDAO) UpdateMessageMedias(tx *dbs.Tx, mediaMaps []maps.Ma
 		if err != nil {
 			return err
 		}
-		op := NewMessageMediaOperator()
+		var op = NewMessageMediaOperator()
 		if mediaId > 0 {
 			op.Id = mediaId
 		}

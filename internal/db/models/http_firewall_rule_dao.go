@@ -116,7 +116,7 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(tx *dbs.Tx, ruleId int64) (
 
 // CreateOrUpdateRuleFromConfig 从配置中配置规则
 func (this *HTTPFirewallRuleDAO) CreateOrUpdateRuleFromConfig(tx *dbs.Tx, ruleConfig *firewallconfigs.HTTPFirewallRule) (int64, error) {
-	op := NewHTTPFirewallRuleOperator()
+	var op = NewHTTPFirewallRuleOperator()
 	op.Id = ruleConfig.Id
 	op.State = HTTPFirewallRuleStateEnabled
 	op.IsOn = ruleConfig.IsOn

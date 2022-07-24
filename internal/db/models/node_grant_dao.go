@@ -75,7 +75,7 @@ func (this *NodeGrantDAO) FindNodeGrantName(tx *dbs.Tx, id uint32) (string, erro
 
 // CreateGrant 创建认证信息
 func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, method string, username string, password string, privateKey string, passphrase string, description string, nodeId int64, su bool) (grantId int64, err error) {
-	op := NewNodeGrantOperator()
+	var op = NewNodeGrantOperator()
 	op.AdminId = adminId
 	op.Name = name
 	op.Method = method
@@ -103,7 +103,7 @@ func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, me
 		return errors.New("invalid grantId")
 	}
 
-	op := NewNodeGrantOperator()
+	var op = NewNodeGrantOperator()
 	op.Id = grantId
 	op.Name = name
 	op.Method = method

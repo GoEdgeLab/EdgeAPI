@@ -134,7 +134,7 @@ func (this *APINodeDAO) CreateAPINode(tx *dbs.Tx, name string, description strin
 		return
 	}
 
-	op := NewAPINodeOperator()
+	var op = NewAPINodeOperator()
 	op.IsOn = isOn
 	op.UniqueId = uniqueId
 	op.Secret = secret

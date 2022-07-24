@@ -65,7 +65,7 @@ func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSO
 
 		if settingId == 0 {
 			// 新建
-			op := NewSysSettingOperator()
+			var op = NewSysSettingOperator()
 			op.Code = codeFormat
 			op.Value = valueJSON
 			err = this.Save(tx, op)
@@ -81,7 +81,7 @@ func (this *SysSettingDAO) UpdateSetting(tx *dbs.Tx, codeFormat string, valueJSO
 		}
 
 		// 修改
-		op := NewSysSettingOperator()
+		var op = NewSysSettingOperator()
 		op.Id = settingId
 		op.Value = valueJSON
 		err = this.Save(tx, op)

@@ -119,7 +119,7 @@ func (this *RegionProvinceDAO) FindProvinceIdWithNameCacheable(tx *dbs.Tx, count
 
 // 创建省份
 func (this *RegionProvinceDAO) CreateProvince(tx *dbs.Tx, countryId int64, name string, dataId string) (int64, error) {
-	op := NewRegionProvinceOperator()
+	var op = NewRegionProvinceOperator()
 	op.CountryId = countryId
 	op.Name = name
 	op.DataId = dataId

@@ -78,7 +78,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 
 // CreatePage 创建Page
 func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) (pageId int64, err error) {
-	op := NewHTTPPageOperator()
+	var op = NewHTTPPageOperator()
 	op.UserId = userId
 	op.IsOn = true
 	op.State = HTTPPageStateEnabled
@@ -108,7 +108,7 @@ func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []strin
 		return errors.New("invalid pageId")
 	}
 
-	op := NewHTTPPageOperator()
+	var op = NewHTTPPageOperator()
 	op.Id = pageId
 	op.IsOn = true
 	op.State = HTTPPageStateEnabled

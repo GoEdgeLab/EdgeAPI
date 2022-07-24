@@ -78,7 +78,7 @@ func (this *ServerGroupDAO) FindServerGroupName(tx *dbs.Tx, id int64) (string, e
 
 // CreateGroup 创建分组
 func (this *ServerGroupDAO) CreateGroup(tx *dbs.Tx, name string, userId int64) (groupId int64, err error) {
-	op := NewServerGroupOperator()
+	var op = NewServerGroupOperator()
 	op.State = ServerGroupStateEnabled
 	op.Name = name
 	op.UserId = userId
@@ -95,7 +95,7 @@ func (this *ServerGroupDAO) UpdateGroup(tx *dbs.Tx, groupId int64, name string) 
 	if groupId <= 0 {
 		return errors.New("invalid groupId")
 	}
-	op := NewServerGroupOperator()
+	var op = NewServerGroupOperator()
 	op.Id = groupId
 	op.Name = name
 	err := this.Save(tx, op)
@@ -193,7 +193,7 @@ func (this *ServerGroupDAO) UpdateHTTPReverseProxy(tx *dbs.Tx, groupId int64, co
 	if groupId <= 0 {
 		return errors.New("groupId should not be smaller than 0")
 	}
-	op := NewServerGroupOperator()
+	var op = NewServerGroupOperator()
 	op.Id = groupId
 	op.HttpReverseProxy = JSONBytes(config)
 	err := this.Save(tx, op)
@@ -209,7 +209,7 @@ func (this *ServerGroupDAO) UpdateTCPReverseProxy(tx *dbs.Tx, groupId int64, con
 	if groupId <= 0 {
 		return errors.New("groupId should not be smaller than 0")
 	}
-	op := NewServerGroupOperator()
+	var op = NewServerGroupOperator()
 	op.Id = groupId
 	op.TcpReverseProxy = JSONBytes(config)
 	err := this.Save(tx, op)
@@ -225,7 +225,7 @@ func (this *ServerGroupDAO) UpdateUDPReverseProxy(tx *dbs.Tx, groupId int64, con
 	if groupId <= 0 {
 		return errors.New("groupId should not be smaller than 0")
 	}
-	op := NewServerGroupOperator()
+	var op = NewServerGroupOperator()
 	op.Id = groupId
 	op.UdpReverseProxy = JSONBytes(config)
 	err := this.Save(tx, op)

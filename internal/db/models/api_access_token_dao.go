@@ -56,7 +56,7 @@ func (this *APIAccessTokenDAO) GenerateAccessToken(tx *dbs.Tx, adminId int64, us
 	token = rands.String(128) // TODO 增强安全性，将来使用 base64_encode(encrypt(salt+random)) 算法来代替
 	expiresAt = time.Now().Unix() + 7200
 
-	op := NewAPIAccessTokenOperator()
+	var op = NewAPIAccessTokenOperator()
 
 	if accessToken != nil {
 		op.Id = accessToken.(*APIAccessToken).Id

@@ -330,7 +330,7 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 		return err
 	}
 
-	op := NewIPItemOperator()
+	var op = NewIPItemOperator()
 	op.Id = itemId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo

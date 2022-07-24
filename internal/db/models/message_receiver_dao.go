@@ -76,7 +76,7 @@ func (this *MessageReceiverDAO) DisableReceivers(tx *dbs.Tx, clusterId int64, no
 
 // CreateReceiver 创建接收人
 func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType MessageType, params maps.Map, recipientId int64, recipientGroupId int64) (int64, error) {
-	op := NewMessageReceiverOperator()
+	var op = NewMessageReceiverOperator()
 	op.Role = role
 	op.ClusterId = clusterId
 	op.NodeId = nodeId

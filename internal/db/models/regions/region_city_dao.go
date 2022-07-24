@@ -86,7 +86,7 @@ func (this *RegionCityDAO) FindCityWithDataId(tx *dbs.Tx, dataId string) (int64,
 
 // CreateCity 创建城市
 func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string, dataId string) (int64, error) {
-	op := NewRegionCityOperator()
+	var op = NewRegionCityOperator()
 	op.ProvinceId = provinceId
 	op.Name = name
 	op.DataId = dataId

@@ -115,7 +115,7 @@ func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password st
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.Id = adminId
 	op.Password = stringutil.Md5(password)
 	err := this.Save(tx, op)
@@ -124,7 +124,7 @@ func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password st
 
 // CreateAdmin 创建管理员
 func (this *AdminDAO) CreateAdmin(tx *dbs.Tx, username string, canLogin bool, password string, fullname string, isSuper bool, modulesJSON []byte) (int64, error) {
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.IsOn = true
 	op.State = AdminStateEnabled
 	op.Username = username
@@ -149,7 +149,7 @@ func (this *AdminDAO) UpdateAdminInfo(tx *dbs.Tx, adminId int64, fullname string
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.Id = adminId
 	op.Fullname = fullname
 	err := this.Save(tx, op)
@@ -161,7 +161,7 @@ func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, ca
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.Id = adminId
 	op.Fullname = fullname
 	op.Username = username
@@ -198,7 +198,7 @@ func (this *AdminDAO) UpdateAdminLogin(tx *dbs.Tx, adminId int64, username strin
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.Id = adminId
 	op.Username = username
 	if len(password) > 0 {
@@ -213,7 +213,7 @@ func (this *AdminDAO) UpdateAdminModules(tx *dbs.Tx, adminId int64, allowModules
 	if adminId <= 0 {
 		return errors.New("invalid adminId")
 	}
-	op := NewAdminOperator()
+	var op = NewAdminOperator()
 	op.Id = adminId
 	op.Modules = allowModulesJSON
 	err := this.Save(tx, op)

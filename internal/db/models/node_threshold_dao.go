@@ -72,7 +72,7 @@ func (this *NodeThresholdDAO) FindEnabledNodeThreshold(tx *dbs.Tx, id int64) (*N
 
 // CreateThreshold 创建阈值
 func (this *NodeThresholdDAO) CreateThreshold(tx *dbs.Tx, role string, clusterId int64, nodeId int64, item nodeconfigs.NodeValueItem, param string, operator nodeconfigs.NodeValueOperator, valueJSON []byte, message string, sumMethod nodeconfigs.NodeValueSumMethod, duration int32, durationUnit nodeconfigs.NodeValueDurationUnit, notifyDuration int32) (int64, error) {
-	op := NewNodeThresholdOperator()
+	var op = NewNodeThresholdOperator()
 	op.Role = role
 	op.ClusterId = clusterId
 	op.NodeId = nodeId
@@ -95,7 +95,7 @@ func (this *NodeThresholdDAO) UpdateThreshold(tx *dbs.Tx, thresholdId int64, ite
 	if thresholdId <= 0 {
 		return errors.New("invalid thresholdId")
 	}
-	op := NewNodeThresholdOperator()
+	var op = NewNodeThresholdOperator()
 	op.Id = thresholdId
 	op.Item = item
 	op.Param = param

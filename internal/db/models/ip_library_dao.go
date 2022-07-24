@@ -92,7 +92,7 @@ func (this *IPLibraryDAO) FindLatestIPLibraryWithType(tx *dbs.Tx, libraryType st
 
 // 创建新的IP库
 func (this *IPLibraryDAO) CreateIPLibrary(tx *dbs.Tx, libraryType string, fileId int64) (int64, error) {
-	op := NewIPLibraryOperator()
+	var op = NewIPLibraryOperator()
 	op.Type = libraryType
 	op.FileId = fileId
 	op.State = IPLibraryStateEnabled

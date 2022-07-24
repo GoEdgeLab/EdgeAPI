@@ -162,7 +162,7 @@ func (this *UserNodeDAO) CreateUserNode(tx *dbs.Tx, name string, description str
 		return
 	}
 
-	op := NewUserNodeOperator()
+	var op = NewUserNodeOperator()
 	op.IsOn = isOn
 	op.UniqueId = uniqueId
 	op.Secret = secret
@@ -194,7 +194,7 @@ func (this *UserNodeDAO) UpdateUserNode(tx *dbs.Tx, nodeId int64, name string, d
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewUserNodeOperator()
+	var op = NewUserNodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.Description = description

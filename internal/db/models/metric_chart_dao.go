@@ -75,7 +75,7 @@ func (this *MetricChartDAO) FindMetricChartName(tx *dbs.Tx, chartId int64) (stri
 
 // CreateChart 创建图表
 func (this *MetricChartDAO) CreateChart(tx *dbs.Tx, itemId int64, name string, chartType string, widthDiv int32, maxItems int32, params maps.Map, ignoreEmptyKeys bool, ignoredKeys []string) (int64, error) {
-	op := NewMetricChartOperator()
+	var op = NewMetricChartOperator()
 	op.ItemId = itemId
 	op.Name = name
 	op.Type = chartType
@@ -112,7 +112,7 @@ func (this *MetricChartDAO) UpdateChart(tx *dbs.Tx, chartId int64, name string, 
 	if chartId <= 0 {
 		return errors.New("invalid chartId")
 	}
-	op := NewMetricChartOperator()
+	var op = NewMetricChartOperator()
 	op.Id = chartId
 	op.Name = name
 	op.Type = chartType

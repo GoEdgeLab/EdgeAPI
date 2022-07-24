@@ -29,7 +29,7 @@ func init() {
 
 // 生成日志
 func (this *ACMETaskLogDAO) CreateACMETaskLog(tx *dbs.Tx, taskId int64, isOk bool, errMsg string) error {
-	op := NewACMETaskLogOperator()
+	var op = NewACMETaskLogOperator()
 	op.TaskId = taskId
 	op.Error = errMsg
 	op.IsOk = isOk

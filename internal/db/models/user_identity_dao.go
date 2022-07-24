@@ -66,9 +66,10 @@ func (this *UserIdentityDAO) FindEnabledUserIdentity(tx *dbs.Tx, id int64) (*Use
 }
 
 // CreateUserIdentity 创建
-func (this *UserIdentityDAO) CreateUserIdentity(tx *dbs.Tx, userId int64, idType userconfigs.UserIdentityType, realName string, number string, fileIds []int64) (int64, error) {
+func (this *UserIdentityDAO) CreateUserIdentity(tx *dbs.Tx, userId int64, orgType userconfigs.UserIdentityOrgType, idType userconfigs.UserIdentityType, realName string, number string, fileIds []int64) (int64, error) {
 	var op = NewUserIdentityOperator()
 	op.UserId = userId
+	op.OrgType = orgType
 	op.Type = idType
 	op.RealName = realName
 	op.Number = number
@@ -96,6 +97,7 @@ func (this *UserIdentityDAO) UpdateUserIdentity(tx *dbs.Tx, identityId int64, id
 	var op = NewUserIdentityOperator()
 	op.Id = identityId
 	op.Type = idType
+	op.RealName = realName
 	op.Number = number
 
 	if fileIds == nil {
@@ -106,6 +108,8 @@ func (this *UserIdentityDAO) UpdateUserIdentity(tx *dbs.Tx, identityId int64, id
 		return err
 	}
 	op.FileIds = fileIdsJSON
+
+	op.Status = userconfigs.UserIdentityStatusNone
 
 	return this.Save(tx, op)
 }
@@ -129,10 +133,11 @@ func (this *UserIdentityDAO) CancelUserIdentity(tx *dbs.Tx, identityId int64) er
 }
 
 // RejectUserIdentity 拒绝
-func (this *UserIdentityDAO) RejectUserIdentity(tx *dbs.Tx, identityId int64) error {
+func (this *UserIdentityDAO) RejectUserIdentity(tx *dbs.Tx, identityId int64, reason string) error {
 	return this.Query(tx).
 		Pk(identityId).
 		Set("status", userconfigs.UserIdentityStatusRejected).
+		Set("rejectedReason", reason).
 		Set("rejectedAt", time.Now().Unix()).
 		UpdateQuickly()
 }
@@ -170,12 +175,13 @@ func (this *UserIdentityDAO) FindUserIdentityStatus(tx *dbs.Tx, identityId int64
 		FindStringCol("")
 }
 
-// FindEnabledUserIdentityWithType 查找某个类型的认证信息
-func (this *UserIdentityDAO) FindEnabledUserIdentityWithType(tx *dbs.Tx, userId int64, idType userconfigs.UserIdentityType) (*UserIdentity, error) {
+// FindEnabledUserIdentityWithOrgType 查找某个类型的认证信息
+func (this *UserIdentityDAO) FindEnabledUserIdentityWithOrgType(tx *dbs.Tx, userId int64, orgType string) (*UserIdentity, error) {
 	one, err := this.Query(tx).
 		Attr("userId", userId).
-		Attr("type", idType).
+		Attr("orgType", orgType).
 		State(UserIdentityStateEnabled).
+		DescPk().
 		Find()
 	if err != nil || one == nil {
 		return nil, err

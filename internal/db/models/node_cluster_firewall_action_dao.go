@@ -84,7 +84,7 @@ func (this *NodeClusterFirewallActionDAO) CreateFirewallAction(tx *dbs.Tx, admin
 		params = maps.Map{}
 	}
 
-	op := NewNodeClusterFirewallActionOperator()
+	var op = NewNodeClusterFirewallActionOperator()
 	op.AdminId = adminId
 	op.ClusterId = clusterId
 	op.Name = name
@@ -113,7 +113,7 @@ func (this *NodeClusterFirewallActionDAO) UpdateFirewallAction(tx *dbs.Tx, actio
 		params = maps.Map{}
 	}
 
-	op := NewNodeClusterFirewallActionOperator()
+	var op = NewNodeClusterFirewallActionOperator()
 	op.Id = actionId
 	op.Name = name
 	op.EventLevel = eventLevel

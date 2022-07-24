@@ -110,7 +110,7 @@ func (this *HTTPWebsocketDAO) ComposeWebsocketConfig(tx *dbs.Tx, websocketId int
 
 // CreateWebsocket 创建Websocket配置
 func (this *HTTPWebsocketDAO) CreateWebsocket(tx *dbs.Tx, handshakeTimeoutJSON []byte, allowAllOrigins bool, allowedOrigins []string, requestSameOrigin bool, requestOrigin string) (websocketId int64, err error) {
-	op := NewHTTPWebsocketOperator()
+	var op = NewHTTPWebsocketOperator()
 	op.IsOn = true
 	op.State = HTTPWebsocketStateEnabled
 	if len(handshakeTimeoutJSON) > 0 {
@@ -135,7 +135,7 @@ func (this *HTTPWebsocketDAO) UpdateWebsocket(tx *dbs.Tx, websocketId int64, han
 	if websocketId <= 0 {
 		return errors.New("invalid websocketId")
 	}
-	op := NewHTTPWebsocketOperator()
+	var op = NewHTTPWebsocketOperator()
 	op.Id = websocketId
 	if len(handshakeTimeoutJSON) > 0 {
 		op.HandshakeTimeout = handshakeTimeoutJSON

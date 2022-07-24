@@ -123,7 +123,7 @@ func (this *MonitorNodeDAO) CreateMonitorNode(tx *dbs.Tx, name string, descripti
 		return
 	}
 
-	op := NewMonitorNodeOperator()
+	var op = NewMonitorNodeOperator()
 	op.IsOn = isOn
 	op.UniqueId = uniqueId
 	op.Secret = secret
@@ -144,7 +144,7 @@ func (this *MonitorNodeDAO) UpdateMonitorNode(tx *dbs.Tx, nodeId int64, name str
 		return errors.New("invalid nodeId")
 	}
 
-	op := NewMonitorNodeOperator()
+	var op = NewMonitorNodeOperator()
 	op.Id = nodeId
 	op.Name = name
 	op.Description = description

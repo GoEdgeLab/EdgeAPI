@@ -129,7 +129,7 @@ func (this *NSRouteDAO) CreateRoute(tx *dbs.Tx, clusterId int64, domainId int64,
 		return 0, err
 	}
 
-	op := NewNSRouteOperator()
+	var op = NewNSRouteOperator()
 	op.ClusterId = clusterId
 	op.DomainId = domainId
 	op.UserId = userId
@@ -166,7 +166,7 @@ func (this *NSRouteDAO) UpdateRoute(tx *dbs.Tx, routeId int64, name string, rang
 		return err
 	}
 
-	op := NewNSRouteOperator()
+	var op = NewNSRouteOperator()
 	op.Id = routeId
 	op.Name = name
 	if len(rangesJSON) > 0 {

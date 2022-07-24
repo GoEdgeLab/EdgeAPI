@@ -154,7 +154,7 @@ func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int
 
 // CreateMessage 创建普通消息
 func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
-	op := NewMessageOperator()
+	var op = NewMessageOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.Type = messageType
@@ -230,7 +230,7 @@ func (this *MessageDAO) UpdateMessageRead(tx *dbs.Tx, messageId int64, b bool) e
 	if messageId <= 0 {
 		return errors.New("invalid messageId")
 	}
-	op := NewMessageOperator()
+	var op = NewMessageOperator()
 	op.Id = messageId
 	op.IsRead = b
 	err := this.Save(tx, op)
@@ -286,7 +286,7 @@ func (this *MessageDAO) createMessage(tx *dbs.Tx, role string, clusterId int64, 
 	// TODO 检查同样的消息最近是否发送过
 
 	// 创建新消息
-	op := NewMessageOperator()
+	var op = NewMessageOperator()
 	op.AdminId = 0 // TODO
 	op.UserId = 0  // TODO
 	op.Role = role

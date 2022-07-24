@@ -64,7 +64,7 @@ func (this *ServerStatBoardChartDAO) FindEnabledServerStatBoardChart(tx *dbs.Tx,
 
 // EnableChart 启用图表
 func (this *ServerStatBoardChartDAO) EnableChart(tx *dbs.Tx, boardId int64, chartId int64) error {
-	op := NewServerStatBoardChartOperator()
+	var op = NewServerStatBoardChartOperator()
 	op.BoardId = boardId
 	op.ChartId = chartId
 	op.State = ServerStatBoardChartStateEnabled

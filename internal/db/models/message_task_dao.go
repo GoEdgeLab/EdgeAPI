@@ -131,7 +131,7 @@ func (this *MessageTaskDAO) CreateMessageTask(tx *dbs.Tx, recipientId int64, ins
 		}
 	}
 
-	op := NewMessageTaskOperator()
+	var op = NewMessageTaskOperator()
 	op.RecipientId = recipientId
 	op.InstanceId = instanceId
 	op.Hash = hash
@@ -190,7 +190,7 @@ func (this *MessageTaskDAO) UpdateMessageTaskStatus(tx *dbs.Tx, taskId int64, st
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
 	}
-	op := NewMessageTaskOperator()
+	var op = NewMessageTaskOperator()
 	op.Id = taskId
 	op.Status = status
 	op.SentAt = time.Now().Unix()
