@@ -146,7 +146,7 @@ func (this *UserIdentityDAO) RejectUserIdentity(tx *dbs.Tx, identityId int64, re
 	return this.Query(tx).
 		Pk(identityId).
 		Set("status", userconfigs.UserIdentityStatusRejected).
-		Set("rejectedReason", reason).
+		Set("rejectReason", reason).
 		Set("rejectedAt", time.Now().Unix()).
 		UpdateQuickly()
 }
@@ -204,6 +204,15 @@ func (this *UserIdentityDAO) CheckUserIdentityIsVerified(tx *dbs.Tx, userId int6
 		Attr("userId", userId).
 		Attr("orgType", orgType).
 		Attr("status", userconfigs.UserIdentityStatusVerified).
+		State(UserIdentityStateEnabled).
+		Exist()
+}
+
+// CheckUserIdentityStatus 检查状态
+func (this *UserIdentityDAO) CheckUserIdentityStatus(tx *dbs.Tx, userId int64, status userconfigs.UserIdentityStatus) (bool, error) {
+	return this.Query(tx).
+		Attr("userId", userId).
+		Attr("status", status).
 		State(UserIdentityStateEnabled).
 		Exist()
 }

@@ -226,7 +226,8 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword s
 			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if isVerifying {
-		query.Attr("isVerified", 0)
+		query.Where("(isVerified=0 OR (id IN (SELECT userId FROM " + SharedUserIdentityDAO.Table + " WHERE status=:identityStatus AND state=1)))")
+		query.Param("identityStatus", userconfigs.UserIdentityStatusSubmitted)
 	}
 	return query.Count()
 }
@@ -235,7 +236,8 @@ func (this *UserDAO) CountAllEnabledUsers(tx *dbs.Tx, clusterId int64, keyword s
 func (this *UserDAO) CountAllVerifyingUsers(tx *dbs.Tx) (int64, error) {
 	query := this.Query(tx)
 	query.State(UserStateEnabled)
-	query.Attr("isVerified", 0)
+	query.Where("(isVerified=0 OR (id IN (SELECT userId FROM " + SharedUserIdentityDAO.Table + " WHERE status=:identityStatus AND state=1)))")
+	query.Param("identityStatus", userconfigs.UserIdentityStatusSubmitted)
 	return query.Count()
 }
 
@@ -251,7 +253,8 @@ func (this *UserDAO) ListEnabledUsers(tx *dbs.Tx, clusterId int64, keyword strin
 			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	if isVerifying {
-		query.Attr("isVerified", 0)
+		query.Where("(isVerified=0 OR (id IN (SELECT userId FROM " + SharedUserIdentityDAO.Table + " WHERE status=:identityStatus AND state=1)))")
+		query.Param("identityStatus", userconfigs.UserIdentityStatusSubmitted)
 	}
 	_, err = query.
 		DescPk().

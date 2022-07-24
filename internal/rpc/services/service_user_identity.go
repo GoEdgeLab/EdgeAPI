@@ -71,18 +71,18 @@ func (this *UserIdentityService) FindEnabledUserIdentity(ctx context.Context, re
 
 	return &pb.FindEnabledUserIdentityResponse{
 		UserIdentity: &pb.UserIdentity{
-			Id:             int64(identity.Id),
-			Type:           identity.Type,
-			RealName:       identity.RealName,
-			Number:         identity.Number,
-			FileIds:        identity.DecodeFileIds(),
-			Status:         identity.Status,
-			CreatedAt:      int64(identity.CreatedAt),
-			UpdatedAt:      int64(identity.UpdatedAt),
-			SubmittedAt:    int64(identity.SubmittedAt),
-			RejectedAt:     int64(identity.RejectedAt),
-			VerifiedAt:     int64(identity.VerifiedAt),
-			RejectedReason: identity.RejectedReason,
+			Id:           int64(identity.Id),
+			Type:         identity.Type,
+			RealName:     identity.RealName,
+			Number:       identity.Number,
+			FileIds:      identity.DecodeFileIds(),
+			Status:       identity.Status,
+			CreatedAt:    int64(identity.CreatedAt),
+			UpdatedAt:    int64(identity.UpdatedAt),
+			SubmittedAt:  int64(identity.SubmittedAt),
+			RejectedAt:   int64(identity.RejectedAt),
+			VerifiedAt:   int64(identity.VerifiedAt),
+			RejectReason: identity.RejectReason,
 		},
 	}, nil
 }
@@ -111,20 +111,36 @@ func (this *UserIdentityService) FindEnabledUserIdentityWithOrgType(ctx context.
 
 	return &pb.FindEnabledUserIdentityWithOrgTypeResponse{
 		UserIdentity: &pb.UserIdentity{
-			Id:             int64(identity.Id),
-			Type:           identity.Type,
-			RealName:       identity.RealName,
-			Number:         identity.Number,
-			FileIds:        identity.DecodeFileIds(),
-			Status:         identity.Status,
-			CreatedAt:      int64(identity.CreatedAt),
-			UpdatedAt:      int64(identity.UpdatedAt),
-			SubmittedAt:    int64(identity.SubmittedAt),
-			RejectedAt:     int64(identity.RejectedAt),
-			VerifiedAt:     int64(identity.VerifiedAt),
-			RejectedReason: identity.RejectedReason,
+			Id:           int64(identity.Id),
+			Type:         identity.Type,
+			RealName:     identity.RealName,
+			Number:       identity.Number,
+			FileIds:      identity.DecodeFileIds(),
+			Status:       identity.Status,
+			CreatedAt:    int64(identity.CreatedAt),
+			UpdatedAt:    int64(identity.UpdatedAt),
+			SubmittedAt:  int64(identity.SubmittedAt),
+			RejectedAt:   int64(identity.RejectedAt),
+			VerifiedAt:   int64(identity.VerifiedAt),
+			RejectReason: identity.RejectReason,
 		},
 	}, nil
+}
+
+// CheckUserIdentityIsSubmitted 检查是否正在审核中
+func (this *UserIdentityService) CheckUserIdentityIsSubmitted(ctx context.Context, req *pb.CheckUserIdentityIsSubmittedRequest) (*pb.CheckUserIdentityIsSubmittedResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	isSubmitted, err := models.SharedUserIdentityDAO.CheckUserIdentityStatus(tx, req.UserId, userconfigs.UserIdentityStatusSubmitted)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CheckUserIdentityIsSubmittedResponse{IsSubmitted: isSubmitted}, nil
 }
 
 // UpdateUserIdentity 修改身份认证信息
