@@ -16,14 +16,18 @@ type LoginService struct {
 
 // FindEnabledLogin 查找认证
 func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnabledLoginRequest) (*pb.FindEnabledLoginResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	if userId > 0 {
+		req.UserId = userId
+	}
+
 	var tx = this.NullTx()
 
-	login, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, req.AdminId, req.Type)
+	login, err := models.SharedLoginDAO.FindEnabledLoginWithType(tx, req.AdminId, req.UserId, req.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +46,7 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 
 // UpdateLogin 修改认证
 func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,20 +57,24 @@ func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRe
 
 	var tx = this.NullTx()
 
+	if userId > 0 {
+		req.Login.UserId = userId
+	}
+
 	if req.Login.IsOn {
-		params := maps.Map{}
+		var params = maps.Map{}
 		if len(req.Login.ParamsJSON) > 0 {
 			err = json.Unmarshal(req.Login.ParamsJSON, &params)
 			if err != nil {
 				return nil, err
 			}
 		}
-		err = models.SharedLoginDAO.UpdateLogin(tx, req.Login.AdminId, req.Login.Type, params, req.Login.IsOn)
+		err = models.SharedLoginDAO.UpdateLogin(tx, req.Login.AdminId, req.Login.UserId, req.Login.Type, params, req.Login.IsOn)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = models.SharedLoginDAO.DisableLoginWithAdminId(tx, req.Login.AdminId, req.Login.Type)
+		err = models.SharedLoginDAO.DisableLoginWithType(tx, req.Login.AdminId, req.Login.UserId, req.Login.Type)
 		if err != nil {
 			return nil, err
 		}

@@ -40,7 +40,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableLogin 启用条目
 func (this *LoginDAO) EnableLogin(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -49,7 +49,7 @@ func (this *LoginDAO) EnableLogin(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableLogin 禁用条目
 func (this *LoginDAO) DisableLogin(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -58,7 +58,7 @@ func (this *LoginDAO) DisableLogin(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledLogin 查找启用中的条目
 func (this *LoginDAO) FindEnabledLogin(tx *dbs.Tx, id int64) (*Login, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -70,7 +70,7 @@ func (this *LoginDAO) FindEnabledLogin(tx *dbs.Tx, id int64) (*Login, error) {
 	return result.(*Login), err
 }
 
-// 创建认证
+// CreateLogin 创建认证
 func (this *LoginDAO) CreateLogin(tx *dbs.Tx, Id int64, loginType LoginType, params maps.Map) (int64, error) {
 	if Id <= 0 {
 		return 0, errors.New("invalid Id")
@@ -87,15 +87,25 @@ func (this *LoginDAO) CreateLogin(tx *dbs.Tx, Id int64, loginType LoginType, par
 	return this.SaveInt64(tx, op)
 }
 
-// 修改认证
-func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, loginType LoginType, params maps.Map, isOn bool) error {
+// UpdateLogin 修改认证
+func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, userId int64, loginType LoginType, params maps.Map, isOn bool) error {
+	if adminId <= 0 && userId <= 0 {
+		return errors.New("invalid adminId and userId")
+	}
+
 	// 是否已经存在
-	loginId, err := this.Query(tx).
-		Attr("adminId", adminId).
+	var query = this.Query(tx).
 		Attr("type", loginType).
 		State(LoginStateEnabled).
-		ResultPk().
-		FindInt64Col(0)
+		ResultPk()
+
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	loginId, err := query.FindInt64Col(0)
 	if err != nil {
 		return err
 	}
@@ -104,6 +114,7 @@ func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, loginType LoginType
 		op.Id = loginId
 	} else {
 		op.AdminId = adminId
+		op.UserId = userId
 		op.Type = loginType
 		op.State = LoginStateEnabled
 	}
@@ -117,35 +128,54 @@ func (this *LoginDAO) UpdateLogin(tx *dbs.Tx, adminId int64, loginType LoginType
 	return this.Save(tx, op)
 }
 
-// 禁用相关认证
-func (this *LoginDAO) DisableLoginWithAdminId(tx *dbs.Tx, adminId int64, loginType LoginType) error {
-	_, err := this.Query(tx).
-		Attr("adminId", adminId).
+// DisableLoginWithType 禁用相关认证
+func (this *LoginDAO) DisableLoginWithType(tx *dbs.Tx, adminId int64, userId int64, loginType LoginType) error {
+	var query = this.Query(tx).
 		Attr("type", loginType).
-		Set("isOn", false).
+		Set("isOn", false)
+
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	_, err := query.
 		Update()
 	return err
 }
 
-// 查找管理员相关的认证
-func (this *LoginDAO) FindEnabledLoginWithAdminId(tx *dbs.Tx, adminId int64, loginType LoginType) (*Login, error) {
-	one, err := this.Query(tx).
-		Attr("adminId", adminId).
+// FindEnabledLoginWithType 查找管理员和用户相关的认证
+func (this *LoginDAO) FindEnabledLoginWithType(tx *dbs.Tx, adminId int64, userId int64, loginType LoginType) (*Login, error) {
+	var query = this.Query(tx).
 		Attr("type", loginType).
-		State(LoginStateEnabled).
-		Find()
+		State(LoginStateEnabled)
+
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	one, err := query.Find()
 	if err != nil || one == nil {
 		return nil, err
 	}
 	return one.(*Login), nil
 }
 
-// 检查某个认证是否启用
-func (this *LoginDAO) CheckLoginIsOn(tx *dbs.Tx, adminId int64, loginType LoginType) (bool, error) {
-	return this.Query(tx).
-		Attr("adminId", adminId).
+// CheckLoginIsOn 检查某个认证是否启用
+func (this *LoginDAO) CheckLoginIsOn(tx *dbs.Tx, adminId int64, userId int64, loginType LoginType) (bool, error) {
+	var query = this.Query(tx).
 		Attr("type", loginType).
 		State(LoginStateEnabled).
-		Attr("isOn", true).
-		Exist()
+		Attr("isOn", true)
+
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	return query.Exist()
 }

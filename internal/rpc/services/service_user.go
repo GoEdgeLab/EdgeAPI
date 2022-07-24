@@ -276,6 +276,23 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		return nil, err
 	}
 
+	// OTP认证
+	var pbOtpAuth *pb.Login = nil
+	{
+		userAuth, err := models.SharedLoginDAO.FindEnabledLoginWithType(tx, 0, req.UserId, models.LoginTypeOTP)
+		if err != nil {
+			return nil, err
+		}
+		if userAuth != nil {
+			pbOtpAuth = &pb.Login{
+				Id:         int64(userAuth.Id),
+				Type:       userAuth.Type,
+				ParamsJSON: userAuth.Params,
+				IsOn:       userAuth.IsOn,
+			}
+		}
+	}
+
 	return &pb.FindEnabledUserResponse{User: &pb.User{
 		Id:                     int64(user.Id),
 		Username:               user.Username,
@@ -293,6 +310,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		NodeCluster:            pbCluster,
 		IsIndividualIdentified: isIndividualIdentified,
 		IsEnterpriseIdentified: isEnterpriseIdentified,
+		OtpLogin:               pbOtpAuth,
 	}}, nil
 }
 
@@ -699,4 +717,32 @@ func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.Com
 	}
 
 	return result, nil
+}
+
+// CheckUserOTPWithUsername 检查是否需要输入OTP
+func (this *UserService) CheckUserOTPWithUsername(ctx context.Context, req *pb.CheckUserOTPWithUsernameRequest) (*pb.CheckUserOTPWithUsernameResponse, error) {
+	_, err := this.ValidateUserNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Username) == 0 {
+		return &pb.CheckUserOTPWithUsernameResponse{RequireOTP: false}, nil
+	}
+
+	var tx = this.NullTx()
+
+	userId, err := models.SharedUserDAO.FindEnabledUserIdWithUsername(tx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if userId <= 0 {
+		return &pb.CheckUserOTPWithUsernameResponse{RequireOTP: false}, nil
+	}
+
+	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(tx, 0, userId, "otp")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckUserOTPWithUsernameResponse{RequireOTP: otpIsOn}, nil
 }

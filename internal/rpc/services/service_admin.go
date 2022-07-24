@@ -165,7 +165,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 	// OTP认证
 	var pbOtpAuth *pb.Login = nil
 	{
-		adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, int64(admin.Id), models.LoginTypeOTP)
+		adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithType(tx, int64(admin.Id), 0, models.LoginTypeOTP)
 		if err != nil {
 			return nil, err
 		}
@@ -385,7 +385,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 	for _, admin := range admins {
 		var pbOtpAuth *pb.Login = nil
 		{
-			adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithAdminId(tx, int64(admin.Id), models.LoginTypeOTP)
+			adminAuth, err := models.SharedLoginDAO.FindEnabledLoginWithType(tx, int64(admin.Id), 0, models.LoginTypeOTP)
 			if err != nil {
 				return nil, err
 			}
@@ -456,7 +456,7 @@ func (this *AdminService) CheckAdminOTPWithUsername(ctx context.Context, req *pb
 		return &pb.CheckAdminOTPWithUsernameResponse{RequireOTP: false}, nil
 	}
 
-	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(tx, adminId, "otp")
+	otpIsOn, err := models.SharedLoginDAO.CheckLoginIsOn(tx, adminId, 0, "otp")
 	if err != nil {
 		return nil, err
 	}
