@@ -132,6 +132,15 @@ func (this *UserIdentityDAO) CancelUserIdentity(tx *dbs.Tx, identityId int64) er
 		UpdateQuickly()
 }
 
+// ResetUserIdentity 重置实名认证状态
+func (this *UserIdentityDAO) ResetUserIdentity(tx *dbs.Tx, identityId int64) error {
+	return this.Query(tx).
+		Pk(identityId).
+		Set("status", userconfigs.UserIdentityStatusSubmitted).
+		Set("updatedAt", time.Now().Unix()).
+		UpdateQuickly()
+}
+
 // RejectUserIdentity 拒绝
 func (this *UserIdentityDAO) RejectUserIdentity(tx *dbs.Tx, identityId int64, reason string) error {
 	return this.Query(tx).

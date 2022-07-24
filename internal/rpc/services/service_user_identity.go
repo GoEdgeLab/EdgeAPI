@@ -240,6 +240,23 @@ func (this *UserIdentityService) CancelUserIdentity(ctx context.Context, req *pb
 	return this.Success()
 }
 
+// ResetUserIdentity 重置提交身份审核认证信息
+func (this *UserIdentityService) ResetUserIdentity(ctx context.Context, req *pb.ResetUserIdentityRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	err = models.SharedUserIdentityDAO.ResetUserIdentity(tx, req.UserIdentityId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // RejectUserIdentity 拒绝用户身份认证信息
 func (this *UserIdentityService) RejectUserIdentity(ctx context.Context, req *pb.RejectUserIdentityRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
