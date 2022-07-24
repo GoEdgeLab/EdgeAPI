@@ -233,12 +233,16 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 // FindEnabledUser 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	if userId > 0 {
+		req.UserId = userId
+	}
 
 	user, err := models.SharedUserDAO.FindEnabledUser(tx, req.UserId, nil)
 	if err != nil {
@@ -261,21 +265,34 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
+	// 认证信息
+	isIndividualIdentified, err := models.SharedUserIdentityDAO.CheckUserIdentityIsVerified(tx, req.UserId, userconfigs.UserIdentityOrgTypeIndividual)
+	if err != nil {
+		return nil, err
+	}
+
+	isEnterpriseIdentified, err := models.SharedUserIdentityDAO.CheckUserIdentityIsVerified(tx, req.UserId, userconfigs.UserIdentityOrgTypeEnterprise)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.FindEnabledUserResponse{User: &pb.User{
-		Id:           int64(user.Id),
-		Username:     user.Username,
-		Fullname:     user.Fullname,
-		Mobile:       user.Mobile,
-		Tel:          user.Tel,
-		Email:        user.Email,
-		Remark:       user.Remark,
-		IsOn:         user.IsOn,
-		CreatedAt:    int64(user.CreatedAt),
-		RegisteredIP: user.RegisteredIP,
-		IsVerified:   user.IsVerified,
-		IsRejected:   user.IsRejected,
-		RejectReason: user.RejectReason,
-		NodeCluster:  pbCluster,
+		Id:                     int64(user.Id),
+		Username:               user.Username,
+		Fullname:               user.Fullname,
+		Mobile:                 user.Mobile,
+		Tel:                    user.Tel,
+		Email:                  user.Email,
+		Remark:                 user.Remark,
+		IsOn:                   user.IsOn,
+		CreatedAt:              int64(user.CreatedAt),
+		RegisteredIP:           user.RegisteredIP,
+		IsVerified:             user.IsVerified,
+		IsRejected:             user.IsRejected,
+		RejectReason:           user.RejectReason,
+		NodeCluster:            pbCluster,
+		IsIndividualIdentified: isIndividualIdentified,
+		IsEnterpriseIdentified: isEnterpriseIdentified,
 	}}, nil
 }
 

@@ -185,7 +185,7 @@ func (this *UserIdentityDAO) FindUserIdentityStatus(tx *dbs.Tx, identityId int64
 }
 
 // FindEnabledUserIdentityWithOrgType 查找某个类型的认证信息
-func (this *UserIdentityDAO) FindEnabledUserIdentityWithOrgType(tx *dbs.Tx, userId int64, orgType string) (*UserIdentity, error) {
+func (this *UserIdentityDAO) FindEnabledUserIdentityWithOrgType(tx *dbs.Tx, userId int64, orgType userconfigs.UserIdentityOrgType) (*UserIdentity, error) {
 	one, err := this.Query(tx).
 		Attr("userId", userId).
 		Attr("orgType", orgType).
@@ -196,4 +196,14 @@ func (this *UserIdentityDAO) FindEnabledUserIdentityWithOrgType(tx *dbs.Tx, user
 		return nil, err
 	}
 	return one.(*UserIdentity), nil
+}
+
+// CheckUserIdentityIsVerified 检查实名认证
+func (this *UserIdentityDAO) CheckUserIdentityIsVerified(tx *dbs.Tx, userId int64, orgType userconfigs.UserIdentityOrgType) (bool, error) {
+	return this.Query(tx).
+		Attr("userId", userId).
+		Attr("orgType", orgType).
+		Attr("status", userconfigs.UserIdentityStatusVerified).
+		State(UserIdentityStateEnabled).
+		Exist()
 }
