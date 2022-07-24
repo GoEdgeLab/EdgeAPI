@@ -918,6 +918,7 @@ func (this *ServerDAO) FindAllEnabledServersWithNode(tx *dbs.Tx, nodeId int64) (
 	for _, clusterId := range clusterIds {
 		ones, err := this.Query(tx).
 			Attr("clusterId", clusterId).
+			Where("(userId=0 OR userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE isOn AND state=1))").
 			State(ServerStateEnabled).
 			AscPk().
 			FindAll()
@@ -2526,6 +2527,28 @@ func (this *ServerDAO) FindServerUAM(tx *dbs.Tx, serverId int64) ([]byte, error)
 		FindJSONCol()
 }
 
+// FindUserServerClusterIds 获取用户相关服务的集群ID组合
+func (this *ServerDAO) FindUserServerClusterIds(tx *dbs.Tx, userId int64) ([]int64, error) {
+	if userId <= 0 {
+		return nil, nil
+	}
+	ones, err := this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("userId", userId).
+		Gt("clusterId", 0).
+		Result("DISTINCT(clusterId) AS clusterId").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var clusterIds = []int64{}
+	for _, one := range ones {
+		clusterIds = append(clusterIds, int64(one.(*Server).ClusterId))
+	}
+	return clusterIds, nil
+}
+
 // NotifyUpdate 同步服务所在的集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	// 创建任务
@@ -2601,6 +2624,26 @@ func (this *ServerDAO) NotifyDisable(tx *dbs.Tx, serverId int64) error {
 		}
 
 		err = SharedHTTPFirewallPolicyDAO.NotifyDisable(tx, policyId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// NotifyUserClustersChange 通知用户相关集群更新
+func (this *ServerDAO) NotifyUserClustersChange(tx *dbs.Tx, userId int64) error {
+	if userId <= 0 {
+		return nil
+	}
+
+	clusterIds, err := this.FindUserServerClusterIds(tx, userId)
+	if err != nil {
+		return err
+	}
+	for _, clusterId := range clusterIds {
+		err = SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
 		if err != nil {
 			return err
 		}

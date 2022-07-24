@@ -42,19 +42,29 @@ func init() {
 }
 
 // EnableUser 启用条目
-func (this *UserDAO) EnableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
-	return this.Query(tx).
-		Pk(id).
+func (this *UserDAO) EnableUser(tx *dbs.Tx, userId int64) error {
+	if userId <= 0 {
+		return errors.New("invalid 'userId'")
+	}
+
+	_, err := this.Query(tx).
+		Pk(userId).
 		Set("state", UserStateEnabled).
 		Update()
+	return err
 }
 
 // DisableUser 禁用条目
-func (this *UserDAO) DisableUser(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
-	return this.Query(tx).
-		Pk(id).
+func (this *UserDAO) DisableUser(tx *dbs.Tx, userId int64) error {
+	if userId <= 0 {
+		return errors.New("invalid 'userId'")
+	}
+
+	_, err := this.Query(tx).
+		Pk(userId).
 		Set("state", UserStateDisabled).
 		Update()
+	return err
 }
 
 // FindEnabledUser 查找启用的用户
@@ -178,6 +188,16 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
+
+	// 是否启用变化
+	oldIsOn, err := this.Query(tx).
+		Pk(userId).
+		Result("isOn").
+		FindBoolCol()
+	if err != nil {
+		return err
+	}
+
 	var op = NewUserOperator()
 	op.Id = userId
 	op.Username = username
@@ -191,8 +211,16 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	op.Remark = remark
 	op.ClusterId = nodeClusterId
 	op.IsOn = isOn
-	err := this.Save(tx, op)
-	return err
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	if oldIsOn != isOn {
+		return SharedServerDAO.NotifyUserClustersChange(tx, userId)
+	}
+
+	return nil
 }
 
 // UpdateUserInfo 修改用户基本信息

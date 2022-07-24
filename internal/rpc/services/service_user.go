@@ -159,7 +159,7 @@ func (this *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserReque
 		}
 	}
 
-	_, err = models.SharedUserDAO.DisableUser(tx, req.UserId)
+	err = models.SharedUserDAO.DisableUser(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
