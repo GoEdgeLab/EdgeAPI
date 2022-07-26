@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"os"
 	"path/filepath"
 	"regexp"
 )
@@ -80,7 +81,7 @@ func (this *NSNodeInstaller) Install(dir string, params interface{}, installStat
 
 		// 删除可执行文件防止冲突
 		err = this.client.Remove(exePath)
-		if err != nil {
+		if err != nil && err != os.ErrNotExist {
 			return errors.New("remove old file failed: " + err.Error())
 		}
 	}
