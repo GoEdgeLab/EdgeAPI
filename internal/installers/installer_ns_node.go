@@ -77,12 +77,12 @@ func (this *NSNodeInstaller) Install(dir string, params interface{}, installStat
 		_, err = this.client.Stat(exePath)
 		if err == nil {
 			_, _, _ = this.client.Exec(exePath + " stop")
-		}
 
-		// 删除可执行文件防止冲突
-		err = this.client.Remove(exePath)
-		if err != nil && err != os.ErrNotExist {
-			return errors.New("remove old file failed: " + err.Error())
+			// 删除可执行文件防止冲突
+			err = this.client.Remove(exePath)
+			if err != nil && err != os.ErrNotExist {
+				return errors.New("remove old file failed: " + err.Error())
+			}
 		}
 	}
 
