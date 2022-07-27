@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 )
 
 // NSClusterService 域名服务集群相关服务
@@ -115,6 +116,9 @@ func (this *NSClusterService) FindEnabledNSCluster(ctx context.Context, req *pb.
 		IsOn:       cluster.IsOn,
 		Name:       cluster.Name,
 		InstallDir: cluster.InstallDir,
+		TcpJSON:    cluster.Tcp,
+		TlsJSON:    cluster.Tls,
+		UdpJSON:    cluster.Udp,
 	}}, nil
 }
 
@@ -215,4 +219,124 @@ func (this *NSClusterService) FindNSClusterRecursionConfig(ctx context.Context, 
 	return &pb.FindNSClusterRecursionConfigResponse{
 		RecursionJSON: recursion,
 	}, nil
+}
+
+// FindNSClusterTCPConfig 查找集群的TCP设置
+func (this *NSClusterService) FindNSClusterTCPConfig(ctx context.Context, req *pb.FindNSClusterTCPConfigRequest) (*pb.FindNSClusterTCPConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	tcpJSON, err := models.SharedNSClusterDAO.FindClusterTCP(tx, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindNSClusterTCPConfigResponse{
+		TcpJSON: tcpJSON,
+	}, nil
+}
+
+// UpdateNSClusterTCP 修改集群的TCP设置
+func (this *NSClusterService) UpdateNSClusterTCP(ctx context.Context, req *pb.UpdateNSClusterTCPRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.TCPProtocolConfig{}
+	err = json.Unmarshal(req.TcpJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNSClusterDAO.UpdateClusterTCP(tx, req.NsClusterId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindNSClusterTLSConfig 查找集群的TLS设置
+func (this *NSClusterService) FindNSClusterTLSConfig(ctx context.Context, req *pb.FindNSClusterTLSConfigRequest) (*pb.FindNSClusterTLSConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	tlsJSON, err := models.SharedNSClusterDAO.FindClusterTLS(tx, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindNSClusterTLSConfigResponse{
+		TlsJSON: tlsJSON,
+	}, nil
+}
+
+// UpdateNSClusterTLS 修改集群的TLS设置
+func (this *NSClusterService) UpdateNSClusterTLS(ctx context.Context, req *pb.UpdateNSClusterTLSRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.TLSProtocolConfig{}
+	err = json.Unmarshal(req.TlsJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNSClusterDAO.UpdateClusterTLS(tx, req.NsClusterId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindNSClusterUDPConfig 查找集群的UDP设置
+func (this *NSClusterService) FindNSClusterUDPConfig(ctx context.Context, req *pb.FindNSClusterUDPConfigRequest) (*pb.FindNSClusterUDPConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	udpJSON, err := models.SharedNSClusterDAO.FindClusterUDP(tx, req.NsClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindNSClusterUDPConfigResponse{
+		UdpJSON: udpJSON,
+	}, nil
+}
+
+// UpdateNSClusterUDP 修改集群的UDP设置
+func (this *NSClusterService) UpdateNSClusterUDP(ctx context.Context, req *pb.UpdateNSClusterUDPRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.UDPProtocolConfig{}
+	err = json.Unmarshal(req.UdpJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNSClusterDAO.UpdateClusterUDP(tx, req.NsClusterId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }

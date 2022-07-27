@@ -1,8 +1,10 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -84,6 +86,42 @@ func (this *NSClusterDAO) CreateCluster(tx *dbs.Tx, name string, accessLogRefJSO
 
 	op.IsOn = true
 	op.State = NSClusterStateEnabled
+
+	// 默认端口
+	// TCP
+	{
+		var config = &serverconfigs.TCPProtocolConfig{}
+		config.IsOn = true
+		config.Listen = []*serverconfigs.NetworkAddressConfig{
+			{
+				Protocol:  serverconfigs.ProtocolTCP,
+				PortRange: "53",
+			},
+		}
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return 0, err
+		}
+		op.Tcp = configJSON
+	}
+
+	// UDP
+	{
+		var config = &serverconfigs.UDPProtocolConfig{}
+		config.IsOn = true
+		config.Listen = []*serverconfigs.NetworkAddressConfig{
+			{
+				Protocol:  serverconfigs.ProtocolUDP,
+				PortRange: "53",
+			},
+		}
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return 0, err
+		}
+		op.Udp = configJSON
+	}
+
 	return this.SaveInt64(tx, op)
 }
 
@@ -191,6 +229,78 @@ func (this *NSClusterDAO) FindClusterRecursion(tx *dbs.Tx, clusterId int64) ([]b
 		return nil, err
 	}
 	return []byte(recursion), nil
+}
+
+// FindClusterTCP 查找集群的TCP设置
+func (this *NSClusterDAO) FindClusterTCP(tx *dbs.Tx, clusterId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(clusterId).
+		Result("tcp").
+		FindBytesCol()
+}
+
+// UpdateClusterTCP 修改集群的TCP设置
+func (this *NSClusterDAO) UpdateClusterTCP(tx *dbs.Tx, clusterId int64, tcpConfig *serverconfigs.TCPProtocolConfig) error {
+	tcpJSON, err := json.Marshal(tcpConfig)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("tcp", tcpJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
+}
+
+// FindClusterTLS 查找集群的TLS设置
+func (this *NSClusterDAO) FindClusterTLS(tx *dbs.Tx, clusterId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(clusterId).
+		Result("tls").
+		FindBytesCol()
+}
+
+// UpdateClusterTLS 修改集群的TLS设置
+func (this *NSClusterDAO) UpdateClusterTLS(tx *dbs.Tx, clusterId int64, tlsConfig *serverconfigs.TLSProtocolConfig) error {
+	tlsJSON, err := json.Marshal(tlsConfig)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("tls", tlsJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
+}
+
+// FindClusterUDP 查找集群的TCP设置
+func (this *NSClusterDAO) FindClusterUDP(tx *dbs.Tx, clusterId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(clusterId).
+		Result("udp").
+		FindBytesCol()
+}
+
+// UpdateClusterUDP 修改集群的UDP设置
+func (this *NSClusterDAO) UpdateClusterUDP(tx *dbs.Tx, clusterId int64, udpConfig *serverconfigs.UDPProtocolConfig) error {
+	udpJSON, err := json.Marshal(udpConfig)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("udp", udpJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, clusterId)
 }
 
 // NotifyUpdate 通知更改

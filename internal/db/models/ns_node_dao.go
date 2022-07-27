@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -395,7 +396,7 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 		return nil, nil
 	}
 
-	config := &dnsconfigs.NSNodeConfig{
+	var config = &dnsconfigs.NSNodeConfig{
 		Id:        int64(node.Id),
 		NodeId:    node.UniqueId,
 		Secret:    node.Secret,
@@ -432,17 +433,55 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 	}
 
 	// 递归DNS配置
-	recursionJSON, err := SharedNSClusterDAO.FindClusterRecursion(tx, int64(node.ClusterId))
-	if err != nil {
-		return nil, err
-	}
-	if len(recursionJSON) > 0 {
+	if IsNotNull(cluster.Recursion) {
 		var recursionConfig = &dnsconfigs.RecursionConfig{}
-		err = json.Unmarshal(recursionJSON, recursionConfig)
+		err = json.Unmarshal(cluster.Recursion, recursionConfig)
 		if err != nil {
 			return nil, err
 		}
 		config.RecursionConfig = recursionConfig
+	}
+
+	// TCP
+	if IsNotNull(cluster.Tcp) {
+		var tcpConfig = &serverconfigs.TCPProtocolConfig{}
+		err = json.Unmarshal(cluster.Tcp, tcpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.TCP = tcpConfig
+	}
+
+	// TLS
+	if IsNotNull(cluster.Tls) {
+		var tlsConfig = &serverconfigs.TLSProtocolConfig{}
+		err = json.Unmarshal(cluster.Tls, tlsConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		// SSL
+		if tlsConfig.SSLPolicyRef != nil {
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, nil)
+			if err != nil {
+				return nil, err
+			}
+			if sslPolicyConfig != nil {
+				tlsConfig.SSLPolicy = sslPolicyConfig
+			}
+		}
+
+		config.TLS = tlsConfig
+	}
+
+	// UDP
+	if IsNotNull(cluster.Udp) {
+		var udpConfig = &serverconfigs.UDPProtocolConfig{}
+		err = json.Unmarshal(cluster.Udp, udpConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.UDP = udpConfig
 	}
 
 	return config, nil

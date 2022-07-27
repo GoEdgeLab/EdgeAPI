@@ -81,6 +81,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.9", upgradeV0_4_9,
 	},
+	{
+		"0.4.11", upgradeV0_4_11,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -786,6 +789,54 @@ func upgradeV0_4_9(db *dbs.DB) error {
 						}
 					}
 				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// v0.4.11
+func upgradeV0_4_11(db *dbs.DB) error {
+	// 升级ns端口
+	{
+		// TCP
+		{
+			var config = &serverconfigs.TCPProtocolConfig{}
+			config.IsOn = true
+			config.Listen = []*serverconfigs.NetworkAddressConfig{
+				{
+					Protocol:  serverconfigs.ProtocolTCP,
+					PortRange: "53",
+				},
+			}
+			configJSON, err := json.Marshal(config)
+			if err != nil {
+				return err
+			}
+			_, err = db.Exec("UPDATE edgeNSClusters SET tcp=? WHERE tcp IS NULL", configJSON)
+			if err != nil {
+				return err
+			}
+		}
+
+		// UDP
+		{
+			var config = &serverconfigs.UDPProtocolConfig{}
+			config.IsOn = true
+			config.Listen = []*serverconfigs.NetworkAddressConfig{
+				{
+					Protocol:  serverconfigs.ProtocolUDP,
+					PortRange: "53",
+				},
+			}
+			configJSON, err := json.Marshal(config)
+			if err != nil {
+				return err
+			}
+			_, err = db.Exec("UPDATE edgeNSClusters SET udp=? WHERE udp IS NULL", configJSON)
+			if err != nil {
+				return err
 			}
 		}
 	}

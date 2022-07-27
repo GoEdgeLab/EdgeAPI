@@ -12,6 +12,9 @@ type NSCluster struct {
 	AccessLog  dbs.JSON `field:"accessLog"`  // 访问日志配置
 	GrantId    uint32   `field:"grantId"`    // 授权ID
 	Recursion  dbs.JSON `field:"recursion"`  // 递归DNS设置
+	Tcp        dbs.JSON `field:"tcp"`        // TCP设置
+	Tls        dbs.JSON `field:"tls"`        // TLS设置
+	Udp        dbs.JSON `field:"udp"`        // UDP设置
 }
 
 type NSClusterOperator struct {
@@ -23,6 +26,9 @@ type NSClusterOperator struct {
 	AccessLog  interface{} // 访问日志配置
 	GrantId    interface{} // 授权ID
 	Recursion  interface{} // 递归DNS设置
+	Tcp        interface{} // TCP设置
+	Tls        interface{} // TLS设置
+	Udp        interface{} // UDP设置
 }
 
 func NewNSClusterOperator() *NSClusterOperator {
