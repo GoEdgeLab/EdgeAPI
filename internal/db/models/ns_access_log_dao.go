@@ -111,7 +111,7 @@ func (this *NSAccessLogDAO) CreateNSAccessLogsWithDAO(tx *dbs.Tx, daoWrapper *NS
 }
 
 // ListAccessLogs 读取往前的 单页访问日志
-func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, hasMore bool, err error) {
+func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, clusterId int64, nodeId int64, domainId int64, recordId int64, recordType string, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, hasMore bool, err error) {
 	if len(day) != 8 {
 		return
 	}
@@ -121,24 +121,24 @@ func (this *NSAccessLogDAO) ListAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 		size = 1000
 	}
 
-	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, nodeId, domainId, recordId, keyword, reverse)
+	result, nextLastRequestId, err = this.listAccessLogs(tx, lastRequestId, size, day, clusterId, nodeId, domainId, recordId, recordType, keyword, reverse)
 	if err != nil || int64(len(result)) < size {
 		return
 	}
 
-	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, nodeId, domainId, recordId, keyword, reverse)
+	moreResult, _, _ := this.listAccessLogs(tx, nextLastRequestId, 1, day, clusterId, nodeId, domainId, recordId, recordType, keyword, reverse)
 	hasMore = len(moreResult) > 0
 	return
 }
 
 // 读取往前的单页访问日志
-func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, nodeId int64, domainId int64, recordId int64, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, err error) {
+func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, size int64, day string, clusterId int64, nodeId int64, domainId int64, recordId int64, recordType string, keyword string, reverse bool) (result []*NSAccessLog, nextLastRequestId string, err error) {
 	if size <= 0 {
 		return nil, lastRequestId, nil
 	}
 
 	accessLogLocker.RLock()
-	daoList := []*NSAccessLogDAOWrapper{}
+	var daoList = []*NSAccessLogDAOWrapper{}
 	for _, daoWrapper := range nsAccessLogDAOMapping {
 		daoList = append(daoList, daoWrapper)
 	}
@@ -151,10 +151,23 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 		}}
 	}
 
-	locker := sync.Mutex{}
+	// 检查是否有集群筛选条件
+	var nodeIds []int64
+	if clusterId > 0 && nodeId <= 0 {
+		nodeIds, err = SharedNSNodeDAO.FindEnabledNodeIdsWithClusterId(tx, clusterId)
+		if err != nil {
+			return
+		}
+		if len(nodeIds) == 0 {
+			// 没有任何节点则直接返回空
+			return nil, "", nil
+		}
+	}
 
-	count := len(daoList)
-	wg := &sync.WaitGroup{}
+	var locker = sync.Mutex{}
+
+	var count = len(daoList)
+	var wg = &sync.WaitGroup{}
 	wg.Add(count)
 	for _, daoWrapper := range daoList {
 		go func(daoWrapper *NSAccessLogDAOWrapper) {
@@ -172,11 +185,14 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 				return
 			}
 
-			query := dao.Query(tx)
+			var query = dao.Query(tx)
 
 			// 条件
 			if nodeId > 0 {
 				query.Attr("nodeId", nodeId)
+			} else if clusterId > 0 {
+				query.Attr("nodeId", nodeIds)
+				query.Reuse(false)
 			}
 			if domainId > 0 {
 				query.Attr("domainId", domainId)
@@ -200,6 +216,12 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 			if len(keyword) > 0 {
 				query.Where("(JSON_EXTRACT(content, '$.remoteAddr') LIKE :keyword OR JSON_EXTRACT(content, '$.questionName') LIKE :keyword OR JSON_EXTRACT(content, '$.recordValue') LIKE :keyword)").
 					Param("keyword", dbutils.QuoteLike(keyword))
+			}
+
+			// record type
+			if len(recordType) > 0 {
+				query.Where("JSON_EXTRACT(content, '$.questionType')=:recordType")
+				query.Param("recordType", recordType)
 			}
 
 			if !reverse {
@@ -244,7 +266,7 @@ func (this *NSAccessLogDAO) listAccessLogs(tx *dbs.Tx, lastRequestId string, siz
 		result = result[:size]
 	}
 
-	requestId := result[len(result)-1].RequestId
+	var requestId = result[len(result)-1].RequestId
 	if reverse {
 		lists.Reverse(result)
 	}

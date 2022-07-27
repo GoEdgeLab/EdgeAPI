@@ -52,12 +52,12 @@ func (this *NSAccessLogService) ListNSAccessLogs(ctx context.Context, req *pb.Li
 		// TODO
 	}
 
-	accessLogs, requestId, hasMore, err := models.SharedNSAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.NsNodeId, req.NsDomainId, req.NsRecordId, req.Keyword, req.Reverse)
+	accessLogs, requestId, hasMore, err := models.SharedNSAccessLogDAO.ListAccessLogs(tx, req.RequestId, req.Size, req.Day, req.NsClusterId, req.NsNodeId, req.NsDomainId, req.NsRecordId, req.RecordType, req.Keyword, req.Reverse)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []*pb.NSAccessLog{}
+	var result = []*pb.NSAccessLog{}
 	for _, accessLog := range accessLogs {
 		a, err := accessLog.ToPB()
 		if err != nil {

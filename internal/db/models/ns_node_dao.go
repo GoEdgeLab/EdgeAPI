@@ -609,6 +609,26 @@ func (this *NSNodeDAO) UpdateNodeInstallStatus(tx *dbs.Tx, nodeId int64, status 
 	return err
 }
 
+// FindEnabledNodeIdsWithClusterId 查找集群下的所有节点
+func (this *NSNodeDAO) FindEnabledNodeIdsWithClusterId(tx *dbs.Tx, clusterId int64) ([]int64, error) {
+	if clusterId <= 0 {
+		return nil, nil
+	}
+	ones, err := this.Query(tx).
+		ResultPk().
+		Attr("clusterId", clusterId).
+		State(NSNodeStateEnabled).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = []int64{}
+	for _, one := range ones {
+		result = append(result, int64(one.(*NSNode).Id))
+	}
+	return result, nil
+}
+
 // NotifyUpdate 通知更新
 func (this *NSNodeDAO) NotifyUpdate(tx *dbs.Tx, nodeId int64) error {
 	// TODO 先什么都不做
