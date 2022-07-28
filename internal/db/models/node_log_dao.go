@@ -363,9 +363,35 @@ func (this *NodeLogDAO) UpdateAllNodeLogsRead(tx *dbs.Tx) error {
 
 // DeleteNodeLogs 删除某个节点上的日志
 func (this *NodeLogDAO) DeleteNodeLogs(tx *dbs.Tx, role nodeconfigs.NodeRole, nodeId int64) error {
+	if nodeId <= 0 {
+		return nil
+	}
 	_, err := this.Query(tx).
 		Attr("nodeId", nodeId).
 		Attr("role", role).
 		Delete()
+	return err
+}
+
+// DeleteNodeLogsWithCluster 删除某个集群下的所有日志
+func (this *NodeLogDAO) DeleteNodeLogsWithCluster(tx *dbs.Tx, role nodeconfigs.NodeRole, clusterId int64) error {
+	if clusterId <= 0 {
+		return nil
+	}
+	var query = this.Query(tx).
+		Attr("role", role)
+
+	switch role {
+	case nodeconfigs.NodeRoleNode:
+		query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE clusterId=:clusterId)")
+		query.Param("clusterId", clusterId)
+	case nodeconfigs.NodeRoleDNS:
+		query.Where("nodeId IN (SELECT id FROM " + SharedNSNodeDAO.Table + " WHERE clusterId=:clusterId)")
+		query.Param("clusterId", clusterId)
+	default:
+		return nil
+	}
+
+	_, err := query.Delete()
 	return err
 }

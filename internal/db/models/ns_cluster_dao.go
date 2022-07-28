@@ -46,12 +46,16 @@ func (this *NSClusterDAO) EnableNSCluster(tx *dbs.Tx, id int64) error {
 }
 
 // DisableNSCluster 禁用条目
-func (this *NSClusterDAO) DisableNSCluster(tx *dbs.Tx, id int64) error {
+func (this *NSClusterDAO) DisableNSCluster(tx *dbs.Tx, clusterId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(clusterId).
 		Set("state", NSClusterStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return SharedNodeLogDAO.DeleteNodeLogsWithCluster(tx, nodeconfigs.NodeRoleDNS, clusterId)
 }
 
 // FindEnabledNSCluster 查找启用中的条目

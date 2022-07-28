@@ -55,12 +55,16 @@ func (this *NodeClusterDAO) EnableNodeCluster(tx *dbs.Tx, id int64) error {
 }
 
 // DisableNodeCluster 禁用条目
-func (this *NodeClusterDAO) DisableNodeCluster(tx *dbs.Tx, id int64) error {
+func (this *NodeClusterDAO) DisableNodeCluster(tx *dbs.Tx, clusterId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(clusterId).
 		Set("state", NodeClusterStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return SharedNodeLogDAO.DeleteNodeLogsWithCluster(tx, nodeconfigs.NodeRoleNode, clusterId)
 }
 
 // FindEnabledNodeCluster 查找集群
