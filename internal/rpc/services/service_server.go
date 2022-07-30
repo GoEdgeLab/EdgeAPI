@@ -535,9 +535,8 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 			return nil, err
 		}
 		if len(serverNameConfigs) > 0 {
-			for index, serverName := range serverNameConfigs {
+			for _, serverName := range serverNameConfigs {
 				serverName.Normalize()
-				serverNameConfigs[index] = serverName
 			}
 			req.ServerNamesJSON, err = json.Marshal(serverNameConfigs)
 			if err != nil {
