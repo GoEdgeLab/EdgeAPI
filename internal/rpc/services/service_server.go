@@ -527,6 +527,25 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 
 	var tx = this.NullTx()
 
+	// 转换为小写
+	var serverNameConfigs = []*serverconfigs.ServerNameConfig{}
+	if len(req.ServerNamesJSON) > 0 {
+		err = json.Unmarshal(req.ServerNamesJSON, &serverNameConfigs)
+		if err != nil {
+			return nil, err
+		}
+		if len(serverNameConfigs) > 0 {
+			for index, serverName := range serverNameConfigs {
+				serverName.Normalize()
+				serverNameConfigs[index] = serverName
+			}
+			req.ServerNamesJSON, err = json.Marshal(serverNameConfigs)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	// 检查用户
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
