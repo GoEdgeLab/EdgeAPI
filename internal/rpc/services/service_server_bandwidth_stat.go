@@ -4,6 +4,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -104,4 +105,42 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 	}
 
 	return this.Success()
+}
+
+// FindServerBandwidthStats 获取服务的峰值带宽
+func (this *ServerBandwidthStatService) FindServerBandwidthStats(ctx context.Context, req *pb.FindServerBandwidthStatsRequest) (*pb.FindServerBandwidthStatsResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var stats = []*models.ServerBandwidthStat{}
+	var tx = this.NullTx()
+	if len(req.Day) > 0 {
+		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithDay(tx, req.ServerId, req.Day)
+	} else if len(req.Month) > 0 {
+		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithMonth(tx, req.ServerId, req.Month)
+	} else {
+		// 默认返回空
+		return nil, errors.New("'month' or 'day' parameter is needed")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var pbStats = []*pb.ServerBandwidthStat{}
+	for _, stat := range stats {
+		pbStats = append(pbStats, &pb.ServerBandwidthStat{
+			Id:       int64(stat.Id),
+			UserId:   int64(stat.UserId),
+			ServerId: int64(stat.ServerId),
+			Day:      stat.Day,
+			TimeAt:   stat.TimeAt,
+			Bytes:    int64(stat.Bytes),
+		})
+	}
+	return &pb.FindServerBandwidthStatsResponse{
+		ServerBandwidthStats: pbStats,
+	}, nil
 }

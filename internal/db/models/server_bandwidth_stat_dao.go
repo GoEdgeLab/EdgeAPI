@@ -124,6 +124,32 @@ func (this *ServerBandwidthStatDAO) FindServerStats(tx *dbs.Tx, serverId int64, 
 	return
 }
 
+// FindAllServerStatsWithDay 查找某个服务的当天的所有带宽峰值
+// day YYYYMMDD
+func (this *ServerBandwidthStatDAO) FindAllServerStatsWithDay(tx *dbs.Tx, serverId int64, day string) (result []*ServerBandwidthStat, err error) {
+	_, err = this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Attr("day", day).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindAllServerStatsWithMonth 查找某个服务的当月的所有带宽峰值
+// month YYYYMM
+func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serverId int64, month string) (result []*ServerBandwidthStat, err error) {
+	_, err = this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("day", month+"01", month+"31").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // FindMonthlyPercentile 获取某月内百分位
 func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int) (result int64, err error) {
 	if percentile <= 0 {

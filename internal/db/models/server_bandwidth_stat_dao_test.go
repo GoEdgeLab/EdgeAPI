@@ -43,6 +43,30 @@ func TestServerBandwidthStatDAO_FindMonthlyPercentile(t *testing.T) {
 	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95))
 }
 
+func TestServerBandwidthStatDAO_FindAllServerStatsWithMonth(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	stats, err := dao.FindAllServerStatsWithMonth(tx, 23, timeutil.Format("Ym"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, stat := range stats {
+		t.Logf("%+v", stat)
+	}
+}
+
+func TestServerBandwidthStatDAO_FindAllServerStatsWithDay(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	stats, err := dao.FindAllServerStatsWithDay(tx, 23, timeutil.Format("Ymd"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, stat := range stats {
+		t.Logf("%+v", stat)
+	}
+}
+
 func TestServerBandwidthStatDAO_Clean(t *testing.T) {
 	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
