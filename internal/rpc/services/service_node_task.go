@@ -125,7 +125,7 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 			}
 
 			// 是否超时（N秒内没有更新）
-			if int64(task.UpdatedAt) < time.Now().Unix()-120 {
+			if int64(task.UpdatedAt) < time.Now().Unix()-180 {
 				task.IsDone = true
 				task.IsOk = false
 				task.Error = "节点响应超时"
