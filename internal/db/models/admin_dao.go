@@ -63,6 +63,19 @@ func (this *AdminDAO) FindEnabledAdmin(tx *dbs.Tx, id int64) (*Admin, error) {
 	return result.(*Admin), err
 }
 
+// FindBasicAdmin 查找管理员基本信息
+func (this *AdminDAO) FindBasicAdmin(tx *dbs.Tx, id int64) (*Admin, error) {
+	result, err := this.Query(tx).
+		Result("id", "username", "fullname").
+		Pk(id).
+		Attr("state", AdminStateEnabled).
+		Find()
+	if result == nil {
+		return nil, err
+	}
+	return result.(*Admin), err
+}
+
 // ExistEnabledAdmin 检查管理员是否存在
 func (this *AdminDAO) ExistEnabledAdmin(tx *dbs.Tx, adminId int64) (bool, error) {
 	return this.Query(tx).
