@@ -340,3 +340,27 @@ func (this *NSClusterService) UpdateNSClusterUDP(ctx context.Context, req *pb.Up
 
 	return this.Success()
 }
+
+// CountAllNSClustersWithSSLCertId 计算使用某个SSL证书的集群数量
+func (this *NSClusterService) CountAllNSClustersWithSSLCertId(ctx context.Context, req *pb.CountAllNSClustersWithSSLCertIdRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	policyIds, err := models.SharedSSLPolicyDAO.FindAllEnabledPolicyIdsWithCertId(tx, req.SslCertId)
+	if err != nil {
+		return nil, err
+	}
+	if len(policyIds) == 0 {
+		return this.SuccessCount(0)
+	}
+
+	count, err := models.SharedNSClusterDAO.CountAllClustersWithSSLPolicyIds(tx, policyIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.SuccessCount(count)
+}

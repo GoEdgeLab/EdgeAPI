@@ -8,6 +8,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -305,6 +307,22 @@ func (this *NSClusterDAO) UpdateClusterUDP(tx *dbs.Tx, clusterId int64, udpConfi
 		return err
 	}
 	return this.NotifyUpdate(tx, clusterId)
+}
+
+// CountAllClustersWithSSLPolicyIds 计算使用SSL策略的所有NS集群数量
+func (this *NSClusterDAO) CountAllClustersWithSSLPolicyIds(tx *dbs.Tx, sslPolicyIds []int64) (count int64, err error) {
+	if len(sslPolicyIds) == 0 {
+		return
+	}
+	policyStringIds := []string{}
+	for _, policyId := range sslPolicyIds {
+		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
+	}
+	return this.Query(tx).
+		State(NSClusterStateEnabled).
+		Where("(FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds)) ").
+		Param("policyIds", strings.Join(policyStringIds, ",")).
+		Count()
 }
 
 // NotifyUpdate 通知更改
