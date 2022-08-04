@@ -18,8 +18,6 @@ func (this *FileService) FindEnabledFile(ctx context.Context, req *pb.FindEnable
 		return nil, err
 	}
 
-	// TODO 检查用户权限
-
 	var tx = this.NullTx()
 	file, err := models.SharedFileDAO.FindEnabledFile(tx, req.FileId)
 	if err != nil {
@@ -67,12 +65,19 @@ func (this *FileService) CreateFile(ctx context.Context, req *pb.CreateFileReque
 
 // UpdateFileFinished 将文件置为已完成
 func (this *FileService) UpdateFileFinished(ctx context.Context, req *pb.UpdateFileFinishedRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedFileDAO.CheckUserFile(tx, userId, req.FileId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = models.SharedFileDAO.UpdateFileIsFinished(tx, req.FileId)
 	if err != nil {
