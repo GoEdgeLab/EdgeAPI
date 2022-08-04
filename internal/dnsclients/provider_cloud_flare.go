@@ -13,7 +13,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -270,7 +269,7 @@ func (this *CloudFlareProvider) doAPI(method string, apiPath string, args map[st
 		_ = resp.Body.Close()
 	}()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

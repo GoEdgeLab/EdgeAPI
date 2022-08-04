@@ -10,7 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -118,7 +118,7 @@ func (this *ESStorage) Write(accessLogs []*pb.HTTPAccessLog) error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyData, _ := ioutil.ReadAll(resp.Body)
+		bodyData, _ := io.ReadAll(resp.Body)
 		return errors.New("ElasticSearch response status code: " + fmt.Sprintf("%d", resp.StatusCode) + " content: " + string(bodyData))
 	}
 

@@ -15,7 +15,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/iwind/TeaGo/dbs"
 	"golang.org/x/crypto/ocsp"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -147,7 +147,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 		_ = issuerResp.Body.Close()
 	}()
 
-	issuerData, err := ioutil.ReadAll(issuerResp.Body)
+	issuerData, err := io.ReadAll(issuerResp.Body)
 	if err != nil {
 		return nil, 0, errors.New("read issuer certificate failed: '" + issuerURL + "': " + err.Error())
 	}
@@ -178,7 +178,7 @@ func (this *SSLCertUpdateOCSPTask) UpdateCertOCSP(certOne *models.SSLCert) (ocsp
 		_ = ocspResp.Body.Close()
 	}()
 
-	respData, err := ioutil.ReadAll(ocspResp.Body)
+	respData, err := io.ReadAll(ocspResp.Body)
 	if err != nil {
 		return nil, 0, errors.New("read ocsp failed: '" + ocspServerURL + "': " + err.Error())
 	}

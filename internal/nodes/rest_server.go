@@ -8,7 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/iwind/TeaGo/maps"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"reflect"
@@ -152,7 +152,7 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	}
 
 	// TODO 需要防止BODY过大攻击
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		_, _ = writer.Write([]byte(err.Error()))

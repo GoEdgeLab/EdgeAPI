@@ -8,7 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -276,7 +276,7 @@ func (this *DNSPodProvider) post(path string, params map[string]string) (maps.Ma
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -75,7 +74,7 @@ func (this *Setup) Run() error {
 
 	// 执行SQL
 	config := &dbs.Config{}
-	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
+	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return err
 	}

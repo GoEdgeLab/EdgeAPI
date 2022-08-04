@@ -15,7 +15,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -35,7 +35,7 @@ func NewSQLExecutor(dbConfig *dbs.DBConfig) *SQLExecutor {
 func NewSQLExecutorFromCmd() (*SQLExecutor, error) {
 	// 执行SQL
 	config := &dbs.Config{}
-	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
+	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return nil, err
 	}

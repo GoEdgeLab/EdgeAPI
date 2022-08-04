@@ -10,7 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/maps"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -180,5 +180,5 @@ func (this *CustomHTTPProvider) post(params maps.Map) (respData []byte, err erro
 	if resp.StatusCode != 200 {
 		return nil, errors.New("status should be 200, but got '" + strconv.Itoa(resp.StatusCode) + "'")
 	}
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }

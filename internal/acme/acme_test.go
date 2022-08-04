@@ -10,7 +10,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/lego"
 	acmelog "github.com/go-acme/lego/v4/log"
-	"io/ioutil"
+	"io"
 	"log"
 	"testing"
 
@@ -50,7 +50,7 @@ func (this *MyProvider) CleanUp(domain, token, keyAuth string) error {
 
 // 参考  https://go-acme.github.io/lego/usage/library/
 func TestGenerate(t *testing.T) {
-	acmelog.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
 
 	// 生成私钥
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -94,7 +94,7 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestGenerate_EAB(t *testing.T) {
-	acmelog.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
 
 	// 生成私钥
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

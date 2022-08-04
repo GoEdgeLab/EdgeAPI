@@ -27,7 +27,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -313,7 +312,7 @@ func (this *APINode) autoUpgrade() error {
 
 	// 执行SQL
 	var config = &dbs.Config{}
-	configData, err := ioutil.ReadFile(Tea.ConfigFile("db.yaml"))
+	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return errors.New("read database config file failed: " + err.Error())
 	}
@@ -785,6 +784,6 @@ func (this *APINode) dbIssueSuggestion(errString string) string {
 func (this *APINode) saveIssues() {
 	issuesJSON, err := json.Marshal(this.issues)
 	if err == nil {
-		_ = ioutil.WriteFile(this.issuesFile, issuesJSON, 0666)
+		_ = os.WriteFile(this.issuesFile, issuesJSON, 0666)
 	}
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -1502,7 +1501,7 @@ func (this *HuaweiDNSProvider) doAPI(method string, apiPath string, args map[str
 		_ = resp.Body.Close()
 	}()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
