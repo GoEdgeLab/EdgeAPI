@@ -4,7 +4,6 @@ package nodes
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
-	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services/nameservers"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc"
 	"reflect"
@@ -461,56 +460,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 	{
 		var instance = this.serviceInstance(&services.HTTPFastcgiService{}).(*services.HTTPFastcgiService)
 		pb.RegisterHTTPFastcgiServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSClusterService{}).(*nameservers.NSClusterService)
-		pb.RegisterNSClusterServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSNodeService{}).(*nameservers.NSNodeService)
-		pb.RegisterNSNodeServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSDomainService{}).(*nameservers.NSDomainService)
-		pb.RegisterNSDomainServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSRecordService{}).(*nameservers.NSRecordService)
-		pb.RegisterNSRecordServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSRouteService{}).(*nameservers.NSRouteService)
-		pb.RegisterNSRouteServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSKeyService{}).(*nameservers.NSKeyService)
-		pb.RegisterNSKeyServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSAccessLogService{}).(*nameservers.NSAccessLogService)
-		pb.RegisterNSAccessLogServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSRecordHourlyStatService{}).(*nameservers.NSRecordHourlyStatService)
-		pb.RegisterNSRecordHourlyStatServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSQuestionOptionService{}).(*nameservers.NSQuestionOptionService)
-		pb.RegisterNSQuestionOptionServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&nameservers.NSService{}).(*nameservers.NSService)
-		pb.RegisterNSServiceServer(server, instance)
 		this.rest(instance)
 	}
 	{
