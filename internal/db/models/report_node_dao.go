@@ -269,7 +269,7 @@ func (this *ReportNodeDAO) FindEnabledNodeIdWithUniqueId(tx *dbs.Tx, uniqueId st
 }
 
 // UpdateNodeStatus 更改节点状态
-func (this ReportNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *reporterconfigs.Status) error {
+func (this *ReportNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *reporterconfigs.Status) error {
 	if nodeStatus == nil {
 		return nil
 	}
