@@ -43,7 +43,7 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 		return nil, err
 	}
 	if policyId > 0 {
-		err = accesslogs.SharedStorageManager.Write(policyId, req.HttpAccessLogs)
+		_, _, err = accesslogs.SharedStorageManager.Write(policyId, req.HttpAccessLogs)
 		if err != nil {
 			return nil, err
 		}

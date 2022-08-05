@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -153,9 +154,12 @@ func (this *HTTPAccessLogPolicyService) WriteHTTPAccessLogPolicy(ctx context.Con
 		return nil, err
 	}
 
-	err = accesslogs.SharedStorageManager.Write(req.HttpAccessLogPolicyId, []*pb.HTTPAccessLog{req.HttpAccessLog})
+	success, failMessage, err := accesslogs.SharedStorageManager.Write(req.HttpAccessLogPolicyId, []*pb.HTTPAccessLog{req.HttpAccessLog})
 	if err != nil {
 		return nil, err
+	}
+	if !success {
+		return nil, errors.New("test failed: " + failMessage)
 	}
 	return this.Success()
 }
