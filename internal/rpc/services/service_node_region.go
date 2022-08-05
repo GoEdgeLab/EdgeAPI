@@ -85,8 +85,8 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 	return &pb.FindAllEnabledNodeRegionsResponse{NodeRegions: result}, nil
 }
 
-// FindAllEnabledAndOnNodeRegions 查找所有启用的区域
-func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Context, req *pb.FindAllEnabledAndOnNodeRegionsRequest) (*pb.FindAllEnabledAndOnNodeRegionsResponse, error) {
+// FindAllAvailableNodeRegions 查找所有启用的区域
+func (this *NodeRegionService) FindAllAvailableNodeRegions(ctx context.Context, req *pb.FindAllAvailableNodeRegionsRequest) (*pb.FindAllAvailableNodeRegionsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (this *NodeRegionService) FindAllEnabledAndOnNodeRegions(ctx context.Contex
 			PricesJSON:  region.Prices,
 		})
 	}
-	return &pb.FindAllEnabledAndOnNodeRegionsResponse{NodeRegions: result}, nil
+	return &pb.FindAllAvailableNodeRegionsResponse{NodeRegions: result}, nil
 }
 
 // UpdateNodeRegionOrders 排序

@@ -6,12 +6,12 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
-// 节点区域价格相关服务
+// NodePriceItemService 节点区域价格相关服务
 type NodePriceItemService struct {
 	BaseService
 }
 
-// 创建区域价格
+// CreateNodePriceItem 创建区域价格
 func (this *NodePriceItemService) CreateNodePriceItem(ctx context.Context, req *pb.CreateNodePriceItemRequest) (*pb.CreateNodePriceItemResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -27,7 +27,7 @@ func (this *NodePriceItemService) CreateNodePriceItem(ctx context.Context, req *
 	return &pb.CreateNodePriceItemResponse{NodePriceItemId: itemId}, nil
 }
 
-// 修改区域价格
+// UpdateNodePriceItem 修改区域价格
 func (this *NodePriceItemService) UpdateNodePriceItem(ctx context.Context, req *pb.UpdateNodePriceItemRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -43,7 +43,7 @@ func (this *NodePriceItemService) UpdateNodePriceItem(ctx context.Context, req *
 	return this.Success()
 }
 
-// 删除区域价格
+// DeleteNodePriceItem 删除区域价格
 func (this *NodePriceItemService) DeleteNodePriceItem(ctx context.Context, req *pb.DeleteNodePriceItemRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -59,7 +59,7 @@ func (this *NodePriceItemService) DeleteNodePriceItem(ctx context.Context, req *
 	return this.Success()
 }
 
-// 查找所有区域价格
+// FindAllEnabledNodePriceItems 查找所有区域价格
 func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Context, req *pb.FindAllEnabledNodePriceItemsRequest) (*pb.FindAllEnabledNodePriceItemsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -87,8 +87,8 @@ func (this *NodePriceItemService) FindAllEnabledNodePriceItems(ctx context.Conte
 	return &pb.FindAllEnabledNodePriceItemsResponse{NodePriceItems: result}, nil
 }
 
-// FindAllEnabledAndOnNodePriceItems 查找所有启用的区域价格
-func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.Context, req *pb.FindAllEnabledAndOnNodePriceItemsRequest) (*pb.FindAllEnabledAndOnNodePriceItemsResponse, error) {
+// FindAllAvailableNodePriceItems 查找所有启用的区域价格
+func (this *NodePriceItemService) FindAllAvailableNodePriceItems(ctx context.Context, req *pb.FindAllAvailableNodePriceItemsRequest) (*pb.FindAllAvailableNodePriceItemsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -112,10 +112,10 @@ func (this *NodePriceItemService) FindAllEnabledAndOnNodePriceItems(ctx context.
 		})
 	}
 
-	return &pb.FindAllEnabledAndOnNodePriceItemsResponse{NodePriceItems: result}, nil
+	return &pb.FindAllAvailableNodePriceItemsResponse{NodePriceItems: result}, nil
 }
 
-// 查找单个区域信息
+// FindEnabledNodePriceItem 查找单个区域信息
 func (this *NodePriceItemService) FindEnabledNodePriceItem(ctx context.Context, req *pb.FindEnabledNodePriceItemRequest) (*pb.FindEnabledNodePriceItemResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
