@@ -1,3 +1,5 @@
+//go:build plus
+
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 
 package dnsclients
@@ -39,7 +41,7 @@ func (this *LocalEdgeDNSProvider) Auth(params maps.Map) error {
 // GetDomains 获取所有域名列表
 func (this *LocalEdgeDNSProvider) GetDomains() (domains []string, err error) {
 	var tx *dbs.Tx
-	domainOnes, err := nameservers.SharedNSDomainDAO.ListEnabledDomains(tx, this.clusterId, 0, "", 0, 1000)
+	domainOnes, err := nameservers.SharedNSDomainDAO.ListEnabledDomains(tx, this.clusterId, 0, 0, "", 0, 10000)
 	if err != nil {
 		return nil, err
 	}

@@ -6,10 +6,24 @@ package dnsclients
 
 import "github.com/iwind/TeaGo/maps"
 
-func filterTypeMaps(typeMaps []maps.Map) []maps.Map {
-	return typeMaps
+// FindProvider 查找服务商实例
+func FindProvider(providerType ProviderType) ProviderInterface {
+	switch providerType {
+	case ProviderTypeDNSPod:
+		return &DNSPodProvider{}
+	case ProviderTypeAliDNS:
+		return &AliDNSProvider{}
+	case ProviderTypeHuaweiDNS:
+		return &HuaweiDNSProvider{}
+	case ProviderTypeCloudFlare:
+		return &CloudFlareProvider{}
+	case ProviderTypeCustomHTTP:
+		return &CustomHTTPProvider{}
+	}
+
+	return nil
 }
 
-func filterProvider(providerType string) ProviderInterface {
-	return nil
+func filterTypeMaps(typeMaps []maps.Map) []maps.Map {
+	return typeMaps
 }

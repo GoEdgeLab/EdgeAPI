@@ -52,28 +52,6 @@ func FindAllProviderTypes() []maps.Map {
 	return typeMaps
 }
 
-// FindProvider 查找服务商实例
-func FindProvider(providerType ProviderType) ProviderInterface {
-	switch providerType {
-	case ProviderTypeDNSPod:
-		return &DNSPodProvider{}
-	case ProviderTypeAliDNS:
-		return &AliDNSProvider{}
-	case ProviderTypeHuaweiDNS:
-		return &HuaweiDNSProvider{}
-	case ProviderTypeCloudFlare:
-		return &CloudFlareProvider{}
-	case ProviderTypeLocalEdgeDNS:
-		return &LocalEdgeDNSProvider{}
-	case ProviderTypeUserEdgeDNS:
-		return &UserEdgeDNSProvider{}
-	case ProviderTypeCustomHTTP:
-		return &CustomHTTPProvider{}
-	}
-
-	return filterProvider(providerType)
-}
-
 // FindProviderTypeName 查找服务商名称
 func FindProviderTypeName(providerType ProviderType) string {
 	for _, t := range FindAllProviderTypes() {
