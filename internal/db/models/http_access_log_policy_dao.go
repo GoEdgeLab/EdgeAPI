@@ -87,6 +87,7 @@ func (this *HTTPAccessLogPolicyDAO) CountAllEnabledPolicies(tx *dbs.Tx) (int64, 
 func (this *HTTPAccessLogPolicyDAO) ListEnabledPolicies(tx *dbs.Tx, offset int64, size int64) (result []*HTTPAccessLogPolicy, err error) {
 	_, err = this.Query(tx).
 		State(HTTPAccessLogPolicyStateEnabled).
+		Desc("isOn").
 		DescPk().
 		Offset(offset).
 		Limit(size).

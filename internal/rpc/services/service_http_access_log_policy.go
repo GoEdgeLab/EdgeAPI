@@ -12,8 +12,8 @@ type HTTPAccessLogPolicyService struct {
 	BaseService
 }
 
-// CountAllEnabledHTTPAccessLogPolicies 计算访问日志策略数量
-func (this *HTTPAccessLogPolicyService) CountAllEnabledHTTPAccessLogPolicies(ctx context.Context, req *pb.CountAllEnabledHTTPAccessLogPoliciesRequest) (*pb.RPCCountResponse, error) {
+// CountAllHTTPAccessLogPolicies 计算访问日志策略数量
+func (this *HTTPAccessLogPolicyService) CountAllHTTPAccessLogPolicies(ctx context.Context, req *pb.CountAllHTTPAccessLogPoliciesRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -27,8 +27,8 @@ func (this *HTTPAccessLogPolicyService) CountAllEnabledHTTPAccessLogPolicies(ctx
 	return this.SuccessCount(count)
 }
 
-// ListEnabledHTTPAccessLogPolicies 列出单页访问日志策略
-func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx context.Context, req *pb.ListEnabledHTTPAccessLogPoliciesRequest) (*pb.ListEnabledHTTPAccessLogPoliciesResponse, error) {
+// ListHTTPAccessLogPolicies 列出单页访问日志策略
+func (this *HTTPAccessLogPolicyService) ListHTTPAccessLogPolicies(ctx context.Context, req *pb.ListHTTPAccessLogPoliciesRequest) (*pb.ListHTTPAccessLogPoliciesResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (this *HTTPAccessLogPolicyService) ListEnabledHTTPAccessLogPolicies(ctx con
 			FirewallOnly: policy.FirewallOnly == 1,
 		})
 	}
-	return &pb.ListEnabledHTTPAccessLogPoliciesResponse{HttpAccessLogPolicies: pbPolicies}, nil
+	return &pb.ListHTTPAccessLogPoliciesResponse{HttpAccessLogPolicies: pbPolicies}, nil
 }
 
 // CreateHTTPAccessLogPolicy 创建访问日志策略
@@ -105,8 +105,8 @@ func (this *HTTPAccessLogPolicyService) UpdateHTTPAccessLogPolicy(ctx context.Co
 	return this.Success()
 }
 
-// FindEnabledHTTPAccessLogPolicy 查找单个访问日志策略
-func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx context.Context, req *pb.FindEnabledHTTPAccessLogPolicyRequest) (*pb.FindEnabledHTTPAccessLogPolicyResponse, error) {
+// FindHTTPAccessLogPolicy 查找单个访问日志策略
+func (this *HTTPAccessLogPolicyService) FindHTTPAccessLogPolicy(ctx context.Context, req *pb.FindHTTPAccessLogPolicyRequest) (*pb.FindHTTPAccessLogPolicyResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -118,9 +118,9 @@ func (this *HTTPAccessLogPolicyService) FindEnabledHTTPAccessLogPolicy(ctx conte
 		return nil, err
 	}
 	if policy == nil {
-		return &pb.FindEnabledHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: nil}, nil
+		return &pb.FindHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: nil}, nil
 	}
-	return &pb.FindEnabledHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: &pb.HTTPAccessLogPolicy{
+	return &pb.FindHTTPAccessLogPolicyResponse{HttpAccessLogPolicy: &pb.HTTPAccessLogPolicy{
 		Id:           int64(policy.Id),
 		Name:         policy.Name,
 		IsOn:         policy.IsOn,
