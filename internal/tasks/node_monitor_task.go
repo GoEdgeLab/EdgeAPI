@@ -98,9 +98,15 @@ func (this *NodeMonitorTask) MonitorCluster(cluster *models.NodeCluster) error {
 				this.inactiveMap[key] = 0
 				this.notifiedMap[nodeId] = time.Now().Unix()
 
-				subject := "节点\"" + node.Name + "\"已处于离线状态"
-				msg := "集群'" + cluster.Name + "'节点\"" + node.Name + "\"已处于离线状态，请检查节点是否异常"
+				var subject = "节点\"" + node.Name + "\"已处于离线状态"
+				var msg = "集群'" + cluster.Name + "'节点\"" + node.Name + "\"已处于离线状态，请检查节点是否异常"
 				err = models.SharedMessageDAO.CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, clusterId, int64(node.Id), models.MessageTypeNodeInactive, models.LevelError, subject, msg, nil, false)
+				if err != nil {
+					return err
+				}
+
+				// 设置通知时间
+				err = models.SharedNodeDAO.UpdateNodeInactiveNotifiedAt(nil, nodeId, time.Now().Unix())
 				if err != nil {
 					return err
 				}

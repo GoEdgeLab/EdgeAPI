@@ -1668,8 +1668,29 @@ func (this *NodeDAO) UpdateNodeActive(tx *dbs.Tx, nodeId int64, isActive bool) e
 	_, err := this.Query(tx).
 		Pk(nodeId).
 		Set("isActive", isActive).
+		Set("inactiveNotifiedAt", 0).
 		Update()
 	return err
+}
+
+// UpdateNodeInactiveNotifiedAt 修改节点的离线通知时间
+func (this *NodeDAO) UpdateNodeInactiveNotifiedAt(tx *dbs.Tx, nodeId int64, inactiveAt int64) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	_, err := this.Query(tx).
+		Pk(nodeId).
+		Set("inactiveNotifiedAt", inactiveAt).
+		Update()
+	return err
+}
+
+// FindNodeInactiveNotifiedAt 读取上次的节点离线通知时间
+func (this *NodeDAO) FindNodeInactiveNotifiedAt(tx *dbs.Tx, nodeId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(nodeId).
+		Result("inactiveNotifiedAt").
+		FindInt64Col(0)
 }
 
 // FindNodeActive 检查节点活跃状态
@@ -1826,6 +1847,19 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 		parentNodes, err = this.FindEnabledNodesWithGroupIdAndLevel(tx, groupId, level+1)
 		if err != nil {
 			return nil, err
+		}
+	} else if nodeId > 0 {
+		// 当前节点所属分组
+		groupId, err = this.Query(tx).Result("groupId").FindInt64Col(0)
+		if err != nil {
+			return nil, err
+		}
+
+		if groupId > 0 {
+			parentNodes, err = this.FindEnabledNodesWithGroupIdAndLevel(tx, groupId, level+1)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

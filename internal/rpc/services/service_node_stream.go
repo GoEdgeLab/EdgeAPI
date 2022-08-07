@@ -52,7 +52,7 @@ func NextCommandRequestId() int64 {
 
 func init() {
 	// 清理WaitingChannelMap
-	ticker := time.NewTicker(30 * time.Second)
+	var ticker = time.NewTicker(30 * time.Second)
 	goman.New(func() {
 		for range ticker.C {
 			nodeLocker.Lock()
@@ -110,8 +110,6 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 		return err
 	}
 
-	//logs.Println("[RPC]accepted node '" + numberutils.FormatInt64(nodeId) + "' connection")
-
 	var tx = this.NullTx()
 
 	// 标记为活跃状态
@@ -121,25 +119,31 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 	}
 
 	if !oldIsActive {
-		err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
+		inactiveNotifiedAt, err := models.SharedNodeDAO.FindNodeInactiveNotifiedAt(tx, nodeId)
 		if err != nil {
 			return err
 		}
+		if inactiveNotifiedAt > 0 {
+			err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
+			if err != nil {
+				return err
+			}
 
-		// 发送恢复消息
-		clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
-		if err != nil {
-			return err
-		}
-		nodeName, err := models.SharedNodeDAO.FindNodeName(tx, nodeId)
-		if err != nil {
-			return err
-		}
-		subject := "节点\"" + nodeName + "\"已经恢复在线"
-		msg := "节点\"" + nodeName + "\"已经恢复在线"
-		err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil, false)
-		if err != nil {
-			return err
+			// 发送恢复消息
+			clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+			if err != nil {
+				return err
+			}
+			nodeName, err := models.SharedNodeDAO.FindNodeName(tx, nodeId)
+			if err != nil {
+				return err
+			}
+			var subject = "节点\"" + nodeName + "\"已经恢复在线"
+			var msg = "节点\"" + nodeName + "\"已经恢复在线"
+			err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil, false)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
