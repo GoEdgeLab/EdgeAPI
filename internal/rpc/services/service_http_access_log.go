@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -37,16 +36,9 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 		return nil, err
 	}
 
-	// 发送到访问日志策略
-	policyId, err := models.SharedHTTPAccessLogPolicyDAO.FindCurrentPublicPolicyId(tx)
+	err = this.writeAccessLogsToPolicy(req.HttpAccessLogs)
 	if err != nil {
 		return nil, err
-	}
-	if policyId > 0 {
-		_, _, err = accesslogs.SharedStorageManager.Write(policyId, req.HttpAccessLogs)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return &pb.CreateHTTPAccessLogsResponse{}, nil

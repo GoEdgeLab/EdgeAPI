@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/accesslogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -159,9 +158,7 @@ func (this *APINode) Start() {
 	})
 
 	// 访问日志存储管理器
-	goman.New(func() {
-		accesslogs.SharedStorageManager.Start()
-	})
+	this.startAccessLogStorages()
 
 	// 监听RPC服务
 	remotelogs.Println("API_NODE", "starting RPC server ...")

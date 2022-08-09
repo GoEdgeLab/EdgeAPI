@@ -103,11 +103,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.HTTPAccessLogPolicyService{}).(*services.HTTPAccessLogPolicyService)
-		pb.RegisterHTTPAccessLogPolicyServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		var instance = this.serviceInstance(&services.HTTPCachePolicyService{}).(*services.HTTPCachePolicyService)
 		pb.RegisterHTTPCachePolicyServiceServer(server, instance)
 		this.rest(instance)

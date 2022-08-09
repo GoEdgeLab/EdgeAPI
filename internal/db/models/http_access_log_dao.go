@@ -93,7 +93,6 @@ func init() {
 			}
 		})
 	})
-
 }
 
 func NewHTTPAccessLogDAO() *HTTPAccessLogDAO {
