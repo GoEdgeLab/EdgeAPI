@@ -12,7 +12,7 @@ require (
 	github.com/go-acme/lego/v4 v4.5.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
-	github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570
+	github.com/iwind/TeaGo v0.0.0-20220811034530-657e3f15b79e
 	github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62
 	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/pkg/sftp v1.12.0
@@ -21,7 +21,7 @@ require (
 	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

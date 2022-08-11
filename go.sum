@@ -239,6 +239,8 @@ github.com/iwind/TeaGo v0.0.0-20210411134150-ddf57e240c2f/go.mod h1:KU4mS7QNiZ7Q
 github.com/iwind/TeaGo v0.0.0-20220304043459-0dd944a5b475/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
 github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570 h1:zqz2FiMMkSHXWO1EsTRJDPTwX9xQ4uuyD5GAE4JGlhM=
 github.com/iwind/TeaGo v0.0.0-20220408111647-f36b9bba3570/go.mod h1:HRHK0zoC/og3c9/hKosD9yYVMTnnzm3PgXUdhRYHaLc=
+github.com/iwind/TeaGo v0.0.0-20220811034530-657e3f15b79e h1:cw4b6ecXdXvLd45YSstD8r9ClcnVK4ljZMZCept2aOk=
+github.com/iwind/TeaGo v0.0.0-20220811034530-657e3f15b79e/go.mod h1:fi/Pq+/5m2HZoseM+39dMF57ANXRt6w4PkGu3NXPc5s=
 github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3 h1:aBSonas7vFcgTj9u96/bWGILGv1ZbUSTLiOzcI1ZT6c=
 github.com/iwind/gosock v0.0.0-20210722083328-12b2d66abec3/go.mod h1:H5Q7SXwbx3a97ecJkaS2sD77gspzE7HFUafBO0peEyA=
 github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62 h1:HJH6RDheAY156DnIfJSD/bEvqyXzsZuE2gzs8PuUjoo=
@@ -789,6 +791,8 @@ gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b h1:h8qDotaEPuJATrMmW04NCwg7v22aHH28wwpauUhK9Oo=
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
