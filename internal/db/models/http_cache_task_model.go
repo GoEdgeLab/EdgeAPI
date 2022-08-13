@@ -12,23 +12,23 @@ type HTTPCacheTask struct {
 	Day         string `field:"day"`         // 创建日期YYYYMMDD
 	IsDone      bool   `field:"isDone"`      // 是否已完成
 	IsOk        bool   `field:"isOk"`        // 是否完全成功
-	IsReady     uint8  `field:"isReady"`     // 是否已准备好
+	IsReady     bool   `field:"isReady"`     // 是否已准备好
 	Description string `field:"description"` // 描述
 }
 
 type HTTPCacheTaskOperator struct {
-	Id          interface{} // ID
-	UserId      interface{} // 用户ID
-	Type        interface{} // 任务类型：purge|fetch
-	KeyType     interface{} // Key类型
-	State       interface{} // 状态
-	CreatedAt   interface{} // 创建时间
-	DoneAt      interface{} // 完成时间
-	Day         interface{} // 创建日期YYYYMMDD
-	IsDone      interface{} // 是否已完成
-	IsOk        interface{} // 是否完全成功
-	IsReady     interface{} // 是否已准备好
-	Description interface{} // 描述
+	Id          any // ID
+	UserId      any // 用户ID
+	Type        any // 任务类型：purge|fetch
+	KeyType     any // Key类型
+	State       any // 状态
+	CreatedAt   any // 创建时间
+	DoneAt      any // 完成时间
+	Day         any // 创建日期YYYYMMDD
+	IsDone      any // 是否已完成
+	IsOk        any // 是否完全成功
+	IsReady     any // 是否已准备好
+	Description any // 描述
 }
 
 func NewHTTPCacheTaskOperator() *HTTPCacheTaskOperator {

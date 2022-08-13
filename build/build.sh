@@ -88,6 +88,7 @@ function build() {
 		mkdir "$DIST"/bin
 		mkdir "$DIST"/configs
 		mkdir "$DIST"/logs
+		mkdir "$DIST"/data
 	fi
 	cp "$ROOT"/configs/api.template.yaml "$DIST"/configs/
 	cp "$ROOT"/configs/db.template.yaml "$DIST"/configs/

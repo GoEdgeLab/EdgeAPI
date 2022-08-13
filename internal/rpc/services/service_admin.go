@@ -187,7 +187,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		IsSuper:  admin.IsSuper,
 		Modules:  pbModules,
 		OtpLogin: pbOtpAuth,
-		CanLogin: admin.CanLogin == 1,
+		CanLogin: admin.CanLogin,
 	}
 	return &pb.FindEnabledAdminResponse{Admin: result}, nil
 }
@@ -407,7 +407,7 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 			IsSuper:   admin.IsSuper,
 			CreatedAt: int64(admin.CreatedAt),
 			OtpLogin:  pbOtpAuth,
-			CanLogin:  admin.CanLogin == 1,
+			CanLogin:  admin.CanLogin,
 		})
 	}
 

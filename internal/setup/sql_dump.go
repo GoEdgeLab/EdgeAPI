@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"regexp"
 	"strings"
@@ -13,18 +14,22 @@ var recordsTables = []*SQLRecordsTable{
 	{
 		TableName:    "edgeRegionCities",
 		UniqueFields: []string{"name", "provinceId"},
+		ExceptFields: []string{"customName", "customCodes"},
 	},
 	{
 		TableName:    "edgeRegionCountries",
 		UniqueFields: []string{"name"},
+		ExceptFields: []string{"customName", "customCodes"},
 	},
 	{
 		TableName:    "edgeRegionProvinces",
 		UniqueFields: []string{"name", "countryId"},
+		ExceptFields: []string{"customName", "customCodes"},
 	},
 	{
 		TableName:    "edgeRegionProviders",
 		UniqueFields: []string{"name"},
+		ExceptFields: []string{"customName", "customCodes"},
 	},
 }
 
@@ -96,8 +101,14 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 					Id:           one.GetInt64("id"),
 					Values:       map[string]string{},
 					UniqueFields: recordsTable.UniqueFields,
+					ExceptFields: recordsTable.ExceptFields,
 				}
 				for k, v := range one {
+					// 需要排除的字段
+					if lists.ContainsString(record.ExceptFields, k) {
+						continue
+					}
+
 					record.Values[k] = types.String(v)
 				}
 				records = append(records, record)
@@ -233,9 +244,9 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 		// 对比记录
 		// +
 		for _, record := range newTable.Records {
-			queryArgs := []string{}
-			queryValues := []interface{}{}
-			valueStrings := []string{}
+			var queryArgs = []string{}
+			var queryValues = []interface{}{}
+			var valueStrings = []string{}
 			for _, field := range record.UniqueFields {
 				queryArgs = append(queryArgs, field+"=?")
 				queryValues = append(queryValues, record.Values[field])
@@ -254,6 +265,11 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 				args := []string{}
 				values := []interface{}{}
 				for k, v := range record.Values {
+					// 需要排除的字段
+					if lists.ContainsString(record.ExceptFields, k) {
+						continue
+					}
+
 					// ID需要保留，因为各个表格之间需要有对应关系
 					params = append(params, "`"+k+"`")
 					args = append(args, "?")
@@ -274,6 +290,12 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 					if k == "id" {
 						continue
 					}
+
+					// 需要排除的字段
+					if lists.ContainsString(record.ExceptFields, k) {
+						continue
+					}
+
 					args = append(args, k+"=?")
 					values = append(values, v)
 				}

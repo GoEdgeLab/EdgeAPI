@@ -6,38 +6,38 @@ import (
 	"github.com/iwind/TeaGo/lists"
 )
 
-func (this *RegionCity) DecodeCodes() []string {
+func (this *RegionTown) DecodeCodes() []string {
 	if len(this.Codes) == 0 {
 		return []string{}
 	}
 	var result = []string{}
 	err := json.Unmarshal(this.Codes, &result)
 	if err != nil {
-		remotelogs.Error("RegionCity.DecodeCodes", err.Error())
+		remotelogs.Error("RegionTown.DecodeCodes", err.Error())
 	}
 	return result
 }
 
-func (this *RegionCity) DecodeCustomCodes() []string {
+func (this *RegionTown) DecodeCustomCodes() []string {
 	if len(this.CustomCodes) == 0 {
 		return []string{}
 	}
 	var result = []string{}
 	err := json.Unmarshal(this.CustomCodes, &result)
 	if err != nil {
-		remotelogs.Error("RegionCity.DecodeCustomCodes", err.Error())
+		remotelogs.Error("RegionTown.DecodeCustomCodes", err.Error())
 	}
 	return result
 }
 
-func (this *RegionCity) DisplayName() string {
+func (this *RegionTown) DisplayName() string {
 	if len(this.CustomName) > 0 {
 		return this.CustomName
 	}
 	return this.Name
 }
 
-func (this *RegionCity) AllCodes() []string {
+func (this *RegionTown) AllCodes() []string {
 	var codes = this.DecodeCodes()
 
 	if len(this.Name) > 0 && !lists.ContainsString(codes, this.Name) {

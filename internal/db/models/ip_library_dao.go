@@ -33,7 +33,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableIPLibrary 启用条目
 func (this *IPLibraryDAO) EnableIPLibrary(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -42,7 +42,7 @@ func (this *IPLibraryDAO) EnableIPLibrary(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableIPLibrary 禁用条目
 func (this *IPLibraryDAO) DisableIPLibrary(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -51,7 +51,7 @@ func (this *IPLibraryDAO) DisableIPLibrary(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledIPLibrary 查找启用中的条目
 func (this *IPLibraryDAO) FindEnabledIPLibrary(tx *dbs.Tx, id int64) (*IPLibrary, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -63,7 +63,7 @@ func (this *IPLibraryDAO) FindEnabledIPLibrary(tx *dbs.Tx, id int64) (*IPLibrary
 	return result.(*IPLibrary), err
 }
 
-// 查找某个类型的IP库列表
+// FindAllEnabledIPLibrariesWithType 查找某个类型的IP库列表
 func (this *IPLibraryDAO) FindAllEnabledIPLibrariesWithType(tx *dbs.Tx, libraryType string) (result []*IPLibrary, err error) {
 	_, err = this.Query(tx).
 		State(IPLibraryStateEnabled).
@@ -74,7 +74,7 @@ func (this *IPLibraryDAO) FindAllEnabledIPLibrariesWithType(tx *dbs.Tx, libraryT
 	return
 }
 
-// 查找某个类型的最新的IP库
+// FindLatestIPLibraryWithType 查找某个类型的最新的IP库
 func (this *IPLibraryDAO) FindLatestIPLibraryWithType(tx *dbs.Tx, libraryType string) (*IPLibrary, error) {
 	one, err := this.Query(tx).
 		State(IPLibraryStateEnabled).
@@ -90,7 +90,7 @@ func (this *IPLibraryDAO) FindLatestIPLibraryWithType(tx *dbs.Tx, libraryType st
 	return one.(*IPLibrary), nil
 }
 
-// 创建新的IP库
+// CreateIPLibrary 创建新的IP库
 func (this *IPLibraryDAO) CreateIPLibrary(tx *dbs.Tx, libraryType string, fileId int64) (int64, error) {
 	var op = NewIPLibraryOperator()
 	op.Type = libraryType

@@ -2,7 +2,9 @@
 
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // SplitStrings 分隔字符串
 // 忽略其中为空的片段
@@ -29,4 +31,34 @@ func ContainsStringInsensitive(list []string, search string) bool {
 		}
 	}
 	return false
+}
+
+// Similar 计算相似度
+// between 0-1
+func Similar(s1 string, s2 string) float32 {
+	var r1s = []rune(s1)
+	var r2s = []rune(s2)
+	var l1 = len(r1s)
+	var l2 = len(r2s)
+
+	if l1 > l2 {
+		r1s, r2s = r2s, r1s
+	}
+
+	if len(r1s) == 0 {
+		return 0
+	}
+
+	var count = 0
+	for _, r := range r1s {
+		for index, r2 := range r2s {
+			if r == r2 {
+				count++
+				r2s = r2s[index+1:]
+				break
+			}
+		}
+	}
+
+	return (float32(count)/float32(l1) + float32(count)/float32(l2)) / 2
 }
