@@ -10,6 +10,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"io"
 	"os"
 	"time"
 )
@@ -225,6 +226,29 @@ func (this *IPLibraryFileDAO) FindLibraryFileCities(tx *dbs.Tx, fileId int64) ([
 	return result, nil
 }
 
+// FindLibraryFileTowns 获取IP库中的区县
+func (this *IPLibraryFileDAO) FindLibraryFileTowns(tx *dbs.Tx, fileId int64) ([][4]string, error) {
+	townsJSON, err := this.Query(tx).
+		Result("towns").
+		Pk(fileId).
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(townsJSON) {
+		return nil, nil
+	}
+
+	var result = [][4]string{}
+	err = json.Unmarshal(townsJSON, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // FindLibraryFileProviders 获取IP库中的ISP运营商
 func (this *IPLibraryFileDAO) FindLibraryFileProviders(tx *dbs.Tx, fileId int64) ([]string, error) {
 	providersJSON, err := this.Query(tx).
@@ -292,24 +316,79 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	// TODO 删除以往生成的文件，但要考虑到文件正在被别的任务所使用
 
 	// 国家
+	dbCountries, err := regions.SharedRegionCountryDAO.FindAllCountries(tx)
+	if err != nil {
+		return err
+	}
+
 	var countries = []*iplibrary.Country{}
-	// TODO
+	for _, country := range dbCountries {
+		countries = append(countries, &iplibrary.Country{
+			Id:    int64(country.Id),
+			Name:  country.DisplayName(),
+			Codes: country.AllCodes(),
+		})
+	}
 
 	// 省份
+	dbProvinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvinces(tx)
+	if err != nil {
+		return err
+	}
+
 	var provinces = []*iplibrary.Province{}
-	// TODO
+	for _, province := range dbProvinces {
+		provinces = append(provinces, &iplibrary.Province{
+			Id:    int64(province.Id),
+			Name:  province.DisplayName(),
+			Codes: province.AllCodes(),
+		})
+	}
 
 	// 城市
+	dbCities, err := regions.SharedRegionCityDAO.FindAllEnabledCities(tx)
+	if err != nil {
+		return err
+	}
+
 	var cities = []*iplibrary.City{}
-	// TODO
+	for _, city := range dbCities {
+		cities = append(cities, &iplibrary.City{
+			Id:    int64(city.Id),
+			Name:  city.DisplayName(),
+			Codes: city.AllCodes(),
+		})
+	}
 
 	// 区县
+	dbTowns, err := regions.SharedRegionTownDAO.FindAllRegionTowns(tx)
+	if err != nil {
+		return err
+	}
+
 	var towns = []*iplibrary.Town{}
-	// TODO
+	for _, town := range dbTowns {
+		towns = append(towns, &iplibrary.Town{
+			Id:    int64(town.Id),
+			Name:  town.DisplayName(),
+			Codes: town.AllCodes(),
+		})
+	}
 
 	// ISP运营商
+	dbProviders, err := regions.SharedRegionProviderDAO.FindAllEnabledProviders(tx)
+	if err != nil {
+		return err
+	}
+
 	var providers = []*iplibrary.Provider{}
-	// TODO
+	for _, provider := range dbProviders {
+		providers = append(providers, &iplibrary.Provider{
+			Id:    int64(provider.Id),
+			Name:  provider.DisplayName(),
+			Codes: provider.AllCodes(),
+		})
+	}
 
 	var libraryCode = utils.Sha1RandomString() // 每次都生成新的code
 	var filePath = dir + "/" + this.composeFilename(libraryFileId, libraryCode)
@@ -342,10 +421,6 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 
 	// countries etc ...
 	var countryMap = map[string]int64{} // countryName => countryId
-	dbCountries, err := regions.SharedRegionCountryDAO.FindAllCountries(tx)
-	if err != nil {
-		return err
-	}
 	for _, country := range dbCountries {
 		for _, code := range country.AllCodes() {
 			countryMap[code] = int64(country.Id)
@@ -353,10 +428,6 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	}
 
 	var provinceMap = map[string]int64{} // countryId_provinceName => provinceId
-	dbProvinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvinces(tx)
-	if err != nil {
-		return err
-	}
 	for _, province := range dbProvinces {
 		for _, code := range province.AllCodes() {
 			provinceMap[types.String(province.CountryId)+"_"+code] = int64(province.Id)
@@ -364,10 +435,6 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	}
 
 	var cityMap = map[string]int64{} // provinceId_cityName => cityId
-	dbCities, err := regions.SharedRegionCityDAO.FindAllEnabledCities(tx)
-	if err != nil {
-		return err
-	}
 	for _, city := range dbCities {
 		for _, code := range city.AllCodes() {
 			cityMap[types.String(city.ProvinceId)+"_"+code] = int64(city.Id)
@@ -375,13 +442,13 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	}
 
 	var townMap = map[string]int64{} // cityId_townName => townId
-	// TODO 将来实现区县
+	for _, town := range dbTowns {
+		for _, code := range town.AllCodes() {
+			townMap[types.String(town.CityId)+"_"+code] = int64(town.Id)
+		}
+	}
 
 	var providerMap = map[string]int64{} // providerName => providerId
-	dbProviders, err := regions.SharedRegionProviderDAO.FindAllEnabledProviders(tx)
-	if err != nil {
-		return err
-	}
 	for _, provider := range dbProviders {
 		for _, code := range provider.AllCodes() {
 			providerMap[code] = int64(provider.Id)
@@ -449,11 +516,47 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 		return err
 	}
 
+	// 将生成的内容写入到文件
+	stat, err = os.Stat(filePath)
+	if err != nil {
+		return errors.New("stat generated file failed: " + err.Error())
+	}
+	generatedFileId, err := SharedFileDAO.CreateFile(tx, 0, 0, "ipLibraryFile", "", libraryCode+".db", stat.Size(), "", false)
+	if err != nil {
+		return err
+	}
+
+	fp, err := os.Open(filePath)
+	if err != nil {
+		return errors.New("open generated file failed: " + err.Error())
+	}
+	var buf = make([]byte, 256*1024)
+	for {
+		n, err := fp.Read(buf)
+		if n > 0 {
+			_, err = SharedFileChunkDAO.CreateFileChunk(tx, generatedFileId, buf[:n])
+			if err != nil {
+				return err
+			}
+		}
+		if err != nil {
+			if err != io.EOF {
+				return err
+			}
+			break
+		}
+	}
+	err = SharedFileDAO.UpdateFileIsFinished(tx, generatedFileId)
+	if err != nil {
+		return err
+	}
+
 	// 设置code
 	err = this.Query(tx).
 		Pk(libraryFileId).
 		Set("code", libraryCode).
 		Set("isFinished", true).
+		Set("generatedFileId", generatedFileId).
 		Set("generatedAt", time.Now().Unix()).
 		UpdateQuickly()
 	if err != nil {

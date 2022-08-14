@@ -273,6 +273,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		var instance = this.serviceInstance(&services.RegionTownService{}).(*services.RegionTownService)
+		pb.RegisterRegionTownServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		var instance = this.serviceInstance(&services.RegionProviderService{}).(*services.RegionProviderService)
 		pb.RegisterRegionProviderServiceServer(server, instance)
 		this.rest(instance)

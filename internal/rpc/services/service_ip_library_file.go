@@ -128,17 +128,19 @@ func (this *IPLibraryFileService) FindIPLibraryFile(ctx context.Context, req *pb
 		})
 	}
 
-	return &pb.FindIPLibraryFileResponse{IpLibraryFile: &pb.IPLibraryFile{
-		Id:            int64(libraryFile.Id),
-		FileId:        int64(libraryFile.FileId),
-		IsFinished:    libraryFile.IsFinished,
-		CreatedAt:     int64(libraryFile.CreatedAt),
-		CountryNames:  pbCountryNames,
-		Provinces:     pbProvinces,
-		Cities:        pbCities,
-		Towns:         pbTowns,
-		ProviderNames: pbProviderNames,
-	}}, nil
+	return &pb.FindIPLibraryFileResponse{
+		IpLibraryFile: &pb.IPLibraryFile{
+			Id:            int64(libraryFile.Id),
+			FileId:        int64(libraryFile.FileId),
+			IsFinished:    libraryFile.IsFinished,
+			CreatedAt:     int64(libraryFile.CreatedAt),
+			CountryNames:  pbCountryNames,
+			Provinces:     pbProvinces,
+			Cities:        pbCities,
+			Towns:         pbTowns,
+			ProviderNames: pbProviderNames,
+		},
+	}, nil
 }
 
 // CreateIPLibraryFile 创建IP库文件
@@ -341,9 +343,9 @@ func (this *IPLibraryFileService) CheckCitiesWithIPLibraryFileId(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	var countryMap = map[string]int64{}            // countryName => countryId
-	var provinceMap = map[string]int64{}           // countryId_provinceName => provinceId
-	var provinceNamesMap = map[int64][][3]string{} // provinceId => [][3]{countryName, provinceName, cityName}
+	var countryMap = map[string]int64{}        // countryName => countryId
+	var provinceMap = map[string]int64{}       // countryId_provinceName => provinceId
+	var cityNamesMap = map[int64][][3]string{} // provinceId => [][3]{countryName, provinceName, cityName}
 	var provinceIds = []int64{}
 	for _, city := range cities {
 		var countryName = city[0]
@@ -363,14 +365,14 @@ func (this *IPLibraryFileService) CheckCitiesWithIPLibraryFileId(ctx context.Con
 		var key = types.String(countryId) + "_" + provinceName
 		provinceId, ok := provinceMap[key]
 		if ok {
-			provinceNamesMap[provinceId] = append(provinceNamesMap[provinceId], [3]string{countryName, provinceName, cityName})
+			cityNamesMap[provinceId] = append(cityNamesMap[provinceId], [3]string{countryName, provinceName, cityName})
 		} else {
 			provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithName(tx, countryId, provinceName)
 			if err != nil {
 				return nil, err
 			}
 			provinceMap[key] = provinceId
-			provinceNamesMap[provinceId] = append(provinceNamesMap[provinceId], [3]string{countryName, provinceName, cityName})
+			cityNamesMap[provinceId] = append(cityNamesMap[provinceId], [3]string{countryName, provinceName, cityName})
 			if provinceId > 0 {
 				provinceIds = append(provinceIds, provinceId)
 			}
@@ -384,7 +386,7 @@ func (this *IPLibraryFileService) CheckCitiesWithIPLibraryFileId(ctx context.Con
 			return nil, err
 		}
 
-		for _, city := range provinceNamesMap[provinceId] {
+		for _, city := range cityNamesMap[provinceId] {
 			var countryName = city[0]
 			var provinceName = city[1]
 			var cityName = city[2]
@@ -417,6 +419,118 @@ func (this *IPLibraryFileService) CheckCitiesWithIPLibraryFileId(ctx context.Con
 	}
 
 	return &pb.CheckCitiesWithIPLibraryFileIdResponse{MissingCities: pbMissingCities}, nil
+}
+
+// CheckTownsWithIPLibraryFileId 检查区县
+func (this *IPLibraryFileService) CheckTownsWithIPLibraryFileId(ctx context.Context, req *pb.CheckTownsWithIPLibraryFileIdRequest) (*pb.CheckTownsWithIPLibraryFileIdResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	towns, err := models.SharedIPLibraryFileDAO.FindLibraryFileTowns(tx, req.IpLibraryFileId)
+	if err != nil {
+		return nil, err
+	}
+	var countryMap = map[string]int64{}  // countryName => countryId
+	var provinceMap = map[string]int64{} // countryId_provinceName => provinceId
+	var cityMap = map[string]int64{}     // province_cityName => cityId
+
+	var townNamesMap = map[int64][][4]string{} // cityId => [][4]{countryName, provinceName, cityName, townName}
+	var cityIds = []int64{}
+	for _, town := range towns {
+		var countryName = town[0]
+		var provinceName = town[1]
+		var cityName = town[2]
+		var townName = town[3]
+
+		// country
+		countryId, ok := countryMap[countryName]
+		if !ok {
+			countryId, err = regions.SharedRegionCountryDAO.FindCountryIdWithName(tx, countryName)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		countryMap[countryName] = countryId
+
+		// province
+		var provinceKey = types.String(countryId) + "_" + provinceName
+		provinceId, ok := provinceMap[provinceKey]
+		if !ok {
+			if countryId > 0 {
+				provinceId, err = regions.SharedRegionProvinceDAO.FindProvinceIdWithName(tx, countryId, provinceName)
+				if err != nil {
+					return nil, err
+				}
+			}
+			provinceMap[provinceKey] = provinceId
+		}
+
+		// city
+		var cityKey = types.String(provinceId) + "_" + cityName
+		cityId, ok := cityMap[cityKey]
+		if !ok {
+			if provinceId > 0 {
+				cityId, err = regions.SharedRegionCityDAO.FindCityIdWithName(tx, provinceId, cityName)
+				if err != nil {
+					return nil, err
+				}
+			}
+			cityMap[cityKey] = cityId
+		}
+
+		// town
+		townNamesMap[cityId] = append(townNamesMap[cityId], [4]string{countryName, provinceName, cityName, townName})
+	}
+
+	var pbMissingTowns = []*pb.CheckTownsWithIPLibraryFileIdResponse_MissingTown{}
+	for _, cityId := range cityIds {
+		allTowns, err := regions.SharedRegionTownDAO.FindAllRegionTownsWithCityId(tx, cityId)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, town := range townNamesMap[cityId] {
+			var countryName = town[0]
+			var provinceName = town[1]
+			var cityName = town[2]
+			var townName = town[3]
+
+			townId, err := regions.SharedRegionTownDAO.FindTownIdWithName(tx, cityId, townName)
+			if err != nil {
+				return nil, err
+			}
+			if townId > 0 {
+				// 已存在，则跳过
+				continue
+			}
+
+			var similarTowns = regions.SharedRegionTownDAO.FindSimilarTowns(allTowns, townName, 5)
+			if err != nil {
+				return nil, err
+			}
+			var pbMissingTown = &pb.CheckTownsWithIPLibraryFileIdResponse_MissingTown{}
+			pbMissingTown.CountryName = countryName
+			pbMissingTown.ProvinceName = provinceName
+			pbMissingTown.CityName = cityName
+			pbMissingTown.TownName = townName
+
+			for _, similarTown := range similarTowns {
+				pbMissingTown.SimilarTowns = append(pbMissingTown.SimilarTowns, &pb.RegionTown{
+					Id:          int64(similarTown.Id),
+					Name:        similarTown.Name,
+					DisplayName: similarTown.DisplayName(),
+				})
+			}
+			pbMissingTowns = append(pbMissingTowns, pbMissingTown)
+		}
+	}
+
+	return &pb.CheckTownsWithIPLibraryFileIdResponse{MissingTowns: pbMissingTowns}, nil
 }
 
 // CheckProvidersWithIPLibraryFileId 检查ISP运营商

@@ -9,6 +9,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"sort"
+	"strconv"
 )
 
 const (
@@ -55,8 +56,8 @@ func (this *RegionTownDAO) DisableRegionTown(tx *dbs.Tx, id uint32) error {
 	return err
 }
 
-// FindEnabledRegionTown 查找启用中的条目
-func (this *RegionTownDAO) FindEnabledRegionTown(tx *dbs.Tx, id uint32) (*RegionTown, error) {
+// FindEnabledRegionTown 查找启用中的区县
+func (this *RegionTownDAO) FindEnabledRegionTown(tx *dbs.Tx, id int64) (*RegionTown, error) {
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", RegionTownStateEnabled).
@@ -65,6 +66,38 @@ func (this *RegionTownDAO) FindEnabledRegionTown(tx *dbs.Tx, id uint32) (*Region
 		return nil, err
 	}
 	return result.(*RegionTown), err
+}
+
+// FindAllRegionTowns 获取所有的区县
+func (this *RegionTownDAO) FindAllRegionTowns(tx *dbs.Tx) (result []*RegionTown, err error) {
+	_, err = this.Query(tx).
+		State(RegionTownStateEnabled).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindAllRegionTownsWithCityId 根据城市查找区县
+func (this *RegionTownDAO) FindAllRegionTownsWithCityId(tx *dbs.Tx, cityId int64) (result []*RegionTown, err error) {
+	_, err = this.Query(tx).
+		State(RegionTownStateEnabled).
+		Attr("cityId", cityId).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindTownIdWithName 根据区县名查找区县ID
+func (this *RegionTownDAO) FindTownIdWithName(tx *dbs.Tx, cityId int64, townName string) (int64, error) {
+	return this.Query(tx).
+		Attr("cityId", cityId).
+		Where("(name=:townName OR customName=:townName OR JSON_CONTAINS(codes, :townNameJSON) OR JSON_CONTAINS(customCodes, :townNameJSON))").
+		Param("townName", townName).
+		Param("townNameJSON", strconv.Quote(townName)). // 查询的需要是个JSON字符串，所以这里加双引号
+		ResultPk().
+		FindInt64Col(0)
 }
 
 // FindRegionTownName 根据主键查找名称

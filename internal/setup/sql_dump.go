@@ -12,11 +12,6 @@ import (
 
 var recordsTables = []*SQLRecordsTable{
 	{
-		TableName:    "edgeRegionCities",
-		UniqueFields: []string{"name", "provinceId"},
-		ExceptFields: []string{"customName", "customCodes"},
-	},
-	{
 		TableName:    "edgeRegionCountries",
 		UniqueFields: []string{"name"},
 		ExceptFields: []string{"customName", "customCodes"},
@@ -24,6 +19,16 @@ var recordsTables = []*SQLRecordsTable{
 	{
 		TableName:    "edgeRegionProvinces",
 		UniqueFields: []string{"name", "countryId"},
+		ExceptFields: []string{"customName", "customCodes"},
+	},
+	{
+		TableName:    "edgeRegionCities",
+		UniqueFields: []string{"name", "provinceId"},
+		ExceptFields: []string{"customName", "customCodes"},
+	},
+	{
+		TableName:    "edgeRegionTowns",
+		UniqueFields: []string{"name", "cityId"},
 		ExceptFields: []string{"customName", "customCodes"},
 	},
 	{
