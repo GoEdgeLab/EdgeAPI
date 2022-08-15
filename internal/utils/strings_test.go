@@ -28,3 +28,15 @@ func TestSimilar(t *testing.T) {
 	t.Log(utils.Similar("efgj", "hijk"))
 	t.Log(utils.Similar("efgj", "klmn"))
 }
+
+func TestLimitString(t *testing.T) {
+	var a = assert.NewAssertion(t)
+	a.IsTrue(utils.LimitString("", 4) == "")
+	a.IsTrue(utils.LimitString("abcd", 0) == "")
+	a.IsTrue(utils.LimitString("abcd", 5) == "abcd")
+	a.IsTrue(utils.LimitString("abcd", 4) == "abcd")
+	a.IsTrue(utils.LimitString("abcd", 3) == "abc")
+	a.IsTrue(utils.LimitString("abcd", 1) == "a")
+	a.IsTrue(utils.LimitString("中文测试", 1) == "")
+	a.IsTrue(utils.LimitString("中文测试", 3) == "中")
+}

@@ -62,3 +62,23 @@ func Similar(s1 string, s2 string) float32 {
 
 	return (float32(count)/float32(l1) + float32(count)/float32(l2)) / 2
 }
+
+// LimitString 限制字符串长度
+func LimitString(s string, maxLength int) string {
+	if len(s) <= maxLength {
+		return s
+	}
+
+	if maxLength <= 0 {
+		return ""
+	}
+
+	var runes = []rune(s)
+	var rs = len(runes)
+	for i := 0; i < rs; i++ {
+		if len(string(runes[:i+1])) > maxLength {
+			return string(runes[:i])
+		}
+	}
+	return s
+}

@@ -4,6 +4,7 @@ import (
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -43,6 +44,8 @@ func init() {
 
 // CreateLog 创建日志
 func (this *NodeLogDAO) CreateLog(tx *dbs.Tx, nodeRole nodeconfigs.NodeRole, nodeId int64, serverId int64, originId int64, level string, tag string, description string, createdAt int64, logType string, paramsJSON []byte) error {
+	description = utils.LimitString(description, 1000)
+
 	// 修复以前同样的日志
 	if nodeId > 0 && level == "success" && len(logType) > 0 && len(paramsJSON) > 0 {
 		err := this.Query(tx).

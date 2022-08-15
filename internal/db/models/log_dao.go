@@ -3,6 +3,7 @@ package models
 import (
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -38,7 +39,7 @@ func init() {
 func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level string, description string, action string, ip string) error {
 	var op = NewLogOperator()
 	op.Level = level
-	op.Description = description
+	op.Description = utils.LimitString(description, 1000)
 	op.Action = action
 	op.Ip = ip
 	op.Type = adminType
