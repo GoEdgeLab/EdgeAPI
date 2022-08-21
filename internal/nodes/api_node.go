@@ -14,6 +14,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
 	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -84,6 +85,13 @@ func (this *APINode) Start() {
 		logs.Println("[API_NODE]" + errString)
 		this.addStartIssue("sock", errString, "")
 		return
+	}
+
+	// 启动IP库
+	remotelogs.Println("API_NODE", "initializing ip library ...")
+	err = iplibrary.Init()
+	if err != nil {
+		remotelogs.Error("API_NODE", "initialize ip library failed: "+err.Error())
 	}
 
 	// 检查数据库连接
