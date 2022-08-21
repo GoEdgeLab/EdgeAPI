@@ -1,5 +1,0 @@
-package iplibrary
-
-func init() {
-
-}

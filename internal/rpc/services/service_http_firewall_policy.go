@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/iplibrary"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/iwind/TeaGo/lists"
@@ -794,20 +793,14 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 	}
 
 	// 检查封禁的地区和省份
-	info, err := iplibrary.SharedLibrary.Lookup(req.Ip)
-	if err != nil {
-		return nil, err
-	}
-	if info != nil {
+	var info = iplibrary.LookupIP(req.Ip)
+	if info != nil && info.IsOk() {
 		if firewallPolicy.Inbound != nil &&
 			firewallPolicy.Inbound.IsOn &&
 			firewallPolicy.Inbound.Region != nil &&
 			firewallPolicy.Inbound.Region.IsOn {
 			// 检查封禁的地区
-			countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, info.Country)
-			if err != nil {
-				return nil, err
-			}
+			var countryId = info.CountryId()
 			if countryId > 0 && lists.ContainsInt64(firewallPolicy.Inbound.Region.DenyCountryIds, countryId) {
 				return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
 					IsOk:      true,
@@ -818,7 +811,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 					IpItem:    nil,
 					RegionCountry: &pb.RegionCountry{
 						Id:   countryId,
-						Name: info.Country,
+						Name: info.CountryName(),
 					},
 					RegionProvince: nil,
 				}, nil
@@ -826,10 +819,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 
 			// 检查封禁的省份
 			if countryId > 0 {
-				provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, info.Province)
-				if err != nil {
-					return nil, err
-				}
+				var provinceId = info.ProvinceId()
 				if provinceId > 0 && lists.ContainsInt64(firewallPolicy.Inbound.Region.DenyProvinceIds, provinceId) {
 					return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
 						IsOk:      true,
@@ -840,11 +830,11 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 						IpItem:    nil,
 						RegionCountry: &pb.RegionCountry{
 							Id:   countryId,
-							Name: info.Country,
+							Name: info.CountryName(),
 						},
 						RegionProvince: &pb.RegionProvince{
 							Id:   provinceId,
-							Name: info.Province,
+							Name: info.ProvinceName(),
 						},
 					}, nil
 				}

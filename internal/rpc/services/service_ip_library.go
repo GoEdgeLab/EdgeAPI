@@ -3,9 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
-	"github.com/TeaOSLab/EdgeAPI/internal/iplibrary"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -183,34 +182,19 @@ func (this *IPLibraryService) LookupIPRegion(ctx context.Context, req *pb.Lookup
 		return nil, err
 	}
 
-	result, err := iplibrary.SharedLibrary.Lookup(req.Ip)
-	if err != nil {
-		return nil, err
-	}
-	if result == nil {
+	var result = iplibrary.LookupIP(req.Ip)
+	if result == nil || !result.IsOk() {
 		return &pb.LookupIPRegionResponse{IpRegion: nil}, nil
 	}
 
-	var tx = this.NullTx()
-
-	countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, result.Country)
-	if err != nil {
-		return nil, err
-	}
-
-	provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, result.Province)
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.LookupIPRegionResponse{IpRegion: &pb.IPRegion{
-		Country:    result.Country,
-		Region:     result.Region,
-		Province:   result.Province,
-		City:       result.City,
-		Isp:        result.ISP,
-		CountryId:  countryId,
-		ProvinceId: provinceId,
+		Country:    result.CountryName(),
+		Region:     "",
+		Province:   result.ProvinceName(),
+		City:       result.CityName(),
+		Isp:        result.ProviderName(),
+		CountryId:  result.CountryId(),
+		ProvinceId: result.ProvinceId(),
 		Summary:    result.Summary(),
 	}}, nil
 }
@@ -223,20 +207,17 @@ func (this *IPLibraryService) LookupIPRegions(ctx context.Context, req *pb.Looku
 		return nil, err
 	}
 
-	result := map[string]*pb.IPRegion{}
+	var result = map[string]*pb.IPRegion{}
 	if len(req.IpList) > 0 {
 		for _, ip := range req.IpList {
-			info, err := iplibrary.SharedLibrary.Lookup(ip)
-			if err != nil {
-				return nil, err
-			}
-			if info != nil {
+			var info = iplibrary.LookupIP(ip)
+			if info != nil && info.IsOk() {
 				result[ip] = &pb.IPRegion{
-					Country:  info.Country,
-					Region:   info.Region,
-					Province: info.Province,
-					City:     info.City,
-					Isp:      info.ISP,
+					Country:  info.CountryName(),
+					Region:   "",
+					Province: info.ProvinceName(),
+					City:     info.CityName(),
+					Isp:      info.ProviderName(),
 					Summary:  info.Summary(),
 				}
 			}

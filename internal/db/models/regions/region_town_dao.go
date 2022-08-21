@@ -162,3 +162,19 @@ func (this *RegionTownDAO) FindSimilarTowns(towns []*RegionTown, townName string
 
 	return
 }
+
+// CreateTown 创建区县
+func (this *RegionTownDAO) CreateTown(tx *dbs.Tx, cityId int64, townName string) (int64, error) {
+	var op = NewRegionTownOperator()
+	op.CityId = cityId
+	op.Name = townName
+
+	codes, err := json.Marshal([]string{townName})
+	if err != nil {
+		return 0, err
+	}
+	op.Codes = codes
+
+	op.State = RegionTownStateEnabled
+	return this.SaveInt64(tx, op)
+}

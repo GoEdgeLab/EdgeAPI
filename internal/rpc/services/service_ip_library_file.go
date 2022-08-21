@@ -18,6 +18,71 @@ type IPLibraryFileService struct {
 	BaseService
 }
 
+// FindAllFinishedIPLibraryFiles 查找所有已完成的IP库文件
+func (this *IPLibraryFileService) FindAllFinishedIPLibraryFiles(ctx context.Context, req *pb.FindAllFinishedIPLibraryFilesRequest) (*pb.FindAllFinishedIPLibraryFilesResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	libraryFiles, err := models.SharedIPLibraryFileDAO.FindAllFinishedLibraryFiles(tx)
+	if err != nil {
+		return nil, err
+	}
+	var pbLibraryFiles = []*pb.IPLibraryFile{}
+	for _, libraryFile := range libraryFiles {
+		var pbCountryNames = libraryFile.DecodeCountries()
+		var pbProviderNames = libraryFile.DecodeProviders()
+
+		var pbProvinces = []*pb.IPLibraryFile_Province{}
+		for _, province := range libraryFile.DecodeProvinces() {
+			pbProvinces = append(pbProvinces, &pb.IPLibraryFile_Province{
+				CountryName:  province[0],
+				ProvinceName: province[1],
+			})
+		}
+
+		var pbCities = []*pb.IPLibraryFile_City{}
+		for _, city := range libraryFile.DecodeCities() {
+			pbCities = append(pbCities, &pb.IPLibraryFile_City{
+				CountryName:  city[0],
+				ProvinceName: city[1],
+				CityName:     city[2],
+			})
+		}
+
+		var pbTowns = []*pb.IPLibraryFile_Town{}
+		for _, town := range libraryFile.DecodeTowns() {
+			pbTowns = append(pbTowns, &pb.IPLibraryFile_Town{
+				CountryName:  town[0],
+				ProvinceName: town[1],
+				CityName:     town[2],
+				TownName:     town[3],
+			})
+		}
+
+		pbLibraryFiles = append(pbLibraryFiles, &pb.IPLibraryFile{
+			Id:              int64(libraryFile.Id),
+			Name:            libraryFile.Name,
+			FileId:          int64(libraryFile.FileId),
+			IsFinished:      libraryFile.IsFinished,
+			CreatedAt:       int64(libraryFile.CreatedAt),
+			GeneratedFileId: int64(libraryFile.GeneratedFileId),
+			GeneratedAt:     int64(libraryFile.GeneratedAt),
+			CountryNames:    pbCountryNames,
+			Provinces:       pbProvinces,
+			Cities:          pbCities,
+			Towns:           pbTowns,
+			ProviderNames:   pbProviderNames,
+		})
+	}
+
+	return &pb.FindAllFinishedIPLibraryFilesResponse{
+		IpLibraryFiles: pbLibraryFiles,
+	}, nil
+}
+
 // FindAllUnfinishedIPLibraryFiles 查找所有未完成的IP库文件
 func (this *IPLibraryFileService) FindAllUnfinishedIPLibraryFiles(ctx context.Context, req *pb.FindAllUnfinishedIPLibraryFilesRequest) (*pb.FindAllUnfinishedIPLibraryFilesResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
@@ -64,6 +129,7 @@ func (this *IPLibraryFileService) FindAllUnfinishedIPLibraryFiles(ctx context.Co
 
 		pbLibraryFiles = append(pbLibraryFiles, &pb.IPLibraryFile{
 			Id:            int64(libraryFile.Id),
+			Name:          libraryFile.Name,
 			FileId:        int64(libraryFile.FileId),
 			IsFinished:    libraryFile.IsFinished,
 			CreatedAt:     int64(libraryFile.CreatedAt),
@@ -130,15 +196,19 @@ func (this *IPLibraryFileService) FindIPLibraryFile(ctx context.Context, req *pb
 
 	return &pb.FindIPLibraryFileResponse{
 		IpLibraryFile: &pb.IPLibraryFile{
-			Id:            int64(libraryFile.Id),
-			FileId:        int64(libraryFile.FileId),
-			IsFinished:    libraryFile.IsFinished,
-			CreatedAt:     int64(libraryFile.CreatedAt),
-			CountryNames:  pbCountryNames,
-			Provinces:     pbProvinces,
-			Cities:        pbCities,
-			Towns:         pbTowns,
-			ProviderNames: pbProviderNames,
+			Id:              int64(libraryFile.Id),
+			Name:            libraryFile.Name,
+			Template:        libraryFile.Template,
+			EmptyValues:     libraryFile.DecodeEmptyValues(),
+			FileId:          int64(libraryFile.FileId),
+			IsFinished:      libraryFile.IsFinished,
+			CreatedAt:       int64(libraryFile.CreatedAt),
+			GeneratedFileId: int64(libraryFile.GeneratedFileId),
+			CountryNames:    pbCountryNames,
+			Provinces:       pbProvinces,
+			Cities:          pbCities,
+			Towns:           pbTowns,
+			ProviderNames:   pbProviderNames,
 		},
 	}, nil
 }
@@ -182,7 +252,7 @@ func (this *IPLibraryFileService) CreateIPLibraryFile(ctx context.Context, req *
 	}
 
 	var tx = this.NullTx()
-	libraryFileId, err := models.SharedIPLibraryFileDAO.CreateLibraryFile(tx, req.Template, req.EmptyValues, req.FileId, countries, provinces, cities, towns, providers)
+	libraryFileId, err := models.SharedIPLibraryFileDAO.CreateLibraryFile(tx, req.Name, req.Template, req.EmptyValues, req.FileId, countries, provinces, cities, towns, providers)
 	if err != nil {
 		return nil, err
 	}
@@ -481,6 +551,9 @@ func (this *IPLibraryFileService) CheckTownsWithIPLibraryFileId(ctx context.Cont
 				}
 			}
 			cityMap[cityKey] = cityId
+			if cityId > 0 {
+				cityIds = append(cityIds, cityId)
+			}
 		}
 
 		// town
@@ -605,5 +678,36 @@ func (this *IPLibraryFileService) GenerateIPLibraryFile(ctx context.Context, req
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// UpdateIPLibraryFileFinished 设置某个IP库为已完成
+func (this *IPLibraryFileService) UpdateIPLibraryFileFinished(ctx context.Context, req *pb.UpdateIPLibraryFileFinishedRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedIPLibraryFileDAO.UpdateLibraryFileIsFinished(tx, req.IpLibraryFileId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// DeleteIPLibraryFile 删除IP库文件
+func (this *IPLibraryFileService) DeleteIPLibraryFile(ctx context.Context, req *pb.DeleteIPLibraryFileRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedIPLibraryFileDAO.DisableIPLibraryFile(tx, req.IpLibraryFileId)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }

@@ -5,6 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 // IPLibraryFile IP库上传的文件
 type IPLibraryFile struct {
 	Id              uint64   `field:"id"`              // ID
+	Name            string   `field:"name"`            // IP库名称
 	FileId          uint64   `field:"fileId"`          // 原始文件ID
 	Template        string   `field:"template"`        // 模板
 	EmptyValues     dbs.JSON `field:"emptyValues"`     // 空值列表
@@ -23,6 +24,7 @@ type IPLibraryFile struct {
 
 type IPLibraryFileOperator struct {
 	Id              any // ID
+	Name            any // IP库名称
 	FileId          any // 原始文件ID
 	Template        any // 模板
 	EmptyValues     any // 空值列表

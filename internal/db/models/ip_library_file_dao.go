@@ -72,8 +72,9 @@ func (this *IPLibraryFileDAO) FindEnabledIPLibraryFile(tx *dbs.Tx, id int64) (*I
 }
 
 // CreateLibraryFile 创建文件
-func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, template string, emptyValues []string, fileId int64, countries []string, provinces [][2]string, cities [][3]string, towns [][4]string, providers []string) (int64, error) {
+func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, name string, template string, emptyValues []string, fileId int64, countries []string, provinces [][2]string, cities [][3]string, towns [][4]string, providers []string) (int64, error) {
 	var op = NewIPLibraryFileOperator()
+	op.Name = name
 	op.Template = template
 
 	if emptyValues == nil {
@@ -135,6 +136,18 @@ func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, template string, emp
 	op.IsFinished = false
 	op.State = IPLibraryFileStateEnabled
 	return this.SaveInt64(tx, op)
+}
+
+// FindAllFinishedLibraryFiles 查找所有已完成的文件
+func (this *IPLibraryFileDAO) FindAllFinishedLibraryFiles(tx *dbs.Tx) (result []*IPLibraryFile, err error) {
+	_, err = this.Query(tx).
+		State(IPLibraryFileStateEnabled).
+		Result("id", "fileId", "createdAt", "generatedFileId", "generatedAt", "name"). // 这里不需要其他信息
+		Attr("isFinished", true).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
 }
 
 // FindAllUnfinishedLibraryFiles 查找所有未完成的文件
