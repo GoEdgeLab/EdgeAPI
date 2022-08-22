@@ -12,7 +12,7 @@ func TestIPLibraryFileDAO_GenerateIPLibrary(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := models.SharedIPLibraryFileDAO.GenerateIPLibrary(tx, 3)
+	err := models.SharedIPLibraryFileDAO.GenerateIPLibrary(tx, 4)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 const (
@@ -347,7 +348,7 @@ func (this *NSNodeDAO) UpdateNodeIsInstalled(tx *dbs.Tx, nodeId int64, isInstall
 }
 
 // UpdateNodeStatus 更改节点状态
-func (this NSNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *nodeconfigs.NodeStatus) error {
+func (this *NSNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *nodeconfigs.NodeStatus) error {
 	if nodeStatus == nil {
 		return nil
 	}
@@ -516,6 +517,7 @@ func (this *NSNodeDAO) UpdateNodeActive(tx *dbs.Tx, nodeId int64, isActive bool)
 		Pk(nodeId).
 		Set("isActive", isActive).
 		Set("statusIsNotified", false).
+		Set("inactiveNotifiedAt", 0).
 		Update()
 	return err
 }
@@ -562,7 +564,16 @@ func (this *NSNodeDAO) UpdateNodeStatusIsNotified(tx *dbs.Tx, nodeId int64) erro
 	return this.Query(tx).
 		Pk(nodeId).
 		Set("statusIsNotified", true).
+		Set("inactiveNotifiedAt", time.Now().Unix()).
 		UpdateQuickly()
+}
+
+// FindNodeInactiveNotifiedAt 读取上次的节点离线通知时间
+func (this *NSNodeDAO) FindNodeInactiveNotifiedAt(tx *dbs.Tx, nodeId int64) (int64, error) {
+	return this.Query(tx).
+		Pk(nodeId).
+		Result("inactiveNotifiedAt").
+		FindInt64Col(0)
 }
 
 // FindAllNodeIdsMatch 匹配节点并返回节点ID

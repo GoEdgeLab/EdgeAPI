@@ -337,7 +337,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var countries = []*iplibrary.Country{}
 	for _, country := range dbCountries {
 		countries = append(countries, &iplibrary.Country{
-			Id:    int64(country.Id),
+			Id:    country.Id,
 			Name:  country.DisplayName(),
 			Codes: country.AllCodes(),
 		})
@@ -352,7 +352,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var provinces = []*iplibrary.Province{}
 	for _, province := range dbProvinces {
 		provinces = append(provinces, &iplibrary.Province{
-			Id:    int64(province.Id),
+			Id:    province.Id,
 			Name:  province.DisplayName(),
 			Codes: province.AllCodes(),
 		})
@@ -367,7 +367,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var cities = []*iplibrary.City{}
 	for _, city := range dbCities {
 		cities = append(cities, &iplibrary.City{
-			Id:    int64(city.Id),
+			Id:    city.Id,
 			Name:  city.DisplayName(),
 			Codes: city.AllCodes(),
 		})
@@ -382,7 +382,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var towns = []*iplibrary.Town{}
 	for _, town := range dbTowns {
 		towns = append(towns, &iplibrary.Town{
-			Id:    int64(town.Id),
+			Id:    town.Id,
 			Name:  town.DisplayName(),
 			Codes: town.AllCodes(),
 		})
@@ -397,7 +397,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var providers = []*iplibrary.Provider{}
 	for _, provider := range dbProviders {
 		providers = append(providers, &iplibrary.Provider{
-			Id:    int64(provider.Id),
+			Id:    provider.Id,
 			Name:  provider.DisplayName(),
 			Codes: provider.AllCodes(),
 		})
