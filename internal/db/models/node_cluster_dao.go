@@ -1066,7 +1066,7 @@ func (this *NodeClusterDAO) FindClusterDDoSProtection(tx *dbs.Tx, clusterId int6
 	return one.(*NodeCluster).DecodeDDoSProtection(), nil
 }
 
-// UpdateClusterDDoSProtection 设置集群的DDOS设置
+// UpdateClusterDDoSProtection 设置集群的DDoS设置
 func (this *NodeClusterDAO) UpdateClusterDDoSProtection(tx *dbs.Tx, clusterId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
 	if clusterId <= 0 {
 		return ErrNotFound

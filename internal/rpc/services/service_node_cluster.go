@@ -1184,7 +1184,7 @@ func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, 
 	return this.Success()
 }
 
-// FindNodeClusterDDoSProtection 获取集群的DDOS设置
+// FindNodeClusterDDoSProtection 获取集群的DDoS设置
 func (this *NodeClusterService) FindNodeClusterDDoSProtection(ctx context.Context, req *pb.FindNodeClusterDDoSProtectionRequest) (*pb.FindNodeClusterDDoSProtectionResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -1211,7 +1211,7 @@ func (this *NodeClusterService) FindNodeClusterDDoSProtection(ctx context.Contex
 	return result, nil
 }
 
-// UpdateNodeClusterDDoSProtection 修改集群的DDOS设置
+// UpdateNodeClusterDDoSProtection 修改集群的DDoS设置
 func (this *NodeClusterService) UpdateNodeClusterDDoSProtection(ctx context.Context, req *pb.UpdateNodeClusterDDoSProtectionRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -485,6 +486,19 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 		config.UDP = udpConfig
 	}
 
+	// DDoS
+	config.DDoSProtection = cluster.DecodeDDoSProtection()
+
+	// DDoS Protection
+	var ddosProtection = node.DecodeDDoSProtection()
+	if ddosProtection != nil {
+		if config.DDoSProtection == nil {
+			config.DDoSProtection = ddosProtection
+		} else {
+			config.DDoSProtection.Merge(ddosProtection)
+		}
+	}
+
 	return config, nil
 }
 
@@ -638,6 +652,53 @@ func (this *NSNodeDAO) FindEnabledNodeIdsWithClusterId(tx *dbs.Tx, clusterId int
 		result = append(result, int64(one.(*NSNode).Id))
 	}
 	return result, nil
+}
+
+// FindNodeDDoSProtection 获取节点的DDOS设置
+func (this *NSNodeDAO) FindNodeDDoSProtection(tx *dbs.Tx, nodeId int64) (*ddosconfigs.ProtectionConfig, error) {
+	one, err := this.Query(tx).
+		Result("ddosProtection").
+		Pk(nodeId).
+		Find()
+	if one == nil || err != nil {
+		return nil, err
+	}
+
+	return one.(*NSNode).DecodeDDoSProtection(), nil
+}
+
+// UpdateNodeDDoSProtection 设置集群的DDOS设置
+func (this *NSNodeDAO) UpdateNodeDDoSProtection(tx *dbs.Tx, nodeId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
+	if nodeId <= 0 {
+		return ErrNotFound
+	}
+
+	var op = NewNSNodeOperator()
+	op.Id = nodeId
+
+	if ddosProtection == nil {
+		op.DdosProtection = "{}"
+	} else {
+		ddosProtectionJSON, err := json.Marshal(ddosProtection)
+		if err != nil {
+			return err
+		}
+		op.DdosProtection = ddosProtectionJSON
+	}
+
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	clusterId, err := this.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return err
+	}
+	if clusterId > 0 {
+		return SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleDNS, clusterId, nodeId, 0, NSNodeTaskTypeDDosProtectionChanged, 0)
+	}
+	return nil
 }
 
 // NotifyUpdate 通知更新

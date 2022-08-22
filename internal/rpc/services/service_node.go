@@ -1868,7 +1868,7 @@ func (this *NodeService) FindNodeDDoSProtection(ctx context.Context, req *pb.Fin
 	return result, nil
 }
 
-// UpdateNodeDDoSProtection 修改集群的DDOS设置
+// UpdateNodeDDoSProtection 修改集群的DDoS设置
 func (this *NodeService) UpdateNodeDDoSProtection(ctx context.Context, req *pb.UpdateNodeDDoSProtectionRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {

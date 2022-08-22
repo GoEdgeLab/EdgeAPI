@@ -1924,7 +1924,7 @@ func (this *NodeDAO) FindNodeDDoSProtection(tx *dbs.Tx, nodeId int64) (*ddosconf
 	return one.(*Node).DecodeDDoSProtection(), nil
 }
 
-// UpdateNodeDDoSProtection 设置集群的DDOS设置
+// UpdateNodeDDoSProtection 设置集群的DDoS设置
 func (this *NodeDAO) UpdateNodeDDoSProtection(tx *dbs.Tx, nodeId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
 	if nodeId <= 0 {
 		return ErrNotFound

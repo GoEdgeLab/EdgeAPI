@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -323,6 +324,45 @@ func (this *NSClusterDAO) CountAllClustersWithSSLPolicyIds(tx *dbs.Tx, sslPolicy
 		Where("(FIND_IN_SET(JSON_EXTRACT(tls, '$.sslPolicyRef.sslPolicyId'), :policyIds)) ").
 		Param("policyIds", strings.Join(policyStringIds, ",")).
 		Count()
+}
+
+// FindClusterDDoSProtection 获取集群的DDoS设置
+func (this *NSClusterDAO) FindClusterDDoSProtection(tx *dbs.Tx, clusterId int64) (*ddosconfigs.ProtectionConfig, error) {
+	one, err := this.Query(tx).
+		Result("ddosProtection").
+		Pk(clusterId).
+		Find()
+	if one == nil || err != nil {
+		return nil, err
+	}
+
+	return one.(*NSCluster).DecodeDDoSProtection(), nil
+}
+
+// UpdateClusterDDoSProtection 设置集群的DDoS设置
+func (this *NSClusterDAO) UpdateClusterDDoSProtection(tx *dbs.Tx, clusterId int64, ddosProtection *ddosconfigs.ProtectionConfig) error {
+	if clusterId <= 0 {
+		return ErrNotFound
+	}
+
+	var op = NewNSClusterOperator()
+	op.Id = clusterId
+
+	if ddosProtection == nil {
+		op.DdosProtection = "{}"
+	} else {
+		ddosProtectionJSON, err := json.Marshal(ddosProtection)
+		if err != nil {
+			return err
+		}
+		op.DdosProtection = ddosProtectionJSON
+	}
+
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleDNS, clusterId, 0, NSNodeTaskTypeDDosProtectionChanged)
 }
 
 // NotifyUpdate 通知更改

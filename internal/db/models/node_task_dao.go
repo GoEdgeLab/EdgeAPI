@@ -23,11 +23,12 @@ const (
 
 	// NS相关
 
-	NSNodeTaskTypeConfigChanged NodeTaskType = "nsConfigChanged"
-	NSNodeTaskTypeDomainChanged NodeTaskType = "nsDomainChanged"
-	NSNodeTaskTypeRecordChanged NodeTaskType = "nsRecordChanged"
-	NSNodeTaskTypeRouteChanged  NodeTaskType = "nsRouteChanged"
-	NSNodeTaskTypeKeyChanged    NodeTaskType = "nsKeyChanged"
+	NSNodeTaskTypeConfigChanged         NodeTaskType = "nsConfigChanged"
+	NSNodeTaskTypeDomainChanged         NodeTaskType = "nsDomainChanged"
+	NSNodeTaskTypeRecordChanged         NodeTaskType = "nsRecordChanged"
+	NSNodeTaskTypeRouteChanged          NodeTaskType = "nsRouteChanged"
+	NSNodeTaskTypeKeyChanged            NodeTaskType = "nsKeyChanged"
+	NSNodeTaskTypeDDosProtectionChanged NodeTaskType = "nsDDoSProtectionChanged" // 节点DDoS配置变更
 )
 
 type NodeTaskDAO dbs.DAO
