@@ -32,7 +32,7 @@ func (this *ServerRegionProvinceMonthlyStatService) FindTopServerRegionProvinceM
 	if err != nil {
 		return nil, err
 	}
-	pbStats := []*pb.FindTopServerRegionProvinceMonthlyStatsResponse_Stat{}
+	var pbStats = []*pb.FindTopServerRegionProvinceMonthlyStatsResponse_Stat{}
 	for _, stat := range statList {
 		pbStat := &pb.FindTopServerRegionProvinceMonthlyStatsResponse_Stat{
 			Count: int64(stat.Count),
@@ -53,11 +53,11 @@ func (this *ServerRegionProvinceMonthlyStatService) FindTopServerRegionProvinceM
 		}
 		pbStat.RegionCountry = &pb.RegionCountry{
 			Id:   int64(country.Id),
-			Name: country.Name,
+			Name: country.DisplayName(),
 		}
 		pbStat.RegionProvince = &pb.RegionProvince{
 			Id:   int64(province.Id),
-			Name: province.Name,
+			Name: province.DisplayName(),
 		}
 		pbStats = append(pbStats, pbStat)
 	}

@@ -405,7 +405,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 
 	var libraryCode = utils.Sha1RandomString() // 每次都生成新的code
 	var filePath = dir + "/" + this.composeFilename(libraryFileId, libraryCode)
-	writer, err := iplibrary.NewFileWriter(filePath, &iplibrary.Meta{
+	var meta = &iplibrary.Meta{
 		Author:    "", // 将来用户可以自行填写
 		CreatedAt: time.Now().Unix(),
 		Countries: countries,
@@ -413,13 +413,15 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 		Cities:    cities,
 		Towns:     towns,
 		Providers: providers,
-	})
+	}
+	writer, err := iplibrary.NewFileWriter(filePath, meta)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
 		_ = writer.Close()
+		_ = os.Remove(filePath)
 	}()
 
 	err = writer.WriteMeta()
@@ -572,6 +574,12 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 		Set("generatedFileId", generatedFileId).
 		Set("generatedAt", time.Now().Unix()).
 		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	// 添加制品
+	_, err = SharedIPLibraryArtifactDAO.CreateArtifact(tx, libraryFile.Name, generatedFileId, libraryFileId, meta)
 	if err != nil {
 		return err
 	}

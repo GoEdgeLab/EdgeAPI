@@ -89,7 +89,7 @@ func (this *APINode) Start() {
 
 	// 启动IP库
 	remotelogs.Println("API_NODE", "initializing ip library ...")
-	err = iplibrary.Init()
+	err = iplibrary.InitDefault()
 	if err != nil {
 		remotelogs.Error("API_NODE", "initialize ip library failed: "+err.Error())
 	}

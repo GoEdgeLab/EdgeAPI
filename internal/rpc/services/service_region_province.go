@@ -88,7 +88,7 @@ func (this *RegionProvinceService) FindAllRegionProvincesWithRegionCountryId(ctx
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.RegionProvince{}
+	var result = []*pb.RegionProvince{}
 	for _, province := range provinces {
 		result = append(result, &pb.RegionProvince{
 			Id:          int64(province.Id),

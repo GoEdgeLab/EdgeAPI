@@ -248,6 +248,11 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		var instance = this.serviceInstance(&services.IPLibraryArtifactService{}).(*services.IPLibraryArtifactService)
+		pb.RegisterIPLibraryArtifactServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		var instance = this.serviceInstance(&services.FileChunkService{}).(*services.FileChunkService)
 		pb.RegisterFileChunkServiceServer(server, instance)
 		this.rest(instance)
