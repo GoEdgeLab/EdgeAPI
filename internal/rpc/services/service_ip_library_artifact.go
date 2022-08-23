@@ -32,6 +32,8 @@ func (this *IPLibraryArtifactService) CreateIPLibraryArtifact(ctx context.Contex
 		return nil, errors.New("decode meta failed: " + err.Error())
 	}
 
+	// TODO 更新数据库中的省市县等信息？
+
 	artifactId, err := models.SharedIPLibraryArtifactDAO.CreateArtifact(tx, req.Name, req.FileId, 0, meta)
 	if err != nil {
 		return nil, err
