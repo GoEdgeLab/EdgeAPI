@@ -342,8 +342,8 @@ func (this *NodeLogDAO) CountAllUnreadNodeLogs(tx *dbs.Tx) (int64, error) {
 		Count()
 }
 
-// UpdateNodeLogsRead 设置日志为已读
-func (this *NodeLogDAO) UpdateNodeLogsRead(tx *dbs.Tx, nodeLogIds []int64) error {
+// UpdateNodeLogIdsRead 设置一组日志为已读
+func (this *NodeLogDAO) UpdateNodeLogIdsRead(tx *dbs.Tx, nodeLogIds []int64) error {
 	for _, logId := range nodeLogIds {
 		err := this.Query(tx).
 			Pk(logId).
@@ -354,6 +354,16 @@ func (this *NodeLogDAO) UpdateNodeLogsRead(tx *dbs.Tx, nodeLogIds []int64) error
 		}
 	}
 	return nil
+}
+
+// UpdateNodeLogsRead 设置节点日志为已读
+func (this *NodeLogDAO) UpdateNodeLogsRead(tx *dbs.Tx, role nodeconfigs.NodeRole, nodeId int64) error {
+	return this.Query(tx).
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		Attr("isRead", false).
+		Set("isRead", true).
+		UpdateQuickly()
 }
 
 // UpdateAllNodeLogsRead 设置所有日志为已读

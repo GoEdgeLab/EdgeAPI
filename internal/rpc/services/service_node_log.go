@@ -148,10 +148,20 @@ func (this *NodeLogService) UpdateNodeLogsRead(ctx context.Context, req *pb.Upda
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedNodeLogDAO.UpdateNodeLogsRead(tx, req.NodeLogIds)
-	if err != nil {
-		return nil, err
+	if len(req.NodeLogIds) > 0 {
+		err = models.SharedNodeLogDAO.UpdateNodeLogIdsRead(tx, req.NodeLogIds)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	if req.NodeId > 0 && len(req.Role) > 0 {
+		err = models.SharedNodeLogDAO.UpdateNodeLogsRead(tx, req.Role, req.NodeId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return this.Success()
 }
 
