@@ -450,14 +450,15 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 
 	if dnsInfo.DnsDomainId == 0 {
 		return &pb.FindEnabledNodeClusterDNSResponse{
-			Name:            dnsInfo.DnsName,
-			Domain:          nil,
-			Provider:        nil,
-			NodesAutoSync:   dnsConfig.NodesAutoSync,
-			ServersAutoSync: dnsConfig.ServersAutoSync,
-			CnameRecords:    dnsConfig.CNameRecords,
-			Ttl:             dnsConfig.TTL,
-			CnameAsDomain:   dnsConfig.CNameAsDomain,
+			Name:             dnsInfo.DnsName,
+			Domain:           nil,
+			Provider:         nil,
+			NodesAutoSync:    dnsConfig.NodesAutoSync,
+			ServersAutoSync:  dnsConfig.ServersAutoSync,
+			CnameRecords:     dnsConfig.CNameRecords,
+			Ttl:              dnsConfig.TTL,
+			CnameAsDomain:    dnsConfig.CNameAsDomain,
+			IncludingLnNodes: dnsConfig.IncludingLnNodes,
 		}, nil
 	}
 
@@ -509,15 +510,16 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 	}
 
 	return &pb.FindEnabledNodeClusterDNSResponse{
-		Name:            dnsInfo.DnsName,
-		Domain:          pbDomain,
-		Provider:        pbProvider,
-		NodesAutoSync:   dnsConfig.NodesAutoSync,
-		ServersAutoSync: dnsConfig.ServersAutoSync,
-		CnameRecords:    dnsConfig.CNameRecords,
-		Ttl:             dnsConfig.TTL,
-		CnameAsDomain:   dnsConfig.CNameAsDomain,
-		DefaultRoute:    defaultRoute,
+		Name:             dnsInfo.DnsName,
+		Domain:           pbDomain,
+		Provider:         pbProvider,
+		NodesAutoSync:    dnsConfig.NodesAutoSync,
+		ServersAutoSync:  dnsConfig.ServersAutoSync,
+		CnameRecords:     dnsConfig.CNameRecords,
+		Ttl:              dnsConfig.TTL,
+		CnameAsDomain:    dnsConfig.CNameAsDomain,
+		IncludingLnNodes: dnsConfig.IncludingLnNodes,
+		DefaultRoute:     defaultRoute,
 	}, nil
 }
 
@@ -610,7 +612,7 @@ func (this *NodeClusterService) UpdateNodeClusterDNS(ctx context.Context, req *p
 
 	var tx = this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords, req.Ttl, req.CnameAsDomain)
+	err = models.SharedNodeClusterDAO.UpdateClusterDNS(tx, req.NodeClusterId, req.DnsName, req.DnsDomainId, req.NodesAutoSync, req.ServersAutoSync, req.CnameRecords, req.Ttl, req.CnameAsDomain, req.IncludingLnNodes)
 	if err != nil {
 		return nil, err
 	}

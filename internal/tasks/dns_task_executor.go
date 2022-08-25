@@ -355,12 +355,12 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}
 
 	// 当前的节点记录
-	newRecordKeys := []string{}
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
+	var newRecordKeys = []string{}
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
 	if err != nil {
 		return err
 	}
-	isChanged := false
+	var isChanged = false
 	for _, node := range nodes {
 		routes, err := node.DNSRouteCodesForDomainId(domainId)
 		if err != nil {
@@ -379,7 +379,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 			continue
 		}
 		for _, ipAddress := range ipAddresses {
-			ip := ipAddress.DNSIP()
+			var ip = ipAddress.DNSIP()
 			if len(ip) == 0 || !ipAddress.CanAccess || !ipAddress.IsUp || !ipAddress.IsOn {
 				continue
 			}
@@ -387,14 +387,14 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 				continue
 			}
 			for _, route := range routes {
-				key := route + "@" + ip
+				var key = route + "@" + ip
 				_, ok := oldRecordsMap[key]
 				if ok {
 					newRecordKeys = append(newRecordKeys, key)
 					continue
 				}
 
-				recordType := dnstypes.RecordTypeA
+				var recordType = dnstypes.RecordTypeA
 				if utils.IsIPv6(ip) {
 					recordType = dnstypes.RecordTypeAAAA
 				}

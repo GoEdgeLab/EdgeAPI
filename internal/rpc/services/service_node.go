@@ -1304,18 +1304,19 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 	if clusterDNS == nil {
 		return nil, errors.New("not found clusterId '" + numberutils.FormatInt64(req.NodeClusterId) + "'")
 	}
-	dnsDomainId := int64(clusterDNS.DnsDomainId)
+	var dnsConfig, _ = clusterDNS.DecodeDNSConfig()
+	var dnsDomainId = int64(clusterDNS.DnsDomainId)
 
 	routes, err := dns.SharedDNSDomainDAO.FindDomainRoutes(tx, dnsDomainId)
 	if err != nil {
 		return nil, err
 	}
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId, true)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.NodeDNSInfo{}
+	var result = []*pb.NodeDNSInfo{}
 	for _, node := range nodes {
 		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
@@ -1327,7 +1328,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 			return nil, err
 		}
 
-		pbRoutes := []*pb.DNSRoute{}
+		var pbRoutes = []*pb.DNSRoute{}
 		for _, routeCode := range domainRouteCodes {
 			for _, r := range routes {
 				if r.Code == routeCode {

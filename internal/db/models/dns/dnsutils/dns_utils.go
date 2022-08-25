@@ -16,8 +16,11 @@ import (
 // CheckClusterDNS 检查集群的DNS问题
 // 藏这么深是避免package循环引用的问题
 func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSIssue, err error) {
-	clusterId := int64(cluster.Id)
-	domainId := int64(cluster.DnsDomainId)
+	var clusterId = int64(cluster.Id)
+	var domainId = int64(cluster.DnsDomainId)
+
+	// 集群DNS设置
+	var clusterDNSConfig, _ = cluster.DecodeDNSConfig()
 
 	// 检查域名
 	domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
@@ -101,7 +104,7 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSI
 	// TODO 检查域名是否已解析
 
 	// 检查节点
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, clusterDNSConfig != nil && clusterDNSConfig.IncludingLnNodes)
 	if err != nil {
 		return nil, err
 	}

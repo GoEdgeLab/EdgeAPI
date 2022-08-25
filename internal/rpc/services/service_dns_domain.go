@@ -417,9 +417,10 @@ func (this *DNSDomainService) convertRecordToPB(record *dnstypes.Record) *pb.DNS
 
 // 检查集群节点变化
 func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnstypes.Record, domainName string, defaultRoute string) (result []maps.Map, doneNodeRecords []*dnstypes.Record, doneServerRecords []*dnstypes.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
-	clusterId := int64(cluster.Id)
-	clusterDnsName := cluster.DnsName
-	clusterDomain := clusterDnsName + "." + domainName
+	var clusterId = int64(cluster.Id)
+	var clusterDnsName = cluster.DnsName
+	var clusterDomain = clusterDnsName + "." + domainName
+	var dnsConfig, _ = cluster.DecodeDNSConfig()
 
 	var tx = this.NullTx()
 
@@ -437,7 +438,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	// 节点域名
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
 	if err != nil {
 		return nil, nil, nil, 0, 0, false, false, err
 	}

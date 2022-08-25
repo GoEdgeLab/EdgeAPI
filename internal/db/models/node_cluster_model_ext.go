@@ -11,13 +11,15 @@ func (this *NodeCluster) DecodeDNSConfig() (*dnsconfigs.ClusterDNSConfig, error)
 	if len(this.Dns) == 0 {
 		// 一定要返回一个默认的值，防止产生nil
 		return &dnsconfigs.ClusterDNSConfig{
-			NodesAutoSync:   false,
-			ServersAutoSync: false,
-			CNameAsDomain:   true,
+			NodesAutoSync:    false,
+			ServersAutoSync:  false,
+			CNameAsDomain:    true,
+			IncludingLnNodes: true,
 		}, nil
 	}
 	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
-		CNameAsDomain: true,
+		CNameAsDomain:    true,
+		IncludingLnNodes: true,
 	}
 	err := json.Unmarshal(this.Dns, &dnsConfig)
 	if err != nil {

@@ -1403,7 +1403,7 @@ func (this *NodeDAO) CountAllEnabledNodesWithRegionId(tx *dbs.Tx, regionId int64
 }
 
 // FindAllEnabledNodesDNSWithClusterId 获取一个集群的节点DNS信息
-func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool) (result []*Node, err error) {
+func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, includingLnNodes bool) (result []*Node, err error) {
 	if clusterId <= 0 {
 		return nil, nil
 	}
@@ -1414,6 +1414,9 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId i
 			Param("primaryClusterIdString", types.String(clusterId))
 	} else {
 		query.Attr("clusterId", clusterId)
+	}
+	if !includingLnNodes {
+		query.Lte("level", 1)
 	}
 	_, err = query.
 		State(NodeStateEnabled).
