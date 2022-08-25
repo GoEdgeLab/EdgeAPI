@@ -199,7 +199,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 }
 
 // UpdateNode 修改节点
-func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, isOn bool, level int) error {
+func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, isOn bool, level int, lnAddrs []string) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -248,6 +248,15 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 
 	if teaconst.IsPlus {
 		op.Level = level
+
+		if lnAddrs == nil {
+			lnAddrs = []string{}
+		}
+		lnAddrsJSON, err := json.Marshal(lnAddrs)
+		if err != nil {
+			return err
+		}
+		op.LnAddrs = lnAddrsJSON
 	}
 
 	err = this.Save(tx, op)
@@ -605,7 +614,7 @@ func (this *NodeDAO) FindEnabledNodesWithGroupIdAndLevel(tx *dbs.Tx, groupId int
 	}
 	_, err = this.Query(tx).
 		State(NodeStateEnabled).
-		Result("id", "clusterId", "secondaryClusterIds", "uniqueId", "secret").
+		Result("id", "clusterId", "secondaryClusterIds", "uniqueId", "secret", "lnAddrs").
 		Attr("isOn", true).
 		Attr("groupId", groupId).
 		Attr("level", level).
@@ -1881,14 +1890,18 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 
 	if len(parentNodes) > 0 {
 		for _, node := range parentNodes {
-			addrs, err := SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
-			if err != nil {
-				return nil, err
-			}
-			var addrStrings = []string{}
-			for _, addr := range addrs {
-				if addr.IsOn {
-					addrStrings = append(addrStrings, addr.DNSIP())
+			// 是否有Ln地址
+			var addrStrings = node.DecodeLnAddrs()
+			if len(addrStrings) == 0 {
+				// 如果没有就取节点的可访问地址
+				addrs, err := SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+				if err != nil {
+					return nil, err
+				}
+				for _, addr := range addrs {
+					if addr.IsOn {
+						addrStrings = append(addrStrings, addr.DNSIP())
+					}
 				}
 			}
 

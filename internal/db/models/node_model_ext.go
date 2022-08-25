@@ -168,3 +168,16 @@ func (this *Node) DecodeDNSResolver() *nodeconfigs.DNSResolverConfig {
 	}
 	return resolverConfig
 }
+
+func (this *Node) DecodeLnAddrs() []string {
+	if IsNull(this.LnAddrs) {
+		return nil
+	}
+
+	var result = []string{}
+	err := json.Unmarshal(this.LnAddrs, &result)
+	if err != nil {
+		// ignore error
+	}
+	return result
+}

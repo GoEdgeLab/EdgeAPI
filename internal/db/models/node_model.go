@@ -8,6 +8,7 @@ type Node struct {
 	AdminId                uint32   `field:"adminId"`                // 管理员ID
 	UserId                 uint32   `field:"userId"`                 // 用户ID
 	Level                  uint8    `field:"level"`                  // 级别
+	LnAddrs                dbs.JSON `field:"lnAddrs"`                // Ln级别访问地址
 	IsOn                   bool     `field:"isOn"`                   // 是否启用
 	IsUp                   bool     `field:"isUp"`                   // 是否在线
 	CountUp                uint32   `field:"countUp"`                // 连续在线次数
@@ -42,41 +43,42 @@ type Node struct {
 }
 
 type NodeOperator struct {
-	Id                     interface{} // ID
-	AdminId                interface{} // 管理员ID
-	UserId                 interface{} // 用户ID
-	Level                  interface{} // 级别
-	IsOn                   interface{} // 是否启用
-	IsUp                   interface{} // 是否在线
-	CountUp                interface{} // 连续在线次数
-	CountDown              interface{} // 连续下线次数
-	IsActive               interface{} // 是否活跃
-	InactiveNotifiedAt     interface{} // 离线通知时间
-	UniqueId               interface{} // 节点ID
-	Secret                 interface{} // 密钥
-	Name                   interface{} // 节点名
-	Code                   interface{} // 代号
-	ClusterId              interface{} // 主集群ID
-	SecondaryClusterIds    interface{} // 从集群ID
-	RegionId               interface{} // 区域ID
-	GroupId                interface{} // 分组ID
-	CreatedAt              interface{} // 创建时间
-	Status                 interface{} // 最新的状态
-	Version                interface{} // 当前版本号
-	LatestVersion          interface{} // 最后版本号
-	InstallDir             interface{} // 安装目录
-	IsInstalled            interface{} // 是否已安装
-	InstallStatus          interface{} // 安装状态
-	State                  interface{} // 状态
-	ConnectedAPINodes      interface{} // 当前连接的API节点
-	MaxCPU                 interface{} // 可以使用的最多CPU
-	MaxThreads             interface{} // 最大线程数
-	DdosProtection         interface{} // DDOS配置
-	DnsRoutes              interface{} // DNS线路设置
-	MaxCacheDiskCapacity   interface{} // 硬盘缓存容量
-	MaxCacheMemoryCapacity interface{} // 内存缓存容量
-	CacheDiskDir           interface{} // 缓存目录
-	DnsResolver            interface{} // DNS解析器
+	Id                     any // ID
+	AdminId                any // 管理员ID
+	UserId                 any // 用户ID
+	Level                  any // 级别
+	LnAddrs                any // Ln级别访问地址
+	IsOn                   any // 是否启用
+	IsUp                   any // 是否在线
+	CountUp                any // 连续在线次数
+	CountDown              any // 连续下线次数
+	IsActive               any // 是否活跃
+	InactiveNotifiedAt     any // 离线通知时间
+	UniqueId               any // 节点ID
+	Secret                 any // 密钥
+	Name                   any // 节点名
+	Code                   any // 代号
+	ClusterId              any // 主集群ID
+	SecondaryClusterIds    any // 从集群ID
+	RegionId               any // 区域ID
+	GroupId                any // 分组ID
+	CreatedAt              any // 创建时间
+	Status                 any // 最新的状态
+	Version                any // 当前版本号
+	LatestVersion          any // 最后版本号
+	InstallDir             any // 安装目录
+	IsInstalled            any // 是否已安装
+	InstallStatus          any // 安装状态
+	State                  any // 状态
+	ConnectedAPINodes      any // 当前连接的API节点
+	MaxCPU                 any // 可以使用的最多CPU
+	MaxThreads             any // 最大线程数
+	DdosProtection         any // DDOS配置
+	DnsRoutes              any // DNS线路设置
+	MaxCacheDiskCapacity   any // 硬盘缓存容量
+	MaxCacheMemoryCapacity any // 内存缓存容量
+	CacheDiskDir           any // 缓存目录
+	DnsResolver            any // DNS解析器
 }
 
 func NewNodeOperator() *NodeOperator {
