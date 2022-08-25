@@ -663,12 +663,19 @@ func (this *HTTPWebService) UpdateHTTPWebCommon(ctx context.Context, req *pb.Upd
 
 // UpdateHTTPWebRequestLimit 修改请求限制
 func (this *HTTPWebService) UpdateHTTPWebRequestLimit(ctx context.Context, req *pb.UpdateHTTPWebRequestLimitRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(tx, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	var config = &serverconfigs.HTTPRequestLimitConfig{}
 	err = json.Unmarshal(req.RequestLimitJSON, config)
