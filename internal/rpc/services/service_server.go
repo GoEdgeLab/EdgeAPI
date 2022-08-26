@@ -15,6 +15,8 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"regexp"
+	"strings"
 )
 
 type ServerService struct {
@@ -643,8 +645,8 @@ func (this *ServerService) UpdateServerDNS(ctx context.Context, req *pb.UpdateSe
 	return this.Success()
 }
 
-// RegenerateServerCNAME 重新生成CNAME
-func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.RegenerateServerCNAMERequest) (*pb.RPCSuccess, error) {
+// RegenerateServerDNSName 重新生成CNAME
+func (this *ServerService) RegenerateServerDNSName(ctx context.Context, req *pb.RegenerateServerDNSNameRequest) (*pb.RPCSuccess, error) {
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -656,6 +658,81 @@ func (this *ServerService) RegenerateServerCNAME(ctx context.Context, req *pb.Re
 		return nil, err
 	}
 	return this.Success()
+}
+
+// UpdateServerDNSName 修改服务的CNAME
+func (this *ServerService) UpdateServerDNSName(ctx context.Context, req *pb.UpdateServerDNSNameRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var dnsName = req.DnsName
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid 'serverId'")
+	}
+
+	if len(dnsName) == 0 {
+		return nil, errors.New("'dnsName' must not be empty")
+	}
+
+	// 处理格式
+	dnsName = strings.ToLower(dnsName)
+	const maxLen = 30
+	if len(dnsName) > maxLen {
+		return nil, errors.New("'dnsName' too long than " + types.String(maxLen))
+	}
+	if !regexp.MustCompile(`^[a-z0-9]{1,` + types.String(maxLen) + `}$`).MatchString(dnsName) {
+		return nil, errors.New("invalid 'dnsName': contains invalid character(s)")
+	}
+
+	// 检查是否被使用
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if clusterId <= 0 {
+		return nil, errors.New("the server is not belong to any cluster")
+	}
+
+	serverId, err := models.SharedServerDAO.FindServerIdWithDNSName(tx, clusterId, dnsName)
+	if err != nil {
+		return nil, err
+	}
+	if serverId > 0 && serverId != req.ServerId {
+		return nil, errors.New("the 'dnsName': " + dnsName + " has already been used")
+	}
+
+	err = models.SharedServerDAO.UpdateServerDNSName(tx, req.ServerId, dnsName)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindServerIdWithDNSName 使用CNAME查找服务
+func (this *ServerService) FindServerIdWithDNSName(ctx context.Context, req *pb.FindServerIdWithDNSNameRequest) (*pb.FindServerIdWithDNSNameResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.DnsName) == 0 {
+		return nil, errors.New("'dnsName' must not be empty")
+	}
+
+	var tx = this.NullTx()
+	serverId, err := models.SharedServerDAO.FindServerIdWithDNSName(tx, req.NodeClusterId, req.DnsName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindServerIdWithDNSNameResponse{
+		ServerId: serverId,
+	}, nil
 }
 
 // CountAllEnabledServersMatch 计算服务数量

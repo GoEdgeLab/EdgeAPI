@@ -759,7 +759,8 @@ func (this *ServerDAO) CountAllEnabledServers(tx *dbs.Tx) (int64, error) {
 
 // CountAllEnabledServersMatch 计算所有可用服务数量
 // 参数：
-//   groupId 分组ID，如果为-1，则搜索没有分组的服务
+//
+//	groupId 分组ID，如果为-1，则搜索没有分组的服务
 func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag configutils.BoolState, protocolFamilies []string) (int64, error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled)
@@ -810,7 +811,8 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 
 // ListEnabledServersMatch 列出单页的服务
 // 参数：
-//   groupId 分组ID，如果为-1，则搜索没有分组的服务
+//
+//	groupId 分组ID，如果为-1，则搜索没有分组的服务
 func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size int64, groupId int64, keyword string, userId int64, clusterId int64, auditingFlag int32, protocolFamilies []string, order string) (result []*Server, err error) {
 	query := this.Query(tx).
 		State(ServerStateEnabled).
@@ -1627,6 +1629,33 @@ func (this *ServerDAO) GenerateServerDNSName(tx *dbs.Tx, serverId int64) (string
 	}
 
 	return dnsName, nil
+}
+
+// UpdateServerDNSName 设置CNAME
+func (this *ServerDAO) UpdateServerDNSName(tx *dbs.Tx, serverId int64, dnsName string) error {
+	if serverId <= 0 || len(dnsName) == 0 {
+		return nil
+	}
+	dnsName = strings.ToLower(dnsName)
+	err := this.Query(tx).
+		Pk(serverId).
+		Set("dnsName", dnsName).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyDNSUpdate(tx, serverId)
+}
+
+// FindServerIdWithDNSName 根据CNAME查询服务ID
+func (this *ServerDAO) FindServerIdWithDNSName(tx *dbs.Tx, clusterId int64, dnsName string) (int64, error) {
+	return this.Query(tx).
+		ResultPk().
+		State(ServerStateEnabled).
+		Attr("clusterId", clusterId).
+		Attr("dnsName", dnsName).
+		FindInt64Col(0)
 }
 
 // FindServerClusterId 查询当前服务的集群ID
