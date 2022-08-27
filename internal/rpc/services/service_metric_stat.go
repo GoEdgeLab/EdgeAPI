@@ -27,8 +27,6 @@ func init() {
 			var countKeys = 0
 			for key := range metricStatKeysQueue {
 				err := func(key string) error {
-					var tx *dbs.Tx
-
 					metricStatsLocker.Lock()
 					req, ok := metricStatsMap[key]
 					if !ok {
@@ -45,7 +43,20 @@ func init() {
 					var itemId = types.Int64(pieces[3])
 
 					// 删除旧的数据
-					err := models.SharedMetricStatDAO.DeleteNodeItemStats(tx, nodeId, serverId, itemId, req.Time)
+					tx, err := models.SharedMetricStatDAO.Instance.Begin()
+					if err != nil {
+						return err
+					}
+
+					defer func() {
+						// 失败时不需要rollback
+						commitErr := tx.Commit()
+						if commitErr != nil {
+							remotelogs.Error("METRIC_STAT", "commit metric stats failed: "+commitErr.Error())
+						}
+					}()
+
+					err = models.SharedMetricStatDAO.DeleteNodeItemStats(tx, nodeId, serverId, itemId, req.Time)
 					if err != nil {
 						return err
 					}
