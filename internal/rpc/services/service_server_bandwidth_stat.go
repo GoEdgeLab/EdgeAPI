@@ -29,19 +29,36 @@ func init() {
 		goman.New(func() {
 			for range ticker.C {
 				func() {
-					var tx *dbs.Tx
-
 					serverBandwidthStatsLocker.Lock()
 					var m = serverBandwidthStatsMap
 					serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{}
 					serverBandwidthStatsLocker.Unlock()
 
+					tx, err := models.SharedServerBandwidthStatDAO.Instance.Begin()
+					if err != nil {
+						remotelogs.Error("ServerBandwidthStatService", "begin transaction failed: "+err.Error())
+						return
+					}
+
+					defer func() {
+						_ = tx.Commit()
+					}()
+
 					for _, stat := range m {
-						err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes)
-						if err != nil {
-							remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
+						// 更新服务的带宽峰值
+						if stat.ServerId > 0 {
+							err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes)
+							if err != nil {
+								remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
+							}
+
+							err = models.SharedServerDAO.UpdateServerBandwidth(tx, stat.ServerId, stat.Day+stat.TimeAt, stat.Bytes)
+							if err != nil {
+								remotelogs.Error("ServerBandwidthStatService", "update server bandwidth failed: "+err.Error())
+							}
 						}
 
+						// 更新服务的带宽峰值
 						if stat.UserId > 0 {
 							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.Day, stat.TimeAt, stat.Bytes)
 							if err != nil {

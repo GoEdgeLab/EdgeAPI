@@ -862,49 +862,32 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	}
 
 	// 排序
-	var day = timeutil.Format("Ymd")
-	var minute = timeutil.FormatTime("His", time.Now().Unix()/300*300-300)
-	var selfTable = this.Table
-	var statTable = SharedServerDailyStatDAO.Table
-	var hasOnlyIds = false
+	var timestamp = time.Now().Unix() / 300 * 300
+	var currentTime = timeutil.FormatTime("YmdHi", timestamp)
+	var prevTime = timeutil.FormatTime("YmdHi", timestamp-300)
+
 	switch order {
 	case "trafficOutAsc":
-		query.Result("id")
-		query.Join(SharedServerDailyStatDAO, dbs.QueryJoinLeft, selfTable+".id="+statTable+".serverId AND "+statTable+".day=:day AND "+statTable+".timeFrom=:minute")
-		query.Param("day", day)
-		query.Param("minute", minute)
-		query.Group(selfTable + ".id")
-		query.Asc("SUM(" + statTable + ".bytes)").
-			DescPk()
-		hasOnlyIds = true
+		query.Asc("IF(IF(bandwidthTime=:currentTime, bandwidthBytes, 0) > 0, IF(bandwidthTime=:currentTime, bandwidthBytes, 0), IF(bandwidthTime=:prevTime, bandwidthBytes, 0))")
+		query.Param("currentTime", currentTime)
+		query.Param("prevTime", prevTime)
+		query.DescPk()
 	case "trafficOutDesc":
-		query.Result("id")
-		query.Join(SharedServerDailyStatDAO, dbs.QueryJoinLeft, selfTable+".id="+statTable+".serverId AND "+statTable+".day=:day AND "+statTable+".timeFrom=:minute")
-		query.Param("day", day)
-		query.Param("minute", minute)
-		query.Group(selfTable + ".id")
-		query.Desc("SUM(" + statTable + ".bytes)").
-			DescPk()
-		hasOnlyIds = true
+		query.Desc("IF(IF(bandwidthTime=:currentTime, bandwidthBytes, 0) > 0, IF(bandwidthTime=:currentTime, bandwidthBytes, 0), IF(bandwidthTime=:prevTime, bandwidthBytes, 0))")
+		query.Param("currentTime", currentTime)
+		query.Param("prevTime", prevTime)
+		query.DescPk()
 	default:
 		query.DescPk()
 	}
 
 	_, err = query.FindAll()
 
-	if hasOnlyIds {
-		var newResult = []*Server{}
-		for _, one := range result {
-			server, err := this.Find(tx, one.Id)
-			if err != nil {
-				return nil, err
-			}
-			if server == nil {
-				continue
-			}
-			newResult = append(newResult, server.(*Server))
+	// 修正带宽统计数据
+	for _, server := range result {
+		if len(server.BandwidthTime) > 0 && server.BandwidthBytes > 0 && server.BandwidthTime < prevTime {
+			server.BandwidthBytes = 0
 		}
-		result = newResult
 	}
 
 	return
@@ -2576,6 +2559,22 @@ func (this *ServerDAO) FindUserServerClusterIds(tx *dbs.Tx, userId int64) ([]int
 		clusterIds = append(clusterIds, int64(one.(*Server).ClusterId))
 	}
 	return clusterIds, nil
+}
+
+// UpdateServerBandwidth 更新服务带宽
+// fullTime YYYYMMDDHHII
+func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTime string, bandwidthBytes int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+	if bandwidthBytes < 0 {
+		bandwidthBytes = 0
+	}
+	return this.Query(tx).
+		Pk(serverId).
+		Set("bandwidthTime", fullTime).
+		Set("bandwidthBytes", bandwidthBytes).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 同步服务所在的集群

@@ -782,7 +782,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.Server{}
+	var result = []*pb.Server{}
 	for _, server := range servers {
 		clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(server.ClusterId))
 		if err != nil {
@@ -790,9 +790,9 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 分组信息
-		pbGroups := []*pb.ServerGroup{}
+		var pbGroups = []*pb.ServerGroup{}
 		if models.IsNotNull(server.GroupIds) {
-			groupIds := []int64{}
+			var groupIds = []int64{}
 			err = json.Unmarshal(server.GroupIds, &groupIds)
 			if err != nil {
 				return nil, err
@@ -827,7 +827,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 审核结果
-		auditingResult := &pb.ServerNameAuditingResult{}
+		var auditingResult = &pb.ServerNameAuditingResult{}
 		if len(server.AuditingResult) > 0 {
 			err = json.Unmarshal(server.AuditingResult, auditingResult)
 			if err != nil {
@@ -845,27 +845,6 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		configJSON, err := json.Marshal(config)
 		if err != nil {
 			return nil, err
-		}
-
-		// 当前统计
-		dailyStat, err := models.SharedServerDailyStatDAO.SumCurrentDailyStat(tx, int64(server.Id))
-		if err != nil {
-			return nil, err
-		}
-		var pbDailyStat *pb.ServerDailyStat
-		if dailyStat != nil {
-			pbDailyStat = &pb.ServerDailyStat{
-				Bytes:               int64(dailyStat.Bytes),
-				CachedBytes:         int64(dailyStat.CachedBytes),
-				AttackBytes:         int64(dailyStat.AttackBytes),
-				CountRequests:       int64(dailyStat.CountRequests),
-				CountCachedRequests: int64(dailyStat.CountCachedRequests),
-				CountAttackRequests: int64(dailyStat.CountAttackRequests),
-				Day:                 dailyStat.Day,
-				Hour:                dailyStat.Hour,
-				TimeFrom:            dailyStat.TimeFrom,
-				TimeTo:              dailyStat.TimeTo,
-			}
 		}
 
 		result = append(result, &pb.Server{
@@ -895,9 +874,10 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
-			ServerGroups:          pbGroups,
-			User:                  pbUser,
-			LatestServerDailyStat: pbDailyStat,
+			ServerGroups:   pbGroups,
+			User:           pbUser,
+			BandwidthTime:  server.BandwidthTime,
+			BandwidthBytes: int64(server.BandwidthBytes),
 		})
 	}
 

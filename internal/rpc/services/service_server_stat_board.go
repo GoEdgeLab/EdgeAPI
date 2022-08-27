@@ -424,10 +424,6 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 				if err != nil {
 					return nil, err
 				}
-				if bytes == 0 {
-					// 尝试从缓存中读取
-					bytes = ServerBandwidthGetCacheBytes(req.ServerId, day, minute)
-				}
 
 				if bytes > 0 {
 					result.MinutelyPeekBandwidthBytes = bytes
