@@ -21,13 +21,13 @@ func TestCreateHTTPAccessLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	accessLog := &pb.HTTPAccessLog{
+	var accessLog = &pb.HTTPAccessLog{
 		ServerId:  1,
 		NodeId:    4,
 		Status:    200,
 		Timestamp: time.Now().Unix(),
 	}
-	dao := randomHTTPAccessLogDAO()
+	var dao = randomHTTPAccessLogDAO()
 	t.Log("dao:", dao)
 
 	// 先初始化
@@ -37,12 +37,59 @@ func TestCreateHTTPAccessLog(t *testing.T) {
 	defer func() {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
+
 	for i := 0; i < 1000; i++ {
 		err = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
+
+	t.Log("ok")
+}
+
+func TestCreateHTTPAccessLog_Tx(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+
+	err := NewDBNodeInitializer().loop()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var accessLog = &pb.HTTPAccessLog{
+		ServerId:  1,
+		NodeId:    4,
+		Status:    200,
+		Timestamp: time.Now().Unix(),
+	}
+	var dao = randomHTTPAccessLogDAO()
+	t.Log("dao:", dao)
+
+	// 先初始化
+	_ = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
+
+	var before = time.Now()
+	defer func() {
+		t.Log(time.Since(before).Seconds()*1000, "ms")
+	}()
+
+	tx, err = dao.DAO.Instance.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 1000; i++ {
+		err = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	t.Log("ok")
 }
 
