@@ -557,6 +557,22 @@ func (this *UserService) UpdateUserFeatures(ctx context.Context, req *pb.UpdateU
 	return this.Success()
 }
 
+// UpdateAllUsersFeatures 设置所有用户能使用的功能
+func (this *UserService) UpdateAllUsersFeatures(ctx context.Context, req *pb.UpdateAllUsersFeaturesRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedUserDAO.UpdateUsersFeatures(tx, req.FeatureCodes, req.Overwrite)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // FindUserFeatures 获取用户所有的功能列表
 func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx)

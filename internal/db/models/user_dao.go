@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -352,7 +353,7 @@ func (this *UserDAO) FindUserClusterId(tx *dbs.Tx, userId int64) (int64, error) 
 		FindInt64Col(0)
 }
 
-// UpdateUserFeatures 更新用户Features
+// UpdateUserFeatures 更新单个用户Features
 func (this *UserDAO) UpdateUserFeatures(tx *dbs.Tx, userId int64, featuresJSON []byte) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
@@ -367,6 +368,74 @@ func (this *UserDAO) UpdateUserFeatures(tx *dbs.Tx, userId int64, featuresJSON [
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// UpdateUsersFeatures 更新所有用户的Features
+func (this *UserDAO) UpdateUsersFeatures(tx *dbs.Tx, featureCodes []string, overwrite bool) error {
+	if featureCodes == nil {
+		featureCodes = []string{}
+	}
+	if overwrite {
+		featureCodesJSON, err := json.Marshal(featureCodes)
+		if err != nil {
+			return err
+		}
+		err = this.Query(tx).
+			State(UserStateEnabled).
+			Set("features", featureCodesJSON).
+			UpdateQuickly()
+		return err
+	}
+
+	var lastId int64
+	const size = 1000
+	for {
+		ones, _, err := this.Query(tx).
+			Result("id", "features").
+			State(UserStateEnabled).
+			Gt("id", lastId).
+			Limit(size).
+			AscPk().
+			FindOnes()
+		if err != nil {
+			return err
+		}
+		for _, one := range ones {
+			var userId = one.GetInt64("id")
+			var userFeaturesJSON = one.GetBytes("features")
+			var userFeatures = []string{}
+			if len(userFeaturesJSON) > 0 {
+				err = json.Unmarshal(userFeaturesJSON, &userFeatures)
+				if err != nil {
+					return err
+				}
+			}
+			for _, featureCode := range featureCodes {
+				if !lists.ContainsString(userFeatures, featureCode) {
+					userFeatures = append(userFeatures, featureCode)
+				}
+			}
+			userFeaturesJSON, err = json.Marshal(userFeatures)
+			if err != nil {
+				return err
+			}
+			err = this.Query(tx).
+				Pk(userId).
+				Set("features", userFeaturesJSON).
+				UpdateQuickly()
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(ones) < size {
+			break
+		}
+
+		lastId += size
+	}
+
 	return nil
 }
 
