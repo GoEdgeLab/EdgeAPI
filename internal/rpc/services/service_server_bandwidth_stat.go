@@ -161,3 +161,39 @@ func (this *ServerBandwidthStatService) FindServerBandwidthStats(ctx context.Con
 		ServerBandwidthStats: pbStats,
 	}, nil
 }
+
+// FindHourlyServerBandwidthStats 获取最近N小时峰值带宽
+func (this *ServerBandwidthStatService) FindHourlyServerBandwidthStats(ctx context.Context, req *pb.FindHourlyServerBandwidthStatsRequest) (*pb.FindHourlyServerBandwidthStatsResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	stats, err := models.SharedServerBandwidthStatDAO.FindHourlyBandwidthStats(tx, req.ServerId, req.Hours)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindHourlyServerBandwidthStatsResponse{
+		Stats: stats,
+	}, nil
+}
+
+// FindDailyServerBandwidthStats 获取最近N天峰值带宽
+func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx context.Context, req *pb.FindDailyServerBandwidthStatsRequest) (*pb.FindDailyServerBandwidthStatsResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	stats, err := models.SharedServerBandwidthStatDAO.FindDailyBandwidthStats(tx, req.ServerId, req.Days)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindDailyServerBandwidthStatsResponse{
+		Stats: stats,
+	}, nil
+}

@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
@@ -76,4 +77,25 @@ func TestServerBandwidthStatDAO_Clean(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok", time.Since(before).Seconds()*1000, "ms")
+}
+
+func TestServerBandwidthStatDAO_FindHourlyBandwidthStats(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	stats, err := dao.FindHourlyBandwidthStats(tx, 23, 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(stats, t)
+}
+
+
+func TestServerBandwidthStatDAO_FindDailyBandwidthStats(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	stats, err := dao.FindDailyBandwidthStats(tx, 23, 14)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(stats, t)
 }

@@ -4,6 +4,8 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -12,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
+	"strings"
 	"sync"
 	"time"
 )
@@ -89,6 +92,59 @@ func (this *ServerBandwidthStatDAO) FindMinutelyPeekBandwidthBytes(tx *dbs.Tx, s
 		FindInt64Col(0)
 }
 
+// FindHourlyBandwidthStats 按小时获取带宽峰值
+func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverId int64, hours int32) (result []*pb.FindHourlyServerBandwidthStatsResponse_Stat, err error) {
+	if hours <= 0 {
+		hours = 24
+	}
+
+	var timestamp = time.Now().Unix() - int64(hours)*3600
+
+	ones, _, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("MAX(bytes) AS bytes", "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
+		Attr("serverId", serverId).
+		Gte("CONCAT(day, '.', SUBSTRING(timeAt, 1, 2))", timeutil.FormatTime("Ymd.H", timestamp)).
+		Group("fullTime").
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+
+	var m = map[string]*pb.FindHourlyServerBandwidthStatsResponse_Stat{}
+	for _, one := range ones {
+		var fullTime = one.GetString("fullTime")
+		var timePieces = strings.Split(fullTime, ".")
+		var day = timePieces[0]
+		var hour = timePieces[1]
+
+		m[day+hour] = &pb.FindHourlyServerBandwidthStatsResponse_Stat{
+			Bytes: one.GetInt64("bytes"),
+			Day:   day,
+			Hour:  types.Int32(hour),
+		}
+	}
+
+	fullHours, err := utils.RangeHours(timeutil.FormatTime("YmdH", timestamp), timeutil.Format("YmdH"))
+	if err != nil {
+		return nil, err
+	}
+	for _, fullHour := range fullHours {
+		stat, ok := m[fullHour]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &pb.FindHourlyServerBandwidthStatsResponse_Stat{
+				Bytes: 0,
+				Day:   fullHour[:8],
+				Hour:  types.Int32(fullHour[8:]),
+			})
+		}
+	}
+
+	return result, nil
+}
+
 // FindDailyPeekBandwidthBytes 获取某天的带宽峰值
 // day YYYYMMDD
 func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string) (int64, error) {
@@ -97,6 +153,54 @@ func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serv
 		Attr("day", day).
 		Result("MAX(bytes)").
 		FindInt64Col(0)
+}
+
+// FindDailyBandwidthStats 按天获取带宽峰值
+func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId int64, days int32) (result []*pb.FindDailyServerBandwidthStatsResponse_Stat, err error) {
+	if days <= 0 {
+		days = 14
+	}
+
+	var timestamp = time.Now().Unix() - int64(days)*86400
+
+	ones, _, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("MAX(bytes) AS bytes", "day").
+		Attr("serverId", serverId).
+		Gte("day", timeutil.FormatTime("Ymd", timestamp)).
+		Group("day").
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+
+	var m = map[string]*pb.FindDailyServerBandwidthStatsResponse_Stat{}
+	for _, one := range ones {
+		var day = one.GetString("day")
+
+		m[day] = &pb.FindDailyServerBandwidthStatsResponse_Stat{
+			Bytes: one.GetInt64("bytes"),
+			Day:   day,
+		}
+	}
+
+	allDays, err := utils.RangeDays(timeutil.FormatTime("Ymd", timestamp), timeutil.Format("Ymd"))
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range allDays {
+		stat, ok := m[day]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &pb.FindDailyServerBandwidthStatsResponse_Stat{
+				Bytes: 0,
+				Day:   day,
+			})
+		}
+	}
+
+	return result, nil
 }
 
 // FindMonthlyPeekBandwidthBytes 获取某月的带宽峰值
