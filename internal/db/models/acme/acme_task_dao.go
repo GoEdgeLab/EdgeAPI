@@ -107,7 +107,11 @@ func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) err
 
 // CountAllEnabledACMETasks 计算所有任务数量
 func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
-	query := dbutils.NewQuery(tx, this, adminId, userId)
+	var query = this.Query(tx)
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	query.Attr("userId", userId) // 这个条件必须加上
 	if isAvailable || isExpired || expiringDays > 0 {
 		query.Gt("certId", 0)
 
@@ -138,7 +142,11 @@ func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, use
 
 // ListEnabledACMETasks 列出单页任务
 func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (result []*ACMETask, err error) {
-	query := dbutils.NewQuery(tx, this, adminId, userId)
+	var query = this.Query(tx)
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	query.Attr("userId", userId) // 这个条件必须加上
 	if isAvailable || isExpired || expiringDays > 0 {
 		query.Gt("certId", 0)
 
@@ -228,7 +236,13 @@ func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId
 
 // CheckACMETask 检查权限
 func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, adminId int64, userId int64, acmeTaskId int64) (bool, error) {
-	return dbutils.NewQuery(tx, this, adminId, userId).
+	var query = this.Query(tx)
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	}
+	query.Attr("userId", userId) // 这个条件必须加上
+
+	return query.
 		State(ACMETaskStateEnabled).
 		Pk(acmeTaskId).
 		Exist()
@@ -319,7 +333,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 		return
 	}
 
-	remoteUser := acmeutils.NewUser(user.Email, privateKey, func(resource *registration.Resource) error {
+	var remoteUser = acmeutils.NewUser(user.Email, privateKey, func(resource *registration.Resource) error {
 		resourceJSON, err := json.Marshal(resource)
 		if err != nil {
 			return err
@@ -382,7 +396,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 	acmeTask.Provider = acmeProvider
 	acmeTask.Account = acmeAccount
 
-	acmeRequest := acmeutils.NewRequest(acmeTask)
+	var acmeRequest = acmeutils.NewRequest(acmeTask)
 	acmeRequest.OnAuth(func(domain, token, keyAuth string) {
 		err := SharedACMEAuthenticationDAO.CreateAuth(tx, taskId, domain, token, keyAuth)
 		if err != nil {
@@ -398,7 +412,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 				if err != nil {
 					remotelogs.Error("ACME", "encode auth data failed: '"+task.AuthURL+"'")
 				} else {
-					client := utils.SharedHttpClient(5 * time.Second)
+					var client = utils.SharedHttpClient(10 * time.Second)
 					req, err := http.NewRequest(http.MethodPost, task.AuthURL, bytes.NewReader(authJSON))
 					req.Header.Set("Content-Type", "application/json")
 					req.Header.Set("User-Agent", teaconst.ProductName+"/"+teaconst.Version)
@@ -423,7 +437,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 	}
 
 	// 分析证书
-	sslConfig := &sslconfigs.SSLCertConfig{
+	var sslConfig = &sslconfigs.SSLCertConfig{
 		CertData: certData,
 		KeyData:  keyData,
 	}

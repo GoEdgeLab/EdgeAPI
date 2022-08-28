@@ -24,11 +24,11 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
 	// 设置记录
-	index := strings.Index(fqdn, "."+this.dnsDomain)
+	var index = strings.Index(fqdn, "."+this.dnsDomain)
 	if index < 0 {
 		return errors.New("invalid fqdn value")
 	}
-	recordName := fqdn[:index]
+	var recordName = fqdn[:index]
 	record, err := this.raw.QueryRecord(this.dnsDomain, recordName, dnstypes.RecordTypeTXT)
 	if err != nil {
 		return errors.New("query DNS record failed: " + err.Error())

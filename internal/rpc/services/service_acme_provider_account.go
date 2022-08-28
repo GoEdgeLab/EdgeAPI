@@ -16,13 +16,13 @@ type ACMEProviderAccountService struct {
 
 // CreateACMEProviderAccount 创建服务商账号
 func (this *ACMEProviderAccountService) CreateACMEProviderAccount(ctx context.Context, req *pb.CreateACMEProviderAccountRequest) (*pb.CreateACMEProviderAccountResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	accountId, err := acme.SharedACMEProviderAccountDAO.CreateAccount(tx, req.Name, req.ProviderCode, req.EabKid, req.EabKey)
+	accountId, err := acme.SharedACMEProviderAccountDAO.CreateAccount(tx, userId, req.Name, req.ProviderCode, req.EabKid, req.EabKey)
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +33,13 @@ func (this *ACMEProviderAccountService) CreateACMEProviderAccount(ctx context.Co
 
 // FindAllACMEProviderAccountsWithProviderCode 使用代号查找服务商账号
 func (this *ACMEProviderAccountService) FindAllACMEProviderAccountsWithProviderCode(ctx context.Context, req *pb.FindAllACMEProviderAccountsWithProviderCodeRequest) (*pb.FindAllACMEProviderAccountsWithProviderCodeResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	accounts, err := acme.SharedACMEProviderAccountDAO.FindAllEnabledAccountsWithProviderCode(tx, req.AcmeProviderCode)
+	accounts, err := acme.SharedACMEProviderAccountDAO.FindAllEnabledAccountsWithProviderCode(tx, userId, req.AcmeProviderCode)
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +76,21 @@ func (this *ACMEProviderAccountService) FindAllACMEProviderAccountsWithProviderC
 
 // UpdateACMEProviderAccount 修改服务商账号
 func (this *ACMEProviderAccountService) UpdateACMEProviderAccount(ctx context.Context, req *pb.UpdateACMEProviderAccountRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查权限
+	if userId > 0 {
+		err = acme.SharedACMEProviderAccountDAO.CheckUserAccount(tx, userId, req.AcmeProviderAccountId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = acme.SharedACMEProviderAccountDAO.UpdateAccount(tx, req.AcmeProviderAccountId, req.Name, req.EabKid, req.EabKey)
 	if err != nil {
 		return nil, err
@@ -91,12 +100,21 @@ func (this *ACMEProviderAccountService) UpdateACMEProviderAccount(ctx context.Co
 
 // DeleteACMEProviderAccount 删除服务商账号
 func (this *ACMEProviderAccountService) DeleteACMEProviderAccount(ctx context.Context, req *pb.DeleteACMEProviderAccountRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查权限
+	if userId > 0 {
+		err = acme.SharedACMEProviderAccountDAO.CheckUserAccount(tx, userId, req.AcmeProviderAccountId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = acme.SharedACMEProviderAccountDAO.DisableACMEProviderAccount(tx, req.AcmeProviderAccountId)
 	if err != nil {
 		return nil, err
@@ -106,12 +124,21 @@ func (this *ACMEProviderAccountService) DeleteACMEProviderAccount(ctx context.Co
 
 // FindEnabledACMEProviderAccount 查找单个服务商账号
 func (this *ACMEProviderAccountService) FindEnabledACMEProviderAccount(ctx context.Context, req *pb.FindEnabledACMEProviderAccountRequest) (*pb.FindEnabledACMEProviderAccountResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查权限
+	if userId > 0 {
+		err = acme.SharedACMEProviderAccountDAO.CheckUserAccount(tx, userId, req.AcmeProviderAccountId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	account, err := acme.SharedACMEProviderAccountDAO.FindEnabledACMEProviderAccount(tx, req.AcmeProviderAccountId)
 	if err != nil {
 		return nil, err
@@ -147,13 +174,13 @@ func (this *ACMEProviderAccountService) FindEnabledACMEProviderAccount(ctx conte
 
 // CountAllEnabledACMEProviderAccounts 计算所有服务商账号数量
 func (this *ACMEProviderAccountService) CountAllEnabledACMEProviderAccounts(ctx context.Context, req *pb.CountAllEnabledACMEProviderAccountsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	count, err := acme.SharedACMEProviderAccountDAO.CountAllEnabledAccounts(tx)
+	count, err := acme.SharedACMEProviderAccountDAO.CountAllEnabledAccounts(tx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -162,13 +189,13 @@ func (this *ACMEProviderAccountService) CountAllEnabledACMEProviderAccounts(ctx 
 
 // ListEnabledACMEProviderAccounts 列出单页服务商账号
 func (this *ACMEProviderAccountService) ListEnabledACMEProviderAccounts(ctx context.Context, req *pb.ListEnabledACMEProviderAccountsRequest) (*pb.ListEnabledACMEProviderAccountsResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	accounts, err := acme.SharedACMEProviderAccountDAO.ListEnabledAccounts(tx, req.Offset, req.Size)
+	accounts, err := acme.SharedACMEProviderAccountDAO.ListEnabledAccounts(tx, userId, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

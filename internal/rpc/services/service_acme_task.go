@@ -90,7 +90,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		return nil, err
 	}
 
-	result := []*pb.ACMETask{}
+	var result = []*pb.ACMETask{}
 	for _, task := range tasks {
 		// ACME用户
 		acmeUser, err := acmemodels.SharedACMEUserDAO.FindEnabledACMEUser(tx, int64(task.AcmeUserId))

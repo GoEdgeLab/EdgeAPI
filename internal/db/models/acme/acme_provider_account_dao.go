@@ -1,6 +1,7 @@
 package acme
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -72,8 +73,9 @@ func (this *ACMEProviderAccountDAO) FindACMEProviderAccountName(tx *dbs.Tx, id i
 }
 
 // CreateAccount 创建账号
-func (this *ACMEProviderAccountDAO) CreateAccount(tx *dbs.Tx, name string, providerCode string, eabKid string, eabKey string) (int64, error) {
+func (this *ACMEProviderAccountDAO) CreateAccount(tx *dbs.Tx, userId int64, name string, providerCode string, eabKid string, eabKey string) (int64, error) {
 	var op = NewACMEProviderAccountOperator()
+	op.UserId = userId
 	op.Name = name
 	op.ProviderCode = providerCode
 	op.EabKid = eabKid
@@ -98,15 +100,18 @@ func (this *ACMEProviderAccountDAO) UpdateAccount(tx *dbs.Tx, accountId int64, n
 }
 
 // CountAllEnabledAccounts 计算账号数量
-func (this *ACMEProviderAccountDAO) CountAllEnabledAccounts(tx *dbs.Tx) (int64, error) {
+func (this *ACMEProviderAccountDAO) CountAllEnabledAccounts(tx *dbs.Tx, userId int64) (int64, error) {
 	return this.Query(tx).
+		State(ACMEProviderAccountStateEnabled).
+		Attr("userId", userId).
 		Count()
 }
 
 // ListEnabledAccounts 查找单页账号
-func (this *ACMEProviderAccountDAO) ListEnabledAccounts(tx *dbs.Tx, offset int64, size int64) (result []*ACMEProviderAccount, err error) {
+func (this *ACMEProviderAccountDAO) ListEnabledAccounts(tx *dbs.Tx, userId int64, offset int64, size int64) (result []*ACMEProviderAccount, err error) {
 	_, err = this.Query(tx).
 		State(ACMEProviderAccountStateEnabled).
+		Attr("userId", userId).
 		Offset(offset).
 		Limit(size).
 		DescPk().
@@ -116,12 +121,34 @@ func (this *ACMEProviderAccountDAO) ListEnabledAccounts(tx *dbs.Tx, offset int64
 }
 
 // FindAllEnabledAccountsWithProviderCode 根据服务商代号查找账号
-func (this *ACMEProviderAccountDAO) FindAllEnabledAccountsWithProviderCode(tx *dbs.Tx, providerCode string) (result []*ACMEProviderAccount, err error) {
+func (this *ACMEProviderAccountDAO) FindAllEnabledAccountsWithProviderCode(tx *dbs.Tx, userId int64, providerCode string) (result []*ACMEProviderAccount, err error) {
 	_, err = this.Query(tx).
 		State(ACMEProviderAccountStateEnabled).
 		Attr("providerCode", providerCode).
+		Attr("userId", userId).
 		DescPk().
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// CheckUserAccount 检查是否为用户的服务商账号
+func (this *ACMEProviderAccountDAO) CheckUserAccount(tx *dbs.Tx, userId int64, accountId int64) error {
+	if userId <= 0 || accountId <= 0 {
+		return models.ErrNotFound
+	}
+
+	b, err := this.Query(tx).
+		Pk(accountId).
+		State(ACMEProviderAccountStateEnabled).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+	if !b {
+		return models.ErrNotFound
+	}
+
+	return nil
 }
