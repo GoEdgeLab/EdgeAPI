@@ -1042,6 +1042,10 @@ func (this *HTTPWebDAO) FindWebServerGroupId(tx *dbs.Tx, webId int64) (groupId i
 
 // CheckUserWeb 检查用户权限
 func (this *HTTPWebDAO) CheckUserWeb(tx *dbs.Tx, userId int64, webId int64) error {
+	if userId <= 0 || webId <= 0 {
+		return ErrNotFound
+	}
+
 	serverId, err := this.FindWebServerId(tx, webId)
 	if err != nil {
 		return err

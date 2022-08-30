@@ -15,13 +15,13 @@ type HTTPAuthPolicyService struct {
 
 // CreateHTTPAuthPolicy 创建策略
 func (this *HTTPAuthPolicyService) CreateHTTPAuthPolicy(ctx context.Context, req *pb.CreateHTTPAuthPolicyRequest) (*pb.CreateHTTPAuthPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
-	policyId, err := models.SharedHTTPAuthPolicyDAO.CreateHTTPAuthPolicy(tx, req.Name, req.Type, req.ParamsJSON)
+	policyId, err := models.SharedHTTPAuthPolicyDAO.CreateHTTPAuthPolicy(tx, userId, req.Name, req.Type, req.ParamsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +30,21 @@ func (this *HTTPAuthPolicyService) CreateHTTPAuthPolicy(ctx context.Context, req
 
 // UpdateHTTPAuthPolicy 修改策略
 func (this *HTTPAuthPolicyService) UpdateHTTPAuthPolicy(ctx context.Context, req *pb.UpdateHTTPAuthPolicyRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查用户权限
+	if userId > 0 {
+		err = models.SharedHTTPAuthPolicyDAO.CheckUserPolicy(tx, userId, req.HttpAuthPolicyId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = models.SharedHTTPAuthPolicyDAO.UpdateHTTPAuthPolicy(tx, req.HttpAuthPolicyId, req.Name, req.ParamsJSON, req.IsOn)
 	if err != nil {
 		return nil, err
@@ -45,12 +54,21 @@ func (this *HTTPAuthPolicyService) UpdateHTTPAuthPolicy(ctx context.Context, req
 
 // FindEnabledHTTPAuthPolicy 查找策略信息
 func (this *HTTPAuthPolicyService) FindEnabledHTTPAuthPolicy(ctx context.Context, req *pb.FindEnabledHTTPAuthPolicyRequest) (*pb.FindEnabledHTTPAuthPolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// 检查用户权限
+	if userId > 0 {
+		err = models.SharedHTTPAuthPolicyDAO.CheckUserPolicy(tx, userId, req.HttpAuthPolicyId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	policy, err := models.SharedHTTPAuthPolicyDAO.FindEnabledHTTPAuthPolicy(tx, req.HttpAuthPolicyId)
 	if err != nil {
 		return nil, err
