@@ -123,7 +123,7 @@ secret: "${nodeSecret}"`)
 	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node test")
 	if err != nil {
 		installStatus.ErrorCode = "TEST_FAILED"
-		return errors.New("test edge node failed: " + err.Error())
+		return errors.New("test edge node failed: " + err.Error() + ", stderr: " + stderr)
 	}
 	if len(stderr) > 0 {
 		if regexp.MustCompile(`(?i)rpc`).MatchString(stderr) {
