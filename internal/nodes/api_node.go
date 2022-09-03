@@ -577,7 +577,7 @@ func (this *APINode) listenPorts(apiNode *models.APINode) (isListening bool) {
 
 	// add to local firewall
 	if len(ports) > 0 {
-		utils.AddPortsToFirewall(ports)
+		go utils.AddPortsToFirewall(ports)
 	}
 
 	return
