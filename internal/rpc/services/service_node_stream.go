@@ -124,6 +124,7 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 			return err
 		}
 		if inactiveNotifiedAt > 0 {
+			// 设置为活跃
 			err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
 			if err != nil {
 				return err
@@ -141,6 +142,12 @@ func (this *NodeService) NodeStream(server pb.NodeService_NodeStreamServer) erro
 			var subject = "节点\"" + nodeName + "\"已经恢复在线"
 			var msg = "节点\"" + nodeName + "\"已经恢复在线"
 			err = models.SharedMessageDAO.CreateNodeMessage(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, models.MessageTypeNodeActive, models.MessageLevelSuccess, subject, msg, nil, false)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 设置为活跃
+			err = models.SharedNodeDAO.UpdateNodeActive(tx, nodeId, true)
 			if err != nil {
 				return err
 			}
