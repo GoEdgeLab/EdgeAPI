@@ -141,6 +141,10 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(tx *dbs.Tx, accessLogs []*pb.
 
 // DumpAccessLogsFromQueue 从队列导入访问日志
 func (this *HTTPAccessLogDAO) DumpAccessLogsFromQueue(size int) (hasMore bool, err error) {
+	if size <= 0 {
+		size = 100
+	}
+	
 	var dao = randomHTTPAccessLogDAO()
 	if dao == nil {
 		dao = &HTTPAccessLogDAOWrapper{
@@ -161,10 +165,6 @@ func (this *HTTPAccessLogDAO) DumpAccessLogsFromQueue(size int) (hasMore bool, e
 	defer func() {
 		_ = tx.Commit()
 	}()
-
-	if size <= 0 {
-		size = 1_000_000
-	}
 
 	// 复制变量，防止中途改变
 	var oldQueue = oldAccessLogQueue
@@ -791,6 +791,9 @@ func (this *HTTPAccessLogDAO) SetupQueue() {
 
 	accessLogQueuePercent = config.Percent
 	accessLogCountPerSecond = config.CountPerSecond
+	if accessLogCountPerSecond <= 0 {
+		accessLogCountPerSecond = 10_000
+	}
 	if config.MaxLength <= 0 {
 		config.MaxLength = 100_000
 	}
