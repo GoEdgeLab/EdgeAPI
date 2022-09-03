@@ -7,7 +7,6 @@ import (
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/dbs"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -67,7 +66,7 @@ func init() {
 		return
 	}
 
-	err = ioutil.WriteFile(sqlFile, dst, 0666)
+	err = os.WriteFile(sqlFile, dst, 0666)
 	if err != nil {
 		fmt.Println("[ERROR]write file failed: " + err.Error())
 		return

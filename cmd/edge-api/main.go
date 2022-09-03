@@ -14,7 +14,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"github.com/iwind/gosock/pkg/gosock"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -130,7 +129,7 @@ func main() {
 		flagSet.BoolVar(&formatJSON, "json", false, "")
 		_ = flagSet.Parse(os.Args[2:])
 
-		data, err := ioutil.ReadFile(Tea.LogFile("issues.log"))
+		data, err := os.ReadFile(Tea.LogFile("issues.log"))
 		if err != nil {
 			if formatJSON {
 				fmt.Print("[]")
