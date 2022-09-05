@@ -415,11 +415,13 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 
 		// 当前N分钟区间
 		{
-			// 查询最近的两个时段，以尽可能获取数据
-			var minute1 = timeutil.FormatTime("Hi", time.Now().Unix()/300*300)
-			var minute2 = timeutil.FormatTime("Hi", time.Now().Unix()/300*300-300)
+			// 查询最近的三个时段，以尽可能获取数据
+			var timestamp = time.Now().Unix() / 300 * 300
+			var minute1 = timeutil.FormatTime("Hi", timestamp)
+			var minute2 = timeutil.FormatTime("Hi", timestamp-300)
+			var minute3 = timeutil.FormatTime("Hi", timestamp-300*2)
 
-			for _, minute := range []string{minute1, minute2} {
+			for _, minute := range []string{minute1, minute2, minute3} {
 				bytes, err := models.SharedServerBandwidthStatDAO.FindMinutelyPeekBandwidthBytes(tx, req.ServerId, day, minute)
 				if err != nil {
 					return nil, err

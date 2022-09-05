@@ -9,7 +9,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	"sync"
@@ -20,10 +19,7 @@ var serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{} // key => ban
 var serverBandwidthStatsLocker = &sync.Mutex{}
 
 func init() {
-	var ticker = time.NewTicker(5 * time.Minute)
-	if Tea.IsTesting() {
-		ticker = time.NewTicker(1 * time.Minute)
-	}
+	var ticker = time.NewTicker(1 * time.Minute)
 
 	dbs.OnReadyDone(func() {
 		goman.New(func() {

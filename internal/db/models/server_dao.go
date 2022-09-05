@@ -862,20 +862,21 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	}
 
 	// 排序
-	var timestamp = time.Now().Unix() / 300 * 300
-	var currentTime = timeutil.FormatTime("YmdHi", timestamp)
-	var prevTime = timeutil.FormatTime("YmdHi", timestamp-300)
+	var timestamp = (time.Now().Unix()) / 300 * 300
+	var times = []string{
+		timeutil.FormatTime("YmdHi", timestamp),
+		timeutil.FormatTime("YmdHi", timestamp-300),
+		timeutil.FormatTime("YmdHi", timestamp-300*2),
+	}
 
 	switch order {
 	case "trafficOutAsc":
-		query.Asc("IF(IF(bandwidthTime=:currentTime, bandwidthBytes, 0) > 0, IF(bandwidthTime=:currentTime, bandwidthBytes, 0), IF(bandwidthTime=:prevTime, bandwidthBytes, 0))")
-		query.Param("currentTime", currentTime)
-		query.Param("prevTime", prevTime)
+		query.Asc("IF(FIND_IN_SET(bandwidthTime, :times), bandwidthBytes, 0)")
+		query.Param("times", strings.Join(times, ","))
 		query.DescPk()
 	case "trafficOutDesc":
-		query.Desc("IF(IF(bandwidthTime=:currentTime, bandwidthBytes, 0) > 0, IF(bandwidthTime=:currentTime, bandwidthBytes, 0), IF(bandwidthTime=:prevTime, bandwidthBytes, 0))")
-		query.Param("currentTime", currentTime)
-		query.Param("prevTime", prevTime)
+		query.Desc("IF(FIND_IN_SET(bandwidthTime, :times), bandwidthBytes, 0)")
+		query.Param("times", strings.Join(times, ","))
 		query.DescPk()
 	default:
 		query.DescPk()
@@ -885,7 +886,7 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 
 	// 修正带宽统计数据
 	for _, server := range result {
-		if len(server.BandwidthTime) > 0 && server.BandwidthBytes > 0 && server.BandwidthTime < prevTime {
+		if len(server.BandwidthTime) > 0 && !lists.ContainsString(times, server.BandwidthTime) {
 			server.BandwidthBytes = 0
 		}
 	}
