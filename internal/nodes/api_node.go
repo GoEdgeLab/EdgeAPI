@@ -46,7 +46,7 @@ import (
 var sharedAPIConfig *configs.APIConfig = nil
 
 type APINode struct {
-	serviceInstanceMap    map[string]interface{}
+	serviceInstanceMap    map[string]any
 	serviceInstanceLocker sync.Mutex
 
 	sock *gosock.Sock
@@ -55,11 +55,13 @@ type APINode struct {
 
 	issues     []*StartIssue
 	issuesFile string
+
+	progress *utils.Progress
 }
 
 func NewAPINode() *APINode {
 	return &APINode{
-		serviceInstanceMap: map[string]interface{}{},
+		serviceInstanceMap: map[string]any{},
 		sock:               gosock.NewTmpSock(teaconst.ProcessName),
 
 		issues:     []*StartIssue{},
@@ -88,6 +90,7 @@ func (this *APINode) Start() {
 	}
 
 	// 启动IP库
+	this.setProgress("IP_LIBRARY", "开始初始化IP库")
 	remotelogs.Println("API_NODE", "initializing ip library ...")
 	err = iplibrary.InitDefault()
 	if err != nil {
@@ -95,6 +98,7 @@ func (this *APINode) Start() {
 	}
 
 	// 检查数据库连接
+	this.setProgress("DATABASE", "正在检查数据库连接")
 	err = this.checkDB()
 	if err != nil {
 		var errString = "check database connection failed: " + err.Error()
@@ -105,6 +109,7 @@ func (this *APINode) Start() {
 
 	// 自动升级
 	logs.Println("[API_NODE]auto upgrading ...")
+	this.setProgress("DATABASE", "正在升级数据库")
 	err = this.autoUpgrade()
 	if err != nil {
 		var errString = "auto upgrade failed: " + err.Error()
@@ -114,6 +119,7 @@ func (this *APINode) Start() {
 	}
 
 	// 自动设置数据库
+	this.setProgress("DATABASE", "正在设置数据库")
 	logs.Println("[API_NODE]setup database ...")
 	err = this.setupDB()
 	if err != nil {
@@ -127,6 +133,7 @@ func (this *APINode) Start() {
 	dbs.NotifyReady()
 
 	// 读取配置
+	this.setProgress("DATABASE", "加载API配置")
 	logs.Println("[API_NODE]reading api config ...")
 	config, err := configs.SharedAPIConfig()
 	if err != nil {
@@ -166,9 +173,11 @@ func (this *APINode) Start() {
 	})
 
 	// 访问日志存储管理器
+	this.setProgress("ACCESS_LOG_STORAGES", "正在启动访问日志存储器")
 	this.startAccessLogStorages()
 
 	// 监听RPC服务
+	this.setProgress("LISTEN_PORT", "正在启动监听端口")
 	remotelogs.Println("API_NODE", "starting RPC server ...")
 
 	var isListening = this.listenPorts(apiNode)
@@ -182,6 +191,7 @@ func (this *APINode) Start() {
 
 	// 结束启动
 	this.isStarting = false
+	this.progress = nil
 
 	// 保持进程
 	select {}
@@ -599,24 +609,24 @@ func (this *APINode) listenSock() error {
 	goman.New(func() {
 		this.sock.OnCommand(func(cmd *gosock.Command) {
 			switch cmd.Code {
-			case "pid":
+			case "pid": // 查询PID
 				_ = cmd.Reply(&gosock.Command{
 					Code: "pid",
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"pid": os.Getpid(),
 					},
 				})
-			case "info":
+			case "info": // 进程相关信息
 				exePath, _ := os.Executable()
 				_ = cmd.Reply(&gosock.Command{
 					Code: "info",
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"pid":     os.Getpid(),
 						"version": teaconst.Version,
 						"path":    exePath,
 					},
 				})
-			case "stop":
+			case "stop": // 停止
 				_ = cmd.ReplyOk()
 
 				// 退出主进程
@@ -625,8 +635,9 @@ func (this *APINode) listenSock() error {
 			case "starting": // 是否正在启动
 				_ = cmd.Reply(&gosock.Command{
 					Code: "starting",
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"isStarting": this.isStarting,
+						"progress":   this.progress,
 					},
 				})
 			case "goman":
@@ -655,35 +666,35 @@ func (this *APINode) listenSock() error {
 				})
 
 				_ = cmd.Reply(&gosock.Command{
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"total":  runtime.NumGoroutine(),
 						"result": result,
 					},
 				})
-			case "debug":
+			case "debug": // 进入|取消调试模式
 				teaconst.Debug = !teaconst.Debug
 				_ = cmd.Reply(&gosock.Command{
-					Params: map[string]interface{}{"debug": teaconst.Debug},
+					Params: map[string]any{"debug": teaconst.Debug},
 				})
-			case "db.stmt.prepare":
+			case "db.stmt.prepare": // 显示prepared的语句
 				dbs.ShowPreparedStatements = !dbs.ShowPreparedStatements
 				_ = cmd.Reply(&gosock.Command{
-					Params: map[string]interface{}{"isOn": dbs.ShowPreparedStatements},
+					Params: map[string]any{"isOn": dbs.ShowPreparedStatements},
 				})
-			case "db.stmt.count":
+			case "db.stmt.count": // 查询prepared语句数量
 				db, _ := dbs.Default()
 				if db != nil {
 					_ = cmd.Reply(&gosock.Command{
-						Params: map[string]interface{}{"count": db.StmtManager().Len()},
+						Params: map[string]any{"count": db.StmtManager().Len()},
 					})
 				} else {
 					_ = cmd.Reply(&gosock.Command{
-						Params: map[string]interface{}{"count": 0},
+						Params: map[string]any{"count": 0},
 					})
 				}
-			case "instance":
+			case "instance": // 获取实例代号
 				_ = cmd.Reply(&gosock.Command{
-					Params: map[string]interface{}{
+					Params: map[string]any{
 						"code": teaconst.InstanceCode,
 					},
 				})
@@ -705,7 +716,7 @@ func (this *APINode) listenSock() error {
 }
 
 // 服务过滤器
-func (this *APINode) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+func (this *APINode) unaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	if teaconst.Debug {
 		var before = time.Now()
 		var traceCtx = rpc.NewContext(ctx)
@@ -790,5 +801,13 @@ func (this *APINode) saveIssues() {
 	issuesJSON, err := json.Marshal(this.issues)
 	if err == nil {
 		_ = os.WriteFile(this.issuesFile, issuesJSON, 0666)
+	}
+}
+
+// 设置启动进度
+func (this *APINode) setProgress(name, description string) {
+	this.progress = &utils.Progress{
+		Name:        name,
+		Description: description,
 	}
 }
