@@ -21,6 +21,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"golang.org/x/net/idna"
 	"net"
 	"net/http"
 	"net/url"
@@ -144,7 +145,7 @@ func (this *HTTPAccessLogDAO) DumpAccessLogsFromQueue(size int) (hasMore bool, e
 	if size <= 0 {
 		size = 100
 	}
-	
+
 	var dao = randomHTTPAccessLogDAO()
 	if dao == nil {
 		dao = &HTTPAccessLogDAOWrapper{
@@ -509,6 +510,14 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 						query.Where("domain LIKE :host2").
 							Param("host2", domain)
 					} else {
+						// 中文域名
+						if !regexp.MustCompile(`^[a-zA-Z0-9-.]+$`).MatchString(domain) {
+							unicodeDomain, err := idna.ToASCII(domain)
+							if err == nil && len(unicodeDomain) > 0 {
+								domain = unicodeDomain
+							}
+						}
+
 						query.Attr("domain", domain)
 						query.UseIndex("domain")
 					}
