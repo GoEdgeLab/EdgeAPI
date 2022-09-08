@@ -125,13 +125,13 @@ func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64,
 }
 
 // CreateCluster 创建集群
-func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, dnsTTL int32, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
 	}
 
-	secret := rands.String(32)
+	var secret = rands.String(32)
 	err = SharedApiTokenDAO.CreateAPIToken(tx, uniqueId, secret, nodeconfigs.NodeRoleCluster)
 	if err != nil {
 		return 0, err
@@ -151,7 +151,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 		ServersAutoSync:  true,
 		CNameRecords:     []string{},
 		CNameAsDomain:    true,
-		TTL:              0,
+		TTL:              dnsTTL,
 		IncludingLnNodes: true,
 	}
 	dnsJSON, err := json.Marshal(dnsConfig)

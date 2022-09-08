@@ -33,7 +33,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 	}
 
 	// 系统服务
-	systemServices := map[string]maps.Map{}
+	var systemServices = map[string]maps.Map{}
 	if len(req.SystemServicesJSON) > 0 {
 		err = json.Unmarshal(req.SystemServicesJSON, &systemServices)
 		if err != nil {
@@ -61,7 +61,12 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 			req.HttpFirewallPolicyId = policyId
 		}
 
-		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
+		// DNS
+		if req.DnsTTL < 0 {
+			req.DnsTTL = 0
+		}
+
+		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.DnsTTL, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
 		if err != nil {
 			return err
 		}
