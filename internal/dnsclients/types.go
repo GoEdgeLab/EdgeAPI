@@ -13,13 +13,13 @@ const (
 	ProviderTypeHuaweiDNS    ProviderType = "huaweiDNS"    // 华为DNS
 	ProviderTypeCloudFlare   ProviderType = "cloudFlare"   // CloudFlare DNS
 	ProviderTypeLocalEdgeDNS ProviderType = "localEdgeDNS" // 和当前系统集成的EdgeDNS
-	ProviderTypeUserEdgeDNS  ProviderType = "userEdgeDNS"  // 通过API连接的EdgeDNS
+	ProviderTypeEdgeDNSAPI   ProviderType = "edgeDNSAPI"   // 通过API连接的EdgeDNS
 	ProviderTypeCustomHTTP   ProviderType = "customHTTP"   // 自定义HTTP接口
 )
 
 // FindAllProviderTypes 所有的服务商类型
 func FindAllProviderTypes() []maps.Map {
-	typeMaps := []maps.Map{
+	var typeMaps = []maps.Map{
 		{
 			"name":        "阿里云DNS",
 			"code":        ProviderTypeAliDNS,
@@ -39,6 +39,11 @@ func FindAllProviderTypes() []maps.Map {
 			"name":        "CloudFlare DNS",
 			"code":        ProviderTypeCloudFlare,
 			"description": "CloudFlare提供的DNS服务。",
+		},
+		{
+			"name":        "EdgeDNS API",
+			"code":        ProviderTypeEdgeDNSAPI,
+			"description": "通过API连接GoEdge商业版系统提供的DNS服务。",
 		},
 	}
 
