@@ -100,21 +100,33 @@ func randomHTTPAccessLogDAO() (dao *HTTPAccessLogDAOWrapper) {
 		return daoList[0]
 	}
 
-	return daoList[rands.Int(0, len(daoList)-1)]
+	return daoList[rands.Int(0, l-1)]
 }
 
 func randomNSAccessLogDAO() (dao *NSAccessLogDAOWrapper) {
 	accessLogLocker.RLock()
+	defer accessLogLocker.RUnlock()
 	if len(nsAccessLogDAOMapping) == 0 {
 		dao = nil
-	} else {
-		for _, d := range nsAccessLogDAOMapping {
-			dao = d
-			break
-		}
+		return
 	}
-	accessLogLocker.RUnlock()
-	return
+
+	var daoList = []*NSAccessLogDAOWrapper{}
+
+	for _, d := range nsAccessLogDAOMapping {
+		daoList = append(daoList, d)
+	}
+
+	var l = len(daoList)
+	if l == 0 {
+		return
+	}
+
+	if l == 1 {
+		return daoList[0]
+	}
+
+	return daoList[rands.Int(0, l-1)]
 }
 
 func findNSAccessLogTableName(db *dbs.DB, day string) (tableName string, ok bool, err error) {
