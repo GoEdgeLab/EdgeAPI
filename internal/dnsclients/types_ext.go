@@ -19,7 +19,7 @@ func FindProvider(providerType ProviderType) ProviderInterface {
 		return &CloudFlareProvider{}
 	case ProviderTypeCustomHTTP:
 		return &CustomHTTPProvider{}
-	case ProviderTypeUserEdgeDNS:
+	case ProviderTypeEdgeDNSAPI:
 		return &EdgeDNSAPIProvider{}
 	}
 
