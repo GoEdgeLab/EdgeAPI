@@ -15,6 +15,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -131,6 +132,9 @@ func (this *APINode) Start() {
 	// 数据库通知启动
 	logs.Println("[API_NODE]notify ready ...")
 	dbs.NotifyReady()
+
+	// 设置时区
+	this.setupTimeZone()
 
 	// 读取配置
 	this.setProgress("DATABASE", "加载API配置")
@@ -809,5 +813,19 @@ func (this *APINode) setProgress(name, description string) {
 	this.progress = &utils.Progress{
 		Name:        name,
 		Description: description,
+	}
+}
+
+// 设置时区
+func (this *APINode) setupTimeZone() {
+	config, err := models.SharedSysSettingDAO.ReadAdminUIConfig(nil, nil)
+	if err == nil && config != nil {
+		if len(config.TimeZone) == 0 {
+			config.TimeZone = nodeconfigs.DefaultTimeZoneLocation
+		}
+		location, err := time.LoadLocation(config.TimeZone)
+		if err == nil && time.Local != location {
+			time.Local = location
+		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
@@ -13,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"time"
 )
 
 type SysSettingDAO dbs.DAO
@@ -211,6 +213,18 @@ func (this *SysSettingDAO) NotifyUpdate(tx *dbs.Tx, code string) error {
 	switch code {
 	case systemconfigs.SettingCodeAccessLogQueue:
 		accessLogQueueChanged <- zero.New()
+	case systemconfigs.SettingCodeAdminUIConfig:
+		// 修改当前时区
+		config, err := this.ReadAdminUIConfig(nil, nil)
+		if err == nil && config != nil {
+			if len(config.TimeZone) == 0 {
+				config.TimeZone = nodeconfigs.DefaultTimeZoneLocation
+			}
+			location, err := time.LoadLocation(config.TimeZone)
+			if err == nil && time.Local != location {
+				time.Local = location
+			}
+		}
 	}
 	return nil
 }
