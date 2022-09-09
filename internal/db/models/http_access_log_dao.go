@@ -86,13 +86,24 @@ func init() {
 		// 导出队列内容
 		goman.New(func() {
 			var ticker = time.NewTicker(1 * time.Second)
+			var accessLogPerLoop = accessLogPerTx
+
 			for range ticker.C {
-				var countTxs = accessLogCountPerSecond / accessLogPerTx
+				var countTxs = accessLogCountPerSecond / accessLogPerLoop
 				if countTxs <= 0 {
 					countTxs = 1
 				}
 				for i := 0; i < countTxs; i++ {
-					hasMore, err := SharedHTTPAccessLogDAO.DumpAccessLogsFromQueue(accessLogPerTx)
+					var before = time.Now()
+					hasMore, err := SharedHTTPAccessLogDAO.DumpAccessLogsFromQueue(accessLogPerLoop)
+
+					// 如果用时过长，则调整每次写入次数
+					var costMs = time.Since(before).Milliseconds()
+					if costMs > 150 {
+						accessLogPerLoop = accessLogPerTx / 4
+					} else if costMs > 100 {
+						accessLogPerLoop = accessLogPerTx / 2
+					} // 这里不需要恢复成默认值，因为可能是写入数量比较小
 					if err != nil {
 						remotelogs.Error("HTTP_ACCESS_LOG_QUEUE", "dump access logs failed: "+err.Error())
 					} else if !hasMore {

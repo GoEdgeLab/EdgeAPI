@@ -79,7 +79,7 @@ func TestCreateHTTPAccessLog_Tx(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 200; i++ {
 		err = SharedHTTPAccessLogDAO.CreateHTTPAccessLog(tx, dao.DAO, accessLog)
 		if err != nil {
 			t.Fatal(err)
