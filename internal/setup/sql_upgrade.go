@@ -84,6 +84,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"0.4.11", upgradeV0_4_11,
 	},
+	{
+		"v0.5.3", upgradeV0_5_3,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -838,6 +841,19 @@ func upgradeV0_4_11(db *dbs.DB) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// v0.5.3
+func upgradeV0_5_3(db *dbs.DB) error {
+	// 升级ns domains中的status字段
+	{
+		_, err := db.Exec("UPDATE edgeNSDomains SET status='" + dnsconfigs.NSDomainStatusVerified + "'")
+		if err != nil {
+			return err
 		}
 	}
 
