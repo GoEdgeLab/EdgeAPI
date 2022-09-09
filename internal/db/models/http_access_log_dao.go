@@ -40,7 +40,7 @@ var SharedHTTPAccessLogDAO *HTTPAccessLogDAO
 var (
 	oldAccessLogQueue       = make(chan *pb.HTTPAccessLog)
 	accessLogQueue          = make(chan *pb.HTTPAccessLog, 10_000)
-	accessLogQueueMaxLength = 100_000 //队列最大长度
+	accessLogQueueMaxLength = 100_000 // 队列最大长度
 	accessLogQueuePercent   = 100     // 0-100
 	accessLogCountPerSecond = 10_000  // 每秒钟写入条数，0 表示不限制
 	accessLogPerTx          = 100     // 单事务写入条数

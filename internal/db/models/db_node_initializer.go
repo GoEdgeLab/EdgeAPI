@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/rands"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"hash/crc32"
 	"regexp"
@@ -78,16 +79,28 @@ func AllAccessLogDBs() []*dbs.DB {
 // 获取获取DAO
 func randomHTTPAccessLogDAO() (dao *HTTPAccessLogDAOWrapper) {
 	accessLogLocker.RLock()
+	defer accessLogLocker.RUnlock()
 	if len(httpAccessLogDAOMapping) == 0 {
 		dao = nil
-	} else {
-		for _, d := range httpAccessLogDAOMapping {
-			dao = d
-			break
-		}
+		return
 	}
-	accessLogLocker.RUnlock()
-	return
+
+	var daoList = []*HTTPAccessLogDAOWrapper{}
+
+	for _, d := range httpAccessLogDAOMapping {
+		daoList = append(daoList, d)
+	}
+
+	var l = len(daoList)
+	if l == 0 {
+		return
+	}
+
+	if l == 1 {
+		return daoList[0]
+	}
+
+	return daoList[rands.Int(0, len(daoList)-1)]
 }
 
 func randomNSAccessLogDAO() (dao *NSAccessLogDAOWrapper) {
