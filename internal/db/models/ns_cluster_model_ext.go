@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 )
 
@@ -14,7 +15,7 @@ func (this *NSCluster) DecodeDDoSProtection() *ddosconfigs.ProtectionConfig {
 	var result = &ddosconfigs.ProtectionConfig{}
 	err := json.Unmarshal(this.DdosProtection, &result)
 	if err != nil {
-		// ignore err
+		remotelogs.Error("NSCluster.DecodeDDoSProtection", "decode failed: "+err.Error())
 	}
 	return result
 }
@@ -26,4 +27,19 @@ func (this *NSCluster) HasDDoSProtection() bool {
 		return config.IsOn()
 	}
 	return false
+}
+
+// DecodeHosts 解析主机地址
+func (this *NSCluster) DecodeHosts() []string {
+	if IsNull(this.Hosts) {
+		return nil
+	}
+
+	var hosts = []string{}
+	err := json.Unmarshal(this.Hosts, &hosts)
+	if err != nil {
+		remotelogs.Error("NSCluster.DecodeHosts", "decode failed: "+err.Error())
+	}
+
+	return hosts
 }

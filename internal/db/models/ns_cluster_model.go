@@ -16,6 +16,7 @@ type NSCluster struct {
 	Tls            dbs.JSON `field:"tls"`            // TLS设置
 	Udp            dbs.JSON `field:"udp"`            // UDP设置
 	DdosProtection dbs.JSON `field:"ddosProtection"` // DDoS防护设置
+	Hosts          dbs.JSON `field:"hosts"`          // DNS主机地址
 }
 
 type NSClusterOperator struct {
@@ -31,6 +32,7 @@ type NSClusterOperator struct {
 	Tls            any // TLS设置
 	Udp            any // UDP设置
 	DdosProtection any // DDoS防护设置
+	Hosts          any // DNS主机地址
 }
 
 func NewNSClusterOperator() *NSClusterOperator {
