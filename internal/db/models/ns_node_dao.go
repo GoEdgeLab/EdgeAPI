@@ -436,7 +436,7 @@ func (this *NSNodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64) (*dnsconfigs.
 
 	// 递归DNS配置
 	if IsNotNull(cluster.Recursion) {
-		var recursionConfig = &dnsconfigs.RecursionConfig{}
+		var recursionConfig = &dnsconfigs.NSRecursionConfig{}
 		err = json.Unmarshal(cluster.Recursion, recursionConfig)
 		if err != nil {
 			return nil, err
