@@ -265,12 +265,18 @@ func (this *APINode) InstallSystemService() error {
 // 启动RPC监听
 func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) error {
 	var rpcServer *grpc.Server
+	var options = []grpc.ServerOption{
+		grpc.MaxRecvMsgSize(128 * 1024 * 1024),
+		grpc.UnaryInterceptor(this.unaryInterceptor),
+	}
+
 	if tlsConfig == nil {
 		remotelogs.Println("API_NODE", "listening GRPC http://"+listener.Addr().String()+" ...")
-		rpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(128*1024*1024), grpc.UnaryInterceptor(this.unaryInterceptor))
+		rpcServer = grpc.NewServer(options...)
 	} else {
 		logs.Println("[API_NODE]listening GRPC https://" + listener.Addr().String() + " ...")
-		rpcServer = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)), grpc.MaxRecvMsgSize(128*1024*1024), grpc.UnaryInterceptor(this.unaryInterceptor))
+		options = append(options, grpc.Creds(credentials.NewTLS(tlsConfig)))
+		rpcServer = grpc.NewServer(options...)
 	}
 	this.registerServices(rpcServer)
 	err := rpcServer.Serve(listener)
