@@ -267,6 +267,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	var rpcServer *grpc.Server
 	var options = []grpc.ServerOption{
 		grpc.MaxRecvMsgSize(128 * 1024 * 1024),
+		grpc.MaxSendMsgSize(128 * 1024 * 1024),
 		grpc.UnaryInterceptor(this.unaryInterceptor),
 	}
 
