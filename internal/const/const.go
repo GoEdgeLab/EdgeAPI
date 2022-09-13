@@ -19,7 +19,7 @@ const (
 	// 其他节点版本号，用来检测是否有需要升级的节点
 
 	NodeVersion          = "0.5.3"
-	UserNodeVersion      = "0.4.1"
+	UserNodeVersion      = "0.5.0"
 	DNSNodeVersion       = "0.2.7"
 	AuthorityNodeVersion = "0.0.2"
 	MonitorNodeVersion   = "0.0.4"
