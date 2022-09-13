@@ -51,6 +51,7 @@ func (this *SysSettingService) ReadSysSetting(ctx context.Context, req *pb.ReadS
 			systemconfigs.SettingCodeUserUIConfig,
 			systemconfigs.SettingCodeNSUserConfig,
 			systemconfigs.SettingCodeUserOrderConfig,
+			systemconfigs.SettingCodeServerGlobalConfig,
 		}, req.Code) {
 			return nil, errors.New("can not read setting code '" + req.Code + "'")
 		}
