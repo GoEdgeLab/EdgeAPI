@@ -5,11 +5,11 @@ type NSRecordHourlyStat struct {
 	Id            uint64 `field:"id"`            // ID
 	ClusterId     uint32 `field:"clusterId"`     // 集群ID
 	NodeId        uint32 `field:"nodeId"`        // 节点ID
-	DomainId      uint32 `field:"domainId"`      // 域名ID
+	DomainId      uint64 `field:"domainId"`      // 域名ID
 	RecordId      uint64 `field:"recordId"`      // 记录ID
 	Day           string `field:"day"`           // YYYYMMDD
 	Hour          string `field:"hour"`          // YYYYMMDDHH
-	CountRequests uint32 `field:"countRequests"` // 请求数
+	CountRequests uint64 `field:"countRequests"` // 请求数
 	Bytes         uint64 `field:"bytes"`         // 流量
 }
 
