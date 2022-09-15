@@ -89,7 +89,21 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 
 	var tx = this.NullTx()
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts)
+	// validate clock
+	var clockConfig = nodeconfigs.DefaultClockConfig()
+	if len(req.ClockJSON) > 0 {
+		err = json.Unmarshal(req.ClockJSON, clockConfig)
+		if err != nil {
+			return nil, errors.New("decode clock failed: " + err.Error())
+		}
+
+		err = clockConfig.Init()
+		if err != nil {
+			return nil, errors.New("validate clock failed: " + err.Error())
+		}
+	}
+
+		err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +183,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		TimeZone:             cluster.TimeZone,
 		NodeMaxThreads:       int32(cluster.NodeMaxThreads),
 		AutoOpenPorts:        cluster.AutoOpenPorts == 1,
+		ClockJSON:            cluster.Clock,
 	}}, nil
 }
 

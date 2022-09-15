@@ -1085,6 +1085,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 			}
 		}
 
+		// 时钟
+		if config.Clock == nil {
+			config.Clock = nodeCluster.DecodeClock()
+		}
+
 		// 最大线程数、TCP连接数
 		if clusterIndex == 0 {
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)

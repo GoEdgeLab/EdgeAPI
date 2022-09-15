@@ -30,45 +30,47 @@ type NodeCluster struct {
 	SystemServices       dbs.JSON `field:"systemServices"`       // 系统服务设置
 	TimeZone             string   `field:"timeZone"`             // 时区
 	NodeMaxThreads       uint32   `field:"nodeMaxThreads"`       // 节点最大线程数
-	DdosProtection       dbs.JSON `field:"ddosProtection"`       // DDOS端口
+	DdosProtection       dbs.JSON `field:"ddosProtection"`       // DDoS防护设置
 	AutoOpenPorts        uint8    `field:"autoOpenPorts"`        // 是否自动尝试开放端口
 	IsPinned             bool     `field:"isPinned"`             // 是否置顶
 	Webp                 dbs.JSON `field:"webp"`                 // WebP设置
 	Uam                  dbs.JSON `field:"uam"`                  // UAM设置
+	Clock                dbs.JSON `field:"clock"`                // 时钟配置
 }
 
 type NodeClusterOperator struct {
-	Id                   interface{} // ID
-	AdminId              interface{} // 管理员ID
-	UserId               interface{} // 用户ID
-	IsOn                 interface{} // 是否启用
-	Name                 interface{} // 名称
-	UseAllAPINodes       interface{} // 是否使用所有API节点
-	ApiNodes             interface{} // 使用的API节点
-	InstallDir           interface{} // 安装目录
-	Order                interface{} // 排序
-	CreatedAt            interface{} // 创建时间
-	GrantId              interface{} // 默认认证方式
-	State                interface{} // 状态
-	AutoRegister         interface{} // 是否开启自动注册
-	UniqueId             interface{} // 唯一ID
-	Secret               interface{} // 密钥
-	HealthCheck          interface{} // 健康检查
-	DnsName              interface{} // DNS名称
-	DnsDomainId          interface{} // 域名ID
-	Dns                  interface{} // DNS配置
-	Toa                  interface{} // TOA配置
-	CachePolicyId        interface{} // 缓存策略ID
-	HttpFirewallPolicyId interface{} // WAF策略ID
-	AccessLog            interface{} // 访问日志设置
-	SystemServices       interface{} // 系统服务设置
-	TimeZone             interface{} // 时区
-	NodeMaxThreads       interface{} // 节点最大线程数
-	DdosProtection       interface{} // DDOS端口
-	AutoOpenPorts        interface{} // 是否自动尝试开放端口
-	IsPinned             interface{} // 是否置顶
-	Webp                 interface{} // WebP设置
-	Uam                  interface{} // UAM设置
+	Id                   any // ID
+	AdminId              any // 管理员ID
+	UserId               any // 用户ID
+	IsOn                 any // 是否启用
+	Name                 any // 名称
+	UseAllAPINodes       any // 是否使用所有API节点
+	ApiNodes             any // 使用的API节点
+	InstallDir           any // 安装目录
+	Order                any // 排序
+	CreatedAt            any // 创建时间
+	GrantId              any // 默认认证方式
+	State                any // 状态
+	AutoRegister         any // 是否开启自动注册
+	UniqueId             any // 唯一ID
+	Secret               any // 密钥
+	HealthCheck          any // 健康检查
+	DnsName              any // DNS名称
+	DnsDomainId          any // 域名ID
+	Dns                  any // DNS配置
+	Toa                  any // TOA配置
+	CachePolicyId        any // 缓存策略ID
+	HttpFirewallPolicyId any // WAF策略ID
+	AccessLog            any // 访问日志设置
+	SystemServices       any // 系统服务设置
+	TimeZone             any // 时区
+	NodeMaxThreads       any // 节点最大线程数
+	DdosProtection       any // DDoS防护设置
+	AutoOpenPorts        any // 是否自动尝试开放端口
+	IsPinned             any // 是否置顶
+	Webp                 any // WebP设置
+	Uam                  any // UAM设置
+	Clock                any // 时钟配置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

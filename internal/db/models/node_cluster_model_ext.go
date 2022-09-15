@@ -2,7 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 )
 
@@ -49,4 +51,16 @@ func (this *NodeCluster) HasDDoSProtection() bool {
 		return config.IsOn()
 	}
 	return false
+}
+
+// DecodeClock 解析时钟配置
+func (this *NodeCluster) DecodeClock() *nodeconfigs.ClockConfig {
+	var clock = nodeconfigs.DefaultClockConfig()
+	if IsNotNull(this.Clock) {
+		err := json.Unmarshal(this.Clock, clock)
+		if err != nil {
+			remotelogs.Error("NodeCluster.DecodeClock()", err.Error())
+		}
+	}
+	return clock
 }
