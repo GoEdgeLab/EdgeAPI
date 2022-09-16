@@ -32,6 +32,19 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 		return nil, err
 	}
 
+	// 全局服务配置
+	var serverGlobalConfig = serverconfigs.DefaultGlobalServerConfig()
+	if len(req.GlobalServerConfigJSON) > 0 {
+		err = json.Unmarshal(req.GlobalServerConfigJSON, serverGlobalConfig)
+		if err != nil {
+			return nil, err
+		}
+		err = serverGlobalConfig.Init()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// 系统服务
 	var systemServices = map[string]maps.Map{}
 	if len(req.SystemServicesJSON) > 0 {
@@ -66,7 +79,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 			req.DnsTTL = 0
 		}
 
-		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.DnsTTL, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices)
+		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.DnsTTL, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices, serverGlobalConfig)
 		if err != nil {
 			return err
 		}

@@ -125,7 +125,7 @@ func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64,
 }
 
 // CreateCluster 创建集群
-func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, dnsTTL int32, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, dnsTTL int32, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map, globalServerConfig *serverconfigs.GlobalServerConfig) (clusterId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
@@ -172,6 +172,16 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 		return 0, err
 	}
 	op.SystemServices = systemServicesJSON
+
+	// 全局服务配置
+	if globalServerConfig == nil {
+		globalServerConfig = serverconfigs.DefaultGlobalServerConfig()
+	}
+	globalServerConfigJSON, err := json.Marshal(globalServerConfig)
+	if err != nil {
+		return 0, err
+	}
+	op.GlobalServerConfig = globalServerConfigJSON
 
 	op.UseAllAPINodes = 1
 	op.ApiNodes = "[]"
