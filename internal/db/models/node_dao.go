@@ -1090,6 +1090,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 			config.Clock = nodeCluster.DecodeClock()
 		}
 
+		// 全局配置
+		if config.GlobalServerConfig == nil {
+			config.GlobalServerConfig = nodeCluster.DecodeGlobalServerConfig()
+		}
+
 		// 最大线程数、TCP连接数
 		if clusterIndex == 0 {
 			config.MaxThreads = int(nodeCluster.NodeMaxThreads)

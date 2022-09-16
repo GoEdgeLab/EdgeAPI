@@ -103,7 +103,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		}
 	}
 
-		err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -1251,5 +1251,55 @@ func (this *NodeClusterService) UpdateNodeClusterDDoSProtection(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
+	return this.Success()
+}
+
+// FindNodeClusterGlobalServerConfig 获取集群的全局服务设置
+func (this *NodeClusterService) FindNodeClusterGlobalServerConfig(ctx context.Context, req *pb.FindNodeClusterGlobalServerConfigRequest) (*pb.FindNodeClusterGlobalServerConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	config, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindNodeClusterGlobalServerConfigResponse{
+		GlobalServerConfigJSON: configJSON,
+	}, nil
+}
+
+// UpdateNodeClusterGlobalServerConfig 修改集群的全局服务设置
+func (this *NodeClusterService) UpdateNodeClusterGlobalServerConfig(ctx context.Context, req *pb.UpdateNodeClusterGlobalServerConfigRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var config = serverconfigs.DefaultGlobalServerConfig()
+	err = json.Unmarshal(req.GlobalServerConfigJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = config.Init()
+	if err != nil {
+		return nil, errors.New("validate config failed: " + err.Error())
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateClusterGlobalServerConfig(tx, req.NodeClusterId, config)
+	if err != nil {
+		return nil, err
+	}
+
 	return this.Success()
 }

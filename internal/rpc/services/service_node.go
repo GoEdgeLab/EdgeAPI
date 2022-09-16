@@ -17,6 +17,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/andybalholm/brotli"
@@ -1889,6 +1890,55 @@ func (this *NodeService) UpdateNodeDDoSProtection(ctx context.Context, req *pb.U
 		return nil, err
 	}
 	return this.Success()
+}
+
+// FindNodeGlobalServerConfig 取得节点的服务全局配置
+func (this *NodeService) FindNodeGlobalServerConfig(ctx context.Context, req *pb.FindNodeGlobalServerConfigRequest) (*pb.FindNodeGlobalServerConfigResponse, error) {
+	var nodeId = req.NodeId
+
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		// 检查是否来自节点
+		currentNodeId, err2 := this.ValidateNode(ctx)
+		if err2 != nil {
+			return nil, err
+		}
+
+		if nodeId > 0 && currentNodeId != nodeId {
+			return nil, errors.New("invalid 'nodeId'")
+		}
+
+		nodeId = currentNodeId
+	}
+
+	var tx = this.NullTx()
+
+	clusterId, err := models.SharedNodeDAO.FindNodeClusterId(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var config *serverconfigs.GlobalServerConfig
+	if clusterId > 0 {
+		config, err = models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, clusterId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if config == nil {
+		config = serverconfigs.DefaultGlobalServerConfig()
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = &pb.FindNodeGlobalServerConfigResponse{
+		GlobalServerConfigJSON: configJSON,
+	}
+
+	return result, nil
 }
 
 // FindEnabledNodeConfigInfo 取得节点的配置概要信息

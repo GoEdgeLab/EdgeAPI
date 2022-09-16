@@ -14,12 +14,13 @@ import (
 type NodeTaskType = string
 
 const (
-	NodeTaskTypeConfigChanged         NodeTaskType = "configChanged"         // 节点整体配置变化
-	NodeTaskTypeDDosProtectionChanged NodeTaskType = "ddosProtectionChanged" // 节点DDoS配置变更
-	NodeTaskTypeIPItemChanged         NodeTaskType = "ipItemChanged"
-	NodeTaskTypeNodeVersionChanged    NodeTaskType = "nodeVersionChanged"
-	NodeTaskTypeScriptsChanged        NodeTaskType = "scriptsChanged"
-	NodeTaskTypeNodeLevelChanged      NodeTaskType = "nodeLevelChanged"
+	NodeTaskTypeConfigChanged             NodeTaskType = "configChanged"             // 节点整体配置变化
+	NodeTaskTypeDDosProtectionChanged     NodeTaskType = "ddosProtectionChanged"     // 节点DDoS配置变更
+	NodeTaskTypeGlobalServerConfigChanged NodeTaskType = "globalServerConfigChanged" // 全局服务设置变化
+	NodeTaskTypeIPItemChanged             NodeTaskType = "ipItemChanged"
+	NodeTaskTypeNodeVersionChanged        NodeTaskType = "nodeVersionChanged"
+	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"
+	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"
 
 	// NS相关
 

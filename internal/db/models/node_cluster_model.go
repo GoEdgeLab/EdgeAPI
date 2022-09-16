@@ -36,6 +36,7 @@ type NodeCluster struct {
 	Webp                 dbs.JSON `field:"webp"`                 // WebP设置
 	Uam                  dbs.JSON `field:"uam"`                  // UAM设置
 	Clock                dbs.JSON `field:"clock"`                // 时钟配置
+	GlobalServerConfig   dbs.JSON `field:"globalServerConfig"`   // 全局服务配置
 }
 
 type NodeClusterOperator struct {
@@ -71,6 +72,7 @@ type NodeClusterOperator struct {
 	Webp                 any // WebP设置
 	Uam                  any // UAM设置
 	Clock                any // 时钟配置
+	GlobalServerConfig   any // 全局服务配置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

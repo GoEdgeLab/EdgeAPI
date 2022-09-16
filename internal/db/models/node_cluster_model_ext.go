@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 )
 
@@ -63,4 +64,16 @@ func (this *NodeCluster) DecodeClock() *nodeconfigs.ClockConfig {
 		}
 	}
 	return clock
+}
+
+// DecodeGlobalServerConfig 解析全局服务配置
+func (this *NodeCluster) DecodeGlobalServerConfig() *serverconfigs.GlobalServerConfig {
+	var config = serverconfigs.DefaultGlobalServerConfig()
+	if IsNotNull(this.GlobalServerConfig) {
+		err := json.Unmarshal(this.GlobalServerConfig, config)
+		if err != nil {
+			remotelogs.Error("NodeCluster.DecodeGlobalServerConfig()", err.Error())
+		}
+	}
+	return config
 }

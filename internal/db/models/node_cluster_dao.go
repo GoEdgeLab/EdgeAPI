@@ -934,7 +934,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "isOn", "ddosProtection", "clock").
+		Result("id", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "isOn", "ddosProtection", "clock", "globalServerConfig").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -1100,6 +1100,49 @@ func (this *NodeClusterDAO) UpdateClusterDDoSProtection(tx *dbs.Tx, clusterId in
 		return err
 	}
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeDDosProtectionChanged)
+}
+
+// FindClusterGlobalServerConfig 查询全局服务配置
+func (this *NodeClusterDAO) FindClusterGlobalServerConfig(tx *dbs.Tx, clusterId int64) (*serverconfigs.GlobalServerConfig, error) {
+	configJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("globalServerConfig").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	var config = serverconfigs.DefaultGlobalServerConfig()
+	if IsNull(configJSON) {
+		return config, nil
+	}
+
+	err = json.Unmarshal(configJSON, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// UpdateClusterGlobalServerConfig 修改全局服务配置
+func (this *NodeClusterDAO) UpdateClusterGlobalServerConfig(tx *dbs.Tx, clusterId int64, config *serverconfigs.GlobalServerConfig) error {
+	if config == nil {
+		config = serverconfigs.DefaultGlobalServerConfig()
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("globalServerConfig", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, NodeTaskTypeGlobalServerConfigChanged)
 }
 
 // NotifyUpdate 通知更新

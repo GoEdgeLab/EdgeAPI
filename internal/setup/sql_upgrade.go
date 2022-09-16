@@ -857,5 +857,47 @@ func upgradeV0_5_3(db *dbs.DB) error {
 		}
 	}
 
+	// 升级集群服务配置
+	{
+		type oldGlobalConfig struct {
+			// HTTP & HTTPS相关配置
+			HTTPAll struct {
+				MatchDomainStrictly  bool                                `yaml:"matchDomainStrictly" json:"matchDomainStrictly"`   // 是否严格匹配域名
+				AllowMismatchDomains []string                            `yaml:"allowMismatchDomains" json:"allowMismatchDomains"` // 允许的不匹配的域名
+				DefaultDomain        string                              `yaml:"defaultDomain" json:"defaultDomain"`               // 默认的域名
+				DomainMismatchAction *serverconfigs.DomainMismatchAction `yaml:"domainMismatchAction" json:"domainMismatchAction"` // 不匹配时采取的动作
+			} `yaml:"httpAll" json:"httpAll"`
+		}
+
+		value, err := db.FindCol(0, "SELECT value FROM edgeSysSettings WHERE code='serverGlobalConfig'")
+		if err != nil {
+			return err
+		}
+		if value != nil {
+			var valueJSON = []byte(types.String(value))
+			var oldConfig = &oldGlobalConfig{}
+			err = json.Unmarshal(valueJSON, oldConfig)
+			if err == nil {
+				var newConfig = &serverconfigs.GlobalServerConfig{}
+				newConfig.HTTPAll.MatchDomainStrictly = oldConfig.HTTPAll.MatchDomainStrictly
+				newConfig.HTTPAll.AllowMismatchDomains = oldConfig.HTTPAll.AllowMismatchDomains
+				newConfig.HTTPAll.DefaultDomain = oldConfig.HTTPAll.DefaultDomain
+				if oldConfig.HTTPAll.DomainMismatchAction != nil {
+					newConfig.HTTPAll.DomainMismatchAction = oldConfig.HTTPAll.DomainMismatchAction
+				}
+				newConfig.HTTPAll.AllowNodeIP = true
+
+				newConfig.Log.RecordServerError = false
+				newConfigJSON, err := json.Marshal(newConfig)
+				if err == nil {
+					_, err = db.Exec("UPDATE edgeNodeClusters SET globalServerConfig=?", newConfigJSON)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
