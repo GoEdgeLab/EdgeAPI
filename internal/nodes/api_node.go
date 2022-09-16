@@ -390,9 +390,9 @@ func (this *APINode) setupDB() error {
 		if err != nil {
 			return err
 		}
-		value := result.GetString("Value")
+		var value = result.GetString("Value")
 		if regexp.MustCompile(`^\d+$`).MatchString(value) {
-			valueInt := types.Int(value)
+			var valueInt = types.Int(value)
 			if valueInt < 65535 {
 				_, err := db.Exec("SET GLOBAL max_prepared_stmt_count=65535")
 				if err != nil {
@@ -400,6 +400,33 @@ func (this *APINode) setupDB() error {
 max_prepared_stmt_count=65535
 ~~~
 then restart mysqld.`)
+				}
+			}
+		}
+	}
+
+	// 调整binlog过期时间
+	{
+		const binlogExpireDays = 7
+
+		version, err := db.FindCol(0, "SELECT VERSION()")
+		if err == nil {
+			var versionString = types.String(version)
+			if strings.HasPrefix(versionString, "8.") {
+				result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='binlog_expire_logs_seconds'")
+				if err == nil && result != nil {
+					var oldValue = result.GetInt("Value")
+					if oldValue > binlogExpireDays*86400 {
+						_, _ = db.Exec("SET GLOBAL binlog_expire_logs_seconds=" + types.String(binlogExpireDays*86400))
+					}
+				}
+			} else if strings.HasPrefix(versionString, "5.") {
+				result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='expire_logs_days'")
+				if err == nil && result != nil {
+					var oldValue = result.GetInt("Value")
+					if oldValue > binlogExpireDays {
+						_, _ = db.Exec("SET GLOBAL expire_logs_days=" + types.String(binlogExpireDays))
+					}
 				}
 			}
 		}
