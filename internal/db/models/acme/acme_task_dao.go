@@ -106,11 +106,8 @@ func (this *ACMETaskDAO) DisableAllTasksWithCertId(tx *dbs.Tx, certId int64) err
 }
 
 // CountAllEnabledACMETasks 计算所有任务数量
-func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
+func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string) (int64, error) {
 	var query = this.Query(tx)
-	if adminId > 0 {
-		query.Attr("adminId", adminId)
-	}
 	query.Attr("userId", userId) // 这个条件必须加上
 	if isAvailable || isExpired || expiringDays > 0 {
 		query.Gt("certId", 0)
@@ -141,11 +138,8 @@ func (this *ACMETaskDAO) CountAllEnabledACMETasks(tx *dbs.Tx, adminId int64, use
 }
 
 // ListEnabledACMETasks 列出单页任务
-func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, adminId int64, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (result []*ACMETask, err error) {
+func (this *ACMETaskDAO) ListEnabledACMETasks(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int64, keyword string, offset int64, size int64) (result []*ACMETask, err error) {
 	var query = this.Query(tx)
-	if adminId > 0 {
-		query.Attr("adminId", adminId)
-	}
 	query.Attr("userId", userId) // 这个条件必须加上
 	if isAvailable || isExpired || expiringDays > 0 {
 		query.Gt("certId", 0)
@@ -235,12 +229,11 @@ func (this *ACMETaskDAO) UpdateACMETask(tx *dbs.Tx, acmeTaskId int64, acmeUserId
 }
 
 // CheckACMETask 检查权限
-func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, adminId int64, userId int64, acmeTaskId int64) (bool, error) {
+func (this *ACMETaskDAO) CheckACMETask(tx *dbs.Tx, userId int64, acmeTaskId int64) (bool, error) {
 	var query = this.Query(tx)
-	if adminId > 0 {
-		query.Attr("adminId", adminId)
+	if userId > 0 {
+		query.Attr("userId", userId)
 	}
-	query.Attr("userId", userId) // 这个条件必须加上
 
 	return query.
 		State(ACMETaskStateEnabled).
