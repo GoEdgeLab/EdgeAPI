@@ -55,8 +55,8 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 
 // GetDomains 获取所有域名列表
 func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
-	offset := 0
-	size := 100
+	var offset = 0
+	var size = 100
 
 	for {
 		domainsResp, err := this.post("/Domain.List", map[string]string{
@@ -68,7 +68,7 @@ func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 		}
 		offset += size
 
-		domainsSlice := domainsResp.GetSlice("domains")
+		var domainsSlice = domainsResp.GetSlice("domains")
 		if len(domainsSlice) == 0 {
 			break
 		}
@@ -79,8 +79,8 @@ func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 		}
 
 		// 检查是否到头
-		info := domainsResp.GetMap("info")
-		recordTotal := info.GetInt("record_total")
+		var info = domainsResp.GetMap("info")
+		var recordTotal = info.GetInt("all_total")
 		if offset >= recordTotal {
 			break
 		}
@@ -90,8 +90,8 @@ func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 
 // GetRecords 获取域名列表
 func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
-	offset := 0
-	size := 100
+	var offset = 0
+	var size = 100
 	for {
 		recordsResp, err := this.post("/Record.List", map[string]string{
 			"domain": domain,
@@ -104,7 +104,7 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 		offset += size
 
 		// 记录
-		recordSlice := recordsResp.GetSlice("records")
+		var recordSlice = recordsResp.GetSlice("records")
 		for _, record := range recordSlice {
 			recordMap := maps.NewMap(record)
 			records = append(records, &dnstypes.Record{
@@ -118,8 +118,8 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 		}
 
 		// 检查是否到头
-		info := recordsResp.GetMap("info")
-		recordTotal := info.GetInt("record_total")
+		var info = recordsResp.GetMap("info")
+		var recordTotal = info.GetInt("record_total")
 		if offset >= recordTotal {
 			break
 		}
