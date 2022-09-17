@@ -1880,8 +1880,8 @@ func (this *ServerDAO) CheckPortIsUsing(tx *dbs.Tx, clusterId int64, protocolFam
 }
 
 // ExistServerNameInCluster 检查ServerName是否已存在
-func (this *ServerDAO) ExistServerNameInCluster(tx *dbs.Tx, clusterId int64, serverName string, excludeServerId int64) (bool, error) {
-	query := this.Query(tx).
+func (this *ServerDAO) ExistServerNameInCluster(tx *dbs.Tx, clusterId int64, serverName string, excludeServerId int64, supportWildcard bool) (bool, error) {
+	var query = this.Query(tx).
 		Attr("clusterId", clusterId).
 		Where("(JSON_CONTAINS(serverNames, :jsonQuery1) OR JSON_CONTAINS(serverNames, :jsonQuery2))").
 		Param("jsonQuery1", maps.Map{"name": serverName}.AsJSON()).
@@ -1890,7 +1890,38 @@ func (this *ServerDAO) ExistServerNameInCluster(tx *dbs.Tx, clusterId int64, ser
 		query.Neq("id", excludeServerId)
 	}
 	query.State(ServerStateEnabled)
-	return query.Exist()
+	exists, err := query.Exist()
+	if err != nil || exists {
+		return exists, err
+	}
+
+	if supportWildcard {
+		var countPieces = strings.Count(serverName, ".")
+		for {
+			var index = strings.Index(serverName, ".")
+			if index > 0 {
+				serverName = serverName[index+1:]
+				var search = strings.Repeat("*.", countPieces-strings.Count(serverName, ".")) + serverName
+				var query = this.Query(tx).
+					Attr("clusterId", clusterId).
+					Where("(JSON_CONTAINS(serverNames, :jsonQuery1) OR JSON_CONTAINS(serverNames, :jsonQuery2))").
+					Param("jsonQuery1", maps.Map{"name": search}.AsJSON()).
+					Param("jsonQuery2", maps.Map{"subNames": search}.AsJSON())
+				if excludeServerId > 0 {
+					query.Neq("id", excludeServerId)
+				}
+				query.State(ServerStateEnabled)
+				exists, err = query.Exist()
+				if err != nil || exists {
+					return exists, err
+				}
+			} else {
+				break
+			}
+		}
+	}
+
+	return false, nil
 }
 
 // GenDNSName 生成DNS Name

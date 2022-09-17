@@ -1707,9 +1707,9 @@ func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.C
 
 	var tx = this.NullTx()
 
-	duplicatedServerNames := []string{}
+	var duplicatedServerNames = []string{}
 	for _, serverName := range req.ServerNames {
-		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, req.NodeClusterId, serverName, req.ExcludeServerId)
+		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, req.NodeClusterId, serverName, req.ExcludeServerId, req.SupportWildcard)
 		if err != nil {
 			return nil, err
 		}
