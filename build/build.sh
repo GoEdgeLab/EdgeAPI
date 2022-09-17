@@ -105,12 +105,14 @@ function build() {
 	done
 
 	# building edge dns installer
-	echo "building dns node installer ..."
-	architects=("amd64" "arm64")
-	for arch in "${architects[@]}"; do
-		# TODO support arm, mips ...
-		env GOOS=linux GOARCH="${arch}" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$ROOT"/installers/edge-installer-dns-helper-linux-"${arch}" "$ROOT"/../cmd/installer-dns-helper/main.go
-	done
+	if [ $TAG = "plus" ]; then
+		echo "building dns node installer ..."
+		architects=("amd64" "arm64")
+		for arch in "${architects[@]}"; do
+			# TODO support arm, mips ...
+			env GOOS=linux GOARCH="${arch}" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$ROOT"/installers/edge-installer-dns-helper-linux-"${arch}" "$ROOT"/../cmd/installer-dns-helper/main.go
+		done
+	fi
 
 	# building api node
 	env GOOS="$OS" GOARCH="$ARCH" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$DIST"/bin/edge-api "$ROOT"/../cmd/edge-api/main.go

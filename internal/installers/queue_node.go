@@ -218,19 +218,19 @@ func (this *NodeQueue) StartNode(nodeId int64) error {
 		return err
 	}
 	if login == nil {
-		return errors.New("can not find node login information")
+		return newGrantError("can not find node login information")
 	}
 	loginParams, err := login.DecodeSSHParams()
 	if err != nil {
-		return err
+		return newGrantError(err.Error())
 	}
 
 	if len(loginParams.Host) == 0 {
-		return errors.New("ssh host should not be empty")
+		return newGrantError("ssh host should not be empty")
 	}
 
 	if loginParams.Port <= 0 {
-		return errors.New("ssh port is invalid")
+		return newGrantError("ssh port is invalid")
 	}
 
 	if loginParams.GrantId == 0 {
@@ -240,7 +240,7 @@ func (this *NodeQueue) StartNode(nodeId int64) error {
 			return err
 		}
 		if grantId == 0 {
-			return errors.New("can not find node grant")
+			return newGrantError("can not find node grant")
 		}
 		loginParams.GrantId = grantId
 	}
@@ -249,10 +249,10 @@ func (this *NodeQueue) StartNode(nodeId int64) error {
 		return err
 	}
 	if grant == nil {
-		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
+		return newGrantError("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
-	installer := &NodeInstaller{}
+	var installer = &NodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,

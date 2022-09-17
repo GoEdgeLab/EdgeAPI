@@ -42,10 +42,10 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 	}
 
 	// 认证
-	methods := []ssh.AuthMethod{}
+	var methods = []ssh.AuthMethod{}
 	if credentials.Method == "user" {
 		{
-			authMethod := ssh.Password(credentials.Password)
+			var authMethod = ssh.Password(credentials.Password)
 			methods = append(methods, authMethod)
 		}
 
@@ -79,7 +79,7 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 	if len(credentials.Username) == 0 {
 		credentials.Username = "root"
 	}
-	config := &ssh.ClientConfig{
+	var config = &ssh.ClientConfig{
 		User:            credentials.Username,
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback,
