@@ -12,4 +12,4 @@ dbs:
 
 
 fields:
-  bool: [ "uamIsOn", "followPort", "requestHostExcludingPort", "autoRemoteStart" ]
+  bool: [ "uamIsOn", "followPort", "requestHostExcludingPort", "autoRemoteStart", "autoInstallNftables" ]

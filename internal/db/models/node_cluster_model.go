@@ -38,6 +38,7 @@ type NodeCluster struct {
 	Clock                dbs.JSON `field:"clock"`                // 时钟配置
 	GlobalServerConfig   dbs.JSON `field:"globalServerConfig"`   // 全局服务配置
 	AutoRemoteStart      bool     `field:"autoRemoteStart"`      // 自动远程启动
+	AutoInstallNftables  bool     `field:"autoInstallNftables"`  // 自动安装nftables
 }
 
 type NodeClusterOperator struct {
@@ -75,6 +76,7 @@ type NodeClusterOperator struct {
 	Clock                any // 时钟配置
 	GlobalServerConfig   any // 全局服务配置
 	AutoRemoteStart      any // 自动远程启动
+	AutoInstallNftables  any // 自动安装nftables
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

@@ -1122,6 +1122,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 			config.UAMPolicies[clusterId] = uamPolicy
 		}
 
+		// 自动安装nftables
+		if clusterIndex == 0 {
+			config.AutoInstallNftables = nodeCluster.AutoInstallNftables
+		}
+
 		clusterIndex++
 	}
 
