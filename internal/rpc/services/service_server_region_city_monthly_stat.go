@@ -15,7 +15,7 @@ type ServerRegionCityMonthlyStatService struct {
 
 // 查找前N个城市
 func (this *ServerRegionCityMonthlyStatService) FindTopServerRegionCityMonthlyStats(ctx context.Context, req *pb.FindTopServerRegionCityMonthlyStatsRequest) (*pb.FindTopServerRegionCityMonthlyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

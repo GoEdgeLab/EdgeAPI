@@ -16,7 +16,7 @@ type LoginService struct {
 
 // FindEnabledLogin 查找认证
 func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnabledLoginRequest) (*pb.FindEnabledLoginResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (this *LoginService) FindEnabledLogin(ctx context.Context, req *pb.FindEnab
 
 // UpdateLogin 修改认证
 func (this *LoginService) UpdateLogin(ctx context.Context, req *pb.UpdateLoginRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

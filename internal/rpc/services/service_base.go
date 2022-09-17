@@ -32,7 +32,7 @@ func (this *BaseService) ValidateAdmin(ctx context.Context) (adminId int64, err 
 }
 
 // ValidateAdminAndUser 校验管理员和用户
-func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int64, userId int64, err error) {
+func (this *BaseService) ValidateAdminAndUser(ctx context.Context, canRest bool) (adminId int64, userId int64, err error) {
 	reqUserType, _, reqUserId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser)
 	if err != nil {
 		return
@@ -57,6 +57,15 @@ func (this *BaseService) ValidateAdminAndUser(ctx context.Context) (adminId int6
 		err = errors.New("invalid user type")
 	}
 
+	if err != nil {
+		return
+	}
+
+	if userId > 0 && !canRest && rpcutils.IsRest(ctx) {
+		err = errors.New("can not be called by rest")
+		return
+	}
+
 	return
 }
 
@@ -73,7 +82,13 @@ func (this *BaseService) ValidateNSNode(ctx context.Context) (nodeId int64, err 
 }
 
 // ValidateUserNode 校验用户节点
-func (this *BaseService) ValidateUserNode(ctx context.Context) (userId int64, err error) {
+func (this *BaseService) ValidateUserNode(ctx context.Context, canRest bool) (userId int64, err error) {
+	// 不允许REST调用
+	if !canRest && rpcutils.IsRest(ctx) {
+		err = errors.New("can not be called by rest")
+		return
+	}
+
 	_, _, userId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeUser)
 	return
 }

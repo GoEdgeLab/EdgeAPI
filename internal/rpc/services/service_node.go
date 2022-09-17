@@ -390,7 +390,7 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 
 // FindAllEnabledNodesWithNodeClusterId 查找一个集群下的所有节点
 func (this *NodeService) FindAllEnabledNodesWithNodeClusterId(ctx context.Context, req *pb.FindAllEnabledNodesWithNodeClusterIdRequest) (*pb.FindAllEnabledNodesWithNodeClusterIdResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

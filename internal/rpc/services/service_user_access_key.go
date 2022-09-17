@@ -13,7 +13,7 @@ type UserAccessKeyService struct {
 
 // CreateUserAccessKey 创建AccessKey
 func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *pb.CreateUserAccessKeyRequest) (*pb.CreateUserAccessKeyResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *UserAccessKeyService) CreateUserAccessKey(ctx context.Context, req *
 
 // FindAllEnabledUserAccessKeys 查找所有的AccessKey
 func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Context, req *pb.FindAllEnabledUserAccessKeysRequest) (*pb.FindAllEnabledUserAccessKeysResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (this *UserAccessKeyService) FindAllEnabledUserAccessKeys(ctx context.Conte
 
 // DeleteUserAccessKey 删除AccessKey
 func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *pb.DeleteUserAccessKeyRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (this *UserAccessKeyService) DeleteUserAccessKey(ctx context.Context, req *
 
 // UpdateUserAccessKeyIsOn 设置是否启用AccessKey
 func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, req *pb.UpdateUserAccessKeyIsOnRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (this *UserAccessKeyService) UpdateUserAccessKeyIsOn(ctx context.Context, r
 
 // CountAllEnabledUserAccessKeys 计算AccessKey数量
 func (this *UserAccessKeyService) CountAllEnabledUserAccessKeys(ctx context.Context, req *pb.CountAllEnabledUserAccessKeysRequest) (*pb.RPCCountResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

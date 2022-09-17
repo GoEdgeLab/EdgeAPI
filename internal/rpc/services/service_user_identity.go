@@ -17,7 +17,7 @@ type UserIdentityService struct {
 
 // CreateUserIdentity 创建身份认证信息
 func (this *UserIdentityService) CreateUserIdentity(ctx context.Context, req *pb.CreateUserIdentityRequest) (*pb.CreateUserIdentityResponse, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (this *UserIdentityService) CreateUserIdentity(ctx context.Context, req *pb
 
 // FindEnabledUserIdentity 查找单个身份认证信息
 func (this *UserIdentityService) FindEnabledUserIdentity(ctx context.Context, req *pb.FindEnabledUserIdentityRequest) (*pb.FindEnabledUserIdentityResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (this *UserIdentityService) FindEnabledUserIdentity(ctx context.Context, re
 
 // FindEnabledUserIdentityWithOrgType 查看最新的身份认证信息
 func (this *UserIdentityService) FindEnabledUserIdentityWithOrgType(ctx context.Context, req *pb.FindEnabledUserIdentityWithOrgTypeRequest) (*pb.FindEnabledUserIdentityWithOrgTypeResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (this *UserIdentityService) CheckUserIdentityIsSubmitted(ctx context.Contex
 
 // UpdateUserIdentity 修改身份认证信息
 func (this *UserIdentityService) UpdateUserIdentity(ctx context.Context, req *pb.UpdateUserIdentityRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (this *UserIdentityService) UpdateUserIdentity(ctx context.Context, req *pb
 
 // SubmitUserIdentity 提交审核身份认证信息
 func (this *UserIdentityService) SubmitUserIdentity(ctx context.Context, req *pb.SubmitUserIdentityRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func (this *UserIdentityService) SubmitUserIdentity(ctx context.Context, req *pb
 
 // CancelUserIdentity 取消提交身份审核认证信息
 func (this *UserIdentityService) CancelUserIdentity(ctx context.Context, req *pb.CancelUserIdentityRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}

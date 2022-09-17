@@ -28,7 +28,7 @@ type DNSDomainService struct {
 // CreateDNSDomain 创建域名
 func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.CreateDNSDomainRequest) (*pb.CreateDNSDomainResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -766,7 +766,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 
 // ExistDNSDomainRecord 检查域名是否在记录中
 func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.ExistDNSDomainRecordRequest) (*pb.ExistDNSDomainRecordResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -782,7 +782,7 @@ func (this *DNSDomainService) ExistDNSDomainRecord(ctx context.Context, req *pb.
 
 // SyncDNSDomainsFromProvider 从服务商同步域名
 func (this *DNSDomainService) SyncDNSDomainsFromProvider(ctx context.Context, req *pb.SyncDNSDomainsFromProviderRequest) (*pb.SyncDNSDomainsFromProviderResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

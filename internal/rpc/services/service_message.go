@@ -15,7 +15,7 @@ type MessageService struct {
 // CountUnreadMessages 计算未读消息数
 func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.CountUnreadMessagesRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (this *MessageService) CountUnreadMessages(ctx context.Context, req *pb.Cou
 // ListUnreadMessages 列出单页未读消息
 func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.ListUnreadMessagesRequest) (*pb.ListUnreadMessagesResponse, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (this *MessageService) ListUnreadMessages(ctx context.Context, req *pb.List
 // UpdateMessageRead 设置消息已读状态
 func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.UpdateMessageReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (this *MessageService) UpdateMessageRead(ctx context.Context, req *pb.Updat
 // UpdateMessagesRead 设置一组消息已读状态
 func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.UpdateMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (this *MessageService) UpdateMessagesRead(ctx context.Context, req *pb.Upda
 func (this *MessageService) UpdateAllMessagesRead(ctx context.Context, req *pb.UpdateAllMessagesReadRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	// 校验请求
-	adminId, userId, err := this.ValidateAdminAndUser(ctx)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

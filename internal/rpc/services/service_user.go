@@ -42,7 +42,7 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 
 // RegisterUser 注册用户
 func (this *UserService) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (this *UserService) ListEnabledUsers(ctx context.Context, req *pb.ListEnabl
 
 // FindEnabledUser 查询单个用户信息
 func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnabledUserRequest) (*pb.FindEnabledUserResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +337,7 @@ func (this *UserService) CheckUserUsername(ctx context.Context, req *pb.CheckUse
 
 // LoginUser 登录
 func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	_, err := this.ValidateUserNode(ctx)
+	_, err := this.ValidateUserNode(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +382,7 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 
 // UpdateUserInfo 修改用户基本信息
 func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserInfoRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +402,7 @@ func (this *UserService) UpdateUserInfo(ctx context.Context, req *pb.UpdateUserI
 
 // UpdateUserLogin 修改用户登录信息
 func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUserLoginRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx)
+	userId, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +422,7 @@ func (this *UserService) UpdateUserLogin(ctx context.Context, req *pb.UpdateUser
 
 // ComposeUserDashboard 取得用户Dashboard数据
 func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.ComposeUserDashboardRequest) (*pb.ComposeUserDashboardResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +519,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 
 // FindUserNodeClusterId 获取用户所在的集群ID
 func (this *UserService) FindUserNodeClusterId(ctx context.Context, req *pb.FindUserNodeClusterIdRequest) (*pb.FindUserNodeClusterIdResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +575,7 @@ func (this *UserService) UpdateAllUsersFeatures(ctx context.Context, req *pb.Upd
 
 // FindUserFeatures 获取用户所有的功能列表
 func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -737,7 +737,7 @@ func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.Com
 
 // CheckUserOTPWithUsername 检查是否需要输入OTP
 func (this *UserService) CheckUserOTPWithUsername(ctx context.Context, req *pb.CheckUserOTPWithUsernameRequest) (*pb.CheckUserOTPWithUsernameResponse, error) {
-	_, err := this.ValidateUserNode(ctx)
+	_, err := this.ValidateUserNode(ctx, true)
 	if err != nil {
 		return nil, err
 	}

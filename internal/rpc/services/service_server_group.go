@@ -16,7 +16,7 @@ type ServerGroupService struct {
 // CreateServerGroup 创建分组
 func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.CreateServerGroupRequest) (*pb.CreateServerGroupResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (this *ServerGroupService) CreateServerGroup(ctx context.Context, req *pb.C
 // UpdateServerGroup 修改分组
 func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.UpdateServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (this *ServerGroupService) UpdateServerGroup(ctx context.Context, req *pb.U
 // DeleteServerGroup 删除分组
 func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.DeleteServerGroupRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 // FindAllEnabledServerGroups 查询所有分组
 func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, req *pb.FindAllEnabledServerGroupsRequest) (*pb.FindAllEnabledServerGroupsResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, 
 // UpdateServerGroupOrders 修改分组排序
 func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req *pb.UpdateServerGroupOrdersRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (this *ServerGroupService) UpdateServerGroupOrders(ctx context.Context, req
 // FindEnabledServerGroup 查找单个分组信息
 func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req *pb.FindEnabledServerGroupRequest) (*pb.FindEnabledServerGroupResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func (this *ServerGroupService) UpdateServerGroupUDPReverseProxy(ctx context.Con
 // FindEnabledServerGroupConfigInfo 取得分组的配置概要信息
 func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Context, req *pb.FindEnabledServerGroupConfigInfoRequest) (*pb.FindEnabledServerGroupConfigInfoResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

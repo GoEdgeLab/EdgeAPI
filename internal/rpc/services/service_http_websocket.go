@@ -13,7 +13,7 @@ type HTTPWebsocketService struct {
 // 创建Websocket配置
 func (this *HTTPWebsocketService) CreateHTTPWebsocket(ctx context.Context, req *pb.CreateHTTPWebsocketRequest) (*pb.CreateHTTPWebsocketResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (this *HTTPWebsocketService) CreateHTTPWebsocket(ctx context.Context, req *
 // 修改Websocket配置
 func (this *HTTPWebsocketService) UpdateHTTPWebsocket(ctx context.Context, req *pb.UpdateHTTPWebsocketRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

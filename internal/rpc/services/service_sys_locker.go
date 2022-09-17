@@ -13,7 +13,7 @@ type SysLockerService struct {
 
 // SysLockerLock 获得锁
 func (this *SysLockerService) SysLockerLock(ctx context.Context, req *pb.SysLockerLockRequest) (*pb.SysLockerLockResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		_, err = this.ValidateMonitorNode(ctx)
 		if err != nil {
@@ -43,7 +43,7 @@ func (this *SysLockerService) SysLockerLock(ctx context.Context, req *pb.SysLock
 
 // SysLockerUnlock 释放锁
 func (this *SysLockerService) SysLockerUnlock(ctx context.Context, req *pb.SysLockerUnlockRequest) (*pb.RPCSuccess, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		_, err = this.ValidateMonitorNode(ctx)
 		if err != nil {

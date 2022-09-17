@@ -160,7 +160,7 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 
 // FindEnabledNodeCluster 查找单个集群
 func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req *pb.FindEnabledNodeClusterRequest) (*pb.FindEnabledNodeClusterResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithNodeGrantId(ctx co
 // FindEnabledNodeClusterDNS 查找集群的DNS配置
 func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, req *pb.FindEnabledNodeClusterDNSRequest) (*pb.FindEnabledNodeClusterDNSResponse, error) {
 	// 校验请求
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -909,7 +909,7 @@ func (this *NodeClusterService) FindNodeClusterSystemService(ctx context.Context
 
 // FindFreePortInNodeCluster 获取集群中可以使用的端口
 func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, req *pb.FindFreePortInNodeClusterRequest) (*pb.FindFreePortInNodeClusterResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -967,7 +967,7 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 
 // CheckPortIsUsingInNodeCluster 检查端口是否已经被使用
 func (this *NodeClusterService) CheckPortIsUsingInNodeCluster(ctx context.Context, req *pb.CheckPortIsUsingInNodeClusterRequest) (*pb.CheckPortIsUsingInNodeClusterResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1131,7 +1131,7 @@ func (this *NodeClusterService) UpdateNodeClusterPinned(ctx context.Context, req
 
 // FindEnabledNodeClusterWebPPolicy 读取集群WebP策略
 func (this *NodeClusterService) FindEnabledNodeClusterWebPPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterWebPPolicyRequest) (*pb.FindEnabledNodeClusterWebPPolicyResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1178,7 +1178,7 @@ func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context,
 
 // FindEnabledNodeClusterUAMPolicy 读取集群UAM策略
 func (this *NodeClusterService) FindEnabledNodeClusterUAMPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterUAMPolicyRequest) (*pb.FindEnabledNodeClusterUAMPolicyResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ type ServerBillService struct {
 
 // CountAllServerBills 查询服务账单数量
 func (this *ServerBillService) CountAllServerBills(ctx context.Context, req *pb.CountAllServerBillsRequest) (*pb.RPCCountResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (this *ServerBillService) CountAllServerBills(ctx context.Context, req *pb.
 
 // ListServerBills 查询服务账单列表
 func (this *ServerBillService) ListServerBills(ctx context.Context, req *pb.ListServerBillsRequest) (*pb.ListServerBillsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

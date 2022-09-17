@@ -35,7 +35,7 @@ func (this *SysSettingService) UpdateSysSetting(ctx context.Context, req *pb.Upd
 // ReadSysSetting 读取配置
 func (this *SysSettingService) ReadSysSetting(ctx context.Context, req *pb.ReadSysSettingRequest) (*pb.ReadSysSettingResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

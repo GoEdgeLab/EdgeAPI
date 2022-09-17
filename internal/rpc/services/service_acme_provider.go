@@ -15,7 +15,7 @@ type ACMEProviderService struct {
 
 // FindAllACMEProviders 查找所有的服务商
 func (this *ACMEProviderService) FindAllACMEProviders(ctx context.Context, req *pb.FindAllACMEProvidersRequest) (*pb.FindAllACMEProvidersResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (this *ACMEProviderService) FindAllACMEProviders(ctx context.Context, req *
 
 // FindACMEProviderWithCode 根据代号查找服务商
 func (this *ACMEProviderService) FindACMEProviderWithCode(ctx context.Context, req *pb.FindACMEProviderWithCodeRequest) (*pb.FindACMEProviderWithCodeResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

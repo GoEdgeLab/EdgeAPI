@@ -225,7 +225,7 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 
 // SumCurrentServerDailyStats 查找单个服务当前统计数据
 func (this *ServerDailyStatService) SumCurrentServerDailyStats(ctx context.Context, req *pb.SumCurrentServerDailyStatsRequest) (*pb.SumCurrentServerDailyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func (this *ServerDailyStatService) SumCurrentServerDailyStats(ctx context.Conte
 
 // SumServerDailyStats 计算单个服务的日统计
 func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req *pb.SumServerDailyStatsRequest) (*pb.SumServerDailyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req
 
 // SumServerMonthlyStats 计算单个服务的月统计
 func (this *ServerDailyStatService) SumServerMonthlyStats(ctx context.Context, req *pb.SumServerMonthlyStatsRequest) (*pb.SumServerMonthlyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

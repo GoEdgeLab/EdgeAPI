@@ -15,7 +15,7 @@ type ServerRegionProviderMonthlyStatService struct {
 
 // 查找前N个运营商
 func (this *ServerRegionProviderMonthlyStatService) FindTopServerRegionProviderMonthlyStats(ctx context.Context, req *pb.FindTopServerRegionProviderMonthlyStatsRequest) (*pb.FindTopServerRegionProviderMonthlyStatsResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}

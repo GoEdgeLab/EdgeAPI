@@ -13,12 +13,14 @@ type HTTPHeaderPolicyService struct {
 
 // FindEnabledHTTPHeaderPolicyConfig 查找策略配置
 func (this *HTTPHeaderPolicyService) FindEnabledHTTPHeaderPolicyConfig(ctx context.Context, req *pb.FindEnabledHTTPHeaderPolicyConfigRequest) (*pb.FindEnabledHTTPHeaderPolicyConfigResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	config, err := models.SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, req.HeaderPolicyId)
 	if err != nil {
@@ -33,14 +35,16 @@ func (this *HTTPHeaderPolicyService) FindEnabledHTTPHeaderPolicyConfig(ctx conte
 	return &pb.FindEnabledHTTPHeaderPolicyConfigResponse{HeaderPolicyJSON: configData}, nil
 }
 
-// 创建策略
+// CreateHTTPHeaderPolicy 创建策略
 func (this *HTTPHeaderPolicyService) CreateHTTPHeaderPolicy(ctx context.Context, req *pb.CreateHTTPHeaderPolicyRequest) (*pb.CreateHTTPHeaderPolicyResponse, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	headerPolicyId, err := models.SharedHTTPHeaderPolicyDAO.CreateHeaderPolicy(tx)
 	if err != nil {
@@ -50,14 +54,16 @@ func (this *HTTPHeaderPolicyService) CreateHTTPHeaderPolicy(ctx context.Context,
 	return &pb.CreateHTTPHeaderPolicyResponse{HeaderPolicyId: headerPolicyId}, nil
 }
 
-// 修改AddHeaders
+// UpdateHTTPHeaderPolicyAddingHeaders 修改AddHeaders
 func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingHeadersRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
@@ -67,14 +73,16 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingHeaders(ctx con
 	return this.Success()
 }
 
-// 修改SetHeaders
+// UpdateHTTPHeaderPolicySettingHeaders 修改SetHeaders
 func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicySettingHeadersRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	err = models.SharedHTTPHeaderPolicyDAO.UpdateSettingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
@@ -84,14 +92,16 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicySettingHeaders(ctx co
 	return this.Success()
 }
 
-// 修改AddTrailers
+// UpdateHTTPHeaderPolicyAddingTrailers 修改AddTrailers
 func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyAddingTrailersRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	err = models.SharedHTTPHeaderPolicyDAO.UpdateAddingTrailers(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
@@ -101,14 +111,16 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyAddingTrailers(ctx co
 	return this.Success()
 }
 
-// 修改ReplaceHeaders
+// UpdateHTTPHeaderPolicyReplacingHeaders 修改ReplaceHeaders
 func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyReplacingHeadersRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	err = models.SharedHTTPHeaderPolicyDAO.UpdateReplacingHeaders(tx, req.HeaderPolicyId, req.HeadersJSON)
 	if err != nil {
@@ -118,14 +130,16 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyReplacingHeaders(ctx 
 	return this.Success()
 }
 
-// 修改删除的Headers
+// UpdateHTTPHeaderPolicyDeletingHeaders 修改删除的Headers
 func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyDeletingHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyDeletingHeadersRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateAdminAndUser(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	// TODO 检查权限
 
 	err = models.SharedHTTPHeaderPolicyDAO.UpdateDeletingHeaders(tx, req.HeaderPolicyId, req.HeaderNames)
 	if err != nil {

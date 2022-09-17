@@ -19,7 +19,7 @@ type ServerHTTPFirewallDailyStatService struct {
 
 // ComposeServerHTTPFirewallDashboard 组合Dashboard
 func (this *ServerHTTPFirewallDailyStatService) ComposeServerHTTPFirewallDashboard(ctx context.Context, req *pb.ComposeServerHTTPFirewallDashboardRequest) (*pb.ComposeServerHTTPFirewallDashboardResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
