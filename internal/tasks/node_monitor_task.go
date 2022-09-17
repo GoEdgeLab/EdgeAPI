@@ -85,35 +85,37 @@ func (this *NodeMonitorTask) MonitorCluster(cluster *models.NodeCluster) error {
 	}
 
 	// 尝试自动远程启动
-	var nodeQueue = installers.NewNodeQueue()
-	for _, node := range inactiveNodes {
-		var nodeId = int64(node.Id)
-		tryInfo, ok := this.recoverMap[nodeId]
-		if !ok {
-			tryInfo = &nodeStartingTry{
-				count:     1,
-				timestamp: time.Now().Unix(),
-			}
-			this.recoverMap[nodeId] = tryInfo
-		} else {
-			if tryInfo.count >= 3 /** 3次 **/ { // N 秒内超过 M 次就暂时不再重新尝试，防止阻塞当前任务
-				if tryInfo.timestamp+10*60 /** 10 分钟 **/ > time.Now().Unix() {
-					continue
+	if cluster.AutoRemoteStart {
+		var nodeQueue = installers.NewNodeQueue()
+		for _, node := range inactiveNodes {
+			var nodeId = int64(node.Id)
+			tryInfo, ok := this.recoverMap[nodeId]
+			if !ok {
+				tryInfo = &nodeStartingTry{
+					count:     1,
+					timestamp: time.Now().Unix(),
 				}
-				tryInfo.timestamp = time.Now().Unix()
-				tryInfo.count = 0
+				this.recoverMap[nodeId] = tryInfo
+			} else {
+				if tryInfo.count >= 3 /** 3次 **/ { // N 秒内超过 M 次就暂时不再重新尝试，防止阻塞当前任务
+					if tryInfo.timestamp+10*60 /** 10 分钟 **/ > time.Now().Unix() {
+						continue
+					}
+					tryInfo.timestamp = time.Now().Unix()
+					tryInfo.count = 0
+				}
+				tryInfo.count++
 			}
-			tryInfo.count++
-		}
 
-		// TODO 如果用户手工安装的位置不在标准位置，需要节点自身记住最近启动的位置
-		err = nodeQueue.StartNode(nodeId)
-		if err != nil {
-			if !installers.IsGrantError(err) {
-				_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelError, "NODE", "start node from remote API failed: "+err.Error(), time.Now().Unix(), "", nil)
+			// TODO 如果用户手工安装的位置不在标准位置，需要节点自身记住最近启动的位置
+			err = nodeQueue.StartNode(nodeId)
+			if err != nil {
+				if !installers.IsGrantError(err) {
+					_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelError, "NODE", "start node from remote API failed: "+err.Error(), time.Now().Unix(), "", nil)
+				}
+			} else {
+				_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelSuccess, "NODE", "start node from remote API successfully", time.Now().Unix(), "", nil)
 			}
-		} else {
-			_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelSuccess, "NODE", "start node from remote API successfully", time.Now().Unix(), "", nil)
 		}
 	}
 

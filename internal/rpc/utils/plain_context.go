@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+func IsRest(ctx context.Context) bool {
+	if ctx == nil {
+		return false
+	}
+	_, ok := ctx.(*PlainContext)
+	return ok
+}
+
 type PlainContext struct {
 	UserType string
 	UserId   int64

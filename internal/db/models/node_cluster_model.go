@@ -37,6 +37,7 @@ type NodeCluster struct {
 	Uam                  dbs.JSON `field:"uam"`                  // UAM设置
 	Clock                dbs.JSON `field:"clock"`                // 时钟配置
 	GlobalServerConfig   dbs.JSON `field:"globalServerConfig"`   // 全局服务配置
+	AutoRemoteStart      bool     `field:"autoRemoteStart"`      // 自动远程启动
 }
 
 type NodeClusterOperator struct {
@@ -73,6 +74,7 @@ type NodeClusterOperator struct {
 	Uam                  any // UAM设置
 	Clock                any // 时钟配置
 	GlobalServerConfig   any // 全局服务配置
+	AutoRemoteStart      any // 自动远程启动
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

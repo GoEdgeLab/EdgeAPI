@@ -116,7 +116,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		}
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig, req.AutoRemoteStart)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +167,9 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 
 	if userId > 0 {
 		// TODO 检查用户是否有权限
+
+		// 禁止通过REST访问
+		// TODO
 	}
 
 	var tx = this.NullTx()
@@ -197,6 +200,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		NodeMaxThreads:       int32(cluster.NodeMaxThreads),
 		AutoOpenPorts:        cluster.AutoOpenPorts == 1,
 		ClockJSON:            cluster.Clock,
+		AutoRemoteStart:      cluster.AutoRemoteStart,
 	}}, nil
 }
 

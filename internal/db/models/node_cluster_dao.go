@@ -197,7 +197,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig, autoRemoteStart bool) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -221,6 +221,8 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 		}
 		op.Clock = clockJSON
 	}
+
+	op.AutoRemoteStart = autoRemoteStart
 
 	err := this.Save(tx, op)
 	if err != nil {

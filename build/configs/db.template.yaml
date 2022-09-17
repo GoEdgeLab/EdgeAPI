@@ -9,3 +9,7 @@ dbs:
     prefix: "edge"
     models:
       package: internal/web/models
+
+
+fields:
+  bool: [ "uamIsOn", "followPort", "requestHostExcludingPort", "autoRemoteStart" ]
