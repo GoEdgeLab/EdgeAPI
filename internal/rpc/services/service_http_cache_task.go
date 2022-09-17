@@ -11,6 +11,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 // HTTPCacheTaskService 缓存任务管理
@@ -196,6 +197,8 @@ func (this *HTTPCacheTaskService) ListHTTPCacheTasks(ctx context.Context, req *p
 		return nil, err
 	}
 
+	var isFromUser = userId > 0
+
 	var tx = this.NullTx()
 	tasks, err := models.SharedHTTPCacheTaskDAO.ListTasks(tx, userId, req.Offset, req.Size)
 	if err != nil {
@@ -232,6 +235,14 @@ func (this *HTTPCacheTaskService) ListHTTPCacheTasks(ctx context.Context, req *p
 			}
 		}
 
+		// 对用户而言，超过Ns自动认为已完成
+		const timeoutSeconds = 300
+		if isFromUser && !task.IsDone && time.Now().Unix()-int64(task.CreatedAt) > timeoutSeconds {
+			task.IsOk = true
+			task.IsDone = true
+			task.DoneAt = task.CreatedAt + timeoutSeconds
+		}
+
 		pbTasks = append(pbTasks, &pb.HTTPCacheTask{
 			Id:                taskId,
 			UserId:            int64(task.UserId),
@@ -257,6 +268,7 @@ func (this *HTTPCacheTaskService) FindEnabledHTTPCacheTask(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	var isFromUser = userId > 0
 
 	var tx = this.NullTx()
 	if userId > 0 {
@@ -272,6 +284,14 @@ func (this *HTTPCacheTaskService) FindEnabledHTTPCacheTask(ctx context.Context, 
 	}
 	if task == nil {
 		return &pb.FindEnabledHTTPCacheTaskResponse{HttpCacheTask: nil}, nil
+	}
+
+	// 对用户而言，超过Ns自动认为已完成
+	const timeoutSeconds = 300
+	if isFromUser && !task.IsDone && time.Now().Unix()-int64(task.CreatedAt) > timeoutSeconds {
+		task.IsOk = true
+		task.IsDone = true
+		task.DoneAt = task.CreatedAt + timeoutSeconds
 	}
 
 	// 查询所属用户
@@ -306,6 +326,11 @@ func (this *HTTPCacheTaskService) FindEnabledHTTPCacheTask(ctx context.Context, 
 	}
 	var pbKeys = []*pb.HTTPCacheTaskKey{}
 	for _, key := range keys {
+		// 对用户而言，超过Ns自动认为已完成
+		if isFromUser && task.IsDone {
+			key.IsDone = true
+			key.Errors = nil
+		}
 
 		pbKeys = append(pbKeys, &pb.HTTPCacheTaskKey{
 			Id:         int64(key.Id),
