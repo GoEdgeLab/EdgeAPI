@@ -15,7 +15,7 @@ import (
 
 // CheckClusterDNS 检查集群的DNS问题
 // 藏这么深是避免package循环引用的问题
-func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSIssue, err error) {
+func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster, checkNodeIssues bool) (issues []*pb.DNSIssue, err error) {
 	var clusterId = int64(cluster.Id)
 	var domainId = int64(cluster.DnsDomainId)
 
@@ -104,47 +104,27 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSI
 	// TODO 检查域名是否已解析
 
 	// 检查节点
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, clusterDNSConfig != nil && clusterDNSConfig.IncludingLnNodes)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO 检查节点数量不能为0
-
-	for _, node := range nodes {
-		nodeId := int64(node.Id)
-
-		routeCodes, err := node.DNSRouteCodesForDomainId(domainId)
+	if checkNodeIssues {
+		nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, clusterDNSConfig != nil && clusterDNSConfig.IncludingLnNodes)
 		if err != nil {
 			return nil, err
 		}
-		if len(routeCodes) == 0 && !hasDefaultRoute {
-			issues = append(issues, &pb.DNSIssue{
-				Target:      node.Name,
-				TargetId:    nodeId,
-				Type:        "node",
-				Description: "没有选择节点所属线路",
-				Params: map[string]string{
-					"clusterName": cluster.Name,
-					"clusterId":   numberutils.FormatInt64(clusterId),
-				},
-				MustFix: true,
-			})
-			continue
-		}
 
-		// 检查线路是否在已有线路中
-		for _, routeCode := range routeCodes {
-			routeOk, err := domain.ContainsRouteCode(routeCode)
+		// TODO 检查节点数量不能为0
+
+		for _, node := range nodes {
+			nodeId := int64(node.Id)
+
+			routeCodes, err := node.DNSRouteCodesForDomainId(domainId)
 			if err != nil {
 				return nil, err
 			}
-			if !routeOk {
+			if len(routeCodes) == 0 && !hasDefaultRoute {
 				issues = append(issues, &pb.DNSIssue{
 					Target:      node.Name,
 					TargetId:    nodeId,
 					Type:        "node",
-					Description: "线路已经失效，请重新选择",
+					Description: "没有选择节点所属线路",
 					Params: map[string]string{
 						"clusterName": cluster.Name,
 						"clusterId":   numberutils.FormatInt64(clusterId),
@@ -153,29 +133,51 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster) (issues []*pb.DNSI
 				})
 				continue
 			}
-		}
 
-		// 检查IP地址
-		ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, true, nodeconfigs.NodeRoleNode)
-		if err != nil {
-			return nil, err
-		}
-		if len(ipAddr) == 0 {
-			issues = append(issues, &pb.DNSIssue{
-				Target:      node.Name,
-				TargetId:    nodeId,
-				Type:        "node",
-				Description: "没有设置IP地址",
-				Params: map[string]string{
-					"clusterName": cluster.Name,
-					"clusterId":   numberutils.FormatInt64(clusterId),
-				},
-				MustFix: true,
-			})
-			continue
-		}
+			// 检查线路是否在已有线路中
+			for _, routeCode := range routeCodes {
+				routeOk, err := domain.ContainsRouteCode(routeCode)
+				if err != nil {
+					return nil, err
+				}
+				if !routeOk {
+					issues = append(issues, &pb.DNSIssue{
+						Target:      node.Name,
+						TargetId:    nodeId,
+						Type:        "node",
+						Description: "线路已经失效，请重新选择",
+						Params: map[string]string{
+							"clusterName": cluster.Name,
+							"clusterId":   numberutils.FormatInt64(clusterId),
+						},
+						MustFix: true,
+					})
+					continue
+				}
+			}
 
-		// TODO 检查是否有解析记录
+			// 检查IP地址
+			ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, true, nodeconfigs.NodeRoleNode)
+			if err != nil {
+				return nil, err
+			}
+			if len(ipAddr) == 0 {
+				issues = append(issues, &pb.DNSIssue{
+					Target:      node.Name,
+					TargetId:    nodeId,
+					Type:        "node",
+					Description: "没有设置IP地址",
+					Params: map[string]string{
+						"clusterName": cluster.Name,
+						"clusterId":   numberutils.FormatInt64(clusterId),
+					},
+					MustFix: true,
+				})
+				continue
+			}
+
+			// TODO 检查是否有解析记录
+		}
 	}
 
 	return

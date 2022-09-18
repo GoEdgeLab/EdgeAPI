@@ -40,7 +40,7 @@ func (this *DNSService) FindAllDNSIssues(ctx context.Context, req *pb.FindAllDNS
 		clusters = []*models.NodeCluster{cluster}
 	}
 	for _, cluster := range clusters {
-		issues, err := dnsutils.CheckClusterDNS(tx, cluster)
+		issues, err := dnsutils.CheckClusterDNS(tx, cluster, true)
 		if err != nil {
 			return nil, err
 		}

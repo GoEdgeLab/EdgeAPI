@@ -472,8 +472,8 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		return nil, nil, nil, 0, 0, false, false, err
 	}
 	countAllNodes = int64(len(nodes))
-	nodeRecords := []*dnstypes.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
-	nodeRecordMapping := map[string]*dnstypes.Record{} // value_route => *Record
+	var nodeRecords = []*dnstypes.Record{}                // 之所以用数组再存一遍，是因为dnsName可能会重复
+	var nodeRecordMapping = map[string]*dnstypes.Record{} // value_route => *Record
 	for _, record := range records {
 		if (record.Type == dnstypes.RecordTypeA || record.Type == dnstypes.RecordTypeAAAA) && record.Name == clusterDnsName {
 			nodeRecords = append(nodeRecords, record)
@@ -482,7 +482,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	// 新增的节点域名
-	nodeKeys := []string{}
+	var nodeKeys = []string{}
 	for _, node := range nodes {
 		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
@@ -557,8 +557,8 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		return nil, nil, nil, 0, 0, false, false, err
 	}
 	countAllServers = int64(len(servers))
-	serverRecords := []*dnstypes.Record{}             // 之所以用数组再存一遍，是因为dnsName可能会重复
-	serverRecordsMap := map[string]*dnstypes.Record{} // dnsName => *Record
+	var serverRecords = []*dnstypes.Record{}             // 之所以用数组再存一遍，是因为dnsName可能会重复
+	var serverRecordsMap = map[string]*dnstypes.Record{} // dnsName => *Record
 	for _, record := range records {
 		if record.Type == dnstypes.RecordTypeCNAME && record.Value == clusterDomain+"." {
 			serverRecords = append(serverRecords, record)
@@ -567,7 +567,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	// 新增的域名
-	serverDNSNames := []string{}
+	var serverDNSNames = []string{}
 	for _, server := range servers {
 		dnsName := server.DnsName
 		if len(dnsName) == 0 {
@@ -635,7 +635,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 
 	// 查询集群信息
 	var err error
-	clusters := []*models.NodeCluster{}
+	var clusters = []*models.NodeCluster{}
 	if req.NodeClusterId > 0 {
 		cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(tx, req.NodeClusterId)
 		if err != nil {
@@ -671,8 +671,8 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	if domain == nil {
 		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "找不到要操作的域名"}, nil
 	}
-	domainId := int64(domain.Id)
-	domainName := domain.Name
+	var domainId = int64(domain.Id)
+	var domainName = domain.Name
 
 	// 服务商信息
 	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, int64(domain.ProviderId))
@@ -691,7 +691,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}
 
 	// 开始同步
-	manager := dnsclients.FindProvider(provider.Type)
+	var manager = dnsclients.FindProvider(provider.Type)
 	if manager == nil {
 		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "目前不支持'" + provider.Type + "'"}, nil
 	}
@@ -716,7 +716,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 
 	// 检查集群设置
 	for _, cluster := range clusters {
-		issues, err := dnsutils.CheckClusterDNS(tx, cluster)
+		issues, err := dnsutils.CheckClusterDNS(tx, cluster, req.CheckNodeIssues)
 		if err != nil {
 			return nil, err
 		}
@@ -740,7 +740,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}
 
 	// 对比变化
-	allChanges := []maps.Map{}
+	var allChanges = []maps.Map{}
 	for _, cluster := range clusters {
 		changes, _, _, _, _, _, _, err := this.findClusterDNSChanges(cluster, records, domainName, manager.DefaultRoute())
 		if err != nil {
@@ -768,8 +768,6 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 				return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "删除域名记录失败：" + err.Error()}, nil
 			}
 		}
-
-		//logs.Println(action, record.Name, record.Type, record.Value, record.Route)
 	}
 
 	// 重新更新记录
