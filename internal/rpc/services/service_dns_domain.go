@@ -147,8 +147,8 @@ func (this *DNSDomainService) RecoverDNSDomain(ctx context.Context, req *pb.Reco
 	return this.Success()
 }
 
-// FindEnabledDNSDomain 查询单个域名完整信息
-func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.FindEnabledDNSDomainRequest) (*pb.FindEnabledDNSDomainResponse, error) {
+// FindDNSDomain 查询单个域名完整信息
+func (this *DNSDomainService) FindDNSDomain(ctx context.Context, req *pb.FindDNSDomainRequest) (*pb.FindDNSDomainResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -162,15 +162,15 @@ func (this *DNSDomainService) FindEnabledDNSDomain(ctx context.Context, req *pb.
 		return nil, err
 	}
 	if domain == nil {
-		return &pb.FindEnabledDNSDomainResponse{DnsDomain: nil}, nil
+		return &pb.FindDNSDomainResponse{DnsDomain: nil}, nil
 	}
 
 	pbDomain, err := this.convertDomainToPB(tx, domain)
-	return &pb.FindEnabledDNSDomainResponse{DnsDomain: pbDomain}, nil
+	return &pb.FindDNSDomainResponse{DnsDomain: pbDomain}, nil
 }
 
-// FindEnabledBasicDNSDomain 查询单个域名基础信息
-func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req *pb.FindEnabledBasicDNSDomainRequest) (*pb.FindEnabledBasicDNSDomainResponse, error) {
+// FindBasicDNSDomain 查询单个域名基础信息
+func (this *DNSDomainService) FindBasicDNSDomain(ctx context.Context, req *pb.FindBasicDNSDomainRequest) (*pb.FindBasicDNSDomainResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -184,10 +184,10 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 		return nil, err
 	}
 	if domain == nil {
-		return &pb.FindEnabledBasicDNSDomainResponse{DnsDomain: nil}, nil
+		return &pb.FindBasicDNSDomainResponse{DnsDomain: nil}, nil
 	}
 
-	return &pb.FindEnabledBasicDNSDomainResponse{DnsDomain: &pb.DNSDomain{
+	return &pb.FindBasicDNSDomainResponse{DnsDomain: &pb.DNSDomain{
 		Id:         int64(domain.Id),
 		Name:       domain.Name,
 		IsOn:       domain.IsOn,
@@ -195,8 +195,8 @@ func (this *DNSDomainService) FindEnabledBasicDNSDomain(ctx context.Context, req
 	}}, nil
 }
 
-// CountAllEnabledDNSDomainsWithDNSProviderId 计算服务商下的域名数量
-func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.CountAllEnabledDNSDomainsWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
+// CountAllDNSDomainsWithDNSProviderId 计算服务商下的域名数量
+func (this *DNSDomainService) CountAllDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.CountAllDNSDomainsWithDNSProviderIdRequest) (*pb.RPCCountResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -205,15 +205,15 @@ func (this *DNSDomainService) CountAllEnabledDNSDomainsWithDNSProviderId(ctx con
 
 	var tx = this.NullTx()
 
-	count, err := dns.SharedDNSDomainDAO.CountAllEnabledDomainsWithProviderId(tx, req.DnsProviderId)
+	count, err := dns.SharedDNSDomainDAO.CountAllEnabledDomainsWithProviderId(tx, req.DnsProviderId, req.IsDeleted, !req.IsDown)
 	if err != nil {
 		return nil, err
 	}
 	return this.SuccessCount(count)
 }
 
-// FindAllEnabledDNSDomainsWithDNSProviderId 列出服务商下的所有域名
-func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllEnabledDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllEnabledDNSDomainsWithDNSProviderIdResponse, error) {
+// FindAllDNSDomainsWithDNSProviderId 列出服务商下的所有域名
+func (this *DNSDomainService) FindAllDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllDNSDomainsWithDNSProviderIdResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -236,11 +236,11 @@ func (this *DNSDomainService) FindAllEnabledDNSDomainsWithDNSProviderId(ctx cont
 		result = append(result, pbDomain)
 	}
 
-	return &pb.FindAllEnabledDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
+	return &pb.FindAllDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
 }
 
-// FindAllEnabledBasicDNSDomainsWithDNSProviderId 列出服务商下的所有域名基本信息
-func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdResponse, error) {
+// FindAllBasicDNSDomainsWithDNSProviderId 列出服务商下的所有域名基本信息
+func (this *DNSDomainService) FindAllBasicDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.FindAllBasicDNSDomainsWithDNSProviderIdRequest) (*pb.FindAllBasicDNSDomainsWithDNSProviderIdResponse, error) {
 	// 校验请求
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
@@ -254,7 +254,7 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 		return nil, err
 	}
 
-	result := []*pb.DNSDomain{}
+	var result = []*pb.DNSDomain{}
 	for _, domain := range domains {
 		result = append(result, &pb.DNSDomain{
 			Id:        int64(domain.Id),
@@ -265,7 +265,36 @@ func (this *DNSDomainService) FindAllEnabledBasicDNSDomainsWithDNSProviderId(ctx
 		})
 	}
 
-	return &pb.FindAllEnabledBasicDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
+	return &pb.FindAllBasicDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
+}
+
+// ListBasicDNSDomainsWithDNSProviderId 列出服务商下的单页域名信息
+func (this *DNSDomainService) ListBasicDNSDomainsWithDNSProviderId(ctx context.Context, req *pb.ListBasicDNSDomainsWithDNSProviderIdRequest) (*pb.ListDNSDomainsWithDNSProviderIdResponse, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	domains, err := dns.SharedDNSDomainDAO.ListDomains(tx, req.DnsProviderId, req.IsDeleted, !req.IsDown, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []*pb.DNSDomain{}
+	for _, domain := range domains {
+		result = append(result, &pb.DNSDomain{
+			Id:        int64(domain.Id),
+			Name:      domain.Name,
+			IsOn:      domain.IsOn,
+			IsUp:      domain.IsUp,
+			IsDeleted: domain.IsDeleted,
+		})
+	}
+
+	return &pb.ListDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
 }
 
 // SyncDNSDomainData 同步域名数据

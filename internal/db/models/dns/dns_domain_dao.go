@@ -133,11 +133,28 @@ func (this *DNSDomainDAO) FindAllEnabledDomainsWithProviderId(tx *dbs.Tx, provid
 	return
 }
 
+// ListDomains 列出单页域名
+func (this *DNSDomainDAO) ListDomains(tx *dbs.Tx, providerId int64, isDeleted bool, isUp bool, offset int64, size int64) (result []*DNSDomain, err error) {
+	_, err = this.Query(tx).
+		State(DNSDomainStateEnabled).
+		Attr("providerId", providerId).
+		Attr("isDeleted", isDeleted).
+		Attr("isUp", isUp).
+		AscPk().
+		Offset(offset).
+		Limit(size).
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // CountAllEnabledDomainsWithProviderId 计算某个服务商下的域名数量
-func (this *DNSDomainDAO) CountAllEnabledDomainsWithProviderId(tx *dbs.Tx, providerId int64) (int64, error) {
+func (this *DNSDomainDAO) CountAllEnabledDomainsWithProviderId(tx *dbs.Tx, providerId int64, isDeleted bool, isUp bool) (int64, error) {
 	return this.Query(tx).
 		State(DNSDomainStateEnabled).
 		Attr("providerId", providerId).
+		Attr("isDeleted", isDeleted).
+		Attr("isUp", isUp).
 		Count()
 }
 
