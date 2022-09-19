@@ -18,6 +18,7 @@ type NSCluster struct {
 	DdosProtection  dbs.JSON `field:"ddosProtection"`  // DDoS防护设置
 	Hosts           dbs.JSON `field:"hosts"`           // DNS主机地址
 	AutoRemoteStart bool     `field:"autoRemoteStart"` // 自动远程启动
+	TimeZone        string   `field:"timeZone"`        // 时区
 }
 
 type NSClusterOperator struct {
@@ -35,6 +36,7 @@ type NSClusterOperator struct {
 	DdosProtection  any // DDoS防护设置
 	Hosts           any // DNS主机地址
 	AutoRemoteStart any // 自动远程启动
+	TimeZone        any // 时区
 }
 
 func NewNSClusterOperator() *NSClusterOperator {
