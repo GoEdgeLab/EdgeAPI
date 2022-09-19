@@ -208,6 +208,7 @@ func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId
 func (this *ServerBandwidthStatDAO) FindMonthlyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, month string) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
 		Between("day", month+"01", month+"31").
 		Result("MAX(bytes)").
 		FindInt64Col(0)
