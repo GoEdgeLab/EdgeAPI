@@ -106,7 +106,7 @@ func (this *UserBandwidthStatDAO) FindUserPeekBandwidthInDay(tx *dbs.Tx, userId 
 
 // Clean 清理过期数据
 func (this *UserBandwidthStatDAO) Clean(tx *dbs.Tx) error {
-	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -62)) // 保留大约2个月的数据
+	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -100)) // 保留大约3个月的数据
 	return this.runBatch(func(table string, locker *sync.Mutex) error {
 		_, err := this.Query(tx).
 			Table(table).

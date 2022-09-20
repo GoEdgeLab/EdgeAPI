@@ -85,8 +85,8 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 func (this *ServerBandwidthStatDAO) FindMinutelyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string, minute string) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("bytes").
 		Attr("serverId", serverId).
+		Result("bytes").
 		Attr("day", day).
 		Attr("timeAt", minute).
 		FindInt64Col(0)
@@ -102,8 +102,8 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 
 	ones, _, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("MAX(bytes) AS bytes", "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
 		Attr("serverId", serverId).
+		Result("MAX(bytes) AS bytes", "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
 		Gte("CONCAT(day, '.', SUBSTRING(timeAt, 1, 2))", timeutil.FormatTime("Ymd.H", timestamp)).
 		Group("fullTime").
 		FindOnes()
@@ -150,6 +150,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
 		Attr("day", day).
 		Result("MAX(bytes)").
 		FindInt64Col(0)
@@ -265,8 +266,8 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	if percentile >= 100 {
 		result, err = this.Query(tx).
 			Table(this.partialTable(serverId)).
-			Result("bytes").
 			Attr("serverId", serverId).
+			Result("bytes").
 			Between("day", month+"01", month+"31").
 			Desc("bytes").
 			Limit(1).
@@ -296,8 +297,8 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	// 查询 nth 位置
 	result, err = this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("bytes").
 		Attr("serverId", serverId).
+		Result("bytes").
 		Between("day", month+"01", month+"31").
 		Desc("bytes").
 		Offset(offset).
@@ -309,7 +310,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 
 // Clean 清理过期数据
 func (this *ServerBandwidthStatDAO) Clean(tx *dbs.Tx) error {
-	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -62)) // 保留大约2个月的数据
+	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -100)) // 保留大约3个月的数据
 	return this.runBatch(func(table string, locker *sync.Mutex) error {
 		_, err := this.Query(tx).
 			Table(table).
