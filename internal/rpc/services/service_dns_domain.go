@@ -459,7 +459,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	if len(cluster.Dns) > 0 {
 		dnsConfig, _ := cluster.DecodeDNSConfig()
 		if dnsConfig != nil {
-			cnameRecords = dnsConfig.CNameRecords
+			cnameRecords = dnsConfig.CNAMERecords
 			if dnsConfig.TTL > 0 {
 				ttl = dnsConfig.TTL
 			}

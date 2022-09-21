@@ -149,8 +149,8 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
 		NodesAutoSync:    true,
 		ServersAutoSync:  true,
-		CNameRecords:     []string{},
-		CNameAsDomain:    true,
+		CNAMERecords:     []string{},
+		CNAMEAsDomain:    true,
 		TTL:              dnsTTL,
 		IncludingLnNodes: true,
 	}
@@ -529,9 +529,9 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
 		NodesAutoSync:    nodesAutoSync,
 		ServersAutoSync:  serversAutoSync,
-		CNameRecords:     cnameRecords,
+		CNAMERecords:     cnameRecords,
 		TTL:              ttl,
-		CNameAsDomain:    cnameAsDomain,
+		CNAMEAsDomain:    cnameAsDomain,
 		IncludingLnNodes: includingLnNodes,
 	}
 	dnsJSON, err := json.Marshal(dnsConfig)

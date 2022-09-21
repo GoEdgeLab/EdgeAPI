@@ -468,7 +468,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	// 自动设置的CNAME
 	var cnameRecords = []string{}
 	if dnsConfig != nil {
-		cnameRecords = dnsConfig.CNameRecords
+		cnameRecords = dnsConfig.CNAMERecords
 	}
 	for _, cnameRecord := range cnameRecords {
 		serverDNSNames = append(serverDNSNames, cnameRecord)

@@ -493,9 +493,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			Provider:         nil,
 			NodesAutoSync:    dnsConfig.NodesAutoSync,
 			ServersAutoSync:  dnsConfig.ServersAutoSync,
-			CnameRecords:     dnsConfig.CNameRecords,
+			CnameRecords:     dnsConfig.CNAMERecords,
 			Ttl:              dnsConfig.TTL,
-			CnameAsDomain:    dnsConfig.CNameAsDomain,
+			CnameAsDomain:    dnsConfig.CNAMEAsDomain,
 			IncludingLnNodes: dnsConfig.IncludingLnNodes,
 		}, nil
 	}
@@ -553,9 +553,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 		Provider:         pbProvider,
 		NodesAutoSync:    dnsConfig.NodesAutoSync,
 		ServersAutoSync:  dnsConfig.ServersAutoSync,
-		CnameRecords:     dnsConfig.CNameRecords,
+		CnameRecords:     dnsConfig.CNAMERecords,
 		Ttl:              dnsConfig.TTL,
-		CnameAsDomain:    dnsConfig.CNameAsDomain,
+		CnameAsDomain:    dnsConfig.CNAMEAsDomain,
 		IncludingLnNodes: dnsConfig.IncludingLnNodes,
 		DefaultRoute:     defaultRoute,
 	}, nil

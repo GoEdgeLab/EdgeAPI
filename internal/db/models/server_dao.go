@@ -1081,7 +1081,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 			if domain != nil {
 				var cname = server.DnsName + "." + domain.Name
 				config.CNameDomain = cname
-				if clusterDNSConfig.CNameAsDomain {
+				if clusterDNSConfig.CNAMEAsDomain {
 					config.CNameAsDomain = true
 					config.AliasServerNames = append(config.AliasServerNames, cname)
 				}
