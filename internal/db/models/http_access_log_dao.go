@@ -455,6 +455,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 			var dao = tableQuery.daoWrapper.DAO
 			var query = dao.Query(tx)
+			query.Result("id", "serverId", "nodeId", "status", "createdAt", "content", "requestId", "firewallPolicyId", "firewallRuleGroupId", "firewallRuleSetId", "firewallRuleId", "remoteAddr", "domain")
 
 			// 条件
 			if nodeId > 0 {
