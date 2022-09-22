@@ -457,6 +457,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		config.UAM = uamConfig
 	}
 
+	// Referers
+	if IsNotNull(web.Referers) {
+		var referersConfig = &serverconfigs.ReferersConfig{}
+		err = json.Unmarshal(web.Referers, referersConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.Referers = referersConfig
+	}
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1209,6 +1219,35 @@ func (this *HTTPWebDAO) FindWebUAM(tx *dbs.Tx, webId int64) ([]byte, error) {
 	return this.Query(tx).
 		Pk(webId).
 		Result("uam").
+		FindJSONCol()
+}
+
+// UpdateWebReferers 修改防盗链设置
+func (this *HTTPWebDAO) UpdateWebReferers(tx *dbs.Tx, webId int64, referersConfig *serverconfigs.ReferersConfig) error {
+	if referersConfig == nil {
+		return nil
+	}
+	configJSON, err := json.Marshal(referersConfig)
+	if err != nil {
+		return err
+	}
+
+	err = this.Query(tx).
+		Pk(webId).
+		Set("referers", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebReferers 查找服务的防盗链配置
+func (this *HTTPWebDAO) FindWebReferers(tx *dbs.Tx, webId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(webId).
+		Result("referers").
 		FindJSONCol()
 }
 

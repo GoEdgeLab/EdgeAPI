@@ -754,3 +754,55 @@ func (this *HTTPWebService) FindHTTPWebRequestScripts(ctx context.Context, req *
 		RequestScriptsJSON: configJSON,
 	}, nil
 }
+
+// UpdateHTTPWebReferers 修改防盗链设置
+func (this *HTTPWebService) UpdateHTTPWebReferers(ctx context.Context, req *pb.UpdateHTTPWebReferersRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var config = &serverconfigs.ReferersConfig{}
+	if len(req.ReferersJSON) > 0 {
+		err = json.Unmarshal(req.ReferersJSON, config)
+		if err != nil {
+			return nil, err
+		}
+
+		err = config.Init()
+		if err != nil {
+			return nil, errors.New("validate referers config failed: " + err.Error())
+		}
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedHTTPWebDAO.UpdateWebReferers(tx, req.HttpWebId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindHTTPWebReferers 查找防盗链设置
+func (this *HTTPWebService) FindHTTPWebReferers(ctx context.Context, req *pb.FindHTTPWebReferersRequest) (*pb.FindHTTPWebReferersResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	config, err := models.SharedHTTPWebDAO.FindWebReferers(tx, req.HttpWebId)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindHTTPWebReferersResponse{
+		ReferersJSON: configJSON,
+	}, nil
+}
