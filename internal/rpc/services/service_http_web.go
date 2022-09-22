@@ -757,9 +757,18 @@ func (this *HTTPWebService) FindHTTPWebRequestScripts(ctx context.Context, req *
 
 // UpdateHTTPWebReferers 修改防盗链设置
 func (this *HTTPWebService) UpdateHTTPWebReferers(ctx context.Context, req *pb.UpdateHTTPWebReferersRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(tx, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var config = &serverconfigs.ReferersConfig{}
@@ -775,7 +784,6 @@ func (this *HTTPWebService) UpdateHTTPWebReferers(ctx context.Context, req *pb.U
 		}
 	}
 
-	var tx = this.NullTx()
 	err = models.SharedHTTPWebDAO.UpdateWebReferers(tx, req.HttpWebId, config)
 	if err != nil {
 		return nil, err
@@ -786,12 +794,20 @@ func (this *HTTPWebService) UpdateHTTPWebReferers(ctx context.Context, req *pb.U
 
 // FindHTTPWebReferers 查找防盗链设置
 func (this *HTTPWebService) FindHTTPWebReferers(ctx context.Context, req *pb.FindHTTPWebReferersRequest) (*pb.FindHTTPWebReferersResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(tx, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	config, err := models.SharedHTTPWebDAO.FindWebReferers(tx, req.HttpWebId)
 	if err != nil {
 		return nil, err
