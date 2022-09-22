@@ -143,14 +143,33 @@ func (this *NodeClusterService) DeleteNodeCluster(ctx context.Context, req *pb.D
 		return nil, err
 	}
 
-	// 删除集群
-	err = models.SharedNodeClusterDAO.DisableNodeCluster(tx, req.NodeClusterId)
+	// 删除现有的DNS相关任务
+	err = dns.SharedDNSTaskDAO.DeleteDNSTasksWithClusterId(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
 
+	// 生成新的删除DNS任务
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+	if dnsInfo != nil {
+		var oldDNSDomainId = int64(dnsInfo.DnsDomainId)
+		err = dns.SharedDNSTaskDAO.CreateClusterRemoveTask(tx, req.NodeClusterId, oldDNSDomainId, dnsInfo.DnsName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// 删除相关任务
 	err = models.SharedNodeTaskDAO.DeleteAllClusterTasks(tx, nodeconfigs.NodeRoleNode, req.NodeClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 删除集群
+	err = models.SharedNodeClusterDAO.DisableNodeCluster(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}

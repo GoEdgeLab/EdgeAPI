@@ -525,11 +525,13 @@ func (this *DNSTaskExecutor) doClusterRemove(taskId int64, clusterId int64, doma
 	}()
 
 	var tx *dbs.Tx
+
+	dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
+	if err != nil {
+		return err
+	}
+
 	if len(dnsName) == 0 {
-		dnsInfo, err := models.SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
-		if err != nil {
-			return err
-		}
 		if dnsInfo == nil {
 			isOk = true
 			return nil
@@ -539,6 +541,12 @@ func (this *DNSTaskExecutor) doClusterRemove(taskId int64, clusterId int64, doma
 			isOk = true
 			return nil
 		}
+	}
+
+	// 再次检查是否正在使用，如果正在使用，则直接返回
+	if dnsInfo != nil && dnsInfo.State == models.NodeClusterStateEnabled /** 尚未被删除 **/ && int64(dnsInfo.DnsDomainId) == domainId && dnsInfo.DnsName == dnsName {
+		isOk = true
+		return nil
 	}
 
 	domain, manager, err := this.findDNSManagerWithDomainId(tx, domainId)

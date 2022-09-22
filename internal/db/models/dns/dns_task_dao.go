@@ -56,11 +56,13 @@ func (this *DNSTaskDAO) CreateDNSTask(tx *dbs.Tx, clusterId int64, serverId int6
 		"isDone":     false,
 		"isOk":       false,
 		"error":      "",
+		"version":    time.Now().UnixNano(),
 	}, maps.Map{
 		"updatedAt": time.Now().Unix(),
 		"isDone":    false,
 		"isOk":      false,
 		"error":     "",
+		"version":   time.Now().UnixNano(),
 	})
 	return err
 }
@@ -94,6 +96,7 @@ func (this *DNSTaskDAO) CreateDomainTask(tx *dbs.Tx, domainId int64, taskType DN
 func (this *DNSTaskDAO) FindAllDoingTasks(tx *dbs.Tx) (result []*DNSTask, err error) {
 	_, err = this.Query(tx).
 		Attr("isDone", 0).
+		Asc("version").
 		AscPk().
 		Slice(&result).
 		FindAll()
@@ -109,6 +112,7 @@ func (this *DNSTaskDAO) FindAllDoingOrErrorTasks(tx *dbs.Tx, nodeClusterId int64
 	_, err = query.
 		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
 		Asc("updatedAt").
+		Asc("version").
 		AscPk().
 		Slice(&result).
 		FindAll()
@@ -162,4 +166,14 @@ func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64) error {
 	op.IsOk = true
 	op.Error = ""
 	return this.Save(tx, op)
+}
+
+// DeleteDNSTasksWithClusterId 删除集群相关任务
+func (this *DNSTaskDAO) DeleteDNSTasksWithClusterId(tx *dbs.Tx, clusterId int64) error {
+	if clusterId <= 0 {
+		return nil
+	}
+	return this.Query(tx).
+		Attr("clusterId", clusterId).
+		DeleteQuickly()
 }

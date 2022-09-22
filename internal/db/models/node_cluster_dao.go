@@ -466,7 +466,7 @@ func (this *NodeClusterDAO) FindClusterDNSInfo(tx *dbs.Tx, clusterId int64, cach
 
 	one, err := this.Query(tx).
 		Pk(clusterId).
-		Result("id", "name", "dnsName", "dnsDomainId", "dns", "isOn").
+		Result("id", "name", "dnsName", "dnsDomainId", "dns", "isOn", "state").
 		Find()
 	if err != nil {
 		return nil, err
@@ -510,10 +510,16 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 
 	var oldCluster = oldOne.(*NodeCluster)
 	var oldDNSDomainId = int64(oldCluster.DnsDomainId)
+	var shouldRemoveOld = false
 	if (oldDNSDomainId > 0 && oldDNSDomainId != dnsDomainId) || (oldCluster.DnsName != dnsName) {
-		err = dns.SharedDNSTaskDAO.CreateClusterRemoveTask(tx, clusterId, oldDNSDomainId, oldCluster.DnsName)
-		if err != nil {
-			return err
+		if oldDNSDomainId == dnsDomainId {
+			// 如果只是换子域名，需要在新的域名添加之前，先删除老的子域名，防止无法添加CNAME
+			err = dns.SharedDNSTaskDAO.CreateClusterRemoveTask(tx, clusterId, oldDNSDomainId, oldCluster.DnsName)
+			if err != nil {
+				return err
+			}
+		} else {
+			shouldRemoveOld = true
 		}
 	}
 
@@ -548,7 +554,20 @@ func (this *NodeClusterDAO) UpdateClusterDNS(tx *dbs.Tx, clusterId int64, dnsNam
 	if err != nil {
 		return err
 	}
-	return this.NotifyDNSUpdate(tx, clusterId)
+	err = this.NotifyDNSUpdate(tx, clusterId)
+	if err != nil {
+		return err
+	}
+
+	// 删除老的记录
+	if shouldRemoveOld {
+		err = dns.SharedDNSTaskDAO.CreateClusterRemoveTask(tx, clusterId, oldDNSDomainId, oldCluster.DnsName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // FindClusterAdminId 查找集群所属管理员
