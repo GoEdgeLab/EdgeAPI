@@ -19,6 +19,7 @@ type NSCluster struct {
 	Hosts           dbs.JSON `field:"hosts"`           // DNS主机地址
 	AutoRemoteStart bool     `field:"autoRemoteStart"` // 自动远程启动
 	TimeZone        string   `field:"timeZone"`        // 时区
+	Answer          dbs.JSON `field:"answer"`          // 应答设置
 }
 
 type NSClusterOperator struct {
@@ -37,6 +38,7 @@ type NSClusterOperator struct {
 	Hosts           any // DNS主机地址
 	AutoRemoteStart any // 自动远程启动
 	TimeZone        any // 时区
+	Answer          any // 应答设置
 }
 
 func NewNSClusterOperator() *NSClusterOperator {

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 )
 
@@ -42,4 +43,20 @@ func (this *NSCluster) DecodeHosts() []string {
 	}
 
 	return hosts
+}
+
+// DecodeAnswerConfig 解析应答设置
+func (this *NSCluster) DecodeAnswerConfig() *dnsconfigs.NSAnswerConfig {
+	var config = dnsconfigs.DefaultNSAnswerConfig()
+
+	if IsNull(this.Answer) {
+		return config
+	}
+
+	err := json.Unmarshal(this.Answer, config)
+	if err != nil {
+		remotelogs.Error("NSCluster.DecodeAnswerConfig", "decode failed: "+err.Error())
+	}
+
+	return config
 }
