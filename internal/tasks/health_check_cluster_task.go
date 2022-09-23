@@ -45,7 +45,7 @@ func (this *HealthCheckClusterTask) Reset(config *serverconfigs.HealthCheckConfi
 		this.logErr("HealthCheckClusterTask", err.Error())
 		return
 	}
-	if bytes.Compare(oldJSON, newJSON) != 0 {
+	if !bytes.Equal(oldJSON, newJSON) {
 		this.config = config
 		this.Run()
 	}

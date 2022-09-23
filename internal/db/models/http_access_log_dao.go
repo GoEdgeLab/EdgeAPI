@@ -805,7 +805,7 @@ func (this *HTTPAccessLogDAO) SetupQueue() {
 		return
 	}
 
-	if bytes.Compare(accessLogConfigJSON, configJSON) == 0 {
+	if bytes.Equal(accessLogConfigJSON, configJSON) {
 		return
 	}
 	accessLogConfigJSON = configJSON

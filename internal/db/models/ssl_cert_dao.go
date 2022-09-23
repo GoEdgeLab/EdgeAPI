@@ -149,7 +149,7 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 		return nil
 	}
 	var oldCert = oldOne.(*SSLCert)
-	var dataIsChanged = bytes.Compare(certData, oldCert.CertData) != 0 || bytes.Compare(keyData, oldCert.KeyData) != 0
+	var dataIsChanged = !bytes.Equal(certData, oldCert.CertData) || !bytes.Equal(keyData, oldCert.KeyData)
 
 	var op = NewSSLCertOperator()
 	op.Id = certId

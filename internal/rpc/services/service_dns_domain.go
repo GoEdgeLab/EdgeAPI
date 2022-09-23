@@ -433,17 +433,6 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 	}, nil
 }
 
-// 转换域名记录信息
-func (this *DNSDomainService) convertRecordToPB(record *dnstypes.Record) *pb.DNSRecord {
-	return &pb.DNSRecord{
-		Id:    record.Id,
-		Name:  record.Name,
-		Value: record.Value,
-		Type:  record.Type,
-		Route: record.Route,
-	}
-}
-
 // 检查集群节点变化
 func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster, records []*dnstypes.Record, domainName string, defaultRoute string) (result []maps.Map, doneNodeRecords []*dnstypes.Record, doneServerRecords []*dnstypes.Record, countAllNodes int64, countAllServers int64, nodesChanged bool, serversChanged bool, err error) {
 	var clusterId = int64(cluster.Id)

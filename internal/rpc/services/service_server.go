@@ -213,6 +213,7 @@ func (this *ServerService) UpdateServerGroupIds(ctx context.Context, req *pb.Upd
 	}
 
 	// 检查分组IDs
+	var serverGroupIds = []int64{}
 	for _, groupId := range req.ServerGroupIds {
 		if userId > 0 {
 			err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, groupId)
@@ -228,18 +229,19 @@ func (this *ServerService) UpdateServerGroupIds(ctx context.Context, req *pb.Upd
 				continue
 			}
 		}
+		serverGroupIds = append(serverGroupIds, groupId)
 	}
 
 	// 增加默认分组
 	if userId > 0 {
 		config, err := models.SharedSysSettingDAO.ReadUserServerConfig(tx)
-		if err == nil && config.GroupId > 0 && !lists.ContainsInt64(req.ServerGroupIds, config.GroupId) {
-			req.ServerGroupIds = append(req.ServerGroupIds, config.GroupId)
+		if err == nil && config.GroupId > 0 && !lists.ContainsInt64(serverGroupIds, config.GroupId) {
+			serverGroupIds = append(serverGroupIds, config.GroupId)
 		}
 	}
 
 	// 修改
-	err = models.SharedServerDAO.UpdateServerGroupIds(tx, req.ServerId, req.ServerGroupIds)
+	err = models.SharedServerDAO.UpdateServerGroupIds(tx, req.ServerId, serverGroupIds)
 	if err != nil {
 		return nil, err
 	}

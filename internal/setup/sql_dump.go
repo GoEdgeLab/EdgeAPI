@@ -70,7 +70,7 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 			Name:       table.Name,
 			Engine:     table.Engine,
 			Charset:    table.Collation,
-			Definition: regexp.MustCompile(" AUTO_INCREMENT=\\d+").ReplaceAllString(table.Code, ""),
+			Definition: regexp.MustCompile(` AUTO_INCREMENT=\d+`).ReplaceAllString(table.Code, ""),
 		}
 
 		// 字段

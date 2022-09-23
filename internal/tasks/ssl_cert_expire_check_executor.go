@@ -122,6 +122,9 @@ func (this *SSLCertExpireCheckExecutor) Loop() error {
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
 							}.AsJSON())
+							if err != nil {
+								return err
+							}
 
 							// 更新通知时间
 							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))
@@ -136,6 +139,9 @@ func (this *SSLCertExpireCheckExecutor) Loop() error {
 								"certId":     cert.Id,
 								"acmeTaskId": cert.AcmeTaskId,
 							}.AsJSON())
+							if err != nil {
+								return err
+							}
 
 							// 更新通知时间
 							err = models.SharedSSLCertDAO.UpdateCertNotifiedAt(nil, int64(cert.Id))

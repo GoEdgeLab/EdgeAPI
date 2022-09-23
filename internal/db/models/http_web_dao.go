@@ -381,7 +381,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	// 认证
 	if IsNotNull(web.Auth) {
-		authConfig := &serverconfigs.HTTPAuthConfig{}
+		var authConfig = &serverconfigs.HTTPAuthConfig{}
 		err = json.Unmarshal(web.Auth, authConfig)
 		if err != nil {
 			return nil, err
@@ -395,6 +395,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 			if policyConfig != nil {
 				ref.AuthPolicy = policyConfig
 				newRefs = append(newRefs, ref)
+				authConfig.PolicyRefs = newRefs
 			}
 		}
 		config.Auth = authConfig

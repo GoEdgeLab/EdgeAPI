@@ -8,6 +8,7 @@ import (
 	pb2 "github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net"
@@ -51,7 +52,7 @@ func TestTCPServer(t *testing.T) {
 }
 
 func TestTCPClient(t *testing.T) {
-	conn, err := grpc.Dial("127.0.0.1:8001", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:8001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal(err)
 	}

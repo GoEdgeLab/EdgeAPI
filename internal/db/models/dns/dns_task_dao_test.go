@@ -9,7 +9,7 @@ import (
 
 func TestDNSTaskDAO_CreateDNSTask(t *testing.T) {
 	dbs.NotifyReady()
-	err := SharedDNSTaskDAO.CreateDNSTask(nil, 1, 2, 3, 0, "taskType")
+	err := SharedDNSTaskDAO.CreateDNSTask(nil, 1, 2, 3, 0, "cdn", "taskType")
 	if err != nil {
 		t.Fatal(err)
 	}

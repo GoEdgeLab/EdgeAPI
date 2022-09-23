@@ -40,6 +40,7 @@ func (this *Request) Run() (certData []byte, keyData []byte, err error) {
 	}
 	if this.task.Provider.RequireEAB && this.task.Account == nil {
 		err = errors.New("account should not be nil when provider require EAB")
+		return
 	}
 
 	switch this.task.AuthType {

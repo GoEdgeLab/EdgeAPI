@@ -21,7 +21,7 @@ func TestNodeClusterDAO_CheckClusterDNS(t *testing.T) {
 		t.Log("cluster not found, skip the test")
 		return
 	}
-	issues, err := CheckClusterDNS(tx, cluster)
+	issues, err := CheckClusterDNS(tx, cluster, true)
 	if err != nil {
 		t.Fatal(err)
 	}

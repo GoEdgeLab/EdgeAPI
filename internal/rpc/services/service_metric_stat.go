@@ -25,6 +25,8 @@ func init() {
 		goman.New(func() {
 			// 将队列导入数据库
 			var countKeys = 0
+			var useTx = true
+
 			for key := range metricStatKeysQueue {
 				err := func(key string) error {
 					metricStatsLocker.Lock()
@@ -43,18 +45,31 @@ func init() {
 					var itemId = types.Int64(pieces[3])
 
 					// 删除旧的数据
-					tx, err := models.SharedMetricStatDAO.Instance.Begin()
-					if err != nil {
-						return err
-					}
+					var tx *dbs.Tx
+					var err error
+					if useTx {
+						var before = time.Now()
 
-					defer func() {
-						// 失败时不需要rollback
-						commitErr := tx.Commit()
-						if commitErr != nil {
-							remotelogs.Error("METRIC_STAT", "commit metric stats failed: "+commitErr.Error())
+						tx, err = models.SharedMetricStatDAO.Instance.Begin()
+						if err != nil {
+							return err
 						}
-					}()
+
+						defer func() {
+							// 失败时不需要rollback
+							if tx != nil {
+								commitErr := tx.Commit()
+								if commitErr != nil {
+									remotelogs.Error("METRIC_STAT", "commit metric stats failed: "+commitErr.Error())
+								}
+							}
+
+							// 如果运行时间过长，则不使用事务
+							if time.Since(before) > 1*time.Second {
+								useTx = false
+							}
+						}()
+					}
 
 					err = models.SharedMetricStatDAO.DeleteNodeItemStats(tx, nodeId, serverId, itemId, req.Time)
 					if err != nil {

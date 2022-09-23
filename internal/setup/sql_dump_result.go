@@ -8,7 +8,7 @@ type SQLDumpResult struct {
 
 func (this *SQLDumpResult) FindTable(tableName string) *SQLTable {
 	for _, table := range this.Tables {
-		if strings.ToLower(table.Name) == strings.ToLower(tableName) {
+		if strings.EqualFold(table.Name, tableName) {
 			return table
 		}
 	}

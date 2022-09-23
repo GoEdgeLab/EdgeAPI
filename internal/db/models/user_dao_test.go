@@ -12,7 +12,6 @@ func TestUserDAO_UpdateUserFeatures(t *testing.T) {
 	var dao = NewUserDAO()
 	var tx *dbs.Tx
 	err := dao.UpdateUsersFeatures(tx, []string{
-		userconfigs.UserFeatureCodeFinance,
 		userconfigs.UserFeatureCodeServerACME,
 	}, false)
 	if err != nil {

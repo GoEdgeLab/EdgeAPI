@@ -20,6 +20,7 @@ var serverBandwidthStatsLocker = &sync.Mutex{}
 
 func init() {
 	var ticker = time.NewTicker(1 * time.Minute)
+	var useTx = true
 
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
@@ -30,15 +31,32 @@ func init() {
 					serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{}
 					serverBandwidthStatsLocker.Unlock()
 
-					tx, err := models.SharedServerBandwidthStatDAO.Instance.Begin()
-					if err != nil {
-						remotelogs.Error("ServerBandwidthStatService", "begin transaction failed: "+err.Error())
-						return
-					}
+					var tx *dbs.Tx
+					var err error
 
-					defer func() {
-						_ = tx.Commit()
-					}()
+					if useTx {
+						var before = time.Now()
+
+						tx, err = models.SharedServerBandwidthStatDAO.Instance.Begin()
+						if err != nil {
+							remotelogs.Error("ServerBandwidthStatService", "begin transaction failed: "+err.Error())
+							return
+						}
+
+						defer func() {
+							if tx != nil {
+								commitErr := tx.Commit()
+								if commitErr != nil {
+									remotelogs.Error("METRIC_STAT", "commit bandwidth stats failed: "+commitErr.Error())
+								}
+							}
+
+							// 如果运行时间过长，则不使用事务
+							if time.Since(before) > 1*time.Second {
+								useTx = false
+							}
+						}()
+					}
 
 					for _, stat := range m {
 						// 更新服务的带宽峰值

@@ -422,7 +422,7 @@ func (this *HTTPAccessLogManager) checkTableFields(db *dbs.DB, tableName string)
 	}
 	for _, field := range fields {
 		var fieldName = field.GetString("Field")
-		if strings.ToLower(fieldName) == strings.ToLower("remoteAddr") {
+		if strings.EqualFold(fieldName, "remoteAddr") {
 			hasRemoteAddrField = true
 		}
 		if strings.ToLower(fieldName) == "domain" {

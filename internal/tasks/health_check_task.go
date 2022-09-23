@@ -86,7 +86,7 @@ func (this *HealthCheckTask) Loop() error {
 			// 检查是否有变化
 			newJSON, _ := json.Marshal(config)
 			oldJSON, _ := json.Marshal(task.Config())
-			if bytes.Compare(oldJSON, newJSON) != 0 {
+			if !bytes.Equal(oldJSON, newJSON) {
 				remotelogs.Println("TASK", "[HealthCheckTask]update cluster '"+numberutils.FormatInt64(clusterId)+"'")
 				goman.New(func() {
 					task.Reset(config)

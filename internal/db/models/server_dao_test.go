@@ -141,7 +141,7 @@ func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
 
 	var tx *dbs.Tx
 	{
-		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "hello.teaos.cn", 0)
+		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "hello.teaos.cn", 0, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -149,7 +149,7 @@ func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
 	}
 
 	{
-		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 0)
+		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 0, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +157,7 @@ func TestServerDAO_ExistServerNameInCluster(t *testing.T) {
 	}
 
 	{
-		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 23)
+		exist, err := models.SharedServerDAO.ExistServerNameInCluster(tx, 18, "cdn.teaos.cn", 23, true)
 		if err != nil {
 			t.Fatal(err)
 		}
