@@ -155,32 +155,3 @@ func (this *NodeLoginDAO) FindFrequentPorts(tx *dbs.Tx) ([]int32, error) {
 	}
 	return ports, nil
 }
-
-func (this *NodeLoginDAO) FindFrequentGrantIds(tx *dbs.Tx, nodeClusterId int64, nsClusterId int64) ([]int64, error) {
-	var query = this.Query(tx).
-		Attr("state", NodeLoginStateEnabled).
-		Result("JSON_EXTRACT(params, '$.grantId') as `grantId`", "COUNT(*) AS c").
-		Having("grantId>0").
-		Desc("c").
-		Limit(3).
-		Group("grantId")
-	if nodeClusterId > 0 {
-		query.Attr("role", nodeconfigs.NodeRoleNode)
-		query.Where("(nodeId IN (SELECT id FROM "+SharedNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId))").
-			Param("clusterId", nodeClusterId)
-	} else if nsClusterId > 0 {
-		query.Attr("role", nodeconfigs.NodeRoleDNS)
-		query.Where("(nodeId IN (SELECT id FROM "+SharedNSNodeDAO.Table+" WHERE state=1 AND clusterId=:clusterId))").
-			Param("clusterId", nsClusterId)
-	}
-	ones, _, err := query.
-		FindOnes()
-	if err != nil {
-		return nil, err
-	}
-	var grantIds = []int64{}
-	for _, one := range ones {
-		grantIds = append(grantIds, one.GetInt64("grantId"))
-	}
-	return grantIds, nil
-}

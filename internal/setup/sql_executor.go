@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -445,33 +443,6 @@ func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
 		}
 	}
 
-	return nil
-}
-
-// 检查自建DNS全局设置
-func (this *SQLExecutor) checkNS(db *dbs.DB) error {
-	// 访问日志
-	{
-		one, err := db.FindOne("SELECT id FROM edgeSysSettings WHERE code=? LIMIT 1", systemconfigs.SettingCodeNSAccessLogSetting)
-		if err != nil {
-			return err
-		}
-		if len(one) == 0 {
-			ref := &dnsconfigs.NSAccessLogRef{
-				IsPrior:           false,
-				IsOn:              true,
-				LogMissingDomains: false,
-			}
-			refJSON, err := json.Marshal(ref)
-			if err != nil {
-				return err
-			}
-			_, err = db.Exec("INSERT edgeSysSettings (code, value) VALUES (?, ?)", systemconfigs.SettingCodeNSAccessLogSetting, refJSON)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 

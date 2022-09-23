@@ -7,7 +7,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
-	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
@@ -18,7 +17,6 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
-	"regexp"
 )
 
 type upgradeVersion struct {
@@ -292,75 +290,6 @@ func upgradeV0_2_5(db *dbs.DB) error {
 		_, err = db.Exec("UPDATE edgeHTTPFirewallRuleSets SET actions=? WHERE id=?", string(actionsJSON), oneId)
 		if err != nil {
 			return err
-		}
-	}
-
-	return nil
-}
-
-// v0.2.8.1
-func upgradeV0_2_8_1(db *dbs.DB) error {
-	// 访问日志设置
-	{
-		one, err := db.FindOne("SELECT id FROM edgeSysSettings WHERE code=? LIMIT 1", systemconfigs.SettingCodeNSAccessLogSetting)
-		if err != nil {
-			return err
-		}
-		if len(one) == 0 {
-			ref := &dnsconfigs.NSAccessLogRef{
-				IsPrior:           false,
-				IsOn:              true,
-				LogMissingDomains: false,
-			}
-			refJSON, err := json.Marshal(ref)
-			if err != nil {
-				return err
-			}
-			_, err = db.Exec("INSERT edgeSysSettings (code, value) VALUES (?, ?)", systemconfigs.SettingCodeNSAccessLogSetting, refJSON)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// 升级EdgeDNS线路
-	ones, _, err := db.FindOnes("SELECT id, dnsRoutes FROM edgeNodes WHERE dnsRoutes IS NOT NULL")
-	if err != nil {
-		return err
-	}
-	for _, one := range ones {
-		var nodeId = one.GetInt64("id")
-		var dnsRoutes = one.GetString("dnsRoutes")
-		if len(dnsRoutes) == 0 {
-			continue
-		}
-		var m = map[string][]string{}
-		err = json.Unmarshal([]byte(dnsRoutes), &m)
-		if err != nil {
-			continue
-		}
-		var isChanged = false
-		var reg = regexp.MustCompile(`^\d+$`)
-		for k, routes := range m {
-			for index, route := range routes {
-				if reg.MatchString(route) {
-					route = "id:" + route
-					isChanged = true
-				}
-				routes[index] = route
-			}
-			m[k] = routes
-		}
-
-		if isChanged {
-			mJSON, err := json.Marshal(m)
-			if err != nil {
-				return err
-			}
-			_, err = db.Exec("UPDATE edgeNodes SET dnsRoutes=? WHERE id=? LIMIT 1", string(mJSON), nodeId)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -840,61 +769,6 @@ func upgradeV0_4_11(db *dbs.DB) error {
 			_, err = db.Exec("UPDATE edgeNSClusters SET udp=? WHERE udp IS NULL", configJSON)
 			if err != nil {
 				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// v0.5.3
-func upgradeV0_5_3(db *dbs.DB) error {
-	// 升级ns domains中的status字段
-	{
-		_, err := db.Exec("UPDATE edgeNSDomains SET status='" + dnsconfigs.NSDomainStatusVerified + "'")
-		if err != nil {
-			return err
-		}
-	}
-
-	// 升级集群服务配置
-	{
-		type oldGlobalConfig struct {
-			// HTTP & HTTPS相关配置
-			HTTPAll struct {
-				MatchDomainStrictly  bool                                `yaml:"matchDomainStrictly" json:"matchDomainStrictly"`   // 是否严格匹配域名
-				AllowMismatchDomains []string                            `yaml:"allowMismatchDomains" json:"allowMismatchDomains"` // 允许的不匹配的域名
-				DefaultDomain        string                              `yaml:"defaultDomain" json:"defaultDomain"`               // 默认的域名
-				DomainMismatchAction *serverconfigs.DomainMismatchAction `yaml:"domainMismatchAction" json:"domainMismatchAction"` // 不匹配时采取的动作
-			} `yaml:"httpAll" json:"httpAll"`
-		}
-
-		value, err := db.FindCol(0, "SELECT value FROM edgeSysSettings WHERE code='serverGlobalConfig'")
-		if err != nil {
-			return err
-		}
-		if value != nil {
-			var valueJSON = []byte(types.String(value))
-			var oldConfig = &oldGlobalConfig{}
-			err = json.Unmarshal(valueJSON, oldConfig)
-			if err == nil {
-				var newConfig = &serverconfigs.GlobalServerConfig{}
-				newConfig.HTTPAll.MatchDomainStrictly = oldConfig.HTTPAll.MatchDomainStrictly
-				newConfig.HTTPAll.AllowMismatchDomains = oldConfig.HTTPAll.AllowMismatchDomains
-				newConfig.HTTPAll.DefaultDomain = oldConfig.HTTPAll.DefaultDomain
-				if oldConfig.HTTPAll.DomainMismatchAction != nil {
-					newConfig.HTTPAll.DomainMismatchAction = oldConfig.HTTPAll.DomainMismatchAction
-				}
-				newConfig.HTTPAll.AllowNodeIP = true
-
-				newConfig.Log.RecordServerError = false
-				newConfigJSON, err := json.Marshal(newConfig)
-				if err == nil {
-					_, err = db.Exec("UPDATE edgeNodeClusters SET globalServerConfig=?", newConfigJSON)
-					if err != nil {
-						return err
-					}
-				}
 			}
 		}
 	}

@@ -391,6 +391,13 @@ func (this *NodeLogDAO) DeleteNodeLogsWithCluster(tx *dbs.Tx, role nodeconfigs.N
 	if clusterId <= 0 {
 		return nil
 	}
+
+	// 执行钩子
+	err := this.deleteNodeLogsWithCluster(tx, role, clusterId)
+	if err != nil {
+		return err
+	}
+
 	var query = this.Query(tx).
 		Attr("role", role)
 
@@ -398,13 +405,10 @@ func (this *NodeLogDAO) DeleteNodeLogsWithCluster(tx *dbs.Tx, role nodeconfigs.N
 	case nodeconfigs.NodeRoleNode:
 		query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE clusterId=:clusterId)")
 		query.Param("clusterId", clusterId)
-	case nodeconfigs.NodeRoleDNS:
-		query.Where("nodeId IN (SELECT id FROM " + SharedNSNodeDAO.Table + " WHERE clusterId=:clusterId)")
-		query.Param("clusterId", clusterId)
 	default:
 		return nil
 	}
 
-	_, err := query.Delete()
+	_, err = query.Delete()
 	return err
 }
