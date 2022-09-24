@@ -439,15 +439,24 @@ func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFr
 
 // FindStatsWithDay 按天查找5分钟级统计
 // day YYYYMMDD
-func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day string) (result []*ServerDailyStat, err error) {
+func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day string, timeFrom string, timeTo string) (result []*ServerDailyStat, err error) {
 	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
 		return
 	}
 
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("serverId", serverId).
 		Attr("day", day).
-		AscPk().
+		DescPk()
+
+	if len(timeFrom) > 0 {
+		query.Gte("timeFrom", timeFrom)
+	}
+	if len(timeTo) > 0 {
+		query.Lte("timeTo", timeTo)
+	}
+
+	_, err = query.
 		Slice(&result).
 		FindAll()
 	return

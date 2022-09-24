@@ -204,7 +204,7 @@ func (this *ServerDailyStatService) FindServer5MinutelyStatsWithDay(ctx context.
 		req.Day = timeutil.Format("Ymd")
 	}
 
-	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsWithDay(tx, req.ServerId, req.Day)
+	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsWithDay(tx, req.ServerId, req.Day, req.TimeFrom, req.TimeTo)
 	if err != nil {
 		return nil, err
 	}
