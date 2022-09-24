@@ -17,9 +17,12 @@ type NSCluster struct {
 	Udp             dbs.JSON `field:"udp"`             // UDP设置
 	DdosProtection  dbs.JSON `field:"ddosProtection"`  // DDoS防护设置
 	Hosts           dbs.JSON `field:"hosts"`           // DNS主机地址
+	Soa             dbs.JSON `field:"soa"`             // SOA配置
 	AutoRemoteStart bool     `field:"autoRemoteStart"` // 自动远程启动
 	TimeZone        string   `field:"timeZone"`        // 时区
 	Answer          dbs.JSON `field:"answer"`          // 应答设置
+	SoaSerial       uint64   `field:"soaSerial"`       // SOA序列号
+	Email           string   `field:"email"`           // 管理员邮箱
 }
 
 type NSClusterOperator struct {
@@ -36,9 +39,12 @@ type NSClusterOperator struct {
 	Udp             any // UDP设置
 	DdosProtection  any // DDoS防护设置
 	Hosts           any // DNS主机地址
+	Soa             any // SOA配置
 	AutoRemoteStart any // 自动远程启动
 	TimeZone        any // 时区
 	Answer          any // 应答设置
+	SoaSerial       any // SOA序列号
+	Email           any // 管理员邮箱
 }
 
 func NewNSClusterOperator() *NSClusterOperator {

@@ -45,6 +45,19 @@ func (this *NSCluster) DecodeHosts() []string {
 	return hosts
 }
 
+// DecodeSOAConfig 解析SOA设置
+func (this *NSCluster) DecodeSOAConfig() *dnsconfigs.NSSOAConfig {
+	var config = dnsconfigs.DefaultNSSOAConfig()
+	if IsNull(this.Soa) {
+		return config
+	}
+	err := json.Unmarshal(this.Soa, config)
+	if err != nil {
+		remotelogs.Error("NSCluster.DecodeSOAConfig", "decode failed: "+err.Error())
+	}
+	return config
+}
+
 // DecodeAnswerConfig 解析应答设置
 func (this *NSCluster) DecodeAnswerConfig() *dnsconfigs.NSAnswerConfig {
 	var config = dnsconfigs.DefaultNSAnswerConfig()
