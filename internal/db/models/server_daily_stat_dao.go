@@ -437,6 +437,22 @@ func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFr
 	return
 }
 
+// FindStatsWithDay 按天查找5分钟级统计
+// day YYYYMMDD
+func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day string) (result []*ServerDailyStat, err error) {
+	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
+		return
+	}
+
+	_, err = this.Query(tx).
+		Attr("serverId", serverId).
+		Attr("day", day).
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
 // FindMonthlyStatsWithPlan 查找某月有套餐的流量
 // month YYYYMM
 func (this *ServerDailyStatDAO) FindMonthlyStatsWithPlan(tx *dbs.Tx, month string) (result []*ServerDailyStat, err error) {

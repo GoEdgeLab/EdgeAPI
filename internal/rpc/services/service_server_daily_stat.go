@@ -192,6 +192,38 @@ func (this *ServerDailyStatService) FindLatestServerMinutelyStats(ctx context.Co
 	return &pb.FindLatestServerMinutelyStatsResponse{Stats: result}, nil
 }
 
+// FindServer5MinutelyStatsWithDay 读取某天的5分钟间隔流量
+func (this *ServerDailyStatService) FindServer5MinutelyStatsWithDay(ctx context.Context, req *pb.FindServer5MinutelyStatsWithDayRequest) (*pb.FindServer5MinutelyStatsWithDayResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if len(req.Day) == 0 {
+		req.Day = timeutil.Format("Ymd")
+	}
+
+	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsWithDay(tx, req.ServerId, req.Day)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbStats = []*pb.FindServer5MinutelyStatsWithDayResponse_Stat{}
+	for _, stat := range dailyStats {
+		pbStats = append(pbStats, &pb.FindServer5MinutelyStatsWithDayResponse_Stat{
+			Day:                 stat.Day,
+			TimeFrom:            stat.TimeFrom,
+			TimeTo:              stat.TimeTo,
+			Bytes:               int64(stat.Bytes),
+			CachedBytes:         int64(stat.CachedBytes),
+			CountRequests:       int64(stat.CountRequests),
+			CountCachedRequests: int64(stat.CountCachedRequests),
+		})
+	}
+	return &pb.FindServer5MinutelyStatsWithDayResponse{Stats: pbStats}, nil
+}
+
 // FindLatestServerDailyStats 按天读取统计数据
 func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Context, req *pb.FindLatestServerDailyStatsRequest) (*pb.FindLatestServerDailyStatsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
