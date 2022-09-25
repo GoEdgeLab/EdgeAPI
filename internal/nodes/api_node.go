@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -32,7 +33,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -384,26 +384,19 @@ func (this *APINode) setupDB() error {
 		return err
 	}
 
-	// 调整预处理语句数量
+	// 设置Innodb事务提交模式
 	{
-		result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='max_prepared_stmt_count'")
-		if err != nil {
-			return err
-		}
-		var value = result.GetString("Value")
-		if regexp.MustCompile(`^\d+$`).MatchString(value) {
-			var valueInt = types.Int(value)
-			if valueInt < 65535 {
-				_, err := db.Exec("SET GLOBAL max_prepared_stmt_count=65535")
-				if err != nil {
-					return errors.New("run 'SET GLOBAL max_prepared_stmt_count' on database failed: " + err.Error() + ", \nyou can change the variable in 'my.cnf': \n~~~\n" + `[mysqld]
-max_prepared_stmt_count=65535
-~~~
-then restart mysqld.`)
-				}
+		result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='innodb_flush_log_at_trx_commit'")
+		if err == nil && result != nil {
+			var oldValue = result.GetInt("Value")
+			if oldValue == 1 {
+				_, _ = db.Exec("SET GLOBAL innodb_flush_log_at_trx_commit=2")
 			}
 		}
 	}
+
+	// 调整预处理语句数量
+	_ = dbutils.SetGlobalVarMin(db, "max_prepared_stmt_count", 65535)
 
 	// 调整binlog过期时间
 	{
@@ -413,24 +406,21 @@ then restart mysqld.`)
 		if err == nil {
 			var versionString = types.String(version)
 			if strings.HasPrefix(versionString, "8.") {
-				result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='binlog_expire_logs_seconds'")
-				if err == nil && result != nil {
-					var oldValue = result.GetInt("Value")
-					if oldValue > binlogExpireDays*86400 {
-						_, _ = db.Exec("SET GLOBAL binlog_expire_logs_seconds=" + types.String(binlogExpireDays*86400))
-					}
-				}
+				_ = dbutils.SetGlobalVarMax(db, "binlog_expire_logs_seconds", binlogExpireDays*86400)
 			} else if strings.HasPrefix(versionString, "5.") {
-				result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='expire_logs_days'")
-				if err == nil && result != nil {
-					var oldValue = result.GetInt("Value")
-					if oldValue > binlogExpireDays {
-						_, _ = db.Exec("SET GLOBAL expire_logs_days=" + types.String(binlogExpireDays))
-					}
-				}
+				_ = dbutils.SetGlobalVarMax(db, "expire_logs_days", binlogExpireDays)
 			}
 		}
 	}
+
+	// 设置binlog_cache_size
+	_ = dbutils.SetGlobalVarMin(db, "binlog_cache_size", 1*1024*1024)
+
+	// 设置binlog_stmt_cache_size
+	_ = dbutils.SetGlobalVarMin(db, "binlog_stmt_cache_size", 1*1024*1024)
+
+	// 设置thread_cache_size
+	_ = dbutils.SetGlobalVarMin(db, "thread_cache_size", 32)
 
 	return nil
 }

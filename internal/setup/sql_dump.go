@@ -1,13 +1,14 @@
 package setup
 
 import (
+	"errors"
 	"fmt"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 var recordsTables = []*SQLRecordsTable{
@@ -36,6 +37,11 @@ var recordsTables = []*SQLRecordsTable{
 		UniqueFields: []string{"name"},
 		ExceptFields: []string{"customName", "customCodes"},
 	},
+}
+
+type sqlItem struct {
+	sqlString string
+	args      []any
 }
 
 type SQLDump struct {
@@ -129,6 +135,78 @@ func (this *SQLDump) Dump(db *dbs.DB) (result *SQLDumpResult, err error) {
 
 // Apply 应用数据
 func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (ops []string, err error) {
+	// 设置Innodb事务提交模式
+	{
+
+		result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='innodb_flush_log_at_trx_commit'")
+		if err == nil && result != nil {
+			var oldValue = result.GetInt("Value")
+			if oldValue == 1 {
+				_, _ = db.Exec("SET GLOBAL innodb_flush_log_at_trx_commit=2")
+			}
+		}
+	}
+
+	// 执行队列
+	var execQueue = make(chan *sqlItem, 256)
+
+	var threads = 32
+	var wg = sync.WaitGroup{}
+	wg.Add(threads + 1 /** applyQueue **/)
+
+	var applyOps []string
+	var applyErr error
+	go func() {
+		defer wg.Done()
+		defer close(execQueue)
+
+		applyOps, applyErr = this.applyQueue(db, newResult, showLog, execQueue)
+	}()
+
+	var sqlErrors = []error{}
+	var sqlErrLocker = &sync.Mutex{}
+	for i := 0; i < threads; i++ {
+		go func() {
+			defer wg.Done()
+
+			for item := range execQueue {
+				_, err := db.Exec(item.sqlString, item.args...)
+				if err != nil {
+					sqlErrLocker.Lock()
+					sqlErrors = append(sqlErrors, errors.New(item.sqlString+": "+err.Error()))
+					sqlErrLocker.Unlock()
+					break
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	if applyErr != nil {
+		return nil, applyErr
+	}
+
+	if len(sqlErrors) == 0 {
+		// 升级数据
+		err = UpgradeSQLData(db)
+		if err != nil {
+			return nil, errors.New("upgrade data failed: " + err.Error())
+		}
+
+		return applyOps, nil
+	}
+
+	return nil, sqlErrors[0]
+}
+
+func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bool, queue chan *sqlItem) (ops []string, err error) {
+	var execSQL = func(sqlString string, args ...any) {
+		queue <- &sqlItem{
+			sqlString: sqlString,
+			args:      args,
+		}
+	}
+
 	currentResult, err := this.Dump(db)
 	if err != nil {
 		return nil, err
@@ -143,9 +221,13 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 			if showLog {
 				fmt.Println(op)
 			}
-			_, err = db.Exec(newTable.Definition)
-			if err != nil {
-				return nil, errors.New("'" + op + "' failed: " + err.Error())
+			if len(newTable.Records) == 0 {
+				execSQL(newTable.Definition)
+			} else {
+				_, err = db.Exec(newTable.Definition)
+				if err != nil {
+					return nil, errors.New("'" + op + "' failed: " + err.Error())
+				}
 			}
 		} else if oldTable.Definition != newTable.Definition {
 			// 对比字段
@@ -291,10 +373,7 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 					values = append(values, v)
 				}
 
-				_, err = db.Exec("INSERT INTO "+newTable.Name+" ("+strings.Join(params, ", ")+") VALUES ("+strings.Join(args, ", ")+")", values...)
-				if err != nil {
-					return nil, err
-				}
+				execSQL("INSERT INTO "+newTable.Name+" ("+strings.Join(params, ", ")+") VALUES ("+strings.Join(args, ", ")+")", values...)
 			} else if !record.ValuesEquals(one) {
 				ops = append(ops, "* record "+newTable.Name+" "+strings.Join(valueStrings, ", "))
 				if showLog {
@@ -316,22 +395,14 @@ func (this *SQLDump) Apply(db *dbs.DB, newResult *SQLDumpResult, showLog bool) (
 					values = append(values, v)
 				}
 				values = append(values, one.GetInt("id"))
-				_, err = db.Exec("UPDATE "+newTable.Name+" SET "+strings.Join(args, ", ")+" WHERE id=?", values...)
-				if err != nil {
-					return nil, err
-				}
+
+				execSQL("UPDATE "+newTable.Name+" SET "+strings.Join(args, ", ")+" WHERE id=?", values...)
 			}
 		}
 	}
 
 	// 减少表格
 	// 由于我们不删除任何表格，所以这里什么都不做
-
-	// 升级数据
-	err = UpgradeSQLData(db)
-	if err != nil {
-		return nil, errors.New("upgrade data failed: " + err.Error())
-	}
 
 	return
 }
