@@ -125,25 +125,13 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 		MinSize:               &shared.SizeCapacity{Count: 0, Unit: shared.SizeCapacityUnitKB},
 		SkipResponseSetCookie: true,
 		AllowChunkedEncoding:  true,
-		Conds: &shared.HTTPRequestCondsConfig{
-			IsOn:      true,
-			Connector: "or",
-			Groups: []*shared.HTTPRequestCondGroup{
-				{
-					IsOn:      true,
-					Connector: "or",
-					Conds: []*shared.HTTPRequestCond{
-						{
-							Type:      "url-extension",
-							IsRequest: true,
-							Param:     "${requestPathExtension}",
-							Operator:  shared.RequestCondOperatorIn,
-							Value:     `[".html", ".js", ".css", ".gif", ".png", ".bmp", ".jpeg", ".jpg", ".webp", ".ico", ".pdf", ".ttf", ".eot", ".tiff", ".svg", ".svgz", ".eps", ".woff", ".otf", ".woff2", ".tif", ".csv", ".xls", ".xlsx", ".doc", ".docx", ".ppt", ".pptx", ".wav", ".mp3", ".mp4", ".ogg", ".mid", ".midi"]`,
-						},
-					},
-					Description: "初始化规则",
-				},
-			},
+		AllowPartialContent:   true,
+		SimpleCond: &shared.HTTPRequestCond{
+			Type:      "url-extension",
+			IsRequest: true,
+			Param:     "${requestPathExtension}",
+			Operator:  shared.RequestCondOperatorIn,
+			Value:     `[".html", ".js", ".css", ".gif", ".png", ".bmp", ".jpeg", ".jpg", ".webp", ".ico", ".pdf", ".ttf", ".eot", ".tiff", ".svg", ".svgz", ".eps", ".woff", ".otf", ".woff2", ".tif", ".csv", ".xls", ".xlsx", ".doc", ".docx", ".ppt", ".pptx", ".wav", ".mp3", ".mp4", ".ogg", ".mid", ".midi"]`,
 		},
 	}
 	refsJSON, err := json.Marshal([]*serverconfigs.HTTPCacheRef{cacheRef})
