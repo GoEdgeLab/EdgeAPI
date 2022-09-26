@@ -130,14 +130,16 @@ func (this *APINode) Start() {
 	}
 
 	// 数据库通知启动
+	this.setProgress("DATABASE", "正在建立数据库模型")
 	logs.Println("[API_NODE]notify ready ...")
 	dbs.NotifyReady()
 
 	// 设置时区
+	this.setProgress("TIMEZONE", "正在设置时区")
 	this.setupTimeZone()
 
 	// 读取配置
-	this.setProgress("DATABASE", "加载API配置")
+	this.setProgress("DATABASE", "正在加载API配置")
 	logs.Println("[API_NODE]reading api config ...")
 	config, err := configs.SharedAPIConfig()
 	if err != nil {
