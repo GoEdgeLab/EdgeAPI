@@ -76,7 +76,7 @@ func TestSQLDump_Apply(t *testing.T) {
 
 	db2, err := dbs.NewInstanceFromConfig(&dbs.DBConfig{
 		Driver: "mysql",
-		Dsn:    "root:123456@tcp(192.168.2.60:3306)/db_edge_new?charset=utf8mb4&timeout=30s",
+		Dsn:    "edge:123456@tcp(192.168.2.60:3306)/db_edge_new?charset=utf8mb4&timeout=30s",
 		Prefix: "edge",
 	})
 	if err != nil {

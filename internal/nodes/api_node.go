@@ -386,6 +386,19 @@ func (this *APINode) setupDB() error {
 		return err
 	}
 
+	// 检查是否为root用户
+	config, _ := db.Config()
+	if config == nil {
+		return nil
+	}
+	dsnConfig, err := mysql.ParseDSN(config.Dsn)
+	if err != nil || dsnConfig == nil {
+		return err
+	}
+	if dsnConfig.User != "root" {
+		return nil
+	}
+
 	// 设置Innodb事务提交模式
 	{
 		result, err := db.FindOne("SHOW VARIABLES WHERE variable_name='innodb_flush_log_at_trx_commit'")
