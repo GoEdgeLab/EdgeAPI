@@ -20,7 +20,7 @@ const (
 
 	NodeVersion          = "0.5.4"
 	UserNodeVersion      = "0.5.0"
-	DNSNodeVersion       = "0.2.7"
+	DNSNodeVersion       = "0.2.7.1"
 	AuthorityNodeVersion = "0.0.2"
 	MonitorNodeVersion   = "0.0.4"
 	ReportNodeVersion    = "0.1.1"
