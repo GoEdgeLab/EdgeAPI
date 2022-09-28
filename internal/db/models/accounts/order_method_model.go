@@ -13,22 +13,24 @@ type OrderMethod struct {
 	Url         string   `field:"url"`         // URL
 	Secret      string   `field:"secret"`      // 密钥
 	Params      dbs.JSON `field:"params"`      // 参数
+	ClientType  string   `field:"clientType"`  // 客户端类型
 	Order       uint32   `field:"order"`       // 排序
 	State       uint8    `field:"state"`       // 状态
 }
 
 type OrderMethodOperator struct {
-	Id          interface{} // ID
-	Name        interface{} // 名称
-	IsOn        interface{} // 是否启用
-	Description interface{} // 描述
-	ParentCode  interface{} // 内置的父级代号
-	Code        interface{} // 代号
-	Url         interface{} // URL
-	Secret      interface{} // 密钥
-	Params      interface{} // 参数
-	Order       interface{} // 排序
-	State       interface{} // 状态
+	Id          any // ID
+	Name        any // 名称
+	IsOn        any // 是否启用
+	Description any // 描述
+	ParentCode  any // 内置的父级代号
+	Code        any // 代号
+	Url         any // URL
+	Secret      any // 密钥
+	Params      any // 参数
+	ClientType  any // 客户端类型
+	Order       any // 排序
+	State       any // 状态
 }
 
 func NewOrderMethodOperator() *OrderMethodOperator {

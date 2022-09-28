@@ -300,7 +300,7 @@ func (this *UserNodeDAO) CountAllEnabledUserNodesWithSSLPolicyIds(tx *dbs.Tx, ss
 	if len(sslPolicyIds) == 0 {
 		return
 	}
-	policyStringIds := []string{}
+	var policyStringIds = []string{}
 	for _, policyId := range sslPolicyIds {
 		policyStringIds = append(policyStringIds, strconv.FormatInt(policyId, 10))
 	}
@@ -309,4 +309,22 @@ func (this *UserNodeDAO) CountAllEnabledUserNodesWithSSLPolicyIds(tx *dbs.Tx, ss
 		Where("(FIND_IN_SET(JSON_EXTRACT(https, '$.sslPolicyRef.sslPolicyId'), :policyIds)) ").
 		Param("policyIds", strings.Join(policyStringIds, ",")).
 		Count()
+}
+
+// FindUserNodeAccessAddr 获取用户节点访问地址
+func (this *UserNodeDAO) FindUserNodeAccessAddr(tx *dbs.Tx) (string, error) {
+	nodes, err := this.ListEnabledUserNodes(tx, 0, 100)
+	if err != nil {
+		return "", err
+	}
+	for _, node := range nodes {
+		addrs, err := node.DecodeAccessAddrStrings()
+		if err != nil {
+			continue
+		}
+		if len(addrs) > 0 {
+			return addrs[0], nil
+		}
+	}
+	return "", nil
 }

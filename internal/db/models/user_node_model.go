@@ -22,21 +22,21 @@ type UserNode struct {
 }
 
 type UserNodeOperator struct {
-	Id          interface{} // ID
-	IsOn        interface{} // 是否启用
-	UniqueId    interface{} // 唯一ID
-	Secret      interface{} // 密钥
-	Name        interface{} // 名称
-	Description interface{} // 描述
-	Http        interface{} // 监听的HTTP配置
-	Https       interface{} // 监听的HTTPS配置
-	AccessAddrs interface{} // 外部访问地址
-	Order       interface{} // 排序
-	State       interface{} // 状态
-	CreatedAt   interface{} // 创建时间
-	AdminId     interface{} // 管理员ID
-	Weight      interface{} // 权重
-	Status      interface{} // 运行状态
+	Id          any // ID
+	IsOn        any // 是否启用
+	UniqueId    any // 唯一ID
+	Secret      any // 密钥
+	Name        any // 名称
+	Description any // 描述
+	Http        any // 监听的HTTP配置
+	Https       any // 监听的HTTPS配置
+	AccessAddrs any // 外部访问地址
+	Order       any // 排序
+	State       any // 状态
+	CreatedAt   any // 创建时间
+	AdminId     any // 管理员ID
+	Weight      any // 权重
+	Status      any // 运行状态
 }
 
 func NewUserNodeOperator() *UserNodeOperator {
