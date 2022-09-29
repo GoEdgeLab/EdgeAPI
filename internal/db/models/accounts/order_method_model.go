@@ -14,6 +14,7 @@ type OrderMethod struct {
 	Secret      string   `field:"secret"`      // 密钥
 	Params      dbs.JSON `field:"params"`      // 参数
 	ClientType  string   `field:"clientType"`  // 客户端类型
+	QrcodeTitle string   `field:"qrcodeTitle"` // 二维码标题
 	Order       uint32   `field:"order"`       // 排序
 	State       uint8    `field:"state"`       // 状态
 }
@@ -29,6 +30,7 @@ type OrderMethodOperator struct {
 	Secret      any // 密钥
 	Params      any // 参数
 	ClientType  any // 客户端类型
+	QrcodeTitle any // 二维码标题
 	Order       any // 排序
 	State       any // 状态
 }
