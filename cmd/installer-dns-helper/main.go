@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/installers/helpers"
 	"github.com/iwind/gosock/pkg/gosock"
 	"os"
 	"os/exec"
@@ -51,7 +51,7 @@ func main() {
 			return
 		}
 
-		unzip := utils.NewUnzip(zipPath, targetPath)
+		unzip := helpers.NewUnzip(zipPath, targetPath)
 		err := unzip.Run()
 		if err != nil {
 			stderr("ERROR: " + err.Error())

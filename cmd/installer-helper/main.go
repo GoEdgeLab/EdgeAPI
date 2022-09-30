@@ -1,8 +1,9 @@
 package main
 
+// 注意这里的依赖文件应该最小化，从而使编译后的文件最小化
 import (
 	"flag"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/installers/helpers"
 	"github.com/iwind/gosock/pkg/gosock"
 	"os"
 	"os/exec"
@@ -51,7 +52,7 @@ func main() {
 			return
 		}
 
-		unzip := utils.NewUnzip(zipPath, targetPath)
+		unzip := helpers.NewUnzip(zipPath, targetPath)
 		err := unzip.Run()
 		if err != nil {
 			stderr("ERROR: " + err.Error())
