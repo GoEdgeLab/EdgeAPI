@@ -147,7 +147,7 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 
 // InstallHelper 上传安装助手
 func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
-	uname, _, err := this.client.Exec("uname -a")
+	uname, _, err := this.client.Exec("/usr/bin/uname -a")
 	if err != nil {
 		return env, err
 	}

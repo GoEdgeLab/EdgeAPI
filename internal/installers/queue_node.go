@@ -366,7 +366,7 @@ func (this *NodeQueue) StopNode(nodeId int64) error {
 	}
 
 	// 我们先尝试Systemd停止
-	_, _, _ = installer.client.Exec("systemctl stop edge-node")
+	_, _, _ = installer.client.Exec("/usr/bin/systemctl stop edge-node")
 
 	// 执行stop
 	_, stderr, err := installer.client.Exec(exe + " stop")
