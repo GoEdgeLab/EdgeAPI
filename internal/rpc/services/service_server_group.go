@@ -463,7 +463,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 		result.HasUDPReverseProxy = ref.IsPrior
 	}
 
-	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), nil)
+	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), false, nil)
 	if err != nil {
 		return nil, err
 	}

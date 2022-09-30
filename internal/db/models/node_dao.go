@@ -976,7 +976,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 
 	for _, server := range servers {
-		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server, cacheMap, true)
+		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server, cacheMap, true, false)
 		if err != nil {
 			return nil, err
 		}

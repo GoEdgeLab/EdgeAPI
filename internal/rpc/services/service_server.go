@@ -840,13 +840,29 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false, true)
 		if err != nil {
 			return nil, err
+		}
+		var countServerNames int32 = 0
+		for _, serverName := range config.ServerNames {
+			if len(serverName.SubNames) > 0 {
+				countServerNames += int32(len(serverName.SubNames))
+			} else {
+				countServerNames++
+			}
+		}
+		if req.IgnoreServerNames && len(config.ServerNames) > 0 {
+			config.ServerNames = config.ServerNames[:1]
 		}
 		configJSON, err := json.Marshal(config)
 		if err != nil {
 			return nil, err
+		}
+
+		// 忽略信息
+		if req.IgnoreServerNames {
+			server.ServerNames = nil
 		}
 
 		result = append(result, &pb.Server{
@@ -855,6 +871,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			Type:                    server.Type,
 			Config:                  configJSON,
 			Name:                    server.Name,
+			CountServerNames:        countServerNames,
 			Description:             server.Description,
 			HttpJSON:                server.Http,
 			HttpsJSON:               server.Https,
@@ -986,7 +1003,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, userId > 0)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, userId > 0, false)
 	if err != nil {
 		return nil, err
 	}

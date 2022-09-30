@@ -1009,12 +1009,12 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 	if server == nil {
 		return nil, ErrNotFound
 	}
-	return this.ComposeServerConfig(tx, server, nil, forNode)
+	return this.ComposeServerConfig(tx, server, nil, forNode, false)
 }
 
 // ComposeServerConfig 构造服务的Config
 // forNode 是否是节点请求
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap *utils.CacheMap, forNode bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
@@ -1039,7 +1039,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 	var groupConfig *serverconfigs.ServerGroupConfig
 	for _, groupId := range server.DecodeGroupIds() {
-		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, cacheMap)
+		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, forList, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -1062,28 +1062,30 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// CNAME
-	config.SupportCNAME = server.SupportCNAME == 1
-	if server.ClusterId > 0 && len(server.DnsName) > 0 {
-		clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId), cacheMap)
-		if err != nil {
-			return nil, err
-		}
-		if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
-			clusterDNSConfig, err := clusterDNS.DecodeDNSConfig()
+	if !forList {
+		config.SupportCNAME = server.SupportCNAME == 1
+		if server.ClusterId > 0 && len(server.DnsName) > 0 {
+			clusterDNS, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, int64(server.ClusterId), cacheMap)
 			if err != nil {
 				return nil, err
 			}
+			if clusterDNS != nil && clusterDNS.DnsDomainId > 0 {
+				clusterDNSConfig, err := clusterDNS.DecodeDNSConfig()
+				if err != nil {
+					return nil, err
+				}
 
-			domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), cacheMap)
-			if err != nil {
-				return nil, err
-			}
-			if domain != nil {
-				var cname = server.DnsName + "." + domain.Name
-				config.CNameDomain = cname
-				if clusterDNSConfig.CNAMEAsDomain {
-					config.CNameAsDomain = true
-					config.AliasServerNames = append(config.AliasServerNames, cname)
+				domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, int64(clusterDNS.DnsDomainId), cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if domain != nil {
+					var cname = server.DnsName + "." + domain.Name
+					config.CNameDomain = cname
+					if clusterDNSConfig.CNAMEAsDomain {
+						config.CNameAsDomain = true
+						config.AliasServerNames = append(config.AliasServerNames, cname)
+					}
 				}
 			}
 		}
@@ -1174,61 +1176,71 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// Web
-	if server.WebId > 0 {
-		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), cacheMap)
-		if err != nil {
-			return nil, err
-		}
-		if webConfig != nil {
-			config.Web = webConfig
+	if !forList {
+		if server.WebId > 0 {
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if webConfig != nil {
+				config.Web = webConfig
+			}
 		}
 	}
 
 	// ReverseProxy
-	if IsNotNull(server.ReverseProxy) {
-		var reverseProxyRef = &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal(server.ReverseProxy, reverseProxyRef)
-		if err != nil {
-			return nil, err
-		}
-		config.ReverseProxyRef = reverseProxyRef
+	if !forList {
+		if IsNotNull(server.ReverseProxy) {
+			var reverseProxyRef = &serverconfigs.ReverseProxyRef{}
+			err := json.Unmarshal(server.ReverseProxy, reverseProxyRef)
+			if err != nil {
+				return nil, err
+			}
+			config.ReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
-		if err != nil {
-			return nil, err
-		}
-		if reverseProxyConfig != nil {
-			config.ReverseProxy = reverseProxyConfig
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if reverseProxyConfig != nil {
+				config.ReverseProxy = reverseProxyConfig
+			}
 		}
 	}
 
 	// WAF策略
 	var clusterId = int64(server.ClusterId)
-	httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
-	if err != nil {
-		return nil, err
-	}
-	if httpFirewallPolicyId > 0 {
-		config.HTTPFirewallPolicyId = httpFirewallPolicyId
-	}
-
-	// 缓存策略
-	httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
-	if err != nil {
-		return nil, err
-	}
-	if httpCachePolicyId > 0 {
-		config.HTTPCachePolicyId = httpCachePolicyId
-	}
-
-	// traffic limit
-	if len(server.TrafficLimit) > 0 {
-		var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
-		err = json.Unmarshal(server.TrafficLimit, trafficLimitConfig)
+	if !forList {
+		httpFirewallPolicyId, err := SharedNodeClusterDAO.FindClusterHTTPFirewallPolicyId(tx, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
 		}
-		config.TrafficLimit = trafficLimitConfig
+		if httpFirewallPolicyId > 0 {
+			config.HTTPFirewallPolicyId = httpFirewallPolicyId
+		}
+	}
+
+	// 缓存策略
+	if !forList {
+		httpCachePolicyId, err := SharedNodeClusterDAO.FindClusterHTTPCachePolicyId(tx, clusterId, cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if httpCachePolicyId > 0 {
+			config.HTTPCachePolicyId = httpCachePolicyId
+		}
+	}
+
+	// traffic limit
+	if !forList {
+		if len(server.TrafficLimit) > 0 {
+			var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
+			err := json.Unmarshal(server.TrafficLimit, trafficLimitConfig)
+			if err != nil {
+				return nil, err
+			}
+			config.TrafficLimit = trafficLimitConfig
+		}
 	}
 
 	// 用户套餐
@@ -1271,7 +1283,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	if config.TrafficLimit != nil && config.TrafficLimit.IsOn && !config.TrafficLimit.IsEmpty() {
 		if len(server.TrafficLimitStatus) > 0 {
 			var status = &serverconfigs.TrafficLimitStatus{}
-			err = json.Unmarshal(server.TrafficLimitStatus, status)
+			err := json.Unmarshal(server.TrafficLimitStatus, status)
 			if err != nil {
 				return nil, err
 			}
@@ -1282,14 +1294,16 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 	}
 
 	// UAM
-	if teaconst.IsPlus && IsNotNull(server.Uam) {
-		var uamConfig = &serverconfigs.UAMConfig{}
-		err = json.Unmarshal(server.Uam, uamConfig)
-		if err != nil {
-			return nil, err
-		}
-		if uamConfig.IsOn {
-			config.UAM = uamConfig
+	if !forList {
+		if teaconst.IsPlus && IsNotNull(server.Uam) {
+			var uamConfig = &serverconfigs.UAMConfig{}
+			err := json.Unmarshal(server.Uam, uamConfig)
+			if err != nil {
+				return nil, err
+			}
+			if uamConfig.IsOn {
+				config.UAM = uamConfig
+			}
 		}
 	}
 

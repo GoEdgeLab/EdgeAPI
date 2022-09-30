@@ -279,7 +279,7 @@ func (this *ServerGroupDAO) InitGroupWeb(tx *dbs.Tx, groupId int64) (int64, erro
 }
 
 // ComposeGroupConfig 组合配置
-func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
+func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forList bool, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -315,65 +315,67 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, cacheM
 		IsOn: group.IsOn,
 	}
 
-	if IsNotNull(group.HttpReverseProxy) {
-		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal(group.HttpReverseProxy, reverseProxyRef)
-		if err != nil {
-			return nil, err
-		}
-		config.HTTPReverseProxyRef = reverseProxyRef
+	if !forList {
+		if IsNotNull(group.HttpReverseProxy) {
+			reverseProxyRef := &serverconfigs.ReverseProxyRef{}
+			err := json.Unmarshal(group.HttpReverseProxy, reverseProxyRef)
+			if err != nil {
+				return nil, err
+			}
+			config.HTTPReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
-		if err != nil {
-			return nil, err
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if reverseProxyConfig != nil {
+				config.HTTPReverseProxy = reverseProxyConfig
+			}
 		}
-		if reverseProxyConfig != nil {
-			config.HTTPReverseProxy = reverseProxyConfig
-		}
-	}
 
-	if IsNotNull(group.TcpReverseProxy) {
-		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal(group.TcpReverseProxy, reverseProxyRef)
-		if err != nil {
-			return nil, err
-		}
-		config.TCPReverseProxyRef = reverseProxyRef
+		if IsNotNull(group.TcpReverseProxy) {
+			reverseProxyRef := &serverconfigs.ReverseProxyRef{}
+			err := json.Unmarshal(group.TcpReverseProxy, reverseProxyRef)
+			if err != nil {
+				return nil, err
+			}
+			config.TCPReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
-		if err != nil {
-			return nil, err
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if reverseProxyConfig != nil {
+				config.TCPReverseProxy = reverseProxyConfig
+			}
 		}
-		if reverseProxyConfig != nil {
-			config.TCPReverseProxy = reverseProxyConfig
-		}
-	}
 
-	if IsNotNull(group.UdpReverseProxy) {
-		reverseProxyRef := &serverconfigs.ReverseProxyRef{}
-		err := json.Unmarshal(group.UdpReverseProxy, reverseProxyRef)
-		if err != nil {
-			return nil, err
-		}
-		config.UDPReverseProxyRef = reverseProxyRef
+		if IsNotNull(group.UdpReverseProxy) {
+			reverseProxyRef := &serverconfigs.ReverseProxyRef{}
+			err := json.Unmarshal(group.UdpReverseProxy, reverseProxyRef)
+			if err != nil {
+				return nil, err
+			}
+			config.UDPReverseProxyRef = reverseProxyRef
 
-		reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
-		if err != nil {
-			return nil, err
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if reverseProxyConfig != nil {
+				config.UDPReverseProxy = reverseProxyConfig
+			}
 		}
-		if reverseProxyConfig != nil {
-			config.UDPReverseProxy = reverseProxyConfig
-		}
-	}
 
-	// web
-	if group.WebId > 0 {
-		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), cacheMap)
-		if err != nil {
-			return nil, err
-		}
-		if webConfig != nil {
-			config.Web = webConfig
+		// web
+		if group.WebId > 0 {
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), cacheMap)
+			if err != nil {
+				return nil, err
+			}
+			if webConfig != nil {
+				config.Web = webConfig
+			}
 		}
 	}
 
