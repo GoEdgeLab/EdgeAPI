@@ -358,16 +358,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.UserBillService{}).(*services.UserBillService)
-		pb.RegisterUserBillServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.ServerBillService{}).(*services.ServerBillService)
-		pb.RegisterServerBillServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		var instance = this.serviceInstance(&services.LoginService{}).(*services.LoginService)
 		pb.RegisterLoginServiceServer(server, instance)
 		this.rest(instance)
