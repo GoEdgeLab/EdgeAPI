@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
+	"time"
 )
 
 func TestServerDailyStatDAO_SaveStats(t *testing.T) {
@@ -82,4 +83,15 @@ func TestServerDailyStatDAO_FindDistinctPlanServerIdsBetweenDay(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(serverIds)
+}
+
+func TestServerDailyStatDAO_FindStatsBetweenDays(t *testing.T) {
+	var tx *dbs.Tx
+	stats, err := NewServerDailyStatDAO().FindStatsBetweenDays(tx, 1, 0, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -1)), timeutil.Format("Ymd"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, stat := range stats {
+		t.Log(stat.Day, stat.TimeFrom, stat.TimeTo, stat.Bytes)
+	}
 }

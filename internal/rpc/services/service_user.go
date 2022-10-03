@@ -479,11 +479,11 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		return nil, err
 	}
 
-	// 近 15 日流量带宽趋势
+	// 近 30 日流量带宽趋势
 	var dailyTrafficStats = []*pb.ComposeUserDashboardResponse_DailyTrafficStat{}
 	var dailyPeekBandwidthStats = []*pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{}
 
-	for i := 14; i >= 0; i-- {
+	for i := 30; i >= 0; i-- {
 		var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
 
 		// 流量

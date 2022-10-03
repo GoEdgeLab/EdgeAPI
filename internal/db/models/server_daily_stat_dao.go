@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -11,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
+	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 	"strings"
@@ -295,19 +297,45 @@ func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour s
 }
 
 // SumDailyStat 获取某天内的流量
-// day 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, day string) (stat *pb.ServerDailyStat, err error) {
+// dayFrom 格式为YYYYMMDD
+// dayTo 格式为YYYYMMDD
+func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, userId int64, serverId int64, dayFrom string, dayTo string) (stat *pb.ServerDailyStat, err error) {
 	stat = &pb.ServerDailyStat{}
 
-	if !regexp.MustCompile(`^\d{8}$`).MatchString(day) {
-		return nil, errors.New("invalid day '" + day + "'")
+	if userId <= 0 && serverId <= 0 {
+		return
 	}
 
-	one, _, err := this.Query(tx).
-		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes").
-		Attr("serverId", serverId).
-		Attr("day", day).
-		FindOne()
+	var reg = regexp.MustCompile(`^\d{8}$`)
+	if !reg.MatchString(dayFrom) {
+		return nil, errors.New("invalid dayFrom '" + dayFrom + "'")
+	}
+	if !reg.MatchString(dayTo) {
+		return nil, errors.New("invalid dayTo '" + dayTo + "'")
+	}
+
+	if dayFrom > dayTo {
+		dayFrom, dayTo = dayTo, dayFrom
+	}
+
+	var query = this.Query(tx).
+		Result("SUM(bytes) AS bytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes")
+
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	if serverId > 0 {
+		query.Attr("serverId", serverId)
+	}
+
+	if dayFrom == dayTo {
+		query.Attr("day", dayFrom)
+	} else {
+		query.Between("day", dayFrom, dayTo)
+	}
+
+	one, _, err := query.FindOne()
 	if err != nil {
 		return nil, err
 	}
@@ -459,6 +487,90 @@ func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day
 	_, err = query.
 		Slice(&result).
 		FindAll()
+	return
+}
+
+// FindStatsBetweenDays 查找日期段内的5分钟统计
+func (this *ServerDailyStatDAO) FindStatsBetweenDays(tx *dbs.Tx, userId int64, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
+	var dayReg = regexp.MustCompile(`^\d{8}$`)
+	if !dayReg.MatchString(dayFrom) || !dayReg.MatchString(dayTo) {
+		return
+	}
+
+	if userId <= 0 && serverId <= 0 {
+		return
+	}
+
+	if dayFrom > dayTo {
+		dayFrom, dayTo = dayTo, dayFrom
+	}
+
+	var query = this.Query(tx)
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+
+	if serverId > 0 {
+		query.Attr("serverId", serverId)
+	} else {
+		query.Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "MIN(day) AS day", "MIN(timeFrom) AS timeFrom", "MIN(timeTo) AS timeTo")
+		query.Group("CONCAT(day,timeFrom)")
+	}
+
+	// 不需要排序
+	query.Between("day", dayFrom, dayTo)
+	_, err = query.
+		Slice(&result).
+		FindAll()
+	if err != nil {
+		return
+	}
+
+	var m = map[string]*ServerDailyStat{} // day @ timeFrom => *ServerDailyStat
+	for _, stat := range result {
+		m[stat.Day+"@"+stat.TimeFrom] = stat
+	}
+
+	// 填充空白
+	rangeDays, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+	dayTimes, err := utils.Range24HourTimes(5)
+	if err != nil {
+		return nil, err
+	}
+
+	// 截止到当前时间
+	var currentTime = timeutil.Format("Ymd@Hi00")
+
+	result = nil
+	for _, day := range rangeDays {
+		for _, timeAt /** HHII **/ := range dayTimes {
+			var key = day + "@" + timeAt + "00"
+
+			if key >= currentTime {
+				break
+			}
+
+			stat, ok := m[key]
+			if ok {
+				result = append(result, stat)
+			} else {
+				var hour = types.Int(timeAt[:2])
+				var minute = types.Int(timeAt[2:])
+
+				minute += 4
+
+				result = append(result, &ServerDailyStat{
+					Day:      day,
+					TimeFrom: timeAt + "00",
+					TimeTo:   fmt.Sprintf("%02d%02d59", hour, minute),
+				})
+			}
+		}
+	}
+
 	return
 }
 

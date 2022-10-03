@@ -125,3 +125,33 @@ func (this *Server) DecodeUDPPorts() (ports []int) {
 	}
 	return
 }
+
+// DecodeServerNames 获取域名
+func (this *Server) DecodeServerNames() (serverNames []*serverconfigs.ServerNameConfig, count int) {
+	if len(this.ServerNames) == 0 {
+		return nil, 0
+	}
+
+	serverNames = []*serverconfigs.ServerNameConfig{}
+	err := json.Unmarshal(this.ServerNames, &serverNames)
+	if err != nil {
+		remotelogs.Error("Server/DecodeServerNames", "decode server names failed: "+err.Error())
+		return
+	}
+
+	for _, serverName := range serverNames {
+		count += serverName.Count()
+	}
+
+	return
+}
+
+// FirstServerName 获取第一个域名
+func (this *Server) FirstServerName() string {
+	serverNames, _ := this.DecodeServerNames()
+	if len(serverNames) == 0 {
+		return ""
+	}
+
+	return serverNames[0].FirstName()
+}

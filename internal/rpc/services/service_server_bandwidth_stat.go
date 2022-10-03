@@ -11,6 +11,8 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -209,5 +211,88 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx contex
 
 	return &pb.FindDailyServerBandwidthStatsResponse{
 		Stats: stats,
+	}, nil
+}
+
+// FindDailyServerBandwidthStatsBetweenDays 读取日期段内的带宽数据
+func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays(ctx context.Context, req *pb.FindDailyServerBandwidthStatsBetweenDaysRequest) (*pb.FindDailyServerBandwidthStatsBetweenDaysResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		req.UserId = userId
+
+		// 检查权限
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if req.UserId <= 0 && req.ServerId <= 0 {
+		return &pb.FindDailyServerBandwidthStatsBetweenDaysResponse{
+			Stats: nil,
+		}, nil
+	}
+
+	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
+	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
+
+	var dayReg = regexp.MustCompile(`^\d{8}$`)
+	if !dayReg.MatchString(req.DayFrom) {
+		return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
+	}
+	if !dayReg.MatchString(req.DayTo) {
+		return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
+	}
+
+	var pbStats = []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{}
+	var pbNthStat *pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat
+	if req.ServerId > 0 { // 服务统计
+		pbStats, err = models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo)
+
+		// nth
+		stat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo, req.Percentile)
+		if err != nil {
+			return nil, err
+		}
+		if stat != nil {
+			pbNthStat = &pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{
+				Day:    stat.Day,
+				TimeAt: stat.TimeAt,
+				Bytes:  int64(stat.Bytes),
+				Bits:   int64(stat.Bytes * 8),
+			}
+		}
+	} else { // 用户统计
+		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.DayFrom, req.DayTo)
+
+		// nth
+		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.DayFrom, req.DayTo, req.Percentile)
+		if err != nil {
+			return nil, err
+		}
+		if stat != nil {
+			pbNthStat = &pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{
+				Day:    stat.Day,
+				TimeAt: stat.TimeAt,
+				Bytes:  int64(stat.Bytes),
+				Bits:   int64(stat.Bytes * 8),
+			}
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindDailyServerBandwidthStatsBetweenDaysResponse{
+		Stats:   pbStats,
+		NthStat: pbNthStat,
 	}, nil
 }

@@ -62,6 +62,25 @@ func TestRangeMinutes(t *testing.T) {
 	}
 }
 
+func TestRangeTimes(t *testing.T) {
+	for _, r := range [][2]string{
+		{"0000", "2359"},
+		{"0000", "0230"},
+		{"0300", "0230"},
+		{"1021", "1131"},
+	} {
+		result, err := utils.RangeTimes(r[0], r[1], 5)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(r, "=>", result, len(result))
+	}
+}
+
+func TestRange24HourTimes(t *testing.T) {
+	t.Log(utils.Range24HourTimes(5))
+}
+
 func TestGroupMinuteRanges(t *testing.T) {
 	{
 		var minutes = utils.GroupMinuteRanges(utils.RangeMinutes(time.Now(), 5, 5))

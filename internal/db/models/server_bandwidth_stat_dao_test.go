@@ -89,7 +89,6 @@ func TestServerBandwidthStatDAO_FindHourlyBandwidthStats(t *testing.T) {
 	logs.PrintAsJSON(stats, t)
 }
 
-
 func TestServerBandwidthStatDAO_FindDailyBandwidthStats(t *testing.T) {
 	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
@@ -98,4 +97,16 @@ func TestServerBandwidthStatDAO_FindDailyBandwidthStats(t *testing.T) {
 		t.Fatal(err)
 	}
 	logs.PrintAsJSON(stats, t)
+}
+
+func TestServerBandwidthStatDAO_FindBandwidthStatsBetweenDays(t *testing.T) {
+	var dao = models.NewServerBandwidthStatDAO()
+	var tx *dbs.Tx
+	stats, err := dao.FindBandwidthStatsBetweenDays(tx, 23, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -2)), timeutil.Format("Ymd"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, stat := range stats {
+		t.Log(stat.Day, stat.TimeAt, "bytes:", stat.Bytes, "bits:", stat.Bits)
+	}
 }

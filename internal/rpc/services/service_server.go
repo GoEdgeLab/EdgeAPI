@@ -1466,6 +1466,38 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 	return &pb.FindAllEnabledServerNamesWithUserIdResponse{ServerNames: serverNames}, nil
 }
 
+// FindAllUserServers 查找一个用户下的所有服务
+func (this *ServerService) FindAllUserServers(ctx context.Context, req *pb.FindAllUserServersRequest) (*pb.FindAllUserServersResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
+	servers, err := models.SharedServerDAO.FindAllEnabledServersWithUserId(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbServers = []*pb.Server{}
+	for _, server := range servers {
+		pbServers = append(pbServers, &pb.Server{
+			Id:              int64(server.Id),
+			Name:            server.Name,
+			FirstServerName: server.FirstServerName(),
+			IsOn:            server.IsOn,
+		})
+	}
+
+	return &pb.FindAllUserServersResponse{
+		Servers: pbServers,
+	}, nil
+}
+
 // FindEnabledUserServerBasic 查找服务基本信息
 func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *pb.FindEnabledUserServerBasicRequest) (*pb.FindEnabledUserServerBasicResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, true)

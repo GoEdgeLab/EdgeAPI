@@ -4,12 +4,14 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -237,7 +239,7 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 	if req.Days > 0 {
 		for i := int32(0); i < req.Days; i++ {
 			dayString := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -int(i)))
-			stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.ServerId, dayString)
+			stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, 0, req.ServerId, dayString, dayString)
 			if err != nil {
 				return nil, err
 			}
@@ -253,6 +255,60 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 		}
 	}
 	return &pb.FindLatestServerDailyStatsResponse{Stats: result}, nil
+}
+
+// FindServerDailyStatsBetweenDays 读取日期段内的流量数据
+func (this *ServerDailyStatService) FindServerDailyStatsBetweenDays(ctx context.Context, req *pb.FindServerDailyStatsBetweenDaysRequest) (*pb.FindServerDailyStatsBetweenDaysResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+
+		// 检查权限
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var reg = regexp.MustCompile(`^\d{8}$`)
+	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
+	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
+	if !reg.MatchString(req.DayFrom) {
+		return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
+	}
+	if !reg.MatchString(req.DayTo) {
+		return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
+	}
+
+	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsBetweenDays(tx, req.UserId, req.ServerId, req.DayFrom, req.DayTo)
+	var pbStats = []*pb.FindServerDailyStatsBetweenDaysResponse_Stat{}
+	for _, stat := range dailyStats {
+		// 防止数据出错
+		if len(stat.TimeFrom) < 4 {
+			continue
+		}
+
+		pbStats = append(pbStats, &pb.FindServerDailyStatsBetweenDaysResponse_Stat{
+			Day:                 stat.Day,
+			TimeFrom:            stat.TimeFrom,
+			TimeTo:              stat.TimeTo,
+			TimeAt:              stat.TimeFrom[:4],
+			Bytes:               int64(stat.Bytes),
+			CachedBytes:         int64(stat.CachedBytes),
+			CountRequests:       int64(stat.CountRequests),
+			CountCachedRequests: int64(stat.CountCachedRequests),
+		})
+	}
+	return &pb.FindServerDailyStatsBetweenDaysResponse{
+		Stats: pbStats,
+	}, nil
 }
 
 // SumCurrentServerDailyStats 查找单个服务当前统计数据
@@ -307,19 +363,42 @@ func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req
 
 	// 检查用户
 	if userId > 0 {
-		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
-		if err != nil {
-			return nil, err
+		req.UserId = userId
+
+		if req.ServerId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	// 某日统计
-	var day = timeutil.Format("Ymd")
-	if regexp.MustCompile(`^\d{8}$`).MatchString(req.Day) {
-		day = req.Day
+	req.Day = strings.ReplaceAll(req.Day, "-", "")
+	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
+	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
+
+	var dayReg = regexp.MustCompile(`^\d{8}$`)
+	if len(req.Day) > 0 {
+		if !dayReg.MatchString(req.Day) {
+			return nil, errors.New("invalid day '" + req.Day + "'")
+		}
+
+		req.DayFrom = req.Day
+		req.DayTo = req.Day
+	} else if len(req.DayFrom) > 0 && len(req.DayTo) > 0 {
+		if !dayReg.MatchString(req.DayFrom) {
+			return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
+		}
+		if !dayReg.MatchString(req.DayTo) {
+			return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
+		}
+	} else {
+		req.DayFrom = timeutil.Format("Ymd")
+		req.DayTo = req.DayFrom
 	}
 
-	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.ServerId, day)
+	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.UserId, req.ServerId, req.DayFrom, req.DayTo)
 	if err != nil {
 		return nil, err
 	}

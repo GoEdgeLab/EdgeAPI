@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -117,9 +118,10 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 		var timePieces = strings.Split(fullTime, ".")
 		var day = timePieces[0]
 		var hour = timePieces[1]
-
+		var bytes = one.GetInt64("bytes")
 		m[day+hour] = &pb.FindHourlyServerBandwidthStatsResponse_Stat{
-			Bytes: one.GetInt64("bytes"),
+			Bytes: bytes,
+			Bits:  bytes * 8,
 			Day:   day,
 			Hour:  types.Int32(hour),
 		}
@@ -136,6 +138,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 		} else {
 			result = append(result, &pb.FindHourlyServerBandwidthStatsResponse_Stat{
 				Bytes: 0,
+				Bits:  0,
 				Day:   fullHour[:8],
 				Hour:  types.Int32(fullHour[8:]),
 			})
@@ -178,9 +181,11 @@ func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId
 	var m = map[string]*pb.FindDailyServerBandwidthStatsResponse_Stat{}
 	for _, one := range ones {
 		var day = one.GetString("day")
+		var bytes = one.GetInt64("bytes")
 
 		m[day] = &pb.FindDailyServerBandwidthStatsResponse_Stat{
-			Bytes: one.GetInt64("bytes"),
+			Bytes: bytes,
+			Bits:  bytes * 8,
 			Day:   day,
 		}
 	}
@@ -196,8 +201,89 @@ func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId
 		} else {
 			result = append(result, &pb.FindDailyServerBandwidthStatsResponse_Stat{
 				Bytes: 0,
+				Bits:  0,
 				Day:   day,
 			})
+		}
+	}
+
+	return result, nil
+}
+
+// FindBandwidthStatsBetweenDays 查找日期段内的带宽峰值
+// dayFrom YYYYMMDD
+// dayTo YYYYMMDD
+func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat, err error) {
+	if serverId <= 0 {
+		return nil, nil
+	}
+
+	var dayReg = regexp.MustCompile(`^\d{8}$`)
+	if !dayReg.MatchString(dayFrom) {
+		return nil, errors.New("invalid dayFrom '" + dayFrom + "'")
+	}
+	if !dayReg.MatchString(dayTo) {
+		return nil, errors.New("invalid dayTo '" + dayTo + "'")
+	}
+
+	if dayFrom > dayTo {
+		dayFrom, dayTo = dayTo, dayFrom
+	}
+
+	ones, _, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("bytes", "day", "timeAt").
+		Attr("serverId", serverId).
+		Between("day", dayFrom, dayTo).
+		FindOnes()
+	if err != nil {
+		return nil, err
+	}
+
+	var m = map[string]*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{}
+	for _, one := range ones {
+		var day = one.GetString("day")
+		var bytes = one.GetInt64("bytes")
+		var timeAt = one.GetString("timeAt")
+		var key = day + "@" + timeAt
+
+		m[key] = &pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{
+			Bytes:  bytes,
+			Bits:   bytes * 8,
+			Day:    day,
+			TimeAt: timeAt,
+		}
+	}
+
+	allDays, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+
+	dayTimes, err := utils.Range24HourTimes(5)
+	if err != nil {
+		return nil, err
+	}
+
+	// 截止到当前时间
+	var currentTime = timeutil.Format("Ymd@Hi")
+
+	for _, day := range allDays {
+		for _, timeAt := range dayTimes {
+			var key = day + "@" + timeAt
+			if key >= currentTime {
+				break
+			}
+
+			stat, ok := m[key]
+			if ok {
+				result = append(result, stat)
+			} else {
+				result = append(result, &pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{
+					Day:    day,
+					TimeAt: timeAt,
+				})
+			}
 		}
 	}
 
@@ -306,6 +392,61 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 		FindInt64Col(0)
 
 	return
+}
+
+// FindPercentileBetweenDays 获取日期段内内百分位
+func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string, percentile int32) (result *ServerBandwidthStat, err error) {
+	if percentile <= 0 {
+		percentile = 95
+	}
+
+	// 如果是100%以上，则快速返回
+	if percentile >= 100 {
+		one, err := this.Query(tx).
+			Table(this.partialTable(serverId)).
+			Attr("serverId", serverId).
+			Between("day", dayFrom, dayTo).
+			Desc("bytes").
+			Find()
+		if err != nil || one == nil {
+			return nil, err
+		}
+
+		return one.(*ServerBandwidthStat), nil
+	}
+
+	// 总数量
+	total, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("day", dayFrom, dayTo).
+		Count()
+	if err != nil {
+		return nil, err
+	}
+	if total == 0 {
+		return nil, nil
+	}
+
+	var offset int64
+
+	if total > 1 {
+		offset = int64(math.Ceil(float64(total) * float64(100-percentile) / 100))
+	}
+
+	// 查询 nth 位置
+	one, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("day", dayFrom, dayTo).
+		Desc("bytes").
+		Offset(offset).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*ServerBandwidthStat), nil
 }
 
 // Clean 清理过期数据

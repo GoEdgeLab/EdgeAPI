@@ -477,6 +477,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 					Day:      stat.Day,
 					TimeAt:   stat.TimeAt,
 					Bytes:    int64(stat.Bytes),
+					Bits:     int64(stat.Bytes * 8),
 				}
 			}
 		}
@@ -486,12 +487,14 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			if ok {
 				pbBandwidthStats = append(pbBandwidthStats, stat)
 			} else {
+				var bytes = ServerBandwidthGetCacheBytes(req.ServerId, minute.Day, minute.Minute) // 从当前缓存中读取
 				pbBandwidthStats = append(pbBandwidthStats, &pb.ServerBandwidthStat{
 					Id:       0,
 					ServerId: req.ServerId,
 					Day:      minute.Day,
 					TimeAt:   minute.Minute,
-					Bytes:    ServerBandwidthGetCacheBytes(req.ServerId, minute.Day, minute.Minute), // 从当前缓存中读取
+					Bytes:    bytes,
+					Bits:     bytes * 8,
 				})
 			}
 		}

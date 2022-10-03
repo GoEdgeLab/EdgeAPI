@@ -1796,6 +1796,7 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 // FindAllEnabledServersWithUserId 查找用户的所有的服务
 func (this *ServerDAO) FindAllEnabledServersWithUserId(tx *dbs.Tx, userId int64) (result []*Server, err error) {
 	_, err = this.Query(tx).
+		Result("id", "serverNames", "name", "isOn", "type", "groupIds", "clusterId", "dnsName").
 		State(ServerStateEnabled).
 		Attr("userId", userId).
 		DescPk().
