@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -154,19 +155,16 @@ func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int
 
 // CreateMessage 创建普通消息
 func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
+	body = utils.LimitString(subject, 100)
+	body = utils.LimitString(body, 1024)
+
 	var op = NewMessageOperator()
 	op.AdminId = adminId
 	op.UserId = userId
 	op.Type = messageType
 	op.Level = level
 
-	subjectRunes := []rune(subject)
-	if len(subjectRunes) > 100 {
-		op.Subject = string(subjectRunes[:100]) + "..."
-	} else {
-		op.Subject = subject
-	}
-
+	op.Subject = subject
 	op.Body = body
 	if len(paramsJSON) > 0 {
 		op.Params = paramsJSON
