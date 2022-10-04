@@ -396,6 +396,10 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 
 // FindPercentileBetweenDays 获取日期段内内百分位
 func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string, percentile int32) (result *ServerBandwidthStat, err error) {
+	if dayFrom > dayTo {
+		dayFrom, dayTo = dayTo, dayFrom
+	}
+
 	if percentile <= 0 {
 		percentile = 95
 	}
