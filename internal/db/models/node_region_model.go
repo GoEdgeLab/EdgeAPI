@@ -11,20 +11,20 @@ type NodeRegion struct {
 	Description string   `field:"description"` // 描述
 	Order       uint32   `field:"order"`       // 排序
 	CreatedAt   uint64   `field:"createdAt"`   // 创建时间
-	Prices      dbs.JSON `field:"prices"`      // 价格
+	Prices      dbs.JSON `field:"prices"`      // 流量价格
 	State       uint8    `field:"state"`       // 状态
 }
 
 type NodeRegionOperator struct {
-	Id          interface{} // ID
-	AdminId     interface{} // 管理员ID
-	IsOn        interface{} // 是否启用
-	Name        interface{} // 名称
-	Description interface{} // 描述
-	Order       interface{} // 排序
-	CreatedAt   interface{} // 创建时间
-	Prices      interface{} // 价格
-	State       interface{} // 状态
+	Id          any // ID
+	AdminId     any // 管理员ID
+	IsOn        any // 是否启用
+	Name        any // 名称
+	Description any // 描述
+	Order       any // 排序
+	CreatedAt   any // 创建时间
+	Prices      any // 流量价格
+	State       any // 状态
 }
 
 func NewNodeRegionOperator() *NodeRegionOperator {

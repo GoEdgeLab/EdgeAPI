@@ -251,4 +251,3 @@ func TestUpgradeSQLData_v0_5_3(t *testing.T) {
 	}
 	t.Log("ok")
 }
-

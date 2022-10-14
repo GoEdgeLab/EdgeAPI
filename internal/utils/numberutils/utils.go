@@ -1,6 +1,8 @@
 package numberutils
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func FormatInt64(value int64) string {
 	return strconv.FormatInt(value, 10)
@@ -38,4 +40,21 @@ func Min[T int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 |
 		}
 	}
 	return min
+}
+
+func FloorFloat32(f float32, decimal int) float32 {
+	if decimal < 0 {
+		decimal = 0
+	}
+
+	for i := 0; i < decimal; i++ {
+		f *= 10
+	}
+
+	f = float32(int64(f))
+
+	for i := 0; i < decimal; i++ {
+		f /= 10
+	}
+	return f
 }

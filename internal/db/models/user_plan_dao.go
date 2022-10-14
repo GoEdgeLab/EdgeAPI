@@ -1,3 +1,5 @@
+//go:build !plus
+
 package models
 
 import (
@@ -7,8 +9,6 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
-	timeutil "github.com/iwind/TeaGo/utils/time"
-	"time"
 )
 
 const (
@@ -112,59 +112,11 @@ func (this *UserPlanDAO) FindUserPlanWithoutState(tx *dbs.Tx, userPlanId int64, 
 
 // CountAllEnabledUserPlans 计算套餐数量
 func (this *UserPlanDAO) CountAllEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32) (int64, error) {
-	var query = this.Query(tx).
-		State(UserPlanStateEnabled).
-		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
-
-	if userId > 0 {
-		query.Attr("userId", userId)
-	} else {
-		query.Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)")
-	}
-
-	var today = timeutil.Format("Y-m-d")
-	if isAvailable {
-		query.Gte("dayTo", today)
-	}
-	if isExpired {
-		query.Lt("dayTo", today)
-	}
-	if expiringDays > 0 {
-		var expiringDay = timeutil.Format("Y-m-d", time.Now().AddDate(0, 0, int(expiringDays)))
-		query.Gte("dayTo", today)
-		query.Lte("dayTo", expiringDay)
-	}
-	return query.Count()
+	return 0, nil
 }
 
 // ListEnabledUserPlans 列出单页套餐
 func (this *UserPlanDAO) ListEnabledUserPlans(tx *dbs.Tx, userId int64, isAvailable bool, isExpired bool, expiringDays int32, offset int64, size int64) (result []*UserPlan, err error) {
-	var query = this.Query(tx).
-		State(UserPlanStateEnabled).
-		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
-	if userId > 0 {
-		query.Attr("userId", userId)
-	} else {
-		query.Where("userId IN (SELECT id FROM " + SharedUserDAO.Table + " WHERE state=1)")
-	}
-	var today = timeutil.Format("Y-m-d")
-	if isAvailable {
-		query.Gte("dayTo", today)
-	}
-	if isExpired {
-		query.Lt("dayTo", today)
-	}
-	if expiringDays > 0 {
-		var expiringDay = timeutil.Format("Y-m-d", time.Now().AddDate(0, 0, int(expiringDays)))
-		query.Gte("dayTo", today)
-		query.Lte("dayTo", expiringDay)
-	}
-	_, err = query.
-		DescPk().
-		Offset(offset).
-		Limit(size).
-		Slice(&result).
-		FindAll()
 	return
 }
 
@@ -215,20 +167,6 @@ func (this *UserPlanDAO) UpdateUserPlanDayTo(tx *dbs.Tx, userPlanId int64, dayTo
 
 // FindAllEnabledPlansForServer 列出服务可用的套餐
 func (this *UserPlanDAO) FindAllEnabledPlansForServer(tx *dbs.Tx, userId int64, serverId int64) (result []*UserPlan, err error) {
-	var query = this.Query(tx).
-		State(UserPlanStateEnabled).
-		Attr("userId", userId).
-		Where("planId IN (SELECT id FROM " + SharedPlanDAO.Table + " WHERE state=1)")
-	if serverId > 0 {
-		query.Where("id NOT IN (SELECT userPlanId FROM " + SharedServerDAO.Table + " WHERE state=1 AND id!=:serverId)")
-		query.Param("serverId", serverId)
-	} else {
-		query.Where("id NOT IN (SELECT userPlanId FROM " + SharedServerDAO.Table + " WHERE state=1)")
-	}
-	_, err = query.
-		DescPk().
-		Slice(&result).
-		FindAll()
 	return
 }
 

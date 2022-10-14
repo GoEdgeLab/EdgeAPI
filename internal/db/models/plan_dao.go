@@ -1,8 +1,9 @@
+//go:build !plus
+
 package models
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -77,129 +78,6 @@ func (this *PlanDAO) FindPlanName(tx *dbs.Tx, id int64) (string, error) {
 		Pk(id).
 		Result("name").
 		FindStringCol("")
-}
-
-// CreatePlan 创建套餐
-func (this *PlanDAO) CreatePlan(tx *dbs.Tx,
-	name string,
-	clusterId int64,
-	trafficLimitJSON []byte,
-	featuresJSON []byte,
-	priceType serverconfigs.PlanPriceType,
-	trafficPriceJSON []byte,
-	bandwidthPriceJSON []byte,
-	monthlyPrice float32,
-	seasonallyPrice float32,
-	yearlyPrice float32) (int64, error) {
-	var op = NewPlanOperator()
-	op.Name = name
-	op.ClusterId = clusterId
-	if len(trafficLimitJSON) > 0 {
-		op.TrafficLimit = trafficLimitJSON
-	}
-	if len(featuresJSON) > 0 {
-		op.Features = featuresJSON
-	}
-	op.PriceType = priceType
-	if len(trafficPriceJSON) > 0 {
-		op.TrafficPrice = trafficPriceJSON
-	}
-	if len(bandwidthPriceJSON) > 0 {
-		op.BandwidthPrice = bandwidthPriceJSON
-	}
-	if monthlyPrice >= 0 {
-		op.MonthlyPrice = monthlyPrice
-	}
-	if seasonallyPrice >= 0 {
-		op.SeasonallyPrice = seasonallyPrice
-	}
-	if yearlyPrice >= 0 {
-		op.YearlyPrice = yearlyPrice
-	}
-	op.IsOn = true
-	op.State = PlanStateEnabled
-	return this.SaveInt64(tx, op)
-}
-
-// UpdatePlan 修改套餐
-func (this *PlanDAO) UpdatePlan(tx *dbs.Tx,
-	planId int64,
-	name string,
-	isOn bool,
-	clusterId int64,
-	trafficLimitJSON []byte,
-	featuresJSON []byte,
-	priceType serverconfigs.PlanPriceType,
-	trafficPriceJSON []byte,
-	bandwidthPriceJSON []byte,
-	monthlyPrice float32,
-	seasonallyPrice float32,
-	yearlyPrice float32) error {
-	if planId <= 0 {
-		return errors.New("invalid planId")
-	}
-
-	// 检查集群有无变化
-	oldClusterId, err := this.Query(tx).
-		Pk(planId).
-		Result("clusterId").
-		FindInt64Col(0)
-	if err != nil {
-		return err
-	}
-
-	var op = NewPlanOperator()
-	op.Id = planId
-	op.Name = name
-	op.IsOn = isOn
-	op.ClusterId = clusterId
-	if len(trafficLimitJSON) > 0 {
-		op.TrafficLimit = trafficLimitJSON
-	}
-	if len(featuresJSON) > 0 {
-		op.Features = featuresJSON
-	}
-	op.PriceType = priceType
-	if len(trafficPriceJSON) > 0 {
-		op.TrafficPrice = trafficPriceJSON
-	}
-	if len(bandwidthPriceJSON) > 0 {
-		op.BandwidthPrice = bandwidthPriceJSON
-	}
-	if monthlyPrice >= 0 {
-		op.MonthlyPrice = monthlyPrice
-	} else {
-		op.MonthlyPrice = 0
-	}
-	if seasonallyPrice >= 0 {
-		op.SeasonallyPrice = seasonallyPrice
-	} else {
-		op.SeasonallyPrice = 0
-	}
-	if yearlyPrice >= 0 {
-		op.YearlyPrice = yearlyPrice
-	} else {
-		op.YearlyPrice = 0
-	}
-	err = this.Save(tx, op)
-	if err != nil {
-		return err
-	}
-
-	if oldClusterId != clusterId {
-		// 修改服务所属集群
-		err = SharedServerDAO.UpdateServersClusterIdWithPlanId(tx, planId, clusterId)
-		if err != nil {
-			return err
-		}
-
-		err = SharedNodeClusterDAO.NotifyUpdate(tx, oldClusterId)
-		if err != nil {
-			return err
-		}
-	}
-
-	return this.NotifyUpdate(tx, planId)
 }
 
 // CountAllEnabledPlans 计算套餐的数量

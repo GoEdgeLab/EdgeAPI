@@ -97,3 +97,27 @@ func TestGroupMinuteRanges(t *testing.T) {
 		t.Log(minutes)
 	}
 }
+
+func TestLastDayInMonth(t *testing.T) {
+	t.Log(utils.LastDayInMonth("202209"))
+	t.Log(utils.LastDayInMonth("202210"))
+	t.Log(utils.LastDayInMonth("202202"))
+}
+
+func TestFixMonthMaxDay(t *testing.T) {
+	for _, day := range []string{
+		"20220930",
+		"20220929",
+		"20220931",
+		"20220932",
+		"20220222",
+		"20220228",
+		"20220229",
+	} {
+		afterDay, err := utils.FixMonthMaxDay(day)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(day, "=>", afterDay)
+	}
+}

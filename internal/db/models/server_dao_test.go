@@ -13,6 +13,7 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"testing"
 	"time"
 )
@@ -319,6 +320,15 @@ func TestServerDAO_FindBool(t *testing.T) {
 	}
 	if one != nil {
 		t.Log(one.(*models.Server).IsOn)
+	}
+}
+
+func TestServerDAO_UpdateServerBandwidth(t *testing.T) {
+	var dao = models.NewServerDAO()
+	var tx *dbs.Tx
+	err := dao.UpdateServerBandwidth(tx, 1, timeutil.FormatTime("YmdHi", time.Now().Unix()/300*300), 1024)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

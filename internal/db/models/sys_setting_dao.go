@@ -142,42 +142,6 @@ func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalCo
 	return config, nil
 }
 
-// ReadUserServerConfig 读取用户服务配置
-func (this *SysSettingDAO) ReadUserServerConfig(tx *dbs.Tx) (*userconfigs.UserServerConfig, error) {
-	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserServerConfig)
-	if err != nil {
-		return nil, err
-	}
-	if len(valueJSON) == 0 {
-		return userconfigs.DefaultUserServerConfig(), nil
-	}
-
-	var config = userconfigs.DefaultUserServerConfig()
-	err = json.Unmarshal(valueJSON, config)
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
-// ReadUserFinanceConfig 读取用户服务配置
-func (this *SysSettingDAO) ReadUserFinanceConfig(tx *dbs.Tx) (*userconfigs.UserFinanceConfig, error) {
-	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserFinanceConfig)
-	if err != nil {
-		return nil, err
-	}
-	if len(valueJSON) == 0 {
-		return userconfigs.DefaultUserFinanceConfig(), nil
-	}
-
-	var config = userconfigs.DefaultUserFinanceConfig()
-	err = json.Unmarshal(valueJSON, config)
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
 // ReadAdminUIConfig 读取管理员界面配置
 func (this *SysSettingDAO) ReadAdminUIConfig(tx *dbs.Tx, cacheMap *utils.CacheMap) (*systemconfigs.AdminUIConfig, error) {
 	var cacheKey = this.Table + ":ReadAdminUIConfig"
@@ -227,4 +191,22 @@ func (this *SysSettingDAO) NotifyUpdate(tx *dbs.Tx, code string) error {
 		}
 	}
 	return nil
+}
+
+// ReadUserServerConfig 读取用户服务配置
+func (this *SysSettingDAO) ReadUserServerConfig(tx *dbs.Tx) (*userconfigs.UserServerConfig, error) {
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserServerConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) == 0 {
+		return userconfigs.DefaultUserServerConfig(), nil
+	}
+
+	var config = userconfigs.DefaultUserServerConfig()
+	err = json.Unmarshal(valueJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }

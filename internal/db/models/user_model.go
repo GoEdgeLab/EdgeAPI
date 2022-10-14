@@ -28,6 +28,8 @@ type User struct {
 	IsVerified      bool     `field:"isVerified"`      // 是否验证通过
 	RequirePlans    uint8    `field:"requirePlans"`    // 是否需要购买套餐
 	Modules         dbs.JSON `field:"modules"`         // 用户模块
+	PriceType       string   `field:"priceType"`       // 计费类型：traffic|bandwidth
+	PricePeriod     string   `field:"pricePeriod"`     // 结算周期
 }
 
 type UserOperator struct {
@@ -55,6 +57,8 @@ type UserOperator struct {
 	IsVerified      any // 是否验证通过
 	RequirePlans    any // 是否需要购买套餐
 	Modules         any // 用户模块
+	PriceType       any // 计费类型：traffic|bandwidth
+	PricePeriod     any // 结算周期
 }
 
 func NewUserOperator() *UserOperator {

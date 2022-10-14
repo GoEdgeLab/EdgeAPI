@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -14,7 +15,6 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -218,11 +218,10 @@ func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, se
 		return nil, nil
 	}
 
-	var dayReg = regexp.MustCompile(`^\d{8}$`)
-	if !dayReg.MatchString(dayFrom) {
+	if !regexputils.YYYYMMDD.MatchString(dayFrom) {
 		return nil, errors.New("invalid dayFrom '" + dayFrom + "'")
 	}
-	if !dayReg.MatchString(dayTo) {
+	if !regexputils.YYYYMMDD.MatchString(dayTo) {
 		return nil, errors.New("invalid dayTo '" + dayTo + "'")
 	}
 

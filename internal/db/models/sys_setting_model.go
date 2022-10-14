@@ -11,10 +11,10 @@ type SysSetting struct {
 }
 
 type SysSettingOperator struct {
-	Id     interface{} // ID
-	UserId interface{} // 用户ID
-	Code   interface{} // 代号
-	Value  interface{} // 配置值
+	Id     any // ID
+	UserId any // 用户ID
+	Code   any // 代号
+	Value  any // 配置值
 }
 
 func NewSysSettingOperator() *SysSettingOperator {

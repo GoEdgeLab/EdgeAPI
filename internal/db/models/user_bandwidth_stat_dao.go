@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -14,7 +15,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
-	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -60,7 +61,7 @@ func init() {
 }
 
 // UpdateUserBandwidth 写入数据
-func (this *UserBandwidthStatDAO) UpdateUserBandwidth(tx *dbs.Tx, userId int64, day string, timeAt string, bytes int64) error {
+func (this *UserBandwidthStatDAO) UpdateUserBandwidth(tx *dbs.Tx, userId int64, regionId int64, day string, timeAt string, bytes int64) error {
 	if userId <= 0 {
 		// 如果用户ID不大于0，则说明服务不属于任何用户，此时不需要处理
 		return nil
@@ -70,10 +71,11 @@ func (this *UserBandwidthStatDAO) UpdateUserBandwidth(tx *dbs.Tx, userId int64, 
 		Table(this.partialTable(userId)).
 		Param("bytes", bytes).
 		InsertOrUpdateQuickly(maps.Map{
-			"userId": userId,
-			"day":    day,
-			"timeAt": timeAt,
-			"bytes":  bytes,
+			"userId":   userId,
+			"regionId": regionId,
+			"day":      day,
+			"timeAt":   timeAt,
+			"bytes":    bytes,
 		}, maps.Map{
 			"bytes": dbs.SQL("bytes+:bytes"),
 		})
@@ -84,9 +86,12 @@ func (this *UserBandwidthStatDAO) UpdateUserBandwidth(tx *dbs.Tx, userId int64, 
 func (this *UserBandwidthStatDAO) FindUserPeekBandwidthInMonth(tx *dbs.Tx, userId int64, month string) (*UserBandwidthStat, error) {
 	one, err := this.Query(tx).
 		Table(this.partialTable(userId)).
+		Result("MIN(id) AS id", "MIN(userId) AS userId", "day", "timeAt", "SUM(bytes) AS bytes").
 		Attr("userId", userId).
 		Between("day", month+"01", month+"31").
 		Desc("bytes").
+		Group("day").
+		Group("timeAt").
 		Find()
 	if err != nil || one == nil {
 		return nil, err
@@ -95,7 +100,8 @@ func (this *UserBandwidthStatDAO) FindUserPeekBandwidthInMonth(tx *dbs.Tx, userI
 }
 
 // FindPercentileBetweenDays 获取日期段内内百分位
-func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId int64, dayFrom string, dayTo string, percentile int32) (result *UserBandwidthStat, err error) {
+// regionId 如果为 -1 表示没有区域的带宽；如果为 0 表示所有区域的带宽
+func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId int64, regionId int64, dayFrom string, dayTo string, percentile int32) (result *UserBandwidthStat, err error) {
 	if dayFrom > dayTo {
 		dayFrom, dayTo = dayTo, dayFrom
 	}
@@ -106,11 +112,20 @@ func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId i
 
 	// 如果是100%以上，则快速返回
 	if percentile >= 100 {
-		one, err := this.Query(tx).
-			Table(this.partialTable(userId)).
+		var query = this.Query(tx).
+			Table(this.partialTable(userId))
+		if regionId > 0 {
+			query.Attr("regionId", regionId)
+		} else if regionId < 0 {
+			query.Attr("regionId", 0)
+		}
+		one, err := query.
+			Result("MIN(id) AS id", "MIN(userId) AS userId", "day", "timeAt", "SUM(bytes) AS bytes").
 			Attr("userId", userId).
 			Between("day", dayFrom, dayTo).
 			Desc("bytes").
+			Group("day").
+			Group("timeAt").
 			Find()
 		if err != nil || one == nil {
 			return nil, err
@@ -120,11 +135,17 @@ func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId i
 	}
 
 	// 总数量
-	total, err := this.Query(tx).
-		Table(this.partialTable(userId)).
+	var totalQuery = this.Query(tx).
+		Table(this.partialTable(userId))
+	if regionId > 0 {
+		totalQuery.Attr("regionId", regionId)
+	} else if regionId < 0 {
+		totalQuery.Attr("regionId", 0)
+	}
+	total, err := totalQuery.
 		Attr("userId", userId).
 		Between("day", dayFrom, dayTo).
-		Count()
+		CountAttr("DISTINCT day, timeAt")
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +160,20 @@ func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId i
 	}
 
 	// 查询 nth 位置
-	one, err := this.Query(tx).
-		Table(this.partialTable(userId)).
+	var query = this.Query(tx).
+		Table(this.partialTable(userId))
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	} else if regionId < 0 {
+		query.Attr("regionId", 0)
+	}
+	one, err := query.
+		Result("MIN(id) AS id", "MIN(userId) AS userId", "day", "timeAt", "SUM(bytes) AS bytes").
 		Attr("userId", userId).
 		Between("day", dayFrom, dayTo).
 		Desc("bytes").
+		Group("day").
+		Group("timeAt").
 		Offset(offset).
 		Find()
 	if err != nil || one == nil {
@@ -158,9 +188,11 @@ func (this *UserBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, userId i
 func (this *UserBandwidthStatDAO) FindUserPeekBandwidthInDay(tx *dbs.Tx, userId int64, day string) (*UserBandwidthStat, error) {
 	one, err := this.Query(tx).
 		Table(this.partialTable(userId)).
+		Result("MIN(id) AS id", "MIN(userId) AS userId", "MIN(day) AS day", "timeAt", "SUM(bytes) AS bytes").
 		Attr("userId", userId).
 		Attr("day", day).
 		Desc("bytes").
+		Group("timeAt").
 		Find()
 	if err != nil || one == nil {
 		return nil, err
@@ -171,16 +203,15 @@ func (this *UserBandwidthStatDAO) FindUserPeekBandwidthInDay(tx *dbs.Tx, userId 
 // FindUserBandwidthStatsBetweenDays 查找日期段内的带宽峰值
 // dayFrom YYYYMMDD
 // dayTo YYYYMMDD
-func (this *UserBandwidthStatDAO) FindUserBandwidthStatsBetweenDays(tx *dbs.Tx, userId int64, dayFrom string, dayTo string) (result []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat, err error) {
+func (this *UserBandwidthStatDAO) FindUserBandwidthStatsBetweenDays(tx *dbs.Tx, userId int64, regionId int64, dayFrom string, dayTo string) (result []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat, err error) {
 	if userId <= 0 {
 		return nil, nil
 	}
 
-	var dayReg = regexp.MustCompile(`^\d{8}$`)
-	if !dayReg.MatchString(dayFrom) {
+	if !regexputils.YYYYMMDD.MatchString(dayFrom) {
 		return nil, errors.New("invalid dayFrom '" + dayFrom + "'")
 	}
-	if !dayReg.MatchString(dayTo) {
+	if !regexputils.YYYYMMDD.MatchString(dayTo) {
 		return nil, errors.New("invalid dayTo '" + dayTo + "'")
 	}
 
@@ -188,11 +219,17 @@ func (this *UserBandwidthStatDAO) FindUserBandwidthStatsBetweenDays(tx *dbs.Tx, 
 		dayFrom, dayTo = dayTo, dayFrom
 	}
 
-	ones, _, err := this.Query(tx).
-		Table(this.partialTable(userId)).
-		Result("bytes", "day", "timeAt").
+	var query = this.Query(tx).
+		Table(this.partialTable(userId))
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	ones, _, err := query.
+		Result("SUM(bytes) AS bytes", "day", "timeAt").
 		Attr("userId", userId).
 		Between("day", dayFrom, dayTo).
+		Group("day").
+		Group("timeAt").
 		FindOnes()
 	if err != nil {
 		return nil, err
@@ -246,6 +283,33 @@ func (this *UserBandwidthStatDAO) FindUserBandwidthStatsBetweenDays(tx *dbs.Tx, 
 	}
 
 	return result, nil
+}
+
+// FindDistinctUserIds 获取所有有带宽的用户ID
+// dayFrom YYYYMMDD
+// dayTo YYYYMMDD
+func (this *UserBandwidthStatDAO) FindDistinctUserIds(tx *dbs.Tx, dayFrom string, dayTo string) (userIds []int64, err error) {
+	dayFrom = strings.ReplaceAll(dayFrom, "-", "")
+	dayTo = strings.ReplaceAll(dayTo, "-", "")
+
+	err = this.runBatch(func(table string, locker *sync.Mutex) error {
+		ones, err := this.Query(tx).
+			Table(table).
+			Between("day", dayFrom, dayTo).
+			Result("DISTINCT userId").
+			FindAll()
+		if err != nil {
+			return err
+		}
+
+		for _, one := range ones {
+			locker.Lock()
+			userIds = append(userIds, int64(one.(*UserBandwidthStat).UserId))
+			locker.Unlock()
+		}
+		return nil
+	})
+	return
 }
 
 // Clean 清理过期数据

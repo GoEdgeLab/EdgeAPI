@@ -5,7 +5,9 @@ package setup
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	"regexp"
@@ -57,6 +59,39 @@ func upgradeV0_2_8_1(db *dbs.DB) error {
 	return nil
 }
 
+// v0.4.9
+func upgradeV0_4_9(db *dbs.DB) error {
+	// 升级管理配置
+	{
+		one, err := db.FindOne("SELECT value FROM edgeSysSettings WHERE code=?", systemconfigs.SettingCodeAdminSecurityConfig)
+		if err != nil {
+			return err
+		}
+		if one != nil {
+			var valueJSON = one.GetBytes("value")
+			if len(valueJSON) > 0 {
+				var config = &systemconfigs.SecurityConfig{}
+				err = json.Unmarshal(valueJSON, config)
+				if err == nil {
+					config.DenySearchEngines = true
+					config.DenySpiders = true
+					configJSON, err := json.Marshal(config)
+					if err != nil {
+						return errors.New("encode SecurityConfig failed: " + err.Error())
+					} else {
+						_, err := db.Exec("UPDATE edgeSysSettings SET value=? WHERE code=?", configJSON, systemconfigs.SettingCodeAdminSecurityConfig)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // v0.5.3
 func upgradeV0_5_3(db *dbs.DB) error {
 	// 升级集群服务配置
@@ -101,5 +136,10 @@ func upgradeV0_5_3(db *dbs.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// v0.5.6
+func upgradeV0_5_6(db *dbs.DB) error {
 	return nil
 }

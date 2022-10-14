@@ -8,16 +8,16 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
 
-var serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{} // key => bandwidth
+var serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{} // server key => bandwidth
 var serverBandwidthStatsLocker = &sync.Mutex{}
 
 func init() {
@@ -74,9 +74,9 @@ func init() {
 							}
 						}
 
-						// 更新服务的带宽峰值
+						// 更新用户的带宽峰值
 						if stat.UserId > 0 {
-							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.Day, stat.TimeAt, stat.Bytes)
+							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.RegionId, stat.Day, stat.TimeAt, stat.Bytes)
 							if err != nil {
 								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -89,18 +89,18 @@ func init() {
 }
 
 // ServerBandwidthCacheKey 组合缓存Key
-func ServerBandwidthCacheKey(serverId int64, day string, timeAt string) string {
-	return types.String(serverId) + "@" + day + "@" + timeAt
+func ServerBandwidthCacheKey(serverId int64, regionId int64, day string, timeAt string) string {
+	return types.String(serverId) + "@" + types.String(regionId) + "@" + day + "@" + timeAt
 }
 
-func ServerBandwidthGetCacheBytes(serverId int64, day string, timeAt string) int64 {
-	var key = ServerBandwidthCacheKey(serverId, day, timeAt)
+func ServerBandwidthGetCacheBytes(serverId int64, timeAt string) int64 {
 	var bytes int64 = 0
 
 	serverBandwidthStatsLocker.Lock()
-	stat, ok := serverBandwidthStatsMap[key]
-	if ok {
-		bytes = stat.Bytes
+	for _, stat := range serverBandwidthStatsMap {
+		if stat.ServerId == serverId && stat.TimeAt == timeAt {
+			bytes += stat.Bytes
+		}
 	}
 	serverBandwidthStatsLocker.Unlock()
 
@@ -119,7 +119,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 	}
 
 	for _, stat := range req.ServerBandwidthStats {
-		var key = ServerBandwidthCacheKey(stat.ServerId, stat.Day, stat.TimeAt)
+		var key = ServerBandwidthCacheKey(stat.ServerId, stat.RegionId, stat.Day, stat.TimeAt)
 		serverBandwidthStatsLocker.Lock()
 		oldStat, ok := serverBandwidthStatsMap[key]
 		if ok {
@@ -127,6 +127,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
 				Id:       0,
+				RegionId: stat.RegionId,
 				UserId:   stat.UserId,
 				ServerId: stat.ServerId,
 				Day:      stat.Day,
@@ -244,11 +245,10 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
 	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
 
-	var dayReg = regexp.MustCompile(`^\d{8}$`)
-	if !dayReg.MatchString(req.DayFrom) {
+	if !regexputils.YYYYMMDD.MatchString(req.DayFrom) {
 		return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
 	}
-	if !dayReg.MatchString(req.DayTo) {
+	if !regexputils.YYYYMMDD.MatchString(req.DayTo) {
 		return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
 	}
 
@@ -271,10 +271,10 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 			}
 		}
 	} else { // 用户统计
-		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.DayFrom, req.DayTo)
+		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.RegionId, req.DayFrom, req.DayTo)
 
 		// nth
-		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.DayFrom, req.DayTo, req.Percentile)
+		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.RegionId, req.DayFrom, req.DayTo, req.Percentile)
 		if err != nil {
 			return nil, err
 		}

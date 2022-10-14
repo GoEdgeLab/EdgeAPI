@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -25,18 +26,12 @@ type timeDayMinuteRange struct {
 
 // RangeDays 计算日期之间的所有日期，格式为YYYYMMDD
 func RangeDays(dayFrom string, dayTo string) ([]string, error) {
-	ok, err := regexp.MatchString(`^\d{8}$`, dayFrom)
-	if err != nil {
-		return nil, err
-	}
+	var ok = regexputils.YYYYMMDD.MatchString(dayFrom)
 	if !ok {
 		return nil, errors.New("invalid 'dayFrom'")
 	}
 
-	ok, err = regexp.MatchString(`^\d{8}$`, dayTo)
-	if err != nil {
-		return nil, err
-	}
+	ok = regexputils.YYYYMMDD.MatchString(dayTo)
 	if !ok {
 		return nil, errors.New("invalid 'dayTo'")
 	}
@@ -73,18 +68,12 @@ func RangeDays(dayFrom string, dayTo string) ([]string, error) {
 
 // RangeMonths 计算日期之间的所有月份，格式为YYYYMM
 func RangeMonths(dayFrom string, dayTo string) ([]string, error) {
-	ok, err := regexp.MatchString(`^\d{8}$`, dayFrom)
-	if err != nil {
-		return nil, err
-	}
+	var ok = regexputils.YYYYMMDD.MatchString(dayFrom)
 	if !ok {
 		return nil, errors.New("invalid 'dayFrom'")
 	}
 
-	ok, err = regexp.MatchString(`^\d{8}$`, dayTo)
-	if err != nil {
-		return nil, err
-	}
+	ok = regexputils.YYYYMMDD.MatchString(dayTo)
 	if !ok {
 		return nil, errors.New("invalid 'dayTo'")
 	}
@@ -275,4 +264,33 @@ func Range24HourTimes(everyMinutes int32) ([]string, error) {
 	}
 
 	return RangeTimes("0000", "2359", everyMinutes)
+}
+
+// LastDayInMonth 某月的最后一天
+// month: YYYYMM
+// 返回 YYYYMMDD
+func LastDayInMonth(month string) (string, error) {
+	if !regexputils.YYYYMM.MatchString(month) {
+		return "", errors.New("invalid month '" + month + "'")
+	}
+
+	var year = types.Int(month[:4])
+	var monthInt = types.Int(month[4:])
+	return month + timeutil.Format("t", time.Date(year, time.Month(monthInt), 1, 0, 0, 0, 0, time.Local)), nil
+}
+
+// FixMonthMaxDay 修正日期最大值
+func FixMonthMaxDay(day string) (string, error) {
+	if !regexputils.YYYYMMDD.MatchString(day) {
+		return "", errors.New("invalid day '" + day + "'")
+	}
+
+	maxDay, err := LastDayInMonth(day[:6])
+	if err != nil {
+		return "", err
+	}
+	if day > maxDay {
+		return maxDay, nil
+	}
+	return day, nil
 }

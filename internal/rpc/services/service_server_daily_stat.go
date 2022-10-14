@@ -6,11 +6,11 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -239,7 +239,7 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 	if req.Days > 0 {
 		for i := int32(0); i < req.Days; i++ {
 			dayString := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -int(i)))
-			stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, 0, req.ServerId, dayString, dayString)
+			stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, 0, req.ServerId, req.RegionId, dayString, dayString)
 			if err != nil {
 				return nil, err
 			}
@@ -277,17 +277,16 @@ func (this *ServerDailyStatService) FindServerDailyStatsBetweenDays(ctx context.
 		}
 	}
 
-	var reg = regexp.MustCompile(`^\d{8}$`)
 	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
 	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
-	if !reg.MatchString(req.DayFrom) {
+	if !regexputils.YYYYMMDD.MatchString(req.DayFrom) {
 		return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
 	}
-	if !reg.MatchString(req.DayTo) {
+	if !regexputils.YYYYMMDD.MatchString(req.DayTo) {
 		return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
 	}
 
-	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsBetweenDays(tx, req.UserId, req.ServerId, req.DayFrom, req.DayTo)
+	dailyStats, err := models.SharedServerDailyStatDAO.FindStatsBetweenDays(tx, req.UserId, req.ServerId, req.RegionId, req.DayFrom, req.DayTo)
 	var pbStats = []*pb.FindServerDailyStatsBetweenDaysResponse_Stat{}
 	for _, stat := range dailyStats {
 		// 防止数据出错
@@ -378,19 +377,18 @@ func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req
 	req.DayFrom = strings.ReplaceAll(req.DayFrom, "-", "")
 	req.DayTo = strings.ReplaceAll(req.DayTo, "-", "")
 
-	var dayReg = regexp.MustCompile(`^\d{8}$`)
 	if len(req.Day) > 0 {
-		if !dayReg.MatchString(req.Day) {
+		if !regexputils.YYYYMMDD.MatchString(req.Day) {
 			return nil, errors.New("invalid day '" + req.Day + "'")
 		}
 
 		req.DayFrom = req.Day
 		req.DayTo = req.Day
 	} else if len(req.DayFrom) > 0 && len(req.DayTo) > 0 {
-		if !dayReg.MatchString(req.DayFrom) {
+		if !regexputils.YYYYMMDD.MatchString(req.DayFrom) {
 			return nil, errors.New("invalid dayFrom '" + req.DayFrom + "'")
 		}
-		if !dayReg.MatchString(req.DayTo) {
+		if !regexputils.YYYYMMDD.MatchString(req.DayTo) {
 			return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
 		}
 	} else {
@@ -398,7 +396,7 @@ func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req
 		req.DayTo = req.DayFrom
 	}
 
-	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.UserId, req.ServerId, req.DayFrom, req.DayTo)
+	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.UserId, req.ServerId, req.RegionId, req.DayFrom, req.DayTo)
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +437,7 @@ func (this *ServerDailyStatService) SumServerMonthlyStats(ctx context.Context, r
 
 	// 某月统计
 	var month = timeutil.Format("Ym")
-	if regexp.MustCompile(`^\d{6}$`).MatchString(req.Month) {
+	if regexputils.YYYYMM.MatchString(req.Month) {
 		month = req.Month
 	}
 

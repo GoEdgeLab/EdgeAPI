@@ -5,10 +5,10 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
-	"regexp"
 	"sync"
 )
 
@@ -168,7 +168,7 @@ func (this *HTTPAccessLogService) FindHTTPAccessLogPartitions(ctx context.Contex
 		return nil, err
 	}
 
-	if !regexp.MustCompile(`^\d{8}$`).MatchString(req.Day) {
+	if !regexputils.YYYYMMDD.MatchString(req.Day) {
 		return nil, errors.New("invalid 'day': " + req.Day)
 	}
 

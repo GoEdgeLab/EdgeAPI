@@ -2617,11 +2617,29 @@ func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTim
 	if bandwidthBytes < 0 {
 		bandwidthBytes = 0
 	}
-	return this.Query(tx).
+
+	bandwidthTime, err := this.Query(tx).
 		Pk(serverId).
-		Set("bandwidthTime", fullTime).
-		Set("bandwidthBytes", bandwidthBytes).
-		UpdateQuickly()
+		Result("bandwidthTime").
+		FindStringCol("")
+	if err != nil {
+		return err
+	}
+
+	if bandwidthTime != fullTime {
+		return this.Query(tx).
+			Pk(serverId).
+			Set("bandwidthTime", fullTime).
+			Set("bandwidthBytes", bandwidthBytes).
+			UpdateQuickly()
+	} else {
+		return this.Query(tx).
+			Pk(serverId).
+			Set("bandwidthTime", fullTime).
+			Set("bandwidthBytes", dbs.SQL("bandwidthBytes+:bytes")).
+			Param("bytes", bandwidthBytes).
+			UpdateQuickly()
+	}
 }
 
 // NotifyUpdate 同步服务所在的集群

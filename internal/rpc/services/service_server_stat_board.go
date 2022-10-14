@@ -487,7 +487,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			if ok {
 				pbBandwidthStats = append(pbBandwidthStats, stat)
 			} else {
-				var bytes = ServerBandwidthGetCacheBytes(req.ServerId, minute.Day, minute.Minute) // 从当前缓存中读取
+				var bytes = ServerBandwidthGetCacheBytes(req.ServerId, minute.Minute) // 从当前缓存中读取
 				pbBandwidthStats = append(pbBandwidthStats, &pb.ServerBandwidthStat{
 					Id:       0,
 					ServerId: req.ServerId,

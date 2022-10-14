@@ -5,18 +5,20 @@ type ServerBandwidthStat struct {
 	Id       uint64 `field:"id"`       // ID
 	UserId   uint64 `field:"userId"`   // 用户ID
 	ServerId uint64 `field:"serverId"` // 服务ID
+	RegionId uint32 `field:"regionId"` // 区域ID
 	Day      string `field:"day"`      // 日期YYYYMMDD
 	TimeAt   string `field:"timeAt"`   // 时间点HHMM
 	Bytes    uint64 `field:"bytes"`    // 带宽字节
 }
 
 type ServerBandwidthStatOperator struct {
-	Id       interface{} // ID
-	UserId   interface{} // 用户ID
-	ServerId interface{} // 服务ID
-	Day      interface{} // 日期YYYYMMDD
-	TimeAt   interface{} // 时间点HHMM
-	Bytes    interface{} // 带宽字节
+	Id       any // ID
+	UserId   any // 用户ID
+	ServerId any // 服务ID
+	RegionId any // 区域ID
+	Day      any // 日期YYYYMMDD
+	TimeAt   any // 时间点HHMM
+	Bytes    any // 带宽字节
 }
 
 func NewServerBandwidthStatOperator() *ServerBandwidthStatOperator {
