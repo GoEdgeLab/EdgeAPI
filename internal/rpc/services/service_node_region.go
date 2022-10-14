@@ -94,11 +94,11 @@ func (this *NodeRegionService) FindAllAvailableNodeRegions(ctx context.Context, 
 
 	var tx = this.NullTx()
 
-	regions, err := models.SharedNodeRegionDAO.FindAllEnabledAndOnRegions(tx)
+	regions, err := models.SharedNodeRegionDAO.FindAllAvailableRegions(tx)
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.NodeRegion{}
+	var result = []*pb.NodeRegion{}
 	for _, region := range regions {
 		result = append(result, &pb.NodeRegion{
 			Id:          int64(region.Id),

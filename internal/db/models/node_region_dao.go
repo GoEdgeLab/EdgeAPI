@@ -120,8 +120,8 @@ func (this *NodeRegionDAO) FindAllEnabledRegionPrices(tx *dbs.Tx) (result []*Nod
 	return
 }
 
-// FindAllEnabledAndOnRegions 列出所有启用的区域
-func (this *NodeRegionDAO) FindAllEnabledAndOnRegions(tx *dbs.Tx) (result []*NodeRegion, err error) {
+// FindAllAvailableRegions 列出所有启用的区域
+func (this *NodeRegionDAO) FindAllAvailableRegions(tx *dbs.Tx) (result []*NodeRegion, err error) {
 	_, err = this.Query(tx).
 		State(NodeRegionStateEnabled).
 		Attr("isOn", true).
@@ -130,6 +130,25 @@ func (this *NodeRegionDAO) FindAllEnabledAndOnRegions(tx *dbs.Tx) (result []*Nod
 		Slice(&result).
 		FindAll()
 	return
+}
+
+// FindAllRegionIds 查找所有区域ID
+func (this *NodeRegionDAO) FindAllRegionIds(tx *dbs.Tx) ([]int64, error) {
+	ones, err := this.Query(tx).
+		ResultPk().
+		State(NodeRegionStateEnabled).
+		Desc("order").
+		AscPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var regionIds = []int64{}
+	for _, one := range ones {
+		regionIds = append(regionIds, int64(one.(*NodeRegion).Id))
+	}
+	return regionIds, nil
 }
 
 // UpdateRegionOrders 排序

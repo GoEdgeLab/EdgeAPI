@@ -86,7 +86,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 			InsertOrUpdate(maps.Map{
 				"userId":              serverUserId,
 				"serverId":            stat.ServerId,
-				"regionId":            stat.RegionId,
+				"regionId":            stat.NodeRegionId,
 				"bytes":               stat.Bytes,
 				"cachedBytes":         stat.CachedBytes,
 				"countRequests":       stat.CountRequests,

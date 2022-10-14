@@ -76,7 +76,7 @@ func init() {
 
 						// 更新用户的带宽峰值
 						if stat.UserId > 0 {
-							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.RegionId, stat.Day, stat.TimeAt, stat.Bytes)
+							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes)
 							if err != nil {
 								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -119,20 +119,20 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 	}
 
 	for _, stat := range req.ServerBandwidthStats {
-		var key = ServerBandwidthCacheKey(stat.ServerId, stat.RegionId, stat.Day, stat.TimeAt)
+		var key = ServerBandwidthCacheKey(stat.ServerId, stat.NodeRegionId, stat.Day, stat.TimeAt)
 		serverBandwidthStatsLocker.Lock()
 		oldStat, ok := serverBandwidthStatsMap[key]
 		if ok {
 			oldStat.Bytes += stat.Bytes
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
-				Id:       0,
-				RegionId: stat.RegionId,
-				UserId:   stat.UserId,
-				ServerId: stat.ServerId,
-				Day:      stat.Day,
-				TimeAt:   stat.TimeAt,
-				Bytes:    stat.Bytes,
+				Id:           0,
+				NodeRegionId: stat.NodeRegionId,
+				UserId:       stat.UserId,
+				ServerId:     stat.ServerId,
+				Day:          stat.Day,
+				TimeAt:       stat.TimeAt,
+				Bytes:        stat.Bytes,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()
@@ -271,10 +271,10 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 			}
 		}
 	} else { // 用户统计
-		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.RegionId, req.DayFrom, req.DayTo)
+		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo)
 
 		// nth
-		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.RegionId, req.DayFrom, req.DayTo, req.Percentile)
+		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo, req.Percentile)
 		if err != nil {
 			return nil, err
 		}
