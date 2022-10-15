@@ -61,7 +61,7 @@ func (this *NodeRegionService) DeleteNodeRegion(ctx context.Context, req *pb.Del
 
 // FindAllEnabledNodeRegions 查找所有区域
 func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, req *pb.FindAllEnabledNodeRegionsRequest) (*pb.FindAllEnabledNodeRegionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (this *NodeRegionService) FindAllEnabledNodeRegions(ctx context.Context, re
 
 // FindAllAvailableNodeRegions 查找所有启用的区域
 func (this *NodeRegionService) FindAllAvailableNodeRegions(ctx context.Context, req *pb.FindAllAvailableNodeRegionsRequest) (*pb.FindAllAvailableNodeRegionsResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}

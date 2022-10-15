@@ -228,6 +228,10 @@ func (this *BaseService) PermissionError() error {
 	return errors.New("Permission Denied")
 }
 
+func (this *BaseService) NotImplementedYet() error {
+	return errors.New("not implemented yet")
+}
+
 // NullTx 空的数据库事务
 func (this *BaseService) NullTx() *dbs.Tx {
 	return nil
