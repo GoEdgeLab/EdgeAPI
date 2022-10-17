@@ -56,7 +56,7 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 // GetDomains 获取所有域名列表
 func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 	var offset = 0
-	var size = 100
+	var size = 3000
 
 	for {
 		domainsResp, err := this.post("/Domain.List", map[string]string{
@@ -91,7 +91,7 @@ func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 // GetRecords 获取域名列表
 func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
 	var offset = 0
-	var size = 100
+	var size = 3000
 	for {
 		recordsResp, err := this.post("/Record.List", map[string]string{
 			"domain": domain,
