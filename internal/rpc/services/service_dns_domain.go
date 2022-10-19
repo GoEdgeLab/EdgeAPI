@@ -285,13 +285,11 @@ func (this *DNSDomainService) ListBasicDNSDomainsWithDNSProviderId(ctx context.C
 
 	var result = []*pb.DNSDomain{}
 	for _, domain := range domains {
-		result = append(result, &pb.DNSDomain{
-			Id:        int64(domain.Id),
-			Name:      domain.Name,
-			IsOn:      domain.IsOn,
-			IsUp:      domain.IsUp,
-			IsDeleted: domain.IsDeleted,
-		})
+		pbDomain, err := this.convertDomainToPB(tx, domain)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, pbDomain)
 	}
 
 	return &pb.ListDNSDomainsWithDNSProviderIdResponse{DnsDomains: result}, nil
@@ -671,7 +669,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	if provider == nil {
 		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "域名没有设置服务商"}, nil
 	}
-	apiParams := maps.Map{}
+	var apiParams = maps.Map{}
 	if models.IsNotNull(provider.ApiParams) {
 		err = json.Unmarshal(provider.ApiParams, &apiParams)
 		if err != nil {
