@@ -2013,3 +2013,97 @@ func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.
 
 	return result, nil
 }
+
+// CountAllNodeRegionInfo 查找节点区域信息数量
+func (this *NodeService) CountAllNodeRegionInfo(ctx context.Context, req *pb.CountAllNodeRegionInfoRequest) (*pb.RPCCountResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedNodeDAO.CountAllNodeRegionInfo(tx, req.NodeRegionId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
+// ListNodeRegionInfo 列出单页节点区域信息
+func (this *NodeService) ListNodeRegionInfo(ctx context.Context, req *pb.ListNodeRegionInfoRequest) (*pb.ListNodeRegionInfoResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	nodes, err := models.SharedNodeDAO.ListNodeRegionInfo(tx, req.NodeRegionId, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbInfoList = []*pb.ListNodeRegionInfoResponse_Info{}
+	var cacheMap = utils.NewCacheMap()
+	for _, node := range nodes {
+		// region
+		var pbRegion *pb.NodeRegion
+		if node.RegionId > 0 {
+			region, err := models.SharedNodeRegionDAO.FindEnabledNodeRegion(tx, int64(node.RegionId))
+			if err != nil {
+				return nil, err
+			}
+			if region != nil {
+				pbRegion = &pb.NodeRegion{
+					Id:   int64(region.Id),
+					Name: region.Name,
+					IsOn: region.IsOn,
+				}
+			}
+		}
+
+		// cluster
+		// 要求必须有cluster
+		var pbCluster *pb.NodeCluster
+		if node.ClusterId <= 0 {
+			continue
+		}
+		cluster, err := models.SharedNodeClusterDAO.FindClusterBasicInfo(tx, int64(node.ClusterId), cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			continue
+		}
+		pbCluster = &pb.NodeCluster{
+			Id:   int64(cluster.Id),
+			Name: cluster.Name,
+			IsOn: cluster.IsOn,
+		}
+
+		pbInfoList = append(pbInfoList, &pb.ListNodeRegionInfoResponse_Info{
+			Id:          int64(node.Id),
+			Name:        node.Name,
+			NodeRegion:  pbRegion,
+			NodeCluster: pbCluster,
+		})
+	}
+	return &pb.ListNodeRegionInfoResponse{
+		InfoList: pbInfoList,
+	}, nil
+}
+
+// UpdateNodeRegionInfo 修改节点区域信息
+func (this *NodeService) UpdateNodeRegionInfo(ctx context.Context, req *pb.UpdateNodeRegionInfoRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeDAO.UpdateNodeRegionId(tx, req.NodeId, req.NodeRegionId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}

@@ -1417,6 +1417,49 @@ func (this *NodeDAO) CountAllEnabledNodesWithRegionId(tx *dbs.Tx, regionId int64
 		Count()
 }
 
+// CountAllNodeRegionInfo 查找所有节点区域信息数量
+func (this *NodeDAO) CountAllNodeRegionInfo(tx *dbs.Tx, regionId int64) (int64, error) {
+	var query = this.Query(tx).
+		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)")
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	return query.Count()
+}
+
+// ListNodeRegionInfo 列出节点区域信息
+func (this *NodeDAO) ListNodeRegionInfo(tx *dbs.Tx, regionId int64, offset int64, size int64) (result []*Node, err error) {
+	var query = this.Query(tx).
+		Result("id", "name", "clusterId", "regionId").
+		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)").
+		Asc("IF(regionId=0, 0, 1)"). // 按照 regionId 排序是为了让没有设置区域的节点排在最上面
+		DescPk().
+		Offset(offset).
+		Limit(size).
+		Slice(&result)
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	_, err = query.FindAll()
+	return
+}
+
+// UpdateNodeRegionId 修改节点所在区域
+func (this *NodeDAO) UpdateNodeRegionId(tx *dbs.Tx, nodeId int64, regionId int64) error {
+	// 这里允许 regionId 为 0
+	err := this.Query(tx).
+		Pk(nodeId).
+		Set("regionId", regionId).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, nodeId)
+}
+
 // FindAllEnabledNodesDNSWithClusterId 获取一个集群的节点DNS信息
 func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, includingLnNodes bool) (result []*Node, err error) {
 	if clusterId <= 0 {
