@@ -42,14 +42,14 @@ func (this *AliDNSProvider) Auth(params maps.Map) error {
 
 // GetDomains 获取所有域名列表
 func (this *AliDNSProvider) GetDomains() (domains []string, err error) {
-	pageNumber := 1
-	size := 100
+	var pageNumber = 1
+	var size = 100
 
 	for {
-		req := alidns.CreateDescribeDomainsRequest()
+		var req = alidns.CreateDescribeDomainsRequest()
 		req.PageNumber = requests.NewInteger(pageNumber)
 		req.PageSize = requests.NewInteger(size)
-		resp := alidns.CreateDescribeDomainsResponse()
+		var resp = alidns.CreateDescribeDomainsResponse()
 		err = this.doAPI(req, resp)
 		if err != nil {
 			return nil, err
@@ -70,16 +70,16 @@ func (this *AliDNSProvider) GetDomains() (domains []string, err error) {
 
 // GetRecords 获取域名列表
 func (this *AliDNSProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
-	pageNumber := 1
-	size := 100
+	var pageNumber = 1
+	var size = 100
 
 	for {
-		req := alidns.CreateDescribeDomainRecordsRequest()
+		var req = alidns.CreateDescribeDomainRecordsRequest()
 		req.DomainName = domain
 		req.PageNumber = requests.NewInteger(pageNumber)
 		req.PageSize = requests.NewInteger(size)
 
-		resp := alidns.CreateDescribeDomainRecordsResponse()
+		var resp = alidns.CreateDescribeDomainRecordsResponse()
 		err = this.doAPI(req, resp)
 		if err != nil {
 			return nil, err
@@ -111,10 +111,10 @@ func (this *AliDNSProvider) GetRecords(domain string) (records []*dnstypes.Recor
 
 // GetRoutes 读取域名支持的线路数据
 func (this *AliDNSProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
-	req := alidns.CreateDescribeSupportLinesRequest()
+	var req = alidns.CreateDescribeSupportLinesRequest()
 	req.DomainName = domain
 
-	resp := alidns.CreateDescribeSupportLinesResponse()
+	var resp = alidns.CreateDescribeSupportLinesResponse()
 	err = this.doAPI(req, resp)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func (this *AliDNSProvider) QueryRecord(domain string, name string, recordType d
 
 // AddRecord 设置记录
 func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
-	req := alidns.CreateAddDomainRecordRequest()
+	var req = alidns.CreateAddDomainRecordRequest()
 	req.RR = newRecord.Name
 	req.Type = newRecord.Type
 	req.Value = newRecord.Value
@@ -155,12 +155,13 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 		req.TTL = requests.NewInteger(types.Int(newRecord.TTL))
 	}
 
-	resp := alidns.CreateAddDomainRecordResponse()
+	var resp = alidns.CreateAddDomainRecordResponse()
 	err := this.doAPI(req, resp)
 	if err != nil {
 		return this.WrapError(err, domain, newRecord)
 	}
 	if resp.IsSuccess() {
+		newRecord.Id = resp.RecordId
 		return nil
 	}
 
@@ -169,7 +170,7 @@ func (this *AliDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 
 // UpdateRecord 修改记录
 func (this *AliDNSProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
-	req := alidns.CreateUpdateDomainRecordRequest()
+	var req = alidns.CreateUpdateDomainRecordRequest()
 	req.RecordId = record.Id
 	req.RR = newRecord.Name
 	req.Type = newRecord.Type
@@ -180,17 +181,17 @@ func (this *AliDNSProvider) UpdateRecord(domain string, record *dnstypes.Record,
 		req.TTL = requests.NewInteger(types.Int(newRecord.TTL))
 	}
 
-	resp := alidns.CreateUpdateDomainRecordResponse()
+	var resp = alidns.CreateUpdateDomainRecordResponse()
 	err := this.doAPI(req, resp)
 	return this.WrapError(err, domain, newRecord)
 }
 
 // DeleteRecord 删除记录
 func (this *AliDNSProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
-	req := alidns.CreateDeleteDomainRecordRequest()
+	var req = alidns.CreateDeleteDomainRecordRequest()
 	req.RecordId = record.Id
 
-	resp := alidns.CreateDeleteDomainRecordResponse()
+	var resp = alidns.CreateDeleteDomainRecordResponse()
 	err := this.doAPI(req, resp)
 	return this.WrapError(err, domain, record)
 }

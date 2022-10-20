@@ -66,17 +66,18 @@ func TestAliDNSProvider_AddRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = provider.AddRecord("meloy.cn", &dnstypes.Record{
+	var record = &dnstypes.Record{
 		Id:    "",
 		Name:  "test",
 		Type:  dnstypes.RecordTypeA,
 		Value: "192.168.1.100",
 		Route: "aliyun_r_cn-beijing",
-	})
+	}
+	err = provider.AddRecord("meloy.cn", record)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("ok")
+	t.Log("ok, record id:", record.Id)
 }
 
 func TestAliDNSProvider_UpdateRecord(t *testing.T) {

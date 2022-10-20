@@ -27,3 +27,4 @@ func (this *BaseProvider) WrapError(err error, domain string, record *dnstypes.R
 	}
 	return errors.New("record operation failed: '" + fullname + " " + record.Type + " " + record.Value + " " + types.String(record.TTL) + "': " + err.Error())
 }
+

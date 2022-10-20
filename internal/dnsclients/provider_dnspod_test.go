@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const DNSPodTestDomain = "yun4s.cn"
+const DNSPodTestDomain = "goedge.cloud"
 
 func TestDNSPodProvider_GetDomains(t *testing.T) {
 	provider, _, err := testDNSPodProvider()
@@ -61,17 +61,18 @@ func TestDNSPodProvider_AddRecord(t *testing.T) {
 		route = "Default"
 	}
 
-	err = provider.AddRecord(DNSPodTestDomain, &dnstypes.Record{
+	var record = &dnstypes.Record{
 		Type:  dnstypes.RecordTypeCNAME,
 		Name:  "hello-forward",
 		Value: "hello." + DNSPodTestDomain,
 		Route: route,
 		TTL:   600,
-	})
+	}
+	err = provider.AddRecord(DNSPodTestDomain, record)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("ok")
+	t.Log("ok, record id:", record.Id)
 }
 
 func TestDNSPodProvider_UpdateRecord(t *testing.T) {
@@ -81,7 +82,7 @@ func TestDNSPodProvider_UpdateRecord(t *testing.T) {
 	}
 
 	var route = "联通"
-	var id = "1093875360"
+	var id = "1224507933"
 	if isInternational {
 		route = "Default"
 		id = "28507333"
@@ -107,7 +108,7 @@ func TestDNSPodProvider_DeleteRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var id = "1093875360"
+	var id = "1224507933"
 	if isInternational {
 		id = "28507333"
 	}
