@@ -14,10 +14,10 @@ func TestServerDailyStatDAO_SaveStats(t *testing.T) {
 	var tx *dbs.Tx
 	stats := []*pb.ServerDailyStat{
 		{
-			ServerId:  1,
-			RegionId:  2,
-			Bytes:     1,
-			CreatedAt: 1607671488,
+			ServerId:     1,
+			NodeRegionId: 2,
+			Bytes:        1,
+			CreatedAt:    1607671488,
 		},
 	}
 	err := NewServerDailyStatDAO().SaveStats(tx, stats)
@@ -31,10 +31,10 @@ func TestServerDailyStatDAO_SaveStats2(t *testing.T) {
 	var tx *dbs.Tx
 	stats := []*pb.ServerDailyStat{
 		{
-			ServerId:  1,
-			RegionId:  3,
-			Bytes:     1,
-			CreatedAt: 1607671488,
+			ServerId:     1,
+			NodeRegionId: 3,
+			Bytes:        1,
+			CreatedAt:    1607671488,
 		},
 	}
 	err := NewServerDailyStatDAO().SaveStats(tx, stats)

@@ -129,7 +129,7 @@ func (this *NodeRegionService) UpdateNodeRegionOrders(ctx context.Context, req *
 
 // FindEnabledNodeRegion 查找单个区域信息
 func (this *NodeRegionService) FindEnabledNodeRegion(ctx context.Context, req *pb.FindEnabledNodeRegionRequest) (*pb.FindEnabledNodeRegionResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
