@@ -39,6 +39,8 @@ var huaweiDNSHTTPClient = &http.Client{
 type HuaweiDNSProvider struct {
 	BaseProvider
 
+	ProviderId int64
+
 	accessKeyId     string
 	accessKeySecret string
 }

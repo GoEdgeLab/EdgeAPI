@@ -57,7 +57,7 @@ func (this *DNSDomainService) CreateDNSDomain(ctx context.Context, req *pb.Creat
 	goman.New(func() {
 		domainName := req.Name
 
-		providerInterface := dnsclients.FindProvider(provider.Type)
+		providerInterface := dnsclients.FindProvider(provider.Type, int64(provider.Id))
 		if providerInterface == nil {
 			return
 		}
@@ -678,7 +678,7 @@ func (this *DNSDomainService) syncClusterDNS(req *pb.SyncDNSDomainDataRequest) (
 	}
 
 	// 开始同步
-	var manager = dnsclients.FindProvider(provider.Type)
+	var manager = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if manager == nil {
 		return &pb.SyncDNSDomainDataResponse{IsOk: false, Error: "目前不支持'" + provider.Type + "'"}, nil
 	}
@@ -816,7 +816,7 @@ func (this *DNSDomainService) SyncDNSDomainsFromProvider(ctx context.Context, re
 		return nil, err
 	}
 
-	dnsProvider := dnsclients.FindProvider(provider.Type)
+	dnsProvider := dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if dnsProvider == nil {
 		return nil, errors.New("provider type '" + provider.Type + "' is not supported yet")
 	}

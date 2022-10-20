@@ -640,7 +640,7 @@ func (this *DNSTaskExecutor) doDomainWithTask(taskId int64, domainId int64) erro
 		return nil
 	}
 
-	manager := dnsclients.FindProvider(provider.Type)
+	manager := dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if manager == nil {
 		this.logErr("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
 		isOk = true
@@ -717,7 +717,7 @@ func (this *DNSTaskExecutor) findDNSManagerWithDomainId(tx *dbs.Tx, domainId int
 		return nil, nil, nil
 	}
 
-	var manager = dnsclients.FindProvider(provider.Type)
+	var manager = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if manager == nil {
 		this.logErr("DNSTaskExecutor", "unsupported dns provider type '"+provider.Type+"'")
 		return nil, nil, nil

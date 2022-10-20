@@ -356,7 +356,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 			errMsg = "找不到DNS服务商账号"
 			return
 		}
-		providerInterface := dnsclients.FindProvider(dnsProvider.Type)
+		providerInterface := dnsclients.FindProvider(dnsProvider.Type, int64(dnsProvider.Id))
 		if providerInterface == nil {
 			errMsg = "暂不支持此类型的DNS服务商 '" + dnsProvider.Type + "'"
 			return

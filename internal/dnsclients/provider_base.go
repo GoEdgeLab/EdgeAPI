@@ -6,8 +6,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 )
 
-type BaseProvider struct {
-}
+type BaseProvider struct{}
 
 // WrapError 封装解析相关错误
 func (this *BaseProvider) WrapError(err error, domain string, record *dnstypes.Record) error {
@@ -27,4 +26,3 @@ func (this *BaseProvider) WrapError(err error, domain string, record *dnstypes.R
 	}
 	return errors.New("record operation failed: '" + fullname + " " + record.Type + " " + record.Value + " " + types.String(record.TTL) + "': " + err.Error())
 }
-

@@ -30,6 +30,8 @@ type CustomHTTPProvider struct {
 	url    string
 	secret string
 
+	ProviderId int64
+
 	BaseProvider
 }
 

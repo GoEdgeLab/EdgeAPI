@@ -67,7 +67,7 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster, checkNodeIssues bo
 		})
 		return
 	}
-	var dnsProvider = dnsclients.FindProvider(provider.Type)
+	var dnsProvider = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if dnsProvider == nil {
 		issues = append(issues, &pb.DNSIssue{
 			Target:      cluster.Name,
@@ -200,7 +200,7 @@ func FindDefaultDomainRoute(tx *dbs.Tx, domain *dns.DNSDomain) (string, error) {
 	if err != nil {
 		return "", errors.New("decode provider params failed: " + err.Error())
 	}
-	var dnsProvider = dnsclients.FindProvider(provider.Type)
+	var dnsProvider = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if dnsProvider == nil {
 		return "", errors.New("not supported provider type '" + provider.Type + "'")
 	}

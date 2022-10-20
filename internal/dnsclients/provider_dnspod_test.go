@@ -75,6 +75,29 @@ func TestDNSPodProvider_AddRecord(t *testing.T) {
 	t.Log("ok, record id:", record.Id)
 }
 
+func TestDNSPodProvider_QueryRecord(t *testing.T) {
+	provider, _, err := testDNSPodProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		record, err := provider.QueryRecord(DNSPodTestDomain, "hello-forward", dnstypes.RecordTypeCNAME)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(record)
+	}
+
+	{
+		record, err := provider.QueryRecord(DNSPodTestDomain, "hello-forward2", dnstypes.RecordTypeCNAME)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(record)
+	}
+}
+
 func TestDNSPodProvider_UpdateRecord(t *testing.T) {
 	provider, isInternational, err := testDNSPodProvider()
 	if err != nil {
@@ -122,6 +145,8 @@ func TestDNSPodProvider_DeleteRecord(t *testing.T) {
 }
 
 func testDNSPodProvider() (provider dnsclients.ProviderInterface, isInternational bool, err error) {
+	dbs.NotifyReady()
+
 	db, err := dbs.Default()
 	if err != nil {
 		return nil, false, err
@@ -130,12 +155,14 @@ func testDNSPodProvider() (provider dnsclients.ProviderInterface, isInternationa
 	if err != nil {
 		return nil, false, err
 	}
-	apiParams := maps.Map{}
+	var apiParams = maps.Map{}
 	err = json.Unmarshal([]byte(one.GetString("apiParams")), &apiParams)
 	if err != nil {
 		return nil, false, err
 	}
-	provider = &dnsclients.DNSPodProvider{}
+	provider = &dnsclients.DNSPodProvider{
+		ProviderId: one.GetInt64("id"),
+	}
 	err = provider.Auth(apiParams)
 	if err != nil {
 		return nil, false, err

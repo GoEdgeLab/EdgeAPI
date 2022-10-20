@@ -36,6 +36,8 @@ var cloudFlareHTTPClient = &http.Client{
 type CloudFlareProvider struct {
 	BaseProvider
 
+	ProviderId int64
+
 	apiKey string // API密钥
 	email  string // 账号邮箱
 

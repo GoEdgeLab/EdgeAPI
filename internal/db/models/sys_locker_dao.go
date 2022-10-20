@@ -141,3 +141,12 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		Result("version").
 		FindInt64Col(0)
 }
+
+
+// 读取当前版本号
+func (this *SysLockerDAO) Read(tx *dbs.Tx, key string) (int64, error) {
+	return this.Query(tx).
+		Attr("key", key).
+		Result("version").
+		FindInt64Col(0)
+}

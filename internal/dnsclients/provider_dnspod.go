@@ -36,6 +36,8 @@ var dnsPodHTTPClient = &http.Client{
 type DNSPodProvider struct {
 	BaseProvider
 
+	ProviderId int64
+
 	region   string
 	apiId    string
 	apiToken string
@@ -53,6 +55,7 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 	if len(this.apiToken) == 0 {
 		return errors.New("'token' should not be empty")
 	}
+
 	return nil
 }
 
@@ -120,6 +123,12 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 			break
 		}
 	}
+
+	// 写入缓存
+	if this.ProviderId > 0 {
+		sharedDomainRecordsCache.WriteDomainRecords(this.ProviderId, domain, records)
+	}
+
 	return
 }
 
@@ -160,6 +169,14 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, 
 
 // QueryRecord 查询单个记录
 func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
+	// 从缓存中读取
+	if this.ProviderId > 0 {
+		record, hasRecords, _ := sharedDomainRecordsCache.QueryDomainRecord(this.ProviderId, domain, name, recordType)
+		if hasRecords { // 有效的搜索
+			return record, nil
+		}
+	}
+
 	records, err := this.GetRecords(domain)
 	if err != nil {
 		return nil, err
@@ -199,6 +216,12 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 		return this.WrapError(err, domain, newRecord)
 	}
 	newRecord.Id = types.String(resp.Record.Id)
+
+	// 加入缓存
+	if this.ProviderId > 0 {
+		sharedDomainRecordsCache.AddDomainRecord(this.ProviderId, domain, newRecord)
+	}
+
 	return nil
 }
 
@@ -229,7 +252,18 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record,
 	}
 	var resp = new(dnspod.RecordModifyResponse)
 	err := this.doAPI("/Record.Modify", args, resp)
-	return this.WrapError(err, domain, newRecord)
+	if err != nil {
+		return this.WrapError(err, domain, newRecord)
+	}
+
+	newRecord.Id = record.Id
+
+	// 修改缓存
+	if this.ProviderId > 0 {
+		sharedDomainRecordsCache.UpdateDomainRecord(this.ProviderId, domain, newRecord)
+	}
+
+	return nil
 }
 
 // DeleteRecord 删除记录
@@ -244,7 +278,16 @@ func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record)
 		"record_id": record.Id,
 	}, resp)
 
-	return this.WrapError(err, domain, record)
+	if err != nil {
+		return this.WrapError(err, domain, record)
+	}
+
+	// 删除缓存
+	if this.ProviderId > 0 {
+		sharedDomainRecordsCache.DeleteDomainRecord(this.ProviderId, domain, record.Id)
+	}
+
+	return nil
 }
 
 // 发送请求

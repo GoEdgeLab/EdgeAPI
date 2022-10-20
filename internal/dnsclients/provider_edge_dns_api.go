@@ -29,6 +29,10 @@ var edgeDNSHTTPClient = &http.Client{
 }
 
 type EdgeDNSAPIProvider struct {
+	BaseProvider
+
+	ProviderId int64
+
 	host            string
 	accessKeyId     string
 	accessKeySecret string

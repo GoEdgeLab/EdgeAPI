@@ -552,7 +552,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterDNS(ctx context.Context, r
 			TypeName: dnsclients.FindProviderTypeName(provider.Type),
 		}
 
-		manager := dnsclients.FindProvider(provider.Type)
+		var manager = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 		if manager != nil {
 			apiParams, err := provider.DecodeAPIParams()
 			if err != nil {
