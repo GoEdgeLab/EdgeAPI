@@ -32,7 +32,6 @@ type recordList struct {
 var sharedDomainRecordsCache = NewDomainRecordsCache()
 
 // DomainRecordsCache 域名记录缓存
-// TODO 自动清理没有使用的域名记录，以节约内存
 type DomainRecordsCache struct {
 	domainRecordsMap map[string]*recordList // domain@providerId => record
 	locker           sync.Mutex
