@@ -51,6 +51,10 @@ var (
 	accessLogRowsPerTable      int64 = 500_000 // 自动分表的单表最大值
 )
 
+func AccessLogQueuePercent() int {
+	return accessLogQueuePercent
+}
+
 type accessLogTableQuery struct {
 	daoWrapper         *HTTPAccessLogDAOWrapper
 	name               string
@@ -131,13 +135,13 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLogs(tx *dbs.Tx, accessLogs []*pb.
 	// 写入队列
 	var queue = accessLogQueue // 这样写非常重要，防止在写入过程中队列有切换
 	for _, accessLog := range accessLogs {
-		if accessLog.FirewallPolicyId == 0 { // 如果是WAF记录，则采取采样率
+		if accessLog.FirewallPolicyId == 0 { // 如果是非WAF记录，则采取采样率
 			// 采样率
 			if accessLogQueuePercent <= 0 {
 				return nil
 			}
 			if accessLogQueuePercent < 100 && rands.Int(1, 100) > accessLogQueuePercent {
-				return nil
+				continue
 			}
 		}
 
