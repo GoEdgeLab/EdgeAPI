@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -224,7 +225,21 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 	// 创建默认集群
 	var uniqueId = rands.HexString(32)
 	var secret = rands.String(32)
-	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret) VALUES (?, ?, ?, ?, ?)", "默认集群", 1, 1, uniqueId, secret)
+
+	var clusterDNSConfig = &dnsconfigs.ClusterDNSConfig{
+		NodesAutoSync:    true,
+		ServersAutoSync:  true,
+		CNAMERecords:     []string{},
+		CNAMEAsDomain:    true,
+		TTL:              0,
+		IncludingLnNodes: true,
+	}
+	clusterDNSConfigJSON, err := json.Marshal(clusterDNSConfig)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret, dns) VALUES (?, ?, ?, ?, ?, ?)", "默认集群", 1, 1, uniqueId, secret, string(clusterDNSConfigJSON))
 	if err != nil {
 		return err
 	}
