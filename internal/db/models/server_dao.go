@@ -2379,21 +2379,21 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 
 	// daily
 	if trafficLimitConfig.DailyBytes() > 0 {
-		if server.TrafficDay == timeutil.Format("Ymd") && server.TotalDailyTraffic >= float64(trafficLimitConfig.DailyBytes())/1024/1024/1024 {
+		if server.TrafficDay == timeutil.Format("Ymd") && server.TotalDailyTraffic >= float64(trafficLimitConfig.DailyBytes())/(1<<30) {
 			untilDay = timeutil.Format("Ymd")
 		}
 	}
 
 	// monthly
 	if server.TrafficMonth == timeutil.Format("Ym") && trafficLimitConfig.MonthlyBytes() > 0 {
-		if server.TotalMonthlyTraffic >= float64(trafficLimitConfig.MonthlyBytes())/1024/1024/1024 {
+		if server.TotalMonthlyTraffic >= float64(trafficLimitConfig.MonthlyBytes())/(1<<30) {
 			untilDay = timeutil.Format("Ym32")
 		}
 	}
 
 	// totally
 	if trafficLimitConfig.TotalBytes() > 0 {
-		if server.TotalTraffic >= float64(trafficLimitConfig.TotalBytes())/1024/1024/1024 {
+		if server.TotalTraffic >= float64(trafficLimitConfig.TotalBytes())/(1<<30) {
 			untilDay = "30000101"
 		}
 	}
@@ -2423,7 +2423,7 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 
 // IncreaseServerTotalTraffic 增加服务的总流量
 func (this *ServerDAO) IncreaseServerTotalTraffic(tx *dbs.Tx, serverId int64, bytes int64) error {
-	var gb = float64(bytes) / 1024 / 1024 / 1024
+	var gb = float64(bytes) / (1 << 30)
 	var day = timeutil.Format("Ymd")
 	var month = timeutil.Format("Ym")
 	return this.Query(tx).
