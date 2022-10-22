@@ -27,8 +27,11 @@ func TestMaxFloat32(t *testing.T) {
 func TestFloorFloat32(t *testing.T) {
 	t.Logf("%f", numberutils.FloorFloat32(123.456, -1))
 	t.Logf("%f", numberutils.FloorFloat32(123.456, 0))
+	t.Logf("%f", numberutils.FloorFloat32(123, 2))
 	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 1), 123.456*10)
 	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 2), 123.456*10*10)
 	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 3), 123.456*10*10*10)
 	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 4), 123.456*10*10*10*10)
+	t.Logf("%f, %f", numberutils.FloorFloat32(123.456789, 4), 123.456789*10*10*10*10)
+	t.Logf("%f", numberutils.FloorFloat32(-123.45678, 2))
 }
