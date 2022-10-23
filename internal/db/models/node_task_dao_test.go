@@ -11,7 +11,7 @@ func TestNodeTaskDAO_CreateNodeTask(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, 1, 2, 0, NodeTaskTypeConfigChanged, 0)
+	err := SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, 1, 2, 0, 0, NodeTaskTypeConfigChanged, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestNodeTaskDAO_CreateClusterTask(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, 1, 0, NodeTaskTypeConfigChanged)
+	err := SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, 1, 0, 0, NodeTaskTypeConfigChanged)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestNodeTaskDAO_ExtractClusterTask(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
-	err := SharedNodeTaskDAO.ExtractNodeClusterTask(tx, 1, 0, NodeTaskTypeConfigChanged)
+	err := SharedNodeTaskDAO.ExtractNodeClusterTask(tx, 1, 0, 0, NodeTaskTypeConfigChanged)
 	if err != nil {
 		t.Fatal(err)
 	}

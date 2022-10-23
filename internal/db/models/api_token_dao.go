@@ -77,7 +77,7 @@ func (this *ApiTokenDAO) FindEnabledTokenWithNodeCacheable(tx *dbs.Tx, nodeId st
 		State(ApiTokenStateEnabled).
 		Find()
 	if one != nil {
-		token := one.(*ApiToken)
+		token = one.(*ApiToken)
 		SharedCacheLocker.Lock()
 		apiTokenCacheMap[nodeId] = token
 		SharedCacheLocker.Unlock()

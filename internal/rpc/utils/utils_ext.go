@@ -114,8 +114,7 @@ func ValidateRequest(ctx context.Context, userTypes ...UserType) (userType UserT
 
 	switch apiToken.Role {
 	case UserTypeNode:
-		// TODO 需要检查集群是否已经删除
-		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueIdCacheable(nil, nodeId)
+		nodeIntId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
 		if err != nil {
 			return UserTypeNode, 0, 0, errors.New("context: " + err.Error())
 		}

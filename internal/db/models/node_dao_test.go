@@ -77,3 +77,34 @@ func TestNodeDAO_ComposeNodeConfig_ParentNodes(t *testing.T) {
 	}
 	logs.PrintAsJSON(nodeConfig.ParentNodes, t)
 }
+
+func TestNodeDAO_FindEnabledNodeIdWithUniqueId(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	// init
+	{
+		_, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(tx, "a186380dbd26ccd49e75d178ec59df1b")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var before = time.Now()
+	nodeId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(tx, "a186380dbd26ccd49e75d178ec59df1b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("cost:", time.Since(before).Seconds()*1000, "ms")
+	t.Log("nodeId:", nodeId)
+
+	{
+		before = time.Now()
+		nodeId, err := models.SharedNodeDAO.FindEnabledNodeIdWithUniqueId(tx, "a186380dbd26ccd49e75d178ec59df1b")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("cost:", time.Since(before).Seconds()*1000, "ms")
+		t.Log("nodeId:", nodeId)
+	}
+}

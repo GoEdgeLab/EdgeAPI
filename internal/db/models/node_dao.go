@@ -11,6 +11,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/sizes"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/ttlcache"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -34,8 +35,6 @@ const (
 	NodeStateEnabled  = 1 // 已启用
 	NodeStateDisabled = 0 // 已禁用
 )
-
-var nodeIdCacheMap = map[string]int64{} // uniqueId => nodeId
 
 type NodeDAO dbs.DAO
 
@@ -77,9 +76,7 @@ func (this *NodeDAO) DisableNode(tx *dbs.Tx, nodeId int64) (err error) {
 		return err
 	}
 	if len(uniqueId) > 0 {
-		SharedCacheLocker.Lock()
-		delete(nodeIdCacheMap, uniqueId)
-		SharedCacheLocker.Unlock()
+		ttlcache.SharedCache.Delete("nodeId@uniqueId@" + uniqueId)
 	}
 
 	_, err = this.Query(tx).
@@ -1279,36 +1276,39 @@ func (this *NodeDAO) UpdateNodeConnectedAPINodes(tx *dbs.Tx, nodeId int64, apiNo
 
 // FindEnabledNodeIdWithUniqueId 根据UniqueId获取ID
 func (this *NodeDAO) FindEnabledNodeIdWithUniqueId(tx *dbs.Tx, uniqueId string) (int64, error) {
-	return this.Query(tx).
-		State(NodeStateEnabled).
-		Attr("uniqueId", uniqueId).
-		ResultPk().
-		FindInt64Col(0)
-}
-
-// FindEnabledNodeIdWithUniqueIdCacheable 根据UniqueId获取ID，并可以使用缓存
-func (this *NodeDAO) FindEnabledNodeIdWithUniqueIdCacheable(tx *dbs.Tx, uniqueId string) (int64, error) {
-	SharedCacheLocker.RLock()
-	nodeId, ok := nodeIdCacheMap[uniqueId]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return nodeId, nil
+	var cacheKey = "nodeId@uniqueId@" + uniqueId
+	var item = ttlcache.SharedCache.Read(cacheKey)
+	if item != nil {
+		return types.Int64(item.Value), nil
 	}
-	SharedCacheLocker.RUnlock()
-	nodeId, err := this.Query(tx).
+
+	one, err := this.Query(tx).
 		State(NodeStateEnabled).
 		Attr("uniqueId", uniqueId).
-		ResultPk().
-		FindInt64Col(0)
+		Result("id", "clusterId").
+		Find()
+	if err != nil || one == nil {
+		return 0, err
+	}
+
+	// 检查集群
+	var node = one.(*Node)
+	var clusterId = int64(node.ClusterId)
+	if clusterId <= 0 {
+		return 0, nil
+	}
+
+	isOn, err := SharedNodeClusterDAO.CheckNodeClusterIsOn(tx, clusterId)
 	if err != nil {
 		return 0, err
 	}
-	if nodeId > 0 {
-		SharedCacheLocker.Lock()
-		nodeIdCacheMap[uniqueId] = nodeId
-		SharedCacheLocker.Unlock()
+	if !isOn {
+		return 0, nil
 	}
-	return nodeId, nil
+
+	ttlcache.SharedCache.Write(cacheKey, int64(node.Id), time.Now().Unix()+60)
+
+	return int64(node.Id), nil
 }
 
 // CountAllEnabledNodesWithGrantId 计算使用某个认证的节点数量
