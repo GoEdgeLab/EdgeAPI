@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/iwind/TeaGo/types"
 	"strconv"
-	"strings"
 )
 
 func FormatInt64(value int64) string {
@@ -50,15 +49,5 @@ func FloorFloat32(f float32, decimal int) float32 {
 		return f
 	}
 
-	var s = fmt.Sprintf("%f", f)
-	var index = strings.Index(s, ".")
-	if index < 0 {
-		return f
-	}
-
-	var d = s[index:]
-	if len(d) <= decimal+1 {
-		return f
-	}
-	return types.Float32(s[:index] + d[:decimal+1])
+	return types.Float32(fmt.Sprintf("%.2f", f))
 }

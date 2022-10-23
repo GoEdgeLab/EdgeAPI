@@ -35,3 +35,9 @@ func TestFloorFloat32(t *testing.T) {
 	t.Logf("%f, %f", numberutils.FloorFloat32(123.456789, 4), 123.456789*10*10*10*10)
 	t.Logf("%f", numberutils.FloorFloat32(-123.45678, 2))
 }
+
+func TestFloorFloat32_Special(t *testing.T) {
+	for _, f := range []float32{17.88, 1.11, 1.23456} {
+		t.Logf("%f", numberutils.FloorFloat32(f, 2))
+	}
+}
