@@ -6,6 +6,7 @@ package setup
 import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
@@ -141,5 +142,37 @@ func upgradeV0_5_3(db *dbs.DB) error {
 
 // v0.5.6
 func upgradeV0_5_6(db *dbs.DB) error {
+	// 修复默认集群的DNS设置
+	{
+		var id = 1
+		clusterMap, err := db.FindOne("SELECT dns FROM edgeNodeClusters WHERE id=? AND state=1", id)
+		if err != nil {
+			return err
+		}
+		if len(clusterMap) > 0 {
+			var dnsString = clusterMap.GetString("dns")
+			if len(dnsString) > 0 && dnsString != "null" {
+				var dnsData = []byte(dnsString)
+				var dnsConfig = &dnsconfigs.ClusterDNSConfig{
+					CNAMEAsDomain:    true,
+					IncludingLnNodes: true,
+				}
+				err = json.Unmarshal(dnsData, dnsConfig)
+				if err == nil && !dnsConfig.NodesAutoSync && !dnsConfig.ServersAutoSync {
+					dnsConfig.NodesAutoSync = true
+					dnsConfig.ServersAutoSync = true
+					dnsConfigJSON, err := json.Marshal(dnsConfig)
+					if err != nil {
+						return err
+					}
+					_, err = db.Exec("UPDATE edgeNodeClusters SET dns=? WHERE id=?", dnsConfigJSON, id)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
