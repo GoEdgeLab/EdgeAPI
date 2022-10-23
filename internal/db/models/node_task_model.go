@@ -6,7 +6,8 @@ type NodeTask struct {
 	Role       string `field:"role"`       // 节点角色
 	NodeId     uint32 `field:"nodeId"`     // 节点ID
 	ClusterId  uint32 `field:"clusterId"`  // 集群ID
-	ServerId   uint32 `field:"serverId"`   // 服务ID
+	ServerId   uint64 `field:"serverId"`   // 服务ID
+	UserId     uint64 `field:"userId"`     // 用户ID
 	Type       string `field:"type"`       // 任务类型
 	UniqueId   string `field:"uniqueId"`   // 唯一ID：nodeId@type
 	UpdatedAt  uint64 `field:"updatedAt"`  // 修改时间
@@ -18,19 +19,20 @@ type NodeTask struct {
 }
 
 type NodeTaskOperator struct {
-	Id         interface{} // ID
-	Role       interface{} // 节点角色
-	NodeId     interface{} // 节点ID
-	ClusterId  interface{} // 集群ID
-	ServerId   interface{} // 服务ID
-	Type       interface{} // 任务类型
-	UniqueId   interface{} // 唯一ID：nodeId@type
-	UpdatedAt  interface{} // 修改时间
-	IsDone     interface{} // 是否已完成
-	IsOk       interface{} // 是否已完成
-	Error      interface{} // 错误信息
-	IsNotified interface{} // 是否已通知更新
-	Version    interface{} // 版本
+	Id         any // ID
+	Role       any // 节点角色
+	NodeId     any // 节点ID
+	ClusterId  any // 集群ID
+	ServerId   any // 服务ID
+	UserId     any // 用户ID
+	Type       any // 任务类型
+	UniqueId   any // 唯一ID：nodeId@type
+	UpdatedAt  any // 修改时间
+	IsDone     any // 是否已完成
+	IsOk       any // 是否已完成
+	Error      any // 错误信息
+	IsNotified any // 是否已通知更新
+	Version    any // 版本
 }
 
 func NewNodeTaskOperator() *NodeTaskOperator {

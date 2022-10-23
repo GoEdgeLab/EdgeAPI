@@ -14,13 +14,16 @@ import (
 type NodeTaskType = string
 
 const (
+	// CDN相关
+
 	NodeTaskTypeConfigChanged             NodeTaskType = "configChanged"             // 节点整体配置变化
 	NodeTaskTypeDDosProtectionChanged     NodeTaskType = "ddosProtectionChanged"     // 节点DDoS配置变更
 	NodeTaskTypeGlobalServerConfigChanged NodeTaskType = "globalServerConfigChanged" // 全局服务设置变化
-	NodeTaskTypeIPItemChanged             NodeTaskType = "ipItemChanged"
-	NodeTaskTypeNodeVersionChanged        NodeTaskType = "nodeVersionChanged"
-	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"
-	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"
+	NodeTaskTypeIPItemChanged             NodeTaskType = "ipItemChanged"             // IP条目变更
+	NodeTaskTypeNodeVersionChanged        NodeTaskType = "nodeVersionChanged"        // 节点版本变化
+	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"            // 脚本配置变化
+	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"          // 节点级别变化
+	NodeTaskTypeUserServersStateChanged   NodeTaskType = "userServersStateChanged"   // 用户服务状态变化
 
 	// NS相关
 
@@ -54,17 +57,25 @@ func init() {
 }
 
 // CreateNodeTask 创建单个节点任务
-func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, taskType NodeTaskType, version int64) error {
+func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, userId int64, serverId int64, taskType NodeTaskType, version int64) error {
 	if clusterId <= 0 || nodeId <= 0 {
 		return nil
 	}
 	var uniqueId = role + "@" + types.String(nodeId) + "@node@" + types.String(serverId) + "@" + taskType
+
+	// 用户信息
+	// 没有直接加入到 uniqueId 中，是为了兼容以前的字段值
+	if userId > 0 {
+		uniqueId += "@" + types.String(userId)
+	}
+
 	var updatedAt = time.Now().Unix()
 	_, _, err := this.Query(tx).
 		InsertOrUpdate(maps.Map{
 			"role":      role,
 			"clusterId": clusterId,
 			"nodeId":    nodeId,
+			"userId":    userId,
 			"serverId":  serverId,
 			"type":      taskType,
 			"uniqueId":  uniqueId,
@@ -87,17 +98,25 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 }
 
 // CreateClusterTask 创建集群任务
-func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId int64, serverId int64, taskType NodeTaskType) error {
+func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId int64, userId int64, serverId int64, taskType NodeTaskType) error {
 	if clusterId <= 0 {
 		return nil
 	}
 
 	var uniqueId = role + "@" + types.String(clusterId) + "@" + types.String(serverId) + "@cluster@" + types.String(serverId) + "@" + taskType
+
+	// 用户信息
+	// 没有直接加入到 uniqueId 中，是为了兼容以前的字段值
+	if userId > 0 {
+		uniqueId += "@" + types.String(userId)
+	}
+
 	var updatedAt = time.Now().Unix()
 	_, _, err := this.Query(tx).
 		InsertOrUpdate(maps.Map{
 			"role":       role,
 			"clusterId":  clusterId,
+			"userId":     userId,
 			"serverId":   serverId,
 			"nodeId":     0,
 			"type":       taskType,
@@ -121,7 +140,7 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId in
 }
 
 // ExtractNodeClusterTask 分解边缘节点集群任务
-func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, serverId int64, taskType NodeTaskType) error {
+func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, userId int64, serverId int64, taskType NodeTaskType) error {
 	nodeIds, err := SharedNodeDAO.FindAllNodeIdsMatch(tx, clusterId, true, configutils.BoolStateYes)
 	if err != nil {
 		return err
@@ -140,7 +159,7 @@ func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, ser
 
 	var version = time.Now().UnixNano()
 	for _, nodeId := range nodeIds {
-		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, serverId, taskType, version)
+		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, userId, serverId, taskType, version)
 		if err != nil {
 			return err
 		}
@@ -169,11 +188,11 @@ func (this *NodeTaskDAO) ExtractAllClusterTasks(tx *dbs.Tx, role string) error {
 		return err
 	}
 	for _, one := range ones {
-		clusterId := int64(one.(*NodeTask).ClusterId)
+		var clusterId = int64(one.(*NodeTask).ClusterId)
 		switch role {
 		case nodeconfigs.NodeRoleNode:
 			var nodeTask = one.(*NodeTask)
-			err = this.ExtractNodeClusterTask(tx, clusterId, int64(nodeTask.ServerId), nodeTask.Type)
+			err = this.ExtractNodeClusterTask(tx, clusterId, int64(nodeTask.UserId), int64(nodeTask.ServerId), nodeTask.Type)
 			if err != nil {
 				return err
 			}

@@ -40,6 +40,7 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 			Version:   int64(task.Version),
 			IsPrimary: primaryNodeId == nodeId,
 			ServerId:  int64(task.ServerId),
+			UserId:    int64(task.UserId),
 		})
 	}
 
@@ -139,6 +140,7 @@ func (this *NodeTaskService) FindNodeClusterTasks(ctx context.Context, req *pb.F
 				Error:     task.Error,
 				UpdatedAt: int64(task.UpdatedAt),
 				ServerId:  int64(task.ServerId),
+				UserId:    int64(task.UserId),
 				Node: &pb.Node{
 					Id:   int64(task.NodeId),
 					Name: nodeName,
@@ -264,6 +266,7 @@ func (this *NodeTaskService) FindNotifyingNodeTasks(ctx context.Context, req *pb
 			UpdatedAt: int64(task.UpdatedAt),
 			Node:      &pb.Node{Id: int64(task.NodeId)},
 			ServerId:  int64(task.ServerId),
+			UserId:    int64(task.UserId),
 		})
 	}
 

@@ -1442,7 +1442,7 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 		req.UserId = userId
 	}
 
-	servers, err := models.SharedServerDAO.FindAllEnabledServersWithUserId(tx, req.UserId)
+	servers, err := models.SharedServerDAO.FindAllBasicServersWithUserId(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -1478,7 +1478,7 @@ func (this *ServerService) FindAllUserServers(ctx context.Context, req *pb.FindA
 	}
 
 	var tx = this.NullTx()
-	servers, err := models.SharedServerDAO.FindAllEnabledServersWithUserId(tx, req.UserId)
+	servers, err := models.SharedServerDAO.FindAllBasicServersWithUserId(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -1495,6 +1495,39 @@ func (this *ServerService) FindAllUserServers(ctx context.Context, req *pb.FindA
 
 	return &pb.FindAllUserServersResponse{
 		Servers: pbServers,
+	}, nil
+}
+
+// ComposeAllUserServersConfig 查找某个用户下的服务配置
+func (this *ServerService) ComposeAllUserServersConfig(ctx context.Context, req *pb.ComposeAllUserServersConfigRequest) (*pb.ComposeAllUserServersConfigResponse, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	servers, err := models.SharedServerDAO.FindAllAvailableServersWithUserId(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var configs = []*serverconfigs.ServerConfig{}
+	var cacheMap = utils.NewCacheMap()
+	for _, server := range servers {
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, cacheMap, true, false)
+		if err != nil {
+			return nil, err
+		}
+		configs = append(configs, config)
+	}
+
+	configsJSON, err := json.Marshal(configs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ComposeAllUserServersConfigResponse{
+		ServersConfigJSON: configsJSON,
 	}, nil
 }
 

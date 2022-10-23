@@ -762,3 +762,40 @@ func (this *UserService) CheckUserOTPWithUsername(ctx context.Context, req *pb.C
 	}
 	return &pb.CheckUserOTPWithUsernameResponse{RequireOTP: otpIsOn}, nil
 }
+
+// CheckUserServersState 检查用户服务可用状态
+func (this *UserService) CheckUserServersState(ctx context.Context, req *pb.CheckUserServersStateRequest) (*pb.CheckUserServersStateResponse, error) {
+	_, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	isEnabled, err := models.SharedUserDAO.CheckUserServersEnabled(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckUserServersStateResponse{
+		IsEnabled: isEnabled,
+	}, nil
+}
+
+// RenewUserServersState 更新用户服务可用状态
+func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.RenewUserServersStateRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedUserDAO.RenewUserServersState(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}

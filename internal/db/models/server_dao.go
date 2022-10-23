@@ -1761,11 +1761,11 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 	}
 
 	if oldClusterId > 0 {
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, NodeTaskTypeConfigChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, 0, NodeTaskTypeConfigChanged)
 		if err != nil {
 			return err
 		}
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, NodeTaskTypeIPItemChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, oldClusterId, 0, 0, NodeTaskTypeIPItemChanged)
 		if err != nil {
 			return err
 		}
@@ -1776,11 +1776,11 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 	}
 
 	if newClusterId > 0 {
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, NodeTaskTypeConfigChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, 0, NodeTaskTypeConfigChanged)
 		if err != nil {
 			return err
 		}
-		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, NodeTaskTypeIPItemChanged)
+		err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, newClusterId, 0, 0, NodeTaskTypeIPItemChanged)
 		if err != nil {
 			return err
 		}
@@ -1793,12 +1793,24 @@ func (this *ServerDAO) UpdateUserServersClusterId(tx *dbs.Tx, userId int64, oldC
 	return err
 }
 
-// FindAllEnabledServersWithUserId 查找用户的所有的服务
-func (this *ServerDAO) FindAllEnabledServersWithUserId(tx *dbs.Tx, userId int64) (result []*Server, err error) {
+// FindAllBasicServersWithUserId 查找用户的所有服务的基础信息
+func (this *ServerDAO) FindAllBasicServersWithUserId(tx *dbs.Tx, userId int64) (result []*Server, err error) {
 	_, err = this.Query(tx).
 		Result("id", "serverNames", "name", "isOn", "type", "groupIds", "clusterId", "dnsName").
 		State(ServerStateEnabled).
 		Attr("userId", userId).
+		DescPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindAllAvailableServersWithUserId 查找用户的所有可用服务信息
+func (this *ServerDAO) FindAllAvailableServersWithUserId(tx *dbs.Tx, userId int64) (result []*Server, err error) {
+	_, err = this.Query(tx).
+		State(ServerStateEnabled).
+		Attr("userId", userId).
+		Attr("isOn", true).
 		DescPk().
 		Slice(&result).
 		FindAll()
@@ -2652,7 +2664,7 @@ func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	if clusterId == 0 {
 		return nil
 	}
-	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, serverId, NodeTaskTypeConfigChanged)
 }
 
 // NotifyClusterUpdate 同步指定的集群
@@ -2660,7 +2672,7 @@ func (this *ServerDAO) NotifyClusterUpdate(tx *dbs.Tx, clusterId, serverId int64
 	if clusterId <= 0 {
 		return nil
 	}
-	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, serverId, NodeTaskTypeConfigChanged)
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, serverId, NodeTaskTypeConfigChanged)
 }
 
 // NotifyDNSUpdate 通知当前集群DNS更新

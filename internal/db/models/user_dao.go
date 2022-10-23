@@ -5,6 +5,7 @@ import (
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -52,7 +53,11 @@ func (this *UserDAO) EnableUser(tx *dbs.Tx, userId int64) error {
 		Pk(userId).
 		Set("state", UserStateEnabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, userId)
 }
 
 // DisableUser 禁用条目
@@ -65,7 +70,11 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, userId int64) error {
 		Pk(userId).
 		Set("state", UserStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, userId)
 }
 
 // FindEnabledUser 查找启用的用户
@@ -190,15 +199,6 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 		return errors.New("invalid userId")
 	}
 
-	// 是否启用变化
-	oldIsOn, err := this.Query(tx).
-		Pk(userId).
-		Result("isOn").
-		FindBoolCol()
-	if err != nil {
-		return err
-	}
-
 	var op = NewUserOperator()
 	op.Id = userId
 	op.Username = username
@@ -212,16 +212,12 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	op.Remark = remark
 	op.ClusterId = nodeClusterId
 	op.IsOn = isOn
-	err = this.Save(tx, op)
+	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
 
-	if oldIsOn != isOn {
-		return SharedServerDAO.NotifyUserClustersChange(tx, userId)
-	}
-
-	return nil
+	return this.NotifyUpdate(tx, userId)
 }
 
 // UpdateUserInfo 修改用户基本信息
@@ -529,5 +525,65 @@ func (this *UserDAO) UpdateUserIsVerified(tx *dbs.Tx, userId int64, isRejected b
 	op.IsRejected = isRejected
 	op.RejectReason = rejectReason
 	op.IsVerified = true
-	return this.Save(tx, op)
+	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, userId)
+}
+
+// RenewUserServersState 更新用户服务状态
+func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) error {
+	oldServersEnabled, err := this.Query(tx).
+		Pk(userId).
+		Result("serversEnabled").
+		FindBoolCol()
+	if err != nil {
+		return err
+	}
+
+	newServersEnabled, err := this.CheckUserServersEnabled(tx, userId)
+	if err != nil {
+		return err
+	}
+
+	if oldServersEnabled != newServersEnabled {
+		err = this.Query(tx).
+			Pk(userId).
+			Set("serversEnabled", newServersEnabled).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		// 创建变更通知
+		clusterIds, err := SharedServerDAO.FindUserServerClusterIds(tx, userId)
+		if err != nil {
+			return err
+		}
+		for _, clusterId := range clusterIds {
+			err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, userId, 0, NodeTaskTypeUserServersStateChanged)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// NotifyUpdate 用户变更通知
+func (this *UserDAO) NotifyUpdate(tx *dbs.Tx, userId int64) error {
+	if userId <= 0 {
+		return nil
+	}
+
+	// 更新用户服务状态
+	err := this.RenewUserServersState(tx, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
