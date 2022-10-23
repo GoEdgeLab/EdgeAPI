@@ -781,7 +781,7 @@ func (this *UserService) CheckUserServersState(ctx context.Context, req *pb.Chec
 }
 
 // RenewUserServersState 更新用户服务可用状态
-func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.RenewUserServersStateRequest) (*pb.RPCSuccess, error) {
+func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.RenewUserServersStateRequest) (*pb.RenewUserServersStateResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
@@ -792,10 +792,12 @@ func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.Rene
 	}
 
 	var tx = this.NullTx()
-	err = models.SharedUserDAO.RenewUserServersState(tx, req.UserId)
+	isEnabled, err := models.SharedUserDAO.RenewUserServersState(tx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	return this.Success()
+	return &pb.RenewUserServersStateResponse{
+		IsEnabled: isEnabled,
+	}, nil
 }

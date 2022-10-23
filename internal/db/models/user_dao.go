@@ -534,18 +534,18 @@ func (this *UserDAO) UpdateUserIsVerified(tx *dbs.Tx, userId int64, isRejected b
 }
 
 // RenewUserServersState 更新用户服务状态
-func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) error {
+func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) (bool, error) {
 	oldServersEnabled, err := this.Query(tx).
 		Pk(userId).
 		Result("serversEnabled").
 		FindBoolCol()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	newServersEnabled, err := this.CheckUserServersEnabled(tx, userId)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if oldServersEnabled != newServersEnabled {
@@ -554,23 +554,23 @@ func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) error {
 			Set("serversEnabled", newServersEnabled).
 			UpdateQuickly()
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// 创建变更通知
 		clusterIds, err := SharedServerDAO.FindUserServerClusterIds(tx, userId)
 		if err != nil {
-			return err
+			return false, err
 		}
 		for _, clusterId := range clusterIds {
 			err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, userId, 0, NodeTaskTypeUserServersStateChanged)
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
 
-	return nil
+	return newServersEnabled, nil
 }
 
 // NotifyUpdate 用户变更通知
@@ -580,7 +580,7 @@ func (this *UserDAO) NotifyUpdate(tx *dbs.Tx, userId int64) error {
 	}
 
 	// 更新用户服务状态
-	err := this.RenewUserServersState(tx, userId)
+	_, err := this.RenewUserServersState(tx, userId)
 	if err != nil {
 		return err
 	}
