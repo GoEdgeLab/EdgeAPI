@@ -24,20 +24,20 @@ func TestMaxFloat32(t *testing.T) {
 	t.Logf("%f", math.MaxFloat32/(1<<100))
 }
 
-func TestFloorFloat32(t *testing.T) {
-	t.Logf("%f", numberutils.FloorFloat32(123.456, -1))
-	t.Logf("%f", numberutils.FloorFloat32(123.456, 0))
-	t.Logf("%f", numberutils.FloorFloat32(123, 2))
-	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 1), 123.456*10)
-	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 2), 123.456*10*10)
-	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 3), 123.456*10*10*10)
-	t.Logf("%f, %f", numberutils.FloorFloat32(123.456, 4), 123.456*10*10*10*10)
-	t.Logf("%f, %f", numberutils.FloorFloat32(123.456789, 4), 123.456789*10*10*10*10)
-	t.Logf("%f", numberutils.FloorFloat32(-123.45678, 2))
+func TestFloorFloat64(t *testing.T) {
+	t.Logf("%f", numberutils.FloorFloat64(123.456, -1))
+	t.Logf("%f", numberutils.FloorFloat64(123.456, 0))
+	t.Logf("%f", numberutils.FloorFloat64(123, 2))
+	t.Logf("%f, %f", numberutils.FloorFloat64(123.456, 1), 123.456*10)
+	t.Logf("%f, %f", numberutils.FloorFloat64(123.456, 2), 123.456*10*10)
+	t.Logf("%f, %f", numberutils.FloorFloat64(123.456, 3), 123.456*10*10*10)
+	t.Logf("%f, %f", numberutils.FloorFloat64(123.456, 4), 123.456*10*10*10*10)
+	t.Logf("%f, %f", numberutils.FloorFloat64(123.456789, 4), 123.456789*10*10*10*10)
+	t.Logf("%f", numberutils.FloorFloat64(-123.45678, 2))
 }
 
-func TestFloorFloat32_Special(t *testing.T) {
-	for _, f := range []float32{17.88, 1.11, 1.23456} {
-		t.Logf("%f", numberutils.FloorFloat32(f, 2))
+func TestFloorFloat64_Special(t *testing.T) {
+	for _, f := range []float64{17.88, 1.11, 1.23456} {
+		t.Logf("%f", numberutils.FloorFloat64(f, 2))
 	}
 }
