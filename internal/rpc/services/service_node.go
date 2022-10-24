@@ -1344,7 +1344,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		}
 
 		for _, ipAddress := range ipAddresses {
-			ip := ipAddress.DNSIP()
+			var ip = ipAddress.DNSIP()
 			if len(ip) == 0 {
 				continue
 			}
@@ -1352,11 +1352,12 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 				continue
 			}
 			result = append(result, &pb.NodeDNSInfo{
-				Id:            int64(node.Id),
-				Name:          node.Name,
-				IpAddr:        ip,
-				Routes:        pbRoutes,
-				NodeClusterId: req.NodeClusterId,
+				Id:              int64(node.Id),
+				Name:            node.Name,
+				IpAddr:          ip,
+				NodeIPAddressId: int64(ipAddress.Id),
+				Routes:          pbRoutes,
+				NodeClusterId:   req.NodeClusterId,
 			})
 		}
 	}
@@ -1382,9 +1383,24 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
 	}
 
-	ipAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id), true, nodeconfigs.NodeRoleNode)
-	if err != nil {
-		return nil, err
+	// 查询节点IP地址
+	var ipAddr string
+	var ipAddrId int64 = 0
+	if req.NodeIPAddrId > 0 {
+		address, err := models.SharedNodeIPAddressDAO.FindEnabledAddress(tx, req.NodeIPAddrId)
+		if err != nil {
+			return nil, err
+		}
+		if address != nil {
+			ipAddr = address.Ip
+			ipAddrId = int64(address.Id)
+		}
+	}
+	if ipAddrId == 0 {
+		ipAddr, ipAddrId, err = models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, int64(node.Id), true, nodeconfigs.NodeRoleNode)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var clusterId = int64(node.ClusterId)
@@ -1400,13 +1416,13 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 		return &pb.FindEnabledNodeDNSResponse{Node: nil}, nil
 	}
 
-	dnsDomainId := int64(clusterDNS.DnsDomainId)
+	var dnsDomainId = int64(clusterDNS.DnsDomainId)
 	dnsDomainName, err := dns.SharedDNSDomainDAO.FindDNSDomainName(tx, dnsDomainId)
 	if err != nil {
 		return nil, err
 	}
 
-	pbRoutes := []*pb.DNSRoute{}
+	var pbRoutes = []*pb.DNSRoute{}
 	if dnsDomainId > 0 {
 		routeCodes, err := node.DNSRouteCodesForDomainId(dnsDomainId)
 		if err != nil {
@@ -1430,6 +1446,7 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 			Id:                 int64(node.Id),
 			Name:               node.Name,
 			IpAddr:             ipAddr,
+			NodeIPAddressId:    ipAddrId,
 			Routes:             pbRoutes,
 			NodeClusterId:      clusterId,
 			NodeClusterDNSName: clusterDNS.DnsName,
@@ -1458,7 +1475,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 		return nil, errors.New("node not found")
 	}
 
-	routeCodeMap := node.DNSRouteCodes()
+	var routeCodeMap = node.DNSRouteCodes()
 	if req.DnsDomainId > 0 {
 		if len(req.Routes) > 0 {
 			var m = map[int64][]string{} // domainId => codes
@@ -1503,19 +1520,26 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 
 	// 修改IP
 	if len(req.IpAddr) > 0 {
-		ipAddrId, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddressId(tx, req.NodeId, true, nodeconfigs.NodeRoleNode)
-		if err != nil {
-			return nil, err
-		}
-		if ipAddrId > 0 {
-			err = models.SharedNodeIPAddressDAO.UpdateAddressIP(tx, ipAddrId, req.IpAddr)
+		if req.NodeIPAddressId > 0 { // 指定了IP地址ID
+			err = models.SharedNodeIPAddressDAO.UpdateAddressIP(tx, req.NodeIPAddressId, req.IpAddr)
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, true, 0)
+		} else { // 没有指定IP地址ID
+			ipAddrId, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddressId(tx, req.NodeId, true, nodeconfigs.NodeRoleNode)
 			if err != nil {
 				return nil, err
+			}
+			if ipAddrId > 0 {
+				err = models.SharedNodeIPAddressDAO.UpdateAddressIP(tx, ipAddrId, req.IpAddr)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, true, 0)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
