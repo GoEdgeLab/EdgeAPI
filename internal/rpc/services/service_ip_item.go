@@ -503,7 +503,7 @@ func (this *IPItemService) CountAllEnabledIPItems(ctx context.Context, req *pb.C
 	if req.GlobalOnly {
 		listId = firewallconfigs.GlobalListId
 	}
-	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Ip, listId, req.Unread, req.EventLevel, req.ListType)
+	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType)
 	if err != nil {
 		return nil, err
 	}
@@ -523,7 +523,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 	if req.GlobalOnly {
 		listId = firewallconfigs.GlobalListId
 	}
-	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Ip, listId, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
+	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
