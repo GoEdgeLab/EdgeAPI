@@ -40,6 +40,7 @@ type Node struct {
 	MaxCacheMemoryCapacity dbs.JSON `field:"maxCacheMemoryCapacity"` // 内存缓存容量
 	CacheDiskDir           string   `field:"cacheDiskDir"`           // 缓存目录
 	DnsResolver            dbs.JSON `field:"dnsResolver"`            // DNS解析器
+	EnableIPLists          bool     `field:"enableIPLists"`          // 启用IP名单
 }
 
 type NodeOperator struct {
@@ -79,6 +80,7 @@ type NodeOperator struct {
 	MaxCacheMemoryCapacity any // 内存缓存容量
 	CacheDiskDir           any // 缓存目录
 	DnsResolver            any // DNS解析器
+	EnableIPLists          any // 启用IP名单
 }
 
 func NewNodeOperator() *NodeOperator {

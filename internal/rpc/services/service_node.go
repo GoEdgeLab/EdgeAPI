@@ -476,7 +476,7 @@ func (this *NodeService) UpdateNode(ctx context.Context, req *pb.UpdateNodeReque
 
 	var tx = this.NullTx()
 
-	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn, int(req.Level), req.LnAddrs)
+	err = models.SharedNodeDAO.UpdateNode(tx, req.NodeId, req.Name, req.NodeClusterId, req.SecondaryNodeClusterIds, req.NodeGroupId, req.NodeRegionId, req.IsOn, int(req.Level), req.LnAddrs, req.EnableIPLists)
 	if err != nil {
 		return nil, err
 	}
@@ -676,6 +676,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		Level:                  int32(node.Level),
 		LnAddrs:                node.DecodeLnAddrs(),
 		DnsRoutes:              pbRoutes,
+		EnableIPLists:          node.EnableIPLists,
 	}}, nil
 }
 

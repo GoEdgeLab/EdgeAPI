@@ -164,6 +164,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 	op.GroupId = groupId
 	op.RegionId = regionId
 	op.IsOn = 1
+	op.EnableIPLists = 1
 	op.State = NodeStateEnabled
 	err = this.Save(tx, op)
 	if err != nil {
@@ -187,7 +188,7 @@ func (this *NodeDAO) CreateNode(tx *dbs.Tx, adminId int64, name string, clusterI
 }
 
 // UpdateNode 修改节点
-func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, isOn bool, level int, lnAddrs []string) error {
+func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId int64, secondaryClusterIds []int64, groupId int64, regionId int64, isOn bool, level int, lnAddrs []string, enableIPLists bool) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -246,6 +247,8 @@ func (this *NodeDAO) UpdateNode(tx *dbs.Tx, nodeId int64, name string, clusterId
 		}
 		op.LnAddrs = lnAddrsJSON
 	}
+
+	op.EnableIPLists = enableIPLists
 
 	err = this.Save(tx, op)
 	if err != nil {
@@ -946,17 +949,18 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 
 	var config = &nodeconfigs.NodeConfig{
-		Id:       int64(node.Id),
-		NodeId:   node.UniqueId,
-		Secret:   node.Secret,
-		IsOn:     node.IsOn,
-		Servers:  nil,
-		Version:  int64(node.Version),
-		Name:     node.Name,
-		MaxCPU:   types.Int32(node.MaxCPU),
-		RegionId: int64(node.RegionId),
-		Level:    types.Int32(node.Level),
-		GroupId:  int64(node.GroupId),
+		Id:            int64(node.Id),
+		NodeId:        node.UniqueId,
+		Secret:        node.Secret,
+		IsOn:          node.IsOn,
+		Servers:       nil,
+		Version:       int64(node.Version),
+		Name:          node.Name,
+		MaxCPU:        types.Int32(node.MaxCPU),
+		RegionId:      int64(node.RegionId),
+		Level:         types.Int32(node.Level),
+		GroupId:       int64(node.GroupId),
+		EnableIPLists: node.EnableIPLists,
 	}
 
 	// API节点IP
