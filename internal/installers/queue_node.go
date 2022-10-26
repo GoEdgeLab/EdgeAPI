@@ -27,7 +27,7 @@ func SharedNodeQueue() *NodeQueue {
 
 // InstallNodeProcess 安装边缘节点流程控制
 func (this *NodeQueue) InstallNodeProcess(nodeId int64, isUpgrading bool) error {
-	installStatus := models.NewNodeInstallStatus()
+	var installStatus = models.NewNodeInstallStatus()
 	installStatus.IsRunning = true
 	installStatus.UpdatedAt = time.Now().Unix()
 
@@ -37,7 +37,7 @@ func (this *NodeQueue) InstallNodeProcess(nodeId int64, isUpgrading bool) error 
 	}
 
 	// 更新时间
-	ticker := utils.NewTicker(3 * time.Second)
+	var ticker = utils.NewTicker(3 * time.Second)
 	goman.New(func() {
 		for ticker.Wait() {
 			installStatus.UpdatedAt = time.Now().Unix()
@@ -104,13 +104,31 @@ func (this *NodeQueue) InstallNode(nodeId int64, installStatus *models.NodeInsta
 	}
 
 	if len(loginParams.Host) == 0 {
-		installStatus.ErrorCode = "EMPTY_SSH_HOST"
-		return errors.New("ssh host should not be empty")
+		// 查询节点IP
+		ip, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(nil, nodeId, false, nodeconfigs.NodeRoleNode)
+		if err != nil {
+			return err
+		}
+		if len(ip) > 0 {
+			loginParams.Host = ip
+		} else {
+			installStatus.ErrorCode = "EMPTY_SSH_HOST"
+			return errors.New("ssh host should not be empty")
+		}
 	}
 
 	if loginParams.Port <= 0 {
-		installStatus.ErrorCode = "EMPTY_SSH_PORT"
-		return errors.New("ssh port is invalid")
+		// 从集群中读取
+		sshParams, err := models.SharedNodeClusterDAO.FindClusterSSHParams(nil, int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if sshParams != nil && sshParams.Port > 0 {
+			loginParams.Port = sshParams.Port
+		} else {
+			installStatus.ErrorCode = "EMPTY_SSH_PORT"
+			return errors.New("ssh port is invalid")
+		}
 	}
 
 	if loginParams.GrantId == 0 {
@@ -161,7 +179,7 @@ func (this *NodeQueue) InstallNode(nodeId int64, installStatus *models.NodeInsta
 		IsUpgrading: isUpgrading,
 	}
 
-	installer := &NodeInstaller{}
+	var installer = &NodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,
@@ -226,11 +244,29 @@ func (this *NodeQueue) StartNode(nodeId int64) error {
 	}
 
 	if len(loginParams.Host) == 0 {
-		return newGrantError("ssh host should not be empty")
+		// 查询节点IP
+		ip, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(nil, nodeId, false, nodeconfigs.NodeRoleNode)
+		if err != nil {
+			return err
+		}
+		if len(ip) > 0 {
+			loginParams.Host = ip
+		} else {
+			return newGrantError("ssh host should not be empty")
+		}
 	}
 
 	if loginParams.Port <= 0 {
-		return newGrantError("ssh port is invalid")
+		// 从集群中读取
+		sshParams, err := models.SharedNodeClusterDAO.FindClusterSSHParams(nil, int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if sshParams != nil && sshParams.Port > 0 {
+			loginParams.Port = sshParams.Port
+		} else {
+			return newGrantError("ssh port is invalid")
+		}
 	}
 
 	if loginParams.GrantId == 0 {
@@ -315,11 +351,29 @@ func (this *NodeQueue) StopNode(nodeId int64) error {
 	}
 
 	if len(loginParams.Host) == 0 {
-		return errors.New("ssh host should not be empty")
+		// 查询节点IP
+		ip, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(nil, nodeId, false, nodeconfigs.NodeRoleNode)
+		if err != nil {
+			return err
+		}
+		if len(ip) > 0 {
+			loginParams.Host = ip
+		} else {
+			return errors.New("ssh host should not be empty")
+		}
 	}
 
 	if loginParams.Port <= 0 {
-		return errors.New("ssh port is invalid")
+		// 从集群中读取
+		sshParams, err := models.SharedNodeClusterDAO.FindClusterSSHParams(nil, int64(node.ClusterId))
+		if err != nil {
+			return err
+		}
+		if sshParams != nil && sshParams.Port > 0 {
+			loginParams.Port = sshParams.Port
+		} else {
+			return errors.New("ssh port is invalid")
+		}
 	}
 
 	if loginParams.GrantId == 0 {
@@ -341,7 +395,7 @@ func (this *NodeQueue) StopNode(nodeId int64) error {
 		return errors.New("can not find user grant with id '" + numberutils.FormatInt64(loginParams.GrantId) + "'")
 	}
 
-	installer := &NodeInstaller{}
+	var installer = &NodeInstaller{}
 	err = installer.Login(&Credentials{
 		Host:       loginParams.Host,
 		Port:       loginParams.Port,
@@ -386,7 +440,7 @@ func (this *NodeQueue) lookupNodeExe(node *models.Node, client *SSHClient) (stri
 	if len(node.InstallDir) > 0 {
 		nodeDirs = append(nodeDirs, node.InstallDir)
 	}
-	clusterId := node.ClusterId
+	var clusterId = node.ClusterId
 	cluster, err := models.SharedNodeClusterDAO.FindEnabledNodeCluster(nil, int64(clusterId))
 	if err != nil {
 		return "", err

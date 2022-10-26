@@ -116,7 +116,17 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		}
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig, req.AutoRemoteStart, req.AutoInstallNftables)
+	// ssh params
+	var sshParams *nodeconfigs.SSHParams
+	if len(req.SshParamsJSON) > 0 {
+		sshParams = nodeconfigs.DefaultSSHParams()
+		err = json.Unmarshal(req.SshParamsJSON, sshParams)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig, req.AutoRemoteStart, req.AutoInstallNftables, sshParams)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +218,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		CreatedAt:            int64(cluster.CreatedAt),
 		InstallDir:           cluster.InstallDir,
 		NodeGrantId:          int64(cluster.GrantId),
+		SshParamsJSON:        cluster.SshParams,
 		UniqueId:             cluster.UniqueId,
 		Secret:               cluster.Secret,
 		HttpCachePolicyId:    int64(cluster.CachePolicyId),

@@ -15,6 +15,7 @@ type NodeCluster struct {
 	Order                uint32   `field:"order"`                // 排序
 	CreatedAt            uint64   `field:"createdAt"`            // 创建时间
 	GrantId              uint32   `field:"grantId"`              // 默认认证方式
+	SshParams            dbs.JSON `field:"sshParams"`            // SSH默认参数
 	State                uint8    `field:"state"`                // 状态
 	AutoRegister         uint8    `field:"autoRegister"`         // 是否开启自动注册
 	UniqueId             string   `field:"uniqueId"`             // 唯一ID
@@ -53,6 +54,7 @@ type NodeClusterOperator struct {
 	Order                any // 排序
 	CreatedAt            any // 创建时间
 	GrantId              any // 默认认证方式
+	SshParams            any // SSH默认参数
 	State                any // 状态
 	AutoRegister         any // 是否开启自动注册
 	UniqueId             any // 唯一ID

@@ -198,7 +198,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig, autoRemoteStart bool, autoInstallTables bool) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig, autoRemoteStart bool, autoInstallTables bool, sshParams *nodeconfigs.SSHParams) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -225,6 +225,14 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 
 	op.AutoRemoteStart = autoRemoteStart
 	op.AutoInstallNftables = autoInstallTables
+
+	if sshParams != nil {
+		sshParamsJSON, err := json.Marshal(sshParams)
+		if err != nil {
+			return err
+		}
+		op.SshParams = sshParamsJSON
+	}
 
 	err := this.Save(tx, op)
 	if err != nil {
@@ -452,6 +460,27 @@ func (this *NodeClusterDAO) FindClusterGrantId(tx *dbs.Tx, clusterId int64) (int
 		Pk(clusterId).
 		Result("grantId").
 		FindInt64Col(0)
+}
+
+// FindClusterSSHParams 查找集群的SSH默认参数
+func (this *NodeClusterDAO) FindClusterSSHParams(tx *dbs.Tx, clusterId int64) (*nodeconfigs.SSHParams, error) {
+	sshParamsJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("sshParams").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	var params = nodeconfigs.DefaultSSHParams()
+	if len(sshParamsJSON) == 0 {
+		return params, nil
+	}
+	err = json.Unmarshal(sshParamsJSON, params)
+	if err != nil {
+		return nil, err
+	}
+	return params, nil
 }
 
 // FindClusterDNSInfo 查找DNS信息
