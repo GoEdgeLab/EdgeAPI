@@ -8,6 +8,7 @@ import (
 	"github.com/go-acme/lego/v4/lego"
 	acmelog "github.com/go-acme/lego/v4/log"
 	"github.com/go-acme/lego/v4/registration"
+	"github.com/iwind/TeaGo/Tea"
 	"io"
 	"log"
 )
@@ -139,7 +140,9 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 
 func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 	if !this.debug {
-		acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
+		if !Tea.IsTesting() {
+			acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
+		}
 	}
 
 	if this.task.User == nil {
