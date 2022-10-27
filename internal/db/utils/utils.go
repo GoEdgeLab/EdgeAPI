@@ -2,6 +2,7 @@ package dbutils
 
 import (
 	"github.com/iwind/TeaGo/dbs"
+	"net"
 	"strings"
 )
 
@@ -68,4 +69,27 @@ func SetGlobalVarMax(db *dbs.DB, variableName string, maxValue int) error {
 		return err
 	}
 	return nil
+}
+
+// IsLocalAddr 是否为本地数据库
+func IsLocalAddr(addr string) bool {
+	var host = addr
+	if strings.Contains(addr, ":") {
+		host, _, _ = net.SplitHostPort(addr)
+		if len(host) == 0 {
+			host = addr
+		}
+	}
+
+	if host == "127.0.0.1" || host == "::1" || host == "localhost" {
+		return true
+	}
+
+	interfaceAddrs, _ := net.InterfaceAddrs()
+	for _, interfaceAddr := range interfaceAddrs {
+		if strings.HasPrefix(interfaceAddr.String(), host+"/") {
+			return true
+		}
+	}
+	return false
 }

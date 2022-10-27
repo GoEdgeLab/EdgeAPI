@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
@@ -29,8 +30,9 @@ var httpAccessLogDAOMapping = map[int64]*HTTPAccessLogDAOWrapper{} // dbNodeId =
 
 // HTTPAccessLogDAOWrapper HTTP访问日志DAO
 type HTTPAccessLogDAOWrapper struct {
-	DAO    *HTTPAccessLogDAO
-	NodeId int64
+	DAO     *HTTPAccessLogDAO
+	NodeId  int64
+	IsLocal bool
 }
 
 func init() {
@@ -195,7 +197,7 @@ func (this *DBNodeInitializer) loop() error {
 					continue
 				}
 
-				daoObject := dbs.DAOObject{
+				var daoObject = dbs.DAOObject{
 					Instance: db,
 					DB:       node.Name + "(id:" + strconv.Itoa(int(node.Id)) + ")",
 					Table:    tableDef.Name,
@@ -210,12 +212,13 @@ func (this *DBNodeInitializer) loop() error {
 
 				accessLogLocker.Lock()
 				accessLogDBMapping[nodeId] = db
-				dao := &HTTPAccessLogDAO{
+				var dao = &HTTPAccessLogDAO{
 					DAOObject: daoObject,
 				}
 				httpAccessLogDAOMapping[nodeId] = &HTTPAccessLogDAOWrapper{
-					DAO:    dao,
-					NodeId: nodeId,
+					DAO:     dao,
+					NodeId:  nodeId,
+					IsLocal: dbutils.IsLocalAddr(node.Host),
 				}
 				accessLogLocker.Unlock()
 			}

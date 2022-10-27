@@ -161,16 +161,27 @@ func (this *HTTPAccessLogDAO) DumpAccessLogsFromQueue(size int) (hasMore bool, e
 		size = 100
 	}
 
+	if len(oldAccessLogQueue) == 0 && len(accessLogQueue) == 0 {
+		return false, nil
+	}
+
 	var dao = randomHTTPAccessLogDAO()
 	if dao == nil {
 		dao = &HTTPAccessLogDAOWrapper{
 			DAO:    SharedHTTPAccessLogDAO,
 			NodeId: 0,
 		}
-	}
 
-	if len(oldAccessLogQueue) == 0 && len(accessLogQueue) == 0 {
-		return false, nil
+		// 检查本地数据库空间
+		if dbutils.IsLocalDatabase && !dbutils.HasFreeSpace {
+			return false, errors.New("dump accesslog failed: there is no enough space left for database (" + dbutils.LocalDatabaseDataDir + ")")
+		}
+	} else if dao.IsLocal {
+		// 检查本地数据库空间
+		// 我们假定本地只能安装一个数据库，访问日志中的数据库和当前API连接的数据库一致
+		if !dbutils.HasFreeSpace {
+			return true, errors.New("dump accesslog failed: there is no enough space left for database (" + dbutils.LocalDatabaseDataDir + ")")
+		}
 	}
 
 	// 开始事务
