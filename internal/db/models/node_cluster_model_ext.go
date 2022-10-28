@@ -13,17 +13,9 @@ import (
 func (this *NodeCluster) DecodeDNSConfig() (*dnsconfigs.ClusterDNSConfig, error) {
 	if len(this.Dns) == 0 {
 		// 一定要返回一个默认的值，防止产生nil
-		return &dnsconfigs.ClusterDNSConfig{
-			NodesAutoSync:    false,
-			ServersAutoSync:  false,
-			CNAMEAsDomain:    true,
-			IncludingLnNodes: true,
-		}, nil
+		return dnsconfigs.DefaultClusterDNSConfig(), nil
 	}
-	var dnsConfig = &dnsconfigs.ClusterDNSConfig{
-		CNAMEAsDomain:    true,
-		IncludingLnNodes: true,
-	}
+	var dnsConfig = dnsconfigs.DefaultClusterDNSConfig()
 	err := json.Unmarshal(this.Dns, &dnsConfig)
 	if err != nil {
 		return nil, err

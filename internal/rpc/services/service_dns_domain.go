@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
@@ -436,21 +437,21 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	var clusterId = int64(cluster.Id)
 	var clusterDnsName = cluster.DnsName
 	var clusterDomain = clusterDnsName + "." + domainName
-	var dnsConfig, _ = cluster.DecodeDNSConfig()
+	dnsConfig, err := cluster.DecodeDNSConfig()
+	if err != nil {
+		return nil, nil, nil, 0, 0, false, false, err
+	}
+	if dnsConfig == nil {
+		dnsConfig = dnsconfigs.DefaultClusterDNSConfig()
+	}
 
 	var tx = this.NullTx()
 
 	// 自动设置的cname记录
-	var cnameRecords = []string{}
 	var ttl int32
-	if len(cluster.Dns) > 0 {
-		dnsConfig, _ := cluster.DecodeDNSConfig()
-		if dnsConfig != nil {
-			cnameRecords = dnsConfig.CNAMERecords
-			if dnsConfig.TTL > 0 {
-				ttl = dnsConfig.TTL
-			}
-		}
+	var cnameRecords = dnsConfig.CNAMERecords
+	if dnsConfig.TTL > 0 {
+		ttl = dnsConfig.TTL
 	}
 
 	// 节点域名
@@ -556,7 +557,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	// 新增的域名
 	var serverDNSNames = []string{}
 	for _, server := range servers {
-		dnsName := server.DnsName
+		var dnsName = server.DnsName
 		if len(dnsName) == 0 {
 			return nil, nil, nil, 0, 0, false, false, errors.New("server '" + numberutils.FormatInt64(int64(server.Id)) + "' 'dnsName' should not empty")
 		}
@@ -582,6 +583,11 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 
 	// 自动设置的CNAME
 	for _, cnameRecord := range cnameRecords {
+		// 如果记录已存在，则跳过
+		if lists.ContainsString(serverDNSNames, cnameRecord) {
+			continue
+		}
+
 		serverDNSNames = append(serverDNSNames, cnameRecord)
 		record, ok := serverRecordsMap[cnameRecord]
 		if !ok {

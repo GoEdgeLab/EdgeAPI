@@ -441,9 +441,9 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 	}
 
 	// 新增的域名
-	serverDNSNames := []string{}
+	var serverDNSNames = []string{}
 	for _, server := range servers {
-		dnsName := server.DnsName
+		var dnsName = server.DnsName
 		if len(dnsName) == 0 {
 			continue
 		}
@@ -471,6 +471,11 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		cnameRecords = dnsConfig.CNAMERecords
 	}
 	for _, cnameRecord := range cnameRecords {
+		// 如果记录已存在，则跳过
+		if lists.ContainsString(serverDNSNames, cnameRecord) {
+			continue
+		}
+
 		serverDNSNames = append(serverDNSNames, cnameRecord)
 		_, ok := serverRecordsMap[cnameRecord]
 		if !ok {
