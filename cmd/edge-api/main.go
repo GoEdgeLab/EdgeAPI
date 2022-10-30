@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/apps"
+	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/nodes"
 	"github.com/TeaOSLab/EdgeAPI/internal/setup"
@@ -67,6 +68,14 @@ func main() {
 		err := nodes.NewAPINode().InstallSystemService()
 		if err != nil {
 			fmt.Println("[ERROR]install failed: " + err.Error())
+			return
+		}
+		fmt.Println("done")
+	})
+	app.On("reset", func() {
+		err := configs.ResetAPIConfig()
+		if err != nil {
+			fmt.Println("[ERROR]reset failed: " + err.Error())
 			return
 		}
 		fmt.Println("done")
