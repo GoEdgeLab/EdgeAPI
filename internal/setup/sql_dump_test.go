@@ -21,7 +21,7 @@ func TestSQLDump_Dump(t *testing.T) {
 	}()
 
 	dump := NewSQLDump()
-	result, err := dump.Dump(db)
+	result, err := dump.Dump(db, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestSQLDump_Apply(t *testing.T) {
 	}()
 
 	var dump = NewSQLDump()
-	result, err := dump.Dump(db)
+	result, err := dump.Dump(db, true)
 	if err != nil {
 		t.Fatal(err)
 	}

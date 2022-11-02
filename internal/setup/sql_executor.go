@@ -55,7 +55,7 @@ func (this *SQLExecutor) Run(showLog bool) error {
 		_ = db.Close()
 	}()
 
-	sqlDump := NewSQLDump()
+	var sqlDump = NewSQLDump()
 	_, err = sqlDump.Apply(db, LatestSQLResult, showLog)
 	if err != nil {
 		return err

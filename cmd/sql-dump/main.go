@@ -18,7 +18,7 @@ func main() {
 		fmt.Println("[ERROR]" + err.Error())
 		return
 	}
-	results, err := setup.NewSQLDump().Dump(db)
+	results, err := setup.NewSQLDump().Dump(db, true)
 	if err != nil {
 		fmt.Println("[ERROR]" + err.Error())
 		return
