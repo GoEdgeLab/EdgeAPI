@@ -103,7 +103,7 @@ func (this *NodeTaskDAO) CreateClusterTask(tx *dbs.Tx, role string, clusterId in
 		return nil
 	}
 
-	var uniqueId = role + "@" + types.String(clusterId) + "@" + types.String(serverId) + "@cluster@" + types.String(serverId) + "@" + taskType
+	var uniqueId = role + "@" + types.String(clusterId) + "@" + types.String(serverId) + "@cluster@" + taskType
 
 	// 用户信息
 	// 没有直接加入到 uniqueId 中，是为了兼容以前的字段值
