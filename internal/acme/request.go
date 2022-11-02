@@ -57,7 +57,9 @@ func (this *Request) Run() (certData []byte, keyData []byte, err error) {
 
 func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 	if !this.debug {
-		acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
+		if !Tea.IsTesting() {
+			acmelog.Logger = log.New(io.Discard, "", log.LstdFlags)
+		}
 	}
 
 	if this.task.User == nil {
