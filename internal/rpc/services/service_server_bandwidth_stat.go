@@ -10,8 +10,10 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"strings"
 	"sync"
 	"time"
@@ -186,14 +188,45 @@ func (this *ServerBandwidthStatService) FindHourlyServerBandwidthStats(ctx conte
 		return nil, err
 	}
 
+	if req.Hours <= 0 {
+		req.Hours = 12
+	}
+
 	var tx = this.NullTx()
 	stats, err := models.SharedServerBandwidthStatDAO.FindHourlyBandwidthStats(tx, req.ServerId, req.Hours)
 	if err != nil {
 		return nil, err
 	}
 
+	// percentile
+	var percentile = systemconfigs.DefaultBandwidthPercentile
+	userUIConfig, _ := models.SharedSysSettingDAO.ReadUserUIConfig(tx)
+	if userUIConfig != nil && userUIConfig.TrafficStats.BandwidthPercentile > 0 {
+		percentile = userUIConfig.TrafficStats.BandwidthPercentile
+	}
+
+	var timestamp = time.Now().Unix() - int64(req.Hours)*3600
+	var timeFrom = timeutil.FormatTime("YmdH00", timestamp)
+	var timeTo = timeutil.Format("YmdHi")
+
+	var pbNthStat *pb.FindHourlyServerBandwidthStatsResponse_Stat
+	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile)
+	if err != nil {
+		return nil, err
+	}
+	if percentileStat != nil {
+		pbNthStat = &pb.FindHourlyServerBandwidthStatsResponse_Stat{
+			Day:   percentileStat.Day,
+			Hour:  types.Int32(percentileStat.TimeAt[:2]),
+			Bytes: int64(percentileStat.Bytes),
+			Bits:  int64(percentileStat.Bytes * 8),
+		}
+	}
+
 	return &pb.FindHourlyServerBandwidthStatsResponse{
-		Stats: stats,
+		Stats:      stats,
+		Percentile: percentile,
+		NthStat:    pbNthStat,
 	}, nil
 }
 
@@ -205,13 +238,52 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx contex
 	}
 
 	var tx = this.NullTx()
-	stats, err := models.SharedServerBandwidthStatDAO.FindDailyBandwidthStats(tx, req.ServerId, req.Days)
+
+	if req.Days <= 0 {
+		req.Days = 30
+	}
+
+	var timestamp = time.Now().Unix() - int64(req.Days)*86400
+	var dayFrom = timeutil.FormatTime("Ymd", timestamp)
+	var dayTo = timeutil.Format("Ymd")
+
+	stats, err := models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, dayFrom, dayTo)
 	if err != nil {
 		return nil, err
 	}
+	var pbStats = []*pb.FindDailyServerBandwidthStatsResponse_Stat{}
+	for _, stat := range stats {
+		pbStats = append(pbStats, &pb.FindDailyServerBandwidthStatsResponse_Stat{
+			Day:   stat.Day,
+			Bytes: stat.Bytes,
+			Bits:  stat.Bytes * 8,
+		})
+	}
+
+	// percentile
+	var percentile = systemconfigs.DefaultBandwidthPercentile
+	userUIConfig, _ := models.SharedSysSettingDAO.ReadUserUIConfig(tx)
+	if userUIConfig != nil && userUIConfig.TrafficStats.BandwidthPercentile > 0 {
+		percentile = userUIConfig.TrafficStats.BandwidthPercentile
+	}
+
+	var pbNthStat = &pb.FindDailyServerBandwidthStatsResponse_Stat{}
+	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, dayFrom, dayTo, percentile)
+	if err != nil {
+		return nil, err
+	}
+	if percentileStat != nil {
+		pbNthStat = &pb.FindDailyServerBandwidthStatsResponse_Stat{
+			Day:   percentileStat.Day,
+			Bytes: int64(percentileStat.Bytes),
+			Bits:  int64(percentileStat.Bytes * 8),
+		}
+	}
 
 	return &pb.FindDailyServerBandwidthStatsResponse{
-		Stats: stats,
+		Stats:      pbStats,
+		Percentile: percentile,
+		NthStat:    pbNthStat,
 	}, nil
 }
 

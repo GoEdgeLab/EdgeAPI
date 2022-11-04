@@ -14,6 +14,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"time"
 )
@@ -465,7 +466,16 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	{
 		var bandwidthMinutes = utils.RangeMinutes(time.Now(), 12, 5)
 		var bandwidthStatMap = map[string]*pb.ServerBandwidthStat{}
+		var timeFrom = ""
+		var timeTo = ""
 		for _, r := range utils.GroupMinuteRanges(bandwidthMinutes) {
+			if len(timeFrom) == 0 || timeFrom > r.Day+r.MinuteFrom {
+				timeFrom = r.Day + r.MinuteFrom
+			}
+			if len(timeTo) == 0 || timeTo < r.Day+r.MinuteTo {
+				timeTo = r.Day + r.MinuteTo
+			}
+
 			bandwidthStats, err := models.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo)
 			if err != nil {
 				return nil, err
@@ -499,6 +509,29 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			}
 		}
 		result.MinutelyBandwidthStats = pbBandwidthStats
+
+		// percentile
+		if len(timeFrom) > 0 && len(timeTo) > 0 {
+			var percentile = systemconfigs.DefaultBandwidthPercentile
+			userUIConfig, _ := models.SharedSysSettingDAO.ReadUserUIConfig(tx)
+			if userUIConfig != nil && userUIConfig.TrafficStats.BandwidthPercentile > 0 {
+				percentile = userUIConfig.TrafficStats.BandwidthPercentile
+			}
+			result.BandwidthPercentile = percentile
+
+			percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile)
+			if err != nil {
+				return nil, err
+			}
+			if percentileStat != nil {
+				result.MinutelyNthBandwidthStat = &pb.ServerBandwidthStat{
+					Day:    percentileStat.Day,
+					TimeAt: percentileStat.TimeAt,
+					Bytes:  int64(percentileStat.Bytes),
+					Bits:   int64(percentileStat.Bytes * 8),
+				}
+			}
+		}
 	}
 
 	// 按日流量统计

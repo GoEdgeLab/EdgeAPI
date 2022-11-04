@@ -15,6 +15,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"math"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -442,6 +443,75 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, server
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Between("day", dayFrom, dayTo).
+		Desc("bytes").
+		Offset(offset).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*ServerBandwidthStat), nil
+}
+
+// FindPercentileBetweenTimes 获取时间段内内百分位
+// timeFrom 开始时间，格式 YYYYMMDDHHII
+// timeTo 结束时间，格式 YYYYMMDDHHII
+func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serverId int64, timeFrom string, timeTo string, percentile int32) (result *ServerBandwidthStat, err error) {
+	var reg = regexp.MustCompile(`^\d{12}$`)
+	if !reg.MatchString(timeFrom) {
+		return nil, errors.New("invalid timeFrom '" + timeFrom + "'")
+	}
+	if !reg.MatchString(timeTo) {
+		return nil, errors.New("invalid timeTo '" + timeTo + "'")
+	}
+
+	if timeFrom > timeTo {
+		timeFrom, timeTo = timeTo, timeFrom
+	}
+
+	if percentile <= 0 {
+		percentile = 95
+	}
+
+	// 如果是100%以上，则快速返回
+	if percentile >= 100 {
+		one, err := this.Query(tx).
+			Table(this.partialTable(serverId)).
+			Attr("serverId", serverId).
+			Between("CONCAT(day, timeAt)", timeFrom, timeTo).
+			Desc("bytes").
+			Find()
+		if err != nil || one == nil {
+			return nil, err
+		}
+
+		return one.(*ServerBandwidthStat), nil
+	}
+
+	// 总数量
+	total, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("CONCAT(day, timeAt)", timeFrom, timeTo).
+		Count()
+	if err != nil {
+		return nil, err
+	}
+	if total == 0 {
+		return nil, nil
+	}
+
+	var offset int64
+
+	if total > 1 {
+		offset = int64(math.Ceil(float64(total) * float64(100-percentile) / 100))
+	}
+
+	// 查询 nth 位置
+	one, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Attr("serverId", serverId).
+		Between("CONCAT(day, timeAt)", timeFrom, timeTo).
 		Desc("bytes").
 		Offset(offset).
 		Find()
