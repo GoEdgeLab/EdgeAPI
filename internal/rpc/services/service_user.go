@@ -483,8 +483,16 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	var dailyTrafficStats = []*pb.ComposeUserDashboardResponse_DailyTrafficStat{}
 	var dailyPeekBandwidthStats = []*pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{}
 
+	var dayFrom = ""
+	var dayTo = ""
 	for i := 30; i >= 0; i-- {
 		var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -i))
+		if len(dayFrom) == 0 {
+			dayFrom = day
+		}
+		if len(dayTo) == 0 || day > dayTo {
+			dayTo = day
+		}
 
 		// 流量
 		trafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
@@ -505,8 +513,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyTrafficStat{Day: day, Bytes: trafficBytes})
 		dailyPeekBandwidthStats = append(dailyPeekBandwidthStats, &pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{Day: day, Bytes: peekBandwidthBytes})
 	}
-
-	return &pb.ComposeUserDashboardResponse{
+	var result = &pb.ComposeUserDashboardResponse{
 		CountServers:              countServers,
 		MonthlyTrafficBytes:       monthlyTrafficBytes,
 		MonthlyPeekBandwidthBytes: monthlyPeekBandwidthBytes,
@@ -514,7 +521,24 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		DailyPeekBandwidthBytes:   dailyPeekBandwidthBytes,
 		DailyTrafficStats:         dailyTrafficStats,
 		DailyPeekBandwidthStats:   dailyPeekBandwidthStats,
-	}, nil
+	}
+
+	// 带宽百分位
+	var bandwidthPercentile = systemconfigs.DefaultBandwidthPercentile
+	userConfig, _ := models.SharedSysSettingDAO.ReadUserUIConfig(tx)
+	if userConfig != nil && userConfig.TrafficStats.BandwidthPercentile > 0 {
+		bandwidthPercentile = userConfig.TrafficStats.BandwidthPercentile
+	}
+	result.BandwidthPercentile = bandwidthPercentile
+	stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, 0, dayFrom, dayTo, bandwidthPercentile)
+	if err != nil {
+		return nil, err
+	}
+	if stat != nil {
+		result.BandwidthPercentileBits = int64(stat.Bytes) * 8
+	}
+
+	return result, nil
 }
 
 // FindUserNodeClusterId 获取用户所在的集群ID

@@ -172,6 +172,24 @@ func (this *SysSettingDAO) ReadAdminUIConfig(tx *dbs.Tx, cacheMap *utils.CacheMa
 	return &systemconfigs.AdminUIConfig{}, nil
 }
 
+// ReadUserUIConfig 读取用户UI配置
+func (this *SysSettingDAO) ReadUserUIConfig(tx *dbs.Tx) (*systemconfigs.UserUIConfig, error) {
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserUIConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) == 0 {
+		return systemconfigs.DefaultUserUIConfig(), nil
+	}
+
+	var config = systemconfigs.DefaultUserUIConfig()
+	err = json.Unmarshal(valueJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
 // NotifyUpdate 通知更改
 func (this *SysSettingDAO) NotifyUpdate(tx *dbs.Tx, code string) error {
 	switch code {
