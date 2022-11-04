@@ -625,10 +625,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 是否是商业版
-	isPlus, err := authority.SharedAuthorityKeyDAO.IsPlus(tx)
-	if err != nil {
-		return nil, err
-	}
+	isPlus, _ := authority.SharedAuthorityKeyDAO.IsPlus(tx)
 
 	// 边缘节点升级信息
 	{
