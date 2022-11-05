@@ -437,7 +437,7 @@ func (this *NodeClusterDAO) FindAllEnabledClustersWithDNSDomainId(tx *dbs.Tx, dn
 	_, err = this.Query(tx).
 		State(NodeClusterStateEnabled).
 		Attr("dnsDomainId", dnsDomainId).
-		Result("id", "name", "dnsName", "dnsDomainId", "isOn").
+		Result("id", "name", "dnsName", "dnsDomainId", "isOn", "dns").
 		Slice(&result).
 		FindAll()
 	return

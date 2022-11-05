@@ -351,7 +351,7 @@ func (this *DNSDomainService) ExistAvailableDomains(ctx context.Context, req *pb
 
 // 转换域名信息
 func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomain) (*pb.DNSDomain, error) {
-	domainId := int64(domain.Id)
+	var domainId = int64(domain.Id)
 
 	defaultRoute, err := dnsutils.FindDefaultDomainRoute(tx, domain)
 	if err != nil {
@@ -383,7 +383,6 @@ func (this *DNSDomainService) convertDomainToPB(tx *dbs.Tx, domain *dns.DNSDomai
 	countAllNodes1 := int64(0)
 	countAllServers1 := int64(0)
 	for _, cluster := range clusters {
-
 		_, nodeRecords, serverRecords, countAllNodes, countAllServers, nodesChanged2, serversChanged2, err := this.findClusterDNSChanges(cluster, records, domain.Name, defaultRoute)
 		if err != nil {
 			return nil, err
