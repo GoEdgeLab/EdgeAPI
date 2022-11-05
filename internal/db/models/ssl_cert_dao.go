@@ -204,7 +204,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
-	var cacheKey = this.Table + ":config:" + types.String(certId)
+	var cacheKey = this.Table + ":ComposeCertConfig:" + types.String(certId)
 	var cache, _ = cacheMap.Get(cacheKey)
 	if cache != nil {
 		return cache.(*sslconfigs.SSLCertConfig), nil
@@ -600,6 +600,7 @@ func (this *SSLCertDAO) NotifyUpdate(tx *dbs.Tx, certId int64) error {
 		return nil
 	}
 
+	// 通知服务更新
 	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithSSLPolicyIds(tx, policyIds)
 	if err != nil {
 		return err
@@ -613,5 +614,8 @@ func (this *SSLCertDAO) NotifyUpdate(tx *dbs.Tx, certId int64) error {
 			return err
 		}
 	}
+
+	// TODO 通知用户节点、API节点、管理系统（将来实现选择）更新
+
 	return nil
 }

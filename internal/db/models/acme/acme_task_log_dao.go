@@ -27,7 +27,7 @@ func init() {
 	})
 }
 
-// 生成日志
+// CreateACMETaskLog 生成日志
 func (this *ACMETaskLogDAO) CreateACMETaskLog(tx *dbs.Tx, taskId int64, isOk bool, errMsg string) error {
 	var op = NewACMETaskLogOperator()
 	op.TaskId = taskId
@@ -37,7 +37,7 @@ func (this *ACMETaskLogDAO) CreateACMETaskLog(tx *dbs.Tx, taskId int64, isOk boo
 	return err
 }
 
-// 取得任务的最后一条执行日志
+// FindLatestACMETasKLog 取得任务的最后一条执行日志
 func (this *ACMETaskLogDAO) FindLatestACMETasKLog(tx *dbs.Tx, taskId int64) (*ACMETaskLog, error) {
 	one, err := this.Query(tx).
 		Attr("taskId", taskId).
