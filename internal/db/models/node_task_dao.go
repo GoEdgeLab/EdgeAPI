@@ -57,7 +57,7 @@ func init() {
 }
 
 // CreateNodeTask 创建单个节点任务
-func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, userId int64, serverId int64, taskType NodeTaskType, version int64) error {
+func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64, nodeId int64, userId int64, serverId int64, taskType NodeTaskType) error {
 	if clusterId <= 0 || nodeId <= 0 {
 		return nil
 	}
@@ -69,8 +69,13 @@ func (this *NodeTaskDAO) CreateNodeTask(tx *dbs.Tx, role string, clusterId int64
 		uniqueId += "@" + types.String(userId)
 	}
 
+	version, err := this.increaseVersion(tx)
+	if err != nil {
+		return err
+	}
+
 	var updatedAt = time.Now().Unix()
-	_, _, err := this.Query(tx).
+	_, _, err = this.Query(tx).
 		InsertOrUpdate(maps.Map{
 			"role":      role,
 			"clusterId": clusterId,
@@ -157,9 +162,8 @@ func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, use
 		return err
 	}
 
-	var version = time.Now().UnixNano()
 	for _, nodeId := range nodeIds {
-		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, userId, serverId, taskType, version)
+		err = this.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, userId, serverId, taskType)
 		if err != nil {
 			return err
 		}
@@ -225,14 +229,22 @@ func (this *NodeTaskDAO) DeleteNodeTasks(tx *dbs.Tx, role string, nodeId int64) 
 }
 
 // FindDoingNodeTasks 查询一个节点的所有任务
-func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int64) (result []*NodeTask, err error) {
+func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int64, version int64) (result []*NodeTask, err error) {
 	if nodeId <= 0 {
 		return
 	}
-	_, err = this.Query(tx).
+	var query = this.Query(tx).
 		Attr("role", role).
 		Attr("nodeId", nodeId).
-		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
+		Asc("version")
+	if version > 0 {
+		query.Lt("LENGTH(version)", 19) // 兼容以往版本
+		query.Gt("version", version)
+	} else {
+		// 第一次访问时只取当前正在执行的或者执行失败的
+		query.Where("(isDone=0 OR (isDone=1 AND isOk=0))")
+	}
+	_, err = query.
 		Slice(&result).
 		FindAll()
 	return
@@ -240,8 +252,16 @@ func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int6
 
 // UpdateNodeTaskDone 修改节点任务的完成状态
 func (this *NodeTaskDAO) UpdateNodeTaskDone(tx *dbs.Tx, taskId int64, isOk bool, errorMessage string) error {
-	_, err := this.Query(tx).
-		Pk(taskId).
+	var query = this.Query(tx).
+		Pk(taskId)
+	if !isOk {
+		version, err := this.increaseVersion(tx)
+		if err != nil {
+			return err
+		}
+		query.Set("version", version)
+	}
+	_, err := query.
 		Set("isDone", 1).
 		Set("isOk", isOk).
 		Set("error", errorMessage).
@@ -372,4 +392,9 @@ func (this *NodeTaskDAO) UpdateTasksNotified(tx *dbs.Tx, taskIds []int64) error 
 		}
 	}
 	return nil
+}
+
+// 生成一个版本号
+func (this *NodeTaskDAO) increaseVersion(tx *dbs.Tx) (version int64, err error) {
+	return SharedSysLockerDAO.Increase(tx, "NODE_TASK_VERSION", 0)
 }

@@ -24,10 +24,8 @@ func (this *NodeTaskService) FindNodeTasks(ctx context.Context, req *pb.FindNode
 		return nil, err
 	}
 
-	_ = req
-
 	var tx = this.NullTx()
-	tasks, err := models.SharedNodeTaskDAO.FindDoingNodeTasks(tx, nodeType, nodeId)
+	tasks, err := models.SharedNodeTaskDAO.FindDoingNodeTasks(tx, nodeType, nodeId, req.Version)
 	if err != nil {
 		return nil, err
 	}

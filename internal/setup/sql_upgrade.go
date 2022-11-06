@@ -83,10 +83,13 @@ var upgradeFuncs = []*upgradeVersion{
 		"0.4.11", upgradeV0_4_11,
 	},
 	{
-		"v0.5.3", upgradeV0_5_3,
+		"0.5.3", upgradeV0_5_3,
 	},
 	{
-		"v0.5.6", upgradeV0_5_6,
+		"0.5.6", upgradeV0_5_6,
+	},
+	{
+		"0.5.7", upgradeV0_5_7,
 	},
 }
 
@@ -711,6 +714,19 @@ func upgradeV0_4_11(db *dbs.DB) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// v0.5.7
+func upgradeV0_5_7(db *dbs.DB) error {
+	// node task versions
+	{
+		_, err := db.Exec("UPDATE edgeNodeTasks SET version=0 WHERE LENGTH(version)=19")
+		if err != nil {
+			return err
 		}
 	}
 
