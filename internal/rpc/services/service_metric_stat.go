@@ -92,7 +92,9 @@ func init() {
 					return nil
 				}(key)
 				if err != nil {
-					remotelogs.Error("METRIC_STAT", "upload metric stats failed: "+err.Error())
+					if !models.CheckSQLErrCode(err, 1213 /** transaction deadlock **/) {
+						remotelogs.Error("METRIC_STAT", "upload metric stats failed: "+err.Error())
+					}
 				}
 
 				// 人为限速
