@@ -9,6 +9,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -67,7 +68,11 @@ func (this *SQLDump) Dump(db *dbs.DB, includingRecords bool) (result *SQLDumpRes
 		return nil, err
 	}
 
-	for tableName, table := range fullTableMap {
+	var autoIncrementReg = regexp.MustCompile(` AUTO_INCREMENT=\d+`)
+
+	for _, table := range fullTableMap {
+		var tableName = table.Name
+
 		// 忽略一些分表
 		if strings.HasPrefix(strings.ToLower(tableName), strings.ToLower("edgeHTTPAccessLogs_")) {
 			continue
@@ -76,11 +81,11 @@ func (this *SQLDump) Dump(db *dbs.DB, includingRecords bool) (result *SQLDumpRes
 			continue
 		}
 
-		sqlTable := &SQLTable{
+		var sqlTable = &SQLTable{
 			Name:       table.Name,
 			Engine:     table.Engine,
 			Charset:    table.Collation,
-			Definition: regexp.MustCompile(` AUTO_INCREMENT=\d+`).ReplaceAllString(table.Code, ""),
+			Definition: autoIncrementReg.ReplaceAllString(table.Code, ""),
 		}
 
 		// 字段
@@ -424,10 +429,10 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 }
 
 // 查找所有表的完整信息
-func (this *SQLDump) findFullTables(db *dbs.DB, tableNames []string) (map[string]*dbs.Table, error) {
-	var fullTableMap = map[string]*dbs.Table{}
+func (this *SQLDump) findFullTables(db *dbs.DB, tableNames []string) ([]*dbs.Table, error) {
+	var fullTables = []*dbs.Table{}
 	if len(tableNames) == 0 {
-		return fullTableMap, nil
+		return fullTables, nil
 	}
 
 	var locker = &sync.Mutex{}
@@ -460,7 +465,8 @@ func (this *SQLDump) findFullTables(db *dbs.DB, tableNames []string) (map[string
 						return
 					}
 					locker.Lock()
-					fullTableMap[tableName] = table
+					table.Name = tableName
+					fullTables = append(fullTables, table)
 					locker.Unlock()
 				default:
 					return
@@ -473,7 +479,12 @@ func (this *SQLDump) findFullTables(db *dbs.DB, tableNames []string) (map[string
 		return nil, lastErr
 	}
 
-	return fullTableMap, nil
+	// 排序
+	sort.Slice(fullTables, func(i, j int) bool {
+		return fullTables[i].Name < fullTables[j].Name
+	})
+
+	return fullTables, nil
 }
 
 // 查找有记录的表
