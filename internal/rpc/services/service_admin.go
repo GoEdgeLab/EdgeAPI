@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/authority"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/tasks"
@@ -604,8 +602,8 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 
 	// 小时流量统计
-	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
-	hourTo := timeutil.Format("YmdH")
+	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	var hourTo = timeutil.Format("YmdH")
 	this.BeginTag(ctx, "SharedTrafficHourlyStatDAO.FindHourlyStats")
 	hourlyTrafficStats, err := stats.SharedTrafficHourlyStatDAO.FindHourlyStats(tx, hourFrom, hourTo)
 	this.EndTag(ctx, "SharedTrafficHourlyStatDAO.FindHourlyStats")
@@ -624,9 +622,6 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		})
 	}
 
-	// 是否是商业版
-	isPlus, _ := authority.SharedAuthorityKeyDAO.IsPlus(tx)
-
 	// 边缘节点升级信息
 	{
 		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
@@ -640,51 +635,6 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		}
 		upgradeInfo.CountNodes = countNodes
 		result.NodeUpgradeInfo = upgradeInfo
-	}
-
-	// 监控节点升级信息
-	if isPlus {
-		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.MonitorNodeVersion,
-		}
-		this.BeginTag(ctx, "SharedMonitorNodeDAO.CountAllLowerVersionNodes")
-		countNodes, err := models.SharedMonitorNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
-		this.EndTag(ctx, "SharedMonitorNodeDAO.CountAllLowerVersionNodes")
-		if err != nil {
-			return nil, err
-		}
-		upgradeInfo.CountNodes = countNodes
-		result.MonitorNodeUpgradeInfo = upgradeInfo
-	}
-
-	// 认证节点升级信息
-	if isPlus {
-		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.AuthorityNodeVersion,
-		}
-		this.BeginTag(ctx, "SharedAuthorityNodeDAO.CountAllLowerVersionNodes")
-		countNodes, err := authority.SharedAuthorityNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
-		this.EndTag(ctx, "SharedAuthorityNodeDAO.CountAllLowerVersionNodes")
-		if err != nil {
-			return nil, err
-		}
-		upgradeInfo.CountNodes = countNodes
-		result.AuthorityNodeUpgradeInfo = upgradeInfo
-	}
-
-	// 用户节点升级信息
-	if isPlus {
-		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.UserNodeVersion,
-		}
-		this.BeginTag(ctx, "SharedUserNodeDAO.CountAllLowerVersionNodes")
-		countNodes, err := models.SharedUserNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
-		this.EndTag(ctx, "SharedUserNodeDAO.CountAllLowerVersionNodes")
-		if err != nil {
-			return nil, err
-		}
-		upgradeInfo.CountNodes = countNodes
-		result.UserNodeUpgradeInfo = upgradeInfo
 	}
 
 	// API节点升级信息
@@ -706,34 +656,10 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		result.ApiNodeUpgradeInfo = upgradeInfo
 	}
 
-	// DNS节点升级信息
-	if isPlus {
-		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.DNSNodeVersion,
-		}
-		this.BeginTag(ctx, "SharedNSNodeDAO.CountAllLowerVersionNodes")
-		countNodes, err := models.SharedNSNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
-		this.EndTag(ctx, "SharedNSNodeDAO.CountAllLowerVersionNodes")
-		if err != nil {
-			return nil, err
-		}
-		upgradeInfo.CountNodes = countNodes
-		result.NsNodeUpgradeInfo = upgradeInfo
-	}
-
-	// Report节点升级信息
-	if isPlus {
-		upgradeInfo := &pb.ComposeAdminDashboardResponse_UpgradeInfo{
-			NewVersion: teaconst.ReportNodeVersion,
-		}
-		this.BeginTag(ctx, "SharedReportNodeDAO.CountAllLowerVersionNodes")
-		countNodes, err := models.SharedReportNodeDAO.CountAllLowerVersionNodes(tx, upgradeInfo.NewVersion)
-		this.EndTag(ctx, "SharedReportNodeDAO.CountAllLowerVersionNodes")
-		if err != nil {
-			return nil, err
-		}
-		upgradeInfo.CountNodes = countNodes
-		result.ReportNodeUpgradeInfo = upgradeInfo
+	// 额外的检查节点版本
+	err = this.composeAdminDashboardExt(tx, ctx, result)
+	if err != nil {
+		return nil, err
 	}
 
 	// 域名排行
@@ -754,63 +680,6 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			CountRequests: int64(stat.CountRequests),
 			Bytes:         int64(stat.Bytes),
 		})
-	}
-
-	// 节点排行
-	if isPlus {
-		this.BeginTag(ctx, "SharedNodeTrafficHourlyStatDAO.FindTopNodeStats")
-		topNodeStats, err := stats.SharedNodeTrafficHourlyStatDAO.FindTopNodeStats(tx, "node", hourFrom, hourTo, 10)
-		this.EndTag(ctx, "SharedNodeTrafficHourlyStatDAO.FindTopNodeStats")
-		if err != nil {
-			return nil, err
-		}
-		for _, stat := range topNodeStats {
-			nodeName, err := models.SharedNodeDAO.FindNodeName(tx, int64(stat.NodeId))
-			if err != nil {
-				return nil, err
-			}
-			if len(nodeName) == 0 {
-				continue
-			}
-			result.TopNodeStats = append(result.TopNodeStats, &pb.ComposeAdminDashboardResponse_NodeStat{
-				NodeId:        int64(stat.NodeId),
-				NodeName:      nodeName,
-				CountRequests: int64(stat.CountRequests),
-				Bytes:         int64(stat.Bytes),
-			})
-		}
-	}
-
-	// 地区流量排行
-	if isPlus {
-		this.BeginTag(ctx, "SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes")
-		totalCountryBytes, err := stats.SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes(tx, timeutil.Format("Ymd"))
-		this.EndTag(ctx, "SharedServerRegionCountryDailyStatDAO.SumDailyTotalBytes")
-		if err != nil {
-			return nil, err
-		}
-
-		if totalCountryBytes > 0 {
-			topCountryStats, err := stats.SharedServerRegionCountryDailyStatDAO.ListSumStats(tx, timeutil.Format("Ymd"), "bytes", 0, 100)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, stat := range topCountryStats {
-				countryName, err := regions.SharedRegionCountryDAO.FindRegionCountryName(tx, int64(stat.CountryId))
-				if err != nil {
-					return nil, err
-				}
-				result.TopCountryStats = append(result.TopCountryStats, &pb.ComposeAdminDashboardResponse_CountryStat{
-					CountryName:         countryName,
-					Bytes:               int64(stat.Bytes),
-					CountRequests:       int64(stat.CountRequests),
-					AttackBytes:         int64(stat.AttackBytes),
-					CountAttackRequests: int64(stat.CountAttackRequests),
-					Percent:             float32(stat.Bytes*100) / float32(totalCountryBytes),
-				})
-			}
-		}
 	}
 
 	// 指标数据
