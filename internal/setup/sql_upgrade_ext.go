@@ -176,3 +176,16 @@ func upgradeV0_5_6(db *dbs.DB) error {
 
 	return nil
 }
+
+// v0.5.7
+func upgradeV0_5_7(db *dbs.DB) error {
+	// node task versions
+	{
+		_, err := db.Exec("UPDATE edgeNodeTasks SET version=0 WHERE LENGTH(version)=19")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
