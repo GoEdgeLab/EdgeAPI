@@ -460,6 +460,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	var requestPathReg = regexp.MustCompile(`requestPath:(\S+)`)
 	var protoReg = regexp.MustCompile(`proto:(\S+)`)
 	var schemeReg = regexp.MustCompile(`scheme:(\S+)`)
+	var methodReg = regexp.MustCompile(`(?:method|requestMethod):(\S+)`)
 
 	var count = len(tableQueries)
 	var wg = &sync.WaitGroup{}
@@ -607,6 +608,11 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 						query.Where("JSON_EXTRACT(content, '$.requestURI') LIKE :keyword").
 							Param("keyword", dbutils.QuoteLikePrefix("\""+u.RequestURI()))
 					}
+				} else if methodReg.MatchString(keyword) { // method|requestMethod:xxx
+					isSpecialKeyword = true
+					var matches = methodReg.FindStringSubmatch(keyword)
+					query.Where("JSON_EXTRACT(content, '$.requestMethod')=:keyword").
+						Param("keyword", strings.ToUpper(matches[1]))
 				}
 				if !isSpecialKeyword {
 					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
