@@ -64,11 +64,11 @@ func (this *HealthCheckClusterTask) Run() {
 	if this.config.Interval == nil {
 		return
 	}
-	duration := this.config.Interval.Duration()
+	var duration = this.config.Interval.Duration()
 	if duration <= 0 {
 		return
 	}
-	ticker := utils.NewTicker(duration)
+	var ticker = utils.NewTicker(duration)
 	goman.New(func() {
 		for ticker.Wait() {
 			err := this.Loop()

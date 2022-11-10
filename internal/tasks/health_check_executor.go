@@ -52,10 +52,16 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	}
 
 	var results = []*HealthCheckResult{}
+
+	// 查询集群下的节点
 	nodes, err := models.NewNodeDAO().FindAllEnabledNodesWithClusterId(nil, this.clusterId, false)
 	if err != nil {
 		return nil, err
 	}
+	if len(nodes) == 0 {
+		return results, nil
+	}
+
 	for _, node := range nodes {
 		if !node.IsOn {
 			continue
@@ -115,7 +121,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 
 	var concurrent = 128
 
-	wg := sync.WaitGroup{}
+	var wg = sync.WaitGroup{}
 	wg.Add(countResults)
 	for i := 0; i < concurrent; i++ {
 		go func() {

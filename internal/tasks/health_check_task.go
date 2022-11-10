@@ -70,7 +70,16 @@ func (this *HealthCheckTask) Loop() error {
 
 	// 启动新的或更新老的
 	for _, cluster := range clusters {
-		clusterId := int64(cluster.Id)
+		var clusterId = int64(cluster.Id)
+
+		// 检查当前集群上是否有服务，如果尚没有部署服务，则直接跳过
+		countServers, err := models.SharedServerDAO.CountAllEnabledServersWithNodeClusterId(nil, clusterId)
+		if err != nil {
+			return err
+		}
+		if countServers == 0 {
+			continue
+		}
 
 		var config = &serverconfigs.HealthCheckConfig{}
 		if len(cluster.HealthCheck) > 0 {
