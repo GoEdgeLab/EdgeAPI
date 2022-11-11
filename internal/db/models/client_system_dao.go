@@ -1,11 +1,15 @@
 package models
 
 import (
-	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/ttlcache"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"strconv"
+	"github.com/iwind/TeaGo/rands"
+	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 const (
@@ -13,7 +17,20 @@ const (
 	ClientSystemStateDisabled = 0 // 已禁用
 )
 
-var clientSystemNameAndIdCacheMap = map[string]int64{} // system name => id
+func init() {
+	dbs.OnReadyDone(func() {
+		// 清理数据任务
+		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
+		goman.New(func() {
+			for range ticker.C {
+				err := SharedClientSystemDAO.Clean(nil, 7) // 只保留N天
+				if err != nil {
+					remotelogs.Error("SharedClientSystemDAO", "clean expired data failed: "+err.Error())
+				}
+			}
+		})
+	})
+}
 
 type ClientSystemDAO dbs.DAO
 
@@ -74,67 +91,63 @@ func (this *ClientSystemDAO) FindClientSystemName(tx *dbs.Tx, id uint32) (string
 		FindStringCol("")
 }
 
-// FindSystemIdWithNameCacheable 根据操作系统名称查找系统ID
-func (this *ClientSystemDAO) FindSystemIdWithNameCacheable(tx *dbs.Tx, systemName string) (int64, error) {
-	SharedCacheLocker.RLock()
-	systemId, ok := clientSystemNameAndIdCacheMap[systemName]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return systemId, nil
-	}
-	SharedCacheLocker.RUnlock()
-
-	systemId, err := this.Query(tx).
-		Where("JSON_CONTAINS(codes, :systemName)").
-		Param("systemName", strconv.Quote(systemName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
-		FindInt64Col(0)
-	if err != nil {
-		return 0, err
-	}
-
-	if systemId > 0 {
-		// 只有找到的时候才放入缓存，以便于我们可以在不存在的时候创建一条新的记录
-		SharedCacheLocker.Lock()
-		clientSystemNameAndIdCacheMap[systemName] = systemId
-		SharedCacheLocker.Unlock()
-	}
-
-	return systemId, nil
-}
-
-// CreateSystem 创建浏览器
-func (this *ClientSystemDAO) CreateSystem(tx *dbs.Tx, systemName string) (int64, error) {
-	var maxlength = 50
+// CreateSystemIfNotExists 创建系统信息
+func (this *ClientSystemDAO) CreateSystemIfNotExists(tx *dbs.Tx, systemName string) error {
+	const maxlength = 50
 	if len(systemName) > maxlength {
 		systemName = systemName[:50]
 	}
 
-	SharedCacheLocker.Lock()
-	defer SharedCacheLocker.Unlock()
+	// 检查缓存
+	var cacheKey = "clientSystem:" + systemName
+	var cacheItem = ttlcache.SharedCache.Read(cacheKey)
+	if cacheItem != nil {
+		return nil
+	}
 
-	// 检查是否已经创建
+	// 检查是否已经存在
+	// 不需要加状态条件
 	systemId, err := this.Query(tx).
 		Attr("name", systemName).
 		ResultPk().
 		FindInt64Col(0)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	if systemId > 0 {
-		return systemId, nil
+		// 加入缓存，但缓存时间不要过长，因为有别的操作在更新数据
+		ttlcache.SharedCache.Write(cacheKey, systemId, time.Now().Unix()+3600)
+
+		return this.Query(tx).
+			Pk(systemId).
+			Set("createdDay", timeutil.Format("Ymd")).
+			UpdateQuickly()
 	}
 
 	var op = NewClientSystemOperator()
 	op.Name = systemName
-
-	codes := []string{systemName}
-	codesJSON, err := json.Marshal(codes)
-	if err != nil {
-		return 0, err
-	}
-	op.Codes = codesJSON
-
+	op.CreatedDay = timeutil.Format("Ymd")
 	op.State = ClientSystemStateEnabled
-	return this.SaveInt64(tx, op)
+	systemId, err = this.SaveInt64(tx, op)
+	if err != nil && CheckSQLErrCode(err, 1062 /** duplicate entry **/) {
+		return nil
+	}
+
+	// 加入缓存，但缓存时间不要过长，因为有别的操作在更新数据
+	if systemId > 0 {
+		ttlcache.SharedCache.Write(cacheKey, systemId, time.Now().Unix()+3600)
+	}
+
+	return err
+}
+
+// Clean 清理
+func (this *ClientSystemDAO) Clean(tx *dbs.Tx, days int) error {
+	if days <= 0 {
+		days = 30
+	}
+
+	return this.Query(tx).
+		Lt("createdDay", timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))).
+		DeleteQuickly()
 }

@@ -31,13 +31,13 @@ func (this *ServerClientSystemMonthlyStatService) FindTopServerClientSystemMonth
 	if err != nil {
 		return nil, err
 	}
-	pbStats := []*pb.FindTopServerClientSystemMonthlyStatsResponse_Stat{}
+	var pbStats = []*pb.FindTopServerClientSystemMonthlyStatsResponse_Stat{}
 	for _, stat := range statList {
 		pbStat := &pb.FindTopServerClientSystemMonthlyStatsResponse_Stat{
 			Count:   int64(stat.Count),
 			Version: stat.Version,
 		}
-		system, err := models.SharedClientSystemDAO.FindEnabledClientSystem(tx, int64(stat.SystemId))
+		system, err := models.SharedFormalClientSystemDAO.FindEnabledFormalClientSystem(tx, int64(stat.SystemId))
 		if err != nil {
 			return nil, err
 		}

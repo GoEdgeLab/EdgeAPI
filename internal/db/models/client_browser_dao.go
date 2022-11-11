@@ -1,11 +1,15 @@
 package models
 
 import (
-	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/goman"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/ttlcache"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
-	"strconv"
+	"github.com/iwind/TeaGo/rands"
+	timeutil "github.com/iwind/TeaGo/utils/time"
+	"time"
 )
 
 const (
@@ -13,7 +17,20 @@ const (
 	ClientBrowserStateDisabled = 0 // 已禁用
 )
 
-var clientBrowserNameAndIdCacheMap = map[string]int64{}
+func init() {
+	dbs.OnReadyDone(func() {
+		// 清理数据任务
+		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
+		goman.New(func() {
+			for range ticker.C {
+				err := SharedClientBrowserDAO.Clean(nil, 7) // 只保留N天
+				if err != nil {
+					remotelogs.Error("SharedClientBrowserDAO", "clean expired data failed: "+err.Error())
+				}
+			}
+		})
+	})
+}
 
 type ClientBrowserDAO dbs.DAO
 
@@ -74,65 +91,64 @@ func (this *ClientBrowserDAO) FindClientBrowserName(tx *dbs.Tx, id uint32) (stri
 		FindStringCol("")
 }
 
-// FindBrowserIdWithNameCacheable 根据浏览器名称查找浏览器ID
-func (this *ClientBrowserDAO) FindBrowserIdWithNameCacheable(tx *dbs.Tx, browserName string) (int64, error) {
-	SharedCacheLocker.RLock()
-	browserId, ok := clientBrowserNameAndIdCacheMap[browserName]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return browserId, nil
-	}
-	SharedCacheLocker.RUnlock()
-
-	browserId, err := this.Query(tx).
-		Where("JSON_CONTAINS(codes, :browserName)").
-		Param("browserName", strconv.Quote(browserName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
-		FindInt64Col(0)
-	if err != nil {
-		return 0, err
-	}
-
-	if browserId > 0 {
-		// 只有找到的时候才放入缓存，以便于我们可以在不存在的时候创建一条新的记录
-		SharedCacheLocker.Lock()
-		clientBrowserNameAndIdCacheMap[browserName] = browserId
-		SharedCacheLocker.Unlock()
-	}
-
-	return browserId, nil
-}
-
-// CreateBrowser 创建浏览器
-func (this *ClientBrowserDAO) CreateBrowser(tx *dbs.Tx, browserName string) (int64, error) {
-	var maxlength = 50
+// CreateBrowserIfNotExists 创建浏览器信息
+func (this *ClientBrowserDAO) CreateBrowserIfNotExists(tx *dbs.Tx, browserName string) error {
+	const maxlength = 50
 	if len(browserName) > maxlength {
 		browserName = browserName[:50]
 	}
 
-	SharedCacheLocker.Lock()
-	defer SharedCacheLocker.Unlock()
+	// 检查缓存
+	var cacheKey = "clientBrowser:" + browserName
+	var cacheItem = ttlcache.SharedCache.Read(cacheKey)
+	if cacheItem != nil {
+		return nil
+	}
 
-	// 检查是否已经创建
+	// 检查是否已经存在
+	// 不需要加状态条件
 	browserId, err := this.Query(tx).
 		Attr("name", browserName).
 		ResultPk().
 		FindInt64Col(0)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	if browserId > 0 {
-		return browserId, nil
+		// 加入缓存，但缓存时间不要过长，因为有别的操作在更新数据
+		ttlcache.SharedCache.Write(cacheKey, browserId, time.Now().Unix()+3600)
+
+		return this.Query(tx).
+			Pk(browserId).
+			Set("createdDay", timeutil.Format("Ymd")).
+			UpdateQuickly()
 	}
 
+	// 如果不存在，则创建之
 	var op = NewClientBrowserOperator()
 	op.Name = browserName
-	codes := []string{browserName}
-	codesJSON, err := json.Marshal(codes)
-	if err != nil {
-		return 0, err
-	}
-	op.Codes = codesJSON
+	op.CreatedDay = timeutil.Format("Ymd")
 	op.State = ClientBrowserStateEnabled
-	return this.SaveInt64(tx, op)
+	browserId, err = this.SaveInt64(tx, op)
+	if err != nil && CheckSQLErrCode(err, 1062 /** duplicate entry **/) {
+		return nil
+	}
+
+	// 加入缓存，但缓存时间不要过长，因为有别的操作在更新数据
+	if browserId > 0 {
+		ttlcache.SharedCache.Write(cacheKey, browserId, time.Now().Unix()+3600)
+	}
+
+	return err
+}
+
+// Clean 清理
+func (this *ClientBrowserDAO) Clean(tx *dbs.Tx, days int) error {
+	if days <= 0 {
+		days = 30
+	}
+
+	return this.Query(tx).
+		Lt("createdDay", timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))).
+		DeleteQuickly()
 }

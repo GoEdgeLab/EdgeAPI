@@ -40,6 +40,14 @@ var recordsTables = []*SQLRecordsTable{
 		UniqueFields: []string{"name"},
 		ExceptFields: []string{"customName", "customCodes"},
 	},
+	{
+		TableName:    "edgeFormalClientSystems",
+		UniqueFields: []string{"dataId"},
+	},
+	{
+		TableName:    "edgeFormalClientBrowsers",
+		UniqueFields: []string{"dataId"},
+	},
 }
 
 type sqlItem struct {

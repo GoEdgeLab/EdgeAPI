@@ -403,6 +403,16 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
+		var instance = this.serviceInstance(&services.FormalClientSystemService{}).(*services.FormalClientSystemService)
+		pb.RegisterFormalClientSystemServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
+		var instance = this.serviceInstance(&services.FormalClientBrowserService{}).(*services.FormalClientBrowserService)
+		pb.RegisterFormalClientBrowserServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		var instance = this.serviceInstance(&services.ServerClientSystemMonthlyStatService{}).(*services.ServerClientSystemMonthlyStatService)
 		pb.RegisterServerClientSystemMonthlyStatServiceServer(server, instance)
 		this.rest(instance)

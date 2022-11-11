@@ -89,7 +89,7 @@ var upgradeFuncs = []*upgradeVersion{
 		"0.5.6", upgradeV0_5_6,
 	},
 	{
-		"0.5.7", upgradeV0_5_7,
+		"0.5.8", upgradeV0_5_8,
 	},
 }
 

@@ -1709,17 +1709,20 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return nil
 			}
 
-			systemId, err := models.SharedClientSystemDAO.FindSystemIdWithNameCacheable(tx, result.Name)
+			systemId, err := models.SharedFormalClientSystemDAO.FindSystemIdWithNameCacheable(tx, result.Name)
 			if err != nil {
 				return err
 			}
 			if systemId == 0 {
-				systemId, err = models.SharedClientSystemDAO.CreateSystem(tx, result.Name)
+				err = models.SharedClientSystemDAO.CreateSystemIfNotExists(tx, result.Name)
 				if err != nil {
 					return err
 				}
+
+				// 直接返回不再进行操作
+				return nil
 			}
-			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, systemId, result.Version, month)
+			var key = fmt.Sprintf("%d@%d@%s@%s", result.ServerId, systemId, result.Version, month)
 			serverStatLocker.Lock()
 			serverHTTPSystemStatMap[key] += result.Count
 			serverStatLocker.Unlock()
@@ -1737,15 +1740,18 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return nil
 			}
 
-			browserId, err := models.SharedClientBrowserDAO.FindBrowserIdWithNameCacheable(tx, result.Name)
+			browserId, err := models.SharedFormalClientBrowserDAO.FindBrowserIdWithNameCacheable(tx, result.Name)
 			if err != nil {
 				return err
 			}
 			if browserId == 0 {
-				browserId, err = models.SharedClientBrowserDAO.CreateBrowser(tx, result.Name)
+				err = models.SharedClientBrowserDAO.CreateBrowserIfNotExists(tx, result.Name)
 				if err != nil {
 					return err
 				}
+
+				// 直接返回不再进行操作
+				return nil
 			}
 			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, browserId, result.Version, month)
 			serverStatLocker.Lock()

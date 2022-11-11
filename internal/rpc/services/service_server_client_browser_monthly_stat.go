@@ -31,13 +31,13 @@ func (this *ServerClientBrowserMonthlyStatService) FindTopServerClientBrowserMon
 	if err != nil {
 		return nil, err
 	}
-	pbStats := []*pb.FindTopServerClientBrowserMonthlyStatsResponse_Stat{}
+	var pbStats = []*pb.FindTopServerClientBrowserMonthlyStatsResponse_Stat{}
 	for _, stat := range statList {
 		pbStat := &pb.FindTopServerClientBrowserMonthlyStatsResponse_Stat{
 			Count:   int64(stat.Count),
 			Version: stat.Version,
 		}
-		browser, err := models.SharedClientBrowserDAO.FindEnabledClientBrowser(tx, int64(stat.BrowserId))
+		browser, err := models.SharedFormalClientBrowserDAO.FindEnabledFormalClientBrowser(tx, int64(stat.BrowserId))
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +48,6 @@ func (this *ServerClientBrowserMonthlyStatService) FindTopServerClientBrowserMon
 			Id:   int64(browser.Id),
 			Name: browser.Name,
 		}
-
 		pbStats = append(pbStats, pbStat)
 	}
 	return &pb.FindTopServerClientBrowserMonthlyStatsResponse{Stats: pbStats}, nil

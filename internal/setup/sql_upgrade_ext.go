@@ -11,6 +11,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
 )
 
@@ -178,10 +179,25 @@ func upgradeV0_5_6(db *dbs.DB) error {
 }
 
 // v0.5.7
-func upgradeV0_5_7(db *dbs.DB) error {
+func upgradeV0_5_8(db *dbs.DB) error {
 	// node task versions
 	{
 		_, err := db.Exec("UPDATE edgeNodeTasks SET version=0 WHERE LENGTH(version)=19")
+		if err != nil {
+			return err
+		}
+	}
+
+	// 删除操作系统和浏览器相关统计
+	// 只删除当前月，避免因为数据过多阻塞
+	{
+		_, err := db.Exec("DELETE FROM edgeServerClientSystemMonthlyStats WHERE month=?", timeutil.Format("Ym"))
+		if err != nil {
+			return err
+		}
+	}
+	{
+		_, err := db.Exec("DELETE FROM edgeServerClientBrowserMonthlyStats WHERE month=?", timeutil.Format("Ym"))
 		if err != nil {
 			return err
 		}
