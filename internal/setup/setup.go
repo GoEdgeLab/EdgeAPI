@@ -22,6 +22,8 @@ type Setup struct {
 	// 要返回的数据
 	AdminNodeId     string
 	AdminNodeSecret string
+
+	logFp *os.File
 }
 
 func NewSetup(config *Config) *Setup {
@@ -31,15 +33,15 @@ func NewSetup(config *Config) *Setup {
 }
 
 func NewSetupFromCmd() *Setup {
-	args := cmd.ParseArgs(strings.Join(os.Args[1:], " "))
+	var args = cmd.ParseArgs(strings.Join(os.Args[1:], " "))
 
-	config := &Config{}
+	var config = &Config{}
 	for _, arg := range args {
-		index := strings.Index(arg, "=")
+		var index = strings.Index(arg, "=")
 		if index <= 0 {
 			continue
 		}
-		value := arg[index+1:]
+		var value = arg[index+1:]
 		value = strings.Trim(value, "\"'")
 		switch arg[:index] {
 		case "-api-node-protocol":
@@ -51,7 +53,18 @@ func NewSetupFromCmd() *Setup {
 		}
 	}
 
-	return NewSetup(config)
+	var setup = NewSetup(config)
+
+	// log writer
+	var tmpDir = os.TempDir()
+	if len(tmpDir) > 0 {
+		fp, err := os.OpenFile(tmpDir+"/edge-install.log", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+		if err == nil {
+			setup.logFp = fp
+		}
+	}
+
+	return setup
 }
 
 func (this *Setup) Run() error {
@@ -73,7 +86,7 @@ func (this *Setup) Run() error {
 	}
 
 	// 执行SQL
-	config := &dbs.Config{}
+	var config = &dbs.Config{}
 	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return err
@@ -91,14 +104,22 @@ func (this *Setup) Run() error {
 		return errors.New("can not find database config for env '" + Tea.Env + "'")
 	}
 
-	executor := NewSQLExecutor(dbConfig)
+	var executor = NewSQLExecutor(dbConfig)
+	if this.logFp != nil {
+		executor.SetLogWriter(this.logFp)
+
+		defer func() {
+			_ = this.logFp.Close()
+			_ = os.Remove(this.logFp.Name())
+		}()
+	}
 	err = executor.Run(false)
 	if err != nil {
 		return err
 	}
 
 	// Admin节点信息
-	apiTokenDAO := models.NewApiTokenDAO()
+	var apiTokenDAO = models.NewApiTokenDAO()
 	token, err := apiTokenDAO.FindEnabledTokenWithRole(nil, "admin")
 	if err != nil {
 		return err
@@ -110,7 +131,7 @@ func (this *Setup) Run() error {
 	this.AdminNodeSecret = token.Secret
 
 	// 检查API节点
-	dao := models.NewAPINodeDAO()
+	var dao = models.NewAPINodeDAO()
 	apiNodeId, err := dao.FindEnabledAPINodeIdWithAddr(nil, this.config.APINodeProtocol, this.config.APINodeHost, this.config.APINodePort)
 	if err != nil {
 		return err
@@ -175,7 +196,7 @@ func (this *Setup) Run() error {
 	}
 
 	// 保存配置
-	apiConfig := &configs.APIConfig{
+	var apiConfig = &configs.APIConfig{
 		NodeId: apiNode.UniqueId,
 		Secret: apiNode.Secret,
 	}

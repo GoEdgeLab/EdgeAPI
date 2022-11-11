@@ -27,10 +27,11 @@ func main() {
 	app.Version(teaconst.Version)
 	app.Product(teaconst.ProductName)
 	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup|upgrade|service|daemon|issues]")
+
 	app.On("setup", func() {
 		var setupCmd = setup.NewSetupFromCmd()
 		err := setupCmd.Run()
-		result := maps.Map{}
+		var result = maps.Map{}
 		if err != nil {
 			result["isOk"] = false
 			result["error"] = err.Error()

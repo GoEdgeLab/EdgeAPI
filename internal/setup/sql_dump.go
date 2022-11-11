@@ -7,6 +7,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
+	"io"
 	"regexp"
 	"runtime"
 	"sort"
@@ -56,10 +57,15 @@ type sqlItem struct {
 }
 
 type SQLDump struct {
+	logWriter io.Writer
 }
 
 func NewSQLDump() *SQLDump {
 	return &SQLDump{}
+}
+
+func (this *SQLDump) SetLogWriter(logWriter io.Writer) {
+	this.logWriter = logWriter
 }
 
 // Dump 导出数据
@@ -248,7 +254,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 			var op = "+ table " + newTable.Name
 			ops = append(ops, op)
 			if showLog {
-				fmt.Println(op)
+				this.log(op)
 			}
 			if len(newTable.Records) == 0 {
 				execSQL(newTable.Definition)
@@ -267,7 +273,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "+ " + newTable.Name + " " + newField.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
@@ -277,7 +283,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "* " + newTable.Name + " " + newField.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " MODIFY `" + newField.Name + "` " + newField.Definition)
 					if err != nil {
@@ -294,7 +300,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "+ index " + newTable.Name + " " + newIndex.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " ADD " + newIndex.Definition)
 					if err != nil {
@@ -307,7 +313,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "* index " + newTable.Name + " " + newIndex.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + newTable.Name + " DROP KEY " + newIndex.Name)
 					if err != nil {
@@ -330,7 +336,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "- index " + oldTable.Name + " " + oldIndex.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP KEY " + oldIndex.Name)
 					if err != nil {
@@ -347,7 +353,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 					var op = "- field " + oldTable.Name + " " + oldField.Name
 					ops = append(ops, op)
 					if showLog {
-						fmt.Println(op)
+						this.log(op)
 					}
 					_, err = db.Exec("ALTER TABLE " + oldTable.Name + " DROP COLUMN `" + oldField.Name + "`")
 					if err != nil {
@@ -385,7 +391,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 			if one == nil {
 				ops = append(ops, "+ record "+newTable.Name+" "+strings.Join(valueStrings, ", "))
 				if showLog {
-					fmt.Println("+ record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
+					this.log("+ record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
 				}
 				var params = []string{}
 				var args = []string{}
@@ -406,7 +412,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 			} else if !record.ValuesEquals(one) {
 				ops = append(ops, "* record "+newTable.Name+" "+strings.Join(valueStrings, ", "))
 				if showLog {
-					fmt.Println("* record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
+					this.log("* record " + newTable.Name + " " + strings.Join(valueStrings, ", "))
 				}
 				var args = []string{}
 				var values = []any{}
@@ -534,4 +540,13 @@ func (this *SQLDump) tryCreateIndex(err error, db *dbs.DB, tableName string, ind
 	}
 
 	return err
+}
+
+// 打印操作日志
+func (this *SQLDump) log(message string) {
+	if this.logWriter != nil {
+		_, _ = this.logWriter.Write([]byte(message + "\n"))
+	} else {
+		fmt.Println(message)
+	}
 }

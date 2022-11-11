@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"gopkg.in/yaml.v3"
+	"io"
 	"os"
 	"time"
 )
@@ -22,7 +23,8 @@ var LatestSQLResult = &SQLDumpResult{}
 
 // SQLExecutor 安装或升级SQL执行器
 type SQLExecutor struct {
-	dbConfig *dbs.DBConfig
+	dbConfig  *dbs.DBConfig
+	logWriter io.Writer
 }
 
 func NewSQLExecutor(dbConfig *dbs.DBConfig) *SQLExecutor {
@@ -33,7 +35,7 @@ func NewSQLExecutor(dbConfig *dbs.DBConfig) *SQLExecutor {
 
 func NewSQLExecutorFromCmd() (*SQLExecutor, error) {
 	// 执行SQL
-	config := &dbs.Config{}
+	var config = &dbs.Config{}
 	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
 		return nil, err
@@ -43,6 +45,10 @@ func NewSQLExecutorFromCmd() (*SQLExecutor, error) {
 		return nil, err
 	}
 	return NewSQLExecutor(config.DBs[Tea.Env]), nil
+}
+
+func (this *SQLExecutor) SetLogWriter(logWriter io.Writer) {
+	this.logWriter = logWriter
 }
 
 func (this *SQLExecutor) Run(showLog bool) error {
@@ -56,6 +62,10 @@ func (this *SQLExecutor) Run(showLog bool) error {
 	}()
 
 	var sqlDump = NewSQLDump()
+	sqlDump.SetLogWriter(this.logWriter)
+	if this.logWriter != nil {
+		showLog = true
+	}
 	_, err = sqlDump.Apply(db, LatestSQLResult, showLog)
 	if err != nil {
 		return err
