@@ -307,12 +307,12 @@ func (this *SQLExecutor) checkIPList(db *dbs.DB) error {
 	}
 
 	// 创建名单
-	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, createdAt) VALUES (?, ?, ?, ?, ?)", "公共黑名单", "black", "black", 1, time.Now().Unix())
+	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, isGlobal, createdAt) VALUES (?, ?, ?, ?, ?, ?)", "公共黑名单", "black", "black", 1, 1, time.Now().Unix())
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, createdAt) VALUES (?, ?, ?, ?, ?)", "公共白名单", "white", "white", 1, time.Now().Unix())
+	_, err = db.Exec("INSERT INTO edgeIPLists(name, type, code, isPublic, isGlobal, createdAt) VALUES (?, ?, ?, ?, ?, ?)", "公共白名单", "white", "white", 1, 1, time.Now().Unix())
 	if err != nil {
 		return err
 	}
