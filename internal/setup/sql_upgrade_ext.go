@@ -203,5 +203,13 @@ func upgradeV0_5_8(db *dbs.DB) error {
 		}
 	}
 
+	// 修复默认黑白名单不是全局的问题
+	{
+		_, err := db.Exec("UPDATE edgeIPLists SET isGlobal=1 WHERE id IN (1, 2)")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
