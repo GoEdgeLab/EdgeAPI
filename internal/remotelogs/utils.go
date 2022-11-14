@@ -6,7 +6,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/cespare/xxhash"
 	"github.com/iwind/TeaGo/logs"
+	"github.com/iwind/TeaGo/types"
 	"time"
 )
 
@@ -106,13 +108,33 @@ func uploadLogs() error {
 		return nil
 	}
 
+	const hashSize = 5
+	var hashList = []uint64{}
+
 Loop:
 	for {
 		select {
 		case log := <-logChan:
-			err := sharedDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt, "", nil)
-			if err != nil {
-				return err
+			// 是否已存在
+			var hash = xxhash.Sum64String(types.String(log.NodeId) + "_" + log.Description)
+			var found = false
+			for _, h := range hashList {
+				if h == hash {
+					found = true
+					break
+				}
+			}
+
+			// 加入
+			if !found {
+				hashList = append(hashList, hash)
+				if len(hashList) > hashSize {
+					hashList = hashList[1:]
+				}
+				err := sharedDAO.CreateLog(nil, nodeconfigs.NodeRoleAPI, log.NodeId, log.ServerId, log.OriginId, log.Level, log.Tag, log.Description, log.CreatedAt, "", nil)
+				if err != nil {
+					return err
+				}
 			}
 		default:
 			break Loop
