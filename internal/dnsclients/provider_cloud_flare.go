@@ -64,14 +64,22 @@ func (this *CloudFlareProvider) Auth(params maps.Map) error {
 
 // GetDomains 获取所有域名列表
 func (this *CloudFlareProvider) GetDomains() (domains []string, err error) {
-	resp := new(cloudflare.ZonesResponse)
-	err = this.doAPI(http.MethodGet, "zones", map[string]string{}, nil, resp)
-	if err != nil {
-		return nil, err
-	}
+	for page := 1; page <= 500; page++ {
+		var resp = new(cloudflare.ZonesResponse)
+		err = this.doAPI(http.MethodGet, "zones", map[string]string{
+			"per_page": "20",
+			"page":     types.String(page),
+		}, nil, resp)
+		if err != nil {
+			return nil, err
+		}
+		if len(resp.Result) == 0 {
+			break
+		}
 
-	for _, zone := range resp.Result {
-		domains = append(domains, zone.Name)
+		for _, zone := range resp.Result {
+			domains = append(domains, zone.Name)
+		}
 	}
 
 	return
