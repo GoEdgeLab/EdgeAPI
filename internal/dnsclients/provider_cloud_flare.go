@@ -67,7 +67,7 @@ func (this *CloudFlareProvider) GetDomains() (domains []string, err error) {
 	for page := 1; page <= 500; page++ {
 		var resp = new(cloudflare.ZonesResponse)
 		err = this.doAPI(http.MethodGet, "zones", map[string]string{
-			"per_page": "20",
+			"per_page": "50",
 			"page":     types.String(page),
 		}, nil, resp)
 		if err != nil {

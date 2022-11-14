@@ -156,19 +156,19 @@ func testCloudFlareProvider() (ProviderInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='cloudFlare' ORDER BY id DESC")
+	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='cloudFlare' AND state=1 ORDER BY id DESC")
 	if err != nil {
 		return nil, err
 	}
 	if one == nil {
 		return nil, errors.New("can not find providers with type 'cloudFlare'")
 	}
-	apiParams := maps.Map{}
+	var apiParams = maps.Map{}
 	err = json.Unmarshal([]byte(one.GetString("apiParams")), &apiParams)
 	if err != nil {
 		return nil, err
 	}
-	provider := &CloudFlareProvider{}
+	var provider = &CloudFlareProvider{}
 	err = provider.Auth(apiParams)
 	if err != nil {
 		return nil, err
