@@ -304,7 +304,10 @@ func (this *UserBandwidthStatDAO) FindDistinctUserIds(tx *dbs.Tx, dayFrom string
 
 		for _, one := range ones {
 			locker.Lock()
-			userIds = append(userIds, int64(one.(*UserBandwidthStat).UserId))
+			var userId = int64(one.(*UserBandwidthStat).UserId)
+			if userId > 0 {
+				userIds = append(userIds, userId)
+			}
 			locker.Unlock()
 		}
 		return nil

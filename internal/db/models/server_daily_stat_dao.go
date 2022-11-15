@@ -710,7 +710,10 @@ func (this *ServerDailyStatDAO) FindDistinctUserIds(tx *dbs.Tx, dayFrom string, 
 		return nil, err
 	}
 	for _, one := range ones {
-		userIds = append(userIds, one.GetInt64("userId"))
+		var userId = one.GetInt64("userId")
+		if userId > 0 {
+			userIds = append(userIds, userId)
+		}
 	}
 	return userIds, nil
 }
