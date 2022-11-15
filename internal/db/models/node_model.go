@@ -38,7 +38,8 @@ type Node struct {
 	DnsRoutes              dbs.JSON `field:"dnsRoutes"`              // DNS线路设置
 	MaxCacheDiskCapacity   dbs.JSON `field:"maxCacheDiskCapacity"`   // 硬盘缓存容量
 	MaxCacheMemoryCapacity dbs.JSON `field:"maxCacheMemoryCapacity"` // 内存缓存容量
-	CacheDiskDir           string   `field:"cacheDiskDir"`           // 缓存目录
+	CacheDiskDir           string   `field:"cacheDiskDir"`           // 主缓存目录
+	CacheDiskSubDirs       dbs.JSON `field:"cacheDiskSubDirs"`       // 其他缓存目录
 	DnsResolver            dbs.JSON `field:"dnsResolver"`            // DNS解析器
 	EnableIPLists          bool     `field:"enableIPLists"`          // 启用IP名单
 }
@@ -78,7 +79,8 @@ type NodeOperator struct {
 	DnsRoutes              any // DNS线路设置
 	MaxCacheDiskCapacity   any // 硬盘缓存容量
 	MaxCacheMemoryCapacity any // 内存缓存容量
-	CacheDiskDir           any // 缓存目录
+	CacheDiskDir           any // 主缓存目录
+	CacheDiskSubDirs       any // 其他缓存目录
 	DnsResolver            any // DNS解析器
 	EnableIPLists          any // 启用IP名单
 }

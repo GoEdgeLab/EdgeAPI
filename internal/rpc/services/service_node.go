@@ -673,6 +673,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		MaxCacheDiskCapacity:   pbMaxCacheDiskCapacity,
 		MaxCacheMemoryCapacity: pbMaxCacheMemoryCapacity,
 		CacheDiskDir:           node.CacheDiskDir,
+		CacheDiskSubDirsJSON:   node.CacheDiskSubDirs,
 		Level:                  int32(node.Level),
 		LnAddrs:                node.DecodeLnAddrs(),
 		DnsRoutes:              pbRoutes,
@@ -1708,7 +1709,16 @@ func (this *NodeService) UpdateNodeCache(ctx context.Context, req *pb.UpdateNode
 		}
 	}
 
-	err = models.SharedNodeDAO.UpdateNodeCache(tx, req.NodeId, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON, req.CacheDiskDir)
+	// cache sub dirs
+	var cacheSubDirs = []*serverconfigs.CacheDir{}
+	if len(req.CacheDiskSubDirsJSON) > 0 {
+		err = json.Unmarshal(req.CacheDiskSubDirsJSON, &cacheSubDirs)
+		if err != nil {
+			return nil, errors.New("decode 'cacheDiskSubDirsJSON' failed: " + err.Error())
+		}
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeCache(tx, req.NodeId, maxCacheDiskCapacityJSON, maxCacheMemoryCapacityJSON, req.CacheDiskDir, cacheSubDirs)
 	if err != nil {
 		return nil, err
 	}

@@ -1146,6 +1146,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 
 	config.CacheDiskDir = node.CacheDiskDir
+	config.CacheDiskSubDirs = node.DecodeCacheDiskSubDirs()
 
 	// TOA
 	toaConfig, err := SharedNodeClusterDAO.FindClusterTOAConfig(tx, primaryClusterId, cacheMap)
@@ -1621,7 +1622,7 @@ func (this *NodeDAO) UpdateNodeSystem(tx *dbs.Tx, nodeId int64, maxCPU int32) er
 }
 
 // UpdateNodeCache 设置缓存相关
-func (this *NodeDAO) UpdateNodeCache(tx *dbs.Tx, nodeId int64, maxCacheDiskCapacityJSON []byte, maxCacheMemoryCapacityJSON []byte, cacheDiskDir string) error {
+func (this *NodeDAO) UpdateNodeCache(tx *dbs.Tx, nodeId int64, maxCacheDiskCapacityJSON []byte, maxCacheMemoryCapacityJSON []byte, cacheDiskDir string, cacheDiskSubDirs []*serverconfigs.CacheDir) error {
 	if nodeId <= 0 {
 		return errors.New("invalid nodeId")
 	}
@@ -1634,7 +1635,17 @@ func (this *NodeDAO) UpdateNodeCache(tx *dbs.Tx, nodeId int64, maxCacheDiskCapac
 		op.MaxCacheMemoryCapacity = maxCacheMemoryCapacityJSON
 	}
 	op.CacheDiskDir = cacheDiskDir
-	err := this.Save(tx, op)
+
+	if cacheDiskSubDirs == nil {
+		cacheDiskSubDirs = []*serverconfigs.CacheDir{}
+	}
+	cacheDiskSubDirsJSON, err := json.Marshal(cacheDiskSubDirs)
+	if err != nil {
+		return err
+	}
+	op.CacheDiskSubDirs = cacheDiskSubDirsJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}

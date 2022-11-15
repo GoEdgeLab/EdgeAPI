@@ -2,7 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"sort"
@@ -178,6 +180,19 @@ func (this *Node) DecodeLnAddrs() []string {
 	err := json.Unmarshal(this.LnAddrs, &result)
 	if err != nil {
 		// ignore error
+	}
+	return result
+}
+
+func (this *Node) DecodeCacheDiskSubDirs() []*serverconfigs.CacheDir {
+	if IsNull(this.CacheDiskSubDirs) {
+		return nil
+	}
+
+	var result = []*serverconfigs.CacheDir{}
+	err := json.Unmarshal(this.CacheDiskSubDirs, &result)
+	if err != nil {
+		remotelogs.Error("Node.DecodeCacheDiskSubDirs", err.Error())
 	}
 	return result
 }
