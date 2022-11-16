@@ -38,8 +38,9 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cluster == nil {
-		return nil, errors.New("can not find cluster with id '" + strconv.FormatInt(this.clusterId, 10) + "'")
+	if cluster == nil || !cluster.IsOn {
+		// 如果节点已经被删除，则不提示错误
+		return nil, nil
 	}
 	if !cluster.HealthCheck.IsNotNull() {
 		return nil, errors.New("health check config is not found")
