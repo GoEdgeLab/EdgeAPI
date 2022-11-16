@@ -361,6 +361,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 		return err
 	}
 	var isChanged = false
+	var addingNodeRecordKeysMap = map[string]bool{} // clusterDnsName_type_ip_route
 	for _, node := range nodes {
 		routes, err := node.DNSRouteCodesForDomainId(domainId)
 		if err != nil {
@@ -398,6 +399,14 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 				if utils.IsIPv6(ip) {
 					recordType = dnstypes.RecordTypeAAAA
 				}
+
+				// 避免添加重复的记录
+				var fullKey = clusterDNSName + "_" + recordType + "_" + ip + "_" + route
+				if addingNodeRecordKeysMap[fullKey] {
+					continue
+				}
+				addingNodeRecordKeysMap[fullKey] = true
+
 				err = manager.AddRecord(domain, &dnstypes.Record{
 					Id:    "",
 					Name:  clusterDNSName,

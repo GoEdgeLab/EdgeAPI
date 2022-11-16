@@ -470,6 +470,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 
 	// 新增的节点域名
 	var nodeKeys = []string{}
+	var addingNodeRecordKeysMap = map[string]bool{} // clusterDnsName_type_ip_route
 	for _, node := range nodes {
 		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
@@ -499,7 +500,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				if net.ParseIP(ip) == nil {
 					continue
 				}
-				key := ip + "_" + route
+				var key = ip + "_" + route
 				nodeKeys = append(nodeKeys, key)
 				record, ok := nodeRecordMapping[key]
 				if !ok {
@@ -507,6 +508,14 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 					if utils.IsIPv6(ip) {
 						recordType = dnstypes.RecordTypeAAAA
 					}
+
+					// 避免添加重复的记录
+					var fullKey = clusterDnsName + "_" + recordType + "_" + ip + "_" + route
+					if addingNodeRecordKeysMap[fullKey] {
+						continue
+					}
+					addingNodeRecordKeysMap[fullKey] = true
+
 					result = append(result, maps.Map{
 						"action": "create",
 						"record": &dnstypes.Record{
