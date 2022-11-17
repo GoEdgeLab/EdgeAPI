@@ -98,6 +98,21 @@ func TestDNSPodProvider_QueryRecord(t *testing.T) {
 	}
 }
 
+func TestDNSPodProvider_QueryRecords(t *testing.T) {
+	provider, _, err := testDNSPodProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		records, err := provider.QueryRecords(DNSPodTestDomain, "hello-forward", dnstypes.RecordTypeCNAME)
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.PrintAsJSON(records, t)
+	}
+}
+
 func TestDNSPodProvider_UpdateRecord(t *testing.T) {
 	provider, isInternational, err := testDNSPodProvider()
 	if err != nil {

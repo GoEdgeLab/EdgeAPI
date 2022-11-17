@@ -186,7 +186,30 @@ func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType d
 			return record, nil
 		}
 	}
-	return nil, err
+	return nil, nil
+}
+
+// QueryRecords 查询多个记录
+func (this *DNSPodProvider) QueryRecords(domain string, name string, recordType dnstypes.RecordType) ([]*dnstypes.Record, error) {
+	// 从缓存中读取
+	if this.ProviderId > 0 {
+		records, hasRecords, _ := sharedDomainRecordsCache.QueryDomainRecords(this.ProviderId, domain, name, recordType)
+		if hasRecords { // 有效的搜索
+			return records, nil
+		}
+	}
+
+	records, err := this.GetRecords(domain)
+	if err != nil {
+		return nil, err
+	}
+	var result = []*dnstypes.Record{}
+	for _, record := range records {
+		if record.Name == name && record.Type == recordType {
+			result = append(result, record)
+		}
+	}
+	return result, nil
 }
 
 // AddRecord 设置记录

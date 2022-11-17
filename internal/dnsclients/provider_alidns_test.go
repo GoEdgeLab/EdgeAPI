@@ -53,6 +53,20 @@ func TestAliDNSProvider_QueryRecord(t *testing.T) {
 	}
 }
 
+func TestAliDNSProvider_QueryRecords(t *testing.T) {
+	provider, err := testAliDNSProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	{
+		records, err := provider.QueryRecords("meloy.cn", "www", "A")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("%+v", records)
+	}
+}
+
 func TestAliDNSProvider_DeleteRecord(t *testing.T) {
 	provider, err := testAliDNSProvider()
 	if err != nil {

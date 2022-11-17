@@ -103,7 +103,7 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 	if len(resp) == 0 || string(resp) == "null" {
 		return nil, nil
 	}
-	record := &dnstypes.Record{}
+	var record = &dnstypes.Record{}
 	err = json.Unmarshal(resp, record)
 	if err != nil {
 		return nil, err
@@ -112,6 +112,28 @@ func (this *CustomHTTPProvider) QueryRecord(domain string, name string, recordTy
 		return nil, nil
 	}
 	return record, nil
+}
+
+// QueryRecords 查询多个记录
+func (this *CustomHTTPProvider) QueryRecords(domain string, name string, recordType dnstypes.RecordType) (result []*dnstypes.Record, err error) {
+	resp, err := this.post(maps.Map{
+		"action":     "QueryRecords",
+		"domain":     domain,
+		"name":       name,
+		"recordType": recordType,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp) == 0 || string(resp) == "null" {
+		return nil, nil
+	}
+	result = []*dnstypes.Record{}
+	err = json.Unmarshal(resp, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // AddRecord 设置记录

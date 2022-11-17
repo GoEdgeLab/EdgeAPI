@@ -30,6 +30,9 @@ var cloudFlareHTTPClient = &http.Client{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
+		/**Proxy: func(req *http.Request) (*url.URL, error) {
+			return url.Parse("socks5://127.0.0.1:7890")
+		},**/
 	},
 }
 
@@ -142,7 +145,7 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 		return nil, err
 	}
 
-	resp := new(cloudflare.GetDNSRecordsResponse)
+	var resp = new(cloudflare.GetDNSRecordsResponse)
 	err = this.doAPI(http.MethodGet, "zones/"+zoneId+"/dns_records", map[string]string{
 		"per_page": "100",
 		"name":     name + "." + domain,
@@ -155,7 +158,7 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 		return nil, nil
 	}
 
-	record := resp.Result[0]
+	var record = resp.Result[0]
 
 	// 修正Record
 	if record.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(record.Content, ".") {
@@ -172,6 +175,46 @@ func (this *CloudFlareProvider) QueryRecord(domain string, name string, recordTy
 		TTL:   types.Int32(record.Ttl),
 		Route: CloudFlareDefaultRoute,
 	}, nil
+}
+
+// QueryRecords 查询多个记录
+func (this *CloudFlareProvider) QueryRecords(domain string, name string, recordType dnstypes.RecordType) (records []*dnstypes.Record, err error) {
+	zoneId, err := this.findZoneIdWithDomain(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp = new(cloudflare.GetDNSRecordsResponse)
+	err = this.doAPI(http.MethodGet, "zones/"+zoneId+"/dns_records", map[string]string{
+		"per_page": "100",
+		"name":     name + "." + domain,
+		"type":     recordType,
+	}, nil, resp)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Result) == 0 {
+		return nil, nil
+	}
+
+	for _, record := range resp.Result {
+		// 修正Record
+		if record.Type == dnstypes.RecordTypeCNAME && !strings.HasSuffix(record.Content, ".") {
+			record.Content += "."
+		}
+
+		record.Name = strings.TrimSuffix(record.Name, "."+domain)
+
+		records = append(records, &dnstypes.Record{
+			Id:    record.Id,
+			Name:  record.Name,
+			Type:  record.Type,
+			Value: record.Content,
+			TTL:   types.Int32(record.Ttl),
+			Route: CloudFlareDefaultRoute,
+		})
+	}
+	return records, nil
 }
 
 // AddRecord 设置记录

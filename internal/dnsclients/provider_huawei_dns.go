@@ -1328,6 +1328,41 @@ func (this *HuaweiDNSProvider) QueryRecord(domain string, name string, recordTyp
 	}, nil
 }
 
+// QueryRecords 查询多个记录
+func (this *HuaweiDNSProvider) QueryRecords(domain string, name string, recordType dnstypes.RecordType) ([]*dnstypes.Record, error) {
+	var resp = new(huaweidns.RecordSetsResponse)
+	err := this.doAPI(http.MethodGet, "/v2.1/recordsets", map[string]string{
+		"name": name + "." + domain + ".",
+		"type": recordType,
+	}, maps.Map{}, resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.RecordSets) == 0 {
+		return nil, nil
+	}
+
+	var result = []*dnstypes.Record{}
+	for _, recordSet := range resp.RecordSets {
+		if len(recordSet.Records) == 0 {
+			continue
+		}
+
+		for _, record := range recordSet.Records {
+			result = append(result, &dnstypes.Record{
+				Id:    recordSet.Id + "@" + record,
+				Name:  name,
+				Type:  recordType,
+				Value: record,
+				Route: recordSet.Line,
+				TTL:   types.Int32(recordSet.Ttl),
+			})
+		}
+	}
+	return result, nil
+}
+
 // AddRecord 设置记录
 func (this *HuaweiDNSProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
 	zoneId, err := this.findZoneIdWithDomain(domain)

@@ -57,7 +57,19 @@ func TestHuaweiDNSProvider_QueryRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	logs.PrintAsJSON(record)
+	logs.PrintAsJSON(record, t)
+}
+
+func TestHuaweiDNSProvider_QueryRecords(t *testing.T) {
+	provider, err := testHuaweiDNSProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	records, err := provider.QueryRecords("yun4s.cn", "abc", dnstypes.RecordTypeA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(records, t)
 }
 
 func TestHuaweiDNSProvider_AddRecord(t *testing.T) {
@@ -71,7 +83,7 @@ func TestHuaweiDNSProvider_AddRecord(t *testing.T) {
 		Type:  "A",
 		Value: "192.168.2.40",
 		Route: "Beijing",
-		TTL: 120,
+		TTL:   120,
 	}
 	err = provider.AddRecord("yun4s.cn", record)
 	if err != nil {

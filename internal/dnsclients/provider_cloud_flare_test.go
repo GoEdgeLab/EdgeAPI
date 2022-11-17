@@ -86,6 +86,21 @@ func TestCloudFlareProvider_QueryRecord(t *testing.T) {
 	}
 }
 
+func TestCloudFlareProvider_QueryRecords(t *testing.T) {
+	provider, err := testCloudFlareProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	{
+		t.Log("== www.meloy.cn/A ==")
+		records, err := provider.QueryRecords("meloy.cn", "www", dnstypes.RecordTypeA)
+		if err != nil {
+			t.Fatal(err)
+		}
+		logs.PrintAsJSON(records, t)
+	}
+}
+
 func TestCloudFlareProvider_AddRecord(t *testing.T) {
 	provider, err := testCloudFlareProvider()
 	if err != nil {

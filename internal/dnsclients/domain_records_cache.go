@@ -72,7 +72,7 @@ func (this *DomainRecordsCache) WriteDomainRecords(providerId int64, domain stri
 	}
 }
 
-// QueryDomainRecord 从缓存中读取域名记录
+// QueryDomainRecord 从缓存中读取单条域名记录
 func (this *DomainRecordsCache) QueryDomainRecord(providerId int64, domain string, recordName string, recordType string) (record *dnstypes.Record, hasRecords bool, ok bool) {
 	if providerId <= 0 || len(domain) == 0 {
 		return
@@ -111,6 +111,52 @@ func (this *DomainRecordsCache) QueryDomainRecord(providerId int64, domain strin
 	for _, r := range list.records {
 		if r.Name == recordName && r.Type == recordType {
 			return r, true, true
+		}
+	}
+
+	return
+}
+
+// QueryDomainRecords 从缓存中读取多条域名记录
+func (this *DomainRecordsCache) QueryDomainRecords(providerId int64, domain string, recordName string, recordType string) (records []*dnstypes.Record, hasRecords bool, ok bool) {
+	if providerId <= 0 || len(domain) == 0 {
+		return
+	}
+
+	domain = types.String(providerId) + "@" + domain
+
+	this.locker.Lock()
+	defer this.locker.Unlock()
+
+	// check version
+	var key = "DomainRecordsCache" + "@" + types.String(providerId) + "@" + domain
+	version, err := models.SharedSysLockerDAO.Read(nil, key)
+	if err != nil {
+		remotelogs.Error("dnsclients.BaseProvider", "ReadDomainRecordsCache: "+err.Error())
+		return
+	}
+
+	// find list
+	list, recordsOk := this.domainRecordsMap[domain]
+	if !recordsOk {
+		return
+	}
+	if version != list.version {
+		delete(this.domainRecordsMap, domain)
+		return
+	}
+
+	// check timestamp
+	if list.updatedAt < time.Now().Unix()-86400 /** 缓存有效期为一天 **/ {
+		delete(this.domainRecordsMap, domain)
+		return
+	}
+
+	hasRecords = true
+	for _, r := range list.records {
+		if r.Name == recordName && r.Type == recordType {
+			records = append(records, r)
+			ok = true
 		}
 	}
 

@@ -22,6 +22,9 @@ type ProviderInterface interface {
 	// QueryRecord 查询单个记录
 	QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error)
 
+	// QueryRecords 查询多个记录
+	QueryRecords(domain string, name string, recordType dnstypes.RecordType) ([]*dnstypes.Record, error)
+
 	// AddRecord 设置记录
 	AddRecord(domain string, newRecord *dnstypes.Record) error
 

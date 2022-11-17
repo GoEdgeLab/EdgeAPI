@@ -63,6 +63,18 @@ func TestEdgeDNSAPIProvider_QueryRecord(t *testing.T) {
 	logs.PrintAsJSON(record)
 }
 
+func TestEdgeDNSAPIProvider_QueryRecords(t *testing.T) {
+	provider, err := testEdgeDNSAPIProvider()
+	if err != nil {
+		t.Fatal(err)
+	}
+	record, err := provider.QueryRecords(edgeDNSAPIDomainName, "cdn", dnstypes.RecordTypeA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs.PrintAsJSON(record)
+}
+
 func TestEdgeDNSAPIProvider_AddRecord(t *testing.T) {
 	provider, err := testEdgeDNSAPIProvider()
 	if err != nil {
@@ -153,8 +165,8 @@ func testEdgeDNSAPIProvider() (dnsclients.ProviderInterface, error) {
 	err := provider.Auth(maps.Map{
 		"role":            "user",
 		"host":            "http://127.0.0.1:8004",
-		"accessKeyId":     "JOvsyXIFqkQbh5kl",
-		"accessKeySecret": "t0RY8YO3R58VbJJNp0RqKw9KWNpObwtE",
+		"accessKeyId":     "zr9cmR42AEZxRyIV",
+		"accessKeySecret": "2w5p5NSZZuplUPsfPMzM7dFmTrI7xyja",
 	})
 	if err != nil {
 		return nil, err
