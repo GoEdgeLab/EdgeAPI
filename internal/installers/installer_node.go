@@ -45,7 +45,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 上传安装文件
-	filePrefix := "edge-node-" + env.OS + "-" + env.Arch
+	var filePrefix = "edge-node-" + env.OS + "-" + env.Arch
 	zipFile, err := this.LookupLatestInstaller(filePrefix)
 	if err != nil {
 		return err
@@ -53,16 +53,34 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	if len(zipFile) == 0 {
 		return errors.New("can not find installer file for " + env.OS + "/" + env.Arch)
 	}
-	targetZip := dir + "/" + filepath.Base(zipFile)
-	err = this.client.Copy(zipFile, targetZip, 0777)
-	if err != nil {
-		return err
+	var targetZip = ""
+	var firstCopyErr error
+	var zipName = filepath.Base(zipFile)
+	for _, candidateTargetZip := range []string{
+		dir + "/" + zipName,
+		this.client.UserHome() + "/" + zipName,
+		"/tmp/" + zipName,
+	} {
+		err = this.client.Copy(zipFile, candidateTargetZip, 0777)
+		if err != nil {
+			if firstCopyErr == nil {
+				firstCopyErr = err
+			}
+		} else {
+			err = nil
+			firstCopyErr = nil
+			targetZip = candidateTargetZip
+			break
+		}
+	}
+	if firstCopyErr != nil {
+		return errors.New("upload node file failed: " + firstCopyErr.Error())
 	}
 
 	// 测试运行环境
 	// 升级的节点暂时不列入测试
 	if !nodeParams.IsUpgrading {
-		_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=test")
+		_, stderr, err := this.client.Exec(env.HelperPath + " -cmd=test")
 		if err != nil {
 			return errors.New("test failed: " + err.Error())
 		}
@@ -72,7 +90,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 如果是升级则优雅停止先前的进程
-	exePath := dir + "/edge-node/bin/edge-node"
+	var exePath = dir + "/edge-node/bin/edge-node"
 	if nodeParams.IsUpgrading {
 		_, err = this.client.Stat(exePath)
 		if err == nil {
@@ -87,7 +105,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 
 	// 解压
-	_, stderr, err := this.client.Exec(dir + "/" + env.HelperName + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
+	_, stderr, err := this.client.Exec(env.HelperPath + " -cmd=unzip -zip=\"" + targetZip + "\" -target=\"" + dir + "\"")
 	if err != nil {
 		return err
 	}

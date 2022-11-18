@@ -147,13 +147,13 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 
 // InstallHelper 上传安装助手
 func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
-	uname, _, err := this.client.Exec("/usr/bin/uname -a")
+	uname, stderr, err := this.client.Exec("/usr/bin/uname -a")
 	if err != nil {
 		return env, err
 	}
 
 	if len(uname) == 0 {
-		return nil, errors.New("unable to execute 'uname -a' on this system")
+		return nil, errors.New("unable to execute 'uname -a' on this system: " + stderr)
 	}
 
 	osName := ""
@@ -181,22 +181,41 @@ func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.Node
 		archName = "386"
 	}
 
-	exeName := "edge-installer-helper-" + osName + "-" + archName
+	var exeName = "edge-installer-helper-" + osName + "-" + archName
 	switch role {
 	case nodeconfigs.NodeRoleDNS:
 		exeName = "edge-installer-dns-helper-" + osName + "-" + archName
 	}
-	exePath := Tea.Root + "/installers/" + exeName
+	var exePath = Tea.Root + "/installers/" + exeName
 
-	err = this.client.Copy(exePath, targetDir+"/"+exeName, 0777)
-	if err != nil {
-		return env, errors.New("copy '" + exeName + "' to '" + targetDir + "' failed: " + err.Error())
+	var realHelperPath = ""
+
+	var firstCopyErr error
+	for _, path := range []string{
+		targetDir + "/" + exeName,
+		this.client.UserHome() + "/" + exeName,
+		"/tmp/" + exeName,
+	} {
+		err = this.client.Copy(exePath, path, 0777)
+		if err != nil {
+			if firstCopyErr == nil {
+				firstCopyErr = err
+			}
+		} else {
+			err = nil
+			firstCopyErr = nil
+			realHelperPath = path
+			break
+		}
+	}
+	if firstCopyErr != nil {
+		return env, errors.New("copy '" + exeName + "' to '" + targetDir + "' failed: " + firstCopyErr.Error())
 	}
 
 	env = &Env{
 		OS:         osName,
 		Arch:       archName,
-		HelperName: exeName,
+		HelperPath: realHelperPath,
 	}
 	return env, nil
 }

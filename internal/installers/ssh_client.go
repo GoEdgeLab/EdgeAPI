@@ -165,7 +165,14 @@ func (this *SSHClient) Mkdir(path string) error {
 }
 
 func (this *SSHClient) MkdirAll(path string) error {
-	return this.sftp.MkdirAll(path)
+	err := this.sftp.MkdirAll(path)
+	if err != nil && this.sudo {
+		_, _, err2 := this.execSudo("mkdir -p "+path, this.sudoPassword)
+		if err2 == nil {
+			return nil
+		}
+	}
+	return err
 }
 
 func (this *SSHClient) Chmod(path string, mode os.FileMode) error {
