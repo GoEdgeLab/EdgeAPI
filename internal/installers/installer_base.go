@@ -147,13 +147,23 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 
 // InstallHelper 上传安装助手
 func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
-	uname, stderr, err := this.client.Exec("/usr/bin/uname -a")
+	var unameRetries = 3
+	var uname string
+	for i := 0; i < unameRetries; i++ {
+		uname, _, err = this.client.Exec("/usr/bin/uname -a")
+		if len(uname) == 0 {
+			continue
+		}
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
-		return env, err
+		return env, errors.New("unable to execute 'uname -a' on this system: " + err.Error())
 	}
 
 	if len(uname) == 0 {
-		return nil, errors.New("unable to execute 'uname -a' on this system: " + stderr)
+		return nil, errors.New("unable to execute 'uname -a' on this system")
 	}
 
 	osName := ""
