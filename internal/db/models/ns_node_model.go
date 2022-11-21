@@ -22,6 +22,7 @@ type NSNode struct {
 	InactiveNotifiedAt uint64   `field:"inactiveNotifiedAt"` // 离线通知时间
 	ConnectedAPINodes  dbs.JSON `field:"connectedAPINodes"`  // 当前连接的API节点
 	DdosProtection     dbs.JSON `field:"ddosProtection"`     // DDoS防护设置
+	ApiNodeAddrs       dbs.JSON `field:"apiNodeAddrs"`       // API节点地址
 }
 
 type NSNodeOperator struct {
@@ -43,6 +44,7 @@ type NSNodeOperator struct {
 	InactiveNotifiedAt any // 离线通知时间
 	ConnectedAPINodes  any // 当前连接的API节点
 	DdosProtection     any // DDoS防护设置
+	ApiNodeAddrs       any // API节点地址
 }
 
 func NewNSNodeOperator() *NSNodeOperator {

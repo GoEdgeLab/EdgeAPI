@@ -546,7 +546,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 	if err != nil {
 		return nil, err
 	}
-	installStatusResult := &pb.NodeInstallStatus{}
+	var installStatusResult = &pb.NodeInstallStatus{}
 	if installStatus != nil {
 		installStatusResult = &pb.NodeInstallStatus{
 			IsRunning:  installStatus.IsRunning,
@@ -678,6 +678,7 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		LnAddrs:                node.DecodeLnAddrs(),
 		DnsRoutes:              pbRoutes,
 		EnableIPLists:          node.EnableIPLists,
+		ApiNodeAddrsJSON:       node.ApiNodeAddrs,
 	}}, nil
 }
 
