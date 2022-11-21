@@ -42,6 +42,7 @@ type Node struct {
 	CacheDiskSubDirs       dbs.JSON `field:"cacheDiskSubDirs"`       // 其他缓存目录
 	DnsResolver            dbs.JSON `field:"dnsResolver"`            // DNS解析器
 	EnableIPLists          bool     `field:"enableIPLists"`          // 启用IP名单
+	ApiNodeAddrs           dbs.JSON `field:"apiNodeAddrs"`           // API节点地址
 }
 
 type NodeOperator struct {
@@ -83,6 +84,7 @@ type NodeOperator struct {
 	CacheDiskSubDirs       any // 其他缓存目录
 	DnsResolver            any // DNS解析器
 	EnableIPLists          any // 启用IP名单
+	ApiNodeAddrs           any // API节点地址
 }
 
 func NewNodeOperator() *NodeOperator {

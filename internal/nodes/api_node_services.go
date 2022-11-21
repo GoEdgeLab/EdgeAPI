@@ -13,6 +13,11 @@ import (
 // 注册服务
 func (this *APINode) registerServices(server *grpc.Server) {
 	{
+		var instance = this.serviceInstance(&services.PingService{}).(*services.PingService)
+		pb.RegisterPingServiceServer(server, instance)
+		this.rest(instance)
+	}
+	{
 		var instance = this.serviceInstance(&services.APITokenService{}).(*services.APITokenService)
 		pb.RegisterAPITokenServiceServer(server, instance)
 		this.rest(instance)

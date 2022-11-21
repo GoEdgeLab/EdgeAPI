@@ -137,6 +137,7 @@ func (this *Node) HasDDoSProtection() bool {
 	return false
 }
 
+// DecodeMaxCacheDiskCapacity 解析硬盘容量
 func (this *Node) DecodeMaxCacheDiskCapacity() *shared.SizeCapacity {
 	if this.MaxCacheDiskCapacity.IsNull() {
 		return nil
@@ -147,6 +148,7 @@ func (this *Node) DecodeMaxCacheDiskCapacity() *shared.SizeCapacity {
 	return capacity
 }
 
+// DecodeMaxCacheMemoryCapacity 解析内存容量
 func (this *Node) DecodeMaxCacheMemoryCapacity() *shared.SizeCapacity {
 	if this.MaxCacheMemoryCapacity.IsNull() {
 		return nil
@@ -171,6 +173,7 @@ func (this *Node) DecodeDNSResolver() *nodeconfigs.DNSResolverConfig {
 	return resolverConfig
 }
 
+// DecodeLnAddrs 解析Ln地址
 func (this *Node) DecodeLnAddrs() []string {
 	if IsNull(this.LnAddrs) {
 		return nil
@@ -184,6 +187,7 @@ func (this *Node) DecodeLnAddrs() []string {
 	return result
 }
 
+// DecodeCacheDiskSubDirs 解析缓存目录
 func (this *Node) DecodeCacheDiskSubDirs() []*serverconfigs.CacheDir {
 	if IsNull(this.CacheDiskSubDirs) {
 		return nil
@@ -193,6 +197,20 @@ func (this *Node) DecodeCacheDiskSubDirs() []*serverconfigs.CacheDir {
 	err := json.Unmarshal(this.CacheDiskSubDirs, &result)
 	if err != nil {
 		remotelogs.Error("Node.DecodeCacheDiskSubDirs", err.Error())
+	}
+	return result
+}
+
+// DecodeAPINodeAddrs 解析API节点地址
+func (this *Node) DecodeAPINodeAddrs() []*serverconfigs.NetworkAddressConfig {
+	var result = []*serverconfigs.NetworkAddressConfig{}
+	if IsNull(this.ApiNodeAddrs) {
+		return result
+	}
+
+	err := json.Unmarshal(this.ApiNodeAddrs, &result)
+	if err != nil {
+		remotelogs.Error("Node.DecodeAPINodeAddrs", err.Error())
 	}
 	return result
 }

@@ -961,6 +961,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		Level:         types.Int32(node.Level),
 		GroupId:       int64(node.GroupId),
 		EnableIPLists: node.EnableIPLists,
+		APINodeAddrs:  node.DecodeAPINodeAddrs(),
 	}
 
 	// API节点IP
@@ -2036,6 +2037,46 @@ func (this *NodeDAO) UpdateNodeDDoSProtection(tx *dbs.Tx, nodeId int64, ddosProt
 		return SharedNodeTaskDAO.CreateNodeTask(tx, nodeconfigs.NodeRoleNode, clusterId, nodeId, 0, 0, NodeTaskTypeDDosProtectionChanged)
 	}
 	return nil
+}
+
+// FindNodeAPIConfig 查找API相关配置信息
+func (this *NodeDAO) FindNodeAPIConfig(tx *dbs.Tx, nodeId int64) (*Node, error) {
+	if nodeId <= 0 {
+		return nil, nil
+	}
+
+	one, err := this.Query(tx).
+		Pk(nodeId).
+		Result("apiNodeAddrs").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Node), nil
+}
+
+// UpdateNodeAPIConfig 修改API相关配置信息
+func (this *NodeDAO) UpdateNodeAPIConfig(tx *dbs.Tx, nodeId int64, apiNodeAddrs []*serverconfigs.NetworkAddressConfig) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+
+	if apiNodeAddrs == nil {
+		apiNodeAddrs = []*serverconfigs.NetworkAddressConfig{}
+	}
+	apiNodeAddrsJSON, err := json.Marshal(apiNodeAddrs)
+	if err != nil {
+		return err
+	}
+	var op = NewNodeOperator()
+	op.Id = nodeId
+	op.ApiNodeAddrs = apiNodeAddrsJSON
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, nodeId)
 }
 
 // NotifyUpdate 通知节点相关更新

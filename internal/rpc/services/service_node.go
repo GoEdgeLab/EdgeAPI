@@ -2041,6 +2041,14 @@ func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.
 		if dnsResolverConfig != nil {
 			result.HasSystemSettings = dnsResolverConfig.Type != nodeconfigs.DNSResolverTypeDefault
 		}
+
+		if !result.HasSystemSettings {
+			// api node addresses
+			var apiNodeAddrs = node.DecodeAPINodeAddrs()
+			if len(apiNodeAddrs) > 0 {
+				result.HasSystemSettings = true
+			}
+		}
 	}
 
 	// ddos protection
@@ -2136,6 +2144,53 @@ func (this *NodeService) UpdateNodeRegionInfo(ctx context.Context, req *pb.Updat
 
 	var tx = this.NullTx()
 	err = models.SharedNodeDAO.UpdateNodeRegionId(tx, req.NodeId, req.NodeRegionId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindNodeAPIConfig 查找单个节点的API相关配置
+func (this *NodeService) FindNodeAPIConfig(ctx context.Context, req *pb.FindNodeAPIConfigRequest) (*pb.FindNodeAPIConfigResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	node, err := models.SharedNodeDAO.FindNodeAPIConfig(tx, req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return &pb.FindNodeAPIConfigResponse{
+			ApiNodeAddrsJSON: nil,
+		}, nil
+	}
+
+	return &pb.FindNodeAPIConfigResponse{
+		ApiNodeAddrsJSON: node.ApiNodeAddrs,
+	}, nil
+}
+
+// UpdateNodeAPIConfig 修改某个节点的API相关配置
+func (this *NodeService) UpdateNodeAPIConfig(ctx context.Context, req *pb.UpdateNodeAPIConfigRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var apiNodeAddrs = []*serverconfigs.NetworkAddressConfig{}
+	if len(req.ApiNodeAddrsJSON) > 0 {
+		err = json.Unmarshal(req.ApiNodeAddrsJSON, &apiNodeAddrs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedNodeDAO.UpdateNodeAPIConfig(tx, req.NodeId, apiNodeAddrs)
 	if err != nil {
 		return nil, err
 	}
