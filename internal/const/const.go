@@ -21,5 +21,5 @@ const (
 	NodeVersion = "0.5.8"
 
 	// SQLVersion SQL版本号
-	SQLVersion = "2"
+	SQLVersion = "3"
 )
