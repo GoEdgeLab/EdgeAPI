@@ -94,13 +94,15 @@ func (this *NodeQueue) InstallNode(nodeId int64, installStatus *models.NodeInsta
 	if err != nil {
 		return err
 	}
-	if login == nil {
-		installStatus.ErrorCode = "EMPTY_LOGIN"
-		return errors.New("can not find node login information")
-	}
-	loginParams, err := login.DecodeSSHParams()
-	if err != nil {
-		return err
+	var loginParams = &models.NodeLoginSSHParams{}
+	if login != nil {
+		sshLoginParams, err := login.DecodeSSHParams()
+		if err != nil {
+			return err
+		}
+		if sshLoginParams != nil {
+			loginParams = sshLoginParams
+		}
 	}
 
 	if len(loginParams.Host) == 0 {
