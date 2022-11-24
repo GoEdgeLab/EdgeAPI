@@ -108,7 +108,7 @@ func uploadLogs() error {
 		return nil
 	}
 
-	const hashSize = 5
+	const hashSize = 10
 	var hashList = []uint64{}
 
 Loop:
