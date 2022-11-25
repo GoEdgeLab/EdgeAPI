@@ -167,24 +167,27 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 		}
 
 		if isChanged {
-			// 发送消息
-			var message = ""
-			var messageType string
-			var messageLevel string
-			if result.IsOk {
-				message = "健康检查成功，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已恢复上线"
-				messageType = models.MessageTypeHealthCheckNodeUp
-				messageLevel = models.MessageLevelSuccess
-			} else {
-				message = "健康检查失败，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已自动下线"
-				messageType = models.MessageTypeHealthCheckNodeDown
-				messageLevel = models.MessageLevelError
-			}
+			// 在线状态发生变化
+			if healthCheckConfig.AutoDown {
+				// 发送消息
+				var message = ""
+				var messageType string
+				var messageLevel string
+				if result.IsOk {
+					message = "健康检查成功，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已恢复上线"
+					messageType = models.MessageTypeHealthCheckNodeUp
+					messageLevel = models.MessageLevelSuccess
+				} else {
+					message = "健康检查失败，节点\"" + result.Node.Name + "\"，IP\"" + result.NodeAddr + "\"已自动下线"
+					messageType = models.MessageTypeHealthCheckNodeDown
+					messageLevel = models.MessageLevelError
+				}
 
-			err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
-			if err != nil {
-				this.logErr("HealthCheckExecutor", err.Error())
-				return
+				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
+				if err != nil {
+					this.logErr("HealthCheckExecutor", err.Error())
+					return
+				}
 			}
 
 			// 触发阈值
