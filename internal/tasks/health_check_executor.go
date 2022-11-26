@@ -289,7 +289,7 @@ func (this *HealthCheckExecutor) runNodeOnce(healthCheckConfig *serverconfigs.He
 			MaxIdleConns:          1,
 			MaxIdleConnsPerHost:   1,
 			MaxConnsPerHost:       1,
-			IdleConnTimeout:       2 * time.Minute,
+			IdleConnTimeout:       10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 			TLSHandshakeTimeout:   0,
 			TLSClientConfig: &tls.Config{
