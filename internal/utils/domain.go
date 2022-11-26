@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var cacheKeyDomainReg1 = regexp.MustCompile(`^(?i)(?:http|https)://([\w-.]+)`)
+var cacheKeyDomainReg1 = regexp.MustCompile(`^(?i)(?:http|https)://([\w-.*]+)`) // 这里支持 *.example.com
 var cacheKeyDomainReg2 = regexp.MustCompile(`^([\w-.]+)`)
 
 // ParseDomainFromKey 从Key中获取域名
