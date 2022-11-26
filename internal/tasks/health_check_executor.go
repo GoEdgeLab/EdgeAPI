@@ -198,8 +198,10 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 			}
 		}
 
-		// 我们只处理IP的上下线，不修改节点的状态
-		return
+		// 结束处理 ，因为我们只处理IP的上下线，不修改节点的状态
+		if healthCheckConfig.AutoDown {
+			return
+		}
 	}
 
 	// 修改节点状态
@@ -216,6 +218,24 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 				message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
 				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
 			}
+			if err != nil {
+				this.logErr("HealthCheckExecutor", err.Error())
+				return
+			}
+		}
+	} else {
+		// 通知健康检查结果
+		var err error
+		if result.IsOk {
+			message := "节点\"" + result.Node.Name + "\"健康检查成功"
+			err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
+		} else {
+			message := "节点\"" + result.Node.Name + "\"健康检查失败"
+			err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
+		}
+		if err != nil {
+			this.logErr("HealthCheckExecutor", err.Error())
+			return
 		}
 	}
 }
