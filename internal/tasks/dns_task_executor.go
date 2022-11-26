@@ -72,7 +72,7 @@ func (this *DNSTaskExecutor) loop() error {
 				}
 			}
 		case dnsmodels.DNSTaskTypeNodeChange:
-			err = this.doNode(taskId, int64(task.NodeId))
+			err = this.doNode(taskId, int64(task.ClusterId), int64(task.NodeId))
 			if err != nil {
 				err = dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskError(nil, taskId, err.Error())
 				if err != nil {
@@ -269,8 +269,8 @@ func (this *DNSTaskExecutor) doServer(taskId int64, oldClusterId int64, serverId
 }
 
 // 修改节点相关记录
-func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
-	isOk := false
+func (this *DNSTaskExecutor) doNode(taskId int64, nodeClusterId int64, nodeId int64) error {
+	var isOk = false
 	defer func() {
 		if isOk {
 			err := dnsmodels.SharedDNSTaskDAO.UpdateDNSTaskDone(nil, taskId)
@@ -291,14 +291,21 @@ func (this *DNSTaskExecutor) doNode(taskId int64, nodeId int64) error {
 	}
 
 	// 转交给cluster统一处理
-	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
-	if err != nil {
-		return err
-	}
-	for _, clusterId := range clusterIds {
-		err = dnsmodels.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dnsmodels.DNSTaskTypeClusterChange)
+	if nodeClusterId > 0 {
+		err = dnsmodels.SharedDNSTaskDAO.CreateClusterTask(tx, nodeClusterId, dnsmodels.DNSTaskTypeClusterChange)
 		if err != nil {
 			return err
+		}
+	} else {
+		clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
+		if err != nil {
+			return err
+		}
+		for _, clusterId := range clusterIds {
+			err = dnsmodels.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dnsmodels.DNSTaskTypeClusterChange)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

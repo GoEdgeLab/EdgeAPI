@@ -1839,6 +1839,12 @@ func (this *NodeDAO) DeleteNodeFromCluster(tx *dbs.Tx, nodeId int64, clusterId i
 		return nil
 	}
 
+	// 提前通知DNS更新，因为后面集群会有变化
+	err = this.NotifyDNSUpdate(tx, nodeId)
+	if err != nil {
+		return err
+	}
+
 	var node = one.(*Node)
 
 	var secondaryClusterIds = []int64{}
@@ -2127,7 +2133,7 @@ func (this *NodeDAO) NotifyDNSUpdate(tx *dbs.Tx, nodeId int64) error {
 		if len(dnsInfo.DnsName) == 0 || dnsInfo.DnsDomainId <= 0 {
 			continue
 		}
-		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, nodeId, dns.DNSTaskTypeNodeChange)
+		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, clusterId, nodeId, dns.DNSTaskTypeNodeChange)
 		if err != nil {
 			return err
 		}

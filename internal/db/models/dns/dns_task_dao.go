@@ -78,8 +78,8 @@ func (this *DNSTaskDAO) CreateClusterRemoveTask(tx *dbs.Tx, clusterId int64, dom
 }
 
 // CreateNodeTask 生成节点任务
-func (this *DNSTaskDAO) CreateNodeTask(tx *dbs.Tx, nodeId int64, taskType DNSTaskType) error {
-	return this.CreateDNSTask(tx, 0, 0, nodeId, 0, "", taskType)
+func (this *DNSTaskDAO) CreateNodeTask(tx *dbs.Tx, clusterId int64, nodeId int64, taskType DNSTaskType) error {
+	return this.CreateDNSTask(tx, clusterId, 0, nodeId, 0, "", taskType)
 }
 
 // CreateServerTask 生成服务任务

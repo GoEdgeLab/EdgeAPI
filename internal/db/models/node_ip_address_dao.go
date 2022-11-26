@@ -604,7 +604,7 @@ func (this *NodeIPAddressDAO) NotifyUpdate(tx *dbs.Tx, addressId int64) error {
 	var role = address.(*NodeIPAddress).Role
 	switch role {
 	case nodeconfigs.NodeRoleNode:
-		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, nodeId, dns.DNSTaskTypeNodeChange)
+		err = dns.SharedDNSTaskDAO.CreateNodeTask(tx, 0, nodeId, dns.DNSTaskTypeNodeChange)
 		if err != nil {
 			return err
 		}
