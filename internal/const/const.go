@@ -18,7 +18,7 @@ const (
 
 	// 其他节点版本号，用来检测是否有需要升级的节点
 
-	NodeVersion = "0.5.8"
+	NodeVersion = "0.5.9"
 
 	// SQLVersion SQL版本号
 	SQLVersion = "4"
