@@ -111,7 +111,7 @@ func (this *NodeMonitorTask) MonitorCluster(cluster *models.NodeCluster) error {
 			err = nodeQueue.StartNode(nodeId)
 			if err != nil {
 				if !installers.IsGrantError(err) {
-					_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelError, "NODE", "start node from remote API failed: "+err.Error(), time.Now().Unix(), "", nil)
+					_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelInfo, "NODE", "start node from remote API failed: "+err.Error(), time.Now().Unix(), "", nil)
 				}
 			} else {
 				_ = models.SharedNodeLogDAO.CreateLog(nil, nodeconfigs.NodeRoleNode, nodeId, 0, 0, models.LevelSuccess, "NODE", "start node from remote API successfully", time.Now().Unix(), "", nil)
