@@ -74,6 +74,11 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, userId int64) error {
 		return err
 	}
 
+	err = SharedAPIAccessTokenDAO.DeleteAccessTokens(tx, 0, userId)
+	if err != nil {
+		return err
+	}
+
 	return this.NotifyUpdate(tx, userId)
 }
 
@@ -215,6 +220,14 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
+	}
+
+	// 删除AccessTokens
+	if !isOn {
+		err = SharedAPIAccessTokenDAO.DeleteAccessTokens(tx, 0, userId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return this.NotifyUpdate(tx, userId)

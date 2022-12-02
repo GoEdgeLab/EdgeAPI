@@ -425,7 +425,7 @@ func (this *AdminService) DeleteAdmin(ctx context.Context, req *pb.DeleteAdminRe
 
 	// TODO 超级管理员用户是不能删除的，或者要至少留一个超级管理员用户
 
-	_, err = models.SharedAdminDAO.DisableAdmin(tx, req.AdminId)
+	err = models.SharedAdminDAO.DisableAdmin(tx, req.AdminId)
 	if err != nil {
 		return nil, err
 	}

@@ -81,3 +81,16 @@ func (this *APIAccessTokenDAO) FindAccessToken(tx *dbs.Tx, token string) (*APIAc
 	}
 	return one.(*APIAccessToken), nil
 }
+
+// DeleteAccessTokens 删除用户的令牌
+func (this *APIAccessTokenDAO) DeleteAccessTokens(tx *dbs.Tx, adminId int64, userId int64) error {
+	var query = this.Query(tx)
+	if adminId > 0 {
+		query.Attr("adminId", adminId)
+	} else if userId > 0 {
+		query.Attr("userId", userId)
+	} else {
+		return nil
+	}
+	return query.DeleteQuickly()
+}

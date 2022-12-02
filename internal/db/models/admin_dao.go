@@ -44,11 +44,17 @@ func (this *AdminDAO) EnableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, err
 }
 
 // DisableAdmin 禁用条目
-func (this *AdminDAO) DisableAdmin(tx *dbs.Tx, id int64) (rowsAffected int64, err error) {
-	return this.Query(tx).
-		Pk(id).
+func (this *AdminDAO) DisableAdmin(tx *dbs.Tx, adminId int64) error {
+	err := this.Query(tx).
+		Pk(adminId).
 		Set("state", AdminStateDisabled).
-		Update()
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	// 删除AccessTokens
+	return SharedAPIAccessTokenDAO.DeleteAccessTokens(tx, adminId, 0)
 }
 
 // FindEnabledAdmin 查找启用中的条目
@@ -190,7 +196,19 @@ func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, ca
 	}
 	op.IsOn = isOn
 	err := this.Save(tx, op)
-	return err
+	if err != nil {
+		return err
+	}
+
+	if !isOn {
+		// 删除AccessTokens
+		err = SharedAPIAccessTokenDAO.DeleteAccessTokens(tx, adminId, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CheckAdminUsername 检查用户名是否存在
