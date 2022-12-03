@@ -16,6 +16,7 @@ type NSRoute struct {
 	Ranges     dbs.JSON `field:"ranges"`     // 范围
 	Order      uint32   `field:"order"`      // 排序
 	Version    uint64   `field:"version"`    // 版本号
+	Priority   uint32   `field:"priority"`   // 优先级，越高越优先
 	Code       string   `field:"code"`       // 代号
 	State      uint8    `field:"state"`      // 状态
 }
@@ -33,6 +34,7 @@ type NSRouteOperator struct {
 	Ranges     any // 范围
 	Order      any // 排序
 	Version    any // 版本号
+	Priority   any // 优先级，越高越优先
 	Code       any // 代号
 	State      any // 状态
 }
