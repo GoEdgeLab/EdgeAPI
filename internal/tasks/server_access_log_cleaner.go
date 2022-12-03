@@ -16,7 +16,7 @@ import (
 func init() {
 	dbs.OnReadyDone(func() {
 		goman.New(func() {
-			NewServerAccessLogCleaner(12 * time.Hour).Start()
+			NewServerAccessLogCleaner(6 * time.Hour).Start()
 		})
 	})
 }
@@ -52,7 +52,7 @@ func (this *ServerAccessLogCleaner) Loop() error {
 	if len(configJSON) == 0 {
 		return nil
 	}
-	config := &systemconfigs.DatabaseConfig{}
+	var config = &systemconfigs.DatabaseConfig{}
 	err = json.Unmarshal(configJSON, config)
 	if err != nil {
 		return err
@@ -60,8 +60,8 @@ func (this *ServerAccessLogCleaner) Loop() error {
 	if config.ServerAccessLog.Clean.Days <= 0 {
 		return nil
 	}
-	days := config.ServerAccessLog.Clean.Days
-	endDay := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days+1))
+	var days = config.ServerAccessLog.Clean.Days
+	var endDay = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days+1))
 
 	// 当前连接的数据库
 	db, err := dbs.Default()
@@ -113,7 +113,7 @@ func (this *ServerAccessLogCleaner) cleanDB(db *dbs.DB, endDay string) error {
 	if len(columnNames) != 1 {
 		return errors.New("invalid column names: " + strings.Join(columnNames, ", "))
 	}
-	columnName := columnNames[0]
+	var columnName = columnNames[0]
 	var reg = regexp.MustCompile(`^(?i)(edgeHTTPAccessLogs|edgeNSAccessLogs)_(\d{8})(_\d{4})?$`)
 	for _, one := range ones {
 		var tableName = one.GetString(columnName)
