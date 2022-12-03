@@ -4,7 +4,7 @@ import "github.com/iwind/TeaGo/dbs"
 
 // ClientSystem 终端操作系统信息
 type ClientSystem struct {
-	Id         uint32   `field:"id"`         // ID
+	Id         uint64   `field:"id"`         // ID
 	Name       string   `field:"name"`       // 系统名称
 	Codes      dbs.JSON `field:"codes"`      // 代号
 	CreatedDay string   `field:"createdDay"` // 创建日期YYYYMMDD

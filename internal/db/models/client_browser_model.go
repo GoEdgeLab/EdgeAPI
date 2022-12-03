@@ -4,7 +4,7 @@ import "github.com/iwind/TeaGo/dbs"
 
 // ClientBrowser 终端浏览器信息
 type ClientBrowser struct {
-	Id         uint32   `field:"id"`         // ID
+	Id         uint64   `field:"id"`         // ID
 	Name       string   `field:"name"`       // 浏览器名称
 	Codes      dbs.JSON `field:"codes"`      // 代号
 	CreatedDay string   `field:"createdDay"` // 创建日期YYYYMMDD
