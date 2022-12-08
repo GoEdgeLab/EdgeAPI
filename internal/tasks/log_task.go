@@ -86,7 +86,7 @@ func (this *LogTask) RunMonitor() {
 
 func (this *LogTask) LoopMonitor() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

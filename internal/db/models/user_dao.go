@@ -340,13 +340,27 @@ func (this *UserDAO) ListEnabledUserIds(tx *dbs.Tx, offset, size int64) ([]int64
 	return result, nil
 }
 
-// CheckUserPassword 检查用户名、密码
+// CheckUserPassword 检查用户名+密码
 func (this *UserDAO) CheckUserPassword(tx *dbs.Tx, username string, encryptedPassword string) (int64, error) {
 	if len(username) == 0 || len(encryptedPassword) == 0 {
 		return 0, nil
 	}
 	return this.Query(tx).
 		Attr("username", username).
+		Attr("password", encryptedPassword).
+		Attr("state", UserStateEnabled).
+		Attr("isOn", true).
+		ResultPk().
+		FindInt64Col(0)
+}
+
+// CheckUserEmailPassword 检查邮箱+密码
+func (this *UserDAO) CheckUserEmailPassword(tx *dbs.Tx, verifiedEmail string, encryptedPassword string) (int64, error) {
+	if len(verifiedEmail) == 0 || len(encryptedPassword) == 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		Attr("verifiedEmail", verifiedEmail).
 		Attr("password", encryptedPassword).
 		Attr("state", UserStateEnabled).
 		Attr("isOn", true).
@@ -584,6 +598,30 @@ func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) (bool, erro
 	}
 
 	return newServersEnabled, nil
+}
+
+// FindUserIdWithVerifiedEmail 使用验证后Email查找用户ID
+func (this *UserDAO) FindUserIdWithVerifiedEmail(tx *dbs.Tx, verifiedEmail string) (int64, error) {
+	if len(verifiedEmail) == 0 {
+
+	}
+	return this.Query(tx).
+		ResultPk().
+		State(UserStateEnabled).
+		Attr("verifiedEmail", verifiedEmail).
+		FindInt64Col(0)
+}
+
+// UpdateUserVerifiedEmail 修改已激活邮箱
+func (this *UserDAO) UpdateUserVerifiedEmail(tx *dbs.Tx, userId int64, verifiedEmail string) error {
+	if userId <= 0 {
+		return nil
+	}
+	return this.Query(tx).
+		Pk(userId).
+		Set("verifiedEmail", verifiedEmail).
+		Set("emailIsVerified", true).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 用户变更通知

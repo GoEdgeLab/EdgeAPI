@@ -13,6 +13,7 @@ type User struct {
 	Tel             string   `field:"tel"`             // 联系电话
 	Remark          string   `field:"remark"`          // 备注
 	Email           string   `field:"email"`           // 邮箱地址
+	VerifiedEmail   string   `field:"verifiedEmail"`   // 激活后的邮箱
 	EmailIsVerified uint8    `field:"emailIsVerified"` // 邮箱是否已验证
 	AvatarFileId    uint64   `field:"avatarFileId"`    // 头像文件ID
 	CreatedAt       uint64   `field:"createdAt"`       // 创建时间
@@ -43,6 +44,7 @@ type UserOperator struct {
 	Tel             any // 联系电话
 	Remark          any // 备注
 	Email           any // 邮箱地址
+	VerifiedEmail   any // 激活后的邮箱
 	EmailIsVerified any // 邮箱是否已验证
 	AvatarFileId    any // 头像文件ID
 	CreatedAt       any // 创建时间

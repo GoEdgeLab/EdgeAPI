@@ -40,7 +40,7 @@ func (this *NodeTaskExtractor) Start() {
 
 func (this *NodeTaskExtractor) Loop() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

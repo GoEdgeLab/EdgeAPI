@@ -1,4 +1,4 @@
-package services
+package users
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
@@ -13,15 +14,15 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
-	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"strings"
 	"time"
 )
 
 // UserService 用户相关服务
 type UserService struct {
-	BaseService
+	services.BaseService
 }
 
 // CreateUser 创建用户
@@ -38,59 +39,6 @@ func (this *UserService) CreateUser(ctx context.Context, req *pb.CreateUserReque
 		return nil, err
 	}
 	return &pb.CreateUserResponse{UserId: userId}, nil
-}
-
-// RegisterUser 注册用户
-func (this *UserService) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*pb.RPCSuccess, error) {
-	userId, err := this.ValidateUserNode(ctx, false)
-	if err != nil {
-		return nil, err
-	}
-
-	if userId > 0 {
-		return nil, this.PermissionError()
-	}
-
-	// 注册配置
-	configJSON, err := models.SharedSysSettingDAO.ReadSetting(nil, systemconfigs.SettingCodeUserRegisterConfig)
-	if err != nil {
-		return nil, err
-	}
-	if len(configJSON) == 0 {
-		return nil, errors.New("the registration has been disabled")
-	}
-	var config = userconfigs.DefaultUserRegisterConfig()
-	err = json.Unmarshal(configJSON, config)
-	if err != nil {
-		return nil, err
-	}
-	if !config.IsOn {
-		return nil, errors.New("the registration has been disabled")
-	}
-
-	err = this.RunTx(func(tx *dbs.Tx) error {
-		// 检查用户名
-		exists, err := models.SharedUserDAO.ExistUser(tx, 0, req.Username)
-		if err != nil {
-			return err
-		}
-		if exists {
-			return errors.New("the username exists already")
-		}
-
-		// 创建用户
-		_, err = models.SharedUserDAO.CreateUser(tx, req.Username, req.Password, req.Fullname, req.Mobile, "", req.Email, "", req.Source, config.ClusterId, config.Features, req.Ip, !config.RequireVerification)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return this.Success()
 }
 
 // VerifyUser 审核用户
@@ -300,6 +248,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		Mobile:                 user.Mobile,
 		Tel:                    user.Tel,
 		Email:                  user.Email,
+		VerifiedEmail:          user.VerifiedEmail,
 		Remark:                 user.Remark,
 		IsOn:                   user.IsOn,
 		CreatedAt:              int64(user.CreatedAt),
@@ -360,6 +309,28 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 
 	var tx = this.NullTx()
 
+	// 邮箱登录
+	if strings.Contains(req.Username, "@") {
+		// 是否允许
+		registerConfig, err := models.SharedSysSettingDAO.ReadUserRegisterConfig(tx)
+		if err != nil {
+			return nil, err
+		}
+		if registerConfig != nil && registerConfig.EmailVerification.CanLogin {
+			userId, err := models.SharedUserDAO.CheckUserEmailPassword(tx, req.Username, req.Password)
+			if err != nil {
+				return nil, err
+			}
+			if userId > 0 {
+				return &pb.LoginUserResponse{
+					UserId: userId,
+					IsOk:   true,
+				}, nil
+			}
+		}
+	}
+
+	// 用户名登录
 	userId, err := models.SharedUserDAO.CheckUserPassword(tx, req.Username, req.Password)
 	if err != nil {
 		utils.PrintError(err)
@@ -824,4 +795,26 @@ func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.Rene
 	return &pb.RenewUserServersStateResponse{
 		IsEnabled: isEnabled,
 	}, nil
+}
+
+// CheckUserEmailIsUsing 检查邮箱是否被使用
+func (this *UserService) CheckUserEmailIsUsing(ctx context.Context, req *pb.CheckUserEmailIsUsingRequest) (*pb.CheckUserEmailIsUsingResponse, error) {
+	userId, err := this.ValidateUserNode(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Email) == 0 {
+		return nil, errors.New("'email' required")
+	}
+
+	var tx = this.NullTx()
+	emailOwnerUserId, err := models.SharedUserDAO.FindUserIdWithVerifiedEmail(tx, req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if emailOwnerUserId > 0 && userId != emailOwnerUserId {
+		return &pb.CheckUserEmailIsUsingResponse{IsUsing: true}, nil
+	}
+	return &pb.CheckUserEmailIsUsingResponse{IsUsing: false}, nil
 }

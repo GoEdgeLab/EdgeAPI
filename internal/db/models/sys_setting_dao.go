@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
+	"strconv"
 	"time"
 )
 
@@ -172,6 +173,21 @@ func (this *SysSettingDAO) ReadAdminUIConfig(tx *dbs.Tx, cacheMap *utils.CacheMa
 	return &systemconfigs.AdminUIConfig{}, nil
 }
 
+// ReadProductName 读取设置的产品名称
+func (this *SysSettingDAO) ReadProductName(tx *dbs.Tx) (string, error) {
+	productName, err := this.Query(tx).
+		Attr("code", systemconfigs.SettingCodeAdminUIConfig).
+		Result("JSON_EXTRACT(value, '$.productName')").
+		FindStringCol("")
+	if err != nil {
+		return "", err
+	}
+	if len(productName) > 0 {
+		return strconv.Unquote(productName)
+	}
+	return "", nil
+}
+
 // ReadUserUIConfig 读取用户UI配置
 func (this *SysSettingDAO) ReadUserUIConfig(tx *dbs.Tx) (*systemconfigs.UserUIConfig, error) {
 	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserUIConfig)
@@ -222,6 +238,24 @@ func (this *SysSettingDAO) ReadUserServerConfig(tx *dbs.Tx) (*userconfigs.UserSe
 	}
 
 	var config = userconfigs.DefaultUserServerConfig()
+	err = json.Unmarshal(valueJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+// ReadUserRegisterConfig 读取用户注册配置
+func (this *SysSettingDAO) ReadUserRegisterConfig(tx *dbs.Tx) (*userconfigs.UserRegisterConfig, error) {
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeUserRegisterConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) == 0 {
+		return userconfigs.DefaultUserRegisterConfig(), nil
+	}
+
+	var config = userconfigs.DefaultUserRegisterConfig()
 	err = json.Unmarshal(valueJSON, config)
 	if err != nil {
 		return nil, err

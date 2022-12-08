@@ -4,6 +4,7 @@ package nodes
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services/users"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc"
 	"reflect"
@@ -198,11 +199,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.MessageMediaService{}).(*services.MessageMediaService)
-		pb.RegisterMessageMediaServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		var instance = this.serviceInstance(&services.MessageRecipientGroupService{}).(*services.MessageRecipientGroupService)
 		pb.RegisterMessageRecipientGroupServiceServer(server, instance)
 		this.rest(instance)
@@ -343,7 +339,7 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.UserService{}).(*services.UserService)
+		var instance = this.serviceInstance(&users.UserService{}).(*users.UserService)
 		pb.RegisterUserServiceServer(server, instance)
 		this.rest(instance)
 	}

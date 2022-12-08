@@ -92,7 +92,7 @@ func (this *HealthCheckClusterTask) Stop() {
 // Loop 单个循环任务
 func (this *HealthCheckClusterTask) Loop() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

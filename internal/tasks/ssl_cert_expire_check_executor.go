@@ -45,7 +45,7 @@ func (this *SSLCertExpireCheckExecutor) Start() {
 // Loop 单次执行
 func (this *SSLCertExpireCheckExecutor) Loop() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

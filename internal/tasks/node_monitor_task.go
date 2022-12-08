@@ -57,7 +57,7 @@ func (this *NodeMonitorTask) Start() {
 
 func (this *NodeMonitorTask) Loop() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

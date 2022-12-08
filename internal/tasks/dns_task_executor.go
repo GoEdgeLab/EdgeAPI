@@ -48,7 +48,7 @@ func (this *DNSTaskExecutor) Start() {
 }
 
 func (this *DNSTaskExecutor) Loop() error {
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

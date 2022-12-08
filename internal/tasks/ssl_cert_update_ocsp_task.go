@@ -53,7 +53,7 @@ func (this *SSLCertUpdateOCSPTask) Start() {
 
 func (this *SSLCertUpdateOCSPTask) Loop() error {
 	// 检查是否为主节点
-	if !models.SharedAPINodeDAO.CheckAPINodeIsPrimaryWithoutErr() {
+	if !this.IsPrimaryNode() {
 		return nil
 	}
 

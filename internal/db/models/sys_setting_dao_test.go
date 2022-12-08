@@ -42,3 +42,8 @@ func TestSysSettingDAO_CompareInt64Setting(t *testing.T) {
 	}
 	t.Log("result:", i)
 }
+
+func TestSysSettingDAO_ReadProductName(t *testing.T) {
+	var tx *dbs.Tx
+	t.Log(NewSysSettingDAO().ReadProductName(tx))
+}
