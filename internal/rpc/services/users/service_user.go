@@ -797,8 +797,8 @@ func (this *UserService) RenewUserServersState(ctx context.Context, req *pb.Rene
 	}, nil
 }
 
-// CheckUserEmailIsUsing 检查邮箱是否被使用
-func (this *UserService) CheckUserEmailIsUsing(ctx context.Context, req *pb.CheckUserEmailIsUsingRequest) (*pb.CheckUserEmailIsUsingResponse, error) {
+// CheckUserEmail 检查邮箱是否被使用
+func (this *UserService) CheckUserEmail(ctx context.Context, req *pb.CheckUserEmailRequest) (*pb.CheckUserEmailResponse, error) {
 	userId, err := this.ValidateUserNode(ctx, false)
 	if err != nil {
 		return nil, err
@@ -814,7 +814,35 @@ func (this *UserService) CheckUserEmailIsUsing(ctx context.Context, req *pb.Chec
 		return nil, err
 	}
 	if emailOwnerUserId > 0 && userId != emailOwnerUserId {
-		return &pb.CheckUserEmailIsUsingResponse{IsUsing: true}, nil
+		return &pb.CheckUserEmailResponse{Exists: true}, nil
 	}
-	return &pb.CheckUserEmailIsUsingResponse{IsUsing: false}, nil
+	return &pb.CheckUserEmailResponse{Exists: false}, nil
+}
+
+// FindUserVerifiedEmailWithUsername 根据用户名查询用户绑定的邮箱
+func (this *UserService) FindUserVerifiedEmailWithUsername(ctx context.Context, req *pb.FindUserVerifiedEmailWithUsernameRequest) (*pb.FindUserVerifiedEmailWithUsernameResponse, error) {
+	_, err := this.ValidateUserNode(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	userId, err := models.SharedUserDAO.FindEnabledUserIdWithUsername(tx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if userId <= 0 {
+		return &pb.FindUserVerifiedEmailWithUsernameResponse{
+			Email: "",
+		}, nil
+	}
+
+	email, err := models.SharedUserDAO.FindUserVerifiedEmail(tx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindUserVerifiedEmailWithUsernameResponse{
+		Email: email,
+	}, nil
 }

@@ -142,11 +142,36 @@ func (this *UserDAO) FindEnabledUserIdWithUsername(tx *dbs.Tx, username string) 
 		FindInt64Col(0)
 }
 
-// FindUserFullname 获取管理员名称
+// FindUserId 根据多个条件查找用户ID
+func (this *UserDAO) FindUserId(tx *dbs.Tx, verifiedEmail string, verifiedMobile string) (int64, error) {
+	var query = this.Query(tx).
+		State(UserStateEnabled).
+		ResultPk()
+
+	if len(verifiedEmail) > 0 {
+		query.Attr("verifiedEmail", verifiedEmail)
+	} else if len(verifiedMobile) > 0 {
+		query.Attr("verifiedMobile", verifiedMobile)
+	} else {
+		return 0, nil
+	}
+
+	return query.FindInt64Col(0)
+}
+
+// FindUserFullname 获取用户名称
 func (this *UserDAO) FindUserFullname(tx *dbs.Tx, userId int64) (string, error) {
 	return this.Query(tx).
 		Pk(userId).
 		Result("fullname").
+		FindStringCol("")
+}
+
+// FindUserVerifiedEmail 查询用户已绑定邮箱
+func (this *UserDAO) FindUserVerifiedEmail(tx *dbs.Tx, userId int64) (string, error) {
+	return this.Query(tx).
+		Pk(userId).
+		Result("verifiedEmail").
 		FindStringCol("")
 }
 
@@ -257,8 +282,20 @@ func (this *UserDAO) UpdateUserLogin(tx *dbs.Tx, userId int64, username string, 
 	if len(password) > 0 {
 		op.Password = stringutil.Md5(password)
 	}
-	err := this.Save(tx, op)
-	return err
+	return this.Save(tx, op)
+}
+
+// UpdateUserPassword 修改用户密码
+func (this *UserDAO) UpdateUserPassword(tx *dbs.Tx, userId int64, password string) error {
+	if userId <= 0 {
+		return errors.New("invalid userId")
+	}
+	var op = NewUserOperator()
+	op.Id = userId
+	if len(password) > 0 {
+		op.Password = stringutil.Md5(password)
+	}
+	return this.Save(tx, op)
 }
 
 // CountAllEnabledUsers 计算用户数量

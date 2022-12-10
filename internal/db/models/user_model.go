@@ -10,6 +10,7 @@ type User struct {
 	Password        string   `field:"password"`        // 密码
 	Fullname        string   `field:"fullname"`        // 真实姓名
 	Mobile          string   `field:"mobile"`          // 手机号
+	VerifiedMobile  string   `field:"verifiedMobile"`  // 已验证手机号
 	Tel             string   `field:"tel"`             // 联系电话
 	Remark          string   `field:"remark"`          // 备注
 	Email           string   `field:"email"`           // 邮箱地址
@@ -41,6 +42,7 @@ type UserOperator struct {
 	Password        any // 密码
 	Fullname        any // 真实姓名
 	Mobile          any // 手机号
+	VerifiedMobile  any // 已验证手机号
 	Tel             any // 联系电话
 	Remark          any // 备注
 	Email           any // 邮箱地址
