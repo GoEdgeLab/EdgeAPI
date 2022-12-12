@@ -1,18 +1,19 @@
 // Copyright 2022 Liuxiangchao iwind.liu@gmail.com. All rights reserved. Official site: https://goedge.cn .
 
-package services
+package clients
 
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
 
 // FormalClientSystemService 操作系统信息库服务
 type FormalClientSystemService struct {
-	BaseService
+	services.BaseService
 }
 
 // CreateFormalClientSystem 创建操作系统信息

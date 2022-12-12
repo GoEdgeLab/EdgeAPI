@@ -4,6 +4,7 @@ package nodes
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services/clients"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services/users"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"google.golang.org/grpc"
@@ -404,12 +405,12 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.FormalClientSystemService{}).(*services.FormalClientSystemService)
+		var instance = this.serviceInstance(&clients.FormalClientSystemService{}).(*clients.FormalClientSystemService)
 		pb.RegisterFormalClientSystemServiceServer(server, instance)
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.FormalClientBrowserService{}).(*services.FormalClientBrowserService)
+		var instance = this.serviceInstance(&clients.FormalClientBrowserService{}).(*clients.FormalClientBrowserService)
 		pb.RegisterFormalClientBrowserServiceServer(server, instance)
 		this.rest(instance)
 	}
