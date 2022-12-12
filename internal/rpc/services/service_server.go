@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/clients"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
@@ -1714,7 +1715,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return err
 			}
 			if systemId == 0 {
-				err = models.SharedClientSystemDAO.CreateSystemIfNotExists(tx, result.Name)
+				err = clients.SharedClientSystemDAO.CreateSystemIfNotExists(tx, result.Name)
 				if err != nil {
 					return err
 				}
@@ -1745,7 +1746,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				return err
 			}
 			if browserId == 0 {
-				err = models.SharedClientBrowserDAO.CreateBrowserIfNotExists(tx, result.Name)
+				err = clients.SharedClientBrowserDAO.CreateBrowserIfNotExists(tx, result.Name)
 				if err != nil {
 					return err
 				}

@@ -1,4 +1,4 @@
-package models_test
+package clients_test
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"

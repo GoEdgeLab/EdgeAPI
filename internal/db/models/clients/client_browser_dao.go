@@ -1,6 +1,7 @@
-package models
+package clients
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/ttlcache"
@@ -130,7 +131,7 @@ func (this *ClientBrowserDAO) CreateBrowserIfNotExists(tx *dbs.Tx, browserName s
 	op.CreatedDay = timeutil.Format("Ymd")
 	op.State = ClientBrowserStateEnabled
 	browserId, err = this.SaveInt64(tx, op)
-	if err != nil && CheckSQLErrCode(err, 1062 /** duplicate entry **/) {
+	if err != nil && models.CheckSQLErrCode(err, 1062 /** duplicate entry **/) {
 		return nil
 	}
 

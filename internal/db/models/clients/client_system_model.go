@@ -1,4 +1,4 @@
-package models
+package clients
 
 import "github.com/iwind/TeaGo/dbs"
 
