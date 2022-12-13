@@ -72,3 +72,11 @@ func CheckSQLErrCode(err error, code uint16) bool {
 
 	return false
 }
+
+// CheckSQLDuplicateErr 检查Duplicate错误
+func CheckSQLDuplicateErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	return CheckSQLErrCode(err, 1062)
+}

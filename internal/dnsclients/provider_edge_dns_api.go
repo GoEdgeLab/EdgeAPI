@@ -206,6 +206,23 @@ func (this *EdgeDNSAPIProvider) GetRoutes(domain string) (routes []*dnstypes.Rou
 		}
 	}
 
+	// Agent
+	{
+		var routesResp = &edgeapi.FindAllNSRoutesResponse{}
+		err = this.doAPI("/NSRouteService/FindAllAgentNSRoutes", map[string]any{}, routesResp)
+		if err != nil {
+			// 忽略错误，因为老版本的EdgeDNS没有提供这个接口
+			err = nil
+		} else {
+			for _, route := range routesResp.Data.NSRoutes {
+				routes = append(routes, &dnstypes.Route{
+					Name: route.Name,
+					Code: route.Code,
+				})
+			}
+		}
+	}
+
 	// 自定义
 	{
 		var routesResp = &edgeapi.FindAllNSRoutesResponse{}

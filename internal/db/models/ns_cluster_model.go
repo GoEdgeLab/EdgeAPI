@@ -23,6 +23,7 @@ type NSCluster struct {
 	Answer          dbs.JSON `field:"answer"`          // 应答设置
 	SoaSerial       uint64   `field:"soaSerial"`       // SOA序列号
 	Email           string   `field:"email"`           // 管理员邮箱
+	DetectAgents    bool     `field:"detectAgents"`    // 是否监测Agents
 }
 
 type NSClusterOperator struct {
@@ -45,6 +46,7 @@ type NSClusterOperator struct {
 	Answer          any // 应答设置
 	SoaSerial       any // SOA序列号
 	Email           any // 管理员邮箱
+	DetectAgents    any // 是否监测Agents
 }
 
 func NewNSClusterOperator() *NSClusterOperator {

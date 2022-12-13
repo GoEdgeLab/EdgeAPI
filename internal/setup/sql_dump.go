@@ -49,6 +49,14 @@ var recordsTables = []*SQLRecordsTable{
 		TableName:    "edgeFormalClientBrowsers",
 		UniqueFields: []string{"dataId"},
 	},
+	{
+		TableName:    "edgeClientAgents",
+		UniqueFields: []string{"code"},
+	},
+	{
+		TableName:    "edgeClientAgentIPs",
+		UniqueFields: []string{"agentId", "ip"},
+	},
 }
 
 type sqlItem struct {
