@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/clients"
 	"github.com/TeaOSLab/EdgeAPI/internal/rpc/services"
+	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -16,8 +17,7 @@ type ClientAgentIPService struct {
 
 // CreateClientAgentIPs 创建一组IP
 func (this *ClientAgentIPService) CreateClientAgentIPs(ctx context.Context, req *pb.CreateClientAgentIPsRequest) (*pb.RPCSuccess, error) {
-	// 先不支持网站服务节点，避免影响普通用户
-	_, err := this.ValidateNSNode(ctx)
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (this *ClientAgentIPService) CreateClientAgentIPs(ctx context.Context, req 
 
 // ListClientAgentIPsAfterId 查询最新的IP
 func (this *ClientAgentIPService) ListClientAgentIPsAfterId(ctx context.Context, req *pb.ListClientAgentIPsAfterIdRequest) (*pb.ListClientAgentIPsAfterIdResponse, error) {
-	_, err := this.ValidateNSNode(ctx)
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (this *ClientAgentIPService) ListClientAgentIPsAfterId(ctx context.Context,
 		pbIPs = append(pbIPs, &pb.ClientAgentIP{
 			Id:  int64(agentIP.Id),
 			Ip:  agentIP.IP,
-			Ptr: "",
+			Ptr: agentIP.Ptr, // 导出时需要
 			ClientAgent: &pb.ClientAgent{
 				Id:          agentId,
 				Name:        "",

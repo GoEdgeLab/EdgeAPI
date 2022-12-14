@@ -88,7 +88,7 @@ func (this *ClientAgentIPDAO) ListIPsAfterId(tx *dbs.Tx, id int64, size int64) (
 	}
 
 	_, err = this.Query(tx).
-		Result("id", "ip", "agentId").
+		Result("id", "ip", "ptr", "agentId").
 		Gt("id", id).
 		AscPk().
 		Limit(size). // 限制单次读取个数
