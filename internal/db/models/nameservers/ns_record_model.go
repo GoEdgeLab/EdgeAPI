@@ -12,6 +12,11 @@ type NSRecord struct {
 	Type        string   `field:"type"`        // 类型
 	Value       string   `field:"value"`       // 值
 	MxPriority  uint32   `field:"mxPriority"`  // MX优先级
+	SrvPriority uint32   `field:"srvPriority"` // SRV优先级
+	SrvWeight   uint32   `field:"srvWeight"`   // SRV权重
+	SrvPort     uint32   `field:"srvPort"`     // SRV端口
+	CaaFlag     uint8    `field:"caaFlag"`     // CAA Flag
+	CaaTag      string   `field:"caaTag"`      // CAA TAG
 	Ttl         uint32   `field:"ttl"`         // TTL（秒）
 	Weight      uint32   `field:"weight"`      // 权重
 	RouteIds    dbs.JSON `field:"routeIds"`    // 线路
@@ -29,6 +34,11 @@ type NSRecordOperator struct {
 	Type        any // 类型
 	Value       any // 值
 	MxPriority  any // MX优先级
+	SrvPriority any // SRV优先级
+	SrvWeight   any // SRV权重
+	SrvPort     any // SRV端口
+	CaaFlag     any // CAA Flag
+	CaaTag      any // CAA TAG
 	Ttl         any // TTL（秒）
 	Weight      any // 权重
 	RouteIds    any // 线路
