@@ -2494,6 +2494,14 @@ func (this *ServerDAO) UpdateServersClusterIdWithPlanId(tx *dbs.Tx, planId int64
 
 // UpdateServerUserPlanId 设置服务所属套餐
 func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPlanId int64) error {
+	oldClusterId, err := this.Query(tx).
+		Pk(serverId).
+		Result("clusterId").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+
 	// 取消套餐
 	if userPlanId <= 0 {
 		// 所属用户
@@ -2524,7 +2532,24 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 		if err != nil {
 			return err
 		}
-		return this.NotifyUpdate(tx, serverId)
+		err = this.NotifyUpdate(tx, serverId)
+		if err != nil {
+			return err
+		}
+
+		// 通知DNS更新
+		if oldClusterId != clusterId {
+			if oldClusterId > 0 {
+				err = this.NotifyClusterDNSUpdate(tx, oldClusterId, serverId)
+				if err != nil {
+					return err
+				}
+			}
+
+			return this.NotifyClusterDNSUpdate(tx, clusterId, serverId)
+		}
+
+		return nil
 	}
 
 	// 设置新套餐
@@ -2544,16 +2569,34 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 		return errors.New("can not find plan with id '" + types.String(userPlan.PlanId) + "'")
 	}
 
+	var clusterId = int64(plan.ClusterId)
 	err = this.Query(tx).
 		Pk(serverId).
 		Set("userPlanId", userPlanId).
 		Set("lastUserPlanId", userPlanId).
-		Set("clusterId", plan.ClusterId).
+		Set("clusterId", clusterId).
 		UpdateQuickly()
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, serverId)
+	err = this.NotifyUpdate(tx, serverId)
+	if err != nil {
+		return err
+	}
+
+	// 通知DNS更新
+	if oldClusterId != clusterId {
+		if oldClusterId > 0 {
+			err = this.NotifyClusterDNSUpdate(tx, oldClusterId, serverId)
+			if err != nil {
+				return err
+			}
+		}
+
+		return this.NotifyClusterDNSUpdate(tx, clusterId, serverId)
+	}
+
+	return nil
 }
 
 // FindServerLastUserPlanIdAndUserId 查找最后使用的套餐
