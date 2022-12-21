@@ -306,6 +306,18 @@ func (this *SSLPolicyDAO) CheckUserPolicy(tx *dbs.Tx, userId int64, policyId int
 	return nil
 }
 
+// UpdatePolicyUser 修改策略所属用户
+func (this *SSLPolicyDAO) UpdatePolicyUser(tx *dbs.Tx, policyId int64, userId int64) error {
+	if policyId <= 0 || userId <= 0 {
+		return nil
+	}
+
+	return this.Query(tx).
+		Pk(policyId).
+		Set("userId", userId).
+		UpdateQuickly()
+}
+
 // NotifyUpdate 通知更新
 func (this *SSLPolicyDAO) NotifyUpdate(tx *dbs.Tx, policyId int64) error {
 	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithSSLPolicyIds(tx, []int64{policyId})

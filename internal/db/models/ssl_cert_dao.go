@@ -399,6 +399,17 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 	return nil
 }
 
+// UpdateCertUser 修改证书所属用户
+func (this *SSLCertDAO) UpdateCertUser(tx *dbs.Tx, certId int64, userId int64) error {
+	if certId <= 0 || userId <= 0 {
+		return nil
+	}
+	return this.Query(tx).
+		Pk(certId).
+		Set("userId", userId).
+		UpdateQuickly()
+}
+
 // ListCertsToUpdateOCSP 查找需要更新OCSP的证书
 func (this *SSLCertDAO) ListCertsToUpdateOCSP(tx *dbs.Tx, maxTries int, size int64) (result []*SSLCert, err error) {
 	var nowTime = time.Now().Unix()

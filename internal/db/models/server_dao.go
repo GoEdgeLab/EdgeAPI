@@ -2697,6 +2697,72 @@ func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTim
 	}
 }
 
+// UpdateServerUserId 修改服务所属用户
+func (this *ServerDAO) UpdateServerUserId(tx *dbs.Tx, serverId int64, userId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
+	serverOne, err := this.Query(tx).
+		Result("https", "tls").
+		Pk(serverId).
+		State(ServerStateEnabled).
+		Find()
+	if err != nil || serverOne == nil {
+		return err
+	}
+	var server = serverOne.(*Server)
+
+	// 修改服务
+	err = this.Query(tx).
+		Pk(serverId).
+		Set("userId", userId).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	// 修改证书相关数据
+	var sslPolicyIds = []int64{}
+	var httpsConfig = server.DecodeHTTPS()
+	if httpsConfig != nil && httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
+		sslPolicyIds = append(sslPolicyIds, httpsConfig.SSLPolicyRef.SSLPolicyId)
+	}
+
+	var tlsConfig = server.DecodeTLS()
+	if tlsConfig != nil && tlsConfig.SSLPolicyRef != nil && tlsConfig.SSLPolicyRef.SSLPolicyId > 0 {
+		sslPolicyIds = append(sslPolicyIds, tlsConfig.SSLPolicyRef.SSLPolicyId)
+	}
+	if len(sslPolicyIds) > 0 {
+		for _, sslPolicyId := range sslPolicyIds {
+			policy, err := SharedSSLPolicyDAO.FindEnabledSSLPolicy(tx, sslPolicyId)
+			if err != nil {
+				return err
+			}
+			if policy != nil {
+				// 修改策略
+				err = SharedSSLPolicyDAO.UpdatePolicyUser(tx, sslPolicyId, userId)
+				if err != nil {
+					return err
+				}
+
+				var certRefs = policy.DecodeCerts()
+				for _, certRef := range certRefs {
+					if certRef.CertId > 0 {
+						// 修改证书
+						err = SharedSSLCertDAO.UpdateCertUser(tx, certRef.CertId, userId)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return this.NotifyUpdate(tx, serverId)
+}
+
 // NotifyUpdate 同步服务所在的集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 	// 创建任务

@@ -42,10 +42,38 @@ func (this *Server) DecodeHTTPPorts() (ports []int) {
 	return
 }
 
+// DecodeHTTPS 解析HTTPS设置
+func (this *Server) DecodeHTTPS() *serverconfigs.HTTPSProtocolConfig {
+	if len(this.Https) == 0 {
+		return nil
+	}
+
+	var config = &serverconfigs.HTTPSProtocolConfig{}
+	err := json.Unmarshal(this.Https, config)
+	if err != nil {
+		remotelogs.Error("Server_DecodeHTTPS", err.Error())
+	}
+	return config
+}
+
+// DecodeTLS 解析TLS设置
+func (this *Server) DecodeTLS() *serverconfigs.TLSProtocolConfig {
+	if len(this.Tls) == 0 {
+		return nil
+	}
+
+	var config = &serverconfigs.TLSProtocolConfig{}
+	err := json.Unmarshal(this.Tls, config)
+	if err != nil {
+		remotelogs.Error("Server_DecodeTLS", err.Error())
+	}
+	return config
+}
+
 // DecodeHTTPSPorts 获取HTTPS所有端口
 func (this *Server) DecodeHTTPSPorts() (ports []int) {
 	if len(this.Https) > 0 {
-		config := &serverconfigs.HTTPSProtocolConfig{}
+		var config = &serverconfigs.HTTPSProtocolConfig{}
 		err := json.Unmarshal(this.Https, config)
 		if err != nil {
 			return nil

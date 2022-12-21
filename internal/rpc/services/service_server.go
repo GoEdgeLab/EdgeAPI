@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
@@ -770,7 +771,9 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 
 	var tx = this.NullTx()
 
+	var fromUser = false
 	if userId > 0 {
+		fromUser = true
 		req.UserId = userId
 	}
 
@@ -817,15 +820,17 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 用户
-		user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, int64(server.UserId))
-		if err != nil {
-			return nil, err
-		}
 		var pbUser *pb.User = nil
-		if user != nil {
-			pbUser = &pb.User{
-				Id:       int64(user.Id),
-				Fullname: user.Fullname,
+		if !fromUser {
+			user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, int64(server.UserId))
+			if err != nil {
+				return nil, err
+			}
+			if user != nil {
+				pbUser = &pb.User{
+					Id:       int64(user.Id),
+					Fullname: user.Fullname,
+				}
 			}
 		}
 
@@ -2238,4 +2243,29 @@ func (this *ServerService) ComposeServerConfig(ctx context.Context, req *pb.Comp
 		return nil, err
 	}
 	return &pb.ComposeServerConfigResponse{ServerConfigJSON: configJSON}, nil
+}
+
+// UpdateServerUser 修改服务所属用户
+func (this *ServerService) UpdateServerUser(ctx context.Context, req *pb.UpdateServerUserRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId")
+	}
+
+	if req.UserId <= 0 {
+		return nil, errors.New("invalid userId")
+	}
+
+	err = this.RunTx(func(tx *dbs.Tx) error {
+		return models.SharedServerDAO.UpdateServerUserId(tx, req.ServerId, req.UserId)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
 }
