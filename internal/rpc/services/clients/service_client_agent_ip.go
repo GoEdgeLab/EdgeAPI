@@ -17,7 +17,7 @@ type ClientAgentIPService struct {
 
 // CreateClientAgentIPs 创建一组IP
 func (this *ClientAgentIPService) CreateClientAgentIPs(ctx context.Context, req *pb.CreateClientAgentIPsRequest) (*pb.RPCSuccess, error) {
-	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS)
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (this *ClientAgentIPService) CreateClientAgentIPs(ctx context.Context, req 
 
 // ListClientAgentIPsAfterId 查询最新的IP
 func (this *ClientAgentIPService) ListClientAgentIPsAfterId(ctx context.Context, req *pb.ListClientAgentIPsAfterIdRequest) (*pb.ListClientAgentIPsAfterIdResponse, error) {
-	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS)
+	_, _, err := this.ValidateNodeId(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeDNS, rpcutils.UserTypeNode)
 	if err != nil {
 		return nil, err
 	}
