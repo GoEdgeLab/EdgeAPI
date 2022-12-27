@@ -434,7 +434,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 						continue
 					}
 
-					args = append(args, k+"=?")
+					args = append(args, "`"+k+"`"+"=?")
 					values = append(values, v)
 				}
 				values = append(values, one.GetInt("id"))

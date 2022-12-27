@@ -33,6 +33,7 @@ type User struct {
 	PriceType       string   `field:"priceType"`       // 计费类型：traffic|bandwidth
 	PricePeriod     string   `field:"pricePeriod"`     // 结算周期
 	ServersEnabled  uint8    `field:"serversEnabled"`  // 是否禁用所有服务
+	Notification    dbs.JSON `field:"notification"`    // 通知设置
 }
 
 type UserOperator struct {
@@ -65,6 +66,7 @@ type UserOperator struct {
 	PriceType       any // 计费类型：traffic|bandwidth
 	PricePeriod     any // 结算周期
 	ServersEnabled  any // 是否禁用所有服务
+	Notification    any // 通知设置
 }
 
 func NewUserOperator() *UserOperator {
