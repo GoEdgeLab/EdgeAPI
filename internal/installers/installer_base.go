@@ -150,7 +150,8 @@ func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.Node
 	var unameRetries = 3
 	var uname string
 	for i := 0; i < unameRetries; i++ {
-		uname, _, err = this.client.Exec("/usr/bin/uname -a")
+		// 此处不能使用 /usr/bin/uname，因为uname不一定在 /usr/bin 下
+		uname, _, err = this.client.Exec("uname -a")
 		if len(uname) == 0 {
 			continue
 		}
