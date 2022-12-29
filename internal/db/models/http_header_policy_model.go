@@ -2,7 +2,7 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
-//
+// HTTPHeaderPolicy Header定义
 type HTTPHeaderPolicy struct {
 	Id             uint32   `field:"id"`             // ID
 	IsOn           bool     `field:"isOn"`           // 是否启用
@@ -16,21 +16,23 @@ type HTTPHeaderPolicy struct {
 	ReplaceHeaders dbs.JSON `field:"replaceHeaders"` // 替换Header内容
 	Expires        dbs.JSON `field:"expires"`        // Expires单独设置
 	DeleteHeaders  dbs.JSON `field:"deleteHeaders"`  // 删除的Headers
+	Cors           dbs.JSON `field:"cors"`           // CORS配置
 }
 
 type HTTPHeaderPolicyOperator struct {
-	Id             interface{} // ID
-	IsOn           interface{} // 是否启用
-	State          interface{} // 状态
-	AdminId        interface{} // 管理员ID
-	UserId         interface{} // 用户ID
-	CreatedAt      interface{} // 创建时间
-	AddHeaders     interface{} // 添加的Header
-	AddTrailers    interface{} // 添加的Trailers
-	SetHeaders     interface{} // 设置Header
-	ReplaceHeaders interface{} // 替换Header内容
-	Expires        interface{} // Expires单独设置
-	DeleteHeaders  interface{} // 删除的Headers
+	Id             any // ID
+	IsOn           any // 是否启用
+	State          any // 状态
+	AdminId        any // 管理员ID
+	UserId         any // 用户ID
+	CreatedAt      any // 创建时间
+	AddHeaders     any // 添加的Header
+	AddTrailers    any // 添加的Trailers
+	SetHeaders     any // 设置Header
+	ReplaceHeaders any // 替换Header内容
+	Expires        any // Expires单独设置
+	DeleteHeaders  any // 删除的Headers
+	Cors           any // CORS配置
 }
 
 func NewHTTPHeaderPolicyOperator() *HTTPHeaderPolicyOperator {
