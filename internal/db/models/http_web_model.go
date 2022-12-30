@@ -39,6 +39,7 @@ type HTTPWeb struct {
 	RequestScripts     dbs.JSON `field:"requestScripts"`     // 请求脚本
 	Uam                dbs.JSON `field:"uam"`                // UAM设置
 	Referers           dbs.JSON `field:"referers"`           // 防盗链设置
+	UserAgent          dbs.JSON `field:"userAgent"`          // UserAgent设置
 }
 
 type HTTPWebOperator struct {
@@ -77,6 +78,7 @@ type HTTPWebOperator struct {
 	RequestScripts     any // 请求脚本
 	Uam                any // UAM设置
 	Referers           any // 防盗链设置
+	UserAgent          any // UserAgent设置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

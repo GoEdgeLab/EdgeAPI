@@ -468,6 +468,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		config.Referers = referersConfig
 	}
 
+	// User-Agent
+	if IsNotNull(web.UserAgent) {
+		var userAgentConfig = serverconfigs.NewUserAgentConfig()
+		err = json.Unmarshal(web.UserAgent, userAgentConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.UserAgent = userAgentConfig
+	}
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1249,6 +1259,35 @@ func (this *HTTPWebDAO) FindWebReferers(tx *dbs.Tx, webId int64) ([]byte, error)
 	return this.Query(tx).
 		Pk(webId).
 		Result("referers").
+		FindJSONCol()
+}
+
+// UpdateWebUserAgent 修改User-Agent设置
+func (this *HTTPWebDAO) UpdateWebUserAgent(tx *dbs.Tx, webId int64, userAgentConfig *serverconfigs.UserAgentConfig) error {
+	if userAgentConfig == nil {
+		return nil
+	}
+	configJSON, err := json.Marshal(userAgentConfig)
+	if err != nil {
+		return err
+	}
+
+	err = this.Query(tx).
+		Pk(webId).
+		Set("userAgent", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebUserAgent 查找服务User-Agent配置
+func (this *HTTPWebDAO) FindWebUserAgent(tx *dbs.Tx, webId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(webId).
+		Result("userAgent").
 		FindJSONCol()
 }
 

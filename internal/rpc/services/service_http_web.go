@@ -822,3 +822,71 @@ func (this *HTTPWebService) FindHTTPWebReferers(ctx context.Context, req *pb.Fin
 		ReferersJSON: configJSON,
 	}, nil
 }
+
+// UpdateHTTPWebUserAgent 修改UserAgent设置
+func (this *HTTPWebService) UpdateHTTPWebUserAgent(ctx context.Context, req *pb.UpdateHTTPWebUserAgentRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(tx, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var config = &serverconfigs.UserAgentConfig{}
+	if len(req.UserAgentJSON) > 0 {
+		err = json.Unmarshal(req.UserAgentJSON, config)
+		if err != nil {
+			return nil, err
+		}
+
+		err = config.Init()
+		if err != nil {
+			return nil, errors.New("validate user-agent config failed: " + err.Error())
+		}
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebUserAgent(tx, req.HttpWebId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindHTTPWebUserAgent 查找UserAgent设置
+func (this *HTTPWebService) FindHTTPWebUserAgent(ctx context.Context, req *pb.FindHTTPWebUserAgentRequest) (*pb.FindHTTPWebUserAgentResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedHTTPWebDAO.CheckUserWeb(tx, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	config, err := models.SharedHTTPWebDAO.FindWebUserAgent(tx, req.HttpWebId)
+	if err != nil {
+		return nil, err
+	}
+
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindHTTPWebUserAgentResponse{
+		UserAgentJSON: configJSON,
+	}, nil
+}
