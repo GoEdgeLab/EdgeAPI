@@ -846,7 +846,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, false, true)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, false, nil, false, true)
 		if err != nil {
 			return nil, err
 		}
@@ -969,9 +969,9 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 分组信息
-	pbGroups := []*pb.ServerGroup{}
+	var pbGroups = []*pb.ServerGroup{}
 	if len(server.GroupIds) > 0 {
-		groupIds := []int64{}
+		var groupIds = []int64{}
 		err = json.Unmarshal(server.GroupIds, &groupIds)
 		if err != nil {
 			return nil, err
@@ -1009,7 +1009,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, nil, userId > 0, false)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCertData, nil, userId > 0, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1069,7 +1069,7 @@ func (this *ServerService) FindEnabledServerConfig(ctx context.Context, req *pb.
 		}
 	}
 
-	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, false)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, false, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1520,7 +1520,7 @@ func (this *ServerService) ComposeAllUserServersConfig(ctx context.Context, req 
 	var configs = []*serverconfigs.ServerConfig{}
 	var cacheMap = utils.NewCacheMap()
 	for _, server := range servers {
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, cacheMap, true, false)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, false, cacheMap, true, false)
 		if err != nil {
 			return nil, err
 		}
@@ -2227,7 +2227,7 @@ func (this *ServerService) ComposeServerConfig(ctx context.Context, req *pb.Comp
 		return &pb.ComposeServerConfigResponse{ServerConfigJSON: nil}, nil
 	}
 
-	serverConfig, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, true)
+	serverConfig, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, req.ServerId, false, true)
 	if err != nil {
 		if err == models.ErrNotFound {
 			return &pb.ComposeServerConfigResponse{ServerConfigJSON: nil}, nil

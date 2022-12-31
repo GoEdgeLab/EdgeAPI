@@ -403,7 +403,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 		}
 		config.CertRef = ref
 		if ref.CertId > 0 {
-			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, cacheMap)
+			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, false, cacheMap)
 			if err != nil {
 				return nil, err
 			}

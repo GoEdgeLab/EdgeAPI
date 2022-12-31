@@ -1001,7 +1001,7 @@ func (this *ServerDAO) FindServerNodeFilters(tx *dbs.Tx, serverId int64) (isOk b
 }
 
 // ComposeServerConfigWithServerId 构造服务的Config
-func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int64, forNode bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int64, ignoreCertData bool, forNode bool) (*serverconfigs.ServerConfig, error) {
 	server, err := this.FindEnabledServer(tx, serverId)
 	if err != nil {
 		return nil, err
@@ -1009,12 +1009,12 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 	if server == nil {
 		return nil, ErrNotFound
 	}
-	return this.ComposeServerConfig(tx, server, nil, forNode, false)
+	return this.ComposeServerConfig(tx, server, ignoreCertData, nil, forNode, false)
 }
 
 // ComposeServerConfig 构造服务的Config
 // forNode 是否是节点请求
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCertData bool, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
@@ -1111,7 +1111,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 		// SSL
 		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, cacheMap)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, ignoreCertData, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -1143,7 +1143,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, cacheMap 
 
 		// SSL
 		if tlsConfig.SSLPolicyRef != nil {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, cacheMap)
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, ignoreCertData, cacheMap)
 			if err != nil {
 				return nil, err
 			}

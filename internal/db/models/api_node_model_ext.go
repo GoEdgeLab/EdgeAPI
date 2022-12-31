@@ -43,9 +43,9 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 	}
 
 	if config.SSLPolicyRef != nil {
-		policyId := config.SSLPolicyRef.SSLPolicyId
+		var policyId = config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, cacheMap)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -143,7 +143,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, cacheMap)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, cacheMap)
 			if err != nil {
 				return nil, err
 			}

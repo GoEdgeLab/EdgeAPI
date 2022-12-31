@@ -200,7 +200,8 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 }
 
 // ComposeCertConfig 组合配置
-func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *utils.CacheMap) (*sslconfigs.SSLCertConfig, error) {
+// ignoreData 是否忽略证书数据，避免因为数据过大影响传输
+func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData bool, cacheMap *utils.CacheMap) (*sslconfigs.SSLCertConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -218,15 +219,17 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 		return nil, nil
 	}
 
-	config := &sslconfigs.SSLCertConfig{}
+	var config = &sslconfigs.SSLCertConfig{}
 	config.Id = int64(cert.Id)
 	config.IsOn = cert.IsOn
 	config.IsCA = cert.IsCA
 	config.IsACME = cert.IsACME
 	config.Name = cert.Name
 	config.Description = cert.Description
-	config.CertData = cert.CertData
-	config.KeyData = cert.KeyData
+	if !ignoreData {
+		config.CertData = cert.CertData
+		config.KeyData = cert.KeyData
+	}
 	config.ServerName = cert.ServerName
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
 	config.TimeEndAt = int64(cert.TimeEndAt)
@@ -239,7 +242,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	config.OCSPError = cert.OcspError
 
 	if IsNotNull(cert.DnsNames) {
-		dnsNames := []string{}
+		var dnsNames = []string{}
 		err := json.Unmarshal(cert.DnsNames, &dnsNames)
 		if err != nil {
 			return nil, err
@@ -248,7 +251,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, cacheMap *ut
 	}
 
 	if cert.CommonNames.IsNotNull() {
-		commonNames := []string{}
+		var commonNames = []string{}
 		err := json.Unmarshal(cert.CommonNames, &commonNames)
 		if err != nil {
 			return nil, err

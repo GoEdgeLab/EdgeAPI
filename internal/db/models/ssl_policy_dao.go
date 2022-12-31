@@ -77,7 +77,7 @@ func (this *SSLPolicyDAO) FindEnabledSSLPolicy(tx *dbs.Tx, id int64) (*SSLPolicy
 }
 
 // ComposePolicyConfig 组合配置
-func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheMap *utils.CacheMap) (*sslconfigs.SSLPolicy, error) {
+func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignoreData bool, cacheMap *utils.CacheMap) (*sslconfigs.SSLPolicy, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -95,7 +95,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 	if policy == nil {
 		return nil, nil
 	}
-	config := &sslconfigs.SSLPolicy{}
+	var config = &sslconfigs.SSLPolicy{}
 	config.Id = int64(policy.Id)
 	config.IsOn = policy.IsOn
 	config.ClientAuthType = int(policy.ClientAuthType)
@@ -104,14 +104,14 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 
 	// certs
 	if IsNotNull(policy.Certs) {
-		refs := []*sslconfigs.SSLCertRef{}
+		var refs = []*sslconfigs.SSLCertRef{}
 		err = json.Unmarshal(policy.Certs, &refs)
 		if err != nil {
 			return nil, err
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, cacheMap)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, cacheMap)
 				if err != nil {
 					return nil, err
 				}
@@ -126,14 +126,14 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 
 	// client CA certs
 	if IsNotNull(policy.ClientCACerts) {
-		refs := []*sslconfigs.SSLCertRef{}
+		var refs = []*sslconfigs.SSLCertRef{}
 		err = json.Unmarshal(policy.ClientCACerts, &refs)
 		if err != nil {
 			return nil, err
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, cacheMap)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, cacheMap)
 				if err != nil {
 					return nil, err
 				}
@@ -159,7 +159,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, cacheM
 
 	// hsts
 	if IsNotNull(policy.Hsts) {
-		hstsConfig := &sslconfigs.HSTSConfig{}
+		var hstsConfig = &sslconfigs.HSTSConfig{}
 		err = json.Unmarshal(policy.Hsts, hstsConfig)
 		if err != nil {
 			return nil, err
