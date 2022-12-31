@@ -1014,7 +1014,7 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 
 // ComposeServerConfig 构造服务的Config
 // forNode 是否是节点请求
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCertData bool, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCerts bool, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
@@ -1110,8 +1110,8 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		}
 
 		// SSL
-		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, ignoreCertData, cacheMap)
+		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 && !ignoreCerts {
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -1142,8 +1142,8 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		}
 
 		// SSL
-		if tlsConfig.SSLPolicyRef != nil {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, ignoreCertData, cacheMap)
+		if tlsConfig.SSLPolicyRef != nil && !ignoreCerts {
+			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
 			if err != nil {
 				return nil, err
 			}

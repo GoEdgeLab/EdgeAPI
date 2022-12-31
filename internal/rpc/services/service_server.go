@@ -846,7 +846,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, false, nil, false, true)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, false, true)
 		if err != nil {
 			return nil, err
 		}
