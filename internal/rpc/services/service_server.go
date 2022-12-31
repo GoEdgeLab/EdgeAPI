@@ -1009,7 +1009,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCertData, nil, userId > 0, false)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, userId > 0, false)
 	if err != nil {
 		return nil, err
 	}
