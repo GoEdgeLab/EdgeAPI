@@ -139,16 +139,20 @@ func testHuaweiDNSProvider() (ProviderInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='huaweiDNS' ORDER BY id DESC")
+	one, err := db.FindOne("SELECT * FROM edgeDNSProviders WHERE type='huaweiDNS' AND state=1 ORDER BY id DESC")
 	if err != nil {
 		return nil, err
 	}
-	apiParams := maps.Map{}
+	var apiParams = maps.Map{}
+	//apiParams["endpoint"] = ""
+	//apiParams["endpoint"] = "cn-north-1"
+	//apiParams["endpoint"] = "dns.cn-north-4.myhuaweicloud.com"
+	//apiParams["endpoint"] = "https://dns.cn-south-1.myhuaweicloud.com/"
 	err = json.Unmarshal([]byte(one.GetString("apiParams")), &apiParams)
 	if err != nil {
 		return nil, err
 	}
-	provider := &HuaweiDNSProvider{}
+	var provider = &HuaweiDNSProvider{}
 	err = provider.Auth(apiParams)
 	if err != nil {
 		return nil, err
