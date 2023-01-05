@@ -206,6 +206,7 @@ func (this *HTTPCacheTaskDAO) UpdateTaskStatus(tx *dbs.Tx, taskId int64, isDone 
 
 	if isDone {
 		op.DoneAt = time.Now().Unix()
+		op.IsReady = true // 让后台列表能列出来
 	}
 
 	return this.Save(tx, op)
