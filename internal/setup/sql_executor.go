@@ -124,6 +124,12 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 		return err
 	}
 
+	// 更新Agents
+	err = this.checkClientAgents(db)
+	if err != nil {
+		return err
+	}
+
 	// 更新版本号
 	err = this.updateVersion(db, ComposeSQLVersion())
 	if err != nil {
@@ -463,6 +469,29 @@ func (this *SQLExecutor) checkMetricItems(db *dbs.DB) error {
 				"code":     "request_referer_host_bar",
 			},
 		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// 更新Agents表
+func (this *SQLExecutor) checkClientAgents(db *dbs.DB) error {
+	ones, _, err := db.FindOnes("SELECT id FROM edgeClientAgents")
+	if err != nil {
+		return err
+	}
+
+	for _, one := range ones {
+		var agentId = one.GetInt64("id")
+
+		countIPs, err := db.FindCol(0, "SELECT COUNT(*) FROM edgeClientAgentIPs WHERE agentId=?", agentId)
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("UPDATE edgeClientAgents SET countIPs=? WHERE id=?", countIPs, agentId)
 		if err != nil {
 			return err
 		}

@@ -52,6 +52,7 @@ var recordsTables = []*SQLRecordsTable{
 	{
 		TableName:    "edgeClientAgents",
 		UniqueFields: []string{"code"},
+		ExceptFields: []string{"countIPs"},
 	},
 	{
 		TableName:    "edgeClientAgentIPs",
