@@ -195,15 +195,20 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, reg
 
 // SumUserDaily 获取某天流量总和
 // day 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (int64, error) {
+func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (stat *ServerDailyStat, err error) {
 	var query = this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
-	return query.
-		Attr("day", day).
+
+	one, err := query.Attr("day", day).
 		Attr("userId", userId).
-		SumInt64("bytes", 0)
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(attackBytes) AS attackBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests").
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*ServerDailyStat), nil
 }
 
 // SumUserTrafficBytesBetweenDays 获取用户某个日期段内的流量总和

@@ -445,9 +445,12 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	}
 
 	// 今日总流量
-	dailyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, currentDay)
+	dailyTrafficStat, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, currentDay)
 	if err != nil {
 		return nil, err
+	}
+	if dailyTrafficStat == nil {
+		dailyTrafficStat = &models.ServerDailyStat{}
 	}
 
 	// 近 30 日流量带宽趋势
@@ -466,9 +469,12 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		}
 
 		// 流量
-		trafficBytes, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
+		trafficStat, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
 		if err != nil {
 			return nil, err
+		}
+		if trafficStat == nil {
+			trafficStat = &models.ServerDailyStat{}
 		}
 
 		// 峰值带宽
@@ -481,14 +487,22 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 			peekBandwidthBytes = int64(peekBandwidthBytesStat.Bytes)
 		}
 
-		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyTrafficStat{Day: day, Bytes: trafficBytes})
+		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyTrafficStat{
+			Day:                 day,
+			Bytes:               int64(trafficStat.Bytes),
+			CachedBytes:         int64(trafficStat.CachedBytes),
+			AttackBytes:         int64(trafficStat.AttackBytes),
+			CountRequests:       int64(trafficStat.CountRequests),
+			CountCachedRequests: int64(trafficStat.CountCachedRequests),
+			CountAttackRequests: int64(trafficStat.CountAttackRequests),
+		})
 		dailyPeekBandwidthStats = append(dailyPeekBandwidthStats, &pb.ComposeUserDashboardResponse_DailyPeekBandwidthStat{Day: day, Bytes: peekBandwidthBytes})
 	}
 	var result = &pb.ComposeUserDashboardResponse{
 		CountServers:              countServers,
 		MonthlyTrafficBytes:       monthlyTrafficBytes,
 		MonthlyPeekBandwidthBytes: monthlyPeekBandwidthBytes,
-		DailyTrafficBytes:         dailyTrafficBytes,
+		DailyTrafficBytes:         int64(dailyTrafficStat.Bytes),
 		DailyPeekBandwidthBytes:   dailyPeekBandwidthBytes,
 		DailyTrafficStats:         dailyTrafficStats,
 		DailyPeekBandwidthStats:   dailyPeekBandwidthStats,
