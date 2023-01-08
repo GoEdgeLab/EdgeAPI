@@ -125,14 +125,14 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 		return "", err
 	}
 
-	lastVersion := ""
-	result := ""
+	var lastVersion = ""
+	var result = ""
 	for _, match := range matches {
-		baseName := filepath.Base(match)
+		var baseName = filepath.Base(match)
 		if !pattern.MatchString(baseName) {
 			continue
 		}
-		m := pattern.FindStringSubmatch(baseName)
+		var m = pattern.FindStringSubmatch(baseName)
 		if len(m) < 2 {
 			continue
 		}
@@ -147,28 +147,10 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 
 // InstallHelper 上传安装助手
 func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
-	var unameRetries = 3
-	var uname string
-	for i := 0; i < unameRetries; i++ {
-		// 此处不能使用 /usr/bin/uname，因为uname不一定在 /usr/bin 下
-		uname, _, err = this.client.Exec("uname -a")
-		if len(uname) == 0 {
-			continue
-		}
-		if err == nil {
-			break
-		}
-	}
-	if err != nil {
-		return env, errors.New("unable to execute 'uname -a' on this system: " + err.Error())
-	}
+	var uname = this.uname()
 
-	if len(uname) == 0 {
-		return nil, errors.New("unable to execute 'uname -a' on this system")
-	}
-
-	osName := ""
-	archName := ""
+	var osName = ""
+	var archName = ""
 	if strings.Contains(uname, "Darwin") {
 		osName = "darwin"
 	} else if strings.Contains(uname, "Linux") {
@@ -229,4 +211,19 @@ func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.Node
 		HelperPath: realHelperPath,
 	}
 	return env, nil
+}
+
+func (this *BaseInstaller) uname() (uname string) {
+	var unameRetries = 3
+
+	for i := 0; i < unameRetries; i++ {
+		for _, unameExe := range []string{"uname", "/bin/uname", "/usr/bin/uname"} {
+			uname, _, _ = this.client.Exec(unameExe + " -a")
+			if len(uname) > 0 {
+				return
+			}
+		}
+	}
+
+	return "x86_64 GNU/Linux"
 }
