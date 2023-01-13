@@ -12,6 +12,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	timeutil "github.com/iwind/TeaGo/utils/time"
@@ -66,7 +67,27 @@ func (this *UserDAO) DisableUser(tx *dbs.Tx, userId int64) error {
 		return errors.New("invalid 'userId'")
 	}
 
-	_, err := this.Query(tx).
+	// 处理以往同用户名用户
+	username, err := this.Query(tx).
+		Pk(userId).
+		Result("username").
+		FindStringCol("")
+	if err != nil {
+		return err
+	}
+	if len(username) > 0 {
+		err = this.Query(tx).
+			Attr("username", username).
+			Attr("state", UserStateDisabled).
+			Set("username", username+"_"+rands.HexString(8)).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+
+	// 禁止当前
+	_, err = this.Query(tx).
 		Pk(userId).
 		Set("state", UserStateDisabled).
 		Update()
