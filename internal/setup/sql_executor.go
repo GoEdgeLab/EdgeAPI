@@ -12,7 +12,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
-	stringutil "github.com/iwind/TeaGo/utils/string"
 	"gopkg.in/yaml.v3"
 	"io"
 	"os"
@@ -82,14 +81,8 @@ func (this *SQLExecutor) Run(showLog bool) error {
 
 // 检查数据
 func (this *SQLExecutor) checkData(db *dbs.DB) error {
-	// 检查管理员
-	err := this.checkAdmin(db)
-	if err != nil {
-		return err
-	}
-
 	// 检查管理员平台节点
-	err = this.checkAdminNode(db)
+	err := this.checkAdminNode(db)
 	if err != nil {
 		return err
 	}
@@ -136,29 +129,6 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 		return err
 	}
 
-	return nil
-}
-
-// 检查管理员
-func (this *SQLExecutor) checkAdmin(db *dbs.DB) error {
-	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeAdmins")
-	if err != nil {
-		return errors.New("check admin failed: " + err.Error())
-	}
-	defer func() {
-		_ = stmt.Close()
-	}()
-	col, err := stmt.FindCol(0)
-	if err != nil {
-		return errors.New("check admin failed: " + err.Error())
-	}
-	count := types.Int(col)
-	if count == 0 {
-		_, err = db.Exec("INSERT INTO edgeAdmins (username, password, fullname, isSuper, createdAt, state) VALUES (?, ?, ?, ?, ?, ?)", "admin", stringutil.Md5("123456"), "管理员", 1, time.Now().Unix(), 1)
-		if err != nil {
-			return errors.New("create admin failed: " + err.Error())
-		}
-	}
 	return nil
 }
 
