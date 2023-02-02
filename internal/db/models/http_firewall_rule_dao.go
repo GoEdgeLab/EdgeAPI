@@ -82,12 +82,12 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(tx *dbs.Tx, ruleId int64) (
 	if rule == nil {
 		return nil, nil
 	}
-	config := &firewallconfigs.HTTPFirewallRule{}
+	var config = &firewallconfigs.HTTPFirewallRule{}
 	config.Id = int64(rule.Id)
 	config.IsOn = rule.IsOn
 	config.Param = rule.Param
 
-	paramFilters := []*firewallconfigs.ParamFilter{}
+	var paramFilters = []*firewallconfigs.ParamFilter{}
 	if IsNotNull(rule.ParamFilters) {
 		err = json.Unmarshal(rule.ParamFilters, &paramFilters)
 		if err != nil {
@@ -101,13 +101,15 @@ func (this *HTTPFirewallRuleDAO) ComposeFirewallRule(tx *dbs.Tx, ruleId int64) (
 	config.IsCaseInsensitive = rule.IsCaseInsensitive
 
 	if IsNotNull(rule.CheckpointOptions) {
-		checkpointOptions := map[string]interface{}{}
+		var checkpointOptions = map[string]interface{}{}
 		err = json.Unmarshal(rule.CheckpointOptions, &checkpointOptions)
 		if err != nil {
 			return nil, err
 		}
 		config.CheckpointOptions = checkpointOptions
 	}
+
+	config.IsComposed = firewallconfigs.CheckCheckpointIsComposed(config.Prefix())
 
 	config.Description = rule.Description
 
