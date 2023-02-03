@@ -14,8 +14,8 @@ type HTTPHeader struct {
 	Order           uint32   `field:"order"`           // 排序
 	Status          dbs.JSON `field:"status"`          // 状态码设置
 	DisableRedirect uint8    `field:"disableRedirect"` // 是否不支持跳转
-	ShouldAppend    uint8    `field:"shouldAppend"`    // 是否为附加
-	ShouldReplace   uint8    `field:"shouldReplace"`   // 是否替换变量
+	ShouldAppend    bool     `field:"shouldAppend"`    // 是否为附加
+	ShouldReplace   bool     `field:"shouldReplace"`   // 是否替换变量
 	ReplaceValues   dbs.JSON `field:"replaceValues"`   // 替换的值
 	Methods         dbs.JSON `field:"methods"`         // 支持的方法
 	Domains         dbs.JSON `field:"domains"`         // 支持的域名

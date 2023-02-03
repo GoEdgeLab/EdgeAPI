@@ -240,10 +240,10 @@ func (this *HTTPHeaderDAO) ComposeHeaderConfig(tx *dbs.Tx, headerId int64) (*sha
 	config.Name = header.Name
 	config.Value = header.Value
 	config.DisableRedirect = header.DisableRedirect == 1
-	config.ShouldAppend = header.ShouldAppend == 1
+	config.ShouldAppend = header.ShouldAppend
 
 	// replace
-	config.ShouldReplace = header.ShouldReplace == 1
+	config.ShouldReplace = header.ShouldReplace
 	if IsNotNull(header.ReplaceValues) {
 		var values = []*shared.HTTPHeaderReplaceValue{}
 		err = json.Unmarshal(header.ReplaceValues, &values)
