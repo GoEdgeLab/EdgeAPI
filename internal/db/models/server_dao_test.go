@@ -45,7 +45,7 @@ func TestServerDAO_CreateManyServers(t *testing.T) {
 func TestServerDAO_ComposeServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestServerDAO_ComposeServerConfig(t *testing.T) {
 func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 14, false)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 14, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestServerDAO_ComposeServerConfig_AliasServerNames(t *testing.T) {
 func TestServerDAO_UpdateServerConfig(t *testing.T) {
 	dbs.NotifyReady()
 	var tx *dbs.Tx
-	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false)
+	config, err := models.SharedServerDAO.ComposeServerConfigWithServerId(tx, 1, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func TestServerDAO_FindAllEnabledServersWithNode_Cache(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, server := range servers {
-			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, cacheMap, true, false)
+			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, cacheMap, true, false)
 		}
 	}
 
@@ -201,7 +201,7 @@ func TestServerDAO_FindAllEnabledServersWithNode_Cache(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, server := range servers {
-			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, cacheMap, true, false)
+			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, cacheMap, true, false)
 		}
 	}
 	t.Log(time.Since(before).Seconds()*1000, "ms")
