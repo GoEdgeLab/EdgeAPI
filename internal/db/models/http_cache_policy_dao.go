@@ -129,7 +129,7 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 		SimpleCond: &shared.HTTPRequestCond{
 			Type:      "url-extension",
 			IsRequest: true,
-			Param:     "${requestPathExtension}",
+			Param:     "${requestPathLowerExtension}",
 			Operator:  shared.RequestCondOperatorIn,
 			Value:     `[".html", ".js", ".css", ".gif", ".png", ".bmp", ".jpeg", ".jpg", ".webp", ".ico", ".pdf", ".ttf", ".eot", ".tiff", ".svg", ".svgz", ".eps", ".woff", ".otf", ".woff2", ".tif", ".csv", ".xls", ".xlsx", ".doc", ".docx", ".ppt", ".pptx", ".wav", ".mp3", ".mp4", ".ogg", ".mid", ".midi"]`,
 		},
