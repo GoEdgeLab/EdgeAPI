@@ -154,7 +154,6 @@ func (this *NodeTaskDAO) ExtractNodeClusterTask(tx *dbs.Tx, clusterId int64, use
 	_, err = this.Query(tx).
 		Attr("role", nodeconfigs.NodeRoleNode).
 		Attr("clusterId", clusterId).
-		Param("clusterIdString", types.String(clusterId)).
 		Where("nodeId> 0").
 		Attr("type", taskType).
 		Delete()

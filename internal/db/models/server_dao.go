@@ -121,7 +121,7 @@ func (this *ServerDAO) FindEnabledServerBasic(tx *dbs.Tx, serverId int64) (*Serv
 	result, err := this.Query(tx).
 		Pk(serverId).
 		State(ServerStateEnabled).
-		Result("id", "name", "description", "isOn", "type", "clusterId").
+		Result("id", "name", "description", "isOn", "type", "clusterId", "userId").
 		Find()
 	if result == nil {
 		return nil, err

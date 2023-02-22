@@ -134,7 +134,7 @@ func (this *UserDAO) FindEnabledBasicUser(tx *dbs.Tx, id int64) (*User, error) {
 	result, err := this.Query(tx).
 		Pk(id).
 		Attr("state", UserStateEnabled).
-		Result("id", "fullname", "username").
+		Result("id", "fullname", "username", "isOn").
 		Find()
 	if result == nil {
 		return nil, err

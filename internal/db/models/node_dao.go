@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/sizes"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/ttlcache"
+	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -971,10 +972,30 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 	config.AllowedIPs = append(config.AllowedIPs, apiNodeIPs...)
 
+	// 所属集群
+	var primaryClusterId = int64(node.ClusterId)
+	var clusterIds = []int64{primaryClusterId}
+	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
+
 	// 获取所有的服务
 	servers, err := SharedServerDAO.FindAllEnabledServersWithNode(tx, int64(node.Id))
 	if err != nil {
 		return nil, err
+	}
+
+	// 获取集群上的其他服务
+	var serverIdMap = map[int64]zero.Zero{}
+	for _, server := range servers {
+		serverIdMap[int64(server.Id)] = zero.Zero{}
+	}
+	for _, clusterId := range clusterIds {
+		clusterServers, err := this.loadServersFromCluster(tx, clusterId, serverIdMap)
+		if err != nil {
+			return nil, err
+		}
+		for _, clusterServer := range clusterServers {
+			servers = append(servers, clusterServer)
+		}
 	}
 
 	for _, server := range servers {
@@ -1016,9 +1037,6 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		config.GlobalConfig = globalConfig
 	}
 
-	var primaryClusterId = int64(node.ClusterId)
-	var clusterIds = []int64{primaryClusterId}
-	clusterIds = append(clusterIds, node.DecodeSecondaryClusterIds()...)
 	var clusterIndex = 0
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
 	config.UAMPolicies = map[int64]*nodeconfigs.UAMPolicy{}

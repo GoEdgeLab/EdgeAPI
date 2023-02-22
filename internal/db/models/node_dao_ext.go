@@ -6,9 +6,14 @@ package models
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 )
+
+func (this *NodeDAO) loadServersFromCluster(tx *dbs.Tx, clusterId int64, serverIdMap map[int64]zero.Zero) ([]*Server, error) {
+	return nil, nil
+}
 
 func (this *NodeDAO) composeExtConfig(tx *dbs.Tx, config *nodeconfigs.NodeConfig, clusterIds []int64, cacheMap *utils.CacheMap) error {
 	return nil

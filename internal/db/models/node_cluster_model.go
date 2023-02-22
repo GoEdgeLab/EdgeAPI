@@ -40,6 +40,7 @@ type NodeCluster struct {
 	GlobalServerConfig   dbs.JSON `field:"globalServerConfig"`   // 全局服务配置
 	AutoRemoteStart      bool     `field:"autoRemoteStart"`      // 自动远程启动
 	AutoInstallNftables  bool     `field:"autoInstallNftables"`  // 自动安装nftables
+	IsAD                 bool     `field:"isAD"`                 // 是否为高防集群
 }
 
 type NodeClusterOperator struct {
@@ -79,6 +80,7 @@ type NodeClusterOperator struct {
 	GlobalServerConfig   any // 全局服务配置
 	AutoRemoteStart      any // 自动远程启动
 	AutoInstallNftables  any // 自动安装nftables
+	IsAD                 any // 是否为高防集群
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {
