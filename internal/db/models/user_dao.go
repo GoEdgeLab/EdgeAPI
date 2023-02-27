@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -245,7 +246,7 @@ func (this *UserDAO) CreateUser(tx *dbs.Tx, username string,
 }
 
 // UpdateUser 修改用户
-func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, nodeClusterId int64) error {
+func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, password string, fullname string, mobile string, tel string, email string, remark string, isOn bool, nodeClusterId int64, bandwidthAlgo systemconfigs.BandwidthAlgo) error {
 	if userId <= 0 {
 		return errors.New("invalid userId")
 	}
@@ -262,6 +263,7 @@ func (this *UserDAO) UpdateUser(tx *dbs.Tx, userId int64, username string, passw
 	op.Email = email
 	op.Remark = remark
 	op.ClusterId = nodeClusterId
+	op.BandwidthAlgo = bandwidthAlgo
 	op.IsOn = isOn
 	err := this.Save(tx, op)
 	if err != nil {
@@ -680,6 +682,34 @@ func (this *UserDAO) UpdateUserVerifiedEmail(tx *dbs.Tx, userId int64, verifiedE
 		Set("verifiedEmail", verifiedEmail).
 		Set("emailIsVerified", true).
 		UpdateQuickly()
+}
+
+// FindUserBandwidthAlgoForView 获取用户浏览用的带宽算法
+func (this *UserDAO) FindUserBandwidthAlgoForView(tx *dbs.Tx, userId int64, uiConfig *systemconfigs.UserUIConfig) (bandwidthAlgo string, err error) {
+	bandwidthAlgo, err = this.Query(tx).
+		Pk(userId).
+		Result("bandwidthAlgo").
+		FindStringCol("")
+	if len(bandwidthAlgo) > 0 {
+		return
+	}
+
+	if uiConfig == nil {
+		uiConfig, err = SharedSysSettingDAO.ReadUserUIConfig(tx)
+		if err != nil {
+			return "", err
+		}
+		if uiConfig == nil {
+			return systemconfigs.BandwidthAlgoSecondly, nil
+		}
+	}
+
+	if uiConfig != nil &&
+		len(uiConfig.TrafficStats.BandwidthAlgo) > 0 {
+		return uiConfig.TrafficStats.BandwidthAlgo, nil
+	}
+
+	return systemconfigs.BandwidthAlgoSecondly, nil
 }
 
 // NotifyUpdate 用户变更通知

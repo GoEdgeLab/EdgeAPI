@@ -14,18 +14,32 @@ import (
 func TestUserBandwidthStatDAO_FindUserPeekBandwidthInMonth(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	stat, err := dao.FindUserPeekBandwidthInMonth(tx, 1, timeutil.Format("Ym"))
-	if err != nil {
-		t.Fatal(err)
+
+	// max
+	{
+		stat, err := dao.FindUserPeekBandwidthInMonth(tx, 1, timeutil.Format("Ym"), false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		logs.PrintAsJSON(stat, t)
 	}
 
-	logs.PrintAsJSON(stat, t)
+	// avg
+	{
+		stat, err := dao.FindUserPeekBandwidthInMonth(tx, 1, timeutil.Format("Ym"), true)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		logs.PrintAsJSON(stat, t)
+	}
 }
 
 func TestUserBandwidthStatDAO_FindUserPeekBandwidthInDay(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	stat, err := dao.FindUserPeekBandwidthInDay(tx, 1, timeutil.Format("Ymd"))
+	stat, err := dao.FindUserPeekBandwidthInDay(tx, 1, timeutil.Format("Ymd"), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +50,7 @@ func TestUserBandwidthStatDAO_FindUserPeekBandwidthInDay(t *testing.T) {
 func TestUserBandwidthStatDAO_UpdateServerBandwidth(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	err := dao.UpdateUserBandwidth(tx, 1, 0, timeutil.Format("Ymd"), timeutil.Format("Hi"), 1024)
+	err := dao.UpdateUserBandwidth(tx, 1, 0, timeutil.Format("Ymd"), timeutil.FormatTime("Hi", time.Now().Unix()/300*300), 1024, 300)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +70,7 @@ func TestUserBandwidthStatDAO_Clean(t *testing.T) {
 func TestUserBandwidthStatDAO_FindBandwidthStatsBetweenDays(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	stats, err := dao.FindUserBandwidthStatsBetweenDays(tx, 1, 0, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -2)), timeutil.Format("Ymd"))
+	stats, err := dao.FindUserBandwidthStatsBetweenDays(tx, 1, 0, timeutil.Format("Ymd", time.Now().AddDate(0, 0, -2)), timeutil.Format("Ymd"), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +87,7 @@ func TestUserBandwidthStatDAO_FindBandwidthStatsBetweenDays(t *testing.T) {
 func TestUserBandwidthStatDAO_FindPercentileBetweenDays(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	stat, err := dao.FindPercentileBetweenDays(tx, 1, 0, timeutil.Format("Ymd"), timeutil.Format("Ymd"), 95)
+	stat, err := dao.FindPercentileBetweenDays(tx, 1, 0, timeutil.Format("Ymd"), timeutil.Format("Ymd"), 95, false)
 	if err != nil {
 		t.Fatal(err)
 	}

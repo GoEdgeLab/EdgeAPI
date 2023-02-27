@@ -62,7 +62,8 @@ func init() {
 }
 
 // UpdateServerBandwidth 写入数据
-func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, day string, timeAt string, bytes int64) error {
+// 暂时不使用region区分
+func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, day string, timeAt string, bytes int64, totalBytes int64) error {
 	if serverId <= 0 {
 		return errors.New("invalid server id '" + types.String(serverId) + "'")
 	}
@@ -70,32 +71,37 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Param("bytes", bytes).
+		Param("totalBytes", totalBytes).
 		InsertOrUpdateQuickly(maps.Map{
-			"userId":   userId,
-			"serverId": serverId,
-			"day":      day,
-			"timeAt":   timeAt,
-			"bytes":    bytes,
+			"userId":     userId,
+			"serverId":   serverId,
+			"day":        day,
+			"timeAt":     timeAt,
+			"bytes":      bytes,
+			"totalBytes": totalBytes,
+			"avgBytes":   totalBytes / 300,
 		}, maps.Map{
-			"bytes": dbs.SQL("bytes+:bytes"),
+			"bytes":      dbs.SQL("bytes+:bytes"),
+			"avgBytes":   dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
+			"totalBytes": dbs.SQL("totalBytes+:totalBytes"),
 		})
 }
 
 // FindMinutelyPeekBandwidthBytes 获取某分钟的带宽峰值
 // day YYYYMMDD
 // minute HHII
-func (this *ServerBandwidthStatDAO) FindMinutelyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string, minute string) (int64, error) {
+func (this *ServerBandwidthStatDAO) FindMinutelyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string, minute string, useAvg bool) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
-		Result("bytes").
+		Result(this.bytesField(useAvg)).
 		Attr("day", day).
 		Attr("timeAt", minute).
 		FindInt64Col(0)
 }
 
 // FindHourlyBandwidthStats 按小时获取带宽峰值
-func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverId int64, hours int32) (result []*pb.FindHourlyServerBandwidthStatsResponse_Stat, err error) {
+func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverId int64, hours int32, useAvg bool) (result []*pb.FindHourlyServerBandwidthStatsResponse_Stat, err error) {
 	if hours <= 0 {
 		hours = 24
 	}
@@ -105,7 +111,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 	ones, _, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
-		Result("MAX(bytes) AS bytes", "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
+		Result(this.maxBytesField(useAvg), "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
 		Gte("CONCAT(day, '.', SUBSTRING(timeAt, 1, 2))", timeutil.FormatTime("Ymd.H", timestamp)).
 		Group("fullTime").
 		FindOnes()
@@ -120,6 +126,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 		var day = timePieces[0]
 		var hour = timePieces[1]
 		var bytes = one.GetInt64("bytes")
+
 		m[day+hour] = &pb.FindHourlyServerBandwidthStatsResponse_Stat{
 			Bytes: bytes,
 			Bits:  bytes * 8,
@@ -151,26 +158,25 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 
 // FindDailyPeekBandwidthBytes 获取某天的带宽峰值
 // day YYYYMMDD
-func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string) (int64, error) {
+func (this *ServerBandwidthStatDAO) FindDailyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, day string, useAvg bool) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Attr("day", day).
-		Result("MAX(bytes)").
+		Result(this.maxBytesField(useAvg)).
 		FindInt64Col(0)
 }
 
 // FindDailyBandwidthStats 按天获取带宽峰值
-func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId int64, days int32) (result []*pb.FindDailyServerBandwidthStatsResponse_Stat, err error) {
+func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId int64, days int32, useAvg bool) (result []*pb.FindDailyServerBandwidthStatsResponse_Stat, err error) {
 	if days <= 0 {
 		days = 14
 	}
 
 	var timestamp = time.Now().Unix() - int64(days)*86400
-
 	ones, _, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("MAX(bytes) AS bytes", "day").
+		Result(this.maxBytesField(useAvg), "day").
 		Attr("serverId", serverId).
 		Gte("day", timeutil.FormatTime("Ymd", timestamp)).
 		Group("day").
@@ -214,7 +220,7 @@ func (this *ServerBandwidthStatDAO) FindDailyBandwidthStats(tx *dbs.Tx, serverId
 // FindBandwidthStatsBetweenDays 查找日期段内的带宽峰值
 // dayFrom YYYYMMDD
 // dayTo YYYYMMDD
-func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat, err error) {
+func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string, useAvg bool) (result []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat, err error) {
 	if serverId <= 0 {
 		return nil, nil
 	}
@@ -232,7 +238,7 @@ func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, se
 
 	ones, _, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("bytes", "day", "timeAt").
+		Result(this.bytesField(useAvg), "day", "timeAt").
 		Attr("serverId", serverId).
 		Between("day", dayFrom, dayTo).
 		FindOnes()
@@ -292,12 +298,12 @@ func (this *ServerBandwidthStatDAO) FindBandwidthStatsBetweenDays(tx *dbs.Tx, se
 
 // FindMonthlyPeekBandwidthBytes 获取某月的带宽峰值
 // month YYYYMM
-func (this *ServerBandwidthStatDAO) FindMonthlyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, month string) (int64, error) {
+func (this *ServerBandwidthStatDAO) FindMonthlyPeekBandwidthBytes(tx *dbs.Tx, serverId int64, month string, useAvg bool) (int64, error) {
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Between("day", month+"01", month+"31").
-		Result("MAX(bytes)").
+		Result(this.maxBytesField(useAvg)).
 		FindInt64Col(0)
 }
 
@@ -305,7 +311,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPeekBandwidthBytes(tx *dbs.Tx, se
 // 参数：
 //   - day YYYYMMDD
 //   - timeAt HHII
-func (this *ServerBandwidthStatDAO) FindServerStats(tx *dbs.Tx, serverId int64, day string, timeFrom string, timeTo string) (result []*ServerBandwidthStat, err error) {
+func (this *ServerBandwidthStatDAO) FindServerStats(tx *dbs.Tx, serverId int64, day string, timeFrom string, timeTo string, useAvg bool) (result []*ServerBandwidthStat, err error) {
 	_, err = this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
@@ -313,12 +319,16 @@ func (this *ServerBandwidthStatDAO) FindServerStats(tx *dbs.Tx, serverId int64, 
 		Between("timeAt", timeFrom, timeTo).
 		Slice(&result).
 		FindAll()
+
+	// 使用平均带宽
+	this.fixServerStats(result, useAvg)
+
 	return
 }
 
 // FindAllServerStatsWithDay 查找某个服务的当天的所有带宽峰值
 // day YYYYMMDD
-func (this *ServerBandwidthStatDAO) FindAllServerStatsWithDay(tx *dbs.Tx, serverId int64, day string) (result []*ServerBandwidthStat, err error) {
+func (this *ServerBandwidthStatDAO) FindAllServerStatsWithDay(tx *dbs.Tx, serverId int64, day string, useAvg bool) (result []*ServerBandwidthStat, err error) {
 	_, err = this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
@@ -326,12 +336,16 @@ func (this *ServerBandwidthStatDAO) FindAllServerStatsWithDay(tx *dbs.Tx, server
 		AscPk().
 		Slice(&result).
 		FindAll()
+
+	// 使用平均带宽
+	this.fixServerStats(result, useAvg)
+
 	return
 }
 
 // FindAllServerStatsWithMonth 查找某个服务的当月的所有带宽峰值
 // month YYYYMM
-func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serverId int64, month string) (result []*ServerBandwidthStat, err error) {
+func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serverId int64, month string, useAvg bool) (result []*ServerBandwidthStat, err error) {
 	_, err = this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
@@ -339,11 +353,15 @@ func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serv
 		AscPk().
 		Slice(&result).
 		FindAll()
+
+	// 使用平均带宽
+	this.fixServerStats(result, useAvg)
+
 	return
 }
 
 // FindMonthlyPercentile 获取某月内百分位
-func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int) (result int64, err error) {
+func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int, useAvg bool) (result int64, err error) {
 	if percentile <= 0 {
 		percentile = 95
 	}
@@ -353,7 +371,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 		result, err = this.Query(tx).
 			Table(this.partialTable(serverId)).
 			Attr("serverId", serverId).
-			Result("bytes").
+			Result(this.bytesField(useAvg)).
 			Between("day", month+"01", month+"31").
 			Desc("bytes").
 			Limit(1).
@@ -384,7 +402,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	result, err = this.Query(tx).
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
-		Result("bytes").
+		Result(this.bytesField(useAvg)).
 		Between("day", month+"01", month+"31").
 		Desc("bytes").
 		Offset(offset).
@@ -395,7 +413,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 }
 
 // FindPercentileBetweenDays 获取日期段内内百分位
-func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string, percentile int32) (result *ServerBandwidthStat, err error) {
+func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string, percentile int32, useAvg bool) (result *ServerBandwidthStat, err error) {
 	if dayFrom > dayTo {
 		dayFrom, dayTo = dayTo, dayFrom
 	}
@@ -410,13 +428,13 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, server
 			Table(this.partialTable(serverId)).
 			Attr("serverId", serverId).
 			Between("day", dayFrom, dayTo).
-			Desc("bytes").
+			Desc(this.bytesOrderField(useAvg)).
 			Find()
 		if err != nil || one == nil {
 			return nil, err
 		}
 
-		return one.(*ServerBandwidthStat), nil
+		return this.fixServerStat(one.(*ServerBandwidthStat), useAvg), nil
 	}
 
 	// 总数量
@@ -443,20 +461,20 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenDays(tx *dbs.Tx, server
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Between("day", dayFrom, dayTo).
-		Desc("bytes").
+		Desc(this.bytesOrderField(useAvg)).
 		Offset(offset).
 		Find()
 	if err != nil || one == nil {
 		return nil, err
 	}
 
-	return one.(*ServerBandwidthStat), nil
+	return this.fixServerStat(one.(*ServerBandwidthStat), useAvg), nil
 }
 
 // FindPercentileBetweenTimes 获取时间段内内百分位
 // timeFrom 开始时间，格式 YYYYMMDDHHII
 // timeTo 结束时间，格式 YYYYMMDDHHII
-func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serverId int64, timeFrom string, timeTo string, percentile int32) (result *ServerBandwidthStat, err error) {
+func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serverId int64, timeFrom string, timeTo string, percentile int32, useAvg bool) (result *ServerBandwidthStat, err error) {
 	var reg = regexp.MustCompile(`^\d{12}$`)
 	if !reg.MatchString(timeFrom) {
 		return nil, errors.New("invalid timeFrom '" + timeFrom + "'")
@@ -479,13 +497,13 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serve
 			Table(this.partialTable(serverId)).
 			Attr("serverId", serverId).
 			Between("CONCAT(day, timeAt)", timeFrom, timeTo).
-			Desc("bytes").
+			Desc(this.bytesOrderField(useAvg)).
 			Find()
 		if err != nil || one == nil {
 			return nil, err
 		}
 
-		return one.(*ServerBandwidthStat), nil
+		return this.fixServerStat(one.(*ServerBandwidthStat), useAvg), nil
 	}
 
 	// 总数量
@@ -512,14 +530,14 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serve
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Between("CONCAT(day, timeAt)", timeFrom, timeTo).
-		Desc("bytes").
+		Desc(this.bytesOrderField(useAvg)).
 		Offset(offset).
 		Find()
 	if err != nil || one == nil {
 		return nil, err
 	}
 
-	return one.(*ServerBandwidthStat), nil
+	return this.fixServerStat(one.(*ServerBandwidthStat), useAvg), nil
 }
 
 // Clean 清理过期数据
@@ -558,4 +576,46 @@ func (this *ServerBandwidthStatDAO) runBatch(f func(table string, locker *sync.M
 // 获取分区表
 func (this *ServerBandwidthStatDAO) partialTable(serverId int64) string {
 	return this.Table + "_" + types.String(serverId%int64(ServerBandwidthStatTablePartials))
+}
+
+// 获取字节字段
+func (this *ServerBandwidthStatDAO) bytesField(useAvg bool) string {
+	if useAvg {
+		return "avgBytes AS bytes"
+	}
+	return "bytes"
+}
+
+// 获取最大字节字段
+func (this *ServerBandwidthStatDAO) maxBytesField(useAvg bool) string {
+	if useAvg {
+		return "MAX(avgBytes) AS bytes"
+	}
+	return "MAX(bytes) AS bytes"
+}
+
+// 获取排序字段
+func (this *ServerBandwidthStatDAO) bytesOrderField(useAvg bool) string {
+	if useAvg {
+		return "avgBytes"
+	}
+	return "bytes"
+}
+
+func (this *ServerBandwidthStatDAO) fixServerStat(stat *ServerBandwidthStat, useAvg bool) *ServerBandwidthStat {
+	if stat == nil {
+		return nil
+	}
+	if useAvg {
+		stat.Bytes = stat.AvgBytes
+	}
+	return stat
+}
+
+func (this *ServerBandwidthStatDAO) fixServerStats(stats []*ServerBandwidthStat, useAvg bool) {
+	if useAvg {
+		for _, stat := range stats {
+			stat.Bytes = stat.AvgBytes
+		}
+	}
 }

@@ -71,7 +71,7 @@ func (this *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
-	err = models.SharedUserDAO.UpdateUser(tx, req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId)
+	err = models.SharedUserDAO.UpdateUser(tx, req.UserId, req.Username, req.Password, req.Fullname, req.Mobile, req.Tel, req.Email, req.Remark, req.IsOn, req.NodeClusterId, req.BandwidthAlgo)
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +259,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		NodeCluster:            pbCluster,
 		IsIndividualIdentified: isIndividualIdentified,
 		IsEnterpriseIdentified: isEnterpriseIdentified,
+		BandwidthAlgo:          user.BandwidthAlgo,
 		OtpLogin:               pbOtpAuth,
 	}}, nil
 }
@@ -404,6 +405,11 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 
 	var tx = this.NullTx()
 
+	bandwidthAglo, err := models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, req.UserId, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// 网站数量
 	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll, []string{})
 	if err != nil {
@@ -423,7 +429,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	// 本月带宽峰值
 	var monthlyPeekBandwidthBytes int64 = 0
 	{
-		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInMonth(tx, req.UserId, currentMonth)
+		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInMonth(tx, req.UserId, currentMonth, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 		if err != nil {
 			return nil, err
 		}
@@ -435,7 +441,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	// 本日带宽峰值
 	var dailyPeekBandwidthBytes int64 = 0
 	{
-		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, currentDay)
+		stat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, currentDay, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 		if err != nil {
 			return nil, err
 		}
@@ -478,7 +484,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		}
 
 		// 峰值带宽
-		peekBandwidthBytesStat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, day)
+		peekBandwidthBytesStat, err := models.SharedUserBandwidthStatDAO.FindUserPeekBandwidthInDay(tx, req.UserId, day, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 		if err != nil {
 			return nil, err
 		}
@@ -515,7 +521,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		bandwidthPercentile = userConfig.TrafficStats.BandwidthPercentile
 	}
 	result.BandwidthPercentile = bandwidthPercentile
-	stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, 0, dayFrom, dayTo, bandwidthPercentile)
+	stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, 0, dayFrom, dayTo, bandwidthPercentile, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 	if err != nil {
 		return nil, err
 	}

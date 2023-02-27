@@ -409,6 +409,19 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	var result = &pb.ComposeServerStatBoardResponse{}
 	var tx = this.NullTx()
 
+	// 用户ID
+	userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	var bandwidthAglo = ""
+	if userId > 0 {
+		bandwidthAglo, err = models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, userId, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// 带宽统计
 	{
 		var month = timeutil.Format("Ym")
@@ -423,7 +436,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			var minute3 = timeutil.FormatTime("Hi", timestamp-300*2)
 
 			for _, minute := range []string{minute1, minute2, minute3} {
-				bytes, err := models.SharedServerBandwidthStatDAO.FindMinutelyPeekBandwidthBytes(tx, req.ServerId, day, minute)
+				bytes, err := models.SharedServerBandwidthStatDAO.FindMinutelyPeekBandwidthBytes(tx, req.ServerId, day, minute, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 				if err != nil {
 					return nil, err
 				}
@@ -437,7 +450,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 
 		// 当天
 		{
-			bytes, err := models.SharedServerBandwidthStatDAO.FindDailyPeekBandwidthBytes(tx, req.ServerId, day)
+			bytes, err := models.SharedServerBandwidthStatDAO.FindDailyPeekBandwidthBytes(tx, req.ServerId, day, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 			if err != nil {
 				return nil, err
 			}
@@ -446,7 +459,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 
 		// 当月
 		{
-			bytes, err := models.SharedServerBandwidthStatDAO.FindMonthlyPeekBandwidthBytes(tx, req.ServerId, month)
+			bytes, err := models.SharedServerBandwidthStatDAO.FindMonthlyPeekBandwidthBytes(tx, req.ServerId, month, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 			if err != nil {
 				return nil, err
 			}
@@ -455,7 +468,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 
 		// 上月
 		{
-			bytes, err := models.SharedServerBandwidthStatDAO.FindMonthlyPeekBandwidthBytes(tx, req.ServerId, timeutil.Format("Ym", time.Now().AddDate(0, -1, 0)))
+			bytes, err := models.SharedServerBandwidthStatDAO.FindMonthlyPeekBandwidthBytes(tx, req.ServerId, timeutil.Format("Ym", time.Now().AddDate(0, -1, 0)), bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 			if err != nil {
 				return nil, err
 			}
@@ -476,7 +489,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 				timeTo = r.Day + r.MinuteTo
 			}
 
-			bandwidthStats, err := models.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo)
+			bandwidthStats, err := models.SharedServerBandwidthStatDAO.FindServerStats(tx, req.ServerId, r.Day, r.MinuteFrom, r.MinuteTo, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 			if err != nil {
 				return nil, err
 			}
@@ -519,7 +532,7 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 			}
 			result.BandwidthPercentile = percentile
 
-			percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile)
+			percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile, bandwidthAglo == systemconfigs.BandwidthAlgoAvg)
 			if err != nil {
 				return nil, err
 			}

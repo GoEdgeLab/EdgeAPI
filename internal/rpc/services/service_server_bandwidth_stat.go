@@ -65,7 +65,7 @@ func init() {
 					for _, stat := range m {
 						// 更新服务的带宽峰值
 						if stat.ServerId > 0 {
-							err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes)
+							err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes)
 							if err != nil {
 								remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -78,7 +78,7 @@ func init() {
 
 						// 更新用户的带宽峰值
 						if stat.UserId > 0 {
-							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes)
+							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes)
 							if err != nil {
 								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -126,6 +126,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 		oldStat, ok := serverBandwidthStatsMap[key]
 		if ok {
 			oldStat.Bytes += stat.Bytes
+			oldStat.TotalBytes += stat.TotalBytes
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
 				Id:           0,
@@ -135,6 +136,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 				Day:          stat.Day,
 				TimeAt:       stat.TimeAt,
 				Bytes:        stat.Bytes,
+				TotalBytes:   stat.TotalBytes,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()
@@ -150,12 +152,26 @@ func (this *ServerBandwidthStatService) FindServerBandwidthStats(ctx context.Con
 		return nil, err
 	}
 
-	var stats = []*models.ServerBandwidthStat{}
 	var tx = this.NullTx()
+
+	// 带宽算法
+	if len(req.Algo) == 0 {
+		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		bandwidthAlgo, err := models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, userId, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Algo = bandwidthAlgo
+	}
+
+	var stats = []*models.ServerBandwidthStat{}
 	if len(req.Day) > 0 {
-		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithDay(tx, req.ServerId, req.Day)
+		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithDay(tx, req.ServerId, req.Day, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	} else if len(req.Month) > 0 {
-		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithMonth(tx, req.ServerId, req.Month)
+		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithMonth(tx, req.ServerId, req.Month, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	} else {
 		// 默认返回空
 		return nil, errors.New("'month' or 'day' parameter is needed")
@@ -188,12 +204,26 @@ func (this *ServerBandwidthStatService) FindHourlyServerBandwidthStats(ctx conte
 		return nil, err
 	}
 
+	var tx = this.NullTx()
+
+	// 带宽算法
+	if len(req.Algo) == 0 {
+		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		bandwidthAlgo, err := models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, userId, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Algo = bandwidthAlgo
+	}
+
 	if req.Hours <= 0 {
 		req.Hours = 12
 	}
 
-	var tx = this.NullTx()
-	stats, err := models.SharedServerBandwidthStatDAO.FindHourlyBandwidthStats(tx, req.ServerId, req.Hours)
+	stats, err := models.SharedServerBandwidthStatDAO.FindHourlyBandwidthStats(tx, req.ServerId, req.Hours, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +240,7 @@ func (this *ServerBandwidthStatService) FindHourlyServerBandwidthStats(ctx conte
 	var timeTo = timeutil.Format("YmdHi")
 
 	var pbNthStat *pb.FindHourlyServerBandwidthStatsResponse_Stat
-	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile)
+	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenTimes(tx, req.ServerId, timeFrom, timeTo, percentile, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	if err != nil {
 		return nil, err
 	}
@@ -239,6 +269,19 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx contex
 
 	var tx = this.NullTx()
 
+	// 带宽算法
+	if len(req.Algo) == 0 {
+		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		bandwidthAlgo, err := models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, userId, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Algo = bandwidthAlgo
+	}
+
 	if req.Days <= 0 {
 		req.Days = 30
 	}
@@ -247,7 +290,7 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx contex
 	var dayFrom = timeutil.FormatTime("Ymd", timestamp)
 	var dayTo = timeutil.Format("Ymd")
 
-	stats, err := models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, dayFrom, dayTo)
+	stats, err := models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, dayFrom, dayTo, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +311,7 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStats(ctx contex
 	}
 
 	var pbNthStat = &pb.FindDailyServerBandwidthStatsResponse_Stat{}
-	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, dayFrom, dayTo, percentile)
+	percentileStat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, dayFrom, dayTo, percentile, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	if err != nil {
 		return nil, err
 	}
@@ -308,6 +351,27 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 		}
 	}
 
+	// 带宽算法
+	if len(req.Algo) == 0 {
+		var bandwidthUserId = userId
+		if bandwidthUserId <= 0 {
+			if req.UserId > 0 {
+				bandwidthUserId = req.UserId
+			} else if req.ServerId > 0 {
+				bandwidthUserId, err = models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		if bandwidthUserId > 0 {
+			req.Algo, err = models.SharedUserDAO.FindUserBandwidthAlgoForView(tx, bandwidthUserId, nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if req.UserId <= 0 && req.ServerId <= 0 {
 		return &pb.FindDailyServerBandwidthStatsBetweenDaysResponse{
 			Stats: nil,
@@ -327,10 +391,10 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 	var pbStats = []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{}
 	var pbNthStat *pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat
 	if req.ServerId > 0 { // 服务统计
-		pbStats, err = models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo)
+		pbStats, err = models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo, req.Algo == systemconfigs.BandwidthAlgoAvg)
 
 		// nth
-		stat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo, req.Percentile)
+		stat, err := models.SharedServerBandwidthStatDAO.FindPercentileBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo, req.Percentile, req.Algo == systemconfigs.BandwidthAlgoAvg)
 		if err != nil {
 			return nil, err
 		}
@@ -343,10 +407,10 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 			}
 		}
 	} else { // 用户统计
-		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo)
+		pbStats, err = models.SharedUserBandwidthStatDAO.FindUserBandwidthStatsBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo, req.Algo == systemconfigs.BandwidthAlgoAvg)
 
 		// nth
-		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo, req.Percentile)
+		stat, err := models.SharedUserBandwidthStatDAO.FindPercentileBetweenDays(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo, req.Percentile, req.Algo == systemconfigs.BandwidthAlgoAvg)
 		if err != nil {
 			return nil, err
 		}
