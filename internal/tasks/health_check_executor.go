@@ -212,10 +212,10 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 		} else if isChanged {
 			// 通知恢复或下线
 			if result.IsOk {
-				message := "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
+				var message = "健康检查成功，节点\"" + result.Node.Name + "\"已恢复上线"
 				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeUp, models.MessageLevelSuccess, message, message, nil, false)
 			} else {
-				message := "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
+				var message = "健康检查失败，节点\"" + result.Node.Name + "\"已自动下线"
 				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), models.MessageTypeHealthCheckNodeDown, models.MessageLevelError, message, message, nil, false)
 			}
 			if err != nil {
