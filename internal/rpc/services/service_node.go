@@ -1347,6 +1347,11 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		}
 
 		for _, ipAddress := range ipAddresses {
+			// 检查专属节点
+			if !ipAddress.IsValidInCluster(req.NodeClusterId) {
+				continue
+			}
+
 			var ip = ipAddress.DNSIP()
 			if len(ip) == 0 {
 				continue
@@ -1539,7 +1544,7 @@ func (this *NodeService) UpdateNodeDNS(ctx context.Context, req *pb.UpdateNodeDN
 					return nil, err
 				}
 			} else {
-				_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, true, 0)
+				_, err = models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, nodeconfigs.NodeRoleNode, "DNS IP", req.IpAddr, true, true, 0, nil)
 				if err != nil {
 					return nil, err
 				}

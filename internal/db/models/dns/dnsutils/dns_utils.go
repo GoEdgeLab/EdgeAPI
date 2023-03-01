@@ -113,7 +113,7 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster, checkNodeIssues bo
 		// TODO 检查节点数量不能为0
 
 		for _, node := range nodes {
-			nodeId := int64(node.Id)
+			var nodeId = int64(node.Id)
 
 			routeCodes, err := node.DNSRouteCodesForDomainId(domainId)
 			if err != nil {

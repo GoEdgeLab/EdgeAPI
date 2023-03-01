@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/types"
 )
@@ -21,7 +23,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddress(ctx context.Context, req *
 
 	var tx = this.NullTx()
 
-	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.IsUp, 0)
+	addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, req.Ip, req.CanAccess, req.IsUp, 0, req.NodeClusterIds)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +49,7 @@ func (this *NodeIPAddressService) CreateNodeIPAddresses(ctx context.Context, req
 
 	var result = []int64{}
 	for _, ip := range req.IpList {
-		addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, ip, req.CanAccess, req.IsUp, groupId)
+		addressId, err := models.SharedNodeIPAddressDAO.CreateAddress(tx, adminId, req.NodeId, req.Role, req.Name, ip, req.CanAccess, req.IsUp, groupId, req.NodeClusterIds)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +69,7 @@ func (this *NodeIPAddressService) UpdateNodeIPAddress(ctx context.Context, req *
 
 	var tx = this.NullTx()
 
-	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, adminId, req.NodeIPAddressId, req.Name, req.Ip, req.CanAccess, req.IsOn, req.IsUp)
+	err = models.SharedNodeIPAddressDAO.UpdateAddress(tx, adminId, req.NodeIPAddressId, req.Name, req.Ip, req.CanAccess, req.IsOn, req.IsUp, req.ClusterIds)
 	if err != nil {
 		return nil, err
 	}
@@ -143,27 +145,48 @@ func (this *NodeIPAddressService) FindEnabledNodeIPAddress(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if address == nil {
+		return &pb.FindEnabledNodeIPAddressResponse{
+			NodeIPAddress: nil,
+		}, nil
+	}
 
-	var result *pb.NodeIPAddress = nil
-	if address != nil {
-		result = &pb.NodeIPAddress{
-			Id:          int64(address.Id),
-			NodeId:      int64(address.NodeId),
-			Role:        address.Role,
-			Name:        address.Name,
-			Ip:          address.Ip,
-			Description: address.Description,
-			State:       int64(address.State),
-			Order:       int64(address.Order),
-			CanAccess:   address.CanAccess,
-			IsOn:        address.IsOn,
-			IsUp:        address.IsUp,
-			IsHealthy:   address.IsHealthy,
-			BackupIP:    address.DecodeBackupIP(),
+	// CDN集群
+	var pbNodeClusters = []*pb.NodeCluster{}
+	if len(address.ClusterIds) > 0 {
+		if address.Role == nodeconfigs.NodeRoleNode { // 边缘节点
+			var clusterIds = address.DecodeClusterIds()
+			for _, clusterId := range clusterIds {
+				cluster, err := models.SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, nil)
+				if err != nil {
+					return nil, err
+				}
+				if cluster != nil {
+					pbNodeClusters = append(pbNodeClusters, &pb.NodeCluster{
+						Id:   int64(cluster.Id),
+						Name: cluster.Name,
+					})
+				}
+			}
 		}
 	}
 
-	return &pb.FindEnabledNodeIPAddressResponse{NodeIPAddress: result}, nil
+	return &pb.FindEnabledNodeIPAddressResponse{NodeIPAddress: &pb.NodeIPAddress{
+		Id:           int64(address.Id),
+		NodeId:       int64(address.NodeId),
+		Role:         address.Role,
+		Name:         address.Name,
+		Ip:           address.Ip,
+		Description:  address.Description,
+		State:        int64(address.State),
+		Order:        int64(address.Order),
+		CanAccess:    address.CanAccess,
+		IsOn:         address.IsOn,
+		IsUp:         address.IsUp,
+		IsHealthy:    address.IsHealthy,
+		BackupIP:     address.DecodeBackupIP(),
+		NodeClusters: pbNodeClusters,
+	}}, nil
 }
 
 // FindAllEnabledNodeIPAddressesWithNodeId 查找节点的所有地址
@@ -181,22 +204,44 @@ func (this *NodeIPAddressService) FindAllEnabledNodeIPAddressesWithNodeId(ctx co
 		return nil, err
 	}
 
-	result := []*pb.NodeIPAddress{}
+	var result = []*pb.NodeIPAddress{}
+	var cacheMap = utils.NewCacheMap()
 	for _, address := range addresses {
+		// 集群
+		var pbNodeClusters = []*pb.NodeCluster{}
+		var clusterIds = address.DecodeClusterIds()
+		if len(clusterIds) > 0 {
+			if address.Role == nodeconfigs.NodeRoleNode { // 边缘节点
+				for _, clusterId := range clusterIds {
+					nodeCluster, err := models.SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
+					if err != nil {
+						return nil, err
+					}
+					if nodeCluster != nil {
+						pbNodeClusters = append(pbNodeClusters, &pb.NodeCluster{
+							Id:   int64(nodeCluster.Id),
+							Name: nodeCluster.Name,
+						})
+					}
+				}
+			}
+		}
+
 		result = append(result, &pb.NodeIPAddress{
-			Id:          int64(address.Id),
-			NodeId:      int64(address.NodeId),
-			Role:        address.Role,
-			Name:        address.Name,
-			Ip:          address.Ip,
-			Description: address.Description,
-			State:       int64(address.State),
-			Order:       int64(address.Order),
-			CanAccess:   address.CanAccess,
-			IsOn:        address.IsOn,
-			IsUp:        address.IsUp,
-			IsHealthy:   address.IsHealthy,
-			BackupIP:    address.DecodeBackupIP(),
+			Id:           int64(address.Id),
+			NodeId:       int64(address.NodeId),
+			Role:         address.Role,
+			Name:         address.Name,
+			Ip:           address.Ip,
+			Description:  address.Description,
+			State:        int64(address.State),
+			Order:        int64(address.Order),
+			CanAccess:    address.CanAccess,
+			IsOn:         address.IsOn,
+			IsUp:         address.IsUp,
+			IsHealthy:    address.IsHealthy,
+			BackupIP:     address.DecodeBackupIP(),
+			NodeClusters: pbNodeClusters,
 		})
 	}
 
@@ -236,18 +281,38 @@ func (this *NodeIPAddressService) ListEnabledNodeIPAddresses(ctx context.Context
 
 	var pbAddrs = []*pb.NodeIPAddress{}
 	for _, addr := range addresses {
+		var clusterIds = addr.DecodeClusterIds()
+		var pbNodeClusters = []*pb.NodeCluster{}
+		if len(clusterIds) > 0 {
+			if addr.Role == nodeconfigs.NodeRoleNode { // 边缘节点
+				for _, clusterId := range clusterIds {
+					cluster, err := models.SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, nil)
+					if err != nil {
+						return nil, err
+					}
+					if cluster != nil {
+						pbNodeClusters = append(pbNodeClusters, &pb.NodeCluster{
+							Id:   int64(cluster.Id),
+							Name: cluster.Name,
+						})
+					}
+				}
+			}
+		}
+
 		pbAddrs = append(pbAddrs, &pb.NodeIPAddress{
-			Id:          int64(addr.Id),
-			NodeId:      int64(addr.NodeId),
-			Role:        addr.Role,
-			Name:        addr.Name,
-			Ip:          addr.Ip,
-			Description: addr.Description,
-			CanAccess:   addr.CanAccess,
-			IsOn:        addr.IsOn,
-			IsUp:        addr.IsUp,
-			IsHealthy:   addr.IsHealthy,
-			BackupIP:    addr.DecodeBackupIP(),
+			Id:           int64(addr.Id),
+			NodeId:       int64(addr.NodeId),
+			Role:         addr.Role,
+			Name:         addr.Name,
+			Ip:           addr.Ip,
+			Description:  addr.Description,
+			CanAccess:    addr.CanAccess,
+			IsOn:         addr.IsOn,
+			IsUp:         addr.IsUp,
+			IsHealthy:    addr.IsHealthy,
+			BackupIP:     addr.DecodeBackupIP(),
+			NodeClusters: pbNodeClusters,
 		})
 	}
 	return &pb.ListEnabledNodeIPAddressesResponse{NodeIPAddresses: pbAddrs}, nil

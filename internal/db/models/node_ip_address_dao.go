@@ -121,7 +121,7 @@ func (this *NodeIPAddressDAO) FindAddressIsHealthy(tx *dbs.Tx, addressId int64) 
 }
 
 // CreateAddress 创建IP地址
-func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, isUp bool, groupId int64) (addressId int64, err error) {
+func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId int64, role nodeconfigs.NodeRole, name string, ip string, canAccess bool, isUp bool, groupId int64, clusterIds []int64) (addressId int64, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
 	}
@@ -134,6 +134,17 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 	op.CanAccess = canAccess
 	op.IsUp = isUp
 	op.GroupId = groupId
+
+	// 集群
+	if len(clusterIds) == 0 {
+		op.ClusterIds = "[]"
+	} else {
+		clusterIdsJSON, err := json.Marshal(clusterIds)
+		if err != nil {
+			return 0, err
+		}
+		op.ClusterIds = clusterIdsJSON
+	}
 
 	op.State = NodeIPAddressStateEnabled
 	addressId, err = this.SaveInt64(tx, op)
@@ -156,7 +167,7 @@ func (this *NodeIPAddressDAO) CreateAddress(tx *dbs.Tx, adminId int64, nodeId in
 }
 
 // UpdateAddress 修改IP地址
-func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId int64, name string, ip string, canAccess bool, isOn bool, isUp bool) (err error) {
+func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId int64, name string, ip string, canAccess bool, isOn bool, isUp bool, clusterIds []int64) (err error) {
 	if addressId <= 0 {
 		return errors.New("invalid addressId")
 	}
@@ -168,6 +179,17 @@ func (this *NodeIPAddressDAO) UpdateAddress(tx *dbs.Tx, adminId int64, addressId
 	op.CanAccess = canAccess
 	op.IsOn = isOn
 	op.IsUp = isUp
+
+	// 集群
+	if len(clusterIds) == 0 {
+		op.ClusterIds = "[]"
+	} else {
+		clusterIdsJSON, err := json.Marshal(clusterIds)
+		if err != nil {
+			return err
+		}
+		op.ClusterIds = clusterIdsJSON
+	}
 
 	op.State = NodeIPAddressStateEnabled // 恢复状态
 	err = this.Save(tx, op)

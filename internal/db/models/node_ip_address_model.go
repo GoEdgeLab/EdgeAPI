@@ -6,6 +6,7 @@ import "github.com/iwind/TeaGo/dbs"
 type NodeIPAddress struct {
 	Id                uint32   `field:"id"`                // ID
 	NodeId            uint32   `field:"nodeId"`            // 节点ID
+	ClusterIds        dbs.JSON `field:"clusterIds"`        // 所属集群IDs
 	Role              string   `field:"role"`              // 节点角色
 	GroupId           uint32   `field:"groupId"`           // 所属分组ID
 	Name              string   `field:"name"`              // 名称
@@ -26,25 +27,26 @@ type NodeIPAddress struct {
 }
 
 type NodeIPAddressOperator struct {
-	Id                interface{} // ID
-	NodeId            interface{} // 节点ID
-	Role              interface{} // 节点角色
-	GroupId           interface{} // 所属分组ID
-	Name              interface{} // 名称
-	Ip                interface{} // IP地址
-	Description       interface{} // 描述
-	State             interface{} // 状态
-	Order             interface{} // 排序
-	CanAccess         interface{} // 是否可以访问
-	IsOn              interface{} // 是否启用
-	IsUp              interface{} // 是否上线
-	IsHealthy         interface{} // 是否健康
-	Thresholds        interface{} // 上线阈值
-	Connectivity      interface{} // 连通性状态
-	BackupIP          interface{} // 备用IP
-	BackupThresholdId interface{} // 触发备用IP的阈值
-	CountUp           interface{} // UP状态次数
-	CountDown         interface{} // DOWN状态次数
+	Id                any // ID
+	NodeId            any // 节点ID
+	ClusterIds        any // 所属集群IDs
+	Role              any // 节点角色
+	GroupId           any // 所属分组ID
+	Name              any // 名称
+	Ip                any // IP地址
+	Description       any // 描述
+	State             any // 状态
+	Order             any // 排序
+	CanAccess         any // 是否可以访问
+	IsOn              any // 是否启用
+	IsUp              any // 是否上线
+	IsHealthy         any // 是否健康
+	Thresholds        any // 上线阈值
+	Connectivity      any // 连通性状态
+	BackupIP          any // 备用IP
+	BackupThresholdId any // 触发备用IP的阈值
+	CountUp           any // UP状态次数
+	CountDown         any // DOWN状态次数
 }
 
 func NewNodeIPAddressOperator() *NodeIPAddressOperator {

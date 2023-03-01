@@ -493,7 +493,12 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 		}
 		for _, route := range routeCodes {
 			for _, ipAddress := range ipAddresses {
-				ip := ipAddress.DNSIP()
+				// 检查专属节点
+				if !ipAddress.IsValidInCluster(clusterId) {
+					continue
+				}
+
+				var ip = ipAddress.DNSIP()
 				if len(ip) == 0 {
 					continue
 				}
@@ -504,7 +509,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				nodeKeys = append(nodeKeys, key)
 				record, ok := nodeRecordMapping[key]
 				if !ok {
-					recordType := dnstypes.RecordTypeA
+					var recordType = dnstypes.RecordTypeA
 					if utils.IsIPv6(ip) {
 						recordType = dnstypes.RecordTypeAAAA
 					}

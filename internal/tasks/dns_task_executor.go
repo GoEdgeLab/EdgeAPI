@@ -387,6 +387,11 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 			continue
 		}
 		for _, ipAddress := range ipAddresses {
+			// 检查专属节点
+			if !ipAddress.IsValidInCluster(clusterId) {
+				continue
+			}
+
 			var ip = ipAddress.DNSIP()
 			if len(ip) == 0 || !ipAddress.CanAccess || !ipAddress.IsUp || !ipAddress.IsOn {
 				continue
