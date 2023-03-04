@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/md5"
@@ -11,6 +12,7 @@ import (
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
+	stringutil "github.com/iwind/TeaGo/utils/string"
 	"io"
 	"os"
 	"os/exec"
@@ -435,10 +437,17 @@ func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.Uploa
 		}
 
 		// 检查文件是否可执行
-		var testCmd = exec.Command(targetFile, "-V")
-		err = testCmd.Run()
+		var versionCmd = exec.Command(targetFile, "-V")
+		var versionBuf = &bytes.Buffer{}
+		versionCmd.Stdout = versionBuf
+		err = versionCmd.Run()
 		if err != nil {
 			return nil, errors.New("test file failed: " + err.Error())
+		}
+
+		// 检查版本
+		if stringutil.VersionCompare(versionCmd.String(), teaconst.Version) >= 0 {
+			return &pb.UploadAPINodeFileResponse{}, nil
 		}
 
 		// 替换文件
