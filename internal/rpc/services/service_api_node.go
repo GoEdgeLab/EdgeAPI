@@ -434,6 +434,13 @@ func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.Uploa
 			return nil, errors.New("extract file failed: " + err.Error())
 		}
 
+		// 检查文件是否可执行
+		var testCmd = exec.Command(targetFile, "-V")
+		err = testCmd.Run()
+		if err != nil {
+			return nil, errors.New("test file failed: " + err.Error())
+		}
+
 		// 替换文件
 		err = os.Remove(exe)
 		if err != nil {
