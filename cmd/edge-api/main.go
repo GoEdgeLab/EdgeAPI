@@ -26,8 +26,12 @@ func main() {
 	var app = apps.NewAppCmd()
 	app.Version(teaconst.Version)
 	app.Product(teaconst.ProductName)
-	app.Usage(teaconst.ProcessName + " [start|stop|restart|setup|upgrade|service|daemon|issues]")
+	app.Usage(teaconst.ProcessName + " [-h|-v|start|stop|restart|setup|upgrade|service|daemon|issues]")
 
+	// 短版本号
+	app.On("-V", func() {
+		_, _ = os.Stdout.WriteString(teaconst.Version)
+	})
 	app.On("setup", func() {
 		var setupCmd = setup.NewSetupFromCmd()
 		err := setupCmd.Run()

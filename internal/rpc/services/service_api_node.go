@@ -1,12 +1,21 @@
 package services
 
 import (
+	"compress/gzip"
 	"context"
+	"crypto/md5"
+	"errors"
+	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 )
 
 type APINodeService struct {
@@ -233,7 +242,11 @@ func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *
 		return nil, err
 	}
 
-	return &pb.FindCurrentAPINodeVersionResponse{Version: teaconst.Version}, nil
+	return &pb.FindCurrentAPINodeVersionResponse{
+		Version: teaconst.Version,
+		Os:      runtime.GOOS,
+		Arch:    runtime.GOARCH,
+	}, nil
 }
 
 // FindCurrentAPINode 获取当前API节点的信息
@@ -311,4 +324,133 @@ func (this *APINodeService) DebugAPINode(ctx context.Context, req *pb.DebugAPINo
 
 	teaconst.Debug = req.Debug
 	return this.Success()
+}
+
+// UploadAPINodeFile 上传新版API节点文件
+func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.UploadAPINodeFileRequest) (*pb.UploadAPINodeFileResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	exe, err := os.Executable()
+	if err != nil {
+		return nil, errors.New("can not find executable file: " + err.Error())
+	}
+
+	var targetDir = filepath.Dir(exe)
+	var targetFilename = teaconst.ProcessName // 这里不使用 filepath.Base() 是因为文件名可能变成修改后的临时文件名
+	var targetCompressedFile = targetDir + "/." + targetFilename + ".gz"
+	var targetFile = targetDir + "/." + targetFilename
+
+	if req.IsFirstChunk {
+		_ = os.Remove(targetCompressedFile)
+		_ = os.Remove(targetFile)
+	}
+
+	if len(req.ChunkData) > 0 {
+		err = func() error {
+			var flags = os.O_CREATE | os.O_WRONLY
+			if req.IsFirstChunk {
+				flags |= os.O_TRUNC
+			} else {
+				flags |= os.O_APPEND
+			}
+			fp, err := os.OpenFile(targetCompressedFile, flags, 0666)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = fp.Close()
+			}()
+
+			_, err = fp.Write(req.ChunkData)
+			return err
+		}()
+		if err != nil {
+			return nil, errors.New("write file failed: " + err.Error())
+		}
+	}
+
+	if req.IsLastChunk {
+		err = func() error {
+			// 删除压缩文件
+			defer func() {
+				_ = os.Remove(targetCompressedFile)
+			}()
+
+			// 检查SUM
+			fp, err := os.Open(targetCompressedFile)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = fp.Close()
+			}()
+
+			var hash = md5.New()
+			_, err = io.Copy(hash, fp)
+			if err != nil {
+				return err
+			}
+
+			var sum = fmt.Sprintf("%x", hash.Sum(nil))
+			if sum != req.Sum {
+				return errors.New("check sum failed: '" + sum + "' expected: '" + req.Sum + "'")
+			}
+
+			// 解压
+			fp2, err := os.Open(targetCompressedFile)
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				_ = fp2.Close()
+			}()
+
+			gzipReader, err := gzip.NewReader(fp2)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = gzipReader.Close()
+			}()
+			targetWriter, err := os.OpenFile(targetFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = targetWriter.Close()
+			}()
+			_, err = io.Copy(targetWriter, gzipReader)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}()
+		if err != nil {
+			return nil, errors.New("extract file failed: " + err.Error())
+		}
+
+		// 替换文件
+		err = os.Remove(exe)
+		if err != nil {
+			return nil, errors.New("remove old file failed: " + err.Error())
+		}
+		err = os.Rename(targetFile, exe)
+		if err != nil {
+			return nil, errors.New("rename file failed: " + err.Error())
+		}
+
+		// 重启
+		var cmd = exec.Command(exe, "restart")
+		err = cmd.Start()
+		if err != nil {
+			return nil, errors.New("start new process failed: " + err.Error())
+		}
+	}
+
+	return &pb.UploadAPINodeFileResponse{}, nil
 }
