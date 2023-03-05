@@ -1,7 +1,6 @@
 package services
 
 import (
-	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/md5"
@@ -10,12 +9,13 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	executils "github.com/TeaOSLab/EdgeAPI/internal/utils/exec"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	stringutil "github.com/iwind/TeaGo/utils/string"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 )
@@ -437,16 +437,18 @@ func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.Uploa
 		}
 
 		// 检查文件是否可执行
-		var versionCmd = exec.Command(targetFile, "-V")
-		var versionBuf = &bytes.Buffer{}
-		versionCmd.Stdout = versionBuf
+		var versionCmd = executils.NewCmd(targetFile, "-V").WithStdout().WithStderr()
 		err = versionCmd.Run()
 		if err != nil {
-			return nil, errors.New("test file failed: " + err.Error())
+			return nil, errors.New("test file failed: " + versionCmd.Stderr())
+		}
+		var newVersion = versionCmd.Stdout()
+		if len(newVersion) == 0 {
+			return nil, errors.New("test file failed, new version should not be empty")
 		}
 
 		// 检查版本
-		if stringutil.VersionCompare(versionCmd.String(), teaconst.Version) >= 0 {
+		if stringutil.VersionCompare(newVersion, teaconst.Version) <= 0 {
 			return &pb.UploadAPINodeFileResponse{}, nil
 		}
 
@@ -460,11 +462,20 @@ func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.Uploa
 			return nil, errors.New("rename file failed: " + err.Error())
 		}
 
+		// 执行升级
+		if !Tea.IsTesting() { // 开发环境下防止破坏本地数据库
+			var upgradeCmd = executils.NewCmd(exe, "upgrade").WithStderr()
+			err = upgradeCmd.Run()
+			if err != nil {
+				return nil, errors.New("execute 'upgrade' command failed: " + upgradeCmd.Stderr())
+			}
+		}
+
 		// 重启
-		var cmd = exec.Command(exe, "restart")
-		err = cmd.Start()
+		var restartCmd = executils.NewCmd(exe, "restart").WithStderr()
+		err = restartCmd.Start()
 		if err != nil {
-			return nil, errors.New("start new process failed: " + err.Error())
+			return nil, errors.New("start new process failed: " + restartCmd.Stderr())
 		}
 	}
 
