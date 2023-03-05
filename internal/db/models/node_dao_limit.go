@@ -7,6 +7,13 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 )
 
+func (this *NodeDAO) CountAllAuthorityNodes(tx *dbs.Tx) (int64, error) {
+	return this.Query(tx).
+		State(NodeStateEnabled).
+		Where("clusterId IN (SELECT id FROM " + SharedNodeClusterDAO.Table + " WHERE state=1)").
+		Count()
+}
+
 func (this *NodeDAO) CheckNodesLimit(tx *dbs.Tx) error {
 	return nil
 }
