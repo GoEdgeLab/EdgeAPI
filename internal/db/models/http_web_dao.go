@@ -458,6 +458,16 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		config.UAM = uamConfig
 	}
 
+	// CC
+	if teaconst.IsPlus && IsNotNull(web.Cc) {
+		var ccConfig = &serverconfigs.HTTPCCConfig{}
+		err = json.Unmarshal(web.Cc, ccConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.CC = ccConfig
+	}
+
 	// Referers
 	if IsNotNull(web.Referers) {
 		var referersConfig = &serverconfigs.ReferersConfig{}
@@ -1230,6 +1240,35 @@ func (this *HTTPWebDAO) FindWebUAM(tx *dbs.Tx, webId int64) ([]byte, error) {
 	return this.Query(tx).
 		Pk(webId).
 		Result("uam").
+		FindJSONCol()
+}
+
+// UpdateWebCC 开启CC
+func (this *HTTPWebDAO) UpdateWebCC(tx *dbs.Tx, webId int64, ccConfig *serverconfigs.HTTPCCConfig) error {
+	if ccConfig == nil {
+		return nil
+	}
+	configJSON, err := json.Marshal(ccConfig)
+	if err != nil {
+		return err
+	}
+
+	err = this.Query(tx).
+		Pk(webId).
+		Set("cc", configJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// FindWebCC 查找服务的CC配置
+func (this *HTTPWebDAO) FindWebCC(tx *dbs.Tx, webId int64) ([]byte, error) {
+	return this.Query(tx).
+		Pk(webId).
+		Result("cc").
 		FindJSONCol()
 }
 

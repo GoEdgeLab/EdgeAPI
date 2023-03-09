@@ -38,6 +38,7 @@ type HTTPWeb struct {
 	RequestLimit       dbs.JSON `field:"requestLimit"`       // 请求限制
 	RequestScripts     dbs.JSON `field:"requestScripts"`     // 请求脚本
 	Uam                dbs.JSON `field:"uam"`                // UAM设置
+	Cc                 dbs.JSON `field:"cc"`                 // CC设置
 	Referers           dbs.JSON `field:"referers"`           // 防盗链设置
 	UserAgent          dbs.JSON `field:"userAgent"`          // UserAgent设置
 }
@@ -77,6 +78,7 @@ type HTTPWebOperator struct {
 	RequestLimit       any // 请求限制
 	RequestScripts     any // 请求脚本
 	Uam                any // UAM设置
+	Cc                 any // CC设置
 	Referers           any // 防盗链设置
 	UserAgent          any // UserAgent设置
 }
