@@ -179,3 +179,20 @@ func (this *NodeLogService) UpdateAllNodeLogsRead(ctx context.Context, req *pb.U
 	}
 	return this.Success()
 }
+
+// DeleteNodeLogs 删除日志
+func (this *NodeLogService) DeleteNodeLogs(ctx context.Context, req *pb.DeleteNodeLogsRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	err = models.SharedNodeLogDAO.DeleteMatchedNodeLogs(tx, req.Role, req.NodeClusterId, req.NodeId, req.ServerId, req.OriginId, req.AllServers, req.DayFrom, req.DayTo, req.Keyword, req.Level, types.Int8(req.FixedState), req.IsUnread, req.Tag)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}

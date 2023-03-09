@@ -412,3 +412,81 @@ func (this *NodeLogDAO) DeleteNodeLogsWithCluster(tx *dbs.Tx, role nodeconfigs.N
 	_, err = query.Delete()
 	return err
 }
+
+// DeleteMatchedNodeLogs 删除匹配的日志
+func (this *NodeLogDAO) DeleteMatchedNodeLogs(tx *dbs.Tx,
+	role string,
+	nodeClusterId int64,
+	nodeId int64,
+	serverId int64,
+	originId int64,
+	allServers bool,
+	dayFrom string,
+	dayTo string,
+	keyword string,
+	level string,
+	fixedState configutils.BoolState,
+	isUnread bool,
+	tag string) error {
+	var query = this.Query(tx)
+	if len(role) > 0 {
+		query.Attr("role", role)
+	}
+	if nodeId > 0 {
+		query.Attr("nodeId", nodeId)
+	} else {
+		if nodeClusterId > 0 {
+			query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE clusterId=:nodeClusterId AND state=1)")
+			query.Param("nodeClusterId", nodeClusterId)
+		} else {
+			switch role {
+			case nodeconfigs.NodeRoleNode:
+				query.Where("nodeId IN (SELECT id FROM " + SharedNodeDAO.Table + " WHERE state=1 AND clusterId>0)")
+			case nodeconfigs.NodeRoleDNS:
+				query.Where("nodeId IN (SELECT id FROM edgeNSNodes WHERE state=1 AND clusterId>0)") // 没有用 SharedNSNodeDAO() 因为有包循环引用的问题
+			}
+		}
+	}
+	if serverId > 0 {
+		query.Attr("serverId", serverId)
+	} else if allServers {
+		query.Where("serverId>0")
+	}
+	if originId > 0 {
+		query.Attr("originId", originId)
+	}
+	if fixedState == configutils.BoolStateYes {
+		query.Attr("isFixed", 1)
+		query.Where("level IN ('error', 'success', 'warning')")
+	} else if fixedState == configutils.BoolStateNo {
+		query.Attr("isFixed", 0)
+		query.Where("level IN ('error', 'success', 'warning')")
+	}
+	if len(dayFrom) > 0 {
+		dayFrom = strings.ReplaceAll(dayFrom, "-", "")
+		query.Gte("day", dayFrom)
+	}
+	if len(dayTo) > 0 {
+		dayTo = strings.ReplaceAll(dayTo, "-", "")
+		query.Lte("day", dayTo)
+	}
+	if len(keyword) > 0 {
+		query.Where("(tag LIKE :keyword OR description LIKE :keyword)").
+			Param("keyword", dbutils.QuoteLike(keyword))
+	}
+	if len(level) > 0 {
+		var pieces = strings.Split(level, ",")
+		if len(pieces) == 1 {
+			query.Attr("level", pieces[0])
+		} else {
+			query.Attr("level", pieces)
+		}
+	}
+	if isUnread {
+		query.Attr("isRead", 0)
+	}
+	if len(tag) > 0 {
+		query.Like("tag", dbutils.QuoteLikeKeyword(tag))
+	}
+	return query.DeleteQuickly()
+}
