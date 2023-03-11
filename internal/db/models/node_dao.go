@@ -1898,7 +1898,18 @@ func (this *NodeDAO) DeleteNodeFromCluster(tx *dbs.Tx, nodeId int64, clusterId i
 		op.State = NodeStateDisabled
 	}
 
-	return this.Save(tx, op)
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	// 是否为删除
+	if newClusterId == 0 {
+		// 删除运行日志
+		return SharedNodeLogDAO.DeleteNodeLogs(tx, nodeconfigs.NodeRoleNode, nodeId)
+	}
+
+	return nil
 }
 
 // TransferPrimaryClusterNodes 自动转移集群下的节点
