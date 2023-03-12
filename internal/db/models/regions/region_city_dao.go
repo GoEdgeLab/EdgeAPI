@@ -20,8 +20,6 @@ const (
 
 type RegionCityDAO dbs.DAO
 
-var regionCityNameAndIdCacheMap = map[string]int64{} //  city name @ province id => id
-
 func NewRegionCityDAO() *RegionCityDAO {
 	return dbs.NewDAO(&RegionCityDAO{
 		DAOObject: dbs.DAOObject{
@@ -119,37 +117,6 @@ func (this *RegionCityDAO) FindCityIdWithName(tx *dbs.Tx, provinceId int64, city
 		FindInt64Col(0)
 }
 
-// FindCityIdWithNameCacheable 根据城市名查找城市ID，并加入缓存
-func (this *RegionCityDAO) FindCityIdWithNameCacheable(tx *dbs.Tx, provinceId int64, cityName string) (int64, error) {
-	key := cityName + "@" + numberutils.FormatInt64(provinceId)
-
-	SharedCacheLocker.RLock()
-	cityId, ok := regionCityNameAndIdCacheMap[key]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return cityId, nil
-	}
-	SharedCacheLocker.RUnlock()
-
-	cityId, err := this.Query(tx).
-		Attr("provinceId", provinceId).
-		Where("(name=:cityName OR customName=:cityName OR JSON_CONTAINS(codes, :cityNameJSON) OR JSON_CONTAINS(customCodes, :cityNameJSON))").
-		Param("cityName", cityName).
-		Param("cityNameJSON", strconv.Quote(cityName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
-		FindInt64Col(0)
-	if err != nil {
-		return 0, err
-	}
-	if cityId > 0 {
-		SharedCacheLocker.Lock()
-		regionCityNameAndIdCacheMap[key] = cityId
-		SharedCacheLocker.Unlock()
-	}
-
-	return cityId, nil
-}
-
 // FindAllEnabledCities 获取所有城市信息
 func (this *RegionCityDAO) FindAllEnabledCities(tx *dbs.Tx) (result []*RegionCity, err error) {
 	_, err = this.Query(tx).
@@ -178,12 +145,6 @@ func (this *RegionCityDAO) UpdateCityCustom(tx *dbs.Tx, cityId int64, customName
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		SharedCacheLocker.Lock()
-		regionCityNameAndIdCacheMap = map[string]int64{}
-		SharedCacheLocker.Unlock()
-	}()
 
 	return this.Query(tx).
 		Pk(cityId).

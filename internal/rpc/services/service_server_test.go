@@ -19,17 +19,17 @@ func TestServerService_UploadServerHTTPRequestStat(t *testing.T) {
 		RegionCities: []*pb.UploadServerHTTPRequestStatRequest_RegionCity{
 			{
 				ServerId:      1,
-				CountryName:   "中国",
-				ProvinceName:  "安徽省",
-				CityName:      "阜阳市",
+				CountryId:     1,   // 中国
+				ProvinceId:    12,  // 安徽省
+				CityId:        108, // 阜阳市
 				CountRequests: 1,
 			},
 		},
 		RegionProviders: []*pb.UploadServerHTTPRequestStatRequest_RegionProvider{
 			{
-				ServerId: 1,
-				Name:     "电信",
-				Count:    1,
+				ServerId:   1,
+				ProviderId: 1, // 电信
+				Count:      1,
 			},
 		},
 		Systems: []*pb.UploadServerHTTPRequestStatRequest_System{

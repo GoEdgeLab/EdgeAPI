@@ -24,7 +24,6 @@ const (
 	CountryChinaId = 1
 )
 
-var regionCountryNameAndIdCacheMap = map[string]int64{} // country name => id
 var regionCountryIdAndNameCacheMap = map[int64]string{} // country id => name
 
 type RegionCountryDAO dbs.DAO
@@ -120,30 +119,6 @@ func (this *RegionCountryDAO) FindCountryIdWithName(tx *dbs.Tx, countryName stri
 		FindInt64Col(0)
 }
 
-// FindCountryIdWithNameCacheable 根据国家名查找国家ID，并可使用缓存
-func (this *RegionCountryDAO) FindCountryIdWithNameCacheable(tx *dbs.Tx, countryName string) (int64, error) {
-	SharedCacheLocker.RLock()
-	provinceId, ok := regionCountryNameAndIdCacheMap[countryName]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return provinceId, nil
-	}
-	SharedCacheLocker.RUnlock()
-
-	countryId, err := this.FindCountryIdWithName(tx, countryName)
-	if err != nil {
-		return 0, err
-	}
-
-	if countryId > 0 {
-		SharedCacheLocker.Lock()
-		regionCountryNameAndIdCacheMap[countryName] = countryId
-		SharedCacheLocker.Unlock()
-	}
-
-	return countryId, nil
-}
-
 // CreateCountry 根据数据ID创建国家
 func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId string) (int64, error) {
 	var op = NewRegionCountryOperator()
@@ -205,7 +180,6 @@ func (this *RegionCountryDAO) UpdateCountryCustom(tx *dbs.Tx, countryId int64, c
 
 	defer func() {
 		SharedCacheLocker.Lock()
-		regionCountryNameAndIdCacheMap = map[string]int64{}
 		regionCountryIdAndNameCacheMap = map[int64]string{}
 		SharedCacheLocker.Unlock()
 	}()

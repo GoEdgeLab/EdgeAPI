@@ -8,7 +8,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/clients"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
-	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -1627,52 +1626,33 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 		// IP => 地理位置
 		err := func() error {
 			// 区域
-			if len(result.CountryName) > 0 {
-				countryId, err := regions.SharedRegionCountryDAO.FindCountryIdWithNameCacheable(tx, result.CountryName)
-				if err != nil {
-					return err
+			if result.CountryId > 0 {
+				var countryKey = fmt.Sprintf("%d@%d@%s", result.ServerId, result.CountryId, day)
+				serverStatLocker.Lock()
+				stat, ok := serverHTTPCountryStatMap[countryKey]
+				if !ok {
+					stat = &TrafficStat{}
+					serverHTTPCountryStatMap[countryKey] = stat
 				}
-				if countryId > 0 {
-					countryKey := fmt.Sprintf("%d@%d@%s", result.ServerId, countryId, day)
+				stat.CountRequests += result.CountRequests
+				stat.Bytes += result.Bytes
+				stat.CountAttackRequests += result.CountAttackRequests
+				stat.AttackBytes += result.AttackBytes
+				serverStatLocker.Unlock()
+
+				// 省份
+				if result.ProvinceId > 0 {
+					var provinceKey = fmt.Sprintf("%d@%d@%s", result.ServerId, result.ProvinceId, month)
 					serverStatLocker.Lock()
-					stat, ok := serverHTTPCountryStatMap[countryKey]
-					if !ok {
-						stat = &TrafficStat{}
-						serverHTTPCountryStatMap[countryKey] = stat
-					}
-					stat.CountRequests += result.CountRequests
-					stat.Bytes += result.Bytes
-					stat.CountAttackRequests += result.CountAttackRequests
-					stat.AttackBytes += result.AttackBytes
+					serverHTTPProvinceStatMap[provinceKey] += result.CountRequests
 					serverStatLocker.Unlock()
 
-					// 省份
-					if len(result.ProvinceName) > 0 {
-						provinceId, err := regions.SharedRegionProvinceDAO.FindProvinceIdWithNameCacheable(tx, countryId, result.ProvinceName)
-						if err != nil {
-							return err
-						}
-						if provinceId > 0 {
-							key := fmt.Sprintf("%d@%d@%s", result.ServerId, provinceId, month)
-							serverStatLocker.Lock()
-							serverHTTPProvinceStatMap[key] += result.CountRequests
-							serverStatLocker.Unlock()
-
-							// 城市
-							if len(result.CityName) > 0 {
-								cityId, err := regions.SharedRegionCityDAO.FindCityIdWithNameCacheable(tx, provinceId, result.CityName)
-								if err != nil {
-									return err
-								}
-								if cityId > 0 {
-									key := fmt.Sprintf("%d@%d@%s", result.ServerId, cityId, month)
-									serverStatLocker.Lock()
-									serverHTTPCityStatMap[key] += result.CountRequests
-									serverStatLocker.Unlock()
-								}
-							}
-
-						}
+					// 城市
+					if result.CityId > 0 {
+						var cityKey = fmt.Sprintf("%d@%d@%s", result.ServerId, result.CityId, month)
+						serverStatLocker.Lock()
+						serverHTTPCityStatMap[cityKey] += result.CountRequests
+						serverStatLocker.Unlock()
 					}
 				}
 			}
@@ -1688,17 +1668,10 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 	for _, result := range req.RegionProviders {
 		// IP => 地理位置
 		err := func() error {
-			if len(result.Name) == 0 {
-				return nil
-			}
-			providerId, err := regions.SharedRegionProviderDAO.FindProviderIdWithNameCacheable(tx, result.Name)
-			if err != nil {
-				return err
-			}
-			if providerId > 0 {
-				key := fmt.Sprintf("%d@%d@%s", result.ServerId, providerId, month)
+			if result.ProviderId > 0 {
+				var providerKey = fmt.Sprintf("%d@%d@%s", result.ServerId, result.ProviderId, month)
 				serverStatLocker.Lock()
-				serverHTTPProviderStatMap[key] += result.Count
+				serverHTTPProviderStatMap[providerKey] += result.Count
 				serverStatLocker.Unlock()
 			}
 			return nil
@@ -1759,7 +1732,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 				// 直接返回不再进行操作
 				return nil
 			}
-			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, browserId, result.Version, month)
+			var key = fmt.Sprintf("%d@%d@%s@%s", result.ServerId, browserId, result.Version, month)
 			serverStatLocker.Lock()
 			serverHTTPBrowserStatMap[key] += result.Count
 			serverStatLocker.Unlock()
@@ -1776,7 +1749,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 			if result.HttpFirewallRuleGroupId <= 0 {
 				return nil
 			}
-			key := fmt.Sprintf("%d@%d@%s@%s", result.ServerId, result.HttpFirewallRuleGroupId, result.Action, day)
+			var key = fmt.Sprintf("%d@%d@%s@%s", result.ServerId, result.HttpFirewallRuleGroupId, result.Action, day)
 			serverStatLocker.Lock()
 			serverHTTPFirewallRuleGroupStatMap[key] += result.Count
 			serverStatLocker.Unlock()

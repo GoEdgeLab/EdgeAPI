@@ -17,8 +17,6 @@ const (
 	RegionProviderStateDisabled = 0 // 已禁用
 )
 
-var regionProviderNameAndIdCacheMap = map[string]int64{} // provider name => id
-
 type RegionProviderDAO dbs.DAO
 
 func NewRegionProviderDAO() *RegionProviderDAO {
@@ -88,35 +86,6 @@ func (this *RegionProviderDAO) FindProviderIdWithName(tx *dbs.Tx, providerName s
 		FindInt64Col(0)
 }
 
-// FindProviderIdWithNameCacheable 根据服务商名称查找服务商ID，并保存进缓存
-func (this *RegionProviderDAO) FindProviderIdWithNameCacheable(tx *dbs.Tx, providerName string) (int64, error) {
-	SharedCacheLocker.RLock()
-	providerId, ok := regionProviderNameAndIdCacheMap[providerName]
-	if ok {
-		SharedCacheLocker.RUnlock()
-		return providerId, nil
-	}
-	SharedCacheLocker.RUnlock()
-
-	providerId, err := this.Query(tx).
-		Where("(name=:providerName OR customName=:providerName OR JSON_CONTAINS(codes, :providerNameJSON) OR JSON_CONTAINS(customCodes, :providerNameJSON))").
-		Param("providerName", providerName).
-		Param("providerNameJSON", strconv.Quote(providerName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
-		FindInt64Col(0)
-	if err != nil {
-		return 0, err
-	}
-
-	if providerId > 0 {
-		SharedCacheLocker.Lock()
-		regionProviderNameAndIdCacheMap[providerName] = providerId
-		SharedCacheLocker.Unlock()
-	}
-
-	return providerId, nil
-}
-
 // CreateProvider 创建Provider
 func (this *RegionProviderDAO) CreateProvider(tx *dbs.Tx, name string) (int64, error) {
 	var op = NewRegionProviderOperator()
@@ -148,12 +117,6 @@ func (this *RegionProviderDAO) UpdateProviderCustom(tx *dbs.Tx, providerId int64
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		SharedCacheLocker.Lock()
-		regionProviderNameAndIdCacheMap = map[string]int64{}
-		SharedCacheLocker.Unlock()
-	}()
 
 	return this.Query(tx).
 		Pk(providerId).

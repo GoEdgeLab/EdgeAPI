@@ -54,7 +54,7 @@ func init() {
 				// 测试条件下缩短时间，以便进行观察
 				duration = 10 * time.Second
 			}
-			ticker := time.NewTicker(duration)
+			var ticker = time.NewTicker(duration)
 			for range ticker.C {
 				err := service.dumpServerHTTPStats()
 				if err != nil {
@@ -69,11 +69,11 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 地区
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPCountryStatMap
+		var m = serverHTTPCountryStatMap
 		serverHTTPCountryStatMap = map[string]*TrafficStat{}
 		serverStatLocker.Unlock()
 		for k, stat := range m {
-			pieces := strings.Split(k, "@")
+			var pieces = strings.Split(k, "@")
 			if len(pieces) != 3 {
 				continue
 			}
@@ -101,7 +101,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 省份
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPProvinceStatMap
+		var m = serverHTTPProvinceStatMap
 		serverHTTPProvinceStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, count := range m {
@@ -119,7 +119,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 城市
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPCityStatMap
+		var m = serverHTTPCityStatMap
 		serverHTTPCityStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, countRequests := range m {
@@ -137,7 +137,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 运营商
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPProviderStatMap
+		var m = serverHTTPProviderStatMap
 		serverHTTPProviderStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, count := range m {
@@ -155,7 +155,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 操作系统
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPSystemStatMap
+		var m = serverHTTPSystemStatMap
 		serverHTTPSystemStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, count := range m {
@@ -173,7 +173,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 浏览器
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPBrowserStatMap
+		var m = serverHTTPBrowserStatMap
 		serverHTTPBrowserStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, count := range m {
@@ -191,7 +191,7 @@ func (this *ServerService) dumpServerHTTPStats() error {
 	// 防火墙
 	{
 		serverStatLocker.Lock()
-		m := serverHTTPFirewallRuleGroupStatMap
+		var m = serverHTTPFirewallRuleGroupStatMap
 		serverHTTPFirewallRuleGroupStatMap = map[string]int64{}
 		serverStatLocker.Unlock()
 		for k, count := range m {
