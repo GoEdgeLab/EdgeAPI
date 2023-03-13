@@ -109,7 +109,7 @@ func (this *BaseService) ValidateAuthorityNode(ctx context.Context) (nodeId int6
 func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.UserType) (role rpcutils.UserType, nodeIntId int64, err error) {
 	// 默认包含大部分节点
 	if len(roles) == 0 {
-		roles = []rpcutils.UserType{rpcutils.UserTypeNode, rpcutils.UserTypeCluster, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeDNS, rpcutils.UserTypeReport, rpcutils.UserTypeMonitor, rpcutils.UserTypeLog}
+		roles = []rpcutils.UserType{rpcutils.UserTypeNode, rpcutils.UserTypeCluster, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeDNS, rpcutils.UserTypeReport, rpcutils.UserTypeMonitor, rpcutils.UserTypeLog, rpcutils.UserTypeAPI}
 	}
 
 	if ctx == nil {
