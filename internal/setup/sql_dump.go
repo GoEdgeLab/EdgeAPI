@@ -6,6 +6,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 	"io"
 	"regexp"
@@ -57,6 +58,7 @@ var recordsTables = []*SQLRecordsTable{
 	{
 		TableName:    "edgeClientAgentIPs",
 		UniqueFields: []string{"agentId", "ip"},
+		IgnoreId:     true,
 	},
 }
 
@@ -374,6 +376,7 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 
 		// 对比记录
 		// +
+		var newRecordsTable = this.findRecordsTable(newTable.Name)
 		for _, record := range newTable.Records {
 			var queryArgs = []string{}
 			var queryValues = []any{}
@@ -392,8 +395,15 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 				}
 			}
 
-			queryValues = append(queryValues, recordId)
-			one, err := db.FindOne("SELECT * FROM "+newTable.Name+" WHERE (("+strings.Join(queryArgs, " AND ")+") OR id=?)", queryValues...)
+			var one maps.Map
+
+			if newRecordsTable != nil && newRecordsTable.IgnoreId {
+				one, err = db.FindOne("SELECT * FROM "+newTable.Name+" WHERE (("+strings.Join(queryArgs, " AND ")+"))", queryValues...)
+			} else {
+				queryValues = append(queryValues, recordId)
+				one, err = db.FindOne("SELECT * FROM "+newTable.Name+" WHERE (("+strings.Join(queryArgs, " AND ")+") OR id=?)", queryValues...)
+			}
+
 			if err != nil {
 				return nil, err
 			}
@@ -411,7 +421,10 @@ func (this *SQLDump) applyQueue(db *dbs.DB, newResult *SQLDumpResult, showLog bo
 						continue
 					}
 
-					// ID需要保留，因为各个表格之间需要有对应关系
+					if newRecordsTable != nil && newRecordsTable.IgnoreId && k == "id" {
+						continue
+					}
+
 					params = append(params, "`"+k+"`")
 					args = append(args, "?")
 					values = append(values, v)
