@@ -28,6 +28,14 @@ func main() {
 		fmt.Println("[ERROR]" + err.Error())
 		return
 	}
+
+	prettyResultsJSON, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		fmt.Println("[ERROR]" + err.Error())
+		return
+	}
+
+	// 写入到 sql.go 中
 	dir, _ := os.Getwd()
 	var sqlFile string
 	for i := 0; i < 5; i++ {
@@ -71,5 +79,13 @@ func init() {
 		fmt.Println("[ERROR]write file failed: " + err.Error())
 		return
 	}
+
+	// 写入到 sql.json 中
+	err = os.WriteFile(dir+"/internal/setup/sql.json", prettyResultsJSON, 0666)
+	if err != nil {
+		fmt.Println("[ERROR]" + err.Error())
+		return
+	}
+
 	fmt.Println("ok")
 }
