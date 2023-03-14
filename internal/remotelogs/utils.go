@@ -17,7 +17,7 @@ var sharedDAO DAOInterface
 
 func init() {
 	// 定期上传日志
-	ticker := time.NewTicker(60 * time.Second)
+	var ticker = time.NewTicker(60 * time.Second)
 	goman.New(func() {
 		for range ticker.C {
 			err := uploadLogs()
