@@ -117,6 +117,21 @@ func (this *NodeTrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, role string, nod
 	return result, nil
 }
 
+// SumDailyStat 计算日期之间的总和
+func (this *NodeTrafficDailyStatDAO) SumDailyStat(tx *dbs.Tx, role string, nodeId int64, dayFrom string, dayTo string) (*NodeTrafficDailyStat, error) {
+	one, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes").
+		Attr("nodeId", nodeId).
+		Attr("role", role).
+		Between("day", dayFrom, dayTo).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*NodeTrafficDailyStat), nil
+}
+
 // Clean 清理历史数据
 func (this *NodeTrafficDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))

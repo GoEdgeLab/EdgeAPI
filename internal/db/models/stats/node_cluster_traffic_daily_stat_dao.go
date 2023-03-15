@@ -114,8 +114,8 @@ func (this *NodeClusterTrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, clusterId
 	return result, nil
 }
 
-// SumDailyStats 计算当月总流量
-func (this *NodeClusterTrafficDailyStatDAO) SumDailyStats(tx *dbs.Tx, clusterId int64, dayFrom string, dayTo string) (*NodeClusterTrafficDailyStat, error) {
+// SumDailyStat 计算当月总流量
+func (this *NodeClusterTrafficDailyStatDAO) SumDailyStat(tx *dbs.Tx, clusterId int64, dayFrom string, dayTo string) (*NodeClusterTrafficDailyStat, error) {
 	one, err := this.Query(tx).
 		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes").
 		Attr("clusterId", clusterId).
