@@ -435,6 +435,16 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 		valueField = "load1m"
 		isAsc = false
 		ifNullValue = -1
+	case "connectionsAsc":
+		valueItem = "connections"
+		valueField = "total"
+		isAsc = true
+		ifNullValue = 1000
+	case "connectionsDesc":
+		valueItem = "connections"
+		valueField = "total"
+		isAsc = false
+		ifNullValue = -1
 	default:
 		query.Desc("level")
 	}

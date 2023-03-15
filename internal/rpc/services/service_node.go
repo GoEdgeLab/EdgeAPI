@@ -225,6 +225,10 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 		order = "loadAsc"
 	} else if req.LoadDesc {
 		order = "loadDesc"
+	} else if req.ConnectionsAsc {
+		order = "connectionsAsc"
+	} else if req.ConnectionsDesc {
+		order = "connectionsDesc"
 	}
 
 	nodes, err := models.SharedNodeDAO.ListEnabledNodesMatch(tx, req.NodeClusterId, configutils.ToBoolState(req.InstallState), configutils.ToBoolState(req.ActiveState), req.Keyword, req.NodeGroupId, req.NodeRegionId, req.Level, true, order, req.Offset, req.Size)
