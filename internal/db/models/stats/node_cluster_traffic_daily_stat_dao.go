@@ -114,6 +114,20 @@ func (this *NodeClusterTrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, clusterId
 	return result, nil
 }
 
+// SumDailyStats 计算当月总流量
+func (this *NodeClusterTrafficDailyStatDAO) SumDailyStats(tx *dbs.Tx, clusterId int64, dayFrom string, dayTo string) (*NodeClusterTrafficDailyStat, error) {
+	one, err := this.Query(tx).
+		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes").
+		Attr("clusterId", clusterId).
+		Between("day", dayFrom, dayTo).
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+
+	return one.(*NodeClusterTrafficDailyStat), nil
+}
+
 // Clean 清理历史数据
 func (this *NodeClusterTrafficDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))

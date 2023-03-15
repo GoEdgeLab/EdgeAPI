@@ -85,13 +85,32 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 	}
 	result.CountServers = countServers
 
+	// 当月总流量
+	monthlyTrafficStat, err := stats.SharedNodeClusterTrafficDailyStatDAO.SumDailyStats(tx, req.NodeClusterId, timeutil.Format("Ym01"), timeutil.Format("Ym31"))
+	if err != nil {
+		return nil, err
+	}
+	var monthlyTrafficBytes int64
+	if monthlyTrafficStat != nil {
+		monthlyTrafficBytes = int64(monthlyTrafficStat.Bytes)
+	}
+	result.MonthlyTrafficBytes = monthlyTrafficBytes
+
 	// 按日流量统计
 	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
 	dailyTrafficStats, err := stats.SharedNodeClusterTrafficDailyStatDAO.FindDailyStats(tx, req.NodeClusterId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
 	}
+	var dailyTrafficBytes int64
+	var lastDailyTrafficBytes int64
 	for _, stat := range dailyTrafficStats {
+		if stat.Day == timeutil.Format("Ymd") { // 今天
+			dailyTrafficBytes = int64(stat.Bytes)
+		} else if stat.Day == timeutil.Format("Ymd", time.Now().AddDate(0, 0, -1)) {
+			lastDailyTrafficBytes = int64(stat.Bytes)
+		}
+
 		result.DailyTrafficStats = append(result.DailyTrafficStats, &pb.ComposeServerStatNodeClusterBoardResponse_DailyTrafficStat{
 			Day:                 stat.Day,
 			Bytes:               int64(stat.Bytes),
@@ -102,6 +121,8 @@ func (this *ServerStatBoardService) ComposeServerStatNodeClusterBoard(ctx contex
 			AttackBytes:         int64(stat.AttackBytes),
 		})
 	}
+	result.DailyTrafficBytes = dailyTrafficBytes
+	result.LastDailyTrafficBytes = lastDailyTrafficBytes
 
 	// 小时流量统计
 	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
