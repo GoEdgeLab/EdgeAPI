@@ -306,13 +306,27 @@ func (this *APINode) checkDB() error {
 		logs.Println("[API_NODE]" + errString)
 		this.addStartIssue("db", errString, this.dbIssueSuggestion(errString))
 
+		// 决定是否尝试启动本地的MySQL
+		if strings.Contains(err.Error(), "connection refused") {
+			config, _ := db.Config()
+			if config != nil && (strings.Contains(config.Dsn, "tcp(127.0.0.1:") || strings.Contains(config.Dsn, "tcp(localhost:)")) && os.Getgid() == 0 /** ROOT 用户 **/ {
+				var mysqldSafeFile = "/usr/local/mysql/bin/mysqld_safe"
+				_, err = os.Stat(mysqldSafeFile)
+				if err == nil {
+					logs.Println("[API_NODE]try to start local mysql server from '" + mysqldSafeFile + "' ...")
+					var mysqlCmd = exec.Command(mysqldSafeFile)
+					_ = mysqlCmd.Start()
+				}
+			}
+		}
+
 		// 多次尝试
 		var maxTries = 600
 		if Tea.IsTesting() {
 			maxTries = 600
 		}
 		for i := 0; i <= maxTries; i++ {
-			_, err := db.Exec("SELECT 1")
+			_, err = db.Exec("SELECT 1")
 			if err != nil {
 				if i == maxTries-1 {
 					return err
