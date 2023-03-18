@@ -753,28 +753,40 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 		return nil, err
 	}
 
-	data, err := json.Marshal(nodeConfig)
+	// 压缩
+	var data []byte
+	var isCompressed = false
+	var buffer = &bytes.Buffer{}
+	var writer io.Writer = buffer
+	var brotliWriter *brotli.Writer
+	if req.Compress {
+		brotliWriter = brotli.NewWriterLevel(writer, 5)
+		writer = brotliWriter
+	}
+
+	var encoder = json.NewEncoder(writer)
+	err = encoder.Encode(nodeConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// 压缩
-	var isCompressed = false
-	if req.Compress {
-		var buf = &bytes.Buffer{}
-		writer := brotli.NewWriterLevel(buf, 5)
-		_, err = writer.Write(data)
-		if err != nil {
-			_ = writer.Close()
+	if brotliWriter != nil {
+		err = brotliWriter.Close()
+		if err == nil {
+			data = buffer.Bytes()
+			isCompressed = true
 		} else {
-			err = writer.Close()
-			if err == nil {
-				isCompressed = true
-				data = buf.Bytes()
-				buf.Reset()
+			// 如果失败，则使用最直接方法重新编码
+			data, err = json.Marshal(nodeConfig)
+			if err != nil {
+				return nil, err
 			}
 		}
+	} else {
+		data = buffer.Bytes()
 	}
+
+	buffer.Reset()
 
 	return &pb.FindCurrentNodeConfigResponse{
 		IsChanged:    true,
