@@ -105,7 +105,7 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster, checkNodeIssues bo
 
 	// 检查节点
 	if checkNodeIssues {
-		nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, clusterDNSConfig != nil && clusterDNSConfig.IncludingLnNodes)
+		nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, clusterDNSConfig != nil && clusterDNSConfig.IncludingLnNodes, true)
 		if err != nil {
 			return nil, err
 		}

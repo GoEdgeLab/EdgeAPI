@@ -363,7 +363,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, clusterId int64) error {
 
 	// 当前的节点记录
 	var newRecordKeys = []string{}
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes, true)
 	if err != nil {
 		return err
 	}

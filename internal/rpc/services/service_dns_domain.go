@@ -454,7 +454,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	}
 
 	// 节点域名
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, clusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes, true)
 	if err != nil {
 		return nil, nil, nil, 0, 0, false, false, err
 	}

@@ -812,6 +812,7 @@ func (this *NodeService) UpdateNodeStatus(ctx context.Context, req *pb.UpdateNod
 	if err != nil {
 		return nil, err
 	}
+
 	return this.Success()
 }
 
@@ -1321,7 +1322,7 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 		return nil, err
 	}
 
-	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes)
+	nodes, err := models.SharedNodeDAO.FindAllEnabledNodesDNSWithClusterId(tx, req.NodeClusterId, true, dnsConfig != nil && dnsConfig.IncludingLnNodes, req.IsInstalled)
 	if err != nil {
 		return nil, err
 	}

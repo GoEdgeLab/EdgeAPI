@@ -642,12 +642,28 @@ func (this *NodeClusterService) FindAllEnabledNodeClustersWithDNSDomainId(ctx co
 
 	result := []*pb.NodeCluster{}
 	for _, cluster := range clusters {
+		// 默认线路
+		domainId := int64(cluster.DnsDomainId)
+		domain, err := dns.SharedDNSDomainDAO.FindEnabledDNSDomain(tx, domainId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if domain == nil {
+			continue
+		}
+
+		defaultRoute, err := dnsutils.FindDefaultDomainRoute(tx, domain)
+		if err != nil {
+			return nil, err
+		}
+
 		result = append(result, &pb.NodeCluster{
-			Id:          int64(cluster.Id),
-			Name:        cluster.Name,
-			DnsName:     cluster.DnsName,
-			DnsDomainId: int64(cluster.DnsDomainId),
-			IsOn:        cluster.IsOn,
+			Id:              int64(cluster.Id),
+			Name:            cluster.Name,
+			DnsName:         cluster.DnsName,
+			DnsDomainId:     int64(cluster.DnsDomainId),
+			DnsDefaultRoute: defaultRoute,
+			IsOn:            cluster.IsOn,
 		})
 	}
 	return &pb.FindAllEnabledNodeClustersWithDNSDomainIdResponse{NodeClusters: result}, nil

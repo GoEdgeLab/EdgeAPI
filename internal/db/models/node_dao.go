@@ -840,7 +840,24 @@ func (this *NodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeStatus *node
 		Set("isActive", true).
 		Set("status", nodeStatusJSON).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 自动设置安装状态
+	isInstalled, err := this.Query(tx).
+		Pk(nodeId).
+		Result("isInstalled").
+		FindBoolCol()
+	if err != nil {
+		return err
+	}
+
+	if !isInstalled {
+		return this.UpdateNodeIsInstalled(tx, nodeId, true)
+	}
+
+	return nil
 }
 
 // FindNodeStatus 获取节点状态
@@ -885,7 +902,10 @@ func (this *NodeDAO) UpdateNodeIsInstalled(tx *dbs.Tx, nodeId int64, isInstalled
 		Set("isInstalled", isInstalled).
 		Set("installStatus", "null"). // 重置安装状态
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+	return this.NotifyDNSUpdate(tx, nodeId)
 }
 
 // FindNodeInstallStatus 查询节点的安装状态
@@ -1495,7 +1515,7 @@ func (this *NodeDAO) UpdateNodeRegionId(tx *dbs.Tx, nodeId int64, regionId int64
 }
 
 // FindAllEnabledNodesDNSWithClusterId 获取一个集群的节点DNS信息
-func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, includingLnNodes bool) (result []*Node, err error) {
+func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId int64, includeSecondaryNodes bool, includingLnNodes bool, isInstalled bool) (result []*Node, err error) {
 	if clusterId <= 0 {
 		return nil, nil
 	}
@@ -1514,6 +1534,7 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId i
 		State(NodeStateEnabled).
 		Attr("isOn", true).
 		Attr("isUp", true).
+		Attr("isInstalled", isInstalled).
 		Result("id", "name", "dnsRoutes", "isOn").
 		DescPk().
 		Slice(&result).
