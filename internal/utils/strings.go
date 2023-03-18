@@ -82,3 +82,54 @@ func LimitString(s string, maxLength int) string {
 	}
 	return s
 }
+
+// SplitKeywordArgs 分隔关键词参数
+// 支持：hello, "hello", name:hello, name:"hello", name:\"hello\"
+func SplitKeywordArgs(s string) (args []splitArg) {
+	var value []rune
+	var beginQuote = false
+	var runes = []rune(s)
+	for index, r := range runes {
+		if r == '"' && (index == 0 || runes[index-1] != '\\') {
+			beginQuote = !beginQuote
+			continue
+		}
+		if !beginQuote && (r == ' ' || r == '\t' || r == '\n' || r == '\r') {
+			if len(value) > 0 {
+				args = append(args, parseKeywordValue(string(value)))
+				value = nil
+			}
+		} else {
+			value = append(value, r)
+		}
+	}
+
+	if len(value) > 0 {
+		args = append(args, parseKeywordValue(string(value)))
+	}
+
+	return
+}
+
+type splitArg struct {
+	Key   string
+	Value string
+}
+
+func (this *splitArg) String() string {
+	if len(this.Key) > 0 {
+		return this.Key + ":" + this.Value
+	}
+	return this.Value
+}
+
+func parseKeywordValue(value string) (arg splitArg) {
+	var colonIndex = strings.Index(value, ":")
+	if colonIndex > 0 {
+		arg.Key = value[:colonIndex]
+		arg.Value = value[colonIndex+1:]
+	} else {
+		arg.Value = value
+	}
+	return
+}

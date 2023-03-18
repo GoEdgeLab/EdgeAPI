@@ -40,3 +40,31 @@ func TestLimitString(t *testing.T) {
 	a.IsTrue(utils.LimitString("中文测试", 1) == "")
 	a.IsTrue(utils.LimitString("中文测试", 3) == "中")
 }
+
+
+func TestSplitKeywordArgs(t *testing.T) {
+	{
+		var keyword = ""
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+	{
+		var keyword = "abc"
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+	{
+		var keyword = "abc def ghi123"
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+	{
+		var keyword = "\"hello world\""
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+	{
+		var keyword = "\"hello world\" hello \"world\" \"my name\" call:\"zip name\" slash:\\\"SLASH"
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+	{
+		var keyword = "name:abc"
+		t.Logf("%+v", utils.SplitKeywordArgs(keyword))
+	}
+}
