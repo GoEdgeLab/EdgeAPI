@@ -77,7 +77,7 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, erro
 }
 
 // ComposeWebConfig 组合配置
-func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *utils.CacheMap) (*serverconfigs.HTTPWebConfig, error) {
+func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGroup bool, forNode bool, cacheMap *utils.CacheMap) (*serverconfigs.HTTPWebConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -101,113 +101,127 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	// root
 	if IsNotNull(web.Root) {
-		rootConfig := &serverconfigs.HTTPRootConfig{}
+		var rootConfig = &serverconfigs.HTTPRootConfig{}
 		err = json.Unmarshal(web.Root, rootConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.Root = rootConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, rootConfig.IsPrior, rootConfig.IsOn) {
+			config.Root = rootConfig
+		}
 	}
 
 	// compression
 	if IsNotNull(web.Compression) {
-		compression := &serverconfigs.HTTPCompressionConfig{}
-		err = json.Unmarshal(web.Compression, compression)
+		var compressionConfig = &serverconfigs.HTTPCompressionConfig{}
+		err = json.Unmarshal(web.Compression, compressionConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.Compression = compression
 
-		// gzip
-		if compression.GzipRef != nil && compression.GzipRef.Id > 0 {
-			gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(tx, compression.GzipRef.Id)
-			if err != nil {
-				return nil, err
-			}
-			compression.Gzip = gzipConfig
-		}
+		if this.shouldCompose(isLocationOrGroup, forNode, compressionConfig.IsPrior, compressionConfig.IsOn) {
+			config.Compression = compressionConfig
 
-		// brotli
-		if compression.BrotliRef != nil && compression.BrotliRef.Id > 0 {
-			brotliConfig, err := SharedHTTPBrotliPolicyDAO.ComposeBrotliConfig(tx, compression.BrotliRef.Id)
-			if err != nil {
-				return nil, err
+			// gzip
+			if compressionConfig.GzipRef != nil && compressionConfig.GzipRef.Id > 0 {
+				gzipConfig, err := SharedHTTPGzipDAO.ComposeGzipConfig(tx, compressionConfig.GzipRef.Id)
+				if err != nil {
+					return nil, err
+				}
+				compressionConfig.Gzip = gzipConfig
 			}
-			compression.Brotli = brotliConfig
-		}
 
-		// deflate
-		if compression.DeflateRef != nil && compression.DeflateRef.Id > 0 {
-			deflateConfig, err := SharedHTTPDeflatePolicyDAO.ComposeDeflateConfig(tx, compression.DeflateRef.Id)
-			if err != nil {
-				return nil, err
+			// brotli
+			if compressionConfig.BrotliRef != nil && compressionConfig.BrotliRef.Id > 0 {
+				brotliConfig, err := SharedHTTPBrotliPolicyDAO.ComposeBrotliConfig(tx, compressionConfig.BrotliRef.Id)
+				if err != nil {
+					return nil, err
+				}
+				compressionConfig.Brotli = brotliConfig
 			}
-			compression.Deflate = deflateConfig
+
+			// deflate
+			if compressionConfig.DeflateRef != nil && compressionConfig.DeflateRef.Id > 0 {
+				deflateConfig, err := SharedHTTPDeflatePolicyDAO.ComposeDeflateConfig(tx, compressionConfig.DeflateRef.Id)
+				if err != nil {
+					return nil, err
+				}
+				compressionConfig.Deflate = deflateConfig
+			}
 		}
 	}
 
 	// charset
 	if IsNotNull(web.Charset) {
-		charsetConfig := &serverconfigs.HTTPCharsetConfig{}
+		var charsetConfig = &serverconfigs.HTTPCharsetConfig{}
 		err = json.Unmarshal(web.Charset, charsetConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.Charset = charsetConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, charsetConfig.IsPrior, charsetConfig.IsOn) {
+			config.Charset = charsetConfig
+		}
 	}
 
 	// headers
 	if IsNotNull(web.RequestHeader) {
-		ref := &shared.HTTPHeaderPolicyRef{}
+		var ref = &shared.HTTPHeaderPolicyRef{}
 		err = json.Unmarshal(web.RequestHeader, ref)
 		if err != nil {
 			return nil, err
 		}
-		config.RequestHeaderPolicyRef = ref
+		if this.shouldCompose(isLocationOrGroup, forNode, ref.IsPrior, ref.IsOn) {
+			config.RequestHeaderPolicyRef = ref
 
-		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
-			if err != nil {
-				return nil, err
-			}
-			if headerPolicy != nil {
-				config.RequestHeaderPolicy = headerPolicy
+			if ref.HeaderPolicyId > 0 {
+				headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
+				if err != nil {
+					return nil, err
+				}
+				if headerPolicy != nil {
+					config.RequestHeaderPolicy = headerPolicy
+				}
 			}
 		}
 	}
 
 	if IsNotNull(web.ResponseHeader) {
-		ref := &shared.HTTPHeaderPolicyRef{}
+		var ref = &shared.HTTPHeaderPolicyRef{}
 		err = json.Unmarshal(web.ResponseHeader, ref)
 		if err != nil {
 			return nil, err
 		}
-		config.ResponseHeaderPolicyRef = ref
+		if this.shouldCompose(isLocationOrGroup, forNode, ref.IsPrior, ref.IsOn) {
+			config.ResponseHeaderPolicyRef = ref
 
-		if ref.HeaderPolicyId > 0 {
-			headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
-			if err != nil {
-				return nil, err
-			}
-			if headerPolicy != nil {
-				config.ResponseHeaderPolicy = headerPolicy
+			if ref.HeaderPolicyId > 0 {
+				headerPolicy, err := SharedHTTPHeaderPolicyDAO.ComposeHeaderPolicyConfig(tx, ref.HeaderPolicyId)
+				if err != nil {
+					return nil, err
+				}
+				if headerPolicy != nil {
+					config.ResponseHeaderPolicy = headerPolicy
+				}
 			}
 		}
 	}
 
 	// shutdown
 	if IsNotNull(web.Shutdown) {
-		shutdownConfig := &serverconfigs.HTTPShutdownConfig{}
+		var shutdownConfig = &serverconfigs.HTTPShutdownConfig{}
 		err = json.Unmarshal(web.Shutdown, shutdownConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.Shutdown = shutdownConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, shutdownConfig.IsPrior, shutdownConfig.IsOn) {
+			config.Shutdown = shutdownConfig
+		}
 	}
 
 	// pages
+	// TODO 检查forNode参数
 	if IsNotNull(web.Pages) {
-		pages := []*serverconfigs.HTTPPageConfig{}
+		var pages = []*serverconfigs.HTTPPageConfig{}
 		err = json.Unmarshal(web.Pages, &pages)
 		if err != nil {
 			return nil, err
@@ -226,62 +240,72 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	// 访问日志
 	if IsNotNull(web.AccessLog) {
-		accessLogConfig := &serverconfigs.HTTPAccessLogRef{}
+		var accessLogConfig = &serverconfigs.HTTPAccessLogRef{}
 		err = json.Unmarshal(web.AccessLog, accessLogConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.AccessLogRef = accessLogConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, accessLogConfig.IsPrior, accessLogConfig.IsOn) {
+			config.AccessLogRef = accessLogConfig
+		}
 	}
 
 	// 统计配置
 	if IsNotNull(web.Stat) {
-		statRef := &serverconfigs.HTTPStatRef{}
+		var statRef = &serverconfigs.HTTPStatRef{}
 		err = json.Unmarshal(web.Stat, statRef)
 		if err != nil {
 			return nil, err
 		}
-		config.StatRef = statRef
+		if this.shouldCompose(isLocationOrGroup, forNode, statRef.IsPrior, statRef.IsOn) {
+			config.StatRef = statRef
+		}
 	}
 
 	// 缓存配置
 	if IsNotNull(web.Cache) {
-		cacheConfig := &serverconfigs.HTTPCacheConfig{}
+		var cacheConfig = &serverconfigs.HTTPCacheConfig{}
 		err = json.Unmarshal(web.Cache, &cacheConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.Cache = cacheConfig
+
+		if this.shouldCompose(isLocationOrGroup, forNode, cacheConfig.IsPrior, cacheConfig.IsOn) {
+			config.Cache = cacheConfig
+		}
 
 		// 暂不支持自定义缓存策略设置，因为同一个集群下的服务需要集中管理
 	}
 
 	// 防火墙配置
 	if IsNotNull(web.Firewall) {
-		firewallRef := &firewallconfigs.HTTPFirewallRef{}
+		var firewallRef = &firewallconfigs.HTTPFirewallRef{}
 		err = json.Unmarshal(web.Firewall, firewallRef)
 		if err != nil {
 			return nil, err
 		}
-		config.FirewallRef = firewallRef
+		if this.shouldCompose(isLocationOrGroup, forNode, firewallRef.IsPrior, firewallRef.IsOn) {
+			config.FirewallRef = firewallRef
 
-		// 自定义防火墙设置
-		if firewallRef.FirewallPolicyId > 0 {
-			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId, cacheMap)
-			if err != nil {
-				return nil, err
-			}
-			if firewallPolicy == nil {
-				config.FirewallRef = nil
-			} else {
-				config.FirewallPolicy = firewallPolicy
+			// 自定义防火墙设置
+			if firewallRef.FirewallPolicyId > 0 {
+				firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if firewallPolicy == nil {
+					config.FirewallRef = nil
+				} else {
+					config.FirewallPolicy = firewallPolicy
+				}
 			}
 		}
 	}
 
 	// 路由规则
+	// TODO 检查forNode参数
 	if IsNotNull(web.Locations) {
-		refs := []*serverconfigs.HTTPLocationRef{}
+		var refs = []*serverconfigs.HTTPLocationRef{}
 		err = json.Unmarshal(web.Locations, &refs)
 		if err != nil {
 			return nil, err
@@ -289,7 +313,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if len(refs) > 0 {
 			config.LocationRefs = refs
 
-			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs, cacheMap)
+			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs, forNode, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -299,36 +323,41 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	// 跳转
 	if IsNotNull(web.RedirectToHttps) {
-		redirectToHTTPSConfig := &serverconfigs.HTTPRedirectToHTTPSConfig{}
+		var redirectToHTTPSConfig = &serverconfigs.HTTPRedirectToHTTPSConfig{}
 		err = json.Unmarshal(web.RedirectToHttps, redirectToHTTPSConfig)
 		if err != nil {
 			return nil, err
 		}
-		config.RedirectToHttps = redirectToHTTPSConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, redirectToHTTPSConfig.IsPrior, redirectToHTTPSConfig.IsOn) {
+			config.RedirectToHttps = redirectToHTTPSConfig
+		}
 	}
 
 	// Websocket
 	if IsNotNull(web.Websocket) {
-		ref := &serverconfigs.HTTPWebsocketRef{}
+		var ref = &serverconfigs.HTTPWebsocketRef{}
 		err = json.Unmarshal(web.Websocket, ref)
 		if err != nil {
 			return nil, err
 		}
-		config.WebsocketRef = ref
-		if ref.WebsocketId > 0 {
-			websocketConfig, err := SharedHTTPWebsocketDAO.ComposeWebsocketConfig(tx, ref.WebsocketId)
-			if err != nil {
-				return nil, err
-			}
-			if websocketConfig != nil {
-				config.Websocket = websocketConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, ref.IsPrior, ref.IsOn) {
+			config.WebsocketRef = ref
+			if ref.WebsocketId > 0 {
+				websocketConfig, err := SharedHTTPWebsocketDAO.ComposeWebsocketConfig(tx, ref.WebsocketId)
+				if err != nil {
+					return nil, err
+				}
+				if websocketConfig != nil {
+					config.Websocket = websocketConfig
+				}
 			}
 		}
 	}
 
 	// 重写规则
+	// TODO 检查forNode参数
 	if IsNotNull(web.RewriteRules) {
-		refs := []*serverconfigs.HTTPRewriteRef{}
+		var refs = []*serverconfigs.HTTPRewriteRef{}
 		err = json.Unmarshal(web.RewriteRules, &refs)
 		if err != nil {
 			return nil, err
@@ -346,8 +375,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 	}
 
 	// 主机跳转
+	// TODO 检查forNode参数
 	if IsNotNull(web.HostRedirects) {
-		redirects := []*serverconfigs.HTTPHostRedirectConfig{}
+		var redirects = []*serverconfigs.HTTPHostRedirectConfig{}
 		err = json.Unmarshal(web.HostRedirects, &redirects)
 		if err != nil {
 			return nil, err
@@ -357,25 +387,28 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 
 	// Fastcgi
 	if IsNotNull(web.Fastcgi) {
-		ref := &serverconfigs.HTTPFastcgiRef{}
+		var ref = &serverconfigs.HTTPFastcgiRef{}
 		err = json.Unmarshal(web.Fastcgi, ref)
 		if err != nil {
 			return nil, err
 		}
-		config.FastcgiRef = ref
 
-		if len(ref.FastcgiIds) > 0 {
-			list := []*serverconfigs.HTTPFastcgiConfig{}
-			for _, fastcgiId := range ref.FastcgiIds {
-				fastcgiConfig, err := SharedHTTPFastcgiDAO.ComposeFastcgiConfig(tx, fastcgiId)
-				if err != nil {
-					return nil, err
+		if this.shouldCompose(isLocationOrGroup, forNode, ref.IsPrior, ref.IsOn) {
+			config.FastcgiRef = ref
+
+			if len(ref.FastcgiIds) > 0 {
+				list := []*serverconfigs.HTTPFastcgiConfig{}
+				for _, fastcgiId := range ref.FastcgiIds {
+					fastcgiConfig, err := SharedHTTPFastcgiDAO.ComposeFastcgiConfig(tx, fastcgiId)
+					if err != nil {
+						return nil, err
+					}
+					if fastcgiConfig != nil {
+						list = append(list, fastcgiConfig)
+					}
 				}
-				if fastcgiConfig != nil {
-					list = append(list, fastcgiConfig)
-				}
+				config.FastcgiList = list
 			}
-			config.FastcgiList = list
 		}
 	}
 
@@ -386,19 +419,21 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		var newRefs []*serverconfigs.HTTPAuthPolicyRef
-		for _, ref := range authConfig.PolicyRefs {
-			policyConfig, err := SharedHTTPAuthPolicyDAO.ComposePolicyConfig(tx, ref.AuthPolicyId, cacheMap)
-			if err != nil {
-				return nil, err
+		if this.shouldCompose(isLocationOrGroup, forNode, authConfig.IsPrior, authConfig.IsOn) {
+			var newRefs []*serverconfigs.HTTPAuthPolicyRef
+			for _, ref := range authConfig.PolicyRefs {
+				policyConfig, err := SharedHTTPAuthPolicyDAO.ComposePolicyConfig(tx, ref.AuthPolicyId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if policyConfig != nil {
+					ref.AuthPolicy = policyConfig
+					newRefs = append(newRefs, ref)
+					authConfig.PolicyRefs = newRefs
+				}
 			}
-			if policyConfig != nil {
-				ref.AuthPolicy = policyConfig
-				newRefs = append(newRefs, ref)
-				authConfig.PolicyRefs = newRefs
-			}
+			config.Auth = authConfig
 		}
-		config.Auth = authConfig
 	}
 
 	// WebP
@@ -408,7 +443,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.WebP = webpConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, webpConfig.IsPrior, webpConfig.IsOn) {
+			config.WebP = webpConfig
+		}
 	}
 
 	// RemoteAddr
@@ -418,7 +455,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.RemoteAddr = remoteAddrConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, remoteAddrConfig.IsPrior, remoteAddrConfig.IsOn) {
+			config.RemoteAddr = remoteAddrConfig
+		}
 	}
 
 	// mergeSlashes
@@ -427,25 +466,24 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 	// 请求限制
 	if len(web.RequestLimit) > 0 {
 		var requestLimitConfig = &serverconfigs.HTTPRequestLimitConfig{}
-		if len(web.RequestLimit) > 0 {
-			err = json.Unmarshal(web.RequestLimit, requestLimitConfig)
-			if err != nil {
-				return nil, err
-			}
+		err = json.Unmarshal(web.RequestLimit, requestLimitConfig)
+		if err != nil {
+			return nil, err
+		}
+		if this.shouldCompose(isLocationOrGroup, forNode, requestLimitConfig.IsPrior, requestLimitConfig.IsOn) {
 			config.RequestLimit = requestLimitConfig
 		}
 	}
 
 	// 请求脚本
+	// TODO 检查forNode设置
 	if len(web.RequestScripts) > 0 {
 		var requestScriptsConfig = &serverconfigs.HTTPRequestScriptsConfig{}
-		if len(web.RequestScripts) > 0 {
-			err = json.Unmarshal(web.RequestScripts, requestScriptsConfig)
-			if err != nil {
-				return nil, err
-			}
-			config.RequestScripts = requestScriptsConfig
+		err = json.Unmarshal(web.RequestScripts, requestScriptsConfig)
+		if err != nil {
+			return nil, err
 		}
+		config.RequestScripts = requestScriptsConfig
 	}
 
 	// UAM
@@ -455,7 +493,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.UAM = uamConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, uamConfig.IsPrior, uamConfig.IsOn) {
+			config.UAM = uamConfig
+		}
 	}
 
 	// CC
@@ -465,7 +505,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.CC = ccConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, ccConfig.IsPrior, ccConfig.IsOn) {
+			config.CC = ccConfig
+		}
 	}
 
 	// Referers
@@ -475,7 +517,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.Referers = referersConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, referersConfig.IsPrior, referersConfig.IsOn) {
+			config.Referers = referersConfig
+		}
 	}
 
 	// User-Agent
@@ -485,7 +529,9 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, cacheMap *util
 		if err != nil {
 			return nil, err
 		}
-		config.UserAgent = userAgentConfig
+		if this.shouldCompose(isLocationOrGroup, forNode, userAgentConfig.IsPrior, userAgentConfig.IsOn) {
+			config.UserAgent = userAgentConfig
+		}
 	}
 
 	if cacheMap != nil {
@@ -1351,4 +1397,12 @@ func (this *HTTPWebDAO) NotifyUpdate(tx *dbs.Tx, webId int64) error {
 	}
 
 	return nil
+}
+
+// 检查是否应该组合配置
+func (this *HTTPWebDAO) shouldCompose(isLocationOrGroup bool, forNode bool, isPrior bool, isOn bool) bool {
+	if !forNode {
+		return true
+	}
+	return (!isLocationOrGroup && isOn) || (isLocationOrGroup && isPrior)
 }

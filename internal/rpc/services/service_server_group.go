@@ -463,7 +463,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 		result.HasUDPReverseProxy = ref.IsPrior
 	}
 
-	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), false, nil)
+	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), false, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +510,7 @@ func (this *ServerGroupService) FindAndInitServerGroupWebConfig(ctx context.Cont
 		}
 	}
 
-	webConfig, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, nil)
+	webConfig, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil)
 	if err != nil {
 		return nil, err
 	}

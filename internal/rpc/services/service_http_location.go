@@ -60,7 +60,7 @@ func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Conte
 
 	var tx = this.NullTx()
 
-	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(tx, req.LocationId, nil)
+	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(tx, req.LocationId, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, nil)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil)
 	if err != nil {
 		return nil, rpcutils.Wrap("ComposeWebConfig()", err)
 	}

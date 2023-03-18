@@ -279,7 +279,7 @@ func (this *ServerGroupDAO) InitGroupWeb(tx *dbs.Tx, groupId int64) (int64, erro
 }
 
 // ComposeGroupConfig 组合配置
-func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forList bool, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
+func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNode bool, forList bool, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -369,7 +369,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forLis
 
 		// web
 		if group.WebId > 0 {
-			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), cacheMap)
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), true, forNode, cacheMap)
 			if err != nil {
 				return nil, err
 			}

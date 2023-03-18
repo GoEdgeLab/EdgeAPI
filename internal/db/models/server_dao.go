@@ -1039,7 +1039,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 
 	var groupConfig *serverconfigs.ServerGroupConfig
 	for _, groupId := range server.DecodeGroupIds() {
-		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, forList, cacheMap)
+		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, forNode, forList, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -1098,7 +1098,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if err != nil {
 			return nil, err
 		}
-		config.HTTP = httpConfig
+		if !forNode || httpConfig.IsOn {
+			config.HTTP = httpConfig
+		}
 	}
 
 	// HTTPS
@@ -1109,18 +1111,20 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			return nil, err
 		}
 
-		// SSL
-		if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 && !ignoreCerts {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
-			if err != nil {
-				return nil, err
+		if !forNode || httpsConfig.IsOn {
+			// SSL
+			if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 && !ignoreCerts {
+				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if sslPolicyConfig != nil {
+					httpsConfig.SSLPolicy = sslPolicyConfig
+				}
 			}
-			if sslPolicyConfig != nil {
-				httpsConfig.SSLPolicy = sslPolicyConfig
-			}
-		}
 
-		config.HTTPS = httpsConfig
+			config.HTTPS = httpsConfig
+		}
 	}
 
 	// TCP
@@ -1130,7 +1134,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if err != nil {
 			return nil, err
 		}
-		config.TCP = tcpConfig
+		if !forNode || tcpConfig.IsOn {
+			config.TCP = tcpConfig
+		}
 	}
 
 	// TLS
@@ -1141,18 +1147,20 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			return nil, err
 		}
 
-		// SSL
-		if tlsConfig.SSLPolicyRef != nil && !ignoreCerts {
-			sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
-			if err != nil {
-				return nil, err
+		if !forNode || tlsConfig.IsOn {
+			// SSL
+			if tlsConfig.SSLPolicyRef != nil && !ignoreCerts {
+				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if sslPolicyConfig != nil {
+					tlsConfig.SSLPolicy = sslPolicyConfig
+				}
 			}
-			if sslPolicyConfig != nil {
-				tlsConfig.SSLPolicy = sslPolicyConfig
-			}
-		}
 
-		config.TLS = tlsConfig
+			config.TLS = tlsConfig
+		}
 	}
 
 	// Unix
@@ -1162,7 +1170,9 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if err != nil {
 			return nil, err
 		}
-		config.Unix = unixConfig
+		if !forNode || unixConfig.IsOn {
+			config.Unix = unixConfig
+		}
 	}
 
 	// UDP
@@ -1172,13 +1182,15 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if err != nil {
 			return nil, err
 		}
-		config.UDP = udpConfig
+		if !forNode || udpConfig.IsOn {
+			config.UDP = udpConfig
+		}
 	}
 
 	// Web
 	if !forList {
 		if server.WebId > 0 {
-			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), cacheMap)
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), false, forNode, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -1196,14 +1208,18 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			if err != nil {
 				return nil, err
 			}
-			config.ReverseProxyRef = reverseProxyRef
+			if !forNode || reverseProxyRef.IsOn {
+				config.ReverseProxyRef = reverseProxyRef
 
-			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
-			if err != nil {
-				return nil, err
-			}
-			if reverseProxyConfig != nil {
-				config.ReverseProxy = reverseProxyConfig
+				reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if reverseProxyConfig != nil {
+					if !forNode || reverseProxyConfig.IsOn {
+						config.ReverseProxy = reverseProxyConfig
+					}
+				}
 			}
 		}
 	}

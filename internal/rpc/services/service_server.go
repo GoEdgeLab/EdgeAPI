@@ -1191,7 +1191,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, nil)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
