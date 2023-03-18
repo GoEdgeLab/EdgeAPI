@@ -19,6 +19,8 @@ const (
 	DNSTaskTypeDomainChange        DNSTaskType = "domainChange"
 )
 
+var DNSTasksNotifier = make(chan bool, 2)
+
 type DNSTaskDAO dbs.DAO
 
 func NewDNSTaskDAO() *DNSTaskDAO {
@@ -64,7 +66,17 @@ func (this *DNSTaskDAO) CreateDNSTask(tx *dbs.Tx, clusterId int64, serverId int6
 		"error":     "",
 		"version":   time.Now().UnixNano(),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 通知更新
+	select {
+	case DNSTasksNotifier <- true:
+	default:
+	}
+
+	return nil
 }
 
 // CreateClusterTask 生成集群变更任务

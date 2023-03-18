@@ -39,7 +39,13 @@ func NewDNSTaskExecutor(duration time.Duration) *DNSTaskExecutor {
 }
 
 func (this *DNSTaskExecutor) Start() {
-	for range this.ticker.C {
+	for {
+		select {
+		case <-this.ticker.C:
+		case <-dnsmodels.DNSTasksNotifier:
+			time.Sleep(3 * time.Second) // 人为延长N秒，等待可能的几个任务合并
+		}
+
 		err := this.Loop()
 		if err != nil {
 			this.logErr("DNSTaskExecutor", err.Error())
