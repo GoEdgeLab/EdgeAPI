@@ -193,7 +193,7 @@ func (this *ServerGroupService) FindAndInitServerGroupHTTPReverseProxyConfig(ctx
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (this *ServerGroupService) FindAndInitServerGroupTCPReverseProxyConfig(ctx 
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func (this *ServerGroupService) FindAndInitServerGroupUDPReverseProxyConfig(ctx 
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +463,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 		result.HasUDPReverseProxy = ref.IsPrior
 	}
 
-	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), false, false, nil)
+	config, err := models.SharedServerGroupDAO.ComposeGroupConfig(tx, int64(group.Id), false, false, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +510,7 @@ func (this *ServerGroupService) FindAndInitServerGroupWebConfig(ctx context.Cont
 		}
 	}
 
-	webConfig, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil)
+	webConfig, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil, nil)
 	if err != nil {
 		return nil, err
 	}

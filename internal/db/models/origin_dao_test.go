@@ -8,7 +8,7 @@ import (
 
 func TestOriginServerDAO_ComposeOriginConfig(t *testing.T) {
 	var tx *dbs.Tx
-	config, err := SharedOriginDAO.ComposeOriginConfig(tx, 1, nil)
+	config, err := SharedOriginDAO.ComposeOriginConfig(tx, 1, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

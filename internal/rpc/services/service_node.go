@@ -743,8 +743,12 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 	if err != nil {
 		return nil, err
 	}
+	var dataMap *shared.DataMap
+	if req.UseDataMap {
+		dataMap = shared.NewDataMap()
+	}
 	var cacheMap = this.findClusterCacheMap(clusterId, req.NodeTaskVersion)
-	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, cacheMap)
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, dataMap, cacheMap)
 	if err != nil {
 		return nil, err
 	}

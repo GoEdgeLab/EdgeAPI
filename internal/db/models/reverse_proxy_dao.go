@@ -81,7 +81,7 @@ func (this *ReverseProxyDAO) FindEnabledReverseProxy(tx *dbs.Tx, id int64) (*Rev
 }
 
 // ComposeReverseProxyConfig 根据ID组合配置
-func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyId int64, cacheMap *utils.CacheMap) (*serverconfigs.ReverseProxyConfig, error) {
+func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyId int64, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.ReverseProxyConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -125,7 +125,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 			return nil, err
 		}
 		for _, ref := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId, cacheMap)
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -142,7 +142,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 			return nil, err
 		}
 		for _, ref := range originRefs {
-			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId, cacheMap)
+			originConfig, err := SharedOriginDAO.ComposeOriginConfig(tx, ref.OriginId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}

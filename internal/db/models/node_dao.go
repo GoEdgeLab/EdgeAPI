@@ -962,7 +962,7 @@ func (this *NodeDAO) UpdateNodeInstallStatus(tx *dbs.Tx, nodeId int64, status *N
 
 // ComposeNodeConfig 组合配置
 // TODO 提升运行速度
-func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils.CacheMap) (*nodeconfigs.NodeConfig, error) {
+func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*nodeconfigs.NodeConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -993,6 +993,8 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 		GroupId:       int64(node.GroupId),
 		EnableIPLists: node.EnableIPLists,
 		APINodeAddrs:  node.DecodeAPINodeAddrs(),
+
+		DataMap: dataMap,
 	}
 
 	// API节点IP
@@ -1029,7 +1031,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, cacheMap *utils
 	}
 
 	for _, server := range servers {
-		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server, false, cacheMap, true, false)
+		serverConfig, err := SharedServerDAO.ComposeServerConfig(tx, server, false, dataMap, cacheMap, true, false)
 		if err != nil {
 			return nil, err
 		}

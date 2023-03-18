@@ -37,7 +37,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 		return nil, err
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 	if config.SSLPolicyRef != nil {
 		var policyId = config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, cacheMap)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, nil, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -55,7 +55,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 		}
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +129,13 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 	if !IsNotNull(this.RestHTTPS) {
 		return nil, nil
 	}
-	config := &serverconfigs.HTTPSProtocolConfig{}
+	var config = &serverconfigs.HTTPSProtocolConfig{}
 	err := json.Unmarshal(this.RestHTTPS, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, cacheMap)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, policyId, false, nil, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -153,7 +153,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 		}
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}

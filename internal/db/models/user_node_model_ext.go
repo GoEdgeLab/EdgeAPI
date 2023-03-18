@@ -36,7 +36,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 		return nil, err
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 	if config.SSLPolicyRef != nil {
 		policyId := config.SSLPolicyRef.SSLPolicyId
 		if policyId > 0 {
-			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(nil, policyId, false, cacheMap)
+			sslPolicy, err := SharedSSLPolicyDAO.ComposePolicyConfig(nil, policyId, false, nil, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -54,7 +54,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 		}
 	}
 
-	err = config.Init()
+	err = config.Init(nil)
 	if err != nil {
 		return nil, err
 	}

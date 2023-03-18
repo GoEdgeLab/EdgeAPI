@@ -86,7 +86,7 @@ func (this *ReverseProxyService) FindEnabledReverseProxyConfig(ctx context.Conte
 
 	var tx = this.NullTx()
 
-	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, req.ReverseProxyId, nil)
+	config, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, req.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}

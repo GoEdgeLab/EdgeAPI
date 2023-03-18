@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -1009,12 +1010,12 @@ func (this *ServerDAO) ComposeServerConfigWithServerId(tx *dbs.Tx, serverId int6
 	if server == nil {
 		return nil, ErrNotFound
 	}
-	return this.ComposeServerConfig(tx, server, ignoreCertData, nil, forNode, false)
+	return this.ComposeServerConfig(tx, server, ignoreCertData, nil, nil, forNode, false)
 }
 
 // ComposeServerConfig 构造服务的Config
 // forNode 是否是节点请求
-func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCerts bool, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
+func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCerts bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap, forNode bool, forList bool) (*serverconfigs.ServerConfig, error) {
 	if server == nil {
 		return nil, ErrNotFound
 	}
@@ -1039,7 +1040,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 
 	var groupConfig *serverconfigs.ServerGroupConfig
 	for _, groupId := range server.DecodeGroupIds() {
-		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, forNode, forList, cacheMap)
+		groupConfig1, err := SharedServerGroupDAO.ComposeGroupConfig(tx, groupId, forNode, forList, dataMap, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -1114,7 +1115,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if !forNode || httpsConfig.IsOn {
 			// SSL
 			if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 && !ignoreCerts {
-				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
+				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, httpsConfig.SSLPolicyRef.SSLPolicyId, false, dataMap, cacheMap)
 				if err != nil {
 					return nil, err
 				}
@@ -1150,7 +1151,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 		if !forNode || tlsConfig.IsOn {
 			// SSL
 			if tlsConfig.SSLPolicyRef != nil && !ignoreCerts {
-				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, false, cacheMap)
+				sslPolicyConfig, err := SharedSSLPolicyDAO.ComposePolicyConfig(tx, tlsConfig.SSLPolicyRef.SSLPolicyId, false, dataMap, cacheMap)
 				if err != nil {
 					return nil, err
 				}
@@ -1190,7 +1191,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 	// Web
 	if !forList {
 		if server.WebId > 0 {
-			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), false, forNode, cacheMap)
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(server.WebId), false, forNode, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -1211,7 +1212,7 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			if !forNode || reverseProxyRef.IsOn {
 				config.ReverseProxyRef = reverseProxyRef
 
-				reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+				reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, dataMap, cacheMap)
 				if err != nil {
 					return nil, err
 				}

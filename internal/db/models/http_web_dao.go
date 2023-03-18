@@ -77,7 +77,7 @@ func (this *HTTPWebDAO) FindEnabledHTTPWeb(tx *dbs.Tx, id int64) (*HTTPWeb, erro
 }
 
 // ComposeWebConfig 组合配置
-func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGroup bool, forNode bool, cacheMap *utils.CacheMap) (*serverconfigs.HTTPWebConfig, error) {
+func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGroup bool, forNode bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.HTTPWebConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -313,7 +313,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 		if len(refs) > 0 {
 			config.LocationRefs = refs
 
-			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs, forNode, cacheMap)
+			locations, err := SharedHTTPLocationDAO.ConvertLocationRefs(tx, refs, forNode, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}

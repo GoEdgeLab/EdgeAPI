@@ -845,7 +845,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		}
 
 		// 配置
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, false, true)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, nil, false, true)
 		if err != nil {
 			return nil, err
 		}
@@ -1008,7 +1008,7 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 	}
 
 	// 配置
-	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, userId > 0, false)
+	config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, req.IgnoreSSLCerts, nil, nil, userId > 0, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1144,7 +1144,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1191,7 +1191,7 @@ func (this *ServerService) FindAndInitServerWebConfig(ctx context.Context, req *
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, false, false, nil)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, false, false, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1519,7 +1519,7 @@ func (this *ServerService) ComposeAllUserServersConfig(ctx context.Context, req 
 	var configs = []*serverconfigs.ServerConfig{}
 	var cacheMap = utils.NewCacheMap()
 	for _, server := range servers {
-		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, false, cacheMap, true, false)
+		config, err := models.SharedServerDAO.ComposeServerConfig(tx, server, false, nil, cacheMap, true, false)
 		if err != nil {
 			return nil, err
 		}

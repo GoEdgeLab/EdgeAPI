@@ -150,7 +150,7 @@ func (this *HTTPLocationDAO) UpdateLocation(tx *dbs.Tx, locationId int64, name s
 }
 
 // ComposeLocationConfig 组合配置
-func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64, forNode bool, cacheMap *utils.CacheMap) (*serverconfigs.HTTPLocationConfig, error) {
+func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64, forNode bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.HTTPLocationConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -179,7 +179,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 
 	// web
 	if location.WebId > 0 {
-		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(location.WebId), true, forNode, cacheMap)
+		webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(location.WebId), true, forNode, dataMap, cacheMap)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +195,7 @@ func (this *HTTPLocationDAO) ComposeLocationConfig(tx *dbs.Tx, locationId int64,
 		}
 		config.ReverseProxyRef = ref
 		if ref.ReverseProxyId > 0 {
-			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, ref.ReverseProxyId, cacheMap)
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, ref.ReverseProxyId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -292,13 +292,13 @@ func (this *HTTPLocationDAO) UpdateLocationWeb(tx *dbs.Tx, locationId int64, web
 }
 
 // ConvertLocationRefs 转换引用为配置
-func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfigs.HTTPLocationRef, forNode bool, cacheMap *utils.CacheMap) (locations []*serverconfigs.HTTPLocationConfig, err error) {
+func (this *HTTPLocationDAO) ConvertLocationRefs(tx *dbs.Tx, refs []*serverconfigs.HTTPLocationRef, forNode bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (locations []*serverconfigs.HTTPLocationConfig, err error) {
 	for _, ref := range refs {
-		config, err := this.ComposeLocationConfig(tx, ref.LocationId, forNode, cacheMap)
+		config, err := this.ComposeLocationConfig(tx, ref.LocationId, forNode, dataMap, cacheMap)
 		if err != nil {
 			return nil, err
 		}
-		children, err := this.ConvertLocationRefs(tx, ref.Children, forNode, cacheMap)
+		children, err := this.ConvertLocationRefs(tx, ref.Children, forNode, dataMap, cacheMap)
 		if err != nil {
 			return nil, err
 		}

@@ -190,7 +190,7 @@ func TestServerDAO_FindAllEnabledServersWithNode_Cache(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, server := range servers {
-			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, cacheMap, true, false)
+			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, nil, cacheMap, true, false)
 		}
 	}
 
@@ -201,7 +201,7 @@ func TestServerDAO_FindAllEnabledServersWithNode_Cache(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, server := range servers {
-			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, cacheMap, true, false)
+			_, _ = models.SharedServerDAO.ComposeServerConfig(nil, server, false, nil, cacheMap, true, false)
 		}
 	}
 	t.Log(time.Since(before).Seconds()*1000, "ms")

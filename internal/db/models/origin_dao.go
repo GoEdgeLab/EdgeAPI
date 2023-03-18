@@ -276,7 +276,7 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 }
 
 // ComposeOriginConfig 将源站信息转换为配置
-func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap *utils.CacheMap) (*serverconfigs.OriginConfig, error) {
+func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.OriginConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -403,7 +403,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, cacheMap 
 		}
 		config.CertRef = ref
 		if ref.CertId > 0 {
-			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, false, cacheMap)
+			certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, false, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}

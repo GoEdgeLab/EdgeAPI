@@ -78,7 +78,7 @@ func (this *Server) DecodeHTTPSPorts() (ports []int) {
 		if err != nil {
 			return nil
 		}
-		err = config.Init()
+		err = config.Init(nil)
 		if err != nil {
 			return nil
 		}
@@ -120,7 +120,7 @@ func (this *Server) DecodeTLSPorts() (ports []int) {
 		if err != nil {
 			return nil
 		}
-		err = config.Init()
+		err = config.Init(nil)
 		if err != nil {
 			return nil
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -279,7 +280,7 @@ func (this *ServerGroupDAO) InitGroupWeb(tx *dbs.Tx, groupId int64) (int64, erro
 }
 
 // ComposeGroupConfig 组合配置
-func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNode bool, forList bool, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
+func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNode bool, forList bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.ServerGroupConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -324,7 +325,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNod
 			}
 			config.HTTPReverseProxyRef = reverseProxyRef
 
-			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -341,7 +342,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNod
 			}
 			config.TCPReverseProxyRef = reverseProxyRef
 
-			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -358,7 +359,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNod
 			}
 			config.UDPReverseProxyRef = reverseProxyRef
 
-			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, cacheMap)
+			reverseProxyConfig, err := SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}
@@ -369,7 +370,7 @@ func (this *ServerGroupDAO) ComposeGroupConfig(tx *dbs.Tx, groupId int64, forNod
 
 		// web
 		if group.WebId > 0 {
-			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), true, forNode, cacheMap)
+			webConfig, err := SharedHTTPWebDAO.ComposeWebConfig(tx, int64(group.WebId), true, forNode, dataMap, cacheMap)
 			if err != nil {
 				return nil, err
 			}

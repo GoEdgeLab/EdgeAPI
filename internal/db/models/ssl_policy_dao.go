@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -77,7 +78,7 @@ func (this *SSLPolicyDAO) FindEnabledSSLPolicy(tx *dbs.Tx, id int64) (*SSLPolicy
 }
 
 // ComposePolicyConfig 组合配置
-func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignoreData bool, cacheMap *utils.CacheMap) (*sslconfigs.SSLPolicy, error) {
+func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignoreData bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*sslconfigs.SSLPolicy, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -111,7 +112,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignore
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, cacheMap)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, dataMap, cacheMap)
 				if err != nil {
 					return nil, err
 				}
@@ -133,7 +134,7 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignore
 		}
 		if len(refs) > 0 {
 			for _, ref := range refs {
-				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, cacheMap)
+				certConfig, err := SharedSSLCertDAO.ComposeCertConfig(tx, ref.CertId, ignoreData, dataMap, cacheMap)
 				if err != nil {
 					return nil, err
 				}

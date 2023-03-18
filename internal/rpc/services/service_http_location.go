@@ -60,7 +60,7 @@ func (this *HTTPLocationService) FindEnabledHTTPLocationConfig(ctx context.Conte
 
 	var tx = this.NullTx()
 
-	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(tx, req.LocationId, false, nil)
+	config, err := models.SharedHTTPLocationDAO.ComposeLocationConfig(tx, req.LocationId, false, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationReverseProxyConfig(ctx c
 		}
 	}
 
-	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil)
+	reverseProxyConfig, err := models.SharedReverseProxyDAO.ComposeReverseProxyConfig(tx, reverseProxyRef.ReverseProxyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (this *HTTPLocationService) FindAndInitHTTPLocationWebConfig(ctx context.Co
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil)
+	config, err := models.SharedHTTPWebDAO.ComposeWebConfig(tx, webId, true, false, nil, nil)
 	if err != nil {
 		return nil, rpcutils.Wrap("ComposeWebConfig()", err)
 	}

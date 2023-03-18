@@ -4,9 +4,11 @@
 package models_test
 
 import (
+	"encoding/json"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/logs"
@@ -47,21 +49,27 @@ func TestNodeDAO_FindEnabledNodeClusterIds(t *testing.T) {
 func TestNodeDAO_ComposeNodeConfig(t *testing.T) {
 	dbs.NotifyReady()
 
-	before := time.Now()
-	defer func() {
-		t.Log(time.Since(before).Seconds()*1000, "ms")
-	}()
+	var before = time.Now()
 
 	var tx *dbs.Tx
 	var cacheMap = utils.NewCacheMap()
-	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
+	var dataMap = shared.NewDataMap()
+	//var dataMap *nodeconfigs.DataMap
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, dataMap, cacheMap)
 	if err != nil {
 		t.Fatal(err)
 	}
+	nodeConfig.DataMap = dataMap
 	t.Log(len(nodeConfig.Servers), "servers")
 	t.Log(cacheMap.Len(), "items")
 
-	// old: 77ms => new: 56ms
+	t.Log(time.Since(before).Seconds()*1000, "ms")
+
+	data, err := json.Marshal(nodeConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(len(data), "bytes")
 }
 
 func TestNodeDAO_ComposeNodeConfig_ParentNodes(t *testing.T) {
@@ -71,7 +79,7 @@ func TestNodeDAO_ComposeNodeConfig_ParentNodes(t *testing.T) {
 
 	var tx *dbs.Tx
 	var cacheMap = utils.NewCacheMap()
-	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, cacheMap)
+	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, 48, nil, cacheMap)
 	if err != nil {
 		t.Fatal(err)
 	}

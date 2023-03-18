@@ -6,6 +6,7 @@ import (
 	"errors"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
@@ -201,7 +202,7 @@ func (this *SSLCertDAO) UpdateCert(tx *dbs.Tx,
 
 // ComposeCertConfig 组合配置
 // ignoreData 是否忽略证书数据，避免因为数据过大影响传输
-func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData bool, cacheMap *utils.CacheMap) (*sslconfigs.SSLCertConfig, error) {
+func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData bool, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*sslconfigs.SSLCertConfig, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -227,8 +228,17 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData b
 	config.Name = cert.Name
 	config.Description = cert.Description
 	if !ignoreData {
-		config.CertData = cert.CertData
-		config.KeyData = cert.KeyData
+		if dataMap != nil {
+			if len(cert.CertData) > 0 {
+				config.CertData = dataMap.Put(cert.CertData)
+			}
+			if len(cert.KeyData) > 0 {
+				config.KeyData = dataMap.Put(cert.KeyData)
+			}
+		} else {
+			config.CertData = cert.CertData
+			config.KeyData = cert.KeyData
+		}
 	}
 	config.ServerName = cert.ServerName
 	config.TimeBeginAt = int64(cert.TimeBeginAt)
@@ -236,7 +246,13 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData b
 
 	// OCSP
 	if int64(cert.OcspExpiresAt) > time.Now().Unix() {
-		config.OCSP = cert.Ocsp
+		if dataMap != nil {
+			if len(cert.Ocsp) > 0 {
+				config.OCSP = dataMap.Put(cert.Ocsp)
+			}
+		} else {
+			config.OCSP = cert.Ocsp
+		}
 		config.OCSPExpiresAt = int64(cert.OcspExpiresAt)
 	}
 	config.OCSPError = cert.OcspError
