@@ -156,10 +156,24 @@ func (this *DNSTaskDAO) UpdateDNSTaskError(tx *dbs.Tx, taskId int64, err string)
 }
 
 // UpdateDNSTaskDone 设置任务完成
-func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64) error {
+func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64, taskVersion int64) error {
 	if taskId <= 0 {
 		return errors.New("invalid taskId")
 	}
+
+	currentVersion, err := this.Query(tx).
+		Pk(taskId).
+		Result("version").
+		FindInt64Col(0)
+	if err != nil {
+		return err
+	}
+
+	// 如果版本号发生变化，则说明有新的要执行的任务
+	if taskVersion > 0 && currentVersion > 0 && currentVersion != taskVersion {
+		return nil
+	}
+
 	var op = NewDNSTaskOperator()
 	op.Id = taskId
 	op.IsDone = true
