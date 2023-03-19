@@ -17,6 +17,7 @@ import (
 	"github.com/iwind/gosock/pkg/gosock"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -185,6 +186,38 @@ func main() {
 				fmt.Println("[ERROR]marshal result failed: " + err.Error())
 			} else {
 				fmt.Println(string(replyJSON))
+			}
+		}
+	})
+	app.On("token", func() {
+		var role = ""
+		if len(os.Args) <= 2 {
+			fmt.Println("require --role parameter")
+			return
+		}
+
+		var set = flag.NewFlagSet("", flag.ExitOnError)
+		set.StringVar(&role, "role", "", "edge-api token --role=[admin|user|api]")
+		_ = set.Parse(os.Args[2:])
+
+		var sock = gosock.NewTmpSock(teaconst.ProcessName)
+		reply, err := sock.Send(&gosock.Command{Code: "lookupToken", Params: map[string]any{
+			"role": role,
+		}})
+		if err != nil {
+			fmt.Println("[ERROR]" + err.Error())
+		} else {
+			var resultMap = maps.NewMap(reply.Params)
+			if resultMap.GetBool("isOk") {
+				var tokens = resultMap.GetSlice("tokens")
+				fmt.Printf("%-35s | %-35s\n", "nodeId", "secret")
+				fmt.Println(strings.Repeat("-", 70))
+				for _, tokenMap := range tokens {
+					var m = maps.NewMap(tokenMap)
+					fmt.Printf("%-35s | %-35s\n", m.GetString("nodeId"), m.GetString("secret"))
+				}
+			} else {
+				fmt.Println("[ERROR]" + resultMap.GetString("err"))
 			}
 		}
 	})

@@ -755,6 +755,41 @@ func (this *APINode) listenSock() error {
 						"code": teaconst.InstanceCode,
 					},
 				})
+			case "lookupToken":
+				var role = maps.NewMap(cmd.Params).GetString("role")
+				switch role {
+				case "admin", "user", "api":
+					tokens, err := models.SharedApiTokenDAO.FindAllEnabledAPITokens(nil, role)
+					if err != nil {
+						_ = cmd.Reply(&gosock.Command{
+							Params: map[string]any{
+								"isOk": false,
+								"err":  err.Error(),
+							},
+						})
+					} else {
+						var tokenMaps = []maps.Map{}
+						for _, token := range tokens {
+							tokenMaps = append(tokenMaps, maps.Map{
+								"nodeId": token.NodeId,
+								"secret": token.Secret,
+							})
+						}
+						_ = cmd.Reply(&gosock.Command{
+							Params: map[string]any{
+								"isOk":   true,
+								"tokens": tokenMaps,
+							},
+						})
+					}
+				default:
+					_ = cmd.Reply(&gosock.Command{
+						Params: map[string]any{
+							"isOk": false,
+							"err":  "unsupported role '" + role + "'",
+						},
+					})
+				}
 			}
 		})
 
