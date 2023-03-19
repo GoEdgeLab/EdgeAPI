@@ -743,11 +743,27 @@ func (this *NodeService) FindCurrentNodeConfig(ctx context.Context, req *pb.Find
 	if err != nil {
 		return nil, err
 	}
+	var cacheMap = this.findClusterCacheMap(clusterId, req.NodeTaskVersion)
 	var dataMap *shared.DataMap
 	if req.UseDataMap {
-		dataMap = shared.NewDataMap()
+		// 是否有共用的
+		if cacheMap != nil {
+			cachedDataMap, ok := cacheMap.Get("DataMap")
+			if ok {
+				dataMap = cachedDataMap.(*shared.DataMap)
+			}
+		}
+
+		if dataMap == nil {
+			dataMap = shared.NewDataMap()
+		}
+	} else {
+		// 如果没有使用DataMap，但是获取的缓存是有DataMap的，需要重新获取
+		_, ok := cacheMap.Get("DataMap")
+		if ok {
+			cacheMap = nil
+		}
 	}
-	var cacheMap = this.findClusterCacheMap(clusterId, req.NodeTaskVersion)
 	nodeConfig, err := models.SharedNodeDAO.ComposeNodeConfig(tx, nodeId, dataMap, cacheMap)
 	if err != nil {
 		return nil, err

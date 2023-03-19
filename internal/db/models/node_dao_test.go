@@ -70,6 +70,19 @@ func TestNodeDAO_ComposeNodeConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(len(data), "bytes")
+
+	{
+		nodeConfig, err = models.SharedNodeDAO.ComposeNodeConfig(tx, 148, dataMap, cacheMap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(len(nodeConfig.DataMap.Map), "items in dataMap")
+		data, err = json.Marshal(nodeConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(len(data), "bytes")
+	}
 }
 
 func TestNodeDAO_ComposeNodeConfig_ParentNodes(t *testing.T) {

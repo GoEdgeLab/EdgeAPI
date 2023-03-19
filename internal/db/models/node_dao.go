@@ -967,6 +967,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		cacheMap = utils.NewCacheMap()
 	}
 
+	// 放入到缓存中，以便于后面继续使用
+	if dataMap != nil {
+		cacheMap.Put("DataMap", dataMap)
+	}
+
 	node, err := this.FindEnabledNode(tx, nodeId)
 	if err != nil {
 		return nil, err
