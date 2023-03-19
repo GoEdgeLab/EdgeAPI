@@ -24,6 +24,7 @@ type NSCluster struct {
 	SoaSerial       uint64   `field:"soaSerial"`       // SOA序列号
 	Email           string   `field:"email"`           // 管理员邮箱
 	DetectAgents    bool     `field:"detectAgents"`    // 是否监测Agents
+	CheckingPorts   bool     `field:"checkingPorts"`   // 自动检测端口
 }
 
 type NSClusterOperator struct {
@@ -47,6 +48,7 @@ type NSClusterOperator struct {
 	SoaSerial       any // SOA序列号
 	Email           any // 管理员邮箱
 	DetectAgents    any // 是否监测Agents
+	CheckingPorts   any // 自动检测端口
 }
 
 func NewNSClusterOperator() *NSClusterOperator {
