@@ -1,27 +1,47 @@
 package utils
 
 import (
+	"errors"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/iwind/TeaGo/logs"
 	"github.com/miekg/dns"
 )
+
+var sharedDNSClient *dns.Client
+var sharedDNSConfig *dns.ClientConfig
+
+func init() {
+	if !teaconst.IsMain {
+		return
+	}
+
+	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+	if err != nil {
+		logs.Println("ERROR: configure dns client failed: " + err.Error())
+		return
+	}
+
+	sharedDNSConfig = config
+	sharedDNSClient = &dns.Client{}
+
+}
 
 // LookupCNAME 查询CNAME记录
 // TODO 可以设置使用的DNS主机地址
 func LookupCNAME(host string) (string, error) {
-	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-	if err != nil {
-		return "", err
+	if sharedDNSClient == nil {
+		return "", errors.New("could not find dns client")
 	}
 
-	var c = new(dns.Client)
 	var m = new(dns.Msg)
 
 	m.SetQuestion(host+".", dns.TypeCNAME)
 	m.RecursionDesired = true
 
 	var lastErr error
-	for _, serverAddr := range config.Servers {
-		r, _, err := c.Exchange(m, configutils.QuoteIP(serverAddr)+":"+config.Port)
+	for _, serverAddr := range sharedDNSConfig.Servers {
+		r, _, err := sharedDNSClient.Exchange(m, configutils.QuoteIP(serverAddr)+":"+sharedDNSConfig.Port)
 		if err != nil {
 			lastErr = err
 			continue
@@ -38,12 +58,6 @@ func LookupCNAME(host string) (string, error) {
 // LookupNS 查询NS记录
 // TODO 可以设置使用的DNS主机地址
 func LookupNS(host string) ([]string, error) {
-	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-	if err != nil {
-		return nil, err
-	}
-
-	var c = new(dns.Client)
 	var m = new(dns.Msg)
 
 	m.SetQuestion(host+".", dns.TypeNS)
@@ -53,8 +67,8 @@ func LookupNS(host string) ([]string, error) {
 
 	var lastErr error
 	var hasValidServer = false
-	for _, serverAddr := range config.Servers {
-		r, _, err := c.Exchange(m, configutils.QuoteIP(serverAddr)+":"+config.Port)
+	for _, serverAddr := range sharedDNSConfig.Servers {
+		r, _, err := sharedDNSClient.Exchange(m, configutils.QuoteIP(serverAddr)+":"+sharedDNSConfig.Port)
 		if err != nil {
 			lastErr = err
 			continue
@@ -82,22 +96,16 @@ func LookupNS(host string) ([]string, error) {
 // LookupTXT 获取CNAME
 // TODO 可以设置使用的DNS主机地址
 func LookupTXT(host string) ([]string, error) {
-	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-	if err != nil {
-		return nil, err
-	}
-
-	var c = new(dns.Client)
 	var m = new(dns.Msg)
 
-	m.SetQuestion(host + ".", dns.TypeTXT)
+	m.SetQuestion(host+".", dns.TypeTXT)
 	m.RecursionDesired = true
 
 	var lastErr error
 	var result = []string{}
 	var hasValidServer = false
-	for _, serverAddr := range config.Servers {
-		r, _, err := c.Exchange(m, configutils.QuoteIP(serverAddr)+":"+config.Port)
+	for _, serverAddr := range sharedDNSConfig.Servers {
+		r, _, err := sharedDNSClient.Exchange(m, configutils.QuoteIP(serverAddr)+":"+sharedDNSConfig.Port)
 		if err != nil {
 			lastErr = err
 			continue
