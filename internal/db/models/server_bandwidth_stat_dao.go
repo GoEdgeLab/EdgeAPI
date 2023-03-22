@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -63,7 +64,7 @@ func init() {
 
 // UpdateServerBandwidth 写入数据
 // 暂时不使用region区分
-func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, day string, timeAt string, bytes int64, totalBytes int64) error {
+func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, regionId int64, day string, timeAt string, bytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64) error {
 	if serverId <= 0 {
 		return errors.New("invalid server id '" + types.String(serverId) + "'")
 	}
@@ -72,18 +73,34 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 		Table(this.partialTable(serverId)).
 		Param("bytes", bytes).
 		Param("totalBytes", totalBytes).
+		Param("cachedBytes", cachedBytes).
+		Param("attackBytes", attackBytes).
+		Param("countRequests", countRequests).
+		Param("countCachedRequests", countCachedRequests).
+		Param("countAttackRequests", countAttackRequests).
 		InsertOrUpdateQuickly(maps.Map{
-			"userId":     userId,
-			"serverId":   serverId,
-			"day":        day,
-			"timeAt":     timeAt,
-			"bytes":      bytes,
-			"totalBytes": totalBytes,
-			"avgBytes":   totalBytes / 300,
+			"userId":              userId,
+			"serverId":            serverId,
+			"regionId":            regionId,
+			"day":                 day,
+			"timeAt":              timeAt,
+			"bytes":               bytes,
+			"totalBytes":          totalBytes,
+			"avgBytes":            totalBytes / 300,
+			"cachedBytes":         cachedBytes,
+			"attackBytes":         attackBytes,
+			"countRequests":       countRequests,
+			"countCachedRequests": countCachedRequests,
+			"countAttackRequests": countAttackRequests,
 		}, maps.Map{
-			"bytes":      dbs.SQL("bytes+:bytes"),
-			"avgBytes":   dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
-			"totalBytes": dbs.SQL("totalBytes+:totalBytes"),
+			"bytes":               dbs.SQL("bytes+:bytes"),
+			"avgBytes":            dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
+			"totalBytes":          dbs.SQL("totalBytes+:totalBytes"),
+			"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
+			"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
+			"countRequests":       dbs.SQL("countRequests+:countRequests"),
+			"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
+			"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
 		})
 }
 
@@ -540,6 +557,190 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serve
 	return this.fixServerStat(one.(*ServerBandwidthStat), useAvg), nil
 }
 
+// FindDailyStats 按天统计
+func (this *ServerBandwidthStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerBandwidthStat, err error) {
+	// 兼容以往版本
+	if !regexputils.YYYYMMDD.MatchString(dayFrom) || !regexputils.YYYYMMDD.MatchString(dayTo) {
+		return nil, nil
+	}
+	hasFullData, err := this.HasFullData(tx, serverId, dayFrom[:6])
+	if err != nil {
+		return nil, err
+	}
+	if !hasFullData {
+		ones, err := SharedServerDailyStatDAO.compatFindDailyStats(tx, serverId, dayFrom, dayTo)
+		if err != nil {
+			return nil, err
+		}
+		for _, one := range ones {
+			result = append(result, one.AsServerBandwidthStat())
+		}
+
+		return result, nil
+	}
+
+	ones, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("SUM(totalBytes) AS totalBytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "day").
+		Attr("serverId", serverId).
+		Between("day", dayFrom, dayTo).
+		Group("day").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var dayMap = map[string]*ServerBandwidthStat{} // day => Stat
+	for _, one := range ones {
+		var stat = one.(*ServerBandwidthStat)
+		dayMap[stat.Day] = stat
+	}
+	days, err := utils.RangeDays(dayFrom, dayTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range days {
+		stat, ok := dayMap[day]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &ServerBandwidthStat{Day: day})
+		}
+	}
+
+	return
+}
+
+// FindHourlyStats 按小时统计
+func (this *ServerBandwidthStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerBandwidthStat, err error) {
+	// 兼容以往版本
+	if !regexputils.YYYYMMDDHH.MatchString(hourFrom) || !regexputils.YYYYMMDDHH.MatchString(hourTo) {
+		return nil, nil
+	}
+	hasFullData, err := this.HasFullData(tx, serverId, hourFrom[:6])
+	if err != nil {
+		return nil, err
+	}
+	if !hasFullData {
+		ones, err := SharedServerDailyStatDAO.compatFindHourlyStats(tx, serverId, hourFrom, hourTo)
+		if err != nil {
+			return nil, err
+		}
+		for _, one := range ones {
+			result = append(result, one.AsServerBandwidthStat())
+		}
+
+		return result, nil
+	}
+
+	var query = this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("MIN(day) AS day", "MIN(timeAt) AS timeAt", "SUM(totalBytes) AS totalBytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "CONCAT(day, SUBSTR(timeAt, 1, 2)) AS hour").
+		Attr("serverId", serverId)
+
+	if hourFrom[:8] == hourTo[:8] { // 同一天
+		query.Attr("day", hourFrom[:8])
+		query.Between("timeAt", hourFrom[8:]+"00", hourTo[8:]+"59")
+	} else {
+		query.Between("CONCAT(day, SUBSTR(timeAt, 1, 2))", hourFrom, hourTo)
+	}
+
+	ones, err := query.
+		Group("hour").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var hourMap = map[string]*ServerBandwidthStat{} // hour => Stat
+	for _, one := range ones {
+		var stat = one.(*ServerBandwidthStat)
+		var hour = stat.Day + stat.TimeAt[:2]
+		hourMap[hour] = stat
+	}
+	hours, err := utils.RangeHours(hourFrom, hourTo)
+	if err != nil {
+		return nil, err
+	}
+	for _, hour := range hours {
+		stat, ok := hourMap[hour]
+		if ok {
+			result = append(result, stat)
+		} else {
+			result = append(result, &ServerBandwidthStat{
+				Day:    hour[:8],
+				TimeAt: hour[8:] + "00",
+			})
+		}
+	}
+
+	return
+}
+
+// SumDailyStat 获取某天内的流量
+// dayFrom 格式为YYYYMMDD
+// dayTo 格式为YYYYMMDD
+func (this *ServerBandwidthStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, regionId int64, dayFrom string, dayTo string) (stat *pb.ServerDailyStat, err error) {
+	if !regexputils.YYYYMMDD.MatchString(dayFrom) {
+		return nil, errors.New("invalid dayFrom '" + dayFrom + "'")
+	}
+	if !regexputils.YYYYMMDD.MatchString(dayTo) {
+		return nil, errors.New("invalid dayTo '" + dayTo + "'")
+	}
+
+	// 兼容以往版本
+	hasFullData, err := this.HasFullData(tx, serverId, dayFrom[:6])
+	if err != nil {
+		return nil, err
+	}
+	if !hasFullData {
+		return SharedServerDailyStatDAO.compatSumDailyStat(tx, 0, serverId, regionId, dayFrom, dayTo)
+	}
+
+	stat = &pb.ServerDailyStat{}
+
+	if serverId <= 0 {
+		return
+	}
+
+	if dayFrom > dayTo {
+		dayFrom, dayTo = dayTo, dayFrom
+	}
+
+	var query = this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Result("SUM(totalBytes) AS totalBytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes")
+
+	query.Attr("serverId", serverId)
+
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+
+	if dayFrom == dayTo {
+		query.Attr("day", dayFrom)
+	} else {
+		query.Between("day", dayFrom, dayTo)
+	}
+
+	one, _, err := query.FindOne()
+	if err != nil {
+		return nil, err
+	}
+
+	if one == nil {
+		return
+	}
+
+	stat.Bytes = one.GetInt64("totalBytes")
+	stat.CachedBytes = one.GetInt64("cachedBytes")
+	stat.CountRequests = one.GetInt64("countRequests")
+	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
+	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
+	stat.AttackBytes = one.GetInt64("attackBytes")
+	return
+}
+
 // Clean 清理过期数据
 func (this *ServerBandwidthStatDAO) Clean(tx *dbs.Tx) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -100)) // 保留大约3个月的数据
@@ -618,4 +819,56 @@ func (this *ServerBandwidthStatDAO) fixServerStats(stats []*ServerBandwidthStat,
 			stat.Bytes = stat.AvgBytes
 		}
 	}
+}
+
+// HasFullData 检查一个月是否完整数据
+// 是为了兼容以前数据，以前的表中没有缓存流量、请求数等字段
+func (this *ServerBandwidthStatDAO) HasFullData(tx *dbs.Tx, serverId int64, month string) (bool, error) {
+	var monthKey = month + "@" + types.String(serverId)
+
+	if !regexputils.YYYYMM.MatchString(month) {
+		return false, errors.New("invalid month '" + month + "'")
+	}
+
+	// 仅供调试
+	if Tea.IsTesting() {
+		return true, nil
+	}
+
+	fullDataLocker.Lock()
+	hasData, ok := fullDataMap[monthKey]
+	fullDataLocker.Unlock()
+	if ok {
+		return hasData, nil
+	}
+
+	var year = types.Int(month[:4])
+	var monthInt = types.Int(month[4:])
+
+	if year < 2000 || monthInt > 12 || monthInt < 1 {
+		return false, nil
+	}
+
+	var lastMonth = monthInt - 1
+	if lastMonth == 0 {
+		lastMonth = 12
+		year--
+	}
+
+	var lastMonthString = fmt.Sprintf("%d%02d", year, lastMonth)
+	one, err := this.Query(tx).
+		Table(this.partialTable(serverId)).
+		Between("day", lastMonthString+"01", lastMonthString+"31").
+		DescPk().
+		Find()
+	if err != nil {
+		return false, err
+	}
+
+	var b = one != nil && one.(*ServerBandwidthStat).CountRequests > 0
+	fullDataLocker.Lock()
+	fullDataMap[monthKey] = b
+	fullDataLocker.Unlock()
+
+	return b, nil
 }

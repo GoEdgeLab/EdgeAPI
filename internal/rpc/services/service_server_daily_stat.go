@@ -239,7 +239,7 @@ func (this *ServerDailyStatService) FindLatestServerDailyStats(ctx context.Conte
 	if req.Days > 0 {
 		for i := int32(0); i < req.Days; i++ {
 			dayString := timeutil.Format("Ymd", time.Now().AddDate(0, 0, -int(i)))
-			stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, 0, req.ServerId, req.NodeRegionId, dayString, dayString)
+			stat, err := models.SharedServerBandwidthStatDAO.SumDailyStat(tx, req.ServerId, req.NodeRegionId, dayString, dayString)
 			if err != nil {
 				return nil, err
 			}
@@ -396,7 +396,12 @@ func (this *ServerDailyStatService) SumServerDailyStats(ctx context.Context, req
 		req.DayTo = req.DayFrom
 	}
 
-	stat, err := models.SharedServerDailyStatDAO.SumDailyStat(tx, req.UserId, req.ServerId, req.NodeRegionId, req.DayFrom, req.DayTo)
+	var stat *pb.ServerDailyStat
+	if req.ServerId > 0 {
+		stat, err = models.SharedServerBandwidthStatDAO.SumDailyStat(tx, req.ServerId, req.NodeRegionId, req.DayFrom, req.DayTo)
+	} else {
+		stat, err = models.SharedUserBandwidthStatDAO.SumDailyStat(tx, req.UserId, req.NodeRegionId, req.DayFrom, req.DayTo)
+	}
 	if err != nil {
 		return nil, err
 	}

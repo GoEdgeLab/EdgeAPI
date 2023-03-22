@@ -195,7 +195,7 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, reg
 
 // SumUserDaily 获取某天流量总和
 // day 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (stat *ServerDailyStat, err error) {
+func (this *ServerDailyStatDAO) compatSumUserDaily(tx *dbs.Tx, userId int64, regionId int64, day string) (stat *ServerDailyStat, err error) {
 	var query = this.Query(tx)
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
@@ -234,7 +234,7 @@ func (this *ServerDailyStatDAO) SumUserTrafficBytesBetweenDays(tx *dbs.Tx, userI
 
 // SumUserMonthly 获取某月流量总和
 // month 格式为YYYYMM
-func (this *ServerDailyStatDAO) SumUserMonthly(tx *dbs.Tx, userId int64, month string) (int64, error) {
+func (this *ServerDailyStatDAO) compatSumUserMonthly(tx *dbs.Tx, userId int64, month string) (int64, error) {
 	return this.Query(tx).
 		Between("day", month+"01", month+"31").
 		Attr("userId", userId).
@@ -323,10 +323,10 @@ func (this *ServerDailyStatDAO) SumHourlyStat(tx *dbs.Tx, serverId int64, hour s
 	return
 }
 
-// SumDailyStat 获取某天内的流量
+// compatSumDailyStat 获取某天内的流量
 // dayFrom 格式为YYYYMMDD
 // dayTo 格式为YYYYMMDD
-func (this *ServerDailyStatDAO) SumDailyStat(tx *dbs.Tx, userId int64, serverId int64, regionId int64, dayFrom string, dayTo string) (stat *pb.ServerDailyStat, err error) {
+func (this *ServerDailyStatDAO) compatSumDailyStat(tx *dbs.Tx, userId int64, serverId int64, regionId int64, dayFrom string, dayTo string) (stat *pb.ServerDailyStat, err error) {
 	stat = &pb.ServerDailyStat{}
 
 	if userId <= 0 && serverId <= 0 {
@@ -463,7 +463,7 @@ func (this *ServerDailyStatDAO) SumMonthlyBytes(tx *dbs.Tx, serverId int64, mont
 }
 
 // FindDailyStats 按天统计
-func (this *ServerDailyStatDAO) FindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
+func (this *ServerDailyStatDAO) compatFindDailyStats(tx *dbs.Tx, serverId int64, dayFrom string, dayTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
 		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "day").
 		Attr("serverId", serverId).
@@ -640,7 +640,7 @@ func (this *ServerDailyStatDAO) FindMonthlyStatsWithPlan(tx *dbs.Tx, month strin
 }
 
 // FindHourlyStats 按小时统计
-func (this *ServerDailyStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
+func (this *ServerDailyStatDAO) compatFindHourlyStats(tx *dbs.Tx, serverId int64, hourFrom string, hourTo string) (result []*ServerDailyStat, err error) {
 	ones, err := this.Query(tx).
 		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "hour").
 		Attr("serverId", serverId).

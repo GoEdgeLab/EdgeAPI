@@ -65,7 +65,7 @@ func init() {
 					for _, stat := range m {
 						// 更新服务的带宽峰值
 						if stat.ServerId > 0 {
-							err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes)
+							err := models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
 							if err != nil {
 								remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -78,7 +78,7 @@ func init() {
 
 						// 更新用户的带宽峰值
 						if stat.UserId > 0 {
-							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes)
+							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
 							if err != nil {
 								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -127,16 +127,26 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 		if ok {
 			oldStat.Bytes += stat.Bytes
 			oldStat.TotalBytes += stat.TotalBytes
+			oldStat.CachedBytes += stat.CachedBytes
+			oldStat.AttackBytes += stat.AttackBytes
+			oldStat.CountRequests += stat.CountRequests
+			oldStat.CountCachedRequests += stat.CountCachedRequests
+			oldStat.CountAttackRequests += stat.CountAttackRequests
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
-				Id:           0,
-				NodeRegionId: stat.NodeRegionId,
-				UserId:       stat.UserId,
-				ServerId:     stat.ServerId,
-				Day:          stat.Day,
-				TimeAt:       stat.TimeAt,
-				Bytes:        stat.Bytes,
-				TotalBytes:   stat.TotalBytes,
+				Id:                  0,
+				NodeRegionId:        stat.NodeRegionId,
+				UserId:              stat.UserId,
+				ServerId:            stat.ServerId,
+				Day:                 stat.Day,
+				TimeAt:              stat.TimeAt,
+				Bytes:               stat.Bytes,
+				TotalBytes:          stat.TotalBytes,
+				CachedBytes:         stat.CachedBytes,
+				AttackBytes:         stat.AttackBytes,
+				CountRequests:       stat.CountRequests,
+				CountCachedRequests: stat.CountCachedRequests,
+				CountAttackRequests: stat.CountAttackRequests,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()

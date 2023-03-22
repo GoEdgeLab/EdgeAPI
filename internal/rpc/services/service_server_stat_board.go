@@ -587,14 +587,14 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 
 	// 按日流量统计
 	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
-	dailyTrafficStats, err := models.SharedServerDailyStatDAO.FindDailyStats(tx, req.ServerId, dayFrom, timeutil.Format("Ymd"))
+	dailyTrafficStats, err := models.SharedServerBandwidthStatDAO.FindDailyStats(tx, req.ServerId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
 	}
 	for _, stat := range dailyTrafficStats {
 		result.DailyTrafficStats = append(result.DailyTrafficStats, &pb.ComposeServerStatBoardResponse_DailyTrafficStat{
 			Day:                 stat.Day,
-			Bytes:               int64(stat.Bytes),
+			Bytes:               int64(stat.TotalBytes),
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),
@@ -606,14 +606,14 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 	// 小时流量统计
 	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
 	var hourTo = timeutil.Format("YmdH")
-	hourlyTrafficStats, err := models.SharedServerDailyStatDAO.FindHourlyStats(tx, req.ServerId, hourFrom, hourTo)
+	hourlyTrafficStats, err := models.SharedServerBandwidthStatDAO.FindHourlyStats(tx, req.ServerId, hourFrom, hourTo)
 	if err != nil {
 		return nil, err
 	}
 	for _, stat := range hourlyTrafficStats {
 		result.HourlyTrafficStats = append(result.HourlyTrafficStats, &pb.ComposeServerStatBoardResponse_HourlyTrafficStat{
-			Hour:                stat.Hour,
-			Bytes:               int64(stat.Bytes),
+			Hour:                stat.Day + stat.TimeAt[:2],
+			Bytes:               int64(stat.TotalBytes),
 			CachedBytes:         int64(stat.CachedBytes),
 			CountRequests:       int64(stat.CountRequests),
 			CountCachedRequests: int64(stat.CountCachedRequests),

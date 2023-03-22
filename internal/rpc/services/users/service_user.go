@@ -421,7 +421,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	var currentDay = timeutil.Format("Ymd")
 
 	// 本月总流量
-	monthlyTrafficBytes, err := models.SharedServerDailyStatDAO.SumUserMonthly(tx, req.UserId, currentMonth)
+	monthlyTrafficBytes, err := models.SharedUserBandwidthStatDAO.SumUserMonthly(tx, req.UserId, currentMonth)
 	if err != nil {
 		return nil, err
 	}
@@ -451,12 +451,12 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 	}
 
 	// 今日总流量
-	dailyTrafficStat, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, currentDay)
+	dailyTrafficStat, err := models.SharedUserBandwidthStatDAO.SumUserDaily(tx, req.UserId, 0, currentDay)
 	if err != nil {
 		return nil, err
 	}
 	if dailyTrafficStat == nil {
-		dailyTrafficStat = &models.ServerDailyStat{}
+		dailyTrafficStat = &models.UserBandwidthStat{}
 	}
 
 	// 近 30 日流量带宽趋势
@@ -475,12 +475,12 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		}
 
 		// 流量
-		trafficStat, err := models.SharedServerDailyStatDAO.SumUserDaily(tx, req.UserId, 0, day)
+		trafficStat, err := models.SharedUserBandwidthStatDAO.SumUserDaily(tx, req.UserId, 0, day)
 		if err != nil {
 			return nil, err
 		}
 		if trafficStat == nil {
-			trafficStat = &models.ServerDailyStat{}
+			trafficStat = &models.UserBandwidthStat{}
 		}
 
 		// 峰值带宽
@@ -495,7 +495,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 
 		dailyTrafficStats = append(dailyTrafficStats, &pb.ComposeUserDashboardResponse_DailyTrafficStat{
 			Day:                 day,
-			Bytes:               int64(trafficStat.Bytes),
+			Bytes:               int64(trafficStat.TotalBytes),
 			CachedBytes:         int64(trafficStat.CachedBytes),
 			AttackBytes:         int64(trafficStat.AttackBytes),
 			CountRequests:       int64(trafficStat.CountRequests),
@@ -508,7 +508,7 @@ func (this *UserService) ComposeUserDashboard(ctx context.Context, req *pb.Compo
 		CountServers:              countServers,
 		MonthlyTrafficBytes:       monthlyTrafficBytes,
 		MonthlyPeekBandwidthBytes: monthlyPeekBandwidthBytes,
-		DailyTrafficBytes:         int64(dailyTrafficStat.Bytes),
+		DailyTrafficBytes:         int64(dailyTrafficStat.TotalBytes),
 		DailyPeekBandwidthBytes:   dailyPeekBandwidthBytes,
 		DailyTrafficStats:         dailyTrafficStats,
 		DailyPeekBandwidthStats:   dailyPeekBandwidthStats,
@@ -728,8 +728,8 @@ func (this *UserService) ComposeUserGlobalBoard(ctx context.Context, req *pb.Com
 	}
 
 	// 流量排行
-	hourFrom := timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
-	hourTo := timeutil.Format("YmdH")
+	var hourFrom = timeutil.Format("YmdH", time.Now().Add(-23*time.Hour))
+	var hourTo = timeutil.Format("YmdH")
 	topUserStats, err := models.SharedServerDailyStatDAO.FindTopUserStats(tx, hourFrom, hourTo)
 	if err != nil {
 		return nil, err

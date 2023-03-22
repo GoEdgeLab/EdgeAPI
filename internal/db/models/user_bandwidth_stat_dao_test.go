@@ -50,7 +50,7 @@ func TestUserBandwidthStatDAO_FindUserPeekBandwidthInDay(t *testing.T) {
 func TestUserBandwidthStatDAO_UpdateServerBandwidth(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	err := dao.UpdateUserBandwidth(tx, 1, 0, timeutil.Format("Ymd"), timeutil.FormatTime("Hi", time.Now().Unix()/300*300), 1024, 300)
+	err := dao.UpdateUserBandwidth(tx, 1, 0, timeutil.Format("Ymd"), timeutil.FormatTime("Hi", time.Now().Unix()/300*300), 1024, 300, 0, 0, 0, 0, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,4 +92,14 @@ func TestUserBandwidthStatDAO_FindPercentileBetweenDays(t *testing.T) {
 		t.Fatal(err)
 	}
 	logs.PrintAsJSON(stat, t)
+}
+
+func TestUserBandwidthStatDAO_HasFullData(t *testing.T) {
+	var tx *dbs.Tx
+	var dao = models.NewUserBandwidthStatDAO()
+
+	var month = "202304"
+	for i := 0; i < 3; i++ {
+		t.Log(dao.HasFullData(tx, 1, month))
+	}
 }

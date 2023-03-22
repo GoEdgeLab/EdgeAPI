@@ -5,6 +5,7 @@ package regexputils
 import "regexp"
 
 var (
-	YYYYMMDD = regexp.MustCompile(`^\d{8}$`)
-	YYYYMM   = regexp.MustCompile(`^\d{6}$`)
+	YYYYMMDDHH = regexp.MustCompile(`^\d{10}$`)
+	YYYYMMDD   = regexp.MustCompile(`^\d{8}$`)
+	YYYYMM     = regexp.MustCompile(`^\d{6}$`)
 )
