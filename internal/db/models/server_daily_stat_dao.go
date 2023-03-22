@@ -61,19 +61,24 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 	var serverUserMap = map[int64]int64{} // serverId => userId
 	var cacheMap = utils.NewCacheMap()
 	for _, stat := range stats {
-		day := timeutil.FormatTime("Ymd", stat.CreatedAt)
-		hour := timeutil.FormatTime("YmdH", stat.CreatedAt)
-		timeFrom := timeutil.FormatTime("His", stat.CreatedAt)
-		timeTo := timeutil.FormatTime("His", stat.CreatedAt+5*60-1) // 5分钟
+		var day = timeutil.FormatTime("Ymd", stat.CreatedAt)
+		var hour = timeutil.FormatTime("YmdH", stat.CreatedAt)
+		var timeFrom = timeutil.FormatTime("His", stat.CreatedAt)
+		var timeTo = timeutil.FormatTime("His", stat.CreatedAt+5*60-1) // 5分钟
 
-		// 所属用户
-		serverUserId, ok := serverUserMap[stat.ServerId]
-		if !ok {
-			userId, err := SharedServerDAO.FindServerUserId(tx, stat.ServerId)
-			if err != nil {
-				return err
+		// 用户ID
+		var serverUserId = stat.UserId
+		if serverUserId == 0 {
+			var ok bool
+			serverUserId, ok = serverUserMap[stat.ServerId]
+			if !ok {
+				userId, err := SharedServerDAO.FindServerUserId(tx, stat.ServerId)
+				if err != nil {
+					return err
+				}
+				serverUserMap[stat.ServerId] = userId
+				serverUserId = userId
 			}
-			serverUserId = userId
 		}
 
 		_, _, err := this.Query(tx).
