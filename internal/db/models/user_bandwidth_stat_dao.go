@@ -523,11 +523,6 @@ func (this *UserBandwidthStatDAO) HasFullData(tx *dbs.Tx, userId int64, month st
 		return false, errors.New("invalid month '" + month + "'")
 	}
 
-	// 仅供调试
-	if Tea.IsTesting() {
-		return true, nil
-	}
-
 	fullDataLocker.Lock()
 	hasData, ok := fullDataMap[month]
 	fullDataLocker.Unlock()

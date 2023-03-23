@@ -481,7 +481,7 @@ func (this *ServerDailyStatDAO) compatFindDailyStats(tx *dbs.Tx, serverId int64,
 
 	dayMap := map[string]*ServerDailyStat{} // day => Stat
 	for _, one := range ones {
-		stat := one.(*ServerDailyStat)
+		var stat = one.(*ServerDailyStat)
 		dayMap[stat.Day] = stat
 	}
 	days, err := utils.RangeDays(dayFrom, dayTo)
@@ -656,9 +656,11 @@ func (this *ServerDailyStatDAO) compatFindHourlyStats(tx *dbs.Tx, serverId int64
 		return nil, err
 	}
 
-	hourMap := map[string]*ServerDailyStat{} // hour => Stat
+	var hourMap = map[string]*ServerDailyStat{} // hour => Stat
 	for _, one := range ones {
-		stat := one.(*ServerDailyStat)
+		var stat = one.(*ServerDailyStat)
+		stat.Day = stat.Hour[:8]
+		stat.TimeFrom = stat.Hour[8:] + "00"
 		hourMap[stat.Hour] = stat
 	}
 	hours, err := utils.RangeHours(hourFrom, hourTo)
@@ -670,7 +672,11 @@ func (this *ServerDailyStatDAO) compatFindHourlyStats(tx *dbs.Tx, serverId int64
 		if ok {
 			result = append(result, stat)
 		} else {
-			result = append(result, &ServerDailyStat{Hour: hour})
+			result = append(result, &ServerDailyStat{
+				Hour: hour,
+				Day: hour[:8],
+				TimeFrom: hour[8:] + "00",
+			})
 		}
 	}
 
