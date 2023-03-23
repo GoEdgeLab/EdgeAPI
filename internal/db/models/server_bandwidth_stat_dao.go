@@ -127,6 +127,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyBandwidthStats(tx *dbs.Tx, serverI
 
 	ones, _, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Between("day", timeutil.FormatTime("Ymd", timestamp), timeutil.Format("Ymd")).
 		Attr("serverId", serverId).
 		Result(this.maxBytesField(useAvg), "CONCAT(day, '.', SUBSTRING(timeAt, 1, 2)) AS fullTime").
 		Gte("CONCAT(day, '.', SUBSTRING(timeAt, 1, 2))", timeutil.FormatTime("Ymd.H", timestamp)).
@@ -526,6 +527,7 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serve
 	// 总数量
 	total, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Between("day", timeFrom[:8], timeTo[:8]).
 		Attr("serverId", serverId).
 		Between("CONCAT(day, timeAt)", timeFrom, timeTo).
 		Count()
@@ -545,6 +547,7 @@ func (this *ServerBandwidthStatDAO) FindPercentileBetweenTimes(tx *dbs.Tx, serve
 	// 查询 nth 位置
 	one, err := this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Between("day", timeFrom[:8], timeTo[:8]).
 		Attr("serverId", serverId).
 		Between("CONCAT(day, timeAt)", timeFrom, timeTo).
 		Desc(this.bytesOrderField(useAvg)).
@@ -635,6 +638,7 @@ func (this *ServerBandwidthStatDAO) FindHourlyStats(tx *dbs.Tx, serverId int64, 
 
 	var query = this.Query(tx).
 		Table(this.partialTable(serverId)).
+		Between("day", hourFrom[:8], hourTo[:8]).
 		Result("MIN(day) AS day", "MIN(timeAt) AS timeAt", "SUM(totalBytes) AS totalBytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "CONCAT(day, SUBSTR(timeAt, 1, 2)) AS hour").
 		Attr("serverId", serverId)
 
