@@ -13,6 +13,8 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -283,8 +285,8 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData b
 }
 
 // CountCerts 计算符合条件的证书数量
-func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64) (int64, error) {
-	query := this.Query(tx).
+func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string) (int64, error) {
+	var query = this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
 		query.Attr("isCA", true)
@@ -309,12 +311,19 @@ func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isEx
 		// 只查询管理员上传的
 		query.Attr("userId", 0)
 	}
+
+	// 域名
+	err := this.buildDomainSearchingQuery(query, domains)
+	if err != nil {
+		return 0, err
+	}
+
 	return query.Count()
 }
 
 // ListCertIds 列出符合条件的证书
-func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, offset int64, size int64) (certIds []int64, err error) {
-	query := this.Query(tx).
+func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string, offset int64, size int64) (certIds []int64, err error) {
+	var query = this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
 		query.Attr("isCA", true)
@@ -338,6 +347,12 @@ func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isE
 	} else {
 		// 只查询管理员上传的
 		query.Attr("userId", 0)
+	}
+
+	// 域名
+	err = this.buildDomainSearchingQuery(query, domains)
+	if err != nil {
+		return nil, err
 	}
 
 	ones, err := query.
@@ -350,7 +365,7 @@ func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isE
 		return nil, err
 	}
 
-	result := []int64{}
+	var result = []int64{}
 	for _, one := range ones {
 		result = append(result, int64(one.(*SSLCert).Id))
 	}
@@ -646,6 +661,74 @@ func (this *SSLCertDAO) NotifyUpdate(tx *dbs.Tx, certId int64) error {
 	}
 
 	// TODO 通知用户节点、API节点、管理系统（将来实现选择）更新
+
+	return nil
+}
+
+// 构造通过域名搜索证书的查询对象
+func (this *SSLCertDAO) buildDomainSearchingQuery(query *dbs.Query, domains []string) error {
+	if len(domains) == 0 {
+		return nil
+	}
+
+	// 不要查询太多
+	const maxDomains = 10_000
+	if len(domains) > maxDomains {
+		domains = domains[:maxDomains]
+	}
+
+	// 加入通配符
+	var searchingDomains = []string{}
+	var domainMap = map[string]bool{}
+	for _, domain := range domains {
+		domainMap[domain] = true
+	}
+	var reg = regexp.MustCompile(`^[\w.-]+$`) // 为了下面的SQL语句安全先不支持其他字符
+	for domain := range domainMap {
+		if !reg.MatchString(domain) {
+			continue
+		}
+		searchingDomains = append(searchingDomains, domain)
+
+		if strings.Count(domain, ".") >= 2 && !strings.HasPrefix(domain, "*.") {
+			var wildcardDomain = "*" + domain[strings.Index(domain, "."):]
+			if !domainMap[wildcardDomain] {
+				domainMap[wildcardDomain] = true
+				searchingDomains = append(searchingDomains, wildcardDomain)
+			}
+		}
+	}
+
+	// 检测 JSON_OVERLAPS() 函数是否可用
+	var canJSONOverlaps = false
+	_, funcErr := this.Instance.FindCol(0, "SELECT JSON_OVERLAPS('[1]', '[1]')")
+	canJSONOverlaps = funcErr == nil
+	if canJSONOverlaps {
+		domainsJSON, err := json.Marshal(searchingDomains)
+		if err != nil {
+			return err
+		}
+
+		query.
+			Where("JSON_OVERLAPS(dnsNames, JSON_UNQUOTE(:domainsJSON))").
+			Param("domainsJSON", string(domainsJSON))
+		return nil
+	}
+
+	// 不支持JSON_OVERLAPS()的情形
+	query.Reuse(false)
+
+	// TODO 需要判断是否超出max_allowed_packet
+	var sqlPieces = []string{}
+	for _, domain := range searchingDomains {
+		domainJSON, err := json.Marshal(domain)
+		if err != nil {
+			return err
+		}
+
+		sqlPieces = append(sqlPieces, "JSON_CONTAINS(dnsNames, '"+string(domainJSON)+"')")
+	}
+	query.Where("(" + strings.Join(sqlPieces, " OR ") + ")")
 
 	return nil
 }

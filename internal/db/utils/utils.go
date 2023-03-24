@@ -2,6 +2,7 @@ package dbutils
 
 import (
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 	"net"
 	"strings"
 )
@@ -92,4 +93,37 @@ func IsLocalAddr(addr string) bool {
 		}
 	}
 	return false
+}
+
+// MySQLVersion 读取当前MySQL版本
+func MySQLVersion() (version string, err error) {
+	db, err := dbs.Default()
+	if err != nil {
+		return "", err
+	}
+	result, err := db.FindCol(0, "SELECT VERSION()")
+	if err != nil {
+		return "", err
+	}
+	version = types.String(result)
+	var suffixIndex = strings.Index(version, "-")
+	if suffixIndex > 0 {
+		version = version[:suffixIndex]
+	}
+	return
+}
+
+func MySQLVersionFrom8() (bool, error) {
+	version, err := MySQLVersion()
+	if err != nil {
+		return false, err
+	}
+	if len(version) == 0 {
+		return false, nil
+	}
+	var dotIndex = strings.Index(version, ".")
+	if dotIndex > 0 {
+		return types.Int(version[:dotIndex]) >= 8, nil
+	}
+	return false, nil
 }

@@ -23,3 +23,15 @@ func TestIsLocalAddr(t *testing.T) {
 	a.IsFalse(dbutils.IsLocalAddr("192.168.2.200"))
 	a.IsFalse(dbutils.IsLocalAddr("192.168.2.200:3306"))
 }
+
+func TestMySQLVersion(t *testing.T) {
+	version, err := dbutils.MySQLVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("version:", version)
+}
+
+func TestMySQLVersionFrom8(t *testing.T) {
+	t.Log(dbutils.MySQLVersionFrom8())
+}

@@ -238,3 +238,17 @@ func TestSSLCertDAO_Update_JSON(t *testing.T) {
 		t.Log(cert)
 	}
 }
+
+func TestSSLCertDAO_FindAllCertsMatchDomains(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	var dao = models.NewSSLCertDAO()
+	certs, err := dao.FindAllCertsMatchDomains(tx, 0, []string{"goedge.cn", "teaos.cn", "www.goedge.cn", "'hello\"'", "中文.com", "xn---1.com", "global.dl.goedge.cn"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, cert := range certs {
+		t.Log("id:", cert.Id, "userId:", cert.UserId, "name:", cert.Name, "dnsNames:", cert.DecodeDNSNames(), "end:", timeutil.FormatTime("Y-m-d H:i:s", int64(cert.TimeEndAt)))
+	}
+}
