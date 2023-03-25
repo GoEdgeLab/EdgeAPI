@@ -180,10 +180,10 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 
 	var tx = this.NullTx()
 
-	if userId > 0 {
+	if adminId > 0 {
 		userId = req.UserId
-	} else if adminId > 0 {
-		userId = req.UserId
+	} else if userId <= 0 {
+		return nil, errors.New("invalid user")
 	}
 
 	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Domains)
@@ -202,10 +202,10 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 		return nil, err
 	}
 
-	if userId > 0 {
+	if adminId > 0 {
 		userId = req.UserId
-	} else if adminId > 0 {
-		userId = req.UserId
+	} else if userId <= 0 {
+		return nil, errors.New("invalid user")
 	}
 
 	var tx = this.NullTx()
