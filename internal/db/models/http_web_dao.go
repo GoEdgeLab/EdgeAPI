@@ -500,7 +500,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 
 	// CC
 	if teaconst.IsPlus && IsNotNull(web.Cc) {
-		var ccConfig = &serverconfigs.HTTPCCConfig{}
+		var ccConfig = serverconfigs.DefaultHTTPCCConfig()
 		err = json.Unmarshal(web.Cc, ccConfig)
 		if err != nil {
 			return nil, err
