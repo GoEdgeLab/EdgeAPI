@@ -25,6 +25,11 @@ func (this *SSLCertService) CreateSSLCert(ctx context.Context, req *pb.CreateSSL
 		return nil, err
 	}
 
+	// 用户ID
+	if adminId > 0 && req.UserId > 0 {
+		userId = req.UserId
+	}
+
 	var tx = this.NullTx()
 
 	if req.TimeBeginAt < 0 {
