@@ -784,9 +784,11 @@ func (this *ServerDAO) CountAllEnabledServersMatch(tx *dbs.Tx, groupId int64, ke
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+		query.UseIndex("userId")
 	}
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+		query.UseIndex("clusterId")
 	}
 	if auditingFlag == configutils.BoolStateYes {
 		query.Attr("isAuditing", true)
@@ -840,9 +842,11 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+		query.UseIndex("userId")
 	}
 	if clusterId > 0 {
 		query.Attr("clusterId", clusterId)
+		query.UseIndex("clusterId")
 	}
 	if auditingFlag == 1 {
 		query.Attr("isAuditing", true)
