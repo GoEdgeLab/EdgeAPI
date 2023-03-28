@@ -155,7 +155,7 @@ func (this *MessageDAO) CreateNodeMessage(tx *dbs.Tx, role string, clusterId int
 
 // CreateMessage 创建普通消息
 func (this *MessageDAO) CreateMessage(tx *dbs.Tx, adminId int64, userId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
-	body = utils.LimitString(subject, 100)
+	subject = utils.LimitString(subject, 100)
 	body = utils.LimitString(body, 1024)
 
 	var op = NewMessageOperator()
