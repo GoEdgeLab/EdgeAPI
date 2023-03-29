@@ -73,6 +73,20 @@ func (this *IPLibraryArtifactService) FindAllIPLibraryArtifacts(ctx context.Cont
 
 	var pbArtifacts = []*pb.IPLibraryArtifact{}
 	for _, artifact := range artifacts {
+		var pbFile *pb.File
+		if artifact.FileId > 0 {
+			fileInfo, err := models.SharedFileDAO.FindEnabledFile(tx, int64(artifact.FileId))
+			if err != nil {
+				return nil, err
+			}
+			if fileInfo != nil {
+				pbFile = &pb.File{
+					Id:   int64(fileInfo.Id),
+					Size: int64(fileInfo.Size),
+				}
+			}
+		}
+
 		pbArtifacts = append(pbArtifacts, &pb.IPLibraryArtifact{
 			Id:        int64(artifact.Id),
 			Name:      artifact.Name,
@@ -81,6 +95,7 @@ func (this *IPLibraryArtifactService) FindAllIPLibraryArtifacts(ctx context.Cont
 			MetaJSON:  artifact.Meta,
 			IsPublic:  artifact.IsPublic,
 			Code:      artifact.Code,
+			File:      pbFile,
 		})
 	}
 	return &pb.FindAllIPLibraryArtifactsResponse{
