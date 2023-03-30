@@ -72,7 +72,7 @@ func (this *IPLibraryFileDAO) FindEnabledIPLibraryFile(tx *dbs.Tx, id int64) (*I
 }
 
 // CreateLibraryFile 创建文件
-func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, name string, template string, emptyValues []string, fileId int64, countries []string, provinces [][2]string, cities [][3]string, towns [][4]string, providers []string) (int64, error) {
+func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, name string, template string, emptyValues []string, password string, fileId int64, countries []string, provinces [][2]string, cities [][3]string, towns [][4]string, providers []string) (int64, error) {
 	var op = NewIPLibraryFileOperator()
 	op.Name = name
 	op.Template = template
@@ -85,6 +85,8 @@ func (this *IPLibraryFileDAO) CreateLibraryFile(tx *dbs.Tx, name string, templat
 		return 0, err
 	}
 	op.EmptyValues = emptyValuesJSON
+
+	op.Password = password
 
 	op.FileId = fileId
 
@@ -337,7 +339,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var countries = []*iplibrary.Country{}
 	for _, country := range dbCountries {
 		countries = append(countries, &iplibrary.Country{
-			Id:    country.Id,
+			Id:    types.Uint16(country.Id),
 			Name:  country.DisplayName(),
 			Codes: country.AllCodes(),
 		})
@@ -352,7 +354,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var provinces = []*iplibrary.Province{}
 	for _, province := range dbProvinces {
 		provinces = append(provinces, &iplibrary.Province{
-			Id:    province.Id,
+			Id:    types.Uint16(province.Id),
 			Name:  province.DisplayName(),
 			Codes: province.AllCodes(),
 		})
@@ -397,7 +399,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var providers = []*iplibrary.Provider{}
 	for _, provider := range dbProviders {
 		providers = append(providers, &iplibrary.Provider{
-			Id:    provider.Id,
+			Id:    types.Uint16(provider.Id),
 			Name:  provider.DisplayName(),
 			Codes: provider.AllCodes(),
 		})
@@ -414,7 +416,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 		Towns:     towns,
 		Providers: providers,
 	}
-	writer, err := iplibrary.NewFileWriter(filePath, meta)
+	writer, err := iplibrary.NewFileWriter(filePath, meta, libraryFile.Password)
 	if err != nil {
 		return err
 	}

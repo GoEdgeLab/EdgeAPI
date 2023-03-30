@@ -18,6 +18,7 @@ type IPLibraryFile struct {
 	Towns           dbs.JSON `field:"towns"`           // 区县
 	Providers       dbs.JSON `field:"providers"`       // ISP服务商
 	Code            string   `field:"code"`            // 文件代号
+	Password        string   `field:"password"`        // 密码
 	CreatedAt       uint64   `field:"createdAt"`       // 上传时间
 	State           uint8    `field:"state"`           // 状态
 }
@@ -37,6 +38,7 @@ type IPLibraryFileOperator struct {
 	Towns           any // 区县
 	Providers       any // ISP服务商
 	Code            any // 文件代号
+	Password        any // 密码
 	CreatedAt       any // 上传时间
 	State           any // 状态
 }
