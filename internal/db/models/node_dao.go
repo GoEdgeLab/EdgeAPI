@@ -986,6 +986,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 
 	var config = &nodeconfigs.NodeConfig{
 		Id:            int64(node.Id),
+		Edition:       teaconst.Edition,
 		NodeId:        node.UniqueId,
 		Secret:        node.Secret,
 		IsOn:          node.IsOn,

@@ -14,6 +14,7 @@ import (
 
 var (
 	IsPlus             = false
+	Edition            = ""
 	MaxNodes     int32 = 0
 	NodeId       int64 = 0
 	Debug              = false
