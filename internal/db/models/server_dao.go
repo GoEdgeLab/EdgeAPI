@@ -32,6 +32,10 @@ const (
 	ServerStateDisabled = 0 // 已禁用
 )
 
+const (
+	ModelServerNameMaxLength = 60
+)
+
 type ServerDAO dbs.DAO
 
 func NewServerDAO() *ServerDAO {
@@ -2782,6 +2786,14 @@ func (this *ServerDAO) UpdateServerUserId(tx *dbs.Tx, serverId int64, userId int
 	}
 
 	return this.NotifyUpdate(tx, serverId)
+}
+
+// UpdateServerName 修改服务名
+func (this *ServerDAO) UpdateServerName(tx *dbs.Tx, serverId int64, name string) error {
+	return this.Query(tx).
+		Pk(serverId).
+		Set("name", name).
+		UpdateQuickly()
 }
 
 // NotifyUpdate 同步服务所在的集群

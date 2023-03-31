@@ -2245,3 +2245,35 @@ func (this *ServerService) UpdateServerUser(ctx context.Context, req *pb.UpdateS
 
 	return this.Success()
 }
+
+// UpdateServerName 修改服务名称
+func (this *ServerService) UpdateServerName(ctx context.Context, req *pb.UpdateServerNameRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 检查长度
+	if len(req.Name) == 0 {
+		return nil, errors.New("'name' should not be empty")
+	}
+
+	if len([]rune(req.Name)) > models.ModelServerNameMaxLength {
+		return nil, errors.New("'name' too long, max length: " + types.String(models.ModelServerNameMaxLength))
+	}
+
+	err = models.SharedServerDAO.UpdateServerName(tx, req.ServerId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
