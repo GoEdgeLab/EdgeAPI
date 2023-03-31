@@ -253,7 +253,8 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	sourceServerId int64,
 	sourceHTTPFirewallPolicyId int64,
 	sourceHTTPFirewallRuleGroupId int64,
-	sourceHTTPFirewallRuleSetId int64) (int64, error) {
+	sourceHTTPFirewallRuleSetId int64,
+	shouldNotify bool) (int64, error) {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -282,6 +283,15 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	op.SourceHTTPFirewallRuleGroupId = sourceHTTPFirewallRuleGroupId
 	op.SourceHTTPFirewallRuleSetId = sourceHTTPFirewallRuleSetId
 
+	// 服务所属用户
+	if sourceServerId > 0 {
+		userId, err := SharedServerDAO.FindServerUserId(tx, sourceServerId)
+		if err != nil {
+			return 0, err
+		}
+		op.SourceUserId = userId
+	}
+
 	var autoAdded = listId == firewallconfigs.GlobalListId || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0
 	if autoAdded {
 		op.IsRead = 0
@@ -301,9 +311,11 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 		return itemId, nil
 	}
 
-	err = this.NotifyUpdate(tx, itemId)
-	if err != nil {
-		return 0, err
+	if shouldNotify {
+		err = this.NotifyUpdate(tx, itemId)
+		if err != nil {
+			return 0, err
+		}
 	}
 	return itemId, nil
 }

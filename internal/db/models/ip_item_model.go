@@ -23,32 +23,34 @@ type IPItem struct {
 	SourceHTTPFirewallPolicyId    uint32 `field:"sourceHTTPFirewallPolicyId"`    // 来源策略ID
 	SourceHTTPFirewallRuleGroupId uint32 `field:"sourceHTTPFirewallRuleGroupId"` // 来源规则集分组ID
 	SourceHTTPFirewallRuleSetId   uint32 `field:"sourceHTTPFirewallRuleSetId"`   // 来源规则集ID
+	SourceUserId                  uint64 `field:"sourceUserId"`                  // 用户ID
 	IsRead                        bool   `field:"isRead"`                        // 是否已读
 }
 
 type IPItemOperator struct {
-	Id                            interface{} // ID
-	ListId                        interface{} // 所属名单ID
-	Type                          interface{} // 类型
-	IpFrom                        interface{} // 开始IP
-	IpTo                          interface{} // 结束IP
-	IpFromLong                    interface{} // 开始IP整型
-	IpToLong                      interface{} // 结束IP整型
-	Version                       interface{} // 版本
-	CreatedAt                     interface{} // 创建时间
-	UpdatedAt                     interface{} // 修改时间
-	Reason                        interface{} // 加入说明
-	EventLevel                    interface{} // 事件级别
-	State                         interface{} // 状态
-	ExpiredAt                     interface{} // 过期时间
-	ServerId                      interface{} // 有效范围服务ID
-	NodeId                        interface{} // 有效范围节点ID
-	SourceNodeId                  interface{} // 来源节点ID
-	SourceServerId                interface{} // 来源服务ID
-	SourceHTTPFirewallPolicyId    interface{} // 来源策略ID
-	SourceHTTPFirewallRuleGroupId interface{} // 来源规则集分组ID
-	SourceHTTPFirewallRuleSetId   interface{} // 来源规则集ID
-	IsRead                        interface{} // 是否已读
+	Id                            any // ID
+	ListId                        any // 所属名单ID
+	Type                          any // 类型
+	IpFrom                        any // 开始IP
+	IpTo                          any // 结束IP
+	IpFromLong                    any // 开始IP整型
+	IpToLong                      any // 结束IP整型
+	Version                       any // 版本
+	CreatedAt                     any // 创建时间
+	UpdatedAt                     any // 修改时间
+	Reason                        any // 加入说明
+	EventLevel                    any // 事件级别
+	State                         any // 状态
+	ExpiredAt                     any // 过期时间
+	ServerId                      any // 有效范围服务ID
+	NodeId                        any // 有效范围节点ID
+	SourceNodeId                  any // 来源节点ID
+	SourceServerId                any // 来源服务ID
+	SourceHTTPFirewallPolicyId    any // 来源策略ID
+	SourceHTTPFirewallRuleGroupId any // 来源规则集分组ID
+	SourceHTTPFirewallRuleSetId   any // 来源规则集ID
+	SourceUserId                  any // 用户ID
+	IsRead                        any // 是否已读
 }
 
 func NewIPItemOperator() *IPItemOperator {

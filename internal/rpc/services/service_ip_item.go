@@ -29,7 +29,7 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		return nil, errors.New("'ipFrom' should not be empty")
 	}
 
-	ipFrom := net.ParseIP(req.IpFrom)
+	var ipFrom = net.ParseIP(req.IpFrom)
 	if ipFrom == nil {
 		return nil, errors.New("invalid 'ipFrom'")
 	}
@@ -64,12 +64,83 @@ func (this *IPItemService) CreateIPItem(ctx context.Context, req *pb.CreateIPIte
 		return nil, err
 	}
 
-	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel, req.NodeId, req.ServerId, req.SourceNodeId, req.SourceServerId, req.SourceHTTPFirewallPolicyId, req.SourceHTTPFirewallRuleGroupId, req.SourceHTTPFirewallRuleSetId)
+	itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, req.IpListId, req.IpFrom, req.IpTo, req.ExpiredAt, req.Reason, req.Type, req.EventLevel, req.NodeId, req.ServerId, req.SourceNodeId, req.SourceServerId, req.SourceHTTPFirewallPolicyId, req.SourceHTTPFirewallRuleGroupId, req.SourceHTTPFirewallRuleSetId, true)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.CreateIPItemResponse{IpItemId: itemId}, nil
+}
+
+// CreateIPItems 创建一组IP
+func (this *IPItemService) CreateIPItems(ctx context.Context, req *pb.CreateIPItemsRequest) (*pb.CreateIPItemsResponse, error) {
+	// 校验请求
+	userType, _, userId, err := rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeNode, rpcutils.UserTypeDNS)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 校验
+	for _, item := range req.IpItems {
+		if len(item.IpFrom) == 0 {
+			return nil, errors.New("'ipFrom' should not be empty")
+		}
+
+		var ipFrom = net.ParseIP(item.IpFrom)
+		if ipFrom == nil {
+			return nil, errors.New("invalid 'ipFrom'")
+		}
+
+		if len(item.IpTo) > 0 {
+			ipTo := net.ParseIP(item.IpTo)
+			if ipTo == nil {
+				return nil, errors.New("invalid 'ipTo'")
+			}
+		}
+
+		if userType == rpcutils.UserTypeUser {
+			if userId <= 0 {
+				return nil, errors.New("invalid userId")
+			} else {
+				err = models.SharedIPListDAO.CheckUserIPList(tx, userId, item.IpListId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		if len(item.Type) == 0 {
+			item.Type = models.IPItemTypeIPv4
+		}
+	}
+
+	// 创建
+	// TODO 需要区分不同的用户
+	var ipItemIds = []int64{}
+	for index, item := range req.IpItems {
+		var shouldNotify = index == len(req.IpItems)-1
+
+		// 删除以前的
+		err = models.SharedIPItemDAO.DeleteOldItem(tx, item.IpListId, item.IpFrom, item.IpTo)
+		if err != nil {
+			return nil, err
+		}
+
+		itemId, err := models.SharedIPItemDAO.CreateIPItem(tx, item.IpListId, item.IpFrom, item.IpTo, item.ExpiredAt, item.Reason, item.Type, item.EventLevel, item.NodeId, item.ServerId, item.SourceNodeId, item.SourceServerId, item.SourceHTTPFirewallPolicyId, item.SourceHTTPFirewallRuleGroupId, item.SourceHTTPFirewallRuleSetId, shouldNotify)
+		if err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		ipItemIds = append(ipItemIds, itemId)
+	}
+
+	return &pb.CreateIPItemsResponse{
+		IpItemIds: ipItemIds,
+	}, nil
 }
 
 // UpdateIPItem 修改IP
