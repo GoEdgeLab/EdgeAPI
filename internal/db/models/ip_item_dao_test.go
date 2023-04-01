@@ -56,7 +56,7 @@ func TestIPItemDAO_CreateManyIPs(t *testing.T) {
 			t.Fatal(err)
 		}
 		_ = itemId
-		/**err = dao.Query(tx).Pk(itemId).Set("state", 0).UpdateQuickly()
+		/**err = dao.Query(tx).Pk(itemId).Attr("state", 0).UpdateQuickly()
 		if err != nil {
 			t.Fatal(err)
 		}**/

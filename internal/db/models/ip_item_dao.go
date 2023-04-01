@@ -213,11 +213,12 @@ func (this *IPItemDAO) DeleteOldItem(tx *dbs.Tx, listId int64, ipFrom string, ip
 		Attr("listId", listId).
 		Attr("ipFrom", ipFrom).
 		Attr("ipTo", ipTo).
-		Set("state", IPItemStateEnabled).
+		Attr("state", IPItemStateEnabled).
 		FindAll()
 	if err != nil {
 		return err
 	}
+
 	for _, one := range ones {
 		var itemId = int64(one.(*IPItem).Id)
 		version, err := SharedIPListDAO.IncreaseVersion(tx)
