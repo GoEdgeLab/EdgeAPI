@@ -5,6 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/iwind/TeaGo/lists"
 )
 
@@ -68,9 +69,12 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 
 	var tx = this.NullTx()
 	if userId > 0 {
-		err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
-		if err != nil {
-			return nil, err
+		// 检查用户所属名单
+		if req.IpListId != firewallconfigs.GlobalListId {
+			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
