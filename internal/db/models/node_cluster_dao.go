@@ -1077,7 +1077,7 @@ func (this *NodeClusterDAO) UpdateClusterUAMPolicy(tx *dbs.Tx, clusterId int64, 
 			return err
 		}
 
-		return this.NotifyUpdate(tx, clusterId)
+		return this.NotifyUAMUpdate(tx, clusterId)
 	}
 
 	uamPolicyJSON, err := json.Marshal(uamPolicy)
@@ -1092,7 +1092,7 @@ func (this *NodeClusterDAO) UpdateClusterUAMPolicy(tx *dbs.Tx, clusterId int64, 
 		return err
 	}
 
-	return this.NotifyUpdate(tx, clusterId)
+	return this.NotifyUAMUpdate(tx, clusterId)
 }
 
 // FindClusterUAMPolicy 查询设置
@@ -1210,6 +1210,11 @@ func (this *NodeClusterDAO) UpdateClusterGlobalServerConfig(tx *dbs.Tx, clusterI
 // NotifyUpdate 通知更新
 func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeConfigChanged)
+}
+
+// NotifyUAMUpdate 通知UAM更新
+func (this *NodeClusterDAO) NotifyUAMUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeUAMPolicyChanged)
 }
 
 // NotifyDNSUpdate 通知DNS更新

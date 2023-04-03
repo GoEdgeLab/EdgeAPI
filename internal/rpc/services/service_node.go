@@ -2240,3 +2240,39 @@ func (this *NodeService) UpdateNodeAPIConfig(ctx context.Context, req *pb.Update
 
 	return this.Success()
 }
+
+// FindNodeUAMPolicies 查找节点的UAM策略
+func (this *NodeService) FindNodeUAMPolicies(ctx context.Context, req *pb.FindNodeUAMPoliciesRequest) (*pb.FindNodeUAMPoliciesResponse, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbPolicies = []*pb.FindNodeUAMPoliciesResponse_UAMPolicy{}
+	for _, clusterId := range clusterIds {
+		policy, err := models.SharedNodeClusterDAO.FindClusterUAMPolicy(tx, clusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		policyJSON, err := json.Marshal(policy)
+		if err != nil {
+			return nil, err
+		}
+		pbPolicies = append(pbPolicies, &pb.FindNodeUAMPoliciesResponse_UAMPolicy{
+			NodeClusterId: clusterId,
+			UamPolicyJSON: policyJSON,
+		})
+	}
+	return &pb.FindNodeUAMPoliciesResponse{
+		UamPolicies: pbPolicies,
+	}, nil
+}

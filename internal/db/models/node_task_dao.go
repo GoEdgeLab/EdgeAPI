@@ -24,6 +24,7 @@ const (
 	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"            // 脚本配置变化
 	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"          // 节点级别变化
 	NodeTaskTypeUserServersStateChanged   NodeTaskType = "userServersStateChanged"   // 用户服务状态变化
+	NodeTaskTypeUAMPolicyChanged          NodeTaskType = "uamPolicyChanged"          // UAM策略变化
 
 	// NS相关
 
