@@ -127,7 +127,7 @@ func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdm
 
 // FindEnabledAdmin 获取管理员信息
 func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnabledAdminRequest) (*pb.FindEnabledAdminResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +135,12 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 	// TODO 检查权限
 
 	var tx = this.NullTx()
+
+	// 超级管理员才能查看是否为弱密码
+	isSuperAdmin, err := models.SharedAdminDAO.CheckSuperAdmin(tx, adminId)
+	if err != nil {
+		return nil, err
+	}
 
 	admin, err := models.SharedAdminDAO.FindEnabledAdmin(tx, req.AdminId)
 	if err != nil {
@@ -144,7 +150,7 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 		return &pb.FindEnabledAdminResponse{Admin: nil}, nil
 	}
 
-	pbModules := []*pb.AdminModule{}
+	var pbModules = []*pb.AdminModule{}
 	modules := []*systemconfigs.AdminModule{}
 	if len(admin.Modules) > 0 {
 		err = json.Unmarshal(admin.Modules, &modules)
@@ -178,14 +184,15 @@ func (this *AdminService) FindEnabledAdmin(ctx context.Context, req *pb.FindEnab
 	}
 
 	result := &pb.Admin{
-		Id:       int64(admin.Id),
-		Fullname: admin.Fullname,
-		Username: admin.Username,
-		IsOn:     admin.IsOn,
-		IsSuper:  admin.IsSuper,
-		Modules:  pbModules,
-		OtpLogin: pbOtpAuth,
-		CanLogin: admin.CanLogin,
+		Id:              int64(admin.Id),
+		Fullname:        admin.Fullname,
+		Username:        admin.Username,
+		IsOn:            admin.IsOn,
+		IsSuper:         admin.IsSuper,
+		Modules:         pbModules,
+		OtpLogin:        pbOtpAuth,
+		CanLogin:        admin.CanLogin,
+		HasWeakPassword: isSuperAdmin && admin.HasWeakPassword(),
 	}
 	return &pb.FindEnabledAdminResponse{Admin: result}, nil
 }
@@ -347,7 +354,7 @@ func (this *AdminService) UpdateAdmin(ctx context.Context, req *pb.UpdateAdminRe
 
 // CountAllEnabledAdmins 计算管理员数量
 func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.CountAllEnabledAdminsRequest) (*pb.RPCCountResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +363,13 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 
 	var tx = this.NullTx()
 
-	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx)
+	// 超级管理员才能查看是否为弱密码
+	isSuperAdmin, err := models.SharedAdminDAO.CheckSuperAdmin(tx, adminId)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx, req.Keyword, isSuperAdmin && req.HasWeakPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +378,7 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 
 // ListEnabledAdmins 列出单页的管理员
 func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEnabledAdminsRequest) (*pb.ListEnabledAdminsResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	adminId, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -374,12 +387,18 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 
 	var tx = this.NullTx()
 
-	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Offset, req.Size)
+	// 超级管理员才能查看是否为弱密码
+	isSuperAdmin, err := models.SharedAdminDAO.CheckSuperAdmin(tx, adminId)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []*pb.Admin{}
+	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Keyword, isSuperAdmin && req.HasWeakPassword, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []*pb.Admin{}
 	for _, admin := range admins {
 		var pbOtpAuth *pb.Login = nil
 		{
@@ -398,14 +417,15 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 		}
 
 		result = append(result, &pb.Admin{
-			Id:        int64(admin.Id),
-			Fullname:  admin.Fullname,
-			Username:  admin.Username,
-			IsOn:      admin.IsOn,
-			IsSuper:   admin.IsSuper,
-			CreatedAt: int64(admin.CreatedAt),
-			OtpLogin:  pbOtpAuth,
-			CanLogin:  admin.CanLogin,
+			Id:              int64(admin.Id),
+			Fullname:        admin.Fullname,
+			Username:        admin.Username,
+			IsOn:            admin.IsOn,
+			IsSuper:         admin.IsSuper,
+			CreatedAt:       int64(admin.CreatedAt),
+			OtpLogin:        pbOtpAuth,
+			CanLogin:        admin.CanLogin,
+			HasWeakPassword: isSuperAdmin && admin.HasWeakPassword(),
 		})
 	}
 
