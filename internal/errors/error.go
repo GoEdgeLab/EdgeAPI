@@ -29,8 +29,12 @@ func (this *errorObj) Error() string {
 	return s
 }
 
-// 新错误
+// New 新错误
 func New(errText string) error {
+	if !Tea.IsTesting() {
+		return errors.New(errText)
+	}
+
 	ptr, file, line, ok := runtime.Caller(1)
 	funcName := ""
 	if ok {
@@ -45,7 +49,7 @@ func New(errText string) error {
 	}
 }
 
-// 包装已有错误
+// Wrap 包装已有错误
 func Wrap(err error) error {
 	if err == nil {
 		return nil
