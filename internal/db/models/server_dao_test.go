@@ -332,6 +332,16 @@ func TestServerDAO_UpdateServerBandwidth(t *testing.T) {
 	}
 }
 
+func TestServerDAO_FindEnabledServersWithIds(t *testing.T) {
+	var dao = models.NewServerDAO()
+	var tx *dbs.Tx
+	servers, err := dao.FindEnabledServersWithIds(tx, []int64{23, 1071})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(len(servers), "servers")
+}
+
 func BenchmarkServerDAO_CountAllEnabledServers(b *testing.B) {
 	models.SharedServerDAO = models.NewServerDAO()
 

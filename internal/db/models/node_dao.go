@@ -1003,6 +1003,13 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		DataMap: dataMap,
 	}
 
+	// 待更新服务ID
+	updatingServerListId, err := SharedUpdatingServerListDAO.FindLatestId(tx)
+	if err != nil {
+		return nil, err
+	}
+	config.UpdatingServerListId = updatingServerListId
+
 	// API节点IP
 	apiNodeIPs, err := SharedAPINodeDAO.FindAllEnabledAPIAccessIPs(tx, cacheMap)
 	if err != nil {

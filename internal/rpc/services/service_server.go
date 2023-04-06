@@ -2277,3 +2277,89 @@ func (this *ServerService) UpdateServerName(ctx context.Context, req *pb.UpdateS
 
 	return this.Success()
 }
+
+// CopyServerConfig 在服务之间复制配置
+func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopyServerConfigRequest) (*pb.RPCSuccess, error) {
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid 'serverId'")
+	}
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	switch req.TargetType {
+	case "servers":
+		// 检查权限
+		if len(req.TargetServerIds) == 0 {
+			return this.Success()
+		}
+		if userId > 0 {
+			for _, targetServerId := range req.TargetServerIds {
+				err = models.SharedServerDAO.CheckUserServer(tx, userId, targetServerId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		err = models.SharedServerDAO.CopyServerConfigToServers(tx, req.ServerId, req.TargetServerIds, req.ConfigCode)
+		if err != nil {
+			return nil, err
+		}
+	case "groups":
+		// 检查权限
+		if len(req.TargetServerGroupIds) == 0 {
+			return this.Success()
+		}
+		if userId > 0 {
+			for _, targetGroupId := range req.TargetServerGroupIds {
+				err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, targetGroupId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		err = models.SharedServerDAO.CopyServerConfigToGroups(tx, req.ServerId, req.TargetServerGroupIds, req.ConfigCode)
+		if err != nil {
+			return nil, err
+		}
+	case "cluster":
+		// 检查权限
+		if adminId <= 0 {
+			return nil, this.PermissionError()
+		}
+		if req.TargetClusterId <= 0 {
+			return this.Success()
+		}
+		err = models.SharedServerDAO.CopyServerConfigToCluster(tx, req.ServerId, req.TargetClusterId, req.ConfigCode)
+		if err != nil {
+			return nil, err
+		}
+	case "user":
+		if userId == 0 {
+			userId, err = models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+			if err != nil {
+				return nil, err
+			}
+
+			// 此时如果用户为0，则同步到未分配用户的服务
+		}
+		err = models.SharedServerDAO.CopyServerConfigToUser(tx, req.ServerId, req.TargetUserId, req.ConfigCode)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return this.Success()
+}

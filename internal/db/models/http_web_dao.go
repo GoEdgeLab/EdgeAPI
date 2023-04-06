@@ -732,6 +732,32 @@ func (this *HTTPWebDAO) UpdateWebStat(tx *dbs.Tx, webId int64, statJSON []byte) 
 	return this.NotifyUpdate(tx, webId)
 }
 
+// CopyWebStats 拷贝统计配置
+func (this *HTTPWebDAO) CopyWebStats(tx *dbs.Tx, fromWebId int64, toWebIds []int64) error {
+	if fromWebId <= 0 || len(toWebIds) == 0 {
+		return nil
+	}
+
+	statJSON, err := this.Query(tx).
+		Pk(fromWebId).
+		Result("stat").
+		FindJSONCol()
+	if err != nil {
+		return err
+	}
+
+	// 暂时不处理
+	if len(statJSON) == 0 {
+		return nil
+	}
+
+	return this.Query(tx).
+		Pk(toWebIds).
+		Reuse(false).
+		Set("stat", statJSON).
+		UpdateQuickly()
+}
+
 // UpdateWebCache 更改缓存配置
 func (this *HTTPWebDAO) UpdateWebCache(tx *dbs.Tx, webId int64, cacheJSON []byte) error {
 	if webId <= 0 {

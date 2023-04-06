@@ -25,6 +25,7 @@ const (
 	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"          // 节点级别变化
 	NodeTaskTypeUserServersStateChanged   NodeTaskType = "userServersStateChanged"   // 用户服务状态变化
 	NodeTaskTypeUAMPolicyChanged          NodeTaskType = "uamPolicyChanged"          // UAM策略变化
+	NodeTaskTypeUpdatingServers           NodeTaskType = "updatingServers"           // 更新一组服务
 
 	// NS相关
 
@@ -237,6 +238,7 @@ func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int6
 	var query = this.Query(tx).
 		Attr("role", role).
 		Attr("nodeId", nodeId).
+		UseIndex("nodeId").
 		Asc("version")
 	if version > 0 {
 		query.Lt("LENGTH(version)", 19) // 兼容以往版本

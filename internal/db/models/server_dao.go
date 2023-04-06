@@ -210,6 +210,15 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	if IsNotNull(udpJSON) {
 		op.Udp = udpJSON
 	}
+
+	// 如果没有Web配置，则创建之
+	if webId <= 0 {
+		webId, err = SharedHTTPWebDAO.CreateWeb(tx, 0, userId, nil)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	op.WebId = webId
 	if IsNotNull(reverseProxyJSON) {
 		op.ReverseProxy = reverseProxyJSON
@@ -1043,8 +1052,10 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 	config.UserId = int64(server.UserId)
 	config.Type = server.Type
 	config.IsOn = server.IsOn
-	config.Name = server.Name
-	config.Description = server.Description
+	if !forNode {
+		config.Name = server.Name
+		config.Description = server.Description
+	}
 
 	var groupConfig *serverconfigs.ServerGroupConfig
 	for _, groupId := range server.DecodeGroupIds() {
@@ -1452,7 +1463,7 @@ func (this *ServerDAO) CountEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64)
 		Count()
 }
 
-// FindAllEnabledServersWithWebIds 查找使用某个缓存策略的所有服务
+// FindAllEnabledServersWithWebIds 通过WebId查找服务
 func (this *ServerDAO) FindAllEnabledServersWithWebIds(tx *dbs.Tx, webIds []int64) (result []*Server, err error) {
 	if len(webIds) == 0 {
 		return
@@ -1460,6 +1471,7 @@ func (this *ServerDAO) FindAllEnabledServersWithWebIds(tx *dbs.Tx, webIds []int6
 	_, err = this.Query(tx).
 		State(ServerStateEnabled).
 		Attr("webId", webIds).
+		UseIndex("webId").
 		Reuse(false).
 		AscPk().
 		Slice(&result).
@@ -2794,6 +2806,20 @@ func (this *ServerDAO) UpdateServerName(tx *dbs.Tx, serverId int64, name string)
 		Pk(serverId).
 		Set("name", name).
 		UpdateQuickly()
+}
+
+// FindEnabledServersWithIds 根据ID查找一组服务
+func (this *ServerDAO) FindEnabledServersWithIds(tx *dbs.Tx, serverIds []int64) (result []*Server, err error) {
+	if len(serverIds) == 0 {
+		return
+	}
+	_, err = this.Query(tx).
+		Pk(serverIds).
+		Reuse(false).
+		State(ServerStateEnabled).
+		Slice(&result).
+		FindAll()
+	return
 }
 
 // NotifyUpdate 同步服务所在的集群
