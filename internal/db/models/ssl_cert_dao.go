@@ -395,6 +395,7 @@ func (this *SSLCertDAO) FindAllExpiringCerts(tx *dbs.Tx, days int) (result []*SS
 	var deltaSeconds = int64(days * 86400)
 	_, err = this.Query(tx).
 		State(SSLCertStateEnabled).
+		Attr("isOn", true).
 		Where("FROM_UNIXTIME(timeEndAt, '%Y-%m-%d')=:day AND FROM_UNIXTIME(notifiedAt, '%Y-%m-%d')!=:today").
 		Param("day", timeutil.FormatTime("Y-m-d", time.Now().Unix()+deltaSeconds)).
 		Param("today", timeutil.Format("Y-m-d")).
