@@ -1299,6 +1299,16 @@ func (this *ServerService) CountAllEnabledServersWithServerGroupId(ctx context.C
 	}
 
 	var tx = this.NullTx()
+	if userId <= 0 {
+		// 指定用户ID可以加快查询速度
+		groupUserId, err := models.SharedServerGroupDAO.FindGroupUserId(tx, req.ServerGroupId)
+		if err != nil {
+			return nil, err
+		}
+		if groupUserId > 0 {
+			userId = groupUserId
+		}
+	}
 
 	count, err := models.SharedServerDAO.CountAllEnabledServersWithGroupId(tx, req.ServerGroupId, userId)
 	if err != nil {
@@ -1562,9 +1572,27 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 		return &pb.FindEnabledUserServerBasicResponse{Server: nil}, nil
 	}
 
+	// 集群
 	clusterName, err := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(server.ClusterId))
 	if err != nil {
 		return nil, err
+	}
+
+	// 分组
+	var pbGroups = []*pb.ServerGroup{}
+	for _, groupId := range server.DecodeGroupIds() {
+		group, err := models.SharedServerGroupDAO.FindEnabledServerGroup(tx, groupId)
+		if err != nil {
+			return nil, err
+		}
+		if group == nil {
+			continue
+		}
+		pbGroups = append(pbGroups, &pb.ServerGroup{
+			Id:     groupId,
+			Name:   group.Name,
+			UserId: int64(group.UserId),
+		})
 	}
 
 	return &pb.FindEnabledUserServerBasicResponse{Server: &pb.Server{
@@ -1578,6 +1606,7 @@ func (this *ServerService) FindEnabledUserServerBasic(ctx context.Context, req *
 			Id:   int64(server.ClusterId),
 			Name: clusterName,
 		},
+		ServerGroups: pbGroups,
 	}}, nil
 }
 

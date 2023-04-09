@@ -85,9 +85,13 @@ func (this *ServerGroupService) DeleteServerGroup(ctx context.Context, req *pb.D
 // FindAllEnabledServerGroups 查询所有分组
 func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, req *pb.FindAllEnabledServerGroupsRequest) (*pb.FindAllEnabledServerGroupsResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
+	}
+
+	if adminId > 0 {
+		userId = req.UserId
 	}
 
 	var tx = this.NullTx()
@@ -96,10 +100,11 @@ func (this *ServerGroupService) FindAllEnabledServerGroups(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.ServerGroup{}
+	var result = []*pb.ServerGroup{}
 	for _, group := range groups {
 		result = append(result, &pb.ServerGroup{
 			Id:   int64(group.Id),
+			IsOn: group.IsOn,
 			Name: group.Name,
 		})
 	}
@@ -153,6 +158,7 @@ func (this *ServerGroupService) FindEnabledServerGroup(ctx context.Context, req 
 	return &pb.FindEnabledServerGroupResponse{
 		ServerGroup: &pb.ServerGroup{
 			Id:   int64(group.Id),
+			IsOn: group.IsOn,
 			Name: group.Name,
 		},
 	}, nil

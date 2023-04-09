@@ -159,6 +159,31 @@ func (this *HTTPWebsocketDAO) UpdateWebsocket(tx *dbs.Tx, websocketId int64, han
 	return this.NotifyUpdate(tx, websocketId)
 }
 
+// CloneWebsocket 复制配置
+func (this *HTTPWebsocketDAO) CloneWebsocket(tx *dbs.Tx, fromWebsocketId int64) (newWebsocketId int64, err error) {
+	websocketOne, err := this.Query(tx).
+		Pk(fromWebsocketId).
+		Find()
+	if err != nil || websocketOne == nil {
+		return 0, err
+	}
+	var websocket = websocketOne.(*HTTPWebsocket)
+
+	var op = NewHTTPWebsocketOperator()
+	op.State = websocket.State
+	op.IsOn = websocket.IsOn
+	if len(websocket.HandshakeTimeout) > 0 {
+		op.HandshakeTimeout = websocket.HandshakeTimeout
+	}
+	op.AllowAllOrigins = websocket.AllowAllOrigins
+	if len(websocket.AllowedOrigins) > 0 {
+		op.AllowedOrigins = websocket.AllowedOrigins
+	}
+	op.RequestSameOrigin = websocket.RequestSameOrigin
+	op.RequestOrigin = websocket.RequestOrigin
+	return this.SaveInt64(tx, op)
+}
+
 // NotifyUpdate 通知更新
 func (this *HTTPWebsocketDAO) NotifyUpdate(tx *dbs.Tx, websocketId int64) error {
 	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithWebsocketId(tx, websocketId)

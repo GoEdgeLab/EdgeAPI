@@ -133,6 +133,32 @@ func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []strin
 	return this.NotifyUpdate(tx, pageId)
 }
 
+// ClonePage 克隆页面
+func (this *HTTPPageDAO) ClonePage(tx *dbs.Tx, fromPageId int64) (newPageId int64, err error) {
+	if fromPageId <= 0 {
+		return
+	}
+	pageOne, err := this.Query(tx).
+		Pk(fromPageId).
+		Find()
+	if err != nil || pageOne == nil {
+		return 0, err
+	}
+	var page = pageOne.(*HTTPPage)
+
+	var op = NewHTTPPageOperator()
+	op.IsOn = page.IsOn
+	if len(page.StatusList) > 0 {
+		op.StatusList = page.StatusList
+	}
+	op.Url = page.Url
+	op.NewStatus = page.NewStatus
+	op.Body = page.Body
+	op.BodyType = page.BodyType
+	op.State = page.State
+	return this.SaveInt64(tx, op)
+}
+
 // ComposePageConfig 组合配置
 func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *utils.CacheMap) (*serverconfigs.HTTPPageConfig, error) {
 	if cacheMap == nil {

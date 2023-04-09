@@ -2,7 +2,7 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
-// Websocket设置
+// HTTPWebsocket Websocket设置
 type HTTPWebsocket struct {
 	Id                uint32   `field:"id"`                // ID
 	AdminId           uint32   `field:"adminId"`           // 管理员ID
@@ -15,20 +15,22 @@ type HTTPWebsocket struct {
 	AllowedOrigins    dbs.JSON `field:"allowedOrigins"`    // 支持的源域名列表
 	RequestSameOrigin uint8    `field:"requestSameOrigin"` // 是否请求一样的Origin
 	RequestOrigin     string   `field:"requestOrigin"`     // 请求Origin
+	WebId             uint64   `field:"webId"`             // Web
 }
 
 type HTTPWebsocketOperator struct {
-	Id                interface{} // ID
-	AdminId           interface{} // 管理员ID
-	UserId            interface{} // 用户ID
-	CreatedAt         interface{} // 创建时间
-	State             interface{} // 状态
-	IsOn              interface{} // 是否启用
-	HandshakeTimeout  interface{} // 握手超时时间
-	AllowAllOrigins   interface{} // 是否支持所有源
-	AllowedOrigins    interface{} // 支持的源域名列表
-	RequestSameOrigin interface{} // 是否请求一样的Origin
-	RequestOrigin     interface{} // 请求Origin
+	Id                any // ID
+	AdminId           any // 管理员ID
+	UserId            any // 用户ID
+	CreatedAt         any // 创建时间
+	State             any // 状态
+	IsOn              any // 是否启用
+	HandshakeTimeout  any // 握手超时时间
+	AllowAllOrigins   any // 是否支持所有源
+	AllowedOrigins    any // 支持的源域名列表
+	RequestSameOrigin any // 是否请求一样的Origin
+	RequestOrigin     any // 请求Origin
+	WebId             any // Web
 }
 
 func NewHTTPWebsocketOperator() *HTTPWebsocketOperator {

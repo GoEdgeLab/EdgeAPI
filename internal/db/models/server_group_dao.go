@@ -424,6 +424,18 @@ func (this *ServerGroupDAO) ExistsGroup(tx *dbs.Tx, groupId int64) (bool, error)
 		Exist()
 }
 
+// FindGroupUserId 读取分组所属用户
+func (this *ServerGroupDAO) FindGroupUserId(tx *dbs.Tx, groupId int64) (userId int64, err error) {
+	if groupId <= 0 {
+		return
+	}
+	return this.Query(tx).
+		Pk(groupId).
+		State(ServerGroupStateEnabled).
+		Result("userId").
+		FindInt64Col(0)
+}
+
 // NotifyUpdate 通知更新
 func (this *ServerGroupDAO) NotifyUpdate(tx *dbs.Tx, groupId int64) error {
 	serverIds, err := SharedServerDAO.FindAllEnabledServerIdsWithGroupId(tx, groupId)

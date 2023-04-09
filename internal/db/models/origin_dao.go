@@ -275,6 +275,64 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	return this.NotifyUpdate(tx, originId)
 }
 
+// CloneOrigin 复制源站
+func (this *OriginDAO) CloneOrigin(tx *dbs.Tx, fromOriginId int64) (newOriginId int64, err error) {
+	if fromOriginId <= 0 {
+		return
+	}
+	originOne, err := this.Find(tx, fromOriginId)
+	if err != nil || originOne == nil {
+		return
+	}
+	var origin = originOne.(*Origin)
+	var op = NewOriginOperator()
+	op.IsOn = origin.IsOn
+	op.Name = origin.Name
+	op.Version = origin.Version
+	if IsNotNull(origin.Addr) {
+		op.Addr = origin.Addr
+	}
+	op.Description = origin.Description
+	op.Code = origin.Code
+	op.Weight = origin.Weight
+	if IsNotNull(origin.ConnTimeout) {
+		op.ConnTimeout = origin.ConnTimeout
+	}
+	if IsNotNull(origin.ReadTimeout) {
+		op.ReadTimeout = origin.ReadTimeout
+	}
+	if IsNotNull(origin.IdleTimeout) {
+		op.IdleTimeout = origin.IdleTimeout
+	}
+	op.MaxFails = origin.MaxFails
+	op.MaxConns = origin.MaxConns
+	op.MaxIdleConns = origin.MaxIdleConns
+	op.HttpRequestURI = origin.HttpRequestURI
+	if IsNotNull(origin.HttpRequestHeader) {
+		op.HttpRequestHeader = origin.HttpRequestHeader
+	}
+	if IsNotNull(origin.HttpResponseHeader) {
+		op.HttpResponseHeader = origin.HttpResponseHeader
+	}
+	op.Host = origin.Host
+	if IsNotNull(origin.HealthCheck) {
+		op.HealthCheck = origin.HealthCheck
+	}
+	if IsNotNull(origin.Cert) {
+		// TODO 需要Clone证书
+		op.Cert = origin.Cert
+	}
+	if IsNotNull(origin.Ftp) {
+		op.Ftp = origin.Ftp
+	}
+	if IsNotNull(origin.Domains) {
+		op.Domains = origin.Domains
+	}
+	op.FollowPort = origin.FollowPort
+	op.State = origin.State
+	return this.SaveInt64(tx, op)
+}
+
 // ComposeOriginConfig 将源站信息转换为配置
 func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *shared.DataMap, cacheMap *utils.CacheMap) (*serverconfigs.OriginConfig, error) {
 	if cacheMap == nil {

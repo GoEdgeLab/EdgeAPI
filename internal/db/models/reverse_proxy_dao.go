@@ -243,6 +243,115 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	return types.Int64(op.Id), nil
 }
 
+// CloneReverseProxy 复制反向代理
+func (this *ReverseProxyDAO) CloneReverseProxy(tx *dbs.Tx, fromReverseProxyId int64) (newReverseProxyId int64, err error) {
+	if fromReverseProxyId <= 0 {
+		return
+	}
+	reverseProxyOne, err := this.Query(tx).
+		Pk(fromReverseProxyId).
+		State(ReverseProxyStateEnabled).
+		Find()
+	if err != nil || reverseProxyOne == nil {
+		return 0, err
+	}
+	var reverseProxy = reverseProxyOne.(*ReverseProxy)
+	var op = NewReverseProxyOperator()
+	op.TemplateId = reverseProxy.TemplateId
+	op.IsOn = reverseProxy.IsOn
+	if IsNotNull(reverseProxy.Scheduling) {
+		op.Scheduling = reverseProxy.Scheduling
+	}
+	if IsNotNull(reverseProxy.PrimaryOrigins) {
+		var originRefs = []*serverconfigs.OriginRef{}
+		err = json.Unmarshal(reverseProxy.PrimaryOrigins, &originRefs)
+		if err != nil {
+			return 0, err
+		}
+
+		var newRefs = []*serverconfigs.OriginRef{}
+		for _, originRef := range originRefs {
+			if originRef.OriginId > 0 {
+				newOriginId, err := SharedOriginDAO.CloneOrigin(tx, originRef.OriginId)
+				if err != nil {
+					return 0, err
+				}
+				if newOriginId > 0 {
+					newRef, err := utils.JSONClone[*serverconfigs.OriginRef](originRef)
+					if err != nil {
+						return 0, err
+					}
+					newRef.OriginId = newOriginId
+					newRefs = append(newRefs, newRef)
+				}
+			}
+		}
+		newRefsJSON, err := json.Marshal(newRefs)
+		if err != nil {
+			return 0, err
+		}
+		op.PrimaryOrigins = newRefsJSON
+	}
+	if IsNotNull(reverseProxy.BackupOrigins) {
+		var originRefs = []*serverconfigs.OriginRef{}
+		err = json.Unmarshal(reverseProxy.BackupOrigins, &originRefs)
+		if err != nil {
+			return 0, err
+		}
+
+		var newRefs = []*serverconfigs.OriginRef{}
+		for _, originRef := range originRefs {
+			if originRef.OriginId > 0 {
+				newOriginId, err := SharedOriginDAO.CloneOrigin(tx, originRef.OriginId)
+				if err != nil {
+					return 0, err
+				}
+				if newOriginId > 0 {
+					newRef, err := utils.JSONClone[*serverconfigs.OriginRef](originRef)
+					if err != nil {
+						return 0, err
+					}
+					newRef.OriginId = newOriginId
+					newRefs = append(newRefs, newRef)
+				}
+			}
+		}
+		newRefsJSON, err := json.Marshal(newRefs)
+		if err != nil {
+			return 0, err
+		}
+		op.BackupOrigins = newRefsJSON
+	}
+	op.StripPrefix = reverseProxy.StripPrefix
+	op.RequestHostType = reverseProxy.RequestHostType
+	op.RequestHost = reverseProxy.RequestHost
+	op.RequestHostExcludingPort = reverseProxy.RequestHostExcludingPort
+	op.RequestURI = reverseProxy.RequestURI
+	op.AutoFlush = reverseProxy.AutoFlush
+	if IsNotNull(reverseProxy.AddHeaders) {
+		// TODO 复制Header
+		op.AddHeaders = reverseProxy.AddHeaders
+	}
+	op.State = reverseProxy.State
+	if IsNotNull(reverseProxy.ConnTimeout) {
+		op.ConnTimeout = reverseProxy.ConnTimeout
+	}
+	if IsNotNull(reverseProxy.ReadTimeout) {
+		op.ReadTimeout = reverseProxy.ReadTimeout
+	}
+	if IsNotNull(reverseProxy.IdleTimeout) {
+		op.IdleTimeout = reverseProxy.IdleTimeout
+	}
+	op.MaxConns = reverseProxy.MaxConns
+	op.MaxIdleConns = reverseProxy.MaxIdleConns
+	if IsNotNull(reverseProxy.ProxyProtocol) {
+		op.ProxyProtocol = reverseProxy.ProxyProtocol
+	}
+	op.FollowRedirects = reverseProxy.FollowRedirects
+
+	return this.SaveInt64(tx, op)
+}
+
 // UpdateReverseProxyScheduling 修改反向代理调度算法
 func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reverseProxyId int64, schedulingJSON []byte) error {
 	if reverseProxyId <= 0 {
