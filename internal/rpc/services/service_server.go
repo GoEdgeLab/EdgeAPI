@@ -37,17 +37,22 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		req.UserId = userId
 	}
 
+	// 修复一个单词拼写错误
+	if len(req.ServerNamesJON) > 0 && len(req.ServerNamesJSON) == 0 {
+		req.ServerNamesJSON = req.ServerNamesJON
+	}
+
 	// 校验用户相关数据
 	if userId > 0 {
 		// HTTPS
 		if len(req.HttpsJSON) > 0 {
-			httpsConfig := &serverconfigs.HTTPSProtocolConfig{}
+			var httpsConfig = &serverconfigs.HTTPSProtocolConfig{}
 			err = json.Unmarshal(req.HttpsJSON, httpsConfig)
 			if err != nil {
 				return nil, err
 			}
 			if httpsConfig.SSLPolicyRef != nil && httpsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, httpsConfig.SSLPolicyRef.SSLPolicyId)
+				err = models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, httpsConfig.SSLPolicyRef.SSLPolicyId)
 				if err != nil {
 					return nil, err
 				}
@@ -56,13 +61,13 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 
 		// TLS
 		if len(req.TlsJSON) > 0 {
-			tlsConfig := &serverconfigs.TLSProtocolConfig{}
+			var tlsConfig = &serverconfigs.TLSProtocolConfig{}
 			err = json.Unmarshal(req.TlsJSON, tlsConfig)
 			if err != nil {
 				return nil, err
 			}
 			if tlsConfig.SSLPolicyRef != nil && tlsConfig.SSLPolicyRef.SSLPolicyId > 0 {
-				err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, tlsConfig.SSLPolicyRef.SSLPolicyId)
+				err = models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, tlsConfig.SSLPolicyRef.SSLPolicyId)
 				if err != nil {
 					return nil, err
 				}
@@ -103,9 +108,9 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	}
 
 	// 是否需要审核
-	isAuditing := false
-	serverNamesJSON := req.ServerNamesJON
-	auditingServerNamesJSON := []byte("[]")
+	var isAuditing = false
+	var serverNamesJSON = req.ServerNamesJSON
+	var auditingServerNamesJSON = []byte("[]")
 	if userId > 0 {
 		// 如果域名不为空的时候需要审核
 		if len(serverNamesJSON) > 0 && string(serverNamesJSON) != "[]" {
@@ -116,7 +121,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 			if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
 				isAuditing = true
 				serverNamesJSON = []byte("[]")
-				auditingServerNamesJSON = req.ServerNamesJON
+				auditingServerNamesJSON = req.ServerNamesJSON
 			}
 		}
 	}
@@ -156,6 +161,18 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 		if planServerId > 0 {
 			return nil, errors.New("the user plan is used by another server '" + types.String(planServerId) + "'")
+		}
+	}
+
+	// 域名
+	if len(req.Name) == 0 && len(req.ServerNamesJSON) > 0 {
+		var serverNames = []*serverconfigs.ServerNameConfig{}
+		err = json.Unmarshal(req.ServerNamesJSON, &serverNames)
+		if err != nil {
+			return nil, errors.New("decode server names failed: " + err.Error())
+		}
+		if len(serverNames) > 0 {
+			req.Name = serverNames[0].FirstName()
 		}
 	}
 
