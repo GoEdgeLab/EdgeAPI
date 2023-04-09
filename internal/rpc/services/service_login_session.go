@@ -14,26 +14,6 @@ type LoginSessionService struct {
 	BaseService
 }
 
-// CreateLoginSession 创建SESSION
-func (this *LoginSessionService) CreateLoginSession(ctx context.Context, req *pb.CreateLoginSessionRequest) (*pb.RPCSuccess, error) {
-	if len(req.Sid) == 0 {
-		return nil, errors.New("'sid' should not be empty")
-	}
-
-	_, _, err := this.ValidateAdminAndUser(ctx, false)
-	if err != nil {
-		return nil, err
-	}
-
-	var tx = this.NullTx()
-	_, err = models.SharedLoginSessionDAO.CreateSession(tx, req.Sid, req.Ip, req.ExpiresAt)
-	if err != nil {
-		return nil, err
-	}
-
-	return this.Success()
-}
-
 // WriteLoginSessionValue 写入SESSION数据
 func (this *LoginSessionService) WriteLoginSessionValue(ctx context.Context, req *pb.WriteLoginSessionValueRequest) (*pb.RPCSuccess, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, false)
