@@ -275,6 +275,7 @@ func (this *AdminDAO) CountAllEnabledAdmins(tx *dbs.Tx, keyword string, hasWeakP
 	}
 	if hasWeakPasswords {
 		query.Attr("password", weakPasswords)
+		query.Attr("isOn", true)
 	}
 	return query.
 		State(AdminStateEnabled).
@@ -290,6 +291,7 @@ func (this *AdminDAO) ListEnabledAdmins(tx *dbs.Tx, keyword string, hasWeakPassw
 	}
 	if hasWeakPasswords {
 		query.Attr("password", weakPasswords)
+		query.Attr("isOn", true)
 	}
 
 	_, err = query.
