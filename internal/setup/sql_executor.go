@@ -18,8 +18,6 @@ import (
 	"time"
 )
 
-var LatestSQLResult = &SQLDumpResult{}
-
 // SQLExecutor 安装或升级SQL执行器
 type SQLExecutor struct {
 	dbConfig  *dbs.DBConfig
@@ -65,7 +63,14 @@ func (this *SQLExecutor) Run(showLog bool) error {
 	if this.logWriter != nil {
 		showLog = true
 	}
-	_, err = sqlDump.Apply(db, LatestSQLResult, showLog)
+
+	var sqlResult = &SQLDumpResult{}
+	err = json.Unmarshal(sqlData, sqlResult)
+	if err != nil {
+		return errors.New("decode sql data failed: " + err.Error())
+	}
+
+	_, err = sqlDump.Apply(db, sqlResult, showLog)
 	if err != nil {
 		return err
 	}
