@@ -29,8 +29,29 @@ func (this *HTTPCacheTaskService) CreateHTTPCacheTask(ctx context.Context, req *
 	var tx = this.NullTx()
 
 	// 检查操作类型
+	if len(req.Type) == 0 {
+		return nil, errors.New("require 'type' parameter")
+	}
 	if req.Type != models.HTTPCacheTaskTypePurge && req.Type != models.HTTPCacheTaskTypeFetch {
-		return nil, errors.New("invalid type '" + req.Type + "'")
+		return nil, errors.New("'type' must be 'purge' or 'fetch'")
+	}
+
+	// 检查Key类型
+	if len(req.KeyType) == 0 {
+		return nil, errors.New("require 'keyType' parameter")
+	}
+	if req.KeyType != "key" && req.KeyType != "prefix" {
+		return nil, errors.New("'keyType' must be 'key' or 'prefix'")
+	}
+
+	// 预热只能是Key
+	if req.Type == models.HTTPCacheTaskTypeFetch && req.KeyType != "key" {
+		return nil, errors.New("'keyType' should be 'key' when fetching cache")
+	}
+
+	// 检查key是否为空
+	if len(req.Keys) == 0 {
+		return nil, errors.New("'keys' should not be empty")
 	}
 
 	// 检查Key数量
