@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package nodes
@@ -31,7 +32,7 @@ func (this *NodeStatusExecutor) updateMem(status *nodeconfigs.NodeStatus) {
 		if minFreeMemory > 1<<30 {
 			minFreeMemory = 1 << 30
 		}
-		if stat.Free < minFreeMemory {
+		if stat.Available > 0 && stat.Available < minFreeMemory {
 			runtime.GC()
 			debug.FreeOSMemory()
 		}
