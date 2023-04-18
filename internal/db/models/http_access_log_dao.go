@@ -237,7 +237,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 	if len(accessLog.TimeISO8601) > 10 {
 		day = strings.ReplaceAll(accessLog.TimeISO8601[:10], "-", "")
 	} else {
-		timeutil.FormatTime("Ymd", accessLog.Timestamp)
+		day = timeutil.FormatTime("Ymd", accessLog.Timestamp)
 	}
 
 	tableDef, err := SharedHTTPAccessLogManager.FindLastTable(dao.Instance, day, true)
