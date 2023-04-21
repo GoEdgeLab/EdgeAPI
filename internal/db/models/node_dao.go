@@ -356,7 +356,7 @@ func (this *NodeDAO) ListEnabledNodesMatch(tx *dbs.Tx,
 
 	// 关键词
 	if len(keyword) > 0 {
-		query.Where("(name LIKE :keyword OR JSON_EXTRACT(status,'$.hostname') LIKE :keyword OR id IN (SELECT nodeId FROM "+SharedNodeIPAddressDAO.Table+" WHERE ip LIKE :keyword))").
+		query.Where("(name LIKE :keyword OR JSON_EXTRACT(status,'$.hostname') LIKE :keyword OR "+this.Table+".id IN (SELECT nodeId FROM "+SharedNodeIPAddressDAO.Table+" WHERE ip LIKE :keyword))").
 			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 
