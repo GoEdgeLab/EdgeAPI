@@ -684,7 +684,7 @@ func (this *SSLCertDAO) buildDomainSearchingQuery(query *dbs.Query, domains []st
 	for _, domain := range domains {
 		domainMap[domain] = true
 	}
-	var reg = regexp.MustCompile(`^[\w.-]+$`) // 为了下面的SQL语句安全先不支持其他字符
+	var reg = regexp.MustCompile(`^[\w*.-]+$`) // 为了下面的SQL语句安全先不支持其他字符
 	for domain := range domainMap {
 		if !reg.MatchString(domain) {
 			continue
@@ -729,7 +729,9 @@ func (this *SSLCertDAO) buildDomainSearchingQuery(query *dbs.Query, domains []st
 
 		sqlPieces = append(sqlPieces, "JSON_CONTAINS(dnsNames, '"+string(domainJSON)+"')")
 	}
-	query.Where("(" + strings.Join(sqlPieces, " OR ") + ")")
+	if len(sqlPieces) > 0 {
+		query.Where("(" + strings.Join(sqlPieces, " OR ") + ")")
+	}
 
 	return nil
 }
