@@ -131,6 +131,8 @@ func (this *ACMEUserDAO) CountACMEUsersWithAdminId(tx *dbs.Tx, adminId int64, us
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+	} else {
+		query.Attr("userId", 0)
 	}
 	if accountId > 0 {
 		query.Attr("accountId", accountId)
@@ -149,6 +151,8 @@ func (this *ACMEUserDAO) ListACMEUsers(tx *dbs.Tx, adminId int64, userId int64, 
 	}
 	if userId > 0 {
 		query.Attr("userId", userId)
+	} else {
+		query.Attr("userId", 0)
 	}
 
 	_, err = query.

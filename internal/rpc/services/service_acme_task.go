@@ -232,6 +232,12 @@ func (this *ACMETaskService) CreateACMETask(ctx context.Context, req *pb.CreateA
 		req.AuthType = acme.AuthTypeDNS
 	}
 
+	if adminId > 0 {
+		if req.UserId > 0 {
+			userId = req.UserId
+		}
+	}
+
 	var tx = this.NullTx()
 	taskId, err := acmemodels.SharedACMETaskDAO.CreateACMETask(tx, adminId, userId, req.AuthType, req.AcmeUserId, req.DnsProviderId, req.DnsDomain, req.Domains, req.AutoRenew, req.AuthURL)
 	if err != nil {
