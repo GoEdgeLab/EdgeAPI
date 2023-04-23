@@ -416,10 +416,10 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, sourceUse
 // ListIPItemsAfterVersion 根据版本号查找IP列表
 func (this *IPItemDAO) ListIPItemsAfterVersion(tx *dbs.Tx, version int64, size int64) (result []*IPItem, err error) {
 	_, err = this.Query(tx).
+		UseIndex("version").
 		// 这里不要设置状态参数，因为我们要知道哪些是删除的
 		Gt("version", version).
 		Asc("version").
-		Asc("id").
 		Limit(size).
 		Slice(&result).
 		FindAll()
