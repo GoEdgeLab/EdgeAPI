@@ -8,6 +8,7 @@ import (
 	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/installers"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
 	executils "github.com/TeaOSLab/EdgeAPI/internal/utils/exec"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
@@ -480,4 +481,107 @@ func (this *APINodeService) UploadAPINodeFile(ctx context.Context, req *pb.Uploa
 	}
 
 	return &pb.UploadAPINodeFileResponse{}, nil
+}
+
+// UploadDeployFileToAPINode 上传节点安装文件
+func (this *APINodeService) UploadDeployFileToAPINode(ctx context.Context, req *pb.UploadDeployFileToAPINodeRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var targetDir = Tea.Root + "/deploy/"
+	var targetTmpFile = targetDir + "/" + req.Filename + ".tmp"
+	var targetFile = targetDir + "/" + req.Filename
+
+	if req.IsFirstChunk {
+		_ = os.Remove(targetTmpFile)
+	}
+
+	if len(req.ChunkData) > 0 {
+		err = func() error {
+			var flags = os.O_CREATE | os.O_WRONLY
+			if req.IsFirstChunk {
+				flags |= os.O_TRUNC
+			} else {
+				flags |= os.O_APPEND
+			}
+			fp, err := os.OpenFile(targetTmpFile, flags, 0666)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = fp.Close()
+			}()
+
+			_, err = fp.Write(req.ChunkData)
+			return err
+		}()
+		if err != nil {
+			return nil, errors.New("write file failed: " + err.Error())
+		}
+	}
+
+	if req.IsLastChunk {
+		// 检查SUM
+		fp, err := os.Open(targetTmpFile)
+		if err != nil {
+			return nil, err
+		}
+		var hash = md5.New()
+		_, err = io.Copy(hash, fp)
+		_ = fp.Close()
+		if err != nil {
+			return nil, err
+		}
+		var tmpSum = fmt.Sprintf("%x", hash.Sum(nil))
+		if tmpSum != req.Sum {
+			_ = os.Remove(targetTmpFile)
+			return nil, errors.New("check sum failed")
+		}
+
+		// 正式改名
+		err = os.Rename(targetTmpFile, targetFile)
+		if err != nil {
+			return nil, errors.New("rename failed: " + err.Error())
+		}
+
+		// 重载数据
+		installers.SharedDeployManager.Reload()
+	}
+
+	return this.Success()
+}
+
+// FindLatestDeployFiles 查找已有节点安装文件信息
+func (this *APINodeService) FindLatestDeployFiles(ctx context.Context, req *pb.FindLatestDeployFilesRequest) (*pb.FindLatestDeployFilesResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbNodeFiles = []*pb.FindLatestDeployFilesResponse_DeployFile{}
+	var nodeFiles = installers.SharedDeployManager.LoadNodeFiles()
+	for _, nodeFile := range nodeFiles {
+		pbNodeFiles = append(pbNodeFiles, &pb.FindLatestDeployFilesResponse_DeployFile{
+			Os:      nodeFile.OS,
+			Arch:    nodeFile.Arch,
+			Version: nodeFile.Version,
+		})
+	}
+
+	var pbNSNodeFiles = []*pb.FindLatestDeployFilesResponse_DeployFile{}
+	var nsNodeFiles = installers.SharedDeployManager.LoadNSNodeFiles()
+	for _, nodeFile := range nsNodeFiles {
+		pbNSNodeFiles = append(pbNSNodeFiles, &pb.FindLatestDeployFilesResponse_DeployFile{
+			Os:      nodeFile.OS,
+			Arch:    nodeFile.Arch,
+			Version: nodeFile.Version,
+		})
+	}
+
+	return &pb.FindLatestDeployFilesResponse{
+		NodeDeployFiles:   pbNodeFiles,
+		NsNodeDeployFiles: pbNSNodeFiles,
+	}, nil
 }
