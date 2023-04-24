@@ -164,6 +164,53 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, 
 		})
 	}
 
+	// 自定义线路分组
+	var groupsPerPage = 100
+	var customLineGroupListResponse = new(dnspod.CustomLineGroupListResponse)
+	err = this.doAPI("/Custom.Line.Group.List", map[string]string{
+		"domain": domain,
+		"offset": "0",
+		"length": types.String(groupsPerPage),
+	}, customLineGroupListResponse)
+	if err != nil {
+		// 忽略自定义分组错误
+		err = nil
+	} else {
+		if len(customLineGroupListResponse.Data.LineGroups) > 0 {
+			for _, lineGroup := range customLineGroupListResponse.Data.LineGroups {
+				routes = append(routes, &dnstypes.Route{
+					Name: "分组：" + lineGroup.Name,
+					Code: lineGroup.Name,
+				})
+			}
+		}
+
+		if customLineGroupListResponse.Data.Info.Total > customLineGroupListResponse.Data.Info.NowTotal {
+			for page := 1; page <= 100; /** 最多100页 **/ page++ {
+				err = this.doAPI("/Custom.Line.Group.List", map[string]string{
+					"domain": domain,
+					"offset": types.String(page * groupsPerPage),
+					"length": types.String(groupsPerPage),
+				}, customLineGroupListResponse)
+				if err != nil {
+					// 忽略错误
+					err = nil
+				} else {
+					if len(customLineGroupListResponse.Data.LineGroups) == 0 {
+						break
+					}
+
+					for _, lineGroup := range customLineGroupListResponse.Data.LineGroups {
+						routes = append(routes, &dnstypes.Route{
+							Name: "分组：" + lineGroup.Name,
+							Code: lineGroup.Name,
+						})
+					}
+				}
+			}
+		}
+	}
+
 	return routes, nil
 }
 
