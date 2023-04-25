@@ -365,7 +365,9 @@ func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, sourceUs
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
 	if sourceUserId > 0 {
-		query.Attr("sourceUserId", sourceUserId)
+		if listId <= 0 || listId == firewallconfigs.GlobalListId {
+			query.Attr("sourceUserId", sourceUserId)
+		}
 	}
 	if len(keyword) > 0 {
 		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
@@ -389,7 +391,9 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, sourceUse
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
 	if sourceUserId > 0 {
-		query.Attr("sourceUserId", sourceUserId)
+		if listId <= 0 || listId == firewallconfigs.GlobalListId {
+			query.Attr("sourceUserId", sourceUserId)
+		}
 	}
 	if len(keyword) > 0 {
 		query.Where("(ipFrom LIKE :keyword OR ipTo LIKE :keyword)").
@@ -481,9 +485,14 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 // CountAllEnabledIPItems 计算数量
 func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string) (int64, error) {
 	var query = this.Query(tx)
-	if sourceUserId > 0 {
-		query.Attr("sourceUserId", sourceUserId)
-		query.UseIndex("sourceUserId")
+	if sourceUserId > 0  {
+		if listId <= 0 {
+			query.Where("((listId=" +types.String(firewallconfigs.GlobalListId)+ " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			query.Param("sourceUserId", sourceUserId)
+		} else if listId == firewallconfigs.GlobalListId {
+			query.Attr("sourceUserId", sourceUserId)
+			query.UseIndex("sourceUserId")
+		}
 	}
 	if len(keyword) > 0 {
 		query.Like("ipFrom", dbutils.QuoteLike(keyword))
@@ -518,9 +527,14 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 // ListAllEnabledIPItems 搜索所有IP
 func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, offset int64, size int64) (result []*IPItem, err error) {
 	var query = this.Query(tx)
-	if sourceUserId > 0 {
-		query.Attr("sourceUserId", sourceUserId)
-		query.UseIndex("sourceUserId")
+	if sourceUserId > 0  {
+		if listId <= 0 {
+			query.Where("((listId=" +types.String(firewallconfigs.GlobalListId)+ " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			query.Param("sourceUserId", sourceUserId)
+		} else if listId == firewallconfigs.GlobalListId {
+			query.Attr("sourceUserId", sourceUserId)
+			query.UseIndex("sourceUserId")
+		}
 	}
 	if len(keyword) > 0 {
 		query.Like("ipFrom", dbutils.QuoteLike(keyword))
