@@ -307,7 +307,7 @@ func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddressId(tx *dbs.Tx, nodeId 
 		FindInt64Col(0)
 }
 
-// FindNodeAccessAndUpIPAddresses 查找节点所有的可访问的IP地址
+// FindNodeAccessAndUpIPAddresses 查找节点所有的可访问且在线的IP地址
 func (this *NodeIPAddressDAO) FindNodeAccessAndUpIPAddresses(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (result []*NodeIPAddress, err error) {
 	if len(role) == 0 {
 		role = nodeconfigs.NodeRoleNode
@@ -319,6 +319,24 @@ func (this *NodeIPAddressDAO) FindNodeAccessAndUpIPAddresses(tx *dbs.Tx, nodeId 
 		Attr("canAccess", true).
 		Attr("isOn", true).
 		Attr("isUp", true).
+		Desc("order").
+		AscPk().
+		Slice(&result).
+		FindAll()
+	return
+}
+
+// FindNodeAccessIPAddresses 查找节点所有的可访问的IP地址，包括在线和离线
+func (this *NodeIPAddressDAO) FindNodeAccessIPAddresses(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (result []*NodeIPAddress, err error) {
+	if len(role) == 0 {
+		role = nodeconfigs.NodeRoleNode
+	}
+	_, err = this.Query(tx).
+		Attr("role", role).
+		Attr("nodeId", nodeId).
+		State(NodeIPAddressStateEnabled).
+		Attr("canAccess", true).
+		Attr("isOn", true).
 		Desc("order").
 		AscPk().
 		Slice(&result).

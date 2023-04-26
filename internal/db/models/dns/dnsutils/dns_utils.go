@@ -162,17 +162,36 @@ func CheckClusterDNS(tx *dbs.Tx, cluster *models.NodeCluster, checkNodeIssues bo
 				return nil, err
 			}
 			if len(ipAddr) == 0 {
-				issues = append(issues, &pb.DNSIssue{
-					Target:      node.Name,
-					TargetId:    nodeId,
-					Type:        "node",
-					Description: "没有设置IP地址",
-					Params: map[string]string{
-						"clusterName": cluster.Name,
-						"clusterId":   numberutils.FormatInt64(clusterId),
-					},
-					MustFix: true,
-				})
+				// 检查是否有离线
+				anyIPAddr, _, err := models.SharedNodeIPAddressDAO.FindFirstNodeAccessIPAddress(tx, nodeId, false, nodeconfigs.NodeRoleNode)
+				if err != nil {
+					return nil, err
+				}
+				if len(anyIPAddr) > 0 {
+					issues = append(issues, &pb.DNSIssue{
+						Target:      node.Name,
+						TargetId:    nodeId,
+						Type:        "node",
+						Description: "节点所有IP地址处于离线状态",
+						Params: map[string]string{
+							"clusterName": cluster.Name,
+							"clusterId":   numberutils.FormatInt64(clusterId),
+						},
+						MustFix: true,
+					})
+				} else {
+					issues = append(issues, &pb.DNSIssue{
+						Target:      node.Name,
+						TargetId:    nodeId,
+						Type:        "node",
+						Description: "没有设置可用的IP地址",
+						Params: map[string]string{
+							"clusterName": cluster.Name,
+							"clusterId":   numberutils.FormatInt64(clusterId),
+						},
+						MustFix: true,
+					})
+				}
 				continue
 			}
 

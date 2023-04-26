@@ -14,7 +14,7 @@ func TestHealthCheckExecutor_Run(t *testing.T) {
 	teaconst.IsPlus = true
 	dbs.NotifyReady()
 
-	executor := tasks.NewHealthCheckExecutor(35)
+	var executor = tasks.NewHealthCheckExecutor(42)
 	results, err := executor.Run()
 	if err != nil {
 		t.Fatal(err)

@@ -12,6 +12,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
@@ -63,26 +64,31 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 		return results, nil
 	}
 
+	var tx *dbs.Tx
 	for _, node := range nodes {
 		if !node.IsOn {
 			continue
 		}
-		result := &HealthCheckResult{
-			Node: node,
-		}
 
-		ipAddr, ipAddrId, err := models.NewNodeIPAddressDAO().FindFirstNodeAccessIPAddress(nil, int64(node.Id), false, nodeconfigs.NodeRoleNode)
+		ipAddrs, err := models.SharedNodeIPAddressDAO.FindNodeAccessIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
 		if err != nil {
 			return nil, err
 		}
-		if len(ipAddr) == 0 {
-			result.Error = "no ip address can be used"
-		} else {
-			result.NodeAddr = ipAddr
-			result.NodeAddrId = ipAddrId
-		}
+		for _, ipAddr := range ipAddrs {
+			var ipClusterIds = ipAddr.DecodeClusterIds()
+			if len(ipClusterIds) > 0 && !lists.ContainsInt64(ipClusterIds, this.clusterId) {
+				continue
+			}
 
-		results = append(results, result)
+			// TODO 支持备用IP
+			var result = &HealthCheckResult{
+				Node:       node,
+				NodeAddrId: int64(ipAddr.Id),
+				NodeAddr:   ipAddr.Ip,
+			}
+
+			results = append(results, result)
+		}
 	}
 
 	// 并行检查
