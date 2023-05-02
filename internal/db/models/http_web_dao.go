@@ -512,7 +512,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 
 	// Referers
 	if IsNotNull(web.Referers) {
-		var referersConfig = &serverconfigs.ReferersConfig{}
+		var referersConfig = serverconfigs.NewReferersConfig()
 		err = json.Unmarshal(web.Referers, referersConfig)
 		if err != nil {
 			return nil, err
