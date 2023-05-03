@@ -20,6 +20,10 @@ type NSRecord struct {
 	Ttl         uint32   `field:"ttl"`         // TTL（秒）
 	Weight      uint32   `field:"weight"`      // 权重
 	RouteIds    dbs.JSON `field:"routeIds"`    // 线路
+	HealthCheck dbs.JSON `field:"healthCheck"` // 健康检查配置
+	CountUp     uint32   `field:"countUp"`     // 连续上线次数
+	CountDown   uint32   `field:"countDown"`   // 连续离线次数
+	IsUp        bool     `field:"isUp"`        // 是否在线
 	CreatedAt   uint64   `field:"createdAt"`   // 创建时间
 	Version     uint64   `field:"version"`     // 版本号
 	State       uint8    `field:"state"`       // 状态
@@ -42,6 +46,10 @@ type NSRecordOperator struct {
 	Ttl         any // TTL（秒）
 	Weight      any // 权重
 	RouteIds    any // 线路
+	HealthCheck any // 健康检查配置
+	CountUp     any // 连续上线次数
+	CountDown   any // 连续离线次数
+	IsUp        any // 是否在线
 	CreatedAt   any // 创建时间
 	Version     any // 版本号
 	State       any // 状态
