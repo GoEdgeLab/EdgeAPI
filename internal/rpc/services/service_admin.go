@@ -369,7 +369,11 @@ func (this *AdminService) CountAllEnabledAdmins(ctx context.Context, req *pb.Cou
 		return nil, err
 	}
 
-	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx, req.Keyword, isSuperAdmin && req.HasWeakPassword)
+	if !isSuperAdmin && req.HasWeakPassword {
+		return this.SuccessCount(0)
+	}
+
+	count, err := models.SharedAdminDAO.CountAllEnabledAdmins(tx, req.Keyword, req.HasWeakPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +397,11 @@ func (this *AdminService) ListEnabledAdmins(ctx context.Context, req *pb.ListEna
 		return nil, err
 	}
 
-	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Keyword, isSuperAdmin && req.HasWeakPassword, req.Offset, req.Size)
+	if !isSuperAdmin && req.HasWeakPassword {
+		return &pb.ListEnabledAdminsResponse{Admins: nil}, nil
+	}
+
+	admins, err := models.SharedAdminDAO.ListEnabledAdmins(tx, req.Keyword, req.HasWeakPassword, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
