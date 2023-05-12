@@ -82,7 +82,7 @@ func (this *UpdatingServerListDAO) FindLists(tx *dbs.Tx, clusterIds []int64, las
 	_, err = this.Query(tx).
 		Attr("clusterId", clusterIds). // 即使clusterIds数量是变化的，这里也不需要使用Reuse(false)，因为clusterIds通常数量有限
 		Gt("id", lastId).
-		Asc(). // 非常重要
+		AscPk(). // 非常重要
 		Slice(&result).
 		FindAll()
 	return

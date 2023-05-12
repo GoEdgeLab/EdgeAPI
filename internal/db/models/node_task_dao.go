@@ -297,8 +297,8 @@ func (this *NodeTaskDAO) FindAllDoingNodeTasksWithClusterId(tx *dbs.Tx, role str
 		Gt("nodeId", 0).
 		Where("(isDone=0 OR (isDone=1 AND isOk=0))").
 		Desc("isDone").
-		Asc().
 		Asc("nodeId").
+		AscPk().
 		Slice(&result).
 		FindAll()
 	return

@@ -51,7 +51,7 @@ func (this *SysEventDAO) CreateEvent(tx *dbs.Tx, event EventInterface) error {
 // 查找事件
 func (this *SysEventDAO) FindEvents(tx *dbs.Tx, size int64) (result []*SysEvent, err error) {
 	_, err = this.Query(tx).
-		Asc().
+		AscPk().
 		Limit(size).
 		Slice(&result).
 		FindAll()

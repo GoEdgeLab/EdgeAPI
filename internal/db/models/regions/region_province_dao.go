@@ -122,7 +122,7 @@ func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(tx *dbs.Tx, 
 	_, err = this.Query(tx).
 		State(RegionProvinceStateEnabled).
 		Attr("countryId", countryId).
-		Asc().
+		AscPk().
 		Slice(&result).
 		FindAll()
 	return
@@ -132,7 +132,7 @@ func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(tx *dbs.Tx, 
 func (this *RegionProvinceDAO) FindAllEnabledProvinces(tx *dbs.Tx) (result []*RegionProvince, err error) {
 	_, err = this.Query(tx).
 		State(RegionProvinceStateEnabled).
-		Asc().
+		AscPk().
 		Slice(&result).
 		FindAll()
 	return
