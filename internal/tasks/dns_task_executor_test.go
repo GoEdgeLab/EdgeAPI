@@ -1,3 +1,5 @@
+//go:build !plus
+
 package tasks_test
 
 import (

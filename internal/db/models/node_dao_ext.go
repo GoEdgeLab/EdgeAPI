@@ -18,3 +18,8 @@ func (this *NodeDAO) loadServersFromCluster(tx *dbs.Tx, clusterId int64, serverI
 func (this *NodeDAO) composeExtConfig(tx *dbs.Tx, config *nodeconfigs.NodeConfig, clusterIds []int64, cacheMap *utils.CacheMap) error {
 	return nil
 }
+
+// CheckNodeIPAddresses 检查节点IP地址
+func (this *NodeDAO) CheckNodeIPAddresses(tx *dbs.Tx, node *Node) (shouldSkip bool, shouldOverwrite bool, ipAddressStrings []string, err error) {
+	return
+}

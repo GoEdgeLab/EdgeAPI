@@ -7,6 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"sort"
 	"time"
 )
@@ -16,7 +17,7 @@ func (this *Node) DecodeInstallStatus() (*NodeInstallStatus, error) {
 	if len(this.InstallStatus) == 0 {
 		return NewNodeInstallStatus(), nil
 	}
-	status := &NodeInstallStatus{}
+	var status = &NodeInstallStatus{}
 	err := json.Unmarshal(this.InstallStatus, status)
 	if err != nil {
 		return NewNodeInstallStatus(), err
@@ -37,7 +38,7 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 	if len(this.Status) == 0 {
 		return nil, nil
 	}
-	status := &nodeconfigs.NodeStatus{}
+	var status = &nodeconfigs.NodeStatus{}
 	err := json.Unmarshal(this.Status, status)
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func (this *Node) DecodeStatus() (*nodeconfigs.NodeStatus, error) {
 
 // DNSRouteCodes 所有的DNS线路
 func (this *Node) DNSRouteCodes() map[int64][]string {
-	routes := map[int64][]string{} // domainId => routes
+	var routes = map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 {
 		return routes
 	}
@@ -61,7 +62,7 @@ func (this *Node) DNSRouteCodes() map[int64][]string {
 
 // DNSRouteCodesForDomainId DNS线路
 func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) {
-	routes := map[int64][]string{} // domainId => routes
+	var routes = map[int64][]string{} // domainId => routes
 	if len(this.DnsRoutes) == 0 {
 		return nil, nil
 	}
@@ -80,7 +81,7 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 
 // DecodeConnectedAPINodeIds 连接的API
 func (this *Node) DecodeConnectedAPINodeIds() ([]int64, error) {
-	apiNodeIds := []int64{}
+	var apiNodeIds = []int64{}
 	if IsNotNull(this.ConnectedAPINodes) {
 		err := json.Unmarshal(this.ConnectedAPINodes, &apiNodeIds)
 		if err != nil {
@@ -213,4 +214,9 @@ func (this *Node) DecodeAPINodeAddrs() []*serverconfigs.NetworkAddressConfig {
 		remotelogs.Error("Node.DecodeAPINodeAddrs", err.Error())
 	}
 	return result
+}
+
+// CheckIsOffline 检查是否已经离线
+func (this *Node) CheckIsOffline() bool {
+	return len(this.OfflineDay) > 0 && this.OfflineDay < timeutil.Format("Ymd")
 }

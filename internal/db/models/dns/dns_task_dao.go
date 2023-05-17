@@ -12,7 +12,8 @@ import (
 type DNSTaskType = string
 
 const (
-	DNSTaskTypeClusterChange       DNSTaskType = "clusterChange"
+	DNSTaskTypeClusterChange       DNSTaskType = "clusterChange"       // 集群节点、服务发生变化
+	DNSTaskTypeClusterNodesChange  DNSTaskType = "clusterNodesChange"  // 集群中节点发生变化
 	DNSTaskTypeClusterRemoveDomain DNSTaskType = "clusterRemoveDomain" // 从集群中移除域名
 	DNSTaskTypeNodeChange          DNSTaskType = "nodeChange"
 	DNSTaskTypeServerChange        DNSTaskType = "serverChange"

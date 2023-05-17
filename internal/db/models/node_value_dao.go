@@ -37,11 +37,15 @@ func init() {
 
 // CreateValue 创建值
 func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconfigs.NodeRole, nodeId int64, item string, valueJSON []byte, createdAt int64) error {
+	if len(valueJSON) == 0 {
+		return errors.New("'valueJSON' should not be nil")
+	}
+
 	var day = timeutil.FormatTime("Ymd", createdAt)
 	var hour = timeutil.FormatTime("YmdH", createdAt)
 	var minute = timeutil.FormatTime("YmdHi", createdAt)
 
-	return this.Query(tx).
+	err := this.Query(tx).
 		InsertOrUpdateQuickly(maps.Map{
 			"clusterId": clusterId,
 			"role":      role,
@@ -55,6 +59,17 @@ func (this *NodeValueDAO) CreateValue(tx *dbs.Tx, clusterId int64, role nodeconf
 		}, maps.Map{
 			"value": valueJSON,
 		})
+	if err != nil {
+		return err
+	}
+
+	// 触发钩子
+	err = this.nodeValueHook(tx, role, nodeId, item, valueJSON)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Clean 清除数据
@@ -324,7 +339,7 @@ func (this *NodeValueDAO) SumNodeClusterValues(tx *dbs.Tx, role string, clusterI
 
 // FindLatestNodeValue 获取最近一条数据
 func (this *NodeValueDAO) FindLatestNodeValue(tx *dbs.Tx, role string, nodeId int64, item string) (*NodeValue, error) {
-	fromMinute := timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(60))
+	var fromMinute = timeutil.FormatTime("YmdHi", time.Now().Unix()-int64(60))
 
 	one, err := this.Query(tx).
 		Attr("role", role).

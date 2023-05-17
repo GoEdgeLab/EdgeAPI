@@ -472,13 +472,14 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 	var nodeKeys = []string{}
 	var addingNodeRecordKeysMap = map[string]bool{} // clusterDnsName_type_ip_route
 	for _, node := range nodes {
-		ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+		shouldSkip, shouldOverwrite, ipAddressesStrings, err := models.SharedNodeDAO.CheckNodeIPAddresses(tx, node)
 		if err != nil {
 			return nil, nil, nil, 0, 0, false, false, err
 		}
-		if len(ipAddresses) == 0 {
+		if shouldSkip {
 			continue
 		}
+
 		routeCodes, err := node.DNSRouteCodesForDomainId(int64(cluster.DnsDomainId))
 		if err != nil {
 			return nil, nil, nil, 0, 0, false, false, err
@@ -491,7 +492,16 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				continue
 			}
 		}
-		for _, route := range routeCodes {
+
+		if !shouldOverwrite {
+			ipAddresses, err := models.SharedNodeIPAddressDAO.FindNodeAccessAndUpIPAddresses(tx, int64(node.Id), nodeconfigs.NodeRoleNode)
+			if err != nil {
+				return nil, nil, nil, 0, 0, false, false, err
+			}
+			if len(ipAddresses) == 0 {
+				continue
+			}
+
 			for _, ipAddress := range ipAddresses {
 				// 检查专属节点
 				if !ipAddress.IsValidInCluster(clusterId) {
@@ -505,6 +515,16 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				if net.ParseIP(ip) == nil {
 					continue
 				}
+
+				ipAddressesStrings = append(ipAddressesStrings, ip)
+			}
+		}
+		if len(ipAddressesStrings) == 0 {
+			continue
+		}
+
+		for _, route := range routeCodes {
+			for _, ip := range ipAddressesStrings {
 				var key = ip + "_" + route
 				nodeKeys = append(nodeKeys, key)
 				record, ok := nodeRecordMapping[key]

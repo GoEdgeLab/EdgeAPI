@@ -16,6 +16,7 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	timeutil "github.com/iwind/TeaGo/utils/time"
 	"net"
 	"net/http"
 	"strconv"
@@ -66,7 +67,7 @@ func (this *HealthCheckExecutor) Run() ([]*HealthCheckResult, error) {
 
 	var tx *dbs.Tx
 	for _, node := range nodes {
-		if !node.IsOn {
+		if !node.IsOn || node.IsBackupForCluster || node.IsBackupForGroup || (len(node.OfflineDay) > 0 && node.OfflineDay < timeutil.Format("Ymd")) {
 			continue
 		}
 
@@ -192,6 +193,15 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 				err = models.NewMessageDAO().CreateNodeMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, int64(result.Node.Id), messageType, messageLevel, message, message, nil, false)
 				if err != nil {
 					this.logErr("HealthCheckExecutor", err.Error())
+					return
+				}
+
+				// 触发节点动作
+				if !result.IsOk {
+					err := this.fireNodeActions(int64(result.Node.Id))
+					if err != nil {
+						this.logErr("HealthCheckExecutor", err.Error())
+					}
 					return
 				}
 			}

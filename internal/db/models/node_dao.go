@@ -1550,7 +1550,7 @@ func (this *NodeDAO) FindAllEnabledNodesDNSWithClusterId(tx *dbs.Tx, clusterId i
 		Attr("isOn", true).
 		Attr("isUp", true).
 		Attr("isInstalled", isInstalled).
-		Result("id", "name", "dnsRoutes", "isOn").
+		Result("id", "name", "dnsRoutes", "isOn", "offlineDay", "actionStatus", "isBackupForCluster", "isBackupForGroup", "backupIPs", "clusterId", "groupId").
 		DescPk().
 		Slice(&result).
 		FindAll()
@@ -1575,7 +1575,7 @@ func (this *NodeDAO) FindEnabledNodeDNS(tx *dbs.Tx, nodeId int64) (*Node, error)
 	one, err := this.Query(tx).
 		State(NodeStateEnabled).
 		Pk(nodeId).
-		Result("id", "name", "dnsRoutes", "clusterId", "isOn").
+		Result("id", "name", "dnsRoutes", "clusterId", "isOn", "offlineDay", "isBackupForCluster", "isBackupForGroup", "actionStatus").
 		Find()
 	if one == nil {
 		return nil, err

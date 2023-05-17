@@ -52,7 +52,9 @@ const (
 
 	MessageTypeReportNodeInactive MessageType = "ReportNodeInactive" // 区域监控节点节点不活跃
 	MessageTypeReportNodeActive   MessageType = "ReportNodeActive"   // 区域监控节点活跃
-	MessageTypeConnectivity       MessageType = "Connectivity"
+	MessageTypeConnectivity       MessageType = "Connectivity"       // 连通性
+	MessageTypeNodeSchedule       MessageType = "NodeSchedule"       // 节点调度信息
+	MessageTypeNodeOfflineDay     MessageType = "NodeOfflineDay"     // 节点到下线日期
 )
 
 type MessageDAO dbs.DAO

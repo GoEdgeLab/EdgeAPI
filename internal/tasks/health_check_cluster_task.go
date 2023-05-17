@@ -127,7 +127,7 @@ func (this *HealthCheckClusterTask) Loop() error {
 			if err != nil {
 				return err
 			}
-			var message = "有" + numberutils.FormatInt(len(failedResults)) + "个节点在健康检查中出现问题"
+			var message = "有" + numberutils.FormatInt(len(failedResults)) + "个节点IP在健康检查中出现问题"
 			err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
 			if err != nil {
 				return err

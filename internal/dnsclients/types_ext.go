@@ -1,10 +1,11 @@
 // Copyright 2022 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 //go:build !plus
-// +build !plus
 
 package dnsclients
 
-import "github.com/iwind/TeaGo/maps"
+import (
+	"github.com/iwind/TeaGo/maps"
+)
 
 // FindProvider 查找服务商实例
 func FindProvider(providerType ProviderType, providerId int64) ProviderInterface {

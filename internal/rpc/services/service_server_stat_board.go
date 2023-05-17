@@ -325,7 +325,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 	}
 
 	// 当月总流量
-	monthlyTrafficStat, err := stats.SharedNodeTrafficDailyStatDAO.SumDailyStat(tx, nodeconfigs.NodeRoleNode, req.NodeId, timeutil.Format("Ym01"), timeutil.Format("Ym31"))
+	monthlyTrafficStat, err := models.SharedNodeTrafficDailyStatDAO.SumDailyStat(tx, nodeconfigs.NodeRoleNode, req.NodeId, timeutil.Format("Ym01"), timeutil.Format("Ym31"))
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 
 	// 按日流量统计
 	var dayFrom = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -14))
-	dailyTrafficStats, err := stats.SharedNodeTrafficDailyStatDAO.FindDailyStats(tx, "node", req.NodeId, dayFrom, timeutil.Format("Ymd"))
+	dailyTrafficStats, err := models.SharedNodeTrafficDailyStatDAO.FindDailyStats(tx, "node", req.NodeId, dayFrom, timeutil.Format("Ymd"))
 	if err != nil {
 		return nil, err
 	}

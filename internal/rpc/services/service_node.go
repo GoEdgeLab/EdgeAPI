@@ -384,6 +384,9 @@ func (this *NodeService) ListEnabledNodesMatch(ctx context.Context, req *pb.List
 			NodeRegion:            pbRegion,
 			DnsRoutes:             pbRoutes,
 			Level:                 int32(node.Level),
+			OfflineDay:            node.OfflineDay,
+			IsBackupForCluster:    node.IsBackupForCluster,
+			IsBackupForGroup:      node.IsBackupForGroup,
 		})
 	}
 
@@ -683,6 +686,9 @@ func (this *NodeService) FindEnabledNode(ctx context.Context, req *pb.FindEnable
 		DnsRoutes:              pbRoutes,
 		EnableIPLists:          node.EnableIPLists,
 		ApiNodeAddrsJSON:       node.ApiNodeAddrs,
+		OfflineDay:             node.OfflineDay,
+		IsBackupForCluster:     node.IsBackupForCluster,
+		IsBackupForGroup:       node.IsBackupForGroup,
 	}}, nil
 }
 
@@ -1397,12 +1403,15 @@ func (this *NodeService) FindAllEnabledNodesDNSWithNodeClusterId(ctx context.Con
 				continue
 			}
 			result = append(result, &pb.NodeDNSInfo{
-				Id:              int64(node.Id),
-				Name:            node.Name,
-				IpAddr:          ip,
-				NodeIPAddressId: int64(ipAddress.Id),
-				Routes:          pbRoutes,
-				NodeClusterId:   req.NodeClusterId,
+				Id:                 int64(node.Id),
+				Name:               node.Name,
+				IpAddr:             ip,
+				NodeIPAddressId:    int64(ipAddress.Id),
+				Routes:             pbRoutes,
+				NodeClusterId:      req.NodeClusterId,
+				IsBackupForCluster: node.IsBackupForCluster,
+				IsBackupForGroup:   node.IsBackupForGroup,
+				IsOffline:          node.CheckIsOffline(),
 			})
 		}
 	}
@@ -1497,6 +1506,9 @@ func (this *NodeService) FindEnabledNodeDNS(ctx context.Context, req *pb.FindEna
 			NodeClusterDNSName: clusterDNS.DnsName,
 			DnsDomainId:        dnsDomainId,
 			DnsDomainName:      dnsDomainName,
+			IsBackupForCluster: node.IsBackupForCluster,
+			IsBackupForGroup:   node.IsBackupForGroup,
+			IsOffline:          node.CheckIsOffline(),
 		},
 	}, nil
 }
@@ -2096,6 +2108,9 @@ func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.
 
 	// ddos protection
 	result.HasDDoSProtection = node.HasDDoSProtection()
+
+	// schedule
+	result.HasScheduleSettings = node.HasScheduleSettings()
 
 	return result, nil
 }
