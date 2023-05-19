@@ -19,3 +19,15 @@ func (this *NodeService) UpdateNodeScheduleInfo(ctx context.Context, req *pb.Upd
 func (this *NodeService) ResetNodeActionStatus(ctx context.Context, req *pb.ResetNodeActionStatusRequest) (*pb.RPCSuccess, error) {
 	return nil, this.NotImplementedYet()
 }
+
+func (this *NodeService) FindAllNodeScheduleInfoWithNodeClusterId(ctx context.Context, req *pb.FindAllNodeScheduleInfoWithNodeClusterIdRequest) (*pb.FindAllNodeScheduleInfoWithNodeClusterIdResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
+func (this *NodeService) CopyNodeActionsToNodeGroup(ctx context.Context, req *pb.CopyNodeActionsToNodeGroupRequest) (*pb.RPCSuccess, error) {
+	return nil, this.NotImplementedYet()
+}
+
+func (this *NodeService) CopyNodeActionsToNodeCluster(ctx context.Context, req *pb.CopyNodeActionsToNodeClusterRequest) (*pb.RPCSuccess, error) {
+	return nil, this.NotImplementedYet()
+}
