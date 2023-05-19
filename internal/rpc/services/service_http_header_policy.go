@@ -202,7 +202,7 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyCORS(ctx context.Cont
 		}
 	}
 
-	var corsConfig = &shared.HTTPCORSHeaderConfig{}
+	var corsConfig = shared.NewHTTPCORSHeaderConfig()
 	err = json.Unmarshal(req.CorsJSON, corsConfig)
 	if err != nil {
 		return nil, err

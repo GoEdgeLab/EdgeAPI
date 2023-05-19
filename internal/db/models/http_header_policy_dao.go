@@ -222,7 +222,7 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 
 	// CORS
 	if IsNotNull(policy.Cors) {
-		var corsConfig = &shared.HTTPCORSHeaderConfig{}
+		var corsConfig = shared.NewHTTPCORSHeaderConfig()
 		err = json.Unmarshal(policy.Cors, corsConfig)
 		if err != nil {
 			return nil, err
