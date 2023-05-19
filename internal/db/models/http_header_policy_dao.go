@@ -157,6 +157,9 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int6
 		return errors.New("invalid policyId")
 	}
 
+	if headerNames == nil {
+		headerNames = []string{}
+	}
 	namesJSON, err := json.Marshal(headerNames)
 	if err != nil {
 		return err
@@ -164,7 +167,31 @@ func (this *HTTPHeaderPolicyDAO) UpdateDeletingHeaders(tx *dbs.Tx, policyId int6
 
 	var op = NewHTTPHeaderPolicyOperator()
 	op.Id = policyId
-	op.DeleteHeaders = string(namesJSON)
+	op.DeleteHeaders = namesJSON
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+	return this.NotifyUpdate(tx, policyId)
+}
+
+// UpdateNonStandardHeaders 修改非标Headers
+func (this *HTTPHeaderPolicyDAO) UpdateNonStandardHeaders(tx *dbs.Tx, policyId int64, headerNames []string) error {
+	if policyId <= 0 {
+		return errors.New("invalid policyId")
+	}
+
+	if headerNames == nil {
+		headerNames = []string{}
+	}
+	namesJSON, err := json.Marshal(headerNames)
+	if err != nil {
+		return err
+	}
+
+	var op = NewHTTPHeaderPolicyOperator()
+	op.Id = policyId
+	op.NonStandardHeaders = namesJSON
 	err = this.Save(tx, op)
 	if err != nil {
 		return err
@@ -218,6 +245,16 @@ func (this *HTTPHeaderPolicyDAO) ComposeHeaderPolicyConfig(tx *dbs.Tx, headerPol
 			return nil, err
 		}
 		config.DeleteHeaders = headers
+	}
+
+	// Non-Standard Headers
+	if IsNotNull(policy.NonStandardHeaders) {
+		var headers = []string{}
+		err = json.Unmarshal(policy.NonStandardHeaders, &headers)
+		if err != nil {
+			return nil, err
+		}
+		config.NonStandardHeaders = headers
 	}
 
 	// CORS

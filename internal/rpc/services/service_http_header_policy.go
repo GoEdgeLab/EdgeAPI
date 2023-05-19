@@ -219,3 +219,28 @@ func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyCORS(ctx context.Cont
 
 	return this.Success()
 }
+
+// UpdateHTTPHeaderPolicyNonStandardHeaders 修改非标的Headers
+func (this *HTTPHeaderPolicyService) UpdateHTTPHeaderPolicyNonStandardHeaders(ctx context.Context, req *pb.UpdateHTTPHeaderPolicyNonStandardHeadersRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 检查权限
+	if userId > 0 {
+		err = models.SharedHTTPHeaderPolicyDAO.CheckUserHeaderPolicy(tx, userId, req.HttpHeaderPolicyId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedHTTPHeaderPolicyDAO.UpdateNonStandardHeaders(tx, req.HttpHeaderPolicyId, req.HeaderNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
