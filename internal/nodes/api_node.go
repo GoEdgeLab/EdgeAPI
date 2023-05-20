@@ -309,7 +309,7 @@ func (this *APINode) checkDB() error {
 		// 决定是否尝试启动本地的MySQL
 		if strings.Contains(err.Error(), "connection refused") {
 			config, _ := db.Config()
-			if config != nil && (strings.Contains(config.Dsn, "tcp(127.0.0.1:") || strings.Contains(config.Dsn, "tcp(localhost:)")) && os.Getgid() == 0 /** ROOT 用户 **/ {
+			if config != nil && (strings.Contains(config.Dsn, "tcp(127.0.0.1:") || strings.Contains(config.Dsn, "tcp(localhost:")) && os.Getgid() == 0 /** ROOT 用户 **/ {
 				var mysqldSafeFile = "/usr/local/mysql/bin/mysqld_safe"
 				_, err = os.Stat(mysqldSafeFile)
 				if err == nil {
