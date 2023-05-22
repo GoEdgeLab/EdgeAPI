@@ -318,7 +318,22 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPWebDAO.UpdateWebPages(tx, req.HttpWebId, req.PagesJSON)
+	// 检查配置
+	var pages = []*serverconfigs.HTTPPageConfig{}
+	err = json.Unmarshal(req.PagesJSON, &pages)
+	if err != nil {
+		return nil, errors.New("decode 'pages' failed: " + err.Error())
+	}
+	var newPages = []*serverconfigs.HTTPPageConfig{}
+	for _, page := range pages {
+		newPages = append(newPages, &serverconfigs.HTTPPageConfig{Id: page.Id})
+	}
+	newPagesJSON, err := json.Marshal(newPages)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebPages(tx, req.HttpWebId, newPagesJSON)
 	if err != nil {
 		return nil, err
 	}
