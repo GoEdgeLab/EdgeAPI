@@ -41,6 +41,7 @@ type NodeCluster struct {
 	AutoRemoteStart      bool     `field:"autoRemoteStart"`      // 自动远程启动
 	AutoInstallNftables  bool     `field:"autoInstallNftables"`  // 自动安装nftables
 	IsAD                 bool     `field:"isAD"`                 // 是否为高防集群
+	HttpPages            dbs.JSON `field:"httpPages"`            // 自定义页面设置
 }
 
 type NodeClusterOperator struct {
@@ -81,6 +82,7 @@ type NodeClusterOperator struct {
 	AutoRemoteStart      any // 自动远程启动
 	AutoInstallNftables  any // 自动安装nftables
 	IsAD                 any // 是否为高防集群
+	HttpPages            any // 自定义页面设置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

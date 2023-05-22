@@ -2112,6 +2112,8 @@ func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.
 	// schedule
 	result.HasScheduleSettings = node.HasScheduleSettings()
 
+	// pages
+
 	return result, nil
 }
 
@@ -2289,5 +2291,41 @@ func (this *NodeService) FindNodeUAMPolicies(ctx context.Context, req *pb.FindNo
 	}
 	return &pb.FindNodeUAMPoliciesResponse{
 		UamPolicies: pbPolicies,
+	}, nil
+}
+
+// FindNodeHTTPPagesPolicies 查找节点的自定义页面策略
+func (this *NodeService) FindNodeHTTPPagesPolicies(ctx context.Context, req *pb.FindNodeHTTPPagesPoliciesRequest) (*pb.FindNodeHTTPPagesPoliciesResponse, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbPolicies = []*pb.FindNodeHTTPPagesPoliciesResponse_HTTPPagesPolicy{}
+	for _, clusterId := range clusterIds {
+		policy, err := models.SharedNodeClusterDAO.FindClusterHTTPPagesPolicy(tx, clusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		policyJSON, err := json.Marshal(policy)
+		if err != nil {
+			return nil, err
+		}
+		pbPolicies = append(pbPolicies, &pb.FindNodeHTTPPagesPoliciesResponse_HTTPPagesPolicy{
+			NodeClusterId:       clusterId,
+			HttpPagesPolicyJSON: policyJSON,
+		})
+	}
+	return &pb.FindNodeHTTPPagesPoliciesResponse{
+		HttpPagesPolicies: pbPolicies,
 	}, nil
 }

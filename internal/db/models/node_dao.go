@@ -1085,6 +1085,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	var clusterIndex = 0
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
 	config.UAMPolicies = map[int64]*nodeconfigs.UAMPolicy{}
+	config.HTTPPagesPolicies = map[int64]*nodeconfigs.HTTPPagesPolicy{}
 	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
 		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
@@ -1176,6 +1177,31 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 				return nil, err
 			}
 			config.UAMPolicies[clusterId] = uamPolicy
+		}
+
+		// HTTP Pages
+		if IsNotNull(nodeCluster.HttpPages) {
+			var httpPagesPolicy = nodeconfigs.NewHTTPPagesPolicy()
+			err = json.Unmarshal(nodeCluster.HttpPages, httpPagesPolicy)
+			if err != nil {
+				return nil, err
+			}
+			if httpPagesPolicy.IsOn {
+				var newPages = []*serverconfigs.HTTPPageConfig{}
+				for _, page := range httpPagesPolicy.Pages {
+					pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(tx, page.Id, cacheMap)
+					if err != nil {
+						return nil, err
+					}
+					if pageConfig != nil && pageConfig.IsOn {
+						newPages = append(newPages, pageConfig)
+					}
+				}
+				httpPagesPolicy.Pages = newPages
+				if len(newPages) > 0 {
+					config.HTTPPagesPolicies[clusterId] = httpPagesPolicy
+				}
+			}
 		}
 
 		// 自动安装nftables

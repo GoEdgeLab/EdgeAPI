@@ -996,7 +996,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "httpPages", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -1095,7 +1095,7 @@ func (this *NodeClusterDAO) UpdateClusterUAMPolicy(tx *dbs.Tx, clusterId int64, 
 	return this.NotifyUAMUpdate(tx, clusterId)
 }
 
-// FindClusterUAMPolicy 查询设置
+// FindClusterUAMPolicy 查询UAM设置
 func (this *NodeClusterDAO) FindClusterUAMPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.UAMPolicy, error) {
 	var cacheKey = this.Table + ":FindClusterUAMPolicy:" + types.String(clusterId)
 	if cacheMap != nil {
@@ -1122,6 +1122,87 @@ func (this *NodeClusterDAO) FindClusterUAMPolicy(tx *dbs.Tx, clusterId int64, ca
 	if err != nil {
 		return nil, err
 	}
+	return policy, nil
+}
+
+// UpdateClusterHTTPPagesPolicy 修改自定义页面设置
+func (this *NodeClusterDAO) UpdateClusterHTTPPagesPolicy(tx *dbs.Tx, clusterId int64, httpPagesPolicy *nodeconfigs.HTTPPagesPolicy) error {
+	if httpPagesPolicy == nil {
+		err := this.Query(tx).
+			Pk(clusterId).
+			Set("httpPages", dbs.SQL("null")).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		return this.NotifyHTTPPagesPolicyUpdate(tx, clusterId)
+	}
+
+	// 移除不需要保存的内容
+	var newPages = []*serverconfigs.HTTPPageConfig{}
+	for _, page := range httpPagesPolicy.Pages {
+		newPages = append(newPages, &serverconfigs.HTTPPageConfig{Id: page.Id})
+	}
+	httpPagesPolicy.Pages = newPages
+
+	httpPagesPolicyJSON, err := json.Marshal(httpPagesPolicy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("httpPages", httpPagesPolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyHTTPPagesPolicyUpdate(tx, clusterId)
+}
+
+// FindClusterHTTPPagesPolicy 查询自定义页面设置
+func (this *NodeClusterDAO) FindClusterHTTPPagesPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.HTTPPagesPolicy, error) {
+	var cacheKey = this.Table + ":FindClusterHTTPPagesPolicy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.HTTPPagesPolicy), nil
+		}
+	}
+
+	pagesJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("httpPages").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(pagesJSON) {
+		return nodeconfigs.NewHTTPPagesPolicy(), nil
+	}
+
+	var policy = nodeconfigs.NewHTTPPagesPolicy()
+	err = json.Unmarshal(pagesJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+
+	// 读取Page信息
+	var newPages = []*serverconfigs.HTTPPageConfig{}
+	for _, page := range policy.Pages {
+		pageConfig, err := SharedHTTPPageDAO.ComposePageConfig(tx, page.Id, cacheMap)
+		if err != nil {
+			return nil, err
+		}
+		if pageConfig == nil {
+			continue
+		}
+		newPages = append(newPages, pageConfig)
+	}
+	policy.Pages = newPages
+
 	return policy, nil
 }
 
@@ -1215,6 +1296,11 @@ func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 // NotifyUAMUpdate 通知UAM更新
 func (this *NodeClusterDAO) NotifyUAMUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeUAMPolicyChanged)
+}
+
+// NotifyHTTPPagesPolicyUpdate 通知HTTP Pages更新
+func (this *NodeClusterDAO) NotifyHTTPPagesPolicyUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTPPagesPolicyChanged)
 }
 
 // NotifyDNSUpdate 通知DNS更新

@@ -1157,6 +1157,16 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	// ddos
 	result.HasDDoSProtection = cluster.HasDDoSProtection()
 
+	// HTTP Pages
+	if models.IsNotNull(cluster.HttpPages) {
+		var pagesPolicy = nodeconfigs.NewHTTPPagesPolicy()
+		err = json.Unmarshal(cluster.HttpPages, pagesPolicy)
+		if err != nil {
+			return nil, err
+		}
+		result.HasHTTPPagesPolicy = pagesPolicy.IsOn && len(pagesPolicy.Pages) > 0
+	}
+
 	return result, nil
 }
 
@@ -1361,6 +1371,54 @@ func (this *NodeClusterService) UpdateNodeClusterGlobalServerConfig(ctx context.
 
 	var tx = this.NullTx()
 	err = models.SharedNodeClusterDAO.UpdateClusterGlobalServerConfig(tx, req.NodeClusterId, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// FindNodeClusterHTTPPagesPolicy 获取集群的自定义页面设置
+func (this *NodeClusterService) FindNodeClusterHTTPPagesPolicy(ctx context.Context, req *pb.FindNodeClusterHTTPPagesPolicyRequest) (*pb.FindNodeClusterHTTPPagesPolicyResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	httpPagesPolicy, err := models.SharedNodeClusterDAO.FindClusterHTTPPagesPolicy(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	httpPagesPolicyJSON, err := json.Marshal(httpPagesPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNodeClusterHTTPPagesPolicyResponse{
+		HttpPagesPolicyJSON: httpPagesPolicyJSON,
+	}, nil
+}
+
+// UpdateNodeClusterHTTPPagesPolicy 修改集群的自定义页面设置
+func (this *NodeClusterService) UpdateNodeClusterHTTPPagesPolicy(ctx context.Context, req *pb.UpdateNodeClusterHTTPPagesPolicyRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	var policy = nodeconfigs.NewHTTPPagesPolicy()
+	err = json.Unmarshal(req.HttpPagesPolicyJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	err = policy.Init()
+	if err != nil {
+		return nil, errors.New("validate policy failed: " + err.Error())
+	}
+
+	err = models.SharedNodeClusterDAO.UpdateClusterHTTPPagesPolicy(tx, req.NodeClusterId, policy)
 	if err != nil {
 		return nil, err
 	}
