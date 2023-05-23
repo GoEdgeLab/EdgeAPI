@@ -996,7 +996,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "httpPages", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -1119,6 +1119,65 @@ func (this *NodeClusterDAO) FindClusterUAMPolicy(tx *dbs.Tx, clusterId int64, ca
 
 	var policy = &nodeconfigs.UAMPolicy{}
 	err = json.Unmarshal(uamJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	return policy, nil
+}
+
+// UpdateClusterHTTPCCPolicy 修改CC策略设置
+func (this *NodeClusterDAO) UpdateClusterHTTPCCPolicy(tx *dbs.Tx, clusterId int64, httpCCPolicy *nodeconfigs.HTTPCCPolicy) error {
+	if httpCCPolicy == nil {
+		err := this.Query(tx).
+			Pk(clusterId).
+			Set("cc", dbs.SQL("null")).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		return this.NotifyHTTPCCUpdate(tx, clusterId)
+	}
+
+	httpCCPolicyJSON, err := json.Marshal(httpCCPolicy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("cc", httpCCPolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyHTTPCCUpdate(tx, clusterId)
+}
+
+// FindClusterHTTPCCPolicy 查询CC策略设置
+func (this *NodeClusterDAO) FindClusterHTTPCCPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.HTTPCCPolicy, error) {
+	var cacheKey = this.Table + ":FindClusterHTTPCCPolicy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.HTTPCCPolicy), nil
+		}
+	}
+
+	httpCCJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("cc").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(httpCCJSON) {
+		return nodeconfigs.NewHTTPCCPolicy(), nil
+	}
+
+	var policy = nodeconfigs.NewHTTPCCPolicy()
+	err = json.Unmarshal(httpCCJSON, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -1296,6 +1355,11 @@ func (this *NodeClusterDAO) NotifyUpdate(tx *dbs.Tx, clusterId int64) error {
 // NotifyUAMUpdate 通知UAM更新
 func (this *NodeClusterDAO) NotifyUAMUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeUAMPolicyChanged)
+}
+
+// NotifyHTTPCCUpdate 通知HTTP CC更新
+func (this *NodeClusterDAO) NotifyHTTPCCUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTPCCPolicyChanged)
 }
 
 // NotifyHTTPPagesPolicyUpdate 通知HTTP Pages更新

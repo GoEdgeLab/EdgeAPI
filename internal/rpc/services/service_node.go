@@ -2294,6 +2294,50 @@ func (this *NodeService) FindNodeUAMPolicies(ctx context.Context, req *pb.FindNo
 	}, nil
 }
 
+// FindNodeHTTPCCPolicies 查找节点的HTTP CC策略
+func (this *NodeService) FindNodeHTTPCCPolicies(ctx context.Context, req *pb.FindNodeHTTPCCPoliciesRequest) (*pb.FindNodeHTTPCCPoliciesResponse, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbPolicies = []*pb.FindNodeHTTPCCPoliciesResponse_HTTPCCPolicy{}
+	for _, clusterId := range clusterIds {
+		policy, err := models.SharedNodeClusterDAO.FindClusterHTTPCCPolicy(tx, clusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+
+		// 集成默认设置
+		for i := 0; i < len(serverconfigs.DefaultHTTPCCThresholds); i ++ {
+			if i < len(policy.Thresholds) {
+				policy.Thresholds[i].MergeIfEmpty(serverconfigs.DefaultHTTPCCThresholds[i])
+			}
+		}
+
+		policyJSON, err := json.Marshal(policy)
+		if err != nil {
+			return nil, err
+		}
+		pbPolicies = append(pbPolicies, &pb.FindNodeHTTPCCPoliciesResponse_HTTPCCPolicy{
+			NodeClusterId:    clusterId,
+			HttpCCPolicyJSON: policyJSON,
+		})
+	}
+	return &pb.FindNodeHTTPCCPoliciesResponse{
+		HttpCCPolicies: pbPolicies,
+	}, nil
+}
+
 // FindNodeHTTPPagesPolicies 查找节点的自定义页面策略
 func (this *NodeService) FindNodeHTTPPagesPolicies(ctx context.Context, req *pb.FindNodeHTTPPagesPoliciesRequest) (*pb.FindNodeHTTPPagesPoliciesResponse, error) {
 	nodeId, err := this.ValidateNode(ctx)

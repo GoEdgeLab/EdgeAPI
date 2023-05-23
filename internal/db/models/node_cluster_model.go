@@ -42,6 +42,7 @@ type NodeCluster struct {
 	AutoInstallNftables  bool     `field:"autoInstallNftables"`  // 自动安装nftables
 	IsAD                 bool     `field:"isAD"`                 // 是否为高防集群
 	HttpPages            dbs.JSON `field:"httpPages"`            // 自定义页面设置
+	Cc                   dbs.JSON `field:"cc"`                   // CC设置
 }
 
 type NodeClusterOperator struct {
@@ -83,6 +84,7 @@ type NodeClusterOperator struct {
 	AutoInstallNftables  any // 自动安装nftables
 	IsAD                 any // 是否为高防集群
 	HttpPages            any // 自定义页面设置
+	Cc                   any // CC设置
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

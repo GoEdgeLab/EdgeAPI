@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns/dnsutils"
@@ -1140,6 +1141,18 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		result.UamIsOn = nodeconfigs.DefaultUAMPolicy.IsOn
 	}
 
+	// HTTP CC
+	if models.IsNotNull(cluster.Cc) {
+		var httpCCPolicy = nodeconfigs.NewHTTPCCPolicy()
+		err = json.Unmarshal(cluster.Cc, httpCCPolicy)
+		if err != nil {
+			return nil, err
+		}
+		result.HttpCCIsOn = httpCCPolicy.IsOn
+	} else {
+		result.HttpCCIsOn = nodeconfigs.NewHTTPCCPolicy().IsOn
+	}
+
 	// system service
 	if models.IsNotNull(cluster.SystemServices) {
 		var servicesMap = map[string]maps.Map{}
@@ -1235,6 +1248,10 @@ func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context,
 
 // FindEnabledNodeClusterUAMPolicy 读取集群UAM策略
 func (this *NodeClusterService) FindEnabledNodeClusterUAMPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterUAMPolicyRequest) (*pb.FindEnabledNodeClusterUAMPolicyResponse, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
 	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
@@ -1256,6 +1273,10 @@ func (this *NodeClusterService) FindEnabledNodeClusterUAMPolicy(ctx context.Cont
 
 // UpdateNodeClusterUAMPolicy 设置集群的UAM策略
 func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, req *pb.UpdateNodeClusterUAMPolicyRequest) (*pb.RPCSuccess, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
 	_, err := this.ValidateAdmin(ctx)
 	if err != nil {
 		return nil, err
@@ -1274,6 +1295,62 @@ func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, 
 
 	var tx = this.NullTx()
 	err = models.SharedNodeClusterDAO.UpdateClusterUAMPolicy(tx, req.NodeClusterId, uamPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
+
+
+// FindEnabledNodeClusterHTTPCCPolicy 读取集群HTTP CC策略
+func (this *NodeClusterService) FindEnabledNodeClusterHTTPCCPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterHTTPCCPolicyRequest) (*pb.FindEnabledNodeClusterHTTPCCPolicyResponse, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	httpCCPolicy, err := models.SharedNodeClusterDAO.FindClusterHTTPCCPolicy(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+	httpCCPolicyJSON, err := json.Marshal(httpCCPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindEnabledNodeClusterHTTPCCPolicyResponse{
+		HttpCCPolicyJSON: httpCCPolicyJSON,
+	}, nil
+}
+
+// UpdateNodeClusterHTTPCCPolicy 设置集群的HTTP CC策略
+func (this *NodeClusterService) UpdateNodeClusterHTTPCCPolicy(ctx context.Context, req *pb.UpdateNodeClusterHTTPCCPolicyRequest) (*pb.RPCSuccess, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var httpCCPolicy = nodeconfigs.NewHTTPCCPolicy()
+	err = json.Unmarshal(req.HttpCCPolicyJSON, httpCCPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = httpCCPolicy.Init()
+	if err != nil {
+		return nil, errors.New("validate http cc policy failed: " + err.Error())
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateClusterHTTPCCPolicy(tx, req.NodeClusterId, httpCCPolicy)
 	if err != nil {
 		return nil, err
 	}

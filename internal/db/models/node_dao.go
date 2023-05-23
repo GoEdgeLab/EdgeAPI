@@ -1085,6 +1085,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	var clusterIndex = 0
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
 	config.UAMPolicies = map[int64]*nodeconfigs.UAMPolicy{}
+	config.HTTPCCPolicies = map[int64]*nodeconfigs.HTTPCCPolicy{}
 	config.HTTPPagesPolicies = map[int64]*nodeconfigs.HTTPPagesPolicy{}
 	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
@@ -1179,7 +1180,25 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			config.UAMPolicies[clusterId] = uamPolicy
 		}
 
-		// HTTP Pages
+		// HTTP CC Policy
+		if IsNotNull(nodeCluster.Cc) {
+			var ccPolicy = nodeconfigs.NewHTTPCCPolicy()
+			err = json.Unmarshal(nodeCluster.Cc, ccPolicy)
+			if err != nil {
+				return nil, err
+			}
+
+			// 集成默认设置
+			for i := 0; i < len(serverconfigs.DefaultHTTPCCThresholds); i ++ {
+				if i < len(ccPolicy.Thresholds) {
+					ccPolicy.Thresholds[i].MergeIfEmpty(serverconfigs.DefaultHTTPCCThresholds[i])
+				}
+			}
+
+			config.HTTPCCPolicies[clusterId] = ccPolicy
+		}
+
+		// HTTP Pages Policy
 		if IsNotNull(nodeCluster.HttpPages) {
 			var httpPagesPolicy = nodeconfigs.NewHTTPPagesPolicy()
 			err = json.Unmarshal(nodeCluster.HttpPages, httpPagesPolicy)
