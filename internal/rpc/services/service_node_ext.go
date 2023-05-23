@@ -8,6 +8,18 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
+func (this *NodeService) FindNodeUAMPolicies(ctx context.Context, req *pb.FindNodeUAMPoliciesRequest) (*pb.FindNodeUAMPoliciesResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
+func (this *NodeService) FindNodeHTTPCCPolicies(ctx context.Context, req *pb.FindNodeHTTPCCPoliciesRequest) (*pb.FindNodeHTTPCCPoliciesResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
+func (this *NodeService) FindNodeHTTPPagesPolicies(ctx context.Context, req *pb.FindNodeHTTPPagesPoliciesRequest) (*pb.FindNodeHTTPPagesPoliciesResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
 func (this *NodeService) FindNodeScheduleInfo(ctx context.Context, req *pb.FindNodeScheduleInfoRequest) (*pb.FindNodeScheduleInfoResponse, error) {
 	return nil, this.NotImplementedYet()
 }
