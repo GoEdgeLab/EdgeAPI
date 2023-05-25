@@ -420,6 +420,12 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		}
 	}
 
+	// 证书
+	var pbCert *pb.SSLCert
+	if task.CertId > 0 {
+		pbCert = &pb.SSLCert{Id: int64(task.CertId)}
+	}
+
 	return &pb.FindEnabledACMETaskResponse{AcmeTask: &pb.ACMETask{
 		Id:          int64(task.Id),
 		IsOn:        task.IsOn,
@@ -431,5 +437,6 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		AcmeUser:    pbACMEUser,
 		AuthType:    task.AuthType,
 		AuthURL:     task.AuthURL,
+		SslCert:     pbCert,
 	}}, nil
 }
