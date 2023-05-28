@@ -5,8 +5,10 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
 )
@@ -181,4 +183,23 @@ func (this *HTTPCacheTaskKeyService) UpdateHTTPCacheTaskKeysStatus(ctx context.C
 	}
 
 	return this.Success()
+}
+
+// CountHTTPCacheTaskKeysWithDay 计算当天已经清理的Key数量
+func (this *HTTPCacheTaskKeyService) CountHTTPCacheTaskKeysWithDay(ctx context.Context, req *pb.CountHTTPCacheTaskKeysWithDayRequest) (*pb.RPCCountResponse, error) {
+	userId, err := this.ValidateUserNode(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if !regexputils.YYYYMMDD.MatchString(req.Day) {
+		return nil, errors.New("invalid format 'day'")
+	}
+
+	var tx = this.NullTx()
+	countKeys, err := models.SharedHTTPCacheTaskKeyDAO.CountUserTasksInDay(tx, userId, req.Day, req.KeyType)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(countKeys)
 }
