@@ -35,7 +35,8 @@ func (this *HTTPCacheTaskKeyService) ValidateHTTPCacheTaskKeys(ctx context.Conte
 	}
 
 	var pbFailResults = []*pb.ValidateHTTPCacheTaskKeysResponse_FailKey{}
-	var domainMap = map[string]*models.Server{} // domain name => *Server
+	var foundDomainMap = map[string]*models.Server{} // domain name => *Server
+	var missingDomainMap = map[string]bool{}         // domain name => true
 	for _, key := range req.Keys {
 		if len(key) == 0 {
 			pbFailResults = append(pbFailResults, &pb.ValidateHTTPCacheTaskKeysResponse_FailKey{
@@ -55,21 +56,31 @@ func (this *HTTPCacheTaskKeyService) ValidateHTTPCacheTaskKeys(ctx context.Conte
 			continue
 		}
 
+		// 是否不存在
+		if missingDomainMap[domain] {
+			pbFailResults = append(pbFailResults, &pb.ValidateHTTPCacheTaskKeysResponse_FailKey{
+				Key:        key,
+				ReasonCode: "requireServer",
+			})
+			continue
+		}
+
 		// 查询所在集群
-		server, ok := domainMap[domain]
+		server, ok := foundDomainMap[domain]
 		if !ok {
-			server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, domain)
+			server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, userId, domain)
 			if err != nil {
 				return nil, err
 			}
 			if server == nil {
+				missingDomainMap[domain] = true
 				pbFailResults = append(pbFailResults, &pb.ValidateHTTPCacheTaskKeysResponse_FailKey{
 					Key:        key,
 					ReasonCode: "requireServer",
 				})
 				continue
 			}
-			domainMap[domain] = server
+			foundDomainMap[domain] = server
 		}
 
 		// 检查用户

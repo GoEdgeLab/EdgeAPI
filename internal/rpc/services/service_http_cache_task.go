@@ -131,7 +131,7 @@ func (this *HTTPCacheTaskService) CreateHTTPCacheTask(ctx context.Context, req *
 		// 查询所在集群
 		server, ok := domainMap[domain]
 		if !ok {
-			server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, domain)
+			server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, userId, domain)
 			if err != nil {
 				return nil, err
 			}

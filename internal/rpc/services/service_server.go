@@ -2010,7 +2010,7 @@ func (this *ServerService) PurgeServerCache(ctx context.Context, req *pb.PurgeSe
 			// 查询所在集群
 			server, ok := domainMap[domain]
 			if !ok {
-				server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, domain)
+				server, err = models.SharedServerDAO.FindEnabledServerWithDomain(tx, 0, domain)
 				if err != nil {
 					return nil, err
 				}

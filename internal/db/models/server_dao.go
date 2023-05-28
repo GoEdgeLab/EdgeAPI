@@ -1594,12 +1594,16 @@ func (this *ServerDAO) FindAllEnabledServersWithDomain(tx *dbs.Tx, domain string
 }
 
 // FindEnabledServerWithDomain 根据域名查找服务集群ID
-func (this *ServerDAO) FindEnabledServerWithDomain(tx *dbs.Tx, domain string) (server *Server, err error) {
+func (this *ServerDAO) FindEnabledServerWithDomain(tx *dbs.Tx, userId int64, domain string) (server *Server, err error) {
 	if len(domain) == 0 {
 		return
 	}
 
-	one, err := this.Query(tx).
+	var query = this.Query(tx)
+	if userId > 0 {
+		query.Attr("userId", userId)
+	}
+	one, err := query.
 		State(ServerStateEnabled).
 		Where("JSON_CONTAINS(plainServerNames, :domain)").
 		Param("domain", strconv.Quote(domain)).
@@ -1618,7 +1622,11 @@ func (this *ServerDAO) FindEnabledServerWithDomain(tx *dbs.Tx, domain string) (s
 	var dotIndex = strings.Index(domain, ".")
 	if dotIndex > 0 {
 		var wildcardDomain = "*." + domain[dotIndex+1:]
-		one, err = this.Query(tx).
+		var wildcardQuery = this.Query(tx)
+		if userId > 0 {
+			wildcardQuery.Attr("userId", userId)
+		}
+		one, err = wildcardQuery.
 			State(ServerStateEnabled).
 			Where("JSON_CONTAINS(plainServerNames, :domain)").
 			Param("domain", strconv.Quote(wildcardDomain)).
