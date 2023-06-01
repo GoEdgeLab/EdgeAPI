@@ -1512,31 +1512,6 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPPagesPolicy(ctx context.Con
 	return this.Success()
 }
 
-// FindNodeClusterHTTP3Policy 获取集群的HTTP3设置
-func (this *NodeClusterService) FindNodeClusterHTTP3Policy(ctx context.Context, req *pb.FindNodeClusterHTTP3PolicyRequest) (*pb.FindNodeClusterHTTP3PolicyResponse, error) {
-	if !teaconst.IsPlus {
-		return nil, this.NotImplementedYet()
-	}
-
-	_, _, err := this.ValidateAdminAndUser(ctx, false)
-	if err != nil {
-		return nil, err
-	}
-
-	var tx = this.NullTx()
-	http3Policy, err := models.SharedNodeClusterDAO.FindClusterHTTP3Policy(tx, req.NodeClusterId, nil)
-	if err != nil {
-		return nil, err
-	}
-	http3PolicyJSON, err := json.Marshal(http3Policy)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.FindNodeClusterHTTP3PolicyResponse{
-		Http3PolicyJSON: http3PolicyJSON,
-	}, nil
-}
-
 // UpdateNodeClusterHTTP3Policy 修改集群的HTTP3设置
 func (this *NodeClusterService) UpdateNodeClusterHTTP3Policy(ctx context.Context, req *pb.UpdateNodeClusterHTTP3PolicyRequest) (*pb.RPCSuccess, error) {
 	if !teaconst.IsPlus {
