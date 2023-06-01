@@ -100,7 +100,8 @@ func (this *SSLPolicyDAO) ComposePolicyConfig(tx *dbs.Tx, policyId int64, ignore
 	config.Id = int64(policy.Id)
 	config.IsOn = policy.IsOn
 	config.ClientAuthType = int(policy.ClientAuthType)
-	config.HTTP2Enabled = policy.Http2Enabled == 1
+	config.HTTP2Enabled = policy.Http2Enabled
+	config.HTTP3Enabled = policy.Http3Enabled
 	config.MinVersion = policy.MinVersion
 
 	// certs
@@ -200,7 +201,7 @@ func (this *SSLPolicyDAO) FindAllEnabledPolicyIdsWithCertId(tx *dbs.Tx, certId i
 }
 
 // CreatePolicy 创建Policy
-func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
+func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, http2Enabled bool, http3Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) (int64, error) {
 	var op = NewSSLPolicyOperator()
 	op.State = SSLPolicyStateEnabled
 	op.IsOn = true
@@ -208,6 +209,7 @@ func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, 
 	op.UserId = userId
 
 	op.Http2Enabled = http2Enabled
+	op.Http3Enabled = http3Enabled
 	op.MinVersion = minVersion
 
 	if len(certsJSON) > 0 {
@@ -240,7 +242,7 @@ func (this *SSLPolicyDAO) CreatePolicy(tx *dbs.Tx, adminId int64, userId int64, 
 }
 
 // UpdatePolicy 修改Policy
-func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
+func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled bool, http3Enabled bool, minVersion string, certsJSON []byte, hstsJSON []byte, ocspIsOn bool, clientAuthType int32, clientCACertsJSON []byte, cipherSuitesIsOn bool, cipherSuites []string) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -248,6 +250,7 @@ func (this *SSLPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, http2Enabled 
 	var op = NewSSLPolicyOperator()
 	op.Id = policyId
 	op.Http2Enabled = http2Enabled
+	op.Http3Enabled = http3Enabled
 	op.MinVersion = minVersion
 
 	if len(certsJSON) > 0 {

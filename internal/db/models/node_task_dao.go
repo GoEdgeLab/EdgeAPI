@@ -27,6 +27,7 @@ const (
 	NodeTaskTypeUAMPolicyChanged          NodeTaskType = "uamPolicyChanged"          // UAM策略变化
 	NodeTaskTypeHTTPPagesPolicyChanged    NodeTaskType = "httpPagesPolicyChanged"    // 自定义页面变化
 	NodeTaskTypeHTTPCCPolicyChanged       NodeTaskType = "httpCCPolicyChanged"       // CC策略变化
+	NodeTaskTypeHTTP3PolicyChanged        NodeTaskType = "http3PolicyChanged"        // HTTP3策略变化
 	NodeTaskTypeUpdatingServers           NodeTaskType = "updatingServers"           // 更新一组服务
 
 	// NS相关

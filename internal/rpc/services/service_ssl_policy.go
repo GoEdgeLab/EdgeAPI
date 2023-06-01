@@ -44,7 +44,7 @@ func (this *SSLPolicyService) CreateSSLPolicy(ctx context.Context, req *pb.Creat
 		// TODO
 	}
 
-	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(tx, adminId, userId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.OcspIsOn, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	policyId, err := models.SharedSSLPolicyDAO.CreatePolicy(tx, adminId, userId, req.Http2Enabled, req.Http3Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.OcspIsOn, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -63,13 +63,13 @@ func (this *SSLPolicyService) UpdateSSLPolicy(ctx context.Context, req *pb.Updat
 	var tx = this.NullTx()
 
 	if userId > 0 {
-		err := models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, req.SslPolicyId)
+		err = models.SharedSSLPolicyDAO.CheckUserPolicy(tx, userId, req.SslPolicyId)
 		if err != nil {
 			return nil, errors.New("check ssl policy failed: " + err.Error())
 		}
 	}
 
-	err = models.SharedSSLPolicyDAO.UpdatePolicy(tx, req.SslPolicyId, req.Http2Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.OcspIsOn, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
+	err = models.SharedSSLPolicyDAO.UpdatePolicy(tx, req.SslPolicyId, req.Http2Enabled, req.Http3Enabled, req.MinVersion, req.SslCertsJSON, req.HstsJSON, req.OcspIsOn, req.ClientAuthType, req.ClientCACertsJSON, req.CipherSuitesIsOn, req.CipherSuites)
 	if err != nil {
 		return nil, err
 	}

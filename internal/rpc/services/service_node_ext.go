@@ -16,6 +16,10 @@ func (this *NodeService) FindNodeHTTPCCPolicies(ctx context.Context, req *pb.Fin
 	return nil, this.NotImplementedYet()
 }
 
+func (this *NodeService) FindNodeHTTP3Policies(ctx context.Context, req *pb.FindNodeHTTP3PoliciesRequest) (*pb.FindNodeHTTP3PoliciesResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
 func (this *NodeService) FindNodeHTTPPagesPolicies(ctx context.Context, req *pb.FindNodeHTTPPagesPoliciesRequest) (*pb.FindNodeHTTPPagesPoliciesResponse, error) {
 	return nil, this.NotImplementedYet()
 }

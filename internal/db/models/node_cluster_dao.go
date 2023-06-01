@@ -996,7 +996,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -1184,6 +1184,65 @@ func (this *NodeClusterDAO) FindClusterHTTPCCPolicy(tx *dbs.Tx, clusterId int64,
 	return policy, nil
 }
 
+// UpdateClusterHTTP3Policy 修改HTTP3策略设置
+func (this *NodeClusterDAO) UpdateClusterHTTP3Policy(tx *dbs.Tx, clusterId int64, http3Policy *nodeconfigs.HTTP3Policy) error {
+	if http3Policy == nil {
+		err := this.Query(tx).
+			Pk(clusterId).
+			Set("http3", dbs.SQL("null")).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+
+		return this.NotifyHTTP3Update(tx, clusterId)
+	}
+
+	http3PolicyJSON, err := json.Marshal(http3Policy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("http3", http3PolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyHTTP3Update(tx, clusterId)
+}
+
+// FindClusterHTTP3Policy 查询HTTP3策略设置
+func (this *NodeClusterDAO) FindClusterHTTP3Policy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.HTTP3Policy, error) {
+	var cacheKey = this.Table + ":FindClusterHTTP3Policy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.HTTP3Policy), nil
+		}
+	}
+
+	http3PolicyJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("http3").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(http3PolicyJSON) {
+		return nodeconfigs.NewHTTP3Policy(), nil
+	}
+
+	var policy = nodeconfigs.NewHTTP3Policy()
+	err = json.Unmarshal(http3PolicyJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	return policy, nil
+}
+
 // UpdateClusterHTTPPagesPolicy 修改自定义页面设置
 func (this *NodeClusterDAO) UpdateClusterHTTPPagesPolicy(tx *dbs.Tx, clusterId int64, httpPagesPolicy *nodeconfigs.HTTPPagesPolicy) error {
 	if httpPagesPolicy == nil {
@@ -1360,6 +1419,11 @@ func (this *NodeClusterDAO) NotifyUAMUpdate(tx *dbs.Tx, clusterId int64) error {
 // NotifyHTTPCCUpdate 通知HTTP CC更新
 func (this *NodeClusterDAO) NotifyHTTPCCUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTPCCPolicyChanged)
+}
+
+// NotifyHTTP3Update 通知HTTP3更新
+func (this *NodeClusterDAO) NotifyHTTP3Update(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTP3PolicyChanged)
 }
 
 // NotifyHTTPPagesPolicyUpdate 通知HTTP Pages更新

@@ -1180,6 +1180,16 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		result.HasHTTPPagesPolicy = pagesPolicy.IsOn && len(pagesPolicy.Pages) > 0
 	}
 
+	// HTTP/3
+	if models.IsNotNull(cluster.Http3) {
+		var http3Policy = nodeconfigs.NewHTTP3Policy()
+		err = json.Unmarshal(cluster.Http3, http3Policy)
+		if err != nil {
+			return nil, err
+		}
+		result.Http3IsOn = http3Policy.IsOn
+	}
+
 	return result, nil
 }
 
@@ -1300,7 +1310,6 @@ func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, 
 	}
 	return this.Success()
 }
-
 
 // FindEnabledNodeClusterHTTPCCPolicy 读取集群HTTP CC策略
 func (this *NodeClusterService) FindEnabledNodeClusterHTTPCCPolicy(ctx context.Context, req *pb.FindEnabledNodeClusterHTTPCCPolicyRequest) (*pb.FindEnabledNodeClusterHTTPCCPolicyResponse, error) {
@@ -1500,5 +1509,60 @@ func (this *NodeClusterService) UpdateNodeClusterHTTPPagesPolicy(ctx context.Con
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// FindNodeClusterHTTP3Policy 获取集群的HTTP3设置
+func (this *NodeClusterService) FindNodeClusterHTTP3Policy(ctx context.Context, req *pb.FindNodeClusterHTTP3PolicyRequest) (*pb.FindNodeClusterHTTP3PolicyResponse, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	http3Policy, err := models.SharedNodeClusterDAO.FindClusterHTTP3Policy(tx, req.NodeClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+	http3PolicyJSON, err := json.Marshal(http3Policy)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.FindNodeClusterHTTP3PolicyResponse{
+		Http3PolicyJSON: http3PolicyJSON,
+	}, nil
+}
+
+// UpdateNodeClusterHTTP3Policy 修改集群的HTTP3设置
+func (this *NodeClusterService) UpdateNodeClusterHTTP3Policy(ctx context.Context, req *pb.UpdateNodeClusterHTTP3PolicyRequest) (*pb.RPCSuccess, error) {
+	if !teaconst.IsPlus {
+		return nil, this.NotImplementedYet()
+	}
+
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var http3Policy = nodeconfigs.NewHTTP3Policy()
+	err = json.Unmarshal(req.Http3PolicyJSON, http3Policy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = http3Policy.Init()
+	if err != nil {
+		return nil, errors.New("validate http3 policy failed: " + err.Error())
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeClusterDAO.UpdateClusterHTTP3Policy(tx, req.NodeClusterId, http3Policy)
+	if err != nil {
+		return nil, err
+	}
 	return this.Success()
 }

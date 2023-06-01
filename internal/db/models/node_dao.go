@@ -1086,6 +1086,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	config.WebPImagePolicies = map[int64]*nodeconfigs.WebPImagePolicy{}
 	config.UAMPolicies = map[int64]*nodeconfigs.UAMPolicy{}
 	config.HTTPCCPolicies = map[int64]*nodeconfigs.HTTPCCPolicy{}
+	config.HTTP3Policies = map[int64]*nodeconfigs.HTTP3Policy{}
 	config.HTTPPagesPolicies = map[int64]*nodeconfigs.HTTPPagesPolicy{}
 	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
@@ -1189,13 +1190,23 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			}
 
 			// 集成默认设置
-			for i := 0; i < len(serverconfigs.DefaultHTTPCCThresholds); i ++ {
+			for i := 0; i < len(serverconfigs.DefaultHTTPCCThresholds); i++ {
 				if i < len(ccPolicy.Thresholds) {
 					ccPolicy.Thresholds[i].MergeIfEmpty(serverconfigs.DefaultHTTPCCThresholds[i])
 				}
 			}
 
 			config.HTTPCCPolicies[clusterId] = ccPolicy
+		}
+
+		// HTTP3 Policy
+		if IsNotNull(nodeCluster.Http3) {
+			var http3Policy = nodeconfigs.NewHTTP3Policy()
+			err = json.Unmarshal(nodeCluster.Http3, http3Policy)
+			if err != nil {
+				return nil, err
+			}
+			config.HTTP3Policies[clusterId] = http3Policy
 		}
 
 		// HTTP Pages Policy
