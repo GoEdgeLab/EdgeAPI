@@ -260,7 +260,7 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 func (this *HealthCheckExecutor) runNodeOnce(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult) error {
 	// 支持IPv6
 	if utils.IsIPv6(result.NodeAddr) {
-		result.NodeAddr = "[" + result.NodeAddr + "]"
+		result.NodeAddr = configutils.QuoteIP(result.NodeAddr)
 	}
 
 	if len(healthCheckConfig.URL) == 0 {
