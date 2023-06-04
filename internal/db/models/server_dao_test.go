@@ -229,7 +229,7 @@ func TestServerDAO_FindEnabledServerWithDomain(t *testing.T) {
 
 	for _, domain := range []string{"a", "a.com", "teaos.cn", "www.teaos.cn", "cdn.teaos.cn", "google.com"} {
 		var before = time.Now()
-		server, err := dao.FindEnabledServerWithDomain(tx, domain)
+		server, err := dao.FindEnabledServerWithDomain(tx, 0, domain)
 		var costMs = time.Since(before).Seconds() * 1000
 		if err != nil {
 			t.Fatal(err)
