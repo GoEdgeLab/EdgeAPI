@@ -132,7 +132,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 		op.Outbound = outboundJSON
 	}
 
-	if userId <= 0 && serverGroupId <=0 && serverId <= 0 {
+	if userId <= 0 && serverGroupId <= 0 && serverId <= 0 {
 		// synFlood
 		var synFloodConfig = firewallconfigs.DefaultSYNFloodConfig()
 		synFloodJSON, err := json.Marshal(synFloodConfig)
@@ -611,6 +611,10 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyServerId(tx *dbs.Tx, poli
 
 // FindFirewallPolicyIdsWithServerId 查找服务独立关联的策略IDs
 func (this *HTTPFirewallPolicyDAO) FindFirewallPolicyIdsWithServerId(tx *dbs.Tx, serverId int64) ([]int64, error) {
+	if serverId <= 0 {
+		return nil, nil
+	}
+
 	var result = []int64{}
 	ones, err := this.Query(tx).
 		Attr("serverId", serverId).

@@ -354,6 +354,9 @@ func (this *ServerDAO) UpdateServerBasic(tx *dbs.Tx, serverId int64, name string
 
 // UpdateServerGroupIds 修改服务所在分组
 func (this *ServerDAO) UpdateServerGroupIds(tx *dbs.Tx, serverId int64, groupIds []int64) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
 	if groupIds == nil {
 		groupIds = []int64{}
 	}
@@ -390,6 +393,10 @@ func (this *ServerDAO) UpdateUserServerBasic(tx *dbs.Tx, serverId int64, name st
 
 // UpdateServerIsOn 修复服务是否启用
 func (this *ServerDAO) UpdateServerIsOn(tx *dbs.Tx, serverId int64, isOn bool) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+
 	_, err := this.Query(tx).
 		Pk(serverId).
 		Set("isOn", isOn).
@@ -2153,6 +2160,10 @@ func (this *ServerDAO) FindFirstHTTPOrHTTPSPortWithClusterId(tx *dbs.Tx, cluster
 
 // NotifyServerPortsUpdate 通知服务端口变化
 func (this *ServerDAO) NotifyServerPortsUpdate(tx *dbs.Tx, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	one, err := this.Query(tx).
 		Pk(serverId).
 		Result("tcp", "tls", "udp", "http", "https").
@@ -2480,6 +2491,10 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCo
 
 // IncreaseServerTotalTraffic 增加服务的总流量
 func (this *ServerDAO) IncreaseServerTotalTraffic(tx *dbs.Tx, serverId int64, bytes int64) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+
 	var gb = float64(bytes) / (1 << 30)
 	var day = timeutil.Format("Ymd")
 	var month = timeutil.Format("Ym")
@@ -2539,6 +2554,10 @@ func (this *ServerDAO) UpdateServersClusterIdWithPlanId(tx *dbs.Tx, planId int64
 
 // UpdateServerUserPlanId 设置服务所属套餐
 func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPlanId int64) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+
 	oldClusterId, err := this.Query(tx).
 		Pk(serverId).
 		Result("clusterId").
@@ -2646,6 +2665,10 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 
 // FindServerLastUserPlanIdAndUserId 查找最后使用的套餐
 func (this *ServerDAO) FindServerLastUserPlanIdAndUserId(tx *dbs.Tx, serverId int64) (userPlanId int64, userId int64, err error) {
+	if serverId <= 0 {
+		return 0, 0, errors.New("serverId should not be smaller than 0")
+	}
+
 	one, err := this.Query(tx).
 		Pk(serverId).
 		Result("lastUserPlanId", "userId").
@@ -2659,6 +2682,10 @@ func (this *ServerDAO) FindServerLastUserPlanIdAndUserId(tx *dbs.Tx, serverId in
 
 // UpdateServerUAM 开启UAM
 func (this *ServerDAO) UpdateServerUAM(tx *dbs.Tx, serverId int64, uamConfig *serverconfigs.UAMConfig) error {
+	if serverId <= 0 {
+		return errors.New("serverId should not be smaller than 0")
+	}
+
 	if uamConfig == nil {
 		return nil
 	}
@@ -2832,6 +2859,10 @@ func (this *ServerDAO) FindEnabledServersWithIds(tx *dbs.Tx, serverIds []int64) 
 
 // NotifyUpdate 同步服务所在的集群
 func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	// 创建任务
 	clusterId, err := this.FindServerClusterId(tx, serverId)
 	if err != nil {
@@ -2845,6 +2876,9 @@ func (this *ServerDAO) NotifyUpdate(tx *dbs.Tx, serverId int64) error {
 
 // NotifyClusterUpdate 同步指定的集群
 func (this *ServerDAO) NotifyClusterUpdate(tx *dbs.Tx, clusterId, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
 	if clusterId <= 0 {
 		return nil
 	}
@@ -2853,6 +2887,10 @@ func (this *ServerDAO) NotifyClusterUpdate(tx *dbs.Tx, clusterId, serverId int64
 
 // NotifyDNSUpdate 通知当前集群DNS更新
 func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	clusterId, err := this.Query(tx).
 		Pk(serverId).
 		Result("clusterId").
@@ -2878,6 +2916,10 @@ func (this *ServerDAO) NotifyDNSUpdate(tx *dbs.Tx, serverId int64) error {
 
 // NotifyClusterDNSUpdate 通知某个集群中的DNS更新
 func (this *ServerDAO) NotifyClusterDNSUpdate(tx *dbs.Tx, clusterId int64, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	dnsInfo, err := SharedNodeClusterDAO.FindClusterDNSInfo(tx, clusterId, nil)
 	if err != nil {
 		return err
@@ -2893,6 +2935,10 @@ func (this *ServerDAO) NotifyClusterDNSUpdate(tx *dbs.Tx, clusterId int64, serve
 
 // NotifyDisable 通知禁用
 func (this *ServerDAO) NotifyDisable(tx *dbs.Tx, serverId int64) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	// 禁用缓存策略相关的内容
 	policyIds, err := SharedHTTPFirewallPolicyDAO.FindFirewallPolicyIdsWithServerId(tx, serverId)
 	if err != nil {
