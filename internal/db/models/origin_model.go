@@ -11,6 +11,7 @@ type Origin struct {
 	Name               string   `field:"name"`               // 名称
 	Version            uint32   `field:"version"`            // 版本
 	Addr               dbs.JSON `field:"addr"`               // 地址
+	Oss                dbs.JSON `field:"oss"`                // OSS配置
 	Description        string   `field:"description"`        // 描述
 	Code               string   `field:"code"`               // 代号
 	Weight             uint32   `field:"weight"`             // 权重
@@ -34,33 +35,34 @@ type Origin struct {
 }
 
 type OriginOperator struct {
-	Id                 interface{} // ID
-	AdminId            interface{} // 管理员ID
-	UserId             interface{} // 用户ID
-	IsOn               interface{} // 是否启用
-	Name               interface{} // 名称
-	Version            interface{} // 版本
-	Addr               interface{} // 地址
-	Description        interface{} // 描述
-	Code               interface{} // 代号
-	Weight             interface{} // 权重
-	ConnTimeout        interface{} // 连接超时
-	ReadTimeout        interface{} // 读超时
-	IdleTimeout        interface{} // 空闲连接超时
-	MaxFails           interface{} // 最多失败次数
-	MaxConns           interface{} // 最大并发连接数
-	MaxIdleConns       interface{} // 最多空闲连接数
-	HttpRequestURI     interface{} // 转发后的请求URI
-	HttpRequestHeader  interface{} // 请求Header配置
-	HttpResponseHeader interface{} // 响应Header配置
-	Host               interface{} // 自定义主机名
-	HealthCheck        interface{} // 健康检查设置
-	Cert               interface{} // 证书设置
-	Ftp                interface{} // FTP相关设置
-	CreatedAt          interface{} // 创建时间
-	Domains            interface{} // 所属域名
-	FollowPort         interface{} // 端口跟随
-	State              interface{} // 状态
+	Id                 any // ID
+	AdminId            any // 管理员ID
+	UserId             any // 用户ID
+	IsOn               any // 是否启用
+	Name               any // 名称
+	Version            any // 版本
+	Addr               any // 地址
+	Oss                any // OSS配置
+	Description        any // 描述
+	Code               any // 代号
+	Weight             any // 权重
+	ConnTimeout        any // 连接超时
+	ReadTimeout        any // 读超时
+	IdleTimeout        any // 空闲连接超时
+	MaxFails           any // 最多失败次数
+	MaxConns           any // 最大并发连接数
+	MaxIdleConns       any // 最多空闲连接数
+	HttpRequestURI     any // 转发后的请求URI
+	HttpRequestHeader  any // 请求Header配置
+	HttpResponseHeader any // 响应Header配置
+	Host               any // 自定义主机名
+	HealthCheck        any // 健康检查设置
+	Cert               any // 证书设置
+	Ftp                any // FTP相关设置
+	CreatedAt          any // 创建时间
+	Domains            any // 所属域名
+	FollowPort         any // 端口跟随
+	State              any // 状态
 }
 
 func NewOriginOperator() *OriginOperator {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ossconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -91,7 +92,8 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 	adminId int64,
 	userId int64,
 	name string,
-	addrJSON string,
+	addrJSON []byte,
+	ossConfig *ossconfigs.OSSConfig,
 	description string,
 	weight int32, isOn bool,
 	connTimeout *shared.TimeDuration,
@@ -141,7 +143,18 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 		op.MaxIdleConns = 0
 	}
 
-	op.Addr = addrJSON
+	if len(addrJSON) > 0 {
+		op.Addr = addrJSON
+	}
+
+	if ossConfig != nil {
+		ossConfigJSON, err := json.Marshal(ossConfig)
+		if err != nil {
+			return 0, err
+		}
+		op.Oss = ossConfigJSON
+	}
+
 	op.Description = description
 	if weight < 0 {
 		weight = 0
@@ -182,7 +195,8 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	originId int64,
 	name string,
-	addrJSON string,
+	addrJSON []byte,
+	ossConfig *ossconfigs.OSSConfig,
 	description string,
 	weight int32,
 	isOn bool,
@@ -201,7 +215,17 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	var op = NewOriginOperator()
 	op.Id = originId
 	op.Name = name
+
 	op.Addr = addrJSON
+
+	if ossConfig != nil {
+		ossConfigJSON, err := json.Marshal(ossConfig)
+		if err != nil {
+			return err
+		}
+		op.Oss = ossConfigJSON
+	}
+
 	op.Description = description
 	if weight < 0 {
 		weight = 0
@@ -369,6 +393,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *
 		FollowPort:   origin.FollowPort,
 	}
 
+	// addr
 	if IsNotNull(origin.Addr) {
 		var addr = &serverconfigs.NetworkAddressConfig{}
 		err = json.Unmarshal(origin.Addr, addr)
@@ -376,6 +401,16 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *
 			return nil, err
 		}
 		config.Addr = addr
+	}
+
+	// oss
+	if IsNotNull(origin.Oss) {
+		var ossConfig = ossconfigs.NewOSSConfig()
+		err = json.Unmarshal(origin.Oss, ossConfig)
+		if err != nil {
+			return nil, err
+		}
+		config.OSS = ossConfig
 	}
 
 	if IsNotNull(origin.ConnTimeout) {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ossconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
 	"github.com/iwind/TeaGo/maps"
@@ -23,13 +24,24 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		return nil, err
 	}
 
+	// 源站地址设置
 	if req.Addr == nil {
 		return nil, errors.New("'addr' can not be nil")
 	}
-	addrMap := maps.Map{
+	var addrMap = maps.Map{
 		"protocol":  req.Addr.Protocol,
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
+	}
+
+	// OSS设置
+	var ossConfig *ossconfigs.OSSConfig
+	if len(req.OssJSON) > 0 {
+		ossConfig = ossconfigs.NewOSSConfig()
+		err = json.Unmarshal(req.OssJSON, ossConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var tx = this.NullTx()
@@ -72,7 +84,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		}
 	}
 
-	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
+	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +107,8 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 			return nil, err
 		}
 	}
+
+	// 源站地址设置
 	if req.Addr == nil {
 		return nil, errors.New("'addr' can not be nil")
 	}
@@ -102,6 +116,16 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		"protocol":  req.Addr.Protocol,
 		"portRange": req.Addr.PortRange,
 		"host":      req.Addr.Host,
+	}
+
+	// OSS设置
+	var ossConfig *ossconfigs.OSSConfig
+	if len(req.OssJSON) > 0 {
+		ossConfig = ossconfigs.NewOSSConfig()
+		err = json.Unmarshal(req.OssJSON, ossConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 校验参数
@@ -142,7 +166,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		}
 	}
 
-	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, string(addrMap.AsJSON()), req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
+	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
 	if err != nil {
 		return nil, err
 	}
