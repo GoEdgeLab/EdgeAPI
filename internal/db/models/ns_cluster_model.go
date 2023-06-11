@@ -15,6 +15,7 @@ type NSCluster struct {
 	Tcp             dbs.JSON `field:"tcp"`             // TCP设置
 	Tls             dbs.JSON `field:"tls"`             // TLS设置
 	Udp             dbs.JSON `field:"udp"`             // UDP设置
+	Doh             dbs.JSON `field:"doh"`             // DoH设置
 	DdosProtection  dbs.JSON `field:"ddosProtection"`  // DDoS防护设置
 	Hosts           dbs.JSON `field:"hosts"`           // DNS主机地址
 	Soa             dbs.JSON `field:"soa"`             // SOA配置
@@ -39,6 +40,7 @@ type NSClusterOperator struct {
 	Tcp             any // TCP设置
 	Tls             any // TLS设置
 	Udp             any // UDP设置
+	Doh             any // DoH设置
 	DdosProtection  any // DDoS防护设置
 	Hosts           any // DNS主机地址
 	Soa             any // SOA配置
