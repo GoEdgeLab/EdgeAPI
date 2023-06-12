@@ -1484,6 +1484,7 @@ func (this *NodeDAO) FindAllNotInstalledNodesWithClusterId(tx *dbs.Tx, clusterId
 func (this *NodeDAO) CountAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId int64, os string, arch string, version string) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
+		Attr("isOn", true).
 		Attr("clusterId", clusterId).
 		Where("status IS NOT NULL").
 		Where("JSON_EXTRACT(status, '$.os')=:os").
@@ -1517,6 +1518,7 @@ func (this *NodeDAO) FindAllLowerVersionNodesWithClusterId(tx *dbs.Tx, clusterId
 func (this *NodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
+		Attr("isOn", true).
 		Where("clusterId IN (SELECT id FROM "+SharedNodeClusterDAO.Table+" WHERE state=1)").
 		Where("status IS NOT NULL").
 		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").

@@ -210,6 +210,7 @@ func (this *AuthorityNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, nodeSta
 func (this *AuthorityNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
 		State(AuthorityNodeStateEnabled).
+		Attr("isOn", true).
 		Where("status IS NOT NULL").
 		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("version", utils.VersionToLong(version)).

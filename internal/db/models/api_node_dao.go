@@ -335,6 +335,7 @@ func (this *APINodeDAO) UpdateAPINodeStatus(tx *dbs.Tx, apiNodeId int64, statusJ
 func (this *APINodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
 		State(APINodeStateEnabled).
+		Attr("isOn", true).
 		Where("status IS NOT NULL").
 		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("version", utils.VersionToLong(version)).

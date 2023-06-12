@@ -207,6 +207,7 @@ func (this *MonitorNodeDAO) UpdateNodeStatus(tx *dbs.Tx, nodeId int64, statusJSO
 func (this *MonitorNodeDAO) CountAllLowerVersionNodes(tx *dbs.Tx, version string) (int64, error) {
 	return this.Query(tx).
 		State(MonitorNodeStateEnabled).
+		Attr("isOn", true).
 		Where("status IS NOT NULL").
 		Where("(JSON_EXTRACT(status, '$.buildVersionCode') IS NULL OR JSON_EXTRACT(status, '$.buildVersionCode')<:version)").
 		Param("version", utils.VersionToLong(version)).
