@@ -295,6 +295,7 @@ func (this *NodeDAO) CountAllEnabledNodes(tx *dbs.Tx) (int64, error) {
 func (this *NodeDAO) CountAllEnabledOfflineNodes(tx *dbs.Tx) (int64, error) {
 	return this.Query(tx).
 		State(NodeStateEnabled).
+		Attr("isOn", true).
 		Where("clusterId IN (SELECT id FROM "+SharedNodeClusterDAO.Table+" WHERE state=:clusterState)").
 		Param("clusterState", NodeClusterStateEnabled).
 		Where("(status IS NULL OR NOT JSON_EXTRACT(status, '$.isActive') OR UNIX_TIMESTAMP()-JSON_EXTRACT(status, '$.updatedAt')>60)").
