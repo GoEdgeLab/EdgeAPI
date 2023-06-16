@@ -16,7 +16,9 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type BaseService struct {
@@ -229,7 +231,7 @@ func (this *BaseService) PermissionError() error {
 }
 
 func (this *BaseService) NotImplementedYet() error {
-	return errors.New("not implemented yet")
+	return status.Error(codes.Unimplemented, "not implemented yet")
 }
 
 // NullTx 空的数据库事务

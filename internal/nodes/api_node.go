@@ -28,6 +28,7 @@ import (
 	"github.com/iwind/gosock/pkg/gosock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v3"
 	"log"
 	"net"
@@ -832,7 +833,12 @@ func (this *APINode) unaryInterceptor(ctx context.Context, req any, info *grpc.U
 	}
 	result, err := handler(ctx, req)
 	if err != nil {
-		err = errors.New("'" + info.FullMethod + "()' says: " + err.Error())
+		statusErr, ok := status.FromError(err)
+		if ok {
+			err = status.Error(statusErr.Code(), "'" + info.FullMethod + "()' says: " + err.Error())
+		} else {
+			err = errors.New("'" + info.FullMethod + "()' says: " + err.Error())
+		}
 	}
 	return result, err
 }
