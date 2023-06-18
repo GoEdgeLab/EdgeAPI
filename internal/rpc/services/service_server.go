@@ -231,10 +231,21 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 	}
 	var serverNames = []*serverconfigs.ServerNameConfig{}
 	for _, domain := range req.Domains {
+		domain = strings.ToLower(domain)
 		if !domainutils.ValidateDomainFormat(domain) {
 			return nil, errors.New("invalid domain format '" + domain + "'")
 		}
-		serverNames = append(serverNames, &serverconfigs.ServerNameConfig{Name: strings.ToLower(domain)})
+
+		// 检查域名是否已存在
+		existServerName, err := models.SharedServerDAO.ExistServerNameInCluster(tx, req.NodeClusterId, domain, 0, true)
+		if err != nil {
+			return nil, err
+		}
+		if existServerName {
+			return nil, errors.New("domain '" + domain + "' already created by other server")
+		}
+
+		serverNames = append(serverNames, &serverconfigs.ServerNameConfig{Name: domain})
 	}
 	serverNamesJSON, err := json.Marshal(serverNames)
 	if err != nil {
@@ -441,6 +452,239 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 	}
 
 	return &pb.CreateBasicHTTPServerResponse{ServerId: serverId}, nil
+}
+
+// CreateBasicTCPServer 快速创建基本的TCP网站
+func (this *ServerService) CreateBasicTCPServer(ctx context.Context, req *pb.CreateBasicTCPServerRequest) (*pb.CreateBasicTCPServerResponse, error) {
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// 集群
+	var tx = this.NullTx()
+	if userId > 0 {
+		req.UserId = userId
+
+		nodeClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, userId)
+		if err != nil {
+			return nil, err
+		}
+		req.NodeClusterId = nodeClusterId
+	} else if adminId > 0 && req.UserId > 0 && req.NodeClusterId <= 0 {
+		// check user
+		existUser, err := models.SharedUserDAO.Exist(tx, req.UserId)
+		if err != nil {
+			return nil, err
+		}
+		if !existUser {
+			return nil, errors.New("user id '" + types.String(req.UserId) + "' not found")
+		}
+
+		nodeClusterId, err := models.SharedUserDAO.FindUserClusterId(tx, userId)
+		if err != nil {
+			return nil, err
+		}
+		req.NodeClusterId = nodeClusterId
+	}
+
+	if req.NodeClusterId <= 0 {
+		return nil, errors.New("invalid 'nodeClusterId'")
+	}
+
+	// 检查用户权限
+	if userId > 0 {
+		features, err := models.SharedUserDAO.FindUserFeatures(tx, userId)
+		if err != nil {
+			return nil, err
+		}
+		var canSpecifyTCPPort = false
+		for _, feature := range features {
+			if feature.Code == "server.tcp.port" {
+				canSpecifyTCPPort = true
+				break
+			}
+		}
+		if !canSpecifyTCPPort {
+			if len(req.TcpPorts) > 0 || len(req.TlsPorts) > 0 {
+				return nil, errors.New("no permission to specify tcp/tls ports")
+			}
+		}
+	}
+
+	if len(req.TcpPorts) == 0 || len(req.TlsPorts) == 0 {
+		// TODO 未来支持自动创建端口
+		return nil, errors.New("no ports valid")
+	}
+
+	// TCP
+	var tcpConfig = &serverconfigs.HTTPProtocolConfig{
+		BaseProtocol: serverconfigs.BaseProtocol{
+			IsOn:   true,
+			Listen: []*serverconfigs.NetworkAddressConfig{},
+		},
+	}
+
+	for _, port := range req.TcpPorts {
+		existPort, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, "tcp", int(port), 0, "")
+		if err != nil {
+			return nil, err
+		}
+		if existPort {
+			return nil, errors.New("port '" + types.String(port) + "' already used by other server")
+		}
+
+		tcpConfig.BaseProtocol.Listen = append(tcpConfig.BaseProtocol.Listen, &serverconfigs.NetworkAddressConfig{
+			Protocol:  "tcp",
+			PortRange: types.String(port),
+		})
+	}
+
+	tcpJSON, err := json.Marshal(tcpConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// TLS
+	var tlsConfig = &serverconfigs.HTTPSProtocolConfig{
+		BaseProtocol: serverconfigs.BaseProtocol{
+			IsOn:   true,
+			Listen: []*serverconfigs.NetworkAddressConfig{},
+		},
+	}
+
+	for _, port := range req.TlsPorts {
+		existPort, err := models.SharedServerDAO.CheckPortIsUsing(tx, req.NodeClusterId, "tcp", int(port), 0, "")
+		if err != nil {
+			return nil, err
+		}
+		if existPort {
+			return nil, errors.New("port '" + types.String(port) + "' already used by other server")
+		}
+
+		tlsConfig.BaseProtocol.Listen = append(tlsConfig.BaseProtocol.Listen, &serverconfigs.NetworkAddressConfig{
+			Protocol:  "tls",
+			PortRange: types.String(port),
+		})
+	}
+
+	var certRefs = []*sslconfigs.SSLCertRef{}
+	for _, certId := range req.SslCertIds {
+		// 检查所有权
+		if userId > 0 {
+			err = models.SharedSSLCertDAO.CheckUserCert(tx, certId, userId)
+			if err != nil {
+				return nil, errors.New("check cert permission failed: " + err.Error())
+			}
+		} else {
+			existCert, err := models.SharedSSLCertDAO.Exist(tx, certId)
+			if err != nil {
+				return nil, err
+			}
+			if !existCert {
+				return nil, errors.New("cert '" + types.String(certId) + "' not found")
+			}
+		}
+
+		certRefs = append(certRefs, &sslconfigs.SSLCertRef{
+			IsOn:   true,
+			CertId: certId,
+		})
+	}
+	certRefsJSON, err := json.Marshal(certRefs)
+	if err != nil {
+		return nil, err
+	}
+	sslPolicyId, err := models.SharedSSLPolicyDAO.CreatePolicy(tx, adminId, req.UserId, false, false, "TLS 1.0", certRefsJSON, nil, false, 0, nil, false, nil)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.SSLPolicyRef = &sslconfigs.SSLPolicyRef{
+		IsOn:        true,
+		SSLPolicyId: sslPolicyId,
+	}
+
+	tlsJSON, err := json.Marshal(tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reverse Proxy
+	var reverseProxyScheduleConfig = &serverconfigs.SchedulingConfig{
+		Code:    "random",
+		Options: nil,
+	}
+	reverseProxyScheduleJSON, err := json.Marshal(reverseProxyScheduleConfig)
+
+	var primaryOrigins = []*serverconfigs.OriginRef{}
+	for _, originAddr := range req.OriginAddrs {
+		u, err := url.Parse(originAddr)
+		if err != nil {
+			return nil, errors.New("parse origin address '" + originAddr + "' failed: " + err.Error())
+		}
+		if len(u.Scheme) == 0 || (u.Scheme != "tcp" && u.Scheme != "tls" && u.Scheme != "ssl" /** 特意不支持大写形式 **/) {
+			return nil, errors.New("invalid scheme in origin address '" + originAddr + "'")
+		}
+
+		if len(u.Host) == 0 {
+			return nil, errors.New("invalid host address '" + originAddr + "', contains no host")
+		}
+
+		host, port, err := net.SplitHostPort(u.Host)
+		if err != nil || len(host) == 0 || len(port) == 0 {
+			err = nil // ignore error
+
+			return nil, errors.New("invalid host address '" + originAddr + "', invalid host format")
+		}
+
+		if u.Scheme == "ssl" {
+			u.Scheme = "tls"
+		}
+
+		var addr = &serverconfigs.NetworkAddressConfig{
+			Protocol:  serverconfigs.Protocol(u.Scheme),
+			Host:      host,
+			PortRange: port,
+		}
+		addrJSON, err := json.Marshal(addr)
+		if err != nil {
+			return nil, err
+		}
+
+		originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, req.UserId, "", addrJSON, nil, "", 10, true, nil, nil, nil, 0, 0, nil, nil, "", false)
+		if err != nil {
+			return nil, err
+		}
+		primaryOrigins = append(primaryOrigins, &serverconfigs.OriginRef{
+			IsOn:     true,
+			OriginId: originId,
+		})
+	}
+	primaryOriginsJSON, err := json.Marshal(primaryOrigins)
+	if err != nil {
+		return nil, err
+	}
+
+	reverseProxyId, err := models.SharedReverseProxyDAO.CreateReverseProxy(tx, adminId, req.UserId, reverseProxyScheduleJSON, primaryOriginsJSON, nil)
+	if err != nil {
+		return nil, err
+	}
+	reverseProxyJSON, err := json.Marshal(&serverconfigs.ReverseProxyRef{
+		IsPrior:        false,
+		IsOn:           true,
+		ReverseProxyId: reverseProxyId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// finally, we create ...
+	serverId, err := models.SharedServerDAO.CreateServer(tx, adminId, req.UserId, serverconfigs.ServerTypeTCPProxy, "TCP Service", "", nil, false, nil, nil, nil, tcpJSON, tlsJSON, nil, nil, 0, reverseProxyJSON, req.NodeClusterId, nil, nil, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CreateBasicTCPServerResponse{ServerId: serverId}, nil
 }
 
 // UpdateServerBasic 修改服务基本信息
