@@ -87,14 +87,8 @@ func (this *SQLExecutor) Run(showLog bool) error {
 
 // 检查数据
 func (this *SQLExecutor) checkData(db *dbs.DB) error {
-	// 检查初始化用户
-	err := this.checkUser(db)
-	if err != nil {
-		return err
-	}
-
 	// 检查管理员平台节点
-	err = this.checkAdminNode(db)
+	err := this.checkAdminNode(db)
 	if err != nil {
 		return err
 	}
@@ -107,6 +101,13 @@ func (this *SQLExecutor) checkData(db *dbs.DB) error {
 
 	// 检查集群配置
 	err = this.checkCluster(db)
+	if err != nil {
+		return err
+	}
+
+	// 检查初始化用户
+	// 需要放在检查集群后面
+	err = this.checkUser(db)
 	if err != nil {
 		return err
 	}
@@ -154,7 +155,14 @@ func (this *SQLExecutor) checkUser(db *dbs.DB) error {
 		return nil
 	}
 
-	_, err = db.Exec("INSERT INTO edgeUsers (`username`, `password`, `fullname`, `isOn`, `state`, `createdAt`) VALUES (?, ?, ?, ?, ?, ?)", "USER-"+rands.HexString(10), stringutil.Md5(rands.HexString(32)), "默认用户", 1, 1, time.Now().Unix())
+	// 读取默认集群ID
+	// Read default cluster id
+	clusterId, err := db.FindCol(0, "SELECT id FROM edgeNodeClusters WHERE state=1 ORDER BY id ASC LIMIT 1")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO edgeUsers (`username`, `password`, `fullname`, `isOn`, `state`, `createdAt`, `clusterId`) VALUES (?, ?, ?, ?, ?, ?, ?)", "USER_"+rands.HexString(10), stringutil.Md5(rands.HexString(32)), "默认用户", 1, 1, time.Now().Unix(), clusterId)
 	return err
 }
 
