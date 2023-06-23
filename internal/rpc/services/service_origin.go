@@ -84,7 +84,7 @@ func (this *OriginService) CreateOrigin(ctx context.Context, req *pb.CreateOrigi
 		}
 	}
 
-	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
+	originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, userId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort, req.Http2Enabled)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (this *OriginService) UpdateOrigin(ctx context.Context, req *pb.UpdateOrigi
 		}
 	}
 
-	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort)
+	err = models.SharedOriginDAO.UpdateOrigin(tx, req.OriginId, req.Name, addrMap.AsJSON(), ossConfig, req.Description, req.Weight, req.IsOn, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, certRef, req.Domains, req.Host, req.FollowPort, req.Http2Enabled)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 		return nil, err
 	}
 
-	result := &pb.Origin{
+	return &pb.FindEnabledOriginResponse{Origin: &pb.Origin{
 		Id:   int64(origin.Id),
 		IsOn: origin.IsOn,
 		Name: origin.Name,
@@ -213,10 +213,11 @@ func (this *OriginService) FindEnabledOrigin(ctx context.Context, req *pb.FindEn
 			Host:      addr.Host,
 			PortRange: addr.PortRange,
 		},
-		Description: origin.Description,
-		Domains:     origin.DecodeDomains(),
-	}
-	return &pb.FindEnabledOriginResponse{Origin: result}, nil
+		Description:  origin.Description,
+		Domains:      origin.DecodeDomains(),
+		FollowPort:   origin.FollowPort,
+		Http2Enabled: origin.Http2Enabled,
+	}}, nil
 }
 
 // FindEnabledOriginConfig 查找源站配置

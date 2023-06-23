@@ -392,7 +392,7 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 			return nil, err
 		}
 
-		originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, req.UserId, "", addrJSON, nil, "", 10, true, nil, nil, nil, 0, 0, nil, nil, u.Host, false)
+		originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, req.UserId, "", addrJSON, nil, "", 10, true, nil, nil, nil, 0, 0, nil, nil, u.Host, false, false)
 		if err != nil {
 			return nil, err
 		}
@@ -651,7 +651,7 @@ func (this *ServerService) CreateBasicTCPServer(ctx context.Context, req *pb.Cre
 			return nil, err
 		}
 
-		originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, req.UserId, "", addrJSON, nil, "", 10, true, nil, nil, nil, 0, 0, nil, nil, "", false)
+		originId, err := models.SharedOriginDAO.CreateOrigin(tx, adminId, req.UserId, "", addrJSON, nil, "", 10, true, nil, nil, nil, 0, 0, nil, nil, "", false, false)
 		if err != nil {
 			return nil, err
 		}

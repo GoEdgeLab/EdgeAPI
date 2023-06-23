@@ -104,7 +104,8 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 	certRef *sslconfigs.SSLCertRef,
 	domains []string,
 	host string,
-	followPort bool) (originId int64, err error) {
+	followPort bool,
+	http2Enabled bool) (originId int64, err error) {
 	var op = NewOriginOperator()
 	op.AdminId = adminId
 	op.UserId = userId
@@ -182,6 +183,7 @@ func (this *OriginDAO) CreateOrigin(tx *dbs.Tx,
 
 	op.Host = host
 	op.FollowPort = followPort
+	op.Http2Enabled = http2Enabled
 
 	op.State = OriginStateEnabled
 	err = this.Save(tx, op)
@@ -208,7 +210,8 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	certRef *sslconfigs.SSLCertRef,
 	domains []string,
 	host string,
-	followPort bool) error {
+	followPort bool,
+	http2Enabled bool) error {
 	if originId <= 0 {
 		return errors.New("invalid originId")
 	}
@@ -290,6 +293,7 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 
 	op.Host = host
 	op.FollowPort = followPort
+	op.Http2Enabled = http2Enabled
 
 	err := this.Save(tx, op)
 	if err != nil {
@@ -353,6 +357,7 @@ func (this *OriginDAO) CloneOrigin(tx *dbs.Tx, fromOriginId int64) (newOriginId 
 		op.Domains = origin.Domains
 	}
 	op.FollowPort = origin.FollowPort
+	op.Http2Enabled = origin.Http2Enabled
 	op.State = origin.State
 	return this.SaveInt64(tx, op)
 }
@@ -391,6 +396,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *
 		RequestHost:  origin.Host,
 		Domains:      origin.DecodeDomains(),
 		FollowPort:   origin.FollowPort,
+		HTTP2Enabled: origin.Http2Enabled,
 	}
 
 	// addr

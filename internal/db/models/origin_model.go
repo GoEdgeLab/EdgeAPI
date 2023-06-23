@@ -32,6 +32,7 @@ type Origin struct {
 	Domains            dbs.JSON `field:"domains"`            // 所属域名
 	FollowPort         bool     `field:"followPort"`         // 端口跟随
 	State              uint8    `field:"state"`              // 状态
+	Http2Enabled       bool     `field:"http2Enabled"`       // 是否支持HTTP/2
 }
 
 type OriginOperator struct {
@@ -63,6 +64,7 @@ type OriginOperator struct {
 	Domains            any // 所属域名
 	FollowPort         any // 端口跟随
 	State              any // 状态
+	Http2Enabled       any // 是否支持HTTP/2
 }
 
 func NewOriginOperator() *OriginOperator {
