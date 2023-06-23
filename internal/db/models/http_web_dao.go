@@ -550,7 +550,20 @@ func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJ
 	if len(rootJSON) > 0 {
 		op.Root = JSONBytes(rootJSON)
 	}
-	err := this.Save(tx, op)
+
+	// 设置默认的remote-addr
+	// set default remote-addr config
+	var remoteAddrConfig = &serverconfigs.HTTPRemoteAddrConfig{
+		IsOn:  true,
+		Value: "${rawRemoteAddr}",
+	}
+	remoteAddrConfigJSON, err := json.Marshal(remoteAddrConfig)
+	if err != nil {
+		return 0, err
+	}
+	op.RemoteAddr = remoteAddrConfigJSON
+
+	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
 	}
