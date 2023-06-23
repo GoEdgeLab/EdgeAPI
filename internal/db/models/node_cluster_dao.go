@@ -100,6 +100,7 @@ func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, clusterId int64) (st
 // FindAllEnableClusters 查找所有可用的集群
 func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
+		Result(NodeClusterFieldId, NodeClusterFieldName, NodeClusterFieldIsOn, NodeClusterFieldHealthCheck, NodeClusterFieldAutoRemoteStart, NodeClusterFieldAutoRegister, NodeClusterFieldCreatedAt, NodeClusterFieldUniqueId, NodeClusterFieldSecret).
 		State(NodeClusterStateEnabled).
 		Slice(&result).
 		Desc("isPinned").
