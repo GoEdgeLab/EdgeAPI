@@ -262,19 +262,40 @@ func (this *NodeClusterDAO) CountAllEnabledClusters(tx *dbs.Tx, keyword string) 
 
 // ListEnabledClusters 列出单页集群
 func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offset, size int64) (result []*NodeCluster, err error) {
-	query := this.Query(tx).
+	var query = this.Query(tx).
 		State(NodeClusterStateEnabled)
 	if len(keyword) > 0 {
 		query.Where("(name LIKE :keyword OR dnsName like :keyword OR (dnsDomainId > 0 AND dnsDomainId IN (SELECT id FROM "+dns.SharedDNSDomainDAO.Table+" WHERE name LIKE :keyword AND state=1)))").
 			Param("keyword", dbutils.QuoteLike(keyword))
 	}
 	_, err = query.
+		Result(
+			NodeClusterFieldId,
+			NodeClusterFieldName,
+			NodeClusterFieldIsOn,
+			NodeClusterFieldIsPinned,
+			NodeClusterFieldInstallDir,
+			NodeClusterFieldHttpFirewallPolicyId,
+			NodeClusterFieldAdminId,
+			NodeClusterFieldIsOn,
+			NodeClusterFieldIsAD,
+			NodeClusterFieldUserId,
+			NodeClusterFieldDnsName,
+			NodeClusterFieldDnsDomainId,
+			NodeClusterFieldDns,
+			NodeClusterFieldCreatedAt,
+			NodeClusterFieldUniqueId,
+			NodeClusterFieldSecret,
+			NodeClusterFieldGrantId,
+			NodeClusterFieldTimeZone,
+		).
 		Offset(offset).
 		Limit(size).
 		Slice(&result).
 		Desc("isPinned").
 		DescPk().
 		FindAll()
+
 	return
 }
 

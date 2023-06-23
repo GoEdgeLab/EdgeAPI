@@ -2,6 +2,49 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
+const (
+	NodeClusterFieldId                   dbs.FieldName = "id"                   // ID
+	NodeClusterFieldAdminId              dbs.FieldName = "adminId"              // 管理员ID
+	NodeClusterFieldUserId               dbs.FieldName = "userId"               // 用户ID
+	NodeClusterFieldIsOn                 dbs.FieldName = "isOn"                 // 是否启用
+	NodeClusterFieldName                 dbs.FieldName = "name"                 // 名称
+	NodeClusterFieldUseAllAPINodes       dbs.FieldName = "useAllAPINodes"       // 是否使用所有API节点
+	NodeClusterFieldApiNodes             dbs.FieldName = "apiNodes"             // 使用的API节点
+	NodeClusterFieldInstallDir           dbs.FieldName = "installDir"           // 安装目录
+	NodeClusterFieldOrder                dbs.FieldName = "order"                // 排序
+	NodeClusterFieldCreatedAt            dbs.FieldName = "createdAt"            // 创建时间
+	NodeClusterFieldGrantId              dbs.FieldName = "grantId"              // 默认认证方式
+	NodeClusterFieldSshParams            dbs.FieldName = "sshParams"            // SSH默认参数
+	NodeClusterFieldState                dbs.FieldName = "state"                // 状态
+	NodeClusterFieldAutoRegister         dbs.FieldName = "autoRegister"         // 是否开启自动注册
+	NodeClusterFieldUniqueId             dbs.FieldName = "uniqueId"             // 唯一ID
+	NodeClusterFieldSecret               dbs.FieldName = "secret"               // 密钥
+	NodeClusterFieldHealthCheck          dbs.FieldName = "healthCheck"          // 健康检查
+	NodeClusterFieldDnsName              dbs.FieldName = "dnsName"              // DNS名称
+	NodeClusterFieldDnsDomainId          dbs.FieldName = "dnsDomainId"          // 域名ID
+	NodeClusterFieldDns                  dbs.FieldName = "dns"                  // DNS配置
+	NodeClusterFieldToa                  dbs.FieldName = "toa"                  // TOA配置
+	NodeClusterFieldCachePolicyId        dbs.FieldName = "cachePolicyId"        // 缓存策略ID
+	NodeClusterFieldHttpFirewallPolicyId dbs.FieldName = "httpFirewallPolicyId" // WAF策略ID
+	NodeClusterFieldAccessLog            dbs.FieldName = "accessLog"            // 访问日志设置
+	NodeClusterFieldSystemServices       dbs.FieldName = "systemServices"       // 系统服务设置
+	NodeClusterFieldTimeZone             dbs.FieldName = "timeZone"             // 时区
+	NodeClusterFieldNodeMaxThreads       dbs.FieldName = "nodeMaxThreads"       // 节点最大线程数
+	NodeClusterFieldDdosProtection       dbs.FieldName = "ddosProtection"       // DDoS防护设置
+	NodeClusterFieldAutoOpenPorts        dbs.FieldName = "autoOpenPorts"        // 是否自动尝试开放端口
+	NodeClusterFieldIsPinned             dbs.FieldName = "isPinned"             // 是否置顶
+	NodeClusterFieldWebp                 dbs.FieldName = "webp"                 // WebP设置
+	NodeClusterFieldUam                  dbs.FieldName = "uam"                  // UAM设置
+	NodeClusterFieldClock                dbs.FieldName = "clock"                // 时钟配置
+	NodeClusterFieldGlobalServerConfig   dbs.FieldName = "globalServerConfig"   // 全局服务配置
+	NodeClusterFieldAutoRemoteStart      dbs.FieldName = "autoRemoteStart"      // 自动远程启动
+	NodeClusterFieldAutoInstallNftables  dbs.FieldName = "autoInstallNftables"  // 自动安装nftables
+	NodeClusterFieldIsAD                 dbs.FieldName = "isAD"                 // 是否为高防集群
+	NodeClusterFieldHttpPages            dbs.FieldName = "httpPages"            // 自定义页面设置
+	NodeClusterFieldCc                   dbs.FieldName = "cc"                   // CC设置
+	NodeClusterFieldHttp3                dbs.FieldName = "http3"                // HTTP3设置
+)
+
 // NodeCluster 节点集群
 type NodeCluster struct {
 	Id                   uint32   `field:"id"`                   // ID
