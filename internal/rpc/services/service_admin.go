@@ -283,7 +283,7 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 		return nil, err
 	}
 
-	result := []*pb.AdminModuleList{}
+	var result = []*pb.AdminModuleList{}
 	for _, admin := range admins {
 		modules := []*systemconfigs.AdminModule{}
 		if len(admin.Modules) > 0 {
@@ -292,7 +292,7 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 				return nil, err
 			}
 		}
-		pbModules := []*pb.AdminModule{}
+		var pbModules = []*pb.AdminModule{}
 		for _, module := range modules {
 			pbModules = append(pbModules, &pb.AdminModule{
 				AllowAll: module.AllowAll,
@@ -301,11 +301,12 @@ func (this *AdminService) FindAllAdminModules(ctx context.Context, req *pb.FindA
 			})
 		}
 
-		list := &pb.AdminModuleList{
+		var list = &pb.AdminModuleList{
 			AdminId:  int64(admin.Id),
 			IsSuper:  admin.IsSuper,
 			Fullname: admin.Fullname,
 			Theme:    admin.Theme,
+			Lang:     admin.Lang,
 			Modules:  pbModules,
 		}
 		result = append(result, list)
