@@ -3,19 +3,19 @@ package models
 import "github.com/iwind/TeaGo/dbs"
 
 const (
-	AdminFieldId        dbs.FieldName = "id"        // ID
-	AdminFieldIsOn      dbs.FieldName = "isOn"      // 是否启用
-	AdminFieldUsername  dbs.FieldName = "username"  // 用户名
-	AdminFieldPassword  dbs.FieldName = "password"  // 密码
-	AdminFieldFullname  dbs.FieldName = "fullname"  // 全名
-	AdminFieldIsSuper   dbs.FieldName = "isSuper"   // 是否为超级管理员
-	AdminFieldCreatedAt dbs.FieldName = "createdAt" // 创建时间
-	AdminFieldUpdatedAt dbs.FieldName = "updatedAt" // 修改时间
-	AdminFieldState     dbs.FieldName = "state"     // 状态
-	AdminFieldModules   dbs.FieldName = "modules"   // 允许的模块
-	AdminFieldCanLogin  dbs.FieldName = "canLogin"  // 是否可以登录
-	AdminFieldTheme     dbs.FieldName = "theme"     // 模板设置
-	AdminFieldLang      dbs.FieldName = "lang"      // 语言代号
+	AdminField_Id        dbs.FieldName = "id"        // ID
+	AdminField_IsOn      dbs.FieldName = "isOn"      // 是否启用
+	AdminField_Username  dbs.FieldName = "username"  // 用户名
+	AdminField_Password  dbs.FieldName = "password"  // 密码
+	AdminField_Fullname  dbs.FieldName = "fullname"  // 全名
+	AdminField_IsSuper   dbs.FieldName = "isSuper"   // 是否为超级管理员
+	AdminField_CreatedAt dbs.FieldName = "createdAt" // 创建时间
+	AdminField_UpdatedAt dbs.FieldName = "updatedAt" // 修改时间
+	AdminField_State     dbs.FieldName = "state"     // 状态
+	AdminField_Modules   dbs.FieldName = "modules"   // 允许的模块
+	AdminField_CanLogin  dbs.FieldName = "canLogin"  // 是否可以登录
+	AdminField_Theme     dbs.FieldName = "theme"     // 模板设置
+	AdminField_Lang      dbs.FieldName = "lang"      // 语言代号
 )
 
 // Admin 管理员

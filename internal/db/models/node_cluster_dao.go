@@ -100,7 +100,7 @@ func (this *NodeClusterDAO) FindNodeClusterName(tx *dbs.Tx, clusterId int64) (st
 // FindAllEnableClusters 查找所有可用的集群
 func (this *NodeClusterDAO) FindAllEnableClusters(tx *dbs.Tx) (result []*NodeCluster, err error) {
 	_, err = this.Query(tx).
-		Result(NodeClusterFieldId, NodeClusterFieldName, NodeClusterFieldIsOn, NodeClusterFieldHealthCheck, NodeClusterFieldAutoRemoteStart, NodeClusterFieldAutoRegister, NodeClusterFieldCreatedAt, NodeClusterFieldUniqueId, NodeClusterFieldSecret).
+		Result(NodeClusterField_Id, NodeClusterField_Name, NodeClusterField_IsOn, NodeClusterField_HealthCheck, NodeClusterField_AutoRemoteStart, NodeClusterField_AutoRegister, NodeClusterField_CreatedAt, NodeClusterField_UniqueId, NodeClusterField_Secret).
 		State(NodeClusterStateEnabled).
 		Slice(&result).
 		Desc("isPinned").
@@ -271,24 +271,24 @@ func (this *NodeClusterDAO) ListEnabledClusters(tx *dbs.Tx, keyword string, offs
 	}
 	_, err = query.
 		Result(
-			NodeClusterFieldId,
-			NodeClusterFieldName,
-			NodeClusterFieldIsOn,
-			NodeClusterFieldIsPinned,
-			NodeClusterFieldInstallDir,
-			NodeClusterFieldHttpFirewallPolicyId,
-			NodeClusterFieldAdminId,
-			NodeClusterFieldIsOn,
-			NodeClusterFieldIsAD,
-			NodeClusterFieldUserId,
-			NodeClusterFieldDnsName,
-			NodeClusterFieldDnsDomainId,
-			NodeClusterFieldDns,
-			NodeClusterFieldCreatedAt,
-			NodeClusterFieldUniqueId,
-			NodeClusterFieldSecret,
-			NodeClusterFieldGrantId,
-			NodeClusterFieldTimeZone,
+			NodeClusterField_Id,
+			NodeClusterField_Name,
+			NodeClusterField_IsOn,
+			NodeClusterField_IsPinned,
+			NodeClusterField_InstallDir,
+			NodeClusterField_HttpFirewallPolicyId,
+			NodeClusterField_AdminId,
+			NodeClusterField_IsOn,
+			NodeClusterField_IsAD,
+			NodeClusterField_UserId,
+			NodeClusterField_DnsName,
+			NodeClusterField_DnsDomainId,
+			NodeClusterField_Dns,
+			NodeClusterField_CreatedAt,
+			NodeClusterField_UniqueId,
+			NodeClusterField_Secret,
+			NodeClusterField_GrantId,
+			NodeClusterField_TimeZone,
 		).
 		Offset(offset).
 		Limit(size).

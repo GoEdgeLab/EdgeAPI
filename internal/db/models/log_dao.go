@@ -62,7 +62,7 @@ func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level
 		if err != nil {
 			return err
 		}
-		op.LangMesageArgs = langMessageArgsJSON
+		op.LangMessageArgs = langMessageArgsJSON
 	}
 
 	op.Day = timeutil.Format("Ymd")
