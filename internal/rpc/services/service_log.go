@@ -26,8 +26,8 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 
 	// i18n
 	var langMessageArgs = []any{}
-	if len(req.LangMessagesArgsJSON) > 0 {
-		err = json.Unmarshal(req.LangMessagesArgsJSON, &langMessageArgs)
+	if len(req.LangMessageArgsJSON) > 0 {
+		err = json.Unmarshal(req.LangMessageArgsJSON, &langMessageArgs)
 		if err != nil {
 			return nil, err
 		}
