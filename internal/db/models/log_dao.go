@@ -1,9 +1,11 @@
 package models
 
 import (
+	"encoding/json"
 	dbutils "github.com/TeaOSLab/EdgeAPI/internal/db/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/langs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -36,7 +38,7 @@ func init() {
 }
 
 // CreateLog 创建管理员日志
-func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level string, description string, action string, ip string) error {
+func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level string, description string, action string, ip string, langMessageCode langs.MessageCode, langMessageArgs []any) error {
 	var op = NewLogOperator()
 	op.Level = level
 	op.Description = utils.LimitString(description, 1000)
@@ -51,6 +53,16 @@ func (this *LogDAO) CreateLog(tx *dbs.Tx, adminType string, adminId int64, level
 		op.UserId = adminId
 	case "provider":
 		op.ProviderId = adminId
+	}
+
+	// i18n
+	op.LangMessageCode = langMessageCode
+	if len(langMessageArgs) > 0 {
+		langMessageArgsJSON, err := json.Marshal(langMessageArgs)
+		if err != nil {
+			return err
+		}
+		op.LangMesageArgs = langMessageArgsJSON
 	}
 
 	op.Day = timeutil.Format("Ymd")

@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/langs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 )
 
@@ -22,7 +24,16 @@ func (this *LogService) CreateLog(ctx context.Context, req *pb.CreateLogRequest)
 
 	var tx = this.NullTx()
 
-	err = models.SharedLogDAO.CreateLog(tx, userType, userId, req.Level, req.Description, req.Action, req.Ip)
+	// i18n
+	var langMessageArgs = []any{}
+	if len(req.LangMessagesArgsJSON) > 0 {
+		err = json.Unmarshal(req.LangMessagesArgsJSON, &langMessageArgs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedLogDAO.CreateLog(tx, userType, userId, req.Level, req.Description, req.Action, req.Ip, langs.MessageCode(req.LangMessageCode), langMessageArgs)
 	if err != nil {
 		return nil, err
 	}
