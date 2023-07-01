@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -25,7 +26,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedServerDomainHourlyStatDAO.Clean(nil, 7) // 只保留 N 天
+				err := SharedServerDomainHourlyStatDAO.CleanDefaultDays(nil, 7) // 只保留 N 天
 				if err != nil {
 					remotelogs.Error("ServerDomainHourlyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -366,8 +367,8 @@ func (this *ServerDomainHourlyStatDAO) FindTopDomainStatsWithServerId(tx *dbs.Tx
 	return
 }
 
-// Clean 清理历史数据
-func (this *ServerDomainHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
+// CleanDays 清理历史数据
+func (this *ServerDomainHourlyStatDAO) CleanDays(tx *dbs.Tx, days int) error {
 	var hour = timeutil.Format("Ymd00", time.Now().AddDate(0, 0, -days))
 	for _, table := range this.FindAllPartitionTables() {
 		_, err := this.Query(tx).
@@ -379,4 +380,20 @@ func (this *ServerDomainHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
 		}
 	}
 	return nil
+}
+
+func (this *ServerDomainHourlyStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := models.SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.ServerDomainHourlyStat.Clean.Days > 0 {
+		defaultDays = databaseConfig.ServerDomainHourlyStat.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 7
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }

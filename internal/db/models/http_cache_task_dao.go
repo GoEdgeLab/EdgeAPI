@@ -33,7 +33,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedHTTPCacheTaskDAO.Clean(nil, 30) // 只保留N天
+				err := SharedHTTPCacheTaskDAO.CleanDefaultDays(nil, 30) // 只保留N天
 				if err != nil {
 					remotelogs.Error("HTTPCacheTaskDAO", "clean expired data failed: "+err.Error())
 				}
@@ -228,8 +228,8 @@ func (this *HTTPCacheTaskDAO) CheckUserTask(tx *dbs.Tx, userId int64, taskId int
 	return nil
 }
 
-// Clean 清理以往的任务
-func (this *HTTPCacheTaskDAO) Clean(tx *dbs.Tx, days int) error {
+// CleanDays 清理N天以前的任务
+func (this *HTTPCacheTaskDAO) CleanDays(tx *dbs.Tx, days int) error {
 	if days <= 0 {
 		days = 30
 	}
@@ -246,6 +246,23 @@ func (this *HTTPCacheTaskDAO) Clean(tx *dbs.Tx, days int) error {
 		Lte("day", day).
 		Delete()
 	return err
+}
+
+// CleanDefaultDays 清除任务
+func (this *HTTPCacheTaskDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.HTTPCacheTask.Clean.Days > 0 {
+		defaultDays = databaseConfig.HTTPCacheTask.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 30
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }
 
 // NotifyChange 发送通知

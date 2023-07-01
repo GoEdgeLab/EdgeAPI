@@ -28,7 +28,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedServerDailyStatDAO.Clean(nil, 60) // 只保留 N 天，时间需要长一些，因为需要用来生成账单
+				err := SharedServerDailyStatDAO.CleanDefaultDays(nil, 60) // 只保留 N 天，时间需要长一些，因为需要用来生成账单
 				if err != nil {
 					logs.Println("ServerDailyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -673,8 +673,8 @@ func (this *ServerDailyStatDAO) compatFindHourlyStats(tx *dbs.Tx, serverId int64
 			result = append(result, stat)
 		} else {
 			result = append(result, &ServerDailyStat{
-				Hour: hour,
-				Day: hour[:8],
+				Hour:     hour,
+				Day:      hour[:8],
 				TimeFrom: hour[8:] + "00",
 			})
 		}
@@ -742,11 +742,27 @@ func (this *ServerDailyStatDAO) UpdateStatFee(tx *dbs.Tx, statId int64, fee floa
 		UpdateQuickly()
 }
 
-// Clean 清理历史数据
-func (this *ServerDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
+// CleanDays 清理历史数据
+func (this *ServerDailyStatDAO) CleanDays(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))
 	_, err := this.Query(tx).
 		Lt("day", day).
 		Delete()
 	return err
+}
+
+func (this *ServerDailyStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.ServerDailyStat.Clean.Days > 0 {
+		defaultDays = databaseConfig.ServerDailyStat.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 60
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }

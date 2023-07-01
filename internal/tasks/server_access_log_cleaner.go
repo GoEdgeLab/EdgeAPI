@@ -52,7 +52,7 @@ func (this *ServerAccessLogCleaner) Loop() error {
 	if len(configJSON) == 0 {
 		return nil
 	}
-	var config = &systemconfigs.DatabaseConfig{}
+	var config = systemconfigs.NewDatabaseConfig()
 	err = json.Unmarshal(configJSON, config)
 	if err != nil {
 		return err

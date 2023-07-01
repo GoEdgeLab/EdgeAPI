@@ -536,7 +536,7 @@ func upgradeV0_4_1(db *dbs.DB) error {
 	}
 
 	// 执行域名统计清理
-	err = stats.NewServerDomainHourlyStatDAO().Clean(nil, 7)
+	err = stats.NewServerDomainHourlyStatDAO().CleanDays(nil, 7)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -22,7 +23,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedNodeTrafficHourlyStatDAO.Clean(nil, 15) // 只保留N天
+				err := SharedNodeTrafficHourlyStatDAO.CleanDefaultDays(nil, 15) // 只保留N天
 				if err != nil {
 					remotelogs.Error("NodeTrafficHourlyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -197,11 +198,27 @@ func (this *NodeTrafficHourlyStatDAO) FindHourlyStatsWithNodeId(tx *dbs.Tx, role
 	return result, nil
 }
 
-// Clean 清理历史数据
-func (this *NodeTrafficHourlyStatDAO) Clean(tx *dbs.Tx, days int) error {
+// CleanDays 清理历史数据
+func (this *NodeTrafficHourlyStatDAO) CleanDays(tx *dbs.Tx, days int) error {
 	var hour = timeutil.Format("Ymd00", time.Now().AddDate(0, 0, -days))
 	_, err := this.Query(tx).
 		Lt("hour", hour).
 		Delete()
 	return err
+}
+
+func (this *NodeTrafficHourlyStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := models.SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.NodeTrafficHourlyStat.Clean.Days > 0 {
+		defaultDays = databaseConfig.NodeTrafficHourlyStat.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 15
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }

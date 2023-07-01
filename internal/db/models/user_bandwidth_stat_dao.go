@@ -36,7 +36,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedUserBandwidthStatDAO.Clean(nil)
+				err := SharedUserBandwidthStatDAO.CleanDefaultDays(nil, 100)
 				if err != nil {
 					remotelogs.Error("SharedUserBandwidthStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -460,9 +460,9 @@ func (this *UserBandwidthStatDAO) SumDailyStat(tx *dbs.Tx, userId int64, regionI
 	return
 }
 
-// Clean 清理过期数据
-func (this *UserBandwidthStatDAO) Clean(tx *dbs.Tx) error {
-	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -100)) // 保留大约3个月的数据
+// CleanDays 清理过期数据
+func (this *UserBandwidthStatDAO) CleanDays(tx *dbs.Tx, days int) error {
+	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days)) // 保留大约3个月的数据
 	return this.runBatch(func(table string, locker *sync.Mutex) error {
 		_, err := this.Query(tx).
 			Table(table).
@@ -470,6 +470,22 @@ func (this *UserBandwidthStatDAO) Clean(tx *dbs.Tx) error {
 			Delete()
 		return err
 	})
+}
+
+func (this *UserBandwidthStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.UserBandwidthStat.Clean.Days > 0 {
+		defaultDays = databaseConfig.UserBandwidthStat.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 100
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }
 
 // 批量执行

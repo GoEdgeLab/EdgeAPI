@@ -262,3 +262,20 @@ func (this *SysSettingDAO) ReadUserRegisterConfig(tx *dbs.Tx) (*userconfigs.User
 	}
 	return config, nil
 }
+
+func (this *SysSettingDAO) ReadDatabaseConfig(tx *dbs.Tx) (config *systemconfigs.DatabaseConfig, err error) {
+	valueJSON, err := this.ReadSetting(tx, systemconfigs.SettingCodeDatabaseConfigSetting)
+	if err != nil {
+		return nil, err
+	}
+	if len(valueJSON) == 0 {
+		return systemconfigs.NewDatabaseConfig(), nil
+	}
+
+	config = systemconfigs.NewDatabaseConfig()
+	err = json.Unmarshal(valueJSON, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}

@@ -22,7 +22,7 @@ func init() {
 		var ticker = time.NewTicker(time.Duration(rands.Int(24, 48)) * time.Hour)
 		goman.New(func() {
 			for range ticker.C {
-				err := SharedNodeTrafficDailyStatDAO.Clean(nil, 30) // 只保留N天
+				err := SharedNodeTrafficDailyStatDAO.CleanDefaultDays(nil, 32) // 只保留N天
 				if err != nil {
 					remotelogs.Error("NodeTrafficDailyStatDAO", "clean expired data failed: "+err.Error())
 				}
@@ -134,11 +134,27 @@ func (this *NodeTrafficDailyStatDAO) SumDailyStat(tx *dbs.Tx, role string, nodeI
 	return one.(*NodeTrafficDailyStat), nil
 }
 
-// Clean 清理历史数据
-func (this *NodeTrafficDailyStatDAO) Clean(tx *dbs.Tx, days int) error {
+// CleanDays 清理历史数据
+func (this *NodeTrafficDailyStatDAO) CleanDays(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days))
 	_, err := this.Query(tx).
 		Lt("day", day).
 		Delete()
 	return err
+}
+
+func (this *NodeTrafficDailyStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int) error {
+	databaseConfig, err := SharedSysSettingDAO.ReadDatabaseConfig(tx)
+	if err != nil {
+		return err
+	}
+
+	if databaseConfig != nil && databaseConfig.NodeTrafficDailyStat.Clean.Days > 0 {
+		defaultDays = databaseConfig.NodeTrafficDailyStat.Clean.Days
+	}
+	if defaultDays <= 0 {
+		defaultDays = 32
+	}
+
+	return this.CleanDays(tx, defaultDays)
 }
