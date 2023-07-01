@@ -240,7 +240,7 @@ func (this *APINodeService) FindEnabledAPINode(ctx context.Context, req *pb.Find
 
 // FindCurrentAPINodeVersion 获取当前API节点的版本
 func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *pb.FindCurrentAPINodeVersionRequest) (*pb.FindCurrentAPINodeVersionResponse, error) {
-	_, _, _, err := rpcutils.ValidateRequest(ctx)
+	role, _, _, err := rpcutils.ValidateRequest(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -249,6 +249,7 @@ func (this *APINodeService) FindCurrentAPINodeVersion(ctx context.Context, req *
 		Version: teaconst.Version,
 		Os:      runtime.GOOS,
 		Arch:    runtime.GOARCH,
+		Role:    role,
 	}, nil
 }
 
