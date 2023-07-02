@@ -11,7 +11,7 @@ import (
 func TestHTTPCacheTaskDAO_Clean(t *testing.T) {
 	dbs.NotifyReady()
 
-	err := models.SharedHTTPCacheTaskDAO.Clean(nil, 30)
+	err := models.SharedHTTPCacheTaskDAO.CleanDays(nil, 30)
 	if err != nil {
 		t.Fatal(err)
 	}

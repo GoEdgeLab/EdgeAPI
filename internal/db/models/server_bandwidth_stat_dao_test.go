@@ -72,11 +72,11 @@ func TestServerBandwidthStatDAO_FindAllServerStatsWithDay(t *testing.T) {
 	}
 }
 
-func TestServerBandwidthStatDAO_Clean(t *testing.T) {
+func TestServerBandwidthStatDAO_CleanDays(t *testing.T) {
 	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
 	var before = time.Now()
-	err := dao.Clean(tx)
+	err := dao.CleanDays(tx, 100)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -57,10 +57,10 @@ func TestUserBandwidthStatDAO_UpdateServerBandwidth(t *testing.T) {
 	t.Log("ok")
 }
 
-func TestUserBandwidthStatDAO_Clean(t *testing.T) {
+func TestUserBandwidthStatDAO_CleanDays(t *testing.T) {
 	var dao = models.NewUserBandwidthStatDAO()
 	var tx *dbs.Tx
-	err := dao.Clean(tx)
+	err := dao.CleanDays(tx, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
