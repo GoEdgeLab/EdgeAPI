@@ -17,6 +17,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"strings"
 )
 
 type upgradeVersion struct {
@@ -90,6 +91,9 @@ var upgradeFuncs = []*upgradeVersion{
 	},
 	{
 		"0.5.8", upgradeV0_5_8,
+	},
+	{
+		"1.2.1", upgradeV1_2_1,
 	},
 }
 
@@ -717,5 +721,34 @@ func upgradeV0_4_11(db *dbs.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// v1.2.1
+func upgradeV1_2_1(db *dbs.DB) error {
+	// upgrade generated USER-xxx in old versions
+	ones, _, err := db.FindOnes("SELECT id, username, clusterId FROM edgeUsers WHERE username LIKE 'USER-%'")
+	if err != nil {
+		return err
+	}
+	for _, one := range ones {
+		var userId = one.GetInt64("id")
+		var clusterId = one.GetInt64("clusterId")
+		var username = one.GetString("username")
+		if clusterId <= 0 {
+			defaultClusterIdValue, err := db.FindCol(0, "SELECT id FROM edgeNodeClusters WHERE state=1 ORDER BY id ASC LIMIT 1")
+			if err != nil {
+				return err
+			}
+
+			var defaultClusterId = types.Int64(defaultClusterIdValue)
+			if defaultClusterId > 0 {
+				_, err = db.Exec("UPDATE edgeUsers SET username=?, clusterId=? WHERE id=?", strings.ReplaceAll(username, "-", "_"), defaultClusterId, userId)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }
