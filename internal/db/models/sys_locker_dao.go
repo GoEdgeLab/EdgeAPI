@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -10,6 +11,10 @@ import (
 )
 
 type SysLockerDAO dbs.DAO
+
+// concurrent transactions control
+// 考虑到存在多个API节点的可能性，容量不能太大，也不能使用mutex
+var sysLockerConcurrentLimiter = make(chan zero.Zero, 8)
 
 func NewSysLockerDAO() *SysLockerDAO {
 	return dbs.NewDAO(&SysLockerDAO{
@@ -117,6 +122,12 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 	if tx == nil {
 		var result int64
 		var err error
+
+		sysLockerConcurrentLimiter <- zero.Zero{} // push
+		defer func() {
+			<-sysLockerConcurrentLimiter // pop
+		}()
+
 		err = this.Instance.RunTx(func(tx *dbs.Tx) error {
 			result, err = this.Increase(tx, key, defaultValue)
 			if err != nil {
@@ -141,7 +152,6 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		Result("version").
 		FindInt64Col(0)
 }
-
 
 // 读取当前版本号
 func (this *SysLockerDAO) Read(tx *dbs.Tx, key string) (int64, error) {

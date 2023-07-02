@@ -3,8 +3,10 @@ package models
 import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/types"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestSysLockerDAO_Lock(t *testing.T) {
@@ -25,22 +27,89 @@ func TestSysLockerDAO_Lock(t *testing.T) {
 }
 
 func TestSysLocker_Increase(t *testing.T) {
-	count := 100
-	wg := sync.WaitGroup{}
+	dbs.NotifyReady()
+
+	var count = 1000
+
+	var dao = NewSysLockerDAO()
+	value, err := dao.Read(nil, "hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("before", value)
+
+	var locker = sync.Mutex{}
+	var allValueMap = map[int64]bool{}
+
+	var before = time.Now()
+
+	var wg = sync.WaitGroup{}
 	wg.Add(count)
 
 	for i := 0; i < count; i++ {
-		go func() {
+		go func(i int) {
 			defer wg.Done()
-			v, err := NewSysLockerDAO().Increase(nil, "hello", 0)
+
+			var key = "hello"
+			v, err := dao.Increase(nil, key, 0)
 			if err != nil {
 				t.Log("err:", err)
 				return
 			}
-			t.Log("v:", v)
-		}()
+
+			locker.Lock()
+			if allValueMap[v] {
+				t.Log("duplicated:", v)
+			} else {
+				allValueMap[v] = true
+			}
+			locker.Unlock()
+
+			//t.Log("v:", v)
+			_ = v
+		}(i)
 	}
 
 	wg.Wait()
-	t.Log("ok")
+
+	t.Log("cost:", time.Since(before).Seconds()*1000, "ms")
+
+	value, err = dao.Read(nil, "hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("after", value, "values:", len(allValueMap))
+}
+
+func TestSysLocker_Increase_Performance(t *testing.T) {
+	dbs.NotifyReady()
+
+	var count = 1000
+
+	var dao = NewSysLockerDAO()
+
+	var before = time.Now()
+
+	var wg = sync.WaitGroup{}
+	wg.Add(count)
+
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+
+			var key = "hello" + types.String(i%10)
+			v, err := dao.Increase(nil, key, 0)
+			if err != nil {
+				t.Log("err:", err)
+				return
+			}
+			//t.Log("v:", v)
+			_ = v
+		}(i)
+	}
+
+	wg.Wait()
+
+	t.Log("cost:", time.Since(before).Seconds()*1000, "ms")
 }
