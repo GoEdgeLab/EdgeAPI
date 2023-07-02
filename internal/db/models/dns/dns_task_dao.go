@@ -155,6 +155,12 @@ func (this *DNSTaskDAO) DeleteDNSTask(tx *dbs.Tx, taskId int64) error {
 	return err
 }
 
+// DeleteAllDNSTasks 删除所有任务
+func (this *DNSTaskDAO) DeleteAllDNSTasks(tx *dbs.Tx) error {
+	return this.Query(tx).
+		DeleteQuickly()
+}
+
 // UpdateDNSTaskError 设置任务错误
 func (this *DNSTaskDAO) UpdateDNSTaskError(tx *dbs.Tx, taskId int64, err string) error {
 	if taskId <= 0 {

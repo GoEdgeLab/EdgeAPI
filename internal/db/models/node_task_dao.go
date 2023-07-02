@@ -233,6 +233,12 @@ func (this *NodeTaskDAO) DeleteNodeTasks(tx *dbs.Tx, role string, nodeId int64) 
 	return err
 }
 
+// DeleteAllNodeTasks 删除所有节点相关任务
+func (this *NodeTaskDAO)DeleteAllNodeTasks(tx *dbs.Tx) error {
+	return this.Query(tx).
+		DeleteQuickly()
+}
+
 // FindDoingNodeTasks 查询一个节点的所有任务
 func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int64, version int64) (result []*NodeTask, err error) {
 	if nodeId <= 0 {

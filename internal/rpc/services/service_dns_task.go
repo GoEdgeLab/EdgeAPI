@@ -117,3 +117,19 @@ func (this *DNSTaskService) DeleteDNSTask(ctx context.Context, req *pb.DeleteDNS
 	}
 	return this.Success()
 }
+
+// DeleteAllDNSTasks 删除所有同步任务
+func (this *DNSTaskService)  DeleteAllDNSTasks(ctx context.Context, req *pb.DeleteAllDNSTasksRequest)  (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = dns.SharedDNSTaskDAO.DeleteAllDNSTasks(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}

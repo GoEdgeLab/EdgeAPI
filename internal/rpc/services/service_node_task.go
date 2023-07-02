@@ -216,6 +216,22 @@ func (this *NodeTaskService) DeleteNodeTasks(ctx context.Context, req *pb.Delete
 	return this.Success()
 }
 
+// DeleteAllNodeTasks 删除所有任务
+func (this *NodeTaskService) DeleteAllNodeTasks(ctx context.Context, req *pb.DeleteAllNodeTasksRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeTaskDAO.DeleteAllNodeTasks(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // CountDoingNodeTasks 计算正在执行的任务数量
 func (this *NodeTaskService) CountDoingNodeTasks(ctx context.Context, req *pb.CountDoingNodeTasksRequest) (*pb.RPCCountResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
