@@ -1130,15 +1130,15 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 	}
 
 	// UAM
+	var uamPolicy = nodeconfigs.NewUAMPolicy()
 	if models.IsNotNull(cluster.Uam) {
-		var uamPolicy = &nodeconfigs.UAMPolicy{}
 		err = json.Unmarshal(cluster.Uam, uamPolicy)
 		if err != nil {
 			return nil, err
 		}
 		result.UamIsOn = uamPolicy.IsOn
 	} else {
-		result.UamIsOn = nodeconfigs.DefaultUAMPolicy.IsOn
+		result.UamIsOn = uamPolicy.IsOn
 	}
 
 	// HTTP CC
@@ -1292,7 +1292,7 @@ func (this *NodeClusterService) UpdateNodeClusterUAMPolicy(ctx context.Context, 
 		return nil, err
 	}
 
-	var uamPolicy = &nodeconfigs.UAMPolicy{}
+	var uamPolicy = nodeconfigs.NewUAMPolicy()
 	err = json.Unmarshal(req.UamPolicyJSON, uamPolicy)
 	if err != nil {
 		return nil, err

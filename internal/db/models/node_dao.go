@@ -1174,7 +1174,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 
 		// UAM
 		if IsNotNull(nodeCluster.Uam) {
-			var uamPolicy = &nodeconfigs.UAMPolicy{}
+			var uamPolicy = nodeconfigs.NewUAMPolicy()
 			err = json.Unmarshal(nodeCluster.Uam, uamPolicy)
 			if err != nil {
 				return nil, err

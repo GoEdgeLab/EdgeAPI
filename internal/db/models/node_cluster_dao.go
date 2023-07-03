@@ -1135,11 +1135,12 @@ func (this *NodeClusterDAO) FindClusterUAMPolicy(tx *dbs.Tx, clusterId int64, ca
 		return nil, err
 	}
 
+	var policy = nodeconfigs.NewUAMPolicy()
+
 	if IsNull(uamJSON) {
-		return nodeconfigs.DefaultUAMPolicy, nil
+		return policy, nil
 	}
 
-	var policy = &nodeconfigs.UAMPolicy{}
 	err = json.Unmarshal(uamJSON, policy)
 	if err != nil {
 		return nil, err
