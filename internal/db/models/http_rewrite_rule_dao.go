@@ -124,8 +124,9 @@ func (this *HTTPRewriteRuleDAO) ComposeRewriteRule(tx *dbs.Tx, rewriteRuleId int
 }
 
 // CreateRewriteRule 创建规则
-func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool, condsJSON []byte) (int64, error) {
+func (this *HTTPRewriteRuleDAO) CreateRewriteRule(tx *dbs.Tx, userId int64, pattern string, replace string, mode string, redirectStatus int, isBreak bool, proxyHost string, withQuery bool, isOn bool, condsJSON []byte) (int64, error) {
 	var op = NewHTTPRewriteRuleOperator()
+	op.UserId = userId
 	op.State = HTTPRewriteRuleStateEnabled
 	op.IsOn = isOn
 
@@ -170,6 +171,34 @@ func (this *HTTPRewriteRuleDAO) UpdateRewriteRule(tx *dbs.Tx, rewriteRuleId int6
 		return err
 	}
 	return this.NotifyUpdate(tx, rewriteRuleId)
+}
+
+func (this *HTTPRewriteRuleDAO) CheckUserRewriteRule(tx *dbs.Tx, userId int64, rewriteRuleId int64) error {
+	if rewriteRuleId <= 0 {
+		return ErrNotFound
+	}
+
+	exists, err := this.Query(tx).
+		Pk(rewriteRuleId).
+		Attr("userId", userId).
+		Exist()
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return ErrNotFound
+	}
+
+	webId, err := SharedHTTPWebDAO.FindEnabledWebIdWithRewriteRuleId(tx, rewriteRuleId)
+	if err != nil {
+		return err
+	}
+	if webId <= 0 {
+		return ErrNotFound
+	}
+
+	return SharedHTTPWebDAO.CheckUserWeb(tx, userId, webId)
 }
 
 // NotifyUpdate 通知更新

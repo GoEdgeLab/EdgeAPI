@@ -261,6 +261,7 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		IsEnterpriseIdentified: isEnterpriseIdentified,
 		BandwidthAlgo:          user.BandwidthAlgo,
 		OtpLogin:               pbOtpAuth,
+		Lang:                   user.Lang,
 	}}, nil
 }
 
