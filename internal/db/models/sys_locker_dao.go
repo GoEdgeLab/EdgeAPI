@@ -138,6 +138,7 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		return result, err
 	}
 	err := this.Query(tx).
+		Reuse(false). // no need to prepare statement in every transaction
 		InsertOrUpdateQuickly(maps.Map{
 			"key":     key,
 			"version": defaultValue,
@@ -148,6 +149,7 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		return 0, err
 	}
 	return this.Query(tx).
+		Reuse(false). // no need to prepare statement in every transaction
 		Attr("key", key).
 		Result("version").
 		FindInt64Col(0)

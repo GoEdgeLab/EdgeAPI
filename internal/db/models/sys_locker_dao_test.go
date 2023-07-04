@@ -26,6 +26,21 @@ func TestSysLockerDAO_Lock(t *testing.T) {
 	}
 }
 
+func TestSysLocker_Increase_SQL(t *testing.T) {
+	var dao = NewSysLockerDAO()
+	value, err := dao.Read(nil, "hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("before:", value)
+	v, err := dao.Increase(nil, "hello", 0)
+	if err != nil {
+		t.Log("err:", err)
+		return
+	}
+	t.Log("after:", v)
+}
+
 func TestSysLocker_Increase(t *testing.T) {
 	dbs.NotifyReady()
 
