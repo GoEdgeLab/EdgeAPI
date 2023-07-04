@@ -97,7 +97,13 @@ func (this *Setup) Run() error {
 	}
 	for _, db := range config.DBs {
 		// 可以同时运行多条语句
-		db.Dsn += "&multiStatements=true"
+		if !strings.Contains(db.Dsn, "multiStatements=") {
+			if strings.Contains(db.Dsn, "?") {
+				db.Dsn += "&multiStatements=true"
+			} else {
+				db.Dsn += "?multiStatements=true"
+			}
+		}
 	}
 	dbConfig, ok := config.DBs[Tea.Env]
 	if !ok {

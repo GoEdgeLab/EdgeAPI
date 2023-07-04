@@ -1,12 +1,14 @@
 package models
 
 import (
+	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"strings"
 	"time"
 )
 
@@ -119,6 +121,11 @@ func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
 
 // Increase 增加版本号
 func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (int64, error) {
+	// validate key
+	if strings.Contains(key, "'") {
+		return 0, errors.New("invalid key '" + key + "'")
+	}
+
 	if tx == nil {
 		var result int64
 		var err error
@@ -137,7 +144,21 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		})
 		return result, err
 	}
-	err := this.Query(tx).
+
+	// combine statements to make increasing faster
+	colValue, err := tx.FindCol(0, "INSERT INTO `edgeSysLockers` (`key`, `version`) VALUES ('"+key+"', "+types.String(defaultValue)+") ON DUPLICATE KEY UPDATE `version`=`version`+1; SELECT `version` FROM edgeSysLockers WHERE `key`='"+key+"'")
+	if err != nil {
+		if CheckSQLErrCode(err, 1064 /** syntax error **/) {
+			// continue to use seperated query
+			err = nil
+		} else {
+			return 0, err
+		}
+	} else {
+		return types.Int64(colValue), nil
+	}
+
+	err = this.Query(tx).
 		Reuse(false). // no need to prepare statement in every transaction
 		InsertOrUpdateQuickly(maps.Map{
 			"key":     key,

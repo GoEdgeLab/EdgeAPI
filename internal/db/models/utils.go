@@ -80,3 +80,12 @@ func CheckSQLDuplicateErr(err error) bool {
 	}
 	return CheckSQLErrCode(err, 1062)
 }
+
+// IsMySQLError Check error is MySQLError
+func IsMySQLError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(*mysql.MySQLError)
+	return ok
+}

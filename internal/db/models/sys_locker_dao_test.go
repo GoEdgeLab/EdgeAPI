@@ -12,14 +12,16 @@ import (
 func TestSysLockerDAO_Lock(t *testing.T) {
 	var tx *dbs.Tx
 
-	isOk, err := SharedSysLockerDAO.Lock(tx, "test", 600)
+	var dao = NewSysLockerDAO()
+
+	isOk, err := dao.Lock(tx, "test", 600)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(isOk)
 
 	if isOk {
-		err = SharedSysLockerDAO.Unlock(tx, "test")
+		err = dao.Unlock(tx, "test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -127,4 +129,20 @@ func TestSysLocker_Increase_Performance(t *testing.T) {
 	wg.Wait()
 
 	t.Log("cost:", time.Since(before).Seconds()*1000, "ms")
+}
+
+func BenchmarkSysLockerDAO_Increase(b *testing.B) {
+	var dao = NewSysLockerDAO()
+	_, _ = dao.Increase(nil, "hello", 0)
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := dao.Increase(nil, "hello", 0)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
