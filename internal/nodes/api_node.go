@@ -295,6 +295,9 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 func (this *APINode) checkDB() error {
 	logs.Println("[API_NODE]checking database connection ...")
 
+	// lookup mysqld_safe process
+	go dbutils.FindMySQLPathAndRemember()
+
 	db, err := dbs.Default()
 	if err != nil {
 		return err
@@ -311,13 +314,7 @@ func (this *APINode) checkDB() error {
 		if strings.Contains(err.Error(), "connection refused") {
 			config, _ := db.Config()
 			if config != nil && (strings.Contains(config.Dsn, "tcp(127.0.0.1:") || strings.Contains(config.Dsn, "tcp(localhost:")) && os.Getgid() == 0 /** ROOT 用户 **/ {
-				var mysqldSafeFile = "/usr/local/mysql/bin/mysqld_safe"
-				_, err = os.Stat(mysqldSafeFile)
-				if err == nil {
-					logs.Println("[API_NODE]try to start local mysql server from '" + mysqldSafeFile + "' ...")
-					var mysqlCmd = exec.Command(mysqldSafeFile)
-					_ = mysqlCmd.Start()
-				}
+				dbutils.StartLocalMySQL()
 			}
 		}
 
@@ -835,7 +832,7 @@ func (this *APINode) unaryInterceptor(ctx context.Context, req any, info *grpc.U
 	if err != nil {
 		statusErr, ok := status.FromError(err)
 		if ok {
-			err = status.Error(statusErr.Code(), "'" + info.FullMethod + "()' says: " + err.Error())
+			err = status.Error(statusErr.Code(), "'"+info.FullMethod+"()' says: "+err.Error())
 		} else {
 			err = errors.New("'" + info.FullMethod + "()' says: " + err.Error())
 		}

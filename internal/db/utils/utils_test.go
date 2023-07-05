@@ -35,3 +35,11 @@ func TestMySQLVersion(t *testing.T) {
 func TestMySQLVersionFrom8(t *testing.T) {
 	t.Log(dbutils.MySQLVersionFrom8())
 }
+
+func TestFindMySQLPath(t *testing.T) {
+	t.Log(dbutils.FindMySQLPath())
+}
+
+func TestStartLocalMySQL(t *testing.T) {
+	dbutils.StartLocalMySQL()
+}
