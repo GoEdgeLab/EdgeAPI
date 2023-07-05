@@ -60,7 +60,7 @@ func (this *NodeCluster) DecodeClock() *nodeconfigs.ClockConfig {
 
 // DecodeGlobalServerConfig 解析全局服务配置
 func (this *NodeCluster) DecodeGlobalServerConfig() *serverconfigs.GlobalServerConfig {
-	var config = serverconfigs.DefaultGlobalServerConfig()
+	var config = serverconfigs.NewGlobalServerConfig()
 	if IsNotNull(this.GlobalServerConfig) {
 		err := json.Unmarshal(this.GlobalServerConfig, config)
 		if err != nil {

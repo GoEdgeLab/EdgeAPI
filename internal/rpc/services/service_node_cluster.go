@@ -34,7 +34,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 	}
 
 	// 全局服务配置
-	var serverGlobalConfig = serverconfigs.DefaultGlobalServerConfig()
+	var serverGlobalConfig = serverconfigs.NewGlobalServerConfig()
 	if len(req.GlobalServerConfigJSON) > 0 {
 		err = json.Unmarshal(req.GlobalServerConfigJSON, serverGlobalConfig)
 		if err != nil {
@@ -1444,7 +1444,7 @@ func (this *NodeClusterService) UpdateNodeClusterGlobalServerConfig(ctx context.
 		return nil, err
 	}
 
-	var config = serverconfigs.DefaultGlobalServerConfig()
+	var config = serverconfigs.NewGlobalServerConfig()
 	err = json.Unmarshal(req.GlobalServerConfigJSON, config)
 	if err != nil {
 		return nil, err

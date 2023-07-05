@@ -2016,7 +2016,7 @@ func (this *NodeService) FindNodeGlobalServerConfig(ctx context.Context, req *pb
 		}
 	}
 	if config == nil {
-		config = serverconfigs.DefaultGlobalServerConfig()
+		config = serverconfigs.NewGlobalServerConfig()
 	}
 
 	configJSON, err := json.Marshal(config)

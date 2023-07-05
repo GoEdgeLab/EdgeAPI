@@ -176,7 +176,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 
 	// 全局服务配置
 	if globalServerConfig == nil {
-		globalServerConfig = serverconfigs.DefaultGlobalServerConfig()
+		globalServerConfig = serverconfigs.NewGlobalServerConfig()
 	}
 	globalServerConfigJSON, err := json.Marshal(globalServerConfig)
 	if err != nil {
@@ -1396,7 +1396,7 @@ func (this *NodeClusterDAO) FindClusterGlobalServerConfig(tx *dbs.Tx, clusterId 
 		return nil, err
 	}
 
-	var config = serverconfigs.DefaultGlobalServerConfig()
+	var config = serverconfigs.NewGlobalServerConfig()
 	if IsNull(configJSON) {
 		return config, nil
 	}
@@ -1412,7 +1412,7 @@ func (this *NodeClusterDAO) FindClusterGlobalServerConfig(tx *dbs.Tx, clusterId 
 // UpdateClusterGlobalServerConfig 修改全局服务配置
 func (this *NodeClusterDAO) UpdateClusterGlobalServerConfig(tx *dbs.Tx, clusterId int64, config *serverconfigs.GlobalServerConfig) error {
 	if config == nil {
-		config = serverconfigs.DefaultGlobalServerConfig()
+		config = serverconfigs.NewGlobalServerConfig()
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
