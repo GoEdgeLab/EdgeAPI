@@ -4,6 +4,7 @@ package utils
 
 import (
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
+	executils "github.com/TeaOSLab/EdgeAPI/internal/utils/exec"
 	"github.com/iwind/TeaGo/types"
 	"os/exec"
 	"runtime"
@@ -14,7 +15,7 @@ func AddPortsToFirewall(ports []int) {
 		// Linux
 		if runtime.GOOS == "linux" {
 			// firewalld
-			firewallCmd, _ := exec.LookPath("firewall-cmd")
+			firewallCmd, _ := executils.LookPath("firewall-cmd")
 			if len(firewallCmd) > 0 {
 				err := exec.Command(firewallCmd, "--add-port="+types.String(port)+"/tcp").Run()
 				if err == nil {
