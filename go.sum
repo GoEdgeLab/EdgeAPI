@@ -87,6 +87,10 @@ github.com/iwind/TeaGo v0.0.0-20230623080147-cd1e53b4915f h1:xo6XmXLtveKcwcZAXV6
 github.com/iwind/TeaGo v0.0.0-20230623080147-cd1e53b4915f/go.mod h1:fi/Pq+/5m2HZoseM+39dMF57ANXRt6w4PkGu3NXPc5s=
 github.com/iwind/TeaGo v0.0.0-20230630104525-161f0b32996d h1:XnTIj781NdSipts60fVqbgZorVAKVSRaA6nqVNfBQ1g=
 github.com/iwind/TeaGo v0.0.0-20230630104525-161f0b32996d/go.mod h1:fi/Pq+/5m2HZoseM+39dMF57ANXRt6w4PkGu3NXPc5s=
+github.com/iwind/TeaGo v0.0.0-20230704123021-ebe4ec1e7717 h1:YgTomks1Bdt+GFajnxcGoM2xhm+LgESMnS3jdgGBBiQ=
+github.com/iwind/TeaGo v0.0.0-20230704123021-ebe4ec1e7717/go.mod h1:fi/Pq+/5m2HZoseM+39dMF57ANXRt6w4PkGu3NXPc5s=
+github.com/iwind/TeaGo v0.0.0-20230704135818-4a5646ab1f5b h1:yYUaxnc04uzfr7C9HBN52ZZvcQomND+C5aZTpjOUYFI=
+github.com/iwind/TeaGo v0.0.0-20230704135818-4a5646ab1f5b/go.mod h1:fi/Pq+/5m2HZoseM+39dMF57ANXRt6w4PkGu3NXPc5s=
 github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62 h1:HJH6RDheAY156DnIfJSD/bEvqyXzsZuE2gzs8PuUjoo=
 github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62/go.mod h1:H5Q7SXwbx3a97ecJkaS2sD77gspzE7HFUafBO0peEyA=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=

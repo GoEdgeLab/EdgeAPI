@@ -14,7 +14,7 @@ require (
 	github.com/go-acme/lego/v4 v4.10.2
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
-	github.com/iwind/TeaGo v0.0.0-20230630104525-161f0b32996d
+	github.com/iwind/TeaGo v0.0.0-20230704135818-4a5646ab1f5b
 	github.com/iwind/gosock v0.0.0-20220505115348-f88412125a62
 	github.com/miekg/dns v1.1.50
 	github.com/mozillazg/go-pinyin v0.18.0
