@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/dbs"
 )
 
@@ -292,8 +294,53 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 	}
 
 	var tx = this.NullTx()
+	var newShutdownJSON = req.ShutdownJSON
+	if len(req.ShutdownJSON) > 0 {
+		const maxURLLength = 512
+		const maxBodyLength = 32 * 1024
 
-	err = models.SharedHTTPWebDAO.UpdateWebShutdown(tx, req.HttpWebId, req.ShutdownJSON)
+		var shutdownConfig = &serverconfigs.HTTPShutdownConfig{}
+		err = json.Unmarshal(req.ShutdownJSON, shutdownConfig)
+		if err != nil {
+			return nil, err
+		}
+		err = shutdownConfig.Init()
+		if err != nil {
+			return nil, errors.New("validate config failed: " + err.Error())
+		}
+
+		switch shutdownConfig.BodyType {
+		case shared.BodyTypeURL:
+			if len(shutdownConfig.URL) > maxURLLength {
+				return nil, errors.New("'url' too long")
+			}
+			if !regexputils.HTTPProtocol.MatchString(shutdownConfig.URL) {
+				return nil, errors.New("invalid 'url' format")
+			}
+
+			if len(shutdownConfig.Body) > maxBodyLength { // we keep short body for user experience
+				shutdownConfig.Body = ""
+			}
+		case shared.BodyTypeHTML:
+			if len(shutdownConfig.Body) > maxBodyLength {
+				return nil, errors.New("'body' too long")
+			}
+
+			if len(shutdownConfig.URL) > maxURLLength { // we keep short url for user experience
+				shutdownConfig.URL = ""
+			}
+
+		default:
+			return nil, errors.New("invalid 'bodyType': " + shutdownConfig.BodyType)
+		}
+
+		newShutdownJSON, err = json.Marshal(shutdownConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebShutdown(tx, req.HttpWebId, newShutdownJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -319,14 +366,23 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	var tx = this.NullTx()
 
 	// 检查配置
-	var pages = []*serverconfigs.HTTPPageConfig{}
-	err = json.Unmarshal(req.PagesJSON, &pages)
-	if err != nil {
-		return nil, errors.New("decode 'pages' failed: " + err.Error())
-	}
 	var newPages = []*serverconfigs.HTTPPageConfig{}
-	for _, page := range pages {
-		newPages = append(newPages, &serverconfigs.HTTPPageConfig{Id: page.Id})
+	if len(req.PagesJSON) > 0 {
+		var pages = []*serverconfigs.HTTPPageConfig{}
+		err = json.Unmarshal(req.PagesJSON, &pages)
+
+		for _, page := range pages {
+			err = page.Init()
+			if err != nil {
+				return nil, errors.New("validate page failed: " + err.Error())
+			}
+
+			// reset not needed fields, keep "id" reference only
+			page.URL = ""
+			page.Body = ""
+
+			newPages = append(newPages, &serverconfigs.HTTPPageConfig{Id: page.Id})
+		}
 	}
 	newPagesJSON, err := json.Marshal(newPages)
 	if err != nil {
