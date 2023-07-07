@@ -16,6 +16,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -513,7 +514,8 @@ func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day
 		Result("SUM(bytes) AS bytes", "SUM(cachedBytes) AS cachedBytes", "SUM(countRequests) AS countRequests", "SUM(countCachedRequests) AS countCachedRequests", "SUM(countAttackRequests) AS countAttackRequests", "SUM(attackBytes) AS attackBytes", "day", "timeFrom", "MIN(timeTo) AS timeTo").
 		Attr("serverId", serverId).
 		Attr("day", day).
-		Group("day").Group("timeFrom", dbs.QueryOrderDesc)
+		Group("day").
+		Group("timeFrom")
 
 	if len(timeFrom) > 0 {
 		query.Gte("timeFrom", timeFrom)
@@ -529,6 +531,11 @@ func (this *ServerDailyStatDAO) FindStatsWithDay(tx *dbs.Tx, serverId int64, day
 	if err != nil {
 		return nil, err
 	}
+
+	// sort results
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].TimeFrom < result[j].TimeFrom
+	})
 
 	return
 }

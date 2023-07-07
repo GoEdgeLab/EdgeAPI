@@ -140,6 +140,6 @@ func TestServerDailyStatDAO_FindStatsWithDay(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, stat := range stats {
-		t.Log(stat.TimeFrom, stat.TimeTo, stat.Bytes)
+		t.Log(stat.Day, stat.TimeFrom, stat.TimeTo, stat.Bytes)
 	}
 }
