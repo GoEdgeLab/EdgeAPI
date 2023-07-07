@@ -903,6 +903,22 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 		query.Desc("IF(FIND_IN_SET(bandwidthTime, :times), bandwidthBytes, 0)")
 		query.Param("times", strings.Join(times, ","))
 		query.DescPk()
+	case "requestsAsc":
+		query.Asc("IF(FIND_IN_SET(bandwidthTime, :times), countRequests, 0)")
+		query.Param("times", strings.Join(times, ","))
+		query.DescPk()
+	case "requestsDesc":
+		query.Desc("IF(FIND_IN_SET(bandwidthTime, :times), countRequests, 0)")
+		query.Param("times", strings.Join(times, ","))
+		query.DescPk()
+	case "attackRequestsAsc":
+		query.Asc("IF(FIND_IN_SET(bandwidthTime, :times), countAttackRequests, 0)")
+		query.Param("times", strings.Join(times, ","))
+		query.DescPk()
+	case "attackRequestsDesc":
+		query.Desc("IF(FIND_IN_SET(bandwidthTime, :times), countAttackRequests, 0)")
+		query.Param("times", strings.Join(times, ","))
+		query.DescPk()
 	default:
 		query.DescPk()
 	}
@@ -913,6 +929,8 @@ func (this *ServerDAO) ListEnabledServersMatch(tx *dbs.Tx, offset int64, size in
 	for _, server := range result {
 		if len(server.BandwidthTime) > 0 && !lists.ContainsString(times, server.BandwidthTime) {
 			server.BandwidthBytes = 0
+			server.CountRequests = 0
+			server.CountAttackRequests = 0
 		}
 	}
 
@@ -2737,7 +2755,7 @@ func (this *ServerDAO) FindUserServerClusterIds(tx *dbs.Tx, userId int64) ([]int
 
 // UpdateServerBandwidth 更新服务带宽
 // fullTime YYYYMMDDHHII
-func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTime string, bandwidthBytes int64) error {
+func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTime string, bandwidthBytes int64, countRequests int64, countAttackRequests int64) error {
 	if serverId <= 0 {
 		return nil
 	}
@@ -2758,13 +2776,19 @@ func (this *ServerDAO) UpdateServerBandwidth(tx *dbs.Tx, serverId int64, fullTim
 			Pk(serverId).
 			Set("bandwidthTime", fullTime).
 			Set("bandwidthBytes", bandwidthBytes).
+			Set("countRequests", countRequests).
+			Set("countAttackRequests", countAttackRequests).
 			UpdateQuickly()
 	} else {
 		return this.Query(tx).
 			Pk(serverId).
 			Set("bandwidthTime", fullTime).
 			Set("bandwidthBytes", dbs.SQL("bandwidthBytes+:bytes")).
+			Set("countRequests", dbs.SQL("countRequests+:countRequests")).
+			Set("countAttackRequests", dbs.SQL("countAttackRequests+:countAttackRequests")).
 			Param("bytes", bandwidthBytes).
+			Param("countRequests", countRequests).
+			Param("countAttackRequests", countAttackRequests).
 			UpdateQuickly()
 	}
 }

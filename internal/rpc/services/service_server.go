@@ -1301,6 +1301,14 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 		order = "trafficOutAsc"
 	} else if req.TrafficOutDesc {
 		order = "trafficOutDesc"
+	} else if req.RequestsAsc {
+		order = "requestsAsc"
+	} else if req.RequestsDesc {
+		order = "requestsDesc"
+	} else if req.AttackRequestsAsc {
+		order = "attackRequestsAsc"
+	} else if req.AttackRequestsDesc {
+		order = "attackRequestsDesc"
 	}
 
 	servers, err := models.SharedServerDAO.ListEnabledServersMatch(tx, req.Offset, req.Size, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, req.AuditingFlag, utils.SplitStrings(req.ProtocolFamily, ","), order)
@@ -1418,11 +1426,13 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 				Id:   int64(server.ClusterId),
 				Name: clusterName,
 			},
-			ServerGroups:   pbGroups,
-			UserId:         int64(server.UserId),
-			User:           pbUser,
-			BandwidthTime:  server.BandwidthTime,
-			BandwidthBytes: int64(server.BandwidthBytes),
+			ServerGroups:        pbGroups,
+			UserId:              int64(server.UserId),
+			User:                pbUser,
+			BandwidthTime:       server.BandwidthTime,
+			BandwidthBytes:      int64(server.BandwidthBytes),
+			CountRequests:       int64(server.CountRequests),
+			CountAttackRequests: int64(server.CountAttackRequests),
 		})
 	}
 

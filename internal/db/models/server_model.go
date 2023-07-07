@@ -2,6 +2,57 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
+const (
+	ServerField_Id                  dbs.FieldName = "id"                  // ID
+	ServerField_IsOn                dbs.FieldName = "isOn"                // 是否启用
+	ServerField_UserId              dbs.FieldName = "userId"              // 用户ID
+	ServerField_AdminId             dbs.FieldName = "adminId"             // 管理员ID
+	ServerField_Type                dbs.FieldName = "type"                // 服务类型
+	ServerField_Name                dbs.FieldName = "name"                // 名称
+	ServerField_Description         dbs.FieldName = "description"         // 描述
+	ServerField_PlainServerNames    dbs.FieldName = "plainServerNames"    // 扁平化域名列表
+	ServerField_ServerNames         dbs.FieldName = "serverNames"         // 域名列表
+	ServerField_AuditingAt          dbs.FieldName = "auditingAt"          // 审核提交时间
+	ServerField_AuditingServerNames dbs.FieldName = "auditingServerNames" // 审核中的域名
+	ServerField_IsAuditing          dbs.FieldName = "isAuditing"          // 是否正在审核
+	ServerField_AuditingResult      dbs.FieldName = "auditingResult"      // 审核结果
+	ServerField_Http                dbs.FieldName = "http"                // HTTP配置
+	ServerField_Https               dbs.FieldName = "https"               // HTTPS配置
+	ServerField_Tcp                 dbs.FieldName = "tcp"                 // TCP配置
+	ServerField_Tls                 dbs.FieldName = "tls"                 // TLS配置
+	ServerField_Unix                dbs.FieldName = "unix"                // Unix配置
+	ServerField_Udp                 dbs.FieldName = "udp"                 // UDP配置
+	ServerField_WebId               dbs.FieldName = "webId"               // WEB配置
+	ServerField_ReverseProxy        dbs.FieldName = "reverseProxy"        // 反向代理配置
+	ServerField_GroupIds            dbs.FieldName = "groupIds"            // 分组ID列表
+	ServerField_Config              dbs.FieldName = "config"              // 服务配置，自动生成
+	ServerField_ConfigMd5           dbs.FieldName = "configMd5"           // Md5
+	ServerField_ClusterId           dbs.FieldName = "clusterId"           // 集群ID
+	ServerField_IncludeNodes        dbs.FieldName = "includeNodes"        // 部署条件
+	ServerField_ExcludeNodes        dbs.FieldName = "excludeNodes"        // 节点排除条件
+	ServerField_Version             dbs.FieldName = "version"             // 版本号
+	ServerField_CreatedAt           dbs.FieldName = "createdAt"           // 创建时间
+	ServerField_State               dbs.FieldName = "state"               // 状态
+	ServerField_DnsName             dbs.FieldName = "dnsName"             // DNS名称
+	ServerField_TcpPorts            dbs.FieldName = "tcpPorts"            // 所包含TCP端口
+	ServerField_UdpPorts            dbs.FieldName = "udpPorts"            // 所包含UDP端口
+	ServerField_SupportCNAME        dbs.FieldName = "supportCNAME"        // 允许CNAME不在域名名单
+	ServerField_TrafficLimit        dbs.FieldName = "trafficLimit"        // 流量限制
+	ServerField_TrafficDay          dbs.FieldName = "trafficDay"          // YYYYMMDD
+	ServerField_TrafficMonth        dbs.FieldName = "trafficMonth"        // YYYYMM
+	ServerField_TotalDailyTraffic   dbs.FieldName = "totalDailyTraffic"   // 日流量
+	ServerField_TotalMonthlyTraffic dbs.FieldName = "totalMonthlyTraffic" // 月流量
+	ServerField_TrafficLimitStatus  dbs.FieldName = "trafficLimitStatus"  // 流量限制状态
+	ServerField_TotalTraffic        dbs.FieldName = "totalTraffic"        // 总流量
+	ServerField_UserPlanId          dbs.FieldName = "userPlanId"          // 所属套餐ID
+	ServerField_LastUserPlanId      dbs.FieldName = "lastUserPlanId"      // 上一次使用的套餐
+	ServerField_Uam                 dbs.FieldName = "uam"                 // UAM设置
+	ServerField_BandwidthTime       dbs.FieldName = "bandwidthTime"       // 带宽更新时间，YYYYMMDDHHII
+	ServerField_BandwidthBytes      dbs.FieldName = "bandwidthBytes"      // 最近带宽峰值
+	ServerField_CountAttackRequests dbs.FieldName = "countAttackRequests" // 最近攻击请求数
+	ServerField_CountRequests       dbs.FieldName = "countRequests"       // 最近总请求数
+)
+
 // Server 服务
 type Server struct {
 	Id                  uint32   `field:"id"`                  // ID
@@ -50,6 +101,8 @@ type Server struct {
 	Uam                 dbs.JSON `field:"uam"`                 // UAM设置
 	BandwidthTime       string   `field:"bandwidthTime"`       // 带宽更新时间，YYYYMMDDHHII
 	BandwidthBytes      uint64   `field:"bandwidthBytes"`      // 最近带宽峰值
+	CountAttackRequests uint64   `field:"countAttackRequests"` // 最近攻击请求数
+	CountRequests       uint64   `field:"countRequests"`       // 最近总请求数
 }
 
 type ServerOperator struct {
@@ -99,6 +152,8 @@ type ServerOperator struct {
 	Uam                 any // UAM设置
 	BandwidthTime       any // 带宽更新时间，YYYYMMDDHHII
 	BandwidthBytes      any // 最近带宽峰值
+	CountAttackRequests any // 最近攻击请求数
+	CountRequests       any // 最近总请求数
 }
 
 func NewServerOperator() *ServerOperator {

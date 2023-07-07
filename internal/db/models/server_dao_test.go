@@ -326,7 +326,7 @@ func TestServerDAO_FindBool(t *testing.T) {
 func TestServerDAO_UpdateServerBandwidth(t *testing.T) {
 	var dao = models.NewServerDAO()
 	var tx *dbs.Tx
-	err := dao.UpdateServerBandwidth(tx, 1, timeutil.FormatTime("YmdHi", time.Now().Unix()/300*300), 1024)
+	err := dao.UpdateServerBandwidth(tx, 1, timeutil.FormatTime("YmdHi", time.Now().Unix()/300*300), 1024, 1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
