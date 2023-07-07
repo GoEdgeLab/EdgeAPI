@@ -146,7 +146,7 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 	}
 
 	// combine statements to make increasing faster
-	colValue, err := tx.FindCol(0, "INSERT INTO `edgeSysLockers` (`key`, `version`) VALUES ('"+key+"', "+types.String(defaultValue)+") ON DUPLICATE KEY UPDATE `version`=`version`+1; SELECT `version` FROM edgeSysLockers WHERE `key`='"+key+"'")
+	colValue, err := tx.FindCol(0, "INSERT INTO `"+this.Table+"` (`key`, `version`) VALUES ('"+key+"', "+types.String(defaultValue)+") ON DUPLICATE KEY UPDATE `version`=`version`+1; SELECT `version` FROM `"+this.Table+"` WHERE `key`='"+key+"'")
 	if err != nil {
 		if CheckSQLErrCode(err, 1064 /** syntax error **/) {
 			// continue to use seperated query
