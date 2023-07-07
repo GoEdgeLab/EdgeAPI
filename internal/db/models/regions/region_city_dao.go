@@ -42,7 +42,7 @@ func init() {
 // EnableRegionCity 启用条目
 func (this *RegionCityDAO) EnableRegionCity(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionCityStateEnabled).
 		Update()
 	return err
@@ -51,7 +51,7 @@ func (this *RegionCityDAO) EnableRegionCity(tx *dbs.Tx, id uint32) error {
 // DisableRegionCity 禁用条目
 func (this *RegionCityDAO) DisableRegionCity(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionCityStateDisabled).
 		Update()
 	return err
@@ -60,7 +60,7 @@ func (this *RegionCityDAO) DisableRegionCity(tx *dbs.Tx, id uint32) error {
 // FindEnabledRegionCity 查找启用中的条目
 func (this *RegionCityDAO) FindEnabledRegionCity(tx *dbs.Tx, id int64) (*RegionCity, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Attr("state", RegionCityStateEnabled).
 		Find()
 	if result == nil {
@@ -72,7 +72,7 @@ func (this *RegionCityDAO) FindEnabledRegionCity(tx *dbs.Tx, id int64) (*RegionC
 // FindRegionCityName 根据主键查找名称
 func (this *RegionCityDAO) FindRegionCityName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Result("name").
 		FindStringCol("")
 }
@@ -81,7 +81,7 @@ func (this *RegionCityDAO) FindRegionCityName(tx *dbs.Tx, id uint32) (string, er
 func (this *RegionCityDAO) FindCityWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).
 		Attr("dataId", dataId).
-		ResultPk().
+		Result(RegionCityField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -93,7 +93,7 @@ func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string,
 	op.DataId = dataId
 	op.State = RegionCityStateEnabled
 
-	codes := []string{name}
+	var codes = []string{name}
 	codesJSON, err := json.Marshal(codes)
 	if err != nil {
 		return 0, err
@@ -103,7 +103,18 @@ func (this *RegionCityDAO) CreateCity(tx *dbs.Tx, provinceId int64, name string,
 	if err != nil {
 		return 0, err
 	}
-	return types.Int64(op.Id), nil
+	var cityId = types.Int64(op.Id)
+
+	// value id
+	err = this.Query(tx).
+		Pk(cityId).
+		Set(RegionCityField_ValueId, cityId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return cityId, nil
 }
 
 // FindCityIdWithName 根据城市名查找城市ID
@@ -113,7 +124,7 @@ func (this *RegionCityDAO) FindCityIdWithName(tx *dbs.Tx, provinceId int64, city
 		Where("(name=:cityName OR customName=:cityName OR JSON_CONTAINS(codes, :cityNameJSON) OR JSON_CONTAINS(customCodes, :cityNameJSON))").
 		Param("cityName", cityName).
 		Param("cityNameJSON", strconv.Quote(cityName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
+		Result(RegionCityField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -147,7 +158,7 @@ func (this *RegionCityDAO) UpdateCityCustom(tx *dbs.Tx, cityId int64, customName
 	}
 
 	return this.Query(tx).
-		Pk(cityId).
+		Attr(RegionCityField_ValueId, cityId).
 		Set("customName", customName).
 		Set("customCodes", customCodesJSON).
 		UpdateQuickly()

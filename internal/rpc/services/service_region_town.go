@@ -48,7 +48,7 @@ func (this *RegionTownService) FindAllRegionTowns(ctx context.Context, req *pb.F
 			}
 
 			pbCity = &pb.RegionCity{
-				Id:          int64(city.Id),
+				Id:          int64(city.ValueId),
 				Name:        city.Name,
 				Codes:       city.DecodeCodes(),
 				CustomName:  city.CustomName,
@@ -58,7 +58,7 @@ func (this *RegionTownService) FindAllRegionTowns(ctx context.Context, req *pb.F
 		}
 
 		pbTowns = append(pbTowns, &pb.RegionTown{
-			Id:           int64(town.Id),
+			Id:           int64(town.ValueId),
 			Name:         town.Name,
 			Codes:        town.DecodeCodes(),
 			RegionCityId: int64(town.CityId),
@@ -95,7 +95,7 @@ func (this *RegionTownService) FindAllRegionTownsWithRegionCityId(ctx context.Co
 		var pbCity = &pb.RegionCity{Id: cityId}
 
 		pbTowns = append(pbTowns, &pb.RegionTown{
-			Id:           int64(town.Id),
+			Id:           int64(town.ValueId),
 			Name:         town.Name,
 			Codes:        town.DecodeCodes(),
 			RegionCityId: int64(town.CityId),
@@ -131,7 +131,7 @@ func (this *RegionTownService) FindRegionTown(ctx context.Context, req *pb.FindR
 
 	return &pb.FindRegionTownResponse{
 		RegionTown: &pb.RegionTown{
-			Id:           int64(town.Id),
+			Id:           int64(town.ValueId),
 			Name:         town.Name,
 			Codes:        town.DecodeCodes(),
 			RegionCityId: int64(town.CityId),

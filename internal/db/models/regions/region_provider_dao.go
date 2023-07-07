@@ -41,7 +41,7 @@ func init() {
 // EnableRegionProvider 启用条目
 func (this *RegionProviderDAO) EnableRegionProvider(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionProviderStateEnabled).
 		Update()
 	return err
@@ -50,7 +50,7 @@ func (this *RegionProviderDAO) EnableRegionProvider(tx *dbs.Tx, id uint32) error
 // DisableRegionProvider 禁用条目
 func (this *RegionProviderDAO) DisableRegionProvider(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionProviderStateDisabled).
 		Update()
 	return err
@@ -59,7 +59,7 @@ func (this *RegionProviderDAO) DisableRegionProvider(tx *dbs.Tx, id uint32) erro
 // FindEnabledRegionProvider 查找启用中的条目
 func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id int64) (*RegionProvider, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Attr("state", RegionProviderStateEnabled).
 		Find()
 	if result == nil {
@@ -71,7 +71,7 @@ func (this *RegionProviderDAO) FindEnabledRegionProvider(tx *dbs.Tx, id int64) (
 // FindRegionProviderName 根据主键查找名称
 func (this *RegionProviderDAO) FindRegionProviderName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Result("name").
 		FindStringCol("")
 }
@@ -82,7 +82,7 @@ func (this *RegionProviderDAO) FindProviderIdWithName(tx *dbs.Tx, providerName s
 		Where("(name=:providerName OR customName=:providerName OR JSON_CONTAINS(codes, :providerNameJSON) OR JSON_CONTAINS(customCodes, :providerNameJSON))").
 		Param("providerName", providerName).
 		Param("providerNameJSON", strconv.Quote(providerName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
+		Result(RegionProviderField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -96,7 +96,20 @@ func (this *RegionProviderDAO) CreateProvider(tx *dbs.Tx, name string) (int64, e
 		return 0, err
 	}
 	op.Codes = codesJSON
-	return this.SaveInt64(tx, op)
+	providerId, err := this.SaveInt64(tx, op)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.Query(tx).
+		Pk(providerId).
+		Set(RegionProviderField_ValueId, providerId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return providerId, nil
 }
 
 // FindAllEnabledProviders 查找所有服务商
@@ -119,7 +132,7 @@ func (this *RegionProviderDAO) UpdateProviderCustom(tx *dbs.Tx, providerId int64
 	}
 
 	return this.Query(tx).
-		Pk(providerId).
+		Attr("valueId", providerId).
 		Set("customName", customName).
 		Set("customCodes", customCodesJSON).
 		UpdateQuickly()

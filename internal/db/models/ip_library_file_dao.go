@@ -339,7 +339,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var countries = []*iplibrary.Country{}
 	for _, country := range dbCountries {
 		countries = append(countries, &iplibrary.Country{
-			Id:    types.Uint16(country.Id),
+			Id:    types.Uint16(country.ValueId),
 			Name:  country.DisplayName(),
 			Codes: country.AllCodes(),
 		})
@@ -354,7 +354,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var provinces = []*iplibrary.Province{}
 	for _, province := range dbProvinces {
 		provinces = append(provinces, &iplibrary.Province{
-			Id:    types.Uint16(province.Id),
+			Id:    types.Uint16(province.ValueId),
 			Name:  province.DisplayName(),
 			Codes: province.AllCodes(),
 		})
@@ -369,7 +369,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var cities = []*iplibrary.City{}
 	for _, city := range dbCities {
 		cities = append(cities, &iplibrary.City{
-			Id:    city.Id,
+			Id:    city.ValueId,
 			Name:  city.DisplayName(),
 			Codes: city.AllCodes(),
 		})
@@ -384,7 +384,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var towns = []*iplibrary.Town{}
 	for _, town := range dbTowns {
 		towns = append(towns, &iplibrary.Town{
-			Id:    town.Id,
+			Id:    town.ValueId,
 			Name:  town.DisplayName(),
 			Codes: town.AllCodes(),
 		})
@@ -399,7 +399,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var providers = []*iplibrary.Provider{}
 	for _, provider := range dbProviders {
 		providers = append(providers, &iplibrary.Provider{
-			Id:    types.Uint16(provider.Id),
+			Id:    types.Uint16(provider.ValueId),
 			Name:  provider.DisplayName(),
 			Codes: provider.AllCodes(),
 		})
@@ -440,35 +440,35 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var countryMap = map[string]int64{} // countryName => countryId
 	for _, country := range dbCountries {
 		for _, code := range country.AllCodes() {
-			countryMap[code] = int64(country.Id)
+			countryMap[code] = int64(country.ValueId)
 		}
 	}
 
 	var provinceMap = map[string]int64{} // countryId_provinceName => provinceId
 	for _, province := range dbProvinces {
 		for _, code := range province.AllCodes() {
-			provinceMap[types.String(province.CountryId)+"_"+code] = int64(province.Id)
+			provinceMap[types.String(province.CountryId)+"_"+code] = int64(province.ValueId)
 		}
 	}
 
 	var cityMap = map[string]int64{} // provinceId_cityName => cityId
 	for _, city := range dbCities {
 		for _, code := range city.AllCodes() {
-			cityMap[types.String(city.ProvinceId)+"_"+code] = int64(city.Id)
+			cityMap[types.String(city.ProvinceId)+"_"+code] = int64(city.ValueId)
 		}
 	}
 
 	var townMap = map[string]int64{} // cityId_townName => townId
 	for _, town := range dbTowns {
 		for _, code := range town.AllCodes() {
-			townMap[types.String(town.CityId)+"_"+code] = int64(town.Id)
+			townMap[types.String(town.CityId)+"_"+code] = int64(town.ValueId)
 		}
 	}
 
 	var providerMap = map[string]int64{} // providerName => providerId
 	for _, provider := range dbProviders {
 		for _, code := range provider.AllCodes() {
-			providerMap[code] = int64(provider.Id)
+			providerMap[code] = int64(provider.ValueId)
 		}
 	}
 

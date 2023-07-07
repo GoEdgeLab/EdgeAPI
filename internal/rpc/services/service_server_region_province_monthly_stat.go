@@ -52,11 +52,11 @@ func (this *ServerRegionProvinceMonthlyStatService) FindTopServerRegionProvinceM
 			continue
 		}
 		pbStat.RegionCountry = &pb.RegionCountry{
-			Id:   int64(country.Id),
+			Id:   int64(country.ValueId),
 			Name: country.DisplayName(),
 		}
 		pbStat.RegionProvince = &pb.RegionProvince{
-			Id:   int64(province.Id),
+			Id:   int64(province.ValueId),
 			Name: province.DisplayName(),
 		}
 		pbStats = append(pbStats, pbStat)

@@ -30,7 +30,7 @@ func (this *RegionProviderService) FindAllEnabledRegionProviders(ctx context.Con
 	var pbProviders = []*pb.RegionProvider{}
 	for _, provider := range providers {
 		pbProviders = append(pbProviders, &pb.RegionProvider{
-			Id:          int64(provider.Id),
+			Id:          int64(provider.ValueId),
 			Name:        provider.Name,
 			Codes:       provider.DecodeCodes(),
 			CustomName:  provider.CustomName,
@@ -65,7 +65,7 @@ func (this *RegionProviderService) FindEnabledRegionProvider(ctx context.Context
 
 	return &pb.FindEnabledRegionProviderResponse{
 		RegionProvider: &pb.RegionProvider{
-			Id:          int64(provider.Id),
+			Id:          int64(provider.ValueId),
 			Name:        provider.Name,
 			Codes:       provider.DecodeCodes(),
 			CustomName:  provider.CustomName,
@@ -91,7 +91,7 @@ func (this *RegionProviderService) FindAllRegionProviders(ctx context.Context, r
 	var pbProviders = []*pb.RegionProvider{}
 	for _, provider := range providers {
 		pbProviders = append(pbProviders, &pb.RegionProvider{
-			Id:          int64(provider.Id),
+			Id:          int64(provider.ValueId),
 			Name:        provider.Name,
 			Codes:       provider.DecodeCodes(),
 			CustomName:  provider.CustomName,
@@ -125,7 +125,7 @@ func (this *RegionProviderService) FindRegionProvider(ctx context.Context, req *
 
 	return &pb.FindRegionProviderResponse{
 		RegionProvider: &pb.RegionProvider{
-			Id:          int64(provider.Id),
+			Id:          int64(provider.ValueId),
 			Name:        provider.Name,
 			Codes:       provider.DecodeCodes(),
 			CustomName:  provider.CustomName,

@@ -40,13 +40,14 @@ func (this *RegionCountryService) FindAllEnabledRegionCountries(ctx context.Cont
 		}
 
 		result = append(result, &pb.RegionCountry{
-			Id:          int64(country.Id),
+			Id:          int64(country.ValueId),
 			Name:        country.Name,
 			Codes:       country.DecodeCodes(),
 			Pinyin:      pinyinStrings,
 			CustomName:  country.CustomName,
 			CustomCodes: country.DecodeCustomCodes(),
 			DisplayName: country.DisplayName(),
+			IsCommon:    country.IsCommon,
 		})
 	}
 	return &pb.FindAllEnabledRegionCountriesResponse{
@@ -74,7 +75,7 @@ func (this *RegionCountryService) FindEnabledRegionCountry(ctx context.Context, 
 	}
 
 	return &pb.FindEnabledRegionCountryResponse{RegionCountry: &pb.RegionCountry{
-		Id:          int64(country.Id),
+		Id:          int64(country.ValueId),
 		Name:        country.Name,
 		Codes:       country.DecodeCodes(),
 		CustomName:  country.CustomName,
@@ -110,13 +111,14 @@ func (this *RegionCountryService) FindAllRegionCountries(ctx context.Context, re
 		}
 
 		result = append(result, &pb.RegionCountry{
-			Id:          int64(country.Id),
+			Id:          int64(country.ValueId),
 			Name:        country.Name,
 			Codes:       country.DecodeCodes(),
 			Pinyin:      pinyinStrings,
 			CustomName:  country.CustomName,
 			CustomCodes: country.DecodeCustomCodes(),
 			DisplayName: country.DisplayName(),
+			IsCommon:    country.IsCommon,
 		})
 	}
 	return &pb.FindAllRegionCountriesResponse{
@@ -143,12 +145,13 @@ func (this *RegionCountryService) FindRegionCountry(ctx context.Context, req *pb
 	}
 
 	return &pb.FindRegionCountryResponse{RegionCountry: &pb.RegionCountry{
-		Id:          int64(country.Id),
+		Id:          int64(country.ValueId),
 		Name:        country.Name,
 		Codes:       country.DecodeCodes(),
 		CustomName:  country.CustomName,
 		CustomCodes: country.DecodeCustomCodes(),
 		DisplayName: country.DisplayName(),
+		IsCommon:    country.IsCommon,
 	}}, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/regionconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -18,10 +19,6 @@ import (
 const (
 	RegionCountryStateEnabled  = 1 // 已启用
 	RegionCountryStateDisabled = 0 // 已禁用
-)
-
-const (
-	CountryChinaId = 1
 )
 
 var regionCountryIdAndNameCacheMap = map[int64]string{} // country id => name
@@ -50,7 +47,7 @@ func init() {
 // EnableRegionCountry 启用条目
 func (this *RegionCountryDAO) EnableRegionCountry(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionCountryStateEnabled).
 		Update()
 	return err
@@ -59,7 +56,7 @@ func (this *RegionCountryDAO) EnableRegionCountry(tx *dbs.Tx, id uint32) error {
 // DisableRegionCountry 禁用条目
 func (this *RegionCountryDAO) DisableRegionCountry(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionCountryStateDisabled).
 		Update()
 	return err
@@ -68,7 +65,7 @@ func (this *RegionCountryDAO) DisableRegionCountry(tx *dbs.Tx, id int64) error {
 // FindEnabledRegionCountry 查找启用中的条目
 func (this *RegionCountryDAO) FindEnabledRegionCountry(tx *dbs.Tx, id int64) (*RegionCountry, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Attr("state", RegionCountryStateEnabled).
 		Find()
 	if result == nil {
@@ -88,7 +85,7 @@ func (this *RegionCountryDAO) FindRegionCountryName(tx *dbs.Tx, id int64) (strin
 	}
 
 	name, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Result("name").
 		FindStringCol("")
 	if err != nil {
@@ -105,7 +102,7 @@ func (this *RegionCountryDAO) FindRegionCountryName(tx *dbs.Tx, id int64) (strin
 func (this *RegionCountryDAO) FindCountryIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).
 		Attr("dataId", dataId).
-		ResultPk().
+		Result(RegionCountryField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -115,7 +112,7 @@ func (this *RegionCountryDAO) FindCountryIdWithName(tx *dbs.Tx, countryName stri
 		Where("(name=:countryName OR JSON_CONTAINS(codes, :countryNameJSON) OR customName=:countryName OR JSON_CONTAINS(customCodes, :countryNameJSON))").
 		Param("countryName", countryName).
 		Param("countryNameJSON", strconv.Quote(countryName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
+		Result(RegionCountryField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -145,16 +142,61 @@ func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId stri
 	if err != nil {
 		return 0, err
 	}
-	return types.Int64(op.Id), nil
+	var countryId = types.Int64(op.Id)
+
+	err = this.Query(tx).
+		Pk(countryId).
+		Set(RegionCountryField_ValueId, countryId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return countryId, nil
 }
 
 // FindAllEnabledCountriesOrderByPinyin 查找所有可用的国家并按拼音排序
 func (this *RegionCountryDAO) FindAllEnabledCountriesOrderByPinyin(tx *dbs.Tx) (result []*RegionCountry, err error) {
-	_, err = this.Query(tx).
+	ones, err := this.Query(tx).
 		State(RegionCountryStateEnabled).
-		Slice(&result).
-		Asc("pinyin").
+		Asc("JSON_EXTRACT(pinyin, '$[0]')").
 		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// resort China special regions
+	var chinaRegionMap = map[int64]*RegionCountry{} // countryId => *RegionCountry
+	for _, one := range ones {
+		var country = one.(*RegionCountry)
+		var valueId = int64(country.ValueId)
+		if regionconfigs.CheckRegionIsInGreaterChina(valueId) {
+			chinaRegionMap[valueId] = country
+		}
+	}
+
+	for _, one := range ones {
+		var country = one.(*RegionCountry)
+		var valueId = int64(country.ValueId)
+		if valueId == regionconfigs.RegionChinaId {
+			result = append(result, country)
+
+			// add hk, tw, mo, mainland ...
+			for _, subRegionId := range regionconfigs.FindAllGreaterChinaSubRegionIds() {
+				subRegion, ok := chinaRegionMap[subRegionId]
+				if ok {
+					result = append(result, subRegion)
+				}
+			}
+
+			continue
+		}
+		if regionconfigs.CheckRegionIsInGreaterChina(valueId) {
+			continue
+		}
+		result = append(result, country)
+	}
+
 	return
 }
 
@@ -163,7 +205,7 @@ func (this *RegionCountryDAO) FindAllCountries(tx *dbs.Tx) (result []*RegionCoun
 	_, err = this.Query(tx).
 		State(RegionCountryStateEnabled).
 		Slice(&result).
-		AscPk().
+		Asc(RegionCountryField_ValueId).
 		FindAll()
 	return
 }
@@ -185,7 +227,7 @@ func (this *RegionCountryDAO) UpdateCountryCustom(tx *dbs.Tx, countryId int64, c
 	}()
 
 	return this.Query(tx).
-		Pk(countryId).
+		Attr("valueId", countryId).
 		Set("customName", customName).
 		Set("customCodes", customCodesJSON).
 		UpdateQuickly()

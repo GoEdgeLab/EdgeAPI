@@ -41,7 +41,7 @@ func init() {
 // EnableRegionTown 启用条目
 func (this *RegionTownDAO) EnableRegionTown(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionTownStateEnabled).
 		Update()
 	return err
@@ -50,7 +50,7 @@ func (this *RegionTownDAO) EnableRegionTown(tx *dbs.Tx, id uint32) error {
 // DisableRegionTown 禁用条目
 func (this *RegionTownDAO) DisableRegionTown(tx *dbs.Tx, id uint32) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionTownStateDisabled).
 		Update()
 	return err
@@ -59,7 +59,7 @@ func (this *RegionTownDAO) DisableRegionTown(tx *dbs.Tx, id uint32) error {
 // FindEnabledRegionTown 查找启用中的区县
 func (this *RegionTownDAO) FindEnabledRegionTown(tx *dbs.Tx, id int64) (*RegionTown, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Attr("state", RegionTownStateEnabled).
 		Find()
 	if result == nil {
@@ -72,7 +72,7 @@ func (this *RegionTownDAO) FindEnabledRegionTown(tx *dbs.Tx, id int64) (*RegionT
 func (this *RegionTownDAO) FindAllRegionTowns(tx *dbs.Tx) (result []*RegionTown, err error) {
 	_, err = this.Query(tx).
 		State(RegionTownStateEnabled).
-		AscPk().
+		Asc(RegionTownField_ValueId).
 		Slice(&result).
 		FindAll()
 	return
@@ -83,7 +83,7 @@ func (this *RegionTownDAO) FindAllRegionTownsWithCityId(tx *dbs.Tx, cityId int64
 	_, err = this.Query(tx).
 		State(RegionTownStateEnabled).
 		Attr("cityId", cityId).
-		AscPk().
+		Asc(RegionTownField_ValueId).
 		Slice(&result).
 		FindAll()
 	return
@@ -96,14 +96,14 @@ func (this *RegionTownDAO) FindTownIdWithName(tx *dbs.Tx, cityId int64, townName
 		Where("(name=:townName OR customName=:townName OR JSON_CONTAINS(codes, :townNameJSON) OR JSON_CONTAINS(customCodes, :townNameJSON))").
 		Param("townName", townName).
 		Param("townNameJSON", strconv.Quote(townName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
+		Result(RegionTownField_ValueId).
 		FindInt64Col(0)
 }
 
 // FindRegionTownName 根据主键查找名称
 func (this *RegionTownDAO) FindRegionTownName(tx *dbs.Tx, id uint32) (string, error) {
 	return this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Result("name").
 		FindStringCol("")
 }
@@ -118,7 +118,7 @@ func (this *RegionTownDAO) UpdateTownCustom(tx *dbs.Tx, townId int64, customName
 		return err
 	}
 	return this.Query(tx).
-		Pk(townId).
+		Attr("valueId", townId).
 		Set("customName", customName).
 		Set("customCodes", customCodesJSON).
 		UpdateQuickly()
@@ -176,5 +176,18 @@ func (this *RegionTownDAO) CreateTown(tx *dbs.Tx, cityId int64, townName string)
 	op.Codes = codes
 
 	op.State = RegionTownStateEnabled
-	return this.SaveInt64(tx, op)
+	townId, err := this.SaveInt64(tx, op)
+	if err != nil {
+		return 0, err
+	}
+
+	err = this.Query(tx).
+		Pk(townId).
+		Set(RegionTownField_ValueId, townId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return townId, nil
 }

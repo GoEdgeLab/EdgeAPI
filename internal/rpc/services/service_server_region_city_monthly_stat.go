@@ -62,15 +62,15 @@ func (this *ServerRegionCityMonthlyStatService) FindTopServerRegionCityMonthlySt
 			continue
 		}
 		pbStat.RegionCountry = &pb.RegionCountry{
-			Id:   int64(country.Id),
+			Id:   int64(country.ValueId),
 			Name: country.DisplayName(),
 		}
 		pbStat.RegionProvince = &pb.RegionProvince{
-			Id:   int64(province.Id),
+			Id:   int64(province.ValueId),
 			Name: province.DisplayName(),
 		}
 		pbStat.RegionCity = &pb.RegionCity{
-			Id:   int64(city.Id),
+			Id:   int64(city.ValueId),
 			Name: city.DisplayName(),
 		}
 		pbStats = append(pbStats, pbStat)

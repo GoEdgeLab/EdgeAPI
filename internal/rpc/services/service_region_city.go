@@ -49,7 +49,7 @@ func (this *RegionCityService) FindAllEnabledRegionCities(ctx context.Context, r
 			}
 
 			pbProvince = &pb.RegionProvince{
-				Id:          int64(province.Id),
+				Id:          int64(province.ValueId),
 				Name:        province.Name,
 				Codes:       province.DecodeCodes(),
 				DisplayName: province.DisplayName(),
@@ -57,7 +57,7 @@ func (this *RegionCityService) FindAllEnabledRegionCities(ctx context.Context, r
 		}
 
 		pbCities = append(pbCities, &pb.RegionCity{
-			Id:               int64(city.Id),
+			Id:               int64(city.ValueId),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),
@@ -108,7 +108,7 @@ func (this *RegionCityService) FindAllRegionCities(ctx context.Context, req *pb.
 			}
 
 			pbProvince = &pb.RegionProvince{
-				Id:          int64(province.Id),
+				Id:          int64(province.ValueId),
 				Name:        province.Name,
 				Codes:       province.DecodeCodes(),
 				CustomName:  province.CustomName,
@@ -118,7 +118,7 @@ func (this *RegionCityService) FindAllRegionCities(ctx context.Context, req *pb.
 		}
 
 		pbCities = append(pbCities, &pb.RegionCity{
-			Id:               int64(city.Id),
+			Id:               int64(city.ValueId),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),
@@ -155,7 +155,7 @@ func (this *RegionCityService) FindAllRegionCitiesWithRegionProvinceId(ctx conte
 		var pbProvince = &pb.RegionProvince{Id: provinceId}
 
 		pbCities = append(pbCities, &pb.RegionCity{
-			Id:               int64(city.Id),
+			Id:               int64(city.ValueId),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),
@@ -192,7 +192,7 @@ func (this *RegionCityService) FindEnabledRegionCity(ctx context.Context, req *p
 
 	return &pb.FindEnabledRegionCityResponse{
 		RegionCity: &pb.RegionCity{
-			Id:               int64(city.Id),
+			Id:               int64(city.ValueId),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),
@@ -223,7 +223,7 @@ func (this *RegionCityService) FindRegionCity(ctx context.Context, req *pb.FindR
 
 	return &pb.FindRegionCityResponse{
 		RegionCity: &pb.RegionCity{
-			Id:               int64(city.Id),
+			Id:               int64(city.ValueId),
 			Name:             city.Name,
 			Codes:            city.DecodeCodes(),
 			RegionProvinceId: int64(city.ProvinceId),

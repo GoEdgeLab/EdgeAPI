@@ -29,7 +29,7 @@ func (this *RegionProvinceService) FindAllEnabledRegionProvincesWithCountryId(ct
 	result := []*pb.RegionProvince{}
 	for _, province := range provinces {
 		result = append(result, &pb.RegionProvince{
-			Id:          int64(province.Id),
+			Id:          int64(province.ValueId),
 			Name:        province.Name,
 			Codes:       province.DecodeCodes(),
 			CustomName:  province.CustomName,
@@ -64,7 +64,7 @@ func (this *RegionProvinceService) FindEnabledRegionProvince(ctx context.Context
 
 	return &pb.FindEnabledRegionProvinceResponse{
 		RegionProvince: &pb.RegionProvince{
-			Id:          int64(province.Id),
+			Id:          int64(province.ValueId),
 			Name:        province.Name,
 			Codes:       province.DecodeCodes(),
 			CustomName:  province.CustomName,
@@ -91,7 +91,7 @@ func (this *RegionProvinceService) FindAllRegionProvincesWithRegionCountryId(ctx
 	var result = []*pb.RegionProvince{}
 	for _, province := range provinces {
 		result = append(result, &pb.RegionProvince{
-			Id:          int64(province.Id),
+			Id:          int64(province.ValueId),
 			Name:        province.Name,
 			Codes:       province.DecodeCodes(),
 			CustomName:  province.CustomName,
@@ -125,7 +125,7 @@ func (this *RegionProvinceService) FindRegionProvince(ctx context.Context, req *
 
 	return &pb.FindRegionProvinceResponse{
 		RegionProvince: &pb.RegionProvince{
-			Id:          int64(province.Id),
+			Id:          int64(province.ValueId),
 			Name:        province.Name,
 			Codes:       province.DecodeCodes(),
 			CustomName:  province.CustomName,

@@ -45,7 +45,7 @@ func (this *ServerRegionProviderMonthlyStatService) FindTopServerRegionProviderM
 			continue
 		}
 		pbStat.RegionProvider = &pb.RegionProvider{
-			Id:   int64(provider.Id),
+			Id:   int64(provider.ValueId),
 			Name: provider.DisplayName(),
 		}
 		pbStats = append(pbStats, pbStat)

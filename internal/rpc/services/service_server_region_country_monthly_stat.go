@@ -46,7 +46,7 @@ func (this *ServerRegionCountryMonthlyStatService) FindTopServerRegionCountryMon
 			continue
 		}
 		pbStat.RegionCountry = &pb.RegionCountry{
-			Id:   int64(country.Id),
+			Id:   int64(country.ValueId),
 			Name: country.DisplayName(),
 		}
 

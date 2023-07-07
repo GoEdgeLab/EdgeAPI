@@ -309,7 +309,7 @@ func (this *IPLibraryFileService) CheckCountriesWithIPLibraryFileId(ctx context.
 		}
 		for _, similarCountry := range similarCountries {
 			pbMissingCountry.SimilarCountries = append(pbMissingCountry.SimilarCountries, &pb.RegionCountry{
-				Id:          int64(similarCountry.Id),
+				Id:          int64(similarCountry.ValueId),
 				Name:        similarCountry.Name,
 				DisplayName: similarCountry.DisplayName(),
 			})
@@ -391,7 +391,7 @@ func (this *IPLibraryFileService) CheckProvincesWithIPLibraryFileId(ctx context.
 
 			for _, similarProvince := range similarProvinces {
 				pbMissingProvince.SimilarProvinces = append(pbMissingProvince.SimilarProvinces, &pb.RegionProvince{
-					Id:          int64(similarProvince.Id),
+					Id:          int64(similarProvince.ValueId),
 					Name:        similarProvince.Name,
 					DisplayName: similarProvince.DisplayName(),
 				})
@@ -482,7 +482,7 @@ func (this *IPLibraryFileService) CheckCitiesWithIPLibraryFileId(ctx context.Con
 
 			for _, similarCity := range similarCities {
 				pbMissingCity.SimilarCities = append(pbMissingCity.SimilarCities, &pb.RegionCity{
-					Id:          int64(similarCity.Id),
+					Id:          int64(similarCity.ValueId),
 					Name:        similarCity.Name,
 					DisplayName: similarCity.DisplayName(),
 				})
@@ -597,7 +597,7 @@ func (this *IPLibraryFileService) CheckTownsWithIPLibraryFileId(ctx context.Cont
 
 			for _, similarTown := range similarTowns {
 				pbMissingTown.SimilarTowns = append(pbMissingTown.SimilarTowns, &pb.RegionTown{
-					Id:          int64(similarTown.Id),
+					Id:          int64(similarTown.ValueId),
 					Name:        similarTown.Name,
 					DisplayName: similarTown.DisplayName(),
 				})
@@ -654,7 +654,7 @@ func (this *IPLibraryFileService) CheckProvidersWithIPLibraryFileId(ctx context.
 		}
 		for _, similarProvider := range similarProviders {
 			pbMissingProvider.SimilarProviders = append(pbMissingProvider.SimilarProviders, &pb.RegionProvider{
-				Id:          int64(similarProvider.Id),
+				Id:          int64(similarProvider.ValueId),
 				Name:        similarProvider.Name,
 				DisplayName: similarProvider.DisplayName(),
 			})

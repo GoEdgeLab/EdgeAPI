@@ -42,7 +42,7 @@ func init() {
 // EnableRegionProvince 启用条目
 func (this *RegionProvinceDAO) EnableRegionProvince(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionProvinceStateEnabled).
 		Update()
 	return err
@@ -51,7 +51,7 @@ func (this *RegionProvinceDAO) EnableRegionProvince(tx *dbs.Tx, id int64) error 
 // DisableRegionProvince 禁用条目
 func (this *RegionProvinceDAO) DisableRegionProvince(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Set("state", RegionProvinceStateDisabled).
 		Update()
 	return err
@@ -60,7 +60,7 @@ func (this *RegionProvinceDAO) DisableRegionProvince(tx *dbs.Tx, id int64) error
 // FindEnabledRegionProvince 查找启用中的条目
 func (this *RegionProvinceDAO) FindEnabledRegionProvince(tx *dbs.Tx, id int64) (*RegionProvince, error) {
 	result, err := this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Attr("state", RegionProvinceStateEnabled).
 		Find()
 	if result == nil {
@@ -72,7 +72,7 @@ func (this *RegionProvinceDAO) FindEnabledRegionProvince(tx *dbs.Tx, id int64) (
 // FindRegionProvinceName 根据主键查找名称
 func (this *RegionProvinceDAO) FindRegionProvinceName(tx *dbs.Tx, id int64) (string, error) {
 	return this.Query(tx).
-		Pk(id).
+		Attr("valueId", id).
 		Result("name").
 		FindStringCol("")
 }
@@ -81,7 +81,7 @@ func (this *RegionProvinceDAO) FindRegionProvinceName(tx *dbs.Tx, id int64) (str
 func (this *RegionProvinceDAO) FindProvinceIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).
 		Attr("dataId", dataId).
-		ResultPk().
+		Result(RegionProvinceField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -92,7 +92,7 @@ func (this *RegionProvinceDAO) FindProvinceIdWithName(tx *dbs.Tx, countryId int6
 		Where("(name=:provinceName OR customName=:provinceName OR JSON_CONTAINS(codes, :provinceNameJSON) OR JSON_CONTAINS(customCodes, :provinceNameJSON))").
 		Param("provinceName", provinceName).
 		Param("provinceNameJSON", strconv.Quote(provinceName)). // 查询的需要是个JSON字符串，所以这里加双引号
-		ResultPk().
+		Result(RegionProvinceField_ValueId).
 		FindInt64Col(0)
 }
 
@@ -104,7 +104,7 @@ func (this *RegionProvinceDAO) CreateProvince(tx *dbs.Tx, countryId int64, name 
 	op.DataId = dataId
 	op.State = RegionProvinceStateEnabled
 
-	codes := []string{name}
+	var codes = []string{name}
 	codesJSON, err := json.Marshal(codes)
 	if err != nil {
 		return 0, err
@@ -114,7 +114,17 @@ func (this *RegionProvinceDAO) CreateProvince(tx *dbs.Tx, countryId int64, name 
 	if err != nil {
 		return 0, err
 	}
-	return types.Int64(op.Id), nil
+	var provinceId = types.Int64(op.Id)
+
+	err = this.Query(tx).
+		Pk(provinceId).
+		Set(RegionProvinceField_ValueId, provinceId).
+		UpdateQuickly()
+	if err != nil {
+		return 0, err
+	}
+
+	return provinceId, nil
 }
 
 // FindAllEnabledProvincesWithCountryId 查找某个国家/地区的所有省份
@@ -122,7 +132,7 @@ func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(tx *dbs.Tx, 
 	_, err = this.Query(tx).
 		State(RegionProvinceStateEnabled).
 		Attr("countryId", countryId).
-		AscPk().
+		Asc(RegionProvinceField_ValueId).
 		Slice(&result).
 		FindAll()
 	return
@@ -132,7 +142,7 @@ func (this *RegionProvinceDAO) FindAllEnabledProvincesWithCountryId(tx *dbs.Tx, 
 func (this *RegionProvinceDAO) FindAllEnabledProvinces(tx *dbs.Tx) (result []*RegionProvince, err error) {
 	_, err = this.Query(tx).
 		State(RegionProvinceStateEnabled).
-		AscPk().
+		Asc(RegionProvinceField_ValueId).
 		Slice(&result).
 		FindAll()
 	return
@@ -149,7 +159,7 @@ func (this *RegionProvinceDAO) UpdateProvinceCustom(tx *dbs.Tx, provinceId int64
 	}
 
 	return this.Query(tx).
-		Pk(provinceId).
+		Attr("valueId", provinceId).
 		Set("customName", customName).
 		Set("customCodes", customCodesJSON).
 		UpdateQuickly()
