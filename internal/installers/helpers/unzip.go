@@ -37,8 +37,8 @@ func (this *Unzip) Run() error {
 	}()
 
 	for _, file := range reader.File {
-		info := file.FileInfo()
-		target := this.targetDir + "/" + file.Name
+		var info = file.FileInfo()
+		var target = this.targetDir + "/" + file.Name
 
 		// 目录
 		if info.IsDir() {
@@ -62,7 +62,7 @@ func (this *Unzip) Run() error {
 		}
 
 		// 文件
-		err := func(file *zip.File, target string) error {
+		err = func(file *zip.File, target string) error {
 			fileReader, err := file.Open()
 			if err != nil {
 				return err
@@ -71,6 +71,10 @@ func (this *Unzip) Run() error {
 				_ = fileReader.Close()
 			}()
 
+			// remove old
+			_ = os.Remove(target)
+
+			// create new
 			fileWriter, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, file.FileInfo().Mode())
 			if err != nil {
 				return err

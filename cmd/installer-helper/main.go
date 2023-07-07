@@ -52,7 +52,7 @@ func main() {
 			return
 		}
 
-		unzip := helpers.NewUnzip(zipPath, targetPath)
+		var unzip = helpers.NewUnzip(zipPath, targetPath)
 		err := unzip.Run()
 		if err != nil {
 			stderr("ERROR: " + err.Error())
