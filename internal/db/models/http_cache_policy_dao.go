@@ -96,7 +96,7 @@ func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies(tx *dbs.Tx) (result 
 }
 
 // CreateCachePolicy 创建缓存策略
-func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) (int64, error) {
+func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) (int64, error) {
 	var op = NewHTTPCachePolicyOperator()
 	op.State = HTTPCachePolicyStateEnabled
 	op.IsOn = isOn
@@ -105,7 +105,6 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 	if len(capacityJSON) > 0 {
 		op.Capacity = capacityJSON
 	}
-	op.MaxKeys = maxKeys
 	if len(maxSizeJSON) > 0 {
 		op.MaxSize = maxSizeJSON
 	}
@@ -184,7 +183,7 @@ func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string
 		return 0, err
 	}
 
-	policyId, err := this.CreateCachePolicy(tx, true, "\""+name+"\"缓存策略", "默认创建的缓存策略", capacityJSON, 0, maxSizeJSON, serverconfigs.CachePolicyStorageFile, storageOptionsJSON, false)
+	policyId, err := this.CreateCachePolicy(tx, true, "\""+name+"\"缓存策略", "默认创建的缓存策略", capacityJSON, maxSizeJSON, serverconfigs.CachePolicyStorageFile, storageOptionsJSON, false)
 	if err != nil {
 		return 0, err
 	}
@@ -192,7 +191,7 @@ func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string
 }
 
 // UpdateCachePolicy 修改缓存策略
-func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxKeys int64, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) error {
+func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -205,7 +204,6 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 	if len(capacityJSON) > 0 {
 		op.Capacity = capacityJSON
 	}
-	op.MaxKeys = maxKeys
 	if len(maxSizeJSON) > 0 {
 		op.MaxSize = maxSizeJSON
 	}
@@ -255,8 +253,6 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 		}
 		config.Capacity = capacityConfig
 	}
-
-	config.MaxKeys = types.Int64(policy.MaxKeys)
 
 	// max size
 	if IsNotNull(policy.MaxSize) {

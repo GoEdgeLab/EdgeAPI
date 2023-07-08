@@ -46,7 +46,7 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 
 	var tx = this.NullTx()
 
-	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
+	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxKeys, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
+	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
 	if err != nil {
 		return nil, err
 	}
