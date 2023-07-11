@@ -151,6 +151,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 		}
 	}
 
+	// Optimization
+	if IsNotNull(web.Optimization) {
+		var optimizationConfig = serverconfigs.NewHTTPPageOptimizationConfig()
+		err = json.Unmarshal(web.Optimization, optimizationConfig)
+		if err != nil {
+			return nil, err
+		}
+		if this.shouldCompose(isLocationOrGroup, forNode, optimizationConfig.IsPrior, true) {
+			config.Optimization = optimizationConfig
+		}
+	}
+
 	// charset
 	if IsNotNull(web.Charset) {
 		var charsetConfig = &serverconfigs.HTTPCharsetConfig{}
@@ -587,14 +599,42 @@ func (this *HTTPWebDAO) UpdateWeb(tx *dbs.Tx, webId int64, rootJSON []byte) erro
 }
 
 // UpdateWebCompression 修改压缩配置
-func (this *HTTPWebDAO) UpdateWebCompression(tx *dbs.Tx, webId int64, compressionConfig []byte) error {
+func (this *HTTPWebDAO) UpdateWebCompression(tx *dbs.Tx, webId int64, compressionConfig *serverconfigs.HTTPCompressionConfig) error {
 	if webId <= 0 {
 		return errors.New("invalid webId")
 	}
+
+	compressionJSON, err := json.Marshal(compressionConfig)
+	if err != nil {
+		return err
+	}
+
 	var op = NewHTTPWebOperator()
 	op.Id = webId
-	op.Compression = JSONBytes(compressionConfig)
-	err := this.Save(tx, op)
+	op.Compression = compressionJSON
+	err = this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateWebOptimization 修改页面优化配置
+func (this *HTTPWebDAO) UpdateWebOptimization(tx *dbs.Tx, webId int64, optimizationConfig *serverconfigs.HTTPPageOptimizationConfig) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+
+	optimizationJSON, err := json.Marshal(optimizationConfig)
+	if err != nil {
+		return err
+	}
+
+	var op = NewHTTPWebOperator()
+	op.Id = webId
+	op.Optimization = optimizationJSON
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}

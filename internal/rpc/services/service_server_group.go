@@ -483,6 +483,7 @@ func (this *ServerGroupService) FindEnabledServerGroupConfigInfo(ctx context.Con
 			result.HasAccessLogConfig = webConfig != nil && webConfig.AccessLogRef != nil && webConfig.AccessLogRef.IsPrior
 			result.HasStatConfig = webConfig != nil && webConfig.StatRef != nil && webConfig.StatRef.IsPrior
 			result.HasCompressionConfig = webConfig != nil && webConfig.Compression != nil && webConfig.Compression.IsPrior
+			result.HasOptimizationConfig = webConfig != nil && webConfig.Optimization != nil && webConfig.Optimization.IsPrior
 			result.HasWebsocketConfig = webConfig != nil && webConfig.WebsocketRef != nil && webConfig.WebsocketRef.IsPrior
 			result.HasRequestHeadersConfig = webConfig != nil && webConfig.RequestHeaderPolicyRef != nil && webConfig.RequestHeaderPolicyRef.IsPrior
 			result.HasResponseHeadersConfig = webConfig != nil && webConfig.ResponseHeaderPolicyRef != nil && webConfig.ResponseHeaderPolicyRef.IsPrior

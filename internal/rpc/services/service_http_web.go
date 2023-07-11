@@ -141,7 +141,60 @@ func (this *HTTPWebService) UpdateHTTPWebCompression(ctx context.Context, req *p
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPWebDAO.UpdateWebCompression(tx, req.HttpWebId, req.CompressionJSON)
+	if len(req.CompressionJSON) == 0 {
+		return nil, errors.New("'compressionJSON' should not be empty")
+	}
+	var compressionConfig = &serverconfigs.HTTPCompressionConfig{}
+	err = json.Unmarshal(req.CompressionJSON, compressionConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = compressionConfig.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebCompression(tx, req.HttpWebId, compressionConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
+// UpdateHTTPWebOptimization 修改页面优化配置
+func (this *HTTPWebService) UpdateHTTPWebOptimization(ctx context.Context, req *pb.UpdateHTTPWebOptimizationRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		// 检查用户权限
+		err = models.SharedHTTPWebDAO.CheckUserWeb(nil, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var tx = this.NullTx()
+
+	if len(req.OptimizationJSON) == 0 {
+		return nil, errors.New("invalid 'optimizationJSON'")
+	}
+	var optimizationConfig = serverconfigs.NewHTTPPageOptimizationConfig()
+	err = json.Unmarshal(req.OptimizationJSON, optimizationConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	err = optimizationConfig.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.SharedHTTPWebDAO.UpdateWebOptimization(tx, req.HttpWebId, optimizationConfig)
 	if err != nil {
 		return nil, err
 	}

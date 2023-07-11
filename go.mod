@@ -6,11 +6,11 @@ replace github.com/TeaOSLab/EdgeCommon => ../EdgeCommon
 
 require (
 	github.com/TeaOSLab/EdgeCommon v0.0.0-00010101000000-000000000000
-	github.com/TeaOSLab/EdgePlus v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1755
 	github.com/andybalholm/brotli v1.0.4
 	github.com/cespare/xxhash v1.1.0
 	github.com/cespare/xxhash/v2 v2.1.1
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-acme/lego/v4 v4.10.2
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
@@ -30,7 +30,6 @@ require (
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -42,6 +41,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/smartwalle/crypto4go v1.0.2 // indirect
+	github.com/tdewolff/minify/v2 v2.12.7 // indirect
+	github.com/tdewolff/parse/v2 v2.6.6 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect

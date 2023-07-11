@@ -2,6 +2,47 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
+const (
+	HTTPWebField_Id                 dbs.FieldName = "id"                 // ID
+	HTTPWebField_IsOn               dbs.FieldName = "isOn"               // 是否启用
+	HTTPWebField_TemplateId         dbs.FieldName = "templateId"         // 模版ID
+	HTTPWebField_AdminId            dbs.FieldName = "adminId"            // 管理员ID
+	HTTPWebField_UserId             dbs.FieldName = "userId"             // 用户ID
+	HTTPWebField_State              dbs.FieldName = "state"              // 状态
+	HTTPWebField_CreatedAt          dbs.FieldName = "createdAt"          // 创建时间
+	HTTPWebField_Root               dbs.FieldName = "root"               // 根目录
+	HTTPWebField_Charset            dbs.FieldName = "charset"            // 字符集
+	HTTPWebField_Shutdown           dbs.FieldName = "shutdown"           // 临时关闭页面配置
+	HTTPWebField_Pages              dbs.FieldName = "pages"              // 特殊页面
+	HTTPWebField_RedirectToHttps    dbs.FieldName = "redirectToHttps"    // 跳转到HTTPS设置
+	HTTPWebField_Indexes            dbs.FieldName = "indexes"            // 首页文件列表
+	HTTPWebField_MaxRequestBodySize dbs.FieldName = "maxRequestBodySize" // 最大允许的请求内容尺寸
+	HTTPWebField_RequestHeader      dbs.FieldName = "requestHeader"      // 请求Header配置
+	HTTPWebField_ResponseHeader     dbs.FieldName = "responseHeader"     // 响应Header配置
+	HTTPWebField_AccessLog          dbs.FieldName = "accessLog"          // 访问日志配置
+	HTTPWebField_Stat               dbs.FieldName = "stat"               // 统计配置
+	HTTPWebField_Gzip               dbs.FieldName = "gzip"               // Gzip配置（v0.3.2弃用）
+	HTTPWebField_Compression        dbs.FieldName = "compression"        // 压缩配置
+	HTTPWebField_Cache              dbs.FieldName = "cache"              // 缓存配置
+	HTTPWebField_Firewall           dbs.FieldName = "firewall"           // 防火墙设置
+	HTTPWebField_Locations          dbs.FieldName = "locations"          // 路由规则配置
+	HTTPWebField_Websocket          dbs.FieldName = "websocket"          // Websocket设置
+	HTTPWebField_RewriteRules       dbs.FieldName = "rewriteRules"       // 重写规则配置
+	HTTPWebField_HostRedirects      dbs.FieldName = "hostRedirects"      // 域名跳转
+	HTTPWebField_Fastcgi            dbs.FieldName = "fastcgi"            // Fastcgi配置
+	HTTPWebField_Auth               dbs.FieldName = "auth"               // 认证策略配置
+	HTTPWebField_Webp               dbs.FieldName = "webp"               // WebP配置
+	HTTPWebField_RemoteAddr         dbs.FieldName = "remoteAddr"         // 客户端IP配置
+	HTTPWebField_MergeSlashes       dbs.FieldName = "mergeSlashes"       // 是否合并路径中的斜杠
+	HTTPWebField_RequestLimit       dbs.FieldName = "requestLimit"       // 请求限制
+	HTTPWebField_RequestScripts     dbs.FieldName = "requestScripts"     // 请求脚本
+	HTTPWebField_Uam                dbs.FieldName = "uam"                // UAM设置
+	HTTPWebField_Cc                 dbs.FieldName = "cc"                 // CC设置
+	HTTPWebField_Referers           dbs.FieldName = "referers"           // 防盗链设置
+	HTTPWebField_UserAgent          dbs.FieldName = "userAgent"          // UserAgent设置
+	HTTPWebField_Optimization       dbs.FieldName = "optimization"       // 页面优化配置
+)
+
 // HTTPWeb HTTP Web
 type HTTPWeb struct {
 	Id                 uint32   `field:"id"`                 // ID
@@ -41,6 +82,7 @@ type HTTPWeb struct {
 	Cc                 dbs.JSON `field:"cc"`                 // CC设置
 	Referers           dbs.JSON `field:"referers"`           // 防盗链设置
 	UserAgent          dbs.JSON `field:"userAgent"`          // UserAgent设置
+	Optimization       dbs.JSON `field:"optimization"`       // 页面优化配置
 }
 
 type HTTPWebOperator struct {
@@ -81,6 +123,7 @@ type HTTPWebOperator struct {
 	Cc                 any // CC设置
 	Referers           any // 防盗链设置
 	UserAgent          any // UserAgent设置
+	Optimization       any // 页面优化配置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {
