@@ -111,6 +111,8 @@ func (this *HTTPWebService) UpdateHTTPWeb(ctx context.Context, req *pb.UpdateHTT
 		if err != nil {
 			return nil, err
 		}
+
+		req.RootJSON = []byte("{}") // 为了安全
 	}
 
 	var tx = this.NullTx()
