@@ -201,6 +201,27 @@ func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64, taskVersion 
 	return this.Save(tx, op)
 }
 
+// GenerateVersion 生成最新的版本号
+func (this *DNSTaskDAO) GenerateVersion() int64 {
+	return time.Now().UnixNano()
+}
+
+// UpdateClusterDNSTasksDone 设置所有集群任务完成
+func (this *DNSTaskDAO) UpdateClusterDNSTasksDone(tx *dbs.Tx, clusterId int64, maxVersion int64) error {
+	if clusterId <= 0 || maxVersion <= 0 {
+		return nil
+	}
+
+	return this.Query(tx).
+		Attr("clusterId", clusterId).
+		Attr("isOk", false).
+		Lte("version", maxVersion).
+		Set("isDone", true).
+		Set("isOk", true).
+		Set("error", "").
+		UpdateQuickly()
+}
+
 // DeleteDNSTasksWithClusterId 删除集群相关任务
 func (this *DNSTaskDAO) DeleteDNSTasksWithClusterId(tx *dbs.Tx, clusterId int64) error {
 	if clusterId <= 0 {

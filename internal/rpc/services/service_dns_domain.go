@@ -303,7 +303,24 @@ func (this *DNSDomainService) SyncDNSDomainData(ctx context.Context, req *pb.Syn
 	if err != nil {
 		return nil, err
 	}
-	return this.syncClusterDNS(req)
+
+	var latestVersion = dns.SharedDNSTaskDAO.GenerateVersion()
+
+	resp, err := this.syncClusterDNS(req)
+	if err != nil {
+		return resp, err
+	}
+
+	// 标记集群所有任务已完成
+	if req.NodeClusterId > 0 && resp != nil && resp.IsOk {
+		var tx = this.NullTx()
+		err = dns.SharedDNSTaskDAO.UpdateClusterDNSTasksDone(tx, req.NodeClusterId, latestVersion)
+		if err != nil {
+			return resp, err
+		}
+	}
+
+	return resp, err
 }
 
 // FindAllDNSDomainRoutes 查看支持的线路
