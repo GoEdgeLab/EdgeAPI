@@ -71,7 +71,7 @@ func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, 
 		}
 
 		// 如果已经有锁
-		locker := one.(*SysLocker)
+		var locker = one.(*SysLocker)
 		if time.Now().Unix() <= int64(locker.TimeoutAt) {
 			return false, nil
 		}
@@ -102,7 +102,7 @@ func (this *SysLockerDAO) Lock(tx *dbs.Tx, key string, timeout int64) (ok bool, 
 			}
 			continue
 		}
-		if types.Int64(version) != int64(locker.Version)+1 {
+		if types.Int64(version) > int64(locker.Version)+1 {
 			return false, nil
 		}
 
