@@ -1089,6 +1089,9 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	config.HTTPCCPolicies = map[int64]*nodeconfigs.HTTPCCPolicy{}
 	config.HTTP3Policies = map[int64]*nodeconfigs.HTTP3Policy{}
 	config.HTTPPagesPolicies = map[int64]*nodeconfigs.HTTPPagesPolicy{}
+
+	var cachePolicyIds = []int64{}
+
 	var allowIPMaps = map[string]bool{}
 	for _, clusterId := range clusterIds {
 		nodeCluster, err := SharedNodeClusterDAO.FindClusterBasicInfo(tx, clusterId, cacheMap)
@@ -1128,12 +1131,15 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		// 缓存策略
 		var httpCachePolicyId = int64(nodeCluster.CachePolicyId)
 		if httpCachePolicyId > 0 {
-			cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId, cacheMap)
-			if err != nil {
-				return nil, err
-			}
-			if cachePolicy != nil {
-				config.HTTPCachePolicies = append(config.HTTPCachePolicies, cachePolicy)
+			if !lists.ContainsInt64(cachePolicyIds, httpCachePolicyId) {
+				cachePolicyIds = append(cachePolicyIds, httpCachePolicyId)
+				cachePolicy, err := SharedHTTPCachePolicyDAO.ComposeCachePolicy(tx, httpCachePolicyId, cacheMap)
+				if err != nil {
+					return nil, err
+				}
+				if cachePolicy != nil {
+					config.HTTPCachePolicies = append(config.HTTPCachePolicies, cachePolicy)
+				}
 			}
 		}
 
