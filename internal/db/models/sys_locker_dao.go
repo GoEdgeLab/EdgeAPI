@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -13,10 +12,6 @@ import (
 )
 
 type SysLockerDAO dbs.DAO
-
-// concurrent transactions control
-// 考虑到存在多个API节点的可能性，容量不能太大，也不能使用mutex
-var sysLockerConcurrentLimiter = make(chan zero.Zero, 8)
 
 func NewSysLockerDAO() *SysLockerDAO {
 	return dbs.NewDAO(&SysLockerDAO{
@@ -119,6 +114,10 @@ func (this *SysLockerDAO) Unlock(tx *dbs.Tx, key string) error {
 	return err
 }
 
+const sysLockerStep = 8
+
+var increment = NewSysLockerIncrement(sysLockerStep)
+
 // Increase 增加版本号
 func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (int64, error) {
 	// validate key
@@ -130,10 +129,22 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 		var result int64
 		var err error
 
-		sysLockerConcurrentLimiter <- zero.Zero{} // push
-		defer func() {
-			<-sysLockerConcurrentLimiter // pop
-		}()
+		{
+			colValue, err := this.Query(tx).
+				Result("version").
+				Attr("key", key).
+				FindInt64Col(0)
+			if err != nil {
+				return 0, err
+			}
+			var lastVersion = types.Int64(colValue)
+			if lastVersion <= increment.MaxValue(key) {
+				value, ok := increment.Pop(key)
+				if ok {
+					return value, nil
+				}
+			}
+		}
 
 		err = this.Instance.RunTx(func(tx *dbs.Tx) error {
 			result, err = this.Increase(tx, key, defaultValue)
@@ -146,7 +157,7 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 	}
 
 	// combine statements to make increasing faster
-	colValue, err := tx.FindCol(0, "INSERT INTO `"+this.Table+"` (`key`, `version`) VALUES ('"+key+"', "+types.String(defaultValue)+") ON DUPLICATE KEY UPDATE `version`=`version`+1; SELECT `version` FROM `"+this.Table+"` WHERE `key`='"+key+"'")
+	colValue, err := tx.FindCol(0, "INSERT INTO `"+this.Table+"` (`key`, `version`) VALUES ('"+key+"', "+types.String(defaultValue)+") ON DUPLICATE KEY UPDATE `version`=`version`+"+types.String(sysLockerStep)+"; SELECT `version` FROM `"+this.Table+"` WHERE `key`='"+key+"'")
 	if err != nil {
 		if CheckSQLErrCode(err, 1064 /** syntax error **/) {
 			// continue to use seperated query
@@ -155,7 +166,11 @@ func (this *SysLockerDAO) Increase(tx *dbs.Tx, key string, defaultValue int64) (
 			return 0, err
 		}
 	} else {
-		return types.Int64(colValue), nil
+		var maxVersion = types.Int64(colValue)
+		var minVersion = maxVersion - sysLockerStep + 1
+		increment.Push(key, minVersion+1, maxVersion)
+
+		return minVersion, nil
 	}
 
 	err = this.Query(tx).

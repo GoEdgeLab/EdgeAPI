@@ -43,12 +43,35 @@ func TestSysLocker_Increase_SQL(t *testing.T) {
 	t.Log("after:", v)
 }
 
+func TestSysLocker_Increase_Cache(t *testing.T) {
+	var dao = NewSysLockerDAO()
+	for i := 0; i < 11; i++ {
+		v, err := dao.Increase(nil, "hello", 0)
+		if err != nil {
+			t.Log("err:", err)
+			return
+		}
+		t.Log("hello", i, "after:", v)
+	}
+
+	for i := 0; i < 11; i++ {
+		v, err := dao.Increase(nil, "hello2", 0)
+		if err != nil {
+			t.Log("err:", err)
+			return
+		}
+		t.Log("hello2", i, "after:", v)
+	}
+}
+
 func TestSysLocker_Increase(t *testing.T) {
 	dbs.NotifyReady()
 
+	var dao = NewSysLockerDAO()
+	dao.Instance.Raw().SetMaxOpenConns(64)
+
 	var count = 1000
 
-	var dao = NewSysLockerDAO()
 	value, err := dao.Read(nil, "hello")
 	if err != nil {
 		t.Fatal(err)
@@ -133,6 +156,8 @@ func TestSysLocker_Increase_Performance(t *testing.T) {
 
 func BenchmarkSysLockerDAO_Increase(b *testing.B) {
 	var dao = NewSysLockerDAO()
+	dao.Instance.Raw().SetMaxOpenConns(64)
+
 	_, _ = dao.Increase(nil, "hello", 0)
 
 	b.ResetTimer()
