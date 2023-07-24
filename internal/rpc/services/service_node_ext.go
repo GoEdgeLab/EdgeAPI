@@ -47,3 +47,8 @@ func (this *NodeService) CopyNodeActionsToNodeGroup(ctx context.Context, req *pb
 func (this *NodeService) CopyNodeActionsToNodeCluster(ctx context.Context, req *pb.CopyNodeActionsToNodeClusterRequest) (*pb.RPCSuccess, error) {
 	return nil, this.NotImplementedYet()
 }
+
+// FindNodeTOAConfig 查找节点的TOA配置
+func (this *NodeService) FindNodeTOAConfig(ctx context.Context, req *pb.FindNodeTOAConfigRequest) (*pb.FindNodeTOAConfigResponse, error) {
+	return nil, this.NotImplementedYet()
+}

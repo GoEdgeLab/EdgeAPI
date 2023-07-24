@@ -29,6 +29,7 @@ const (
 	NodeTaskTypeHTTPCCPolicyChanged       NodeTaskType = "httpCCPolicyChanged"       // CC策略变化
 	NodeTaskTypeHTTP3PolicyChanged        NodeTaskType = "http3PolicyChanged"        // HTTP3策略变化
 	NodeTaskTypeUpdatingServers           NodeTaskType = "updatingServers"           // 更新一组服务
+	NodeTaskTypeTOAChanged                NodeTaskType = "toaChanged"                // TOA配置变化
 
 	// NS相关
 
@@ -234,7 +235,7 @@ func (this *NodeTaskDAO) DeleteNodeTasks(tx *dbs.Tx, role string, nodeId int64) 
 }
 
 // DeleteAllNodeTasks 删除所有节点相关任务
-func (this *NodeTaskDAO)DeleteAllNodeTasks(tx *dbs.Tx) error {
+func (this *NodeTaskDAO) DeleteAllNodeTasks(tx *dbs.Tx) error {
 	return this.Query(tx).
 		DeleteQuickly()
 }

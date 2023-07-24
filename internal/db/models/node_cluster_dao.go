@@ -675,7 +675,7 @@ func (this *NodeClusterDAO) UpdateClusterTOA(tx *dbs.Tx, clusterId int64, toaJSO
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, clusterId)
+	return this.NotifyTOAUpdate(tx, clusterId)
 }
 
 // CountAllEnabledNodeClustersWithHTTPCachePolicyId 计算使用某个缓存策略的集群数量
@@ -1454,12 +1454,13 @@ func (this *NodeClusterDAO) NotifyHTTPPagesPolicyUpdate(tx *dbs.Tx, clusterId in
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTPPagesPolicyChanged)
 }
 
+// NotifyTOAUpdate 通知TOA变化
+func (this *NodeClusterDAO) NotifyTOAUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeTOAChanged)
+}
+
 // NotifyDNSUpdate 通知DNS更新
 // TODO 更新新的DNS解析记录的同时，需要删除老的DNS解析记录
 func (this *NodeClusterDAO) NotifyDNSUpdate(tx *dbs.Tx, clusterId int64) error {
-	err := dns.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dns.DNSTaskTypeClusterChange)
-	if err != nil {
-		return err
-	}
-	return nil
+	return dns.SharedDNSTaskDAO.CreateClusterTask(tx, clusterId, dns.DNSTaskTypeClusterChange)
 }
