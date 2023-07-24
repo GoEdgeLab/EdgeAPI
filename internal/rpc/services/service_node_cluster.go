@@ -1102,7 +1102,7 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 
 	// toa
 	if models.IsNotNull(cluster.Toa) {
-		var toaConfig = &nodeconfigs.TOAConfig{}
+		var toaConfig = nodeconfigs.NewTOAConfig()
 		err = json.Unmarshal(cluster.Toa, toaConfig)
 		if err != nil {
 			return nil, err

@@ -647,10 +647,10 @@ func (this *NodeClusterDAO) FindClusterTOAConfig(tx *dbs.Tx, clusterId int64, ca
 		return nil, err
 	}
 	if !IsNotNull([]byte(toa)) {
-		return nodeconfigs.DefaultTOAConfig(), nil
+		return nodeconfigs.NewTOAConfig(), nil
 	}
 
-	config := &nodeconfigs.TOAConfig{}
+	var config = nodeconfigs.NewTOAConfig()
 	err = json.Unmarshal([]byte(toa), config)
 	if err != nil {
 		return nil, err
