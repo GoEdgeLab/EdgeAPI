@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"math"
+	"net"
 	"time"
 )
 
@@ -498,7 +499,11 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 		}
 	}
 	if len(keyword) > 0 {
-		query.Like("ipFrom", dbutils.QuoteLike(keyword))
+		if net.ParseIP(keyword) != nil { // 是一个IP地址
+			query.Attr("ipFrom", keyword)
+		} else {
+			query.Like("ipFrom", dbutils.QuoteLike(keyword))
+		}
 	}
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
@@ -540,7 +545,11 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 		}
 	}
 	if len(keyword) > 0 {
-		query.Like("ipFrom", dbutils.QuoteLike(keyword))
+		if net.ParseIP(keyword) != nil { // 是一个IP地址
+			query.Attr("ipFrom", keyword)
+		} else {
+			query.Like("ipFrom", dbutils.QuoteLike(keyword))
+		}
 	}
 	if len(ip) > 0 {
 		query.Attr("ipFrom", ip)
