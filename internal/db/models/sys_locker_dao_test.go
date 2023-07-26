@@ -43,6 +43,25 @@ func TestSysLocker_Increase_SQL(t *testing.T) {
 	t.Log("after:", v)
 }
 
+func TestSysLocker_Increase_New_Key(t *testing.T) {
+	var key = "KEY" + types.String(time.Now().Unix())
+
+	var dao = NewSysLockerDAO()
+	value, err := dao.Read(nil, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("before:", value)
+	for i := 0; i < 2; i++ {
+		v, err := dao.Increase(nil, key, 0)
+		if err != nil {
+			t.Log("err:", err)
+			return
+		}
+		t.Log("after:", v)
+	}
+}
+
 func TestSysLocker_Increase_Cache(t *testing.T) {
 	var dao = NewSysLockerDAO()
 	for i := 0; i < 11; i++ {
