@@ -844,6 +844,11 @@ func (this *ServerBandwidthStatDAO) fixServerStats(stats []*ServerBandwidthStat,
 // HasFullData 检查一个月是否完整数据
 // 是为了兼容以前数据，以前的表中没有缓存流量、请求数等字段
 func (this *ServerBandwidthStatDAO) HasFullData(tx *dbs.Tx, serverId int64, month string) (bool, error) {
+	// 最迟在2024年完成过渡
+	if time.Now().Year() >= 2024 {
+		return true, nil
+	}
+
 	var monthKey = month + "@" + types.String(serverId)
 
 	if !regexputils.YYYYMM.MatchString(month) {
