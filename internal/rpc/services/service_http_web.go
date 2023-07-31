@@ -369,7 +369,7 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 			if len(shutdownConfig.URL) > maxURLLength {
 				return nil, errors.New("'url' too long")
 			}
-			if !regexputils.HTTPProtocol.MatchString(shutdownConfig.URL) {
+			if shutdownConfig.IsOn /** validate when it's on **/ && !regexputils.HTTPProtocol.MatchString(shutdownConfig.URL) {
 				return nil, errors.New("invalid 'url' format")
 			}
 
