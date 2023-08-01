@@ -519,6 +519,14 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 		}
 		if this.shouldCompose(isLocationOrGroup, forNode, ccConfig.IsPrior, ccConfig.IsOn) {
 			config.CC = ccConfig
+
+			if forNode {
+				for index, threshold := range ccConfig.Thresholds {
+					if index < len(serverconfigs.DefaultHTTPCCThresholds) {
+						threshold.MergeIfEmpty(serverconfigs.DefaultHTTPCCThresholds[index])
+					}
+				}
+			}
 		}
 	}
 
