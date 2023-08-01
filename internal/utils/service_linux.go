@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package utils
@@ -47,7 +48,7 @@ func (this *ServiceManager) Start() error {
 	return exec.Command("service", teaconst.ProcessName, "start").Start()
 }
 
-// 删除服务
+// Uninstall 删除服务
 func (this *ServiceManager) Uninstall() error {
 	if os.Getgid() != 0 {
 		return errors.New("only root users can uninstall the service")
@@ -60,10 +61,10 @@ func (this *ServiceManager) Uninstall() error {
 		}
 
 		// disable service
-		exec.Command(systemd, "disable", teaconst.SystemdServiceName+".service").Start()
+		_ = exec.Command(systemd, "disable", teaconst.SystemdServiceName+".service").Start()
 
 		// reload
-		exec.Command(systemd, "daemon-reload")
+		_ = exec.Command(systemd, "daemon-reload").Start()
 
 		return files.NewFile(systemdServiceFile).Delete()
 	}
@@ -144,10 +145,10 @@ WantedBy=multi-user.target`
 	}
 
 	// stop current systemd service if running
-	exec.Command(systemd, "stop", shortName+".service")
+	_ = exec.Command(systemd, "stop", shortName+".service").Start()
 
 	// reload
-	exec.Command(systemd, "daemon-reload")
+	_ = exec.Command(systemd, "daemon-reload").Start()
 
 	// enable
 	cmd := exec.Command(systemd, "enable", shortName+".service")
