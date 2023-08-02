@@ -290,7 +290,8 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	mode firewallconfigs.FirewallMode,
 	useLocalFirewall bool,
 	synFloodConfig *firewallconfigs.SYNFloodConfig,
-	logConfig *firewallconfigs.HTTPFirewallPolicyLogConfig) error {
+	logConfig *firewallconfigs.HTTPFirewallPolicyLogConfig,
+	maxRequestBodySize int64) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -338,6 +339,8 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	}
 
 	op.UseLocalFirewall = useLocalFirewall
+	op.MaxRequestBodySize = maxRequestBodySize
+
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -414,6 +417,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	config.Name = policy.Name
 	config.Description = policy.Description
 	config.UseLocalFirewall = policy.UseLocalFirewall == 1
+	config.MaxRequestBodySize = int64(policy.MaxRequestBodySize)
 
 	if len(policy.Mode) == 0 {
 		policy.Mode = firewallconfigs.FirewallModeDefend
