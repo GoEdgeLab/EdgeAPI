@@ -172,16 +172,18 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 	// 初始化
 	var groupCodes = []string{}
 
-	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
+	var templatePolicy = firewallconfigs.HTTPFirewallTemplate()
 	for _, group := range templatePolicy.AllRuleGroups() {
-		groupCodes = append(groupCodes, group.Code)
+		if group.IsOn {
+			groupCodes = append(groupCodes, group.Code)
+		}
 	}
 
 	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
 	var outboundConfig = &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
 	if templatePolicy.Inbound != nil {
 		for _, group := range templatePolicy.Inbound.Groups {
-			isOn := lists.ContainsString(groupCodes, group.Code)
+			var isOn = lists.ContainsString(groupCodes, group.Code)
 			group.IsOn = isOn
 
 			groupId, err := SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, group)
@@ -196,7 +198,7 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 	}
 	if templatePolicy.Outbound != nil {
 		for _, group := range templatePolicy.Outbound.Groups {
-			isOn := lists.ContainsString(groupCodes, group.Code)
+			var isOn = lists.ContainsString(groupCodes, group.Code)
 			group.IsOn = isOn
 
 			groupId, err := SharedHTTPFirewallRuleGroupDAO.CreateGroupFromConfig(tx, group)
