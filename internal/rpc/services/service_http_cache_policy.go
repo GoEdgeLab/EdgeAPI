@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 )
 
 type HTTPCachePolicyService struct {
@@ -46,7 +48,26 @@ func (this *HTTPCachePolicyService) CreateHTTPCachePolicy(ctx context.Context, r
 
 	var tx = this.NullTx()
 
-	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
+	if req.CapacityJSON != nil {
+		req.CapacityJSON, err = utils.JSONDecodeConfig(req.CapacityJSON, &shared.SizeCapacity{})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if req.MaxSizeJSON != nil {
+		req.MaxSizeJSON, err = utils.JSONDecodeConfig(req.MaxSizeJSON, &shared.SizeCapacity{})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if req.FetchTimeoutJSON != nil {
+		req.FetchTimeoutJSON, err = utils.JSONDecodeConfig(req.FetchTimeoutJSON, &shared.TimeDuration{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	policyId, err := models.SharedHTTPCachePolicyDAO.CreateCachePolicy(tx, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache, req.FetchTimeoutJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +84,26 @@ func (this *HTTPCachePolicyService) UpdateHTTPCachePolicy(ctx context.Context, r
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache)
+	if req.CapacityJSON != nil {
+		req.CapacityJSON, err = utils.JSONDecodeConfig(req.CapacityJSON, &shared.SizeCapacity{})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if req.MaxSizeJSON != nil {
+		req.MaxSizeJSON, err = utils.JSONDecodeConfig(req.MaxSizeJSON, &shared.SizeCapacity{})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if req.FetchTimeoutJSON != nil {
+		req.FetchTimeoutJSON, err = utils.JSONDecodeConfig(req.FetchTimeoutJSON, &shared.TimeDuration{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = models.SharedHTTPCachePolicyDAO.UpdateCachePolicy(tx, req.HttpCachePolicyId, req.IsOn, req.Name, req.Description, req.CapacityJSON, req.MaxSizeJSON, req.Type, req.OptionsJSON, req.SyncCompressionCache, req.FetchTimeoutJSON)
 	if err != nil {
 		return nil, err
 	}

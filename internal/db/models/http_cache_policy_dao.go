@@ -96,7 +96,7 @@ func (this *HTTPCachePolicyDAO) FindAllEnabledCachePolicies(tx *dbs.Tx) (result 
 }
 
 // CreateCachePolicy 创建缓存策略
-func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) (int64, error) {
+func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool, fetchTimeoutJSON []byte) (int64, error) {
 	var op = NewHTTPCachePolicyOperator()
 	op.State = HTTPCachePolicyStateEnabled
 	op.IsOn = isOn
@@ -113,6 +113,10 @@ func (this *HTTPCachePolicyDAO) CreateCachePolicy(tx *dbs.Tx, isOn bool, name st
 		op.Options = storageOptionsJSON
 	}
 	op.SyncCompressionCache = syncCompressionCache
+
+	if len(fetchTimeoutJSON) > 0 {
+		op.FetchTimeout = fetchTimeoutJSON
+	}
 
 	// 默认的缓存条件
 	cacheRef := &serverconfigs.HTTPCacheRef{
@@ -183,7 +187,7 @@ func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string
 		return 0, err
 	}
 
-	policyId, err := this.CreateCachePolicy(tx, true, "\""+name+"\"缓存策略", "默认创建的缓存策略", capacityJSON, maxSizeJSON, serverconfigs.CachePolicyStorageFile, storageOptionsJSON, false)
+	policyId, err := this.CreateCachePolicy(tx, true, "\""+name+"\"缓存策略", "默认创建的缓存策略", capacityJSON, maxSizeJSON, serverconfigs.CachePolicyStorageFile, storageOptionsJSON, false, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -191,7 +195,7 @@ func (this *HTTPCachePolicyDAO) CreateDefaultCachePolicy(tx *dbs.Tx, name string
 }
 
 // UpdateCachePolicy 修改缓存策略
-func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool) error {
+func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, isOn bool, name string, description string, capacityJSON []byte, maxSizeJSON []byte, storageType string, storageOptionsJSON []byte, syncCompressionCache bool, fetchTimeoutJSON []byte) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -212,6 +216,9 @@ func (this *HTTPCachePolicyDAO) UpdateCachePolicy(tx *dbs.Tx, policyId int64, is
 		op.Options = storageOptionsJSON
 	}
 	op.SyncCompressionCache = syncCompressionCache
+	if len(fetchTimeoutJSON) > 0 {
+		op.FetchTimeout = fetchTimeoutJSON
+	}
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
@@ -237,7 +244,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 	if policy == nil {
 		return nil, nil
 	}
-	config := &serverconfigs.HTTPCachePolicy{}
+	var config = &serverconfigs.HTTPCachePolicy{}
 	config.Id = int64(policy.Id)
 	config.IsOn = policy.IsOn
 	config.Name = policy.Name
@@ -246,7 +253,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 
 	// capacity
 	if IsNotNull(policy.Capacity) {
-		capacityConfig := &shared.SizeCapacity{}
+		var capacityConfig = &shared.SizeCapacity{}
 		err = json.Unmarshal(policy.Capacity, capacityConfig)
 		if err != nil {
 			return nil, err
@@ -256,7 +263,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 
 	// max size
 	if IsNotNull(policy.MaxSize) {
-		maxSizeConfig := &shared.SizeCapacity{}
+		var maxSizeConfig = &shared.SizeCapacity{}
 		err = json.Unmarshal(policy.MaxSize, maxSizeConfig)
 		if err != nil {
 			return nil, err
@@ -268,7 +275,7 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 
 	// options
 	if IsNotNull(policy.Options) {
-		m := map[string]interface{}{}
+		var m = map[string]any{}
 		err = json.Unmarshal(policy.Options, &m)
 		if err != nil {
 			return nil, errors.Wrap(err)
@@ -278,12 +285,22 @@ func (this *HTTPCachePolicyDAO) ComposeCachePolicy(tx *dbs.Tx, policyId int64, c
 
 	// refs
 	if IsNotNull(policy.Refs) {
-		refs := []*serverconfigs.HTTPCacheRef{}
+		var refs = []*serverconfigs.HTTPCacheRef{}
 		err = json.Unmarshal(policy.Refs, &refs)
 		if err != nil {
 			return nil, err
 		}
 		config.CacheRefs = refs
+	}
+
+	// fetch timeout
+	if IsNotNull(policy.FetchTimeout) {
+		var timeoutDuration = &shared.TimeDuration{}
+		err = json.Unmarshal(policy.FetchTimeout, timeoutDuration)
+		if err != nil {
+			return nil, err
+		}
+		config.FetchTimeout = timeoutDuration
 	}
 
 	if cacheMap != nil {

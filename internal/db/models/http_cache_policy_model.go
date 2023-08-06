@@ -2,6 +2,26 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
+const (
+	HTTPCachePolicyField_Id                   dbs.FieldName = "id"                   // ID
+	HTTPCachePolicyField_AdminId              dbs.FieldName = "adminId"              // 管理员ID
+	HTTPCachePolicyField_UserId               dbs.FieldName = "userId"               // 用户ID
+	HTTPCachePolicyField_TemplateId           dbs.FieldName = "templateId"           // 模版ID
+	HTTPCachePolicyField_IsOn                 dbs.FieldName = "isOn"                 // 是否启用
+	HTTPCachePolicyField_Name                 dbs.FieldName = "name"                 // 名称
+	HTTPCachePolicyField_Capacity             dbs.FieldName = "capacity"             // 容量数据
+	HTTPCachePolicyField_MaxKeys              dbs.FieldName = "maxKeys"              // 最多Key值
+	HTTPCachePolicyField_MaxSize              dbs.FieldName = "maxSize"              // 最大缓存内容尺寸
+	HTTPCachePolicyField_Type                 dbs.FieldName = "type"                 // 存储类型
+	HTTPCachePolicyField_Options              dbs.FieldName = "options"              // 存储选项
+	HTTPCachePolicyField_CreatedAt            dbs.FieldName = "createdAt"            // 创建时间
+	HTTPCachePolicyField_State                dbs.FieldName = "state"                // 状态
+	HTTPCachePolicyField_Description          dbs.FieldName = "description"          // 描述
+	HTTPCachePolicyField_Refs                 dbs.FieldName = "refs"                 // 默认的缓存设置
+	HTTPCachePolicyField_SyncCompressionCache dbs.FieldName = "syncCompressionCache" // 是否同步写入压缩缓存
+	HTTPCachePolicyField_FetchTimeout         dbs.FieldName = "fetchTimeout"         // 预热超时时间
+)
+
 // HTTPCachePolicy HTTP缓存策略
 type HTTPCachePolicy struct {
 	Id                   uint32   `field:"id"`                   // ID
@@ -20,25 +40,27 @@ type HTTPCachePolicy struct {
 	Description          string   `field:"description"`          // 描述
 	Refs                 dbs.JSON `field:"refs"`                 // 默认的缓存设置
 	SyncCompressionCache uint8    `field:"syncCompressionCache"` // 是否同步写入压缩缓存
+	FetchTimeout         dbs.JSON `field:"fetchTimeout"`         // 预热超时时间
 }
 
 type HTTPCachePolicyOperator struct {
-	Id                   interface{} // ID
-	AdminId              interface{} // 管理员ID
-	UserId               interface{} // 用户ID
-	TemplateId           interface{} // 模版ID
-	IsOn                 interface{} // 是否启用
-	Name                 interface{} // 名称
-	Capacity             interface{} // 容量数据
-	MaxKeys              interface{} // 最多Key值
-	MaxSize              interface{} // 最大缓存内容尺寸
-	Type                 interface{} // 存储类型
-	Options              interface{} // 存储选项
-	CreatedAt            interface{} // 创建时间
-	State                interface{} // 状态
-	Description          interface{} // 描述
-	Refs                 interface{} // 默认的缓存设置
-	SyncCompressionCache interface{} // 是否同步写入压缩缓存
+	Id                   any // ID
+	AdminId              any // 管理员ID
+	UserId               any // 用户ID
+	TemplateId           any // 模版ID
+	IsOn                 any // 是否启用
+	Name                 any // 名称
+	Capacity             any // 容量数据
+	MaxKeys              any // 最多Key值
+	MaxSize              any // 最大缓存内容尺寸
+	Type                 any // 存储类型
+	Options              any // 存储选项
+	CreatedAt            any // 创建时间
+	State                any // 状态
+	Description          any // 描述
+	Refs                 any // 默认的缓存设置
+	SyncCompressionCache any // 是否同步写入压缩缓存
+	FetchTimeout         any // 预热超时时间
 }
 
 func NewHTTPCachePolicyOperator() *HTTPCachePolicyOperator {
