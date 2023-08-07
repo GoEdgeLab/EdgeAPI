@@ -187,7 +187,7 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicyConfig(ctx context
 
 // FindEnabledHTTPCachePolicy 查找单个缓存策略信息
 func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Context, req *pb.FindEnabledHTTPCachePolicyRequest) (*pb.FindEnabledHTTPCachePolicyResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, _, err := this.ValidateAdminAndUser(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -202,9 +202,10 @@ func (this *HTTPCachePolicyService) FindEnabledHTTPCachePolicy(ctx context.Conte
 		return &pb.FindEnabledHTTPCachePolicyResponse{HttpCachePolicy: nil}, nil
 	}
 	return &pb.FindEnabledHTTPCachePolicyResponse{HttpCachePolicy: &pb.HTTPCachePolicy{
-		Id:   int64(policy.Id),
-		Name: policy.Name,
-		IsOn: policy.IsOn,
+		Id:           int64(policy.Id),
+		Name:         policy.Name,
+		IsOn:         policy.IsOn,
+		MaxBytesJSON: policy.MaxSize,
 	}}, nil
 }
 
