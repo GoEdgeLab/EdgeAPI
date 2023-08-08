@@ -177,7 +177,7 @@ func (this *ServerBandwidthStatService) FindServerBandwidthStats(ctx context.Con
 		req.Algo = bandwidthAlgo
 	}
 
-	var stats = []*models.ServerBandwidthStat{}
+	var stats []*models.ServerBandwidthStat
 	if len(req.Day) > 0 {
 		stats, err = models.SharedServerBandwidthStatDAO.FindAllServerStatsWithDay(tx, req.ServerId, req.Day, req.Algo == systemconfigs.BandwidthAlgoAvg)
 	} else if len(req.Month) > 0 {
@@ -398,7 +398,7 @@ func (this *ServerBandwidthStatService) FindDailyServerBandwidthStatsBetweenDays
 		return nil, errors.New("invalid dayTo '" + req.DayTo + "'")
 	}
 
-	var pbStats = []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat{}
+	var pbStats []*pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat
 	var pbNthStat *pb.FindDailyServerBandwidthStatsBetweenDaysResponse_Stat
 	if req.ServerId > 0 { // 服务统计
 		pbStats, err = models.SharedServerBandwidthStatDAO.FindBandwidthStatsBetweenDays(tx, req.ServerId, req.DayFrom, req.DayTo, req.Algo == systemconfigs.BandwidthAlgoAvg)

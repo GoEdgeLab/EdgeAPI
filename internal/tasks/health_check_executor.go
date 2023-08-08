@@ -177,7 +177,7 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 			// 在线状态发生变化
 			if healthCheckConfig.AutoDown {
 				// 发送消息
-				var message = ""
+				var message string
 				var messageType string
 				var messageLevel string
 				if result.IsOk {

@@ -18,7 +18,7 @@ func (this *BaseProvider) WrapError(err error, domain string, record *dnstypes.R
 		return err
 	}
 
-	var fullname = ""
+	var fullname string
 	if len(record.Name) == 0 {
 		fullname = domain
 	} else {

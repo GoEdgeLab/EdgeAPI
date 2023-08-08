@@ -127,6 +127,9 @@ func (this *RegionCountryDAO) CreateCountry(tx *dbs.Tx, name string, dataId stri
 		pinyinResult = append(pinyinResult, strings.Join(piece, " "))
 	}
 	pinyinJSON, err := json.Marshal([]string{strings.Join(pinyinResult, " ")})
+	if err != nil {
+		return 0, err
+	}
 	op.Pinyin = pinyinJSON
 
 	codes := []string{name}

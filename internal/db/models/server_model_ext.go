@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -78,7 +79,7 @@ func (this *Server) DecodeHTTPSPorts() (ports []int) {
 		if err != nil {
 			return nil
 		}
-		err = config.Init(nil)
+		err = config.Init(context.TODO())
 		if err != nil {
 			return nil
 		}
@@ -120,7 +121,7 @@ func (this *Server) DecodeTLSPorts() (ports []int) {
 		if err != nil {
 			return nil
 		}
-		err = config.Init(nil)
+		err = config.Init(context.TODO())
 		if err != nil {
 			return nil
 		}

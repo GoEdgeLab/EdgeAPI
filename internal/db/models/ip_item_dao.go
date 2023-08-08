@@ -674,6 +674,9 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 			}
 		} else {
 			clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIds(tx)
+			if err != nil {
+				return err
+			}
 			for _, clusterId := range clusterIds {
 				err = SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeIPItemChanged)
 				if err != nil {

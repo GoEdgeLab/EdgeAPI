@@ -25,5 +25,5 @@ func SetRLimit(limit uint64) error {
 
 // set best resource limit value
 func SetSuitableRLimit() {
-	SetRLimit(4096 * 100) // 1M=100Files
+	_ = SetRLimit(4096 * 100) // 1M=100Files
 }

@@ -61,10 +61,7 @@ func (this *DomainRecordsCache) WriteDomainRecords(providerId int64, domain stri
 		return
 	}
 
-	var clonedRecords = []*dnstypes.Record{}
-	for _, record := range records {
-		clonedRecords = append(clonedRecords, record)
-	}
+	var clonedRecords = append([]*dnstypes.Record{}, records...)
 	this.domainRecordsMap[domain] = &recordList{
 		version:   version,
 		updatedAt: time.Now().Unix(),

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -37,7 +38,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 		return nil, err
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func (this *APINode) DecodeHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*serverc
 		}
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 		return nil, err
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +154,7 @@ func (this *APINode) DecodeRestHTTPS(tx *dbs.Tx, cacheMap *utils.CacheMap) (*ser
 		}
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}

@@ -149,8 +149,8 @@ func (this *BaseInstaller) LookupLatestInstaller(filePrefix string) (string, err
 func (this *BaseInstaller) InstallHelper(targetDir string, role nodeconfigs.NodeRole) (env *Env, err error) {
 	var uname = this.uname()
 
-	var osName = ""
-	var archName = ""
+	var osName string
+	var archName string
 	if strings.Contains(uname, "Darwin") {
 		osName = "darwin"
 	} else if strings.Contains(uname, "Linux") {

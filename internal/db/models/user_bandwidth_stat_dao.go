@@ -522,16 +522,6 @@ func (this *UserBandwidthStatDAO) sumBytesField(useAvg bool) string {
 	return "SUM(bytes) AS bytes"
 }
 
-func (this *UserBandwidthStatDAO) fixUserStat(stat *UserBandwidthStat, useAvg bool) *UserBandwidthStat {
-	if stat == nil {
-		return nil
-	}
-	if useAvg {
-		stat.Bytes = stat.AvgBytes
-	}
-	return stat
-}
-
 // HasFullData 检查一个月是否完整数据
 // 是为了兼容以前数据，以前的表中没有缓存流量、请求数等字段
 func (this *UserBandwidthStatDAO) HasFullData(tx *dbs.Tx, userId int64, month string) (bool, error) {

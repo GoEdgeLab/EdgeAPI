@@ -2917,8 +2917,14 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 			if err != nil {
 				return nil, err
 			}
+			if req.TargetUserId <= 0 {
+				req.TargetUserId = userId
+			}
 
-			// 此时如果用户为0，则同步到未分配用户的服务
+			// 此时如果用户为0，则同步到未分配用户的网站
+		} else {
+			// 只能同步到自己的网站
+			req.TargetUserId = userId
 		}
 		err = models.SharedServerDAO.CopyServerConfigToUser(tx, req.ServerId, req.TargetUserId, req.ConfigCode)
 		if err != nil {

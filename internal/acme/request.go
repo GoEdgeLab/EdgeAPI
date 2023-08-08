@@ -92,13 +92,13 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 	// 注册用户
 	var resource = this.task.User.GetRegistration()
 	if resource != nil {
-		resource, err = client.Registration.QueryRegistration()
+		_, err = client.Registration.QueryRegistration()
 		if err != nil {
 			return nil, nil, err
 		}
 	} else {
 		if this.task.Provider.RequireEAB {
-			resource, err := client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
+			resource, err = client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
 				TermsOfServiceAgreed: true,
 				Kid:                  this.task.Account.EABKid,
 				HmacEncoded:          this.task.Account.EABKey,
@@ -111,7 +111,7 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 				return nil, nil, err
 			}
 		} else {
-			resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+			resource, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 			if err != nil {
 				return nil, nil, err
 			}
@@ -165,13 +165,13 @@ func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 	// 注册用户
 	var resource = this.task.User.GetRegistration()
 	if resource != nil {
-		resource, err = client.Registration.QueryRegistration()
+		_, err = client.Registration.QueryRegistration()
 		if err != nil {
 			return nil, nil, err
 		}
 	} else {
 		if this.task.Provider.RequireEAB {
-			resource, err := client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
+			resource, err = client.Registration.RegisterWithExternalAccountBinding(registration.RegisterEABOptions{
 				TermsOfServiceAgreed: true,
 				Kid:                  this.task.Account.EABKid,
 				HmacEncoded:          this.task.Account.EABKey,
@@ -184,7 +184,7 @@ func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 				return nil, nil, err
 			}
 		} else {
-			resource, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
+			resource, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 			if err != nil {
 				return nil, nil, err
 			}

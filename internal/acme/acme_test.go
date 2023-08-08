@@ -130,6 +130,9 @@ func TestGenerate_EAB(t *testing.T) {
 	} else {
 		reg, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	}
+	if err != nil {
+		t.Fatal(err)
+	}
 	myUser.Registration = reg
 
 	request := certificate.ObtainRequest{

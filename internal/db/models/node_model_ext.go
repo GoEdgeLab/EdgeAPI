@@ -70,8 +70,7 @@ func (this *Node) DNSRouteCodesForDomainId(dnsDomainId int64) ([]string, error) 
 	if err != nil {
 		return nil, err
 	}
-	domainRoutes, _ := routes[dnsDomainId]
-
+	var domainRoutes = routes[dnsDomainId]
 	if len(domainRoutes) > 0 {
 		sort.Strings(domainRoutes)
 	}

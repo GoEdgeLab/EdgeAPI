@@ -10,7 +10,7 @@ func On(event string, callback func()) {
 	locker.Lock()
 	defer locker.Unlock()
 
-	callbacks, _ := eventsMap[event]
+	var callbacks = eventsMap[event]
 	callbacks = append(callbacks, callback)
 	eventsMap[event] = callbacks
 }
@@ -18,9 +18,9 @@ func On(event string, callback func()) {
 // Notify 通知事件
 func Notify(event string) {
 	locker.Lock()
-	callbacks, _ := eventsMap[event]
+	var callbacks = eventsMap[event]
 	locker.Unlock()
-	
+
 	for _, callback := range callbacks {
 		callback()
 	}

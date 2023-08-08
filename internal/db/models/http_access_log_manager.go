@@ -373,7 +373,7 @@ func (this *HTTPAccessLogManager) findTableWithoutCache(db *dbs.DB, day string, 
 		var lastInt64Id = types.Int64(lastId)
 		if accessLogRowsPerTable > 0 && lastInt64Id >= accessLogRowsPerTable {
 			// create next partial table
-			var nextTableName = ""
+			var nextTableName string
 			if accessLogTableMainReg.MatchString(lastTableName) {
 				nextTableName = prefix + "_0001"
 			} else if accessLogTablePartialReg.MatchString(lastTableName) {

@@ -97,16 +97,12 @@ func (this *HTTPCacheTaskKeyService) ValidateHTTPCacheTaskKeys(ctx context.Conte
 		}
 
 		var serverClusterId = int64(server.ClusterId)
-		if serverClusterId == 0 {
-			if clusterId > 0 {
-				serverClusterId = clusterId
-			} else {
-				pbFailResults = append(pbFailResults, &pb.ValidateHTTPCacheTaskKeysResponse_FailKey{
-					Key:        key,
-					ReasonCode: "requireClusterId",
-				})
-				continue
-			}
+		if serverClusterId == 0 && clusterId <= 0 {
+			pbFailResults = append(pbFailResults, &pb.ValidateHTTPCacheTaskKeysResponse_FailKey{
+				Key:        key,
+				ReasonCode: "requireClusterId",
+			})
+			continue
 		}
 	}
 

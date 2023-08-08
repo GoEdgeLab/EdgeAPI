@@ -701,7 +701,7 @@ func (this *SSLCertDAO) buildDomainSearchingQuery(query *dbs.Query, domains []st
 	}
 
 	// 检测 JSON_OVERLAPS() 函数是否可用
-	var canJSONOverlaps = false
+	var canJSONOverlaps bool
 	_, funcErr := this.Instance.FindCol(0, "SELECT JSON_OVERLAPS('[1]', '[1]')")
 	canJSONOverlaps = funcErr == nil
 	if canJSONOverlaps {

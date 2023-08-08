@@ -1039,9 +1039,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		if err != nil {
 			return nil, err
 		}
-		for _, clusterServer := range clusterServers {
-			servers = append(servers, clusterServer)
-		}
+		servers = append(servers, clusterServers...)
 	}
 
 	for _, server := range servers {
@@ -1063,7 +1061,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	// TODO 根据用户的不同读取不同的全局设置
 	var settingCacheKey = "SharedSysSettingDAO:" + systemconfigs.SettingCodeServerGlobalConfig
 	settingJSONCache, ok := cacheMap.Get(settingCacheKey)
-	var settingJSON = []byte{}
+	var settingJSON []byte
 	if ok {
 		settingJSON = settingJSONCache.([]byte)
 	} else {
@@ -2124,7 +2122,7 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 			var secretHash = fmt.Sprintf("%x", sha256.Sum256([]byte(node.UniqueId+"@"+node.Secret)))
 
 			for _, clusterId := range node.AllClusterIds() {
-				parentNodeConfigs, _ := result[clusterId]
+				var parentNodeConfigs = result[clusterId]
 				parentNodeConfigs = append(parentNodeConfigs, &nodeconfigs.ParentNodeConfig{
 					Id:         int64(node.Id),
 					Addrs:      addrStrings,

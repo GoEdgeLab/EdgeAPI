@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -36,7 +37,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 		return nil, err
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (this *UserNode) DecodeHTTPS(cacheMap *utils.CacheMap) (*serverconfigs.HTTP
 		}
 	}
 
-	err = config.Init(nil)
+	err = config.Init(context.TODO())
 	if err != nil {
 		return nil, err
 	}

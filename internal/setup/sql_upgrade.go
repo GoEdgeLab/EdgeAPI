@@ -424,9 +424,7 @@ func upgradeV0_3_2(db *dbs.DB) error {
 			if err != nil {
 				continue
 			}
-			if sizeCapacity != nil {
-				compressionConfig.MinLength = sizeCapacity
-			}
+			compressionConfig.MinLength = sizeCapacity
 		}
 
 		var maxLengthBytes = []byte(gzipOne.GetString("maxLength"))
@@ -436,9 +434,7 @@ func upgradeV0_3_2(db *dbs.DB) error {
 			if err != nil {
 				continue
 			}
-			if sizeCapacity != nil {
-				compressionConfig.MaxLength = sizeCapacity
-			}
+			compressionConfig.MaxLength = sizeCapacity
 		}
 
 		var condsBytes = []byte(gzipOne.GetString("conds"))
@@ -448,9 +444,7 @@ func upgradeV0_3_2(db *dbs.DB) error {
 			if err != nil {
 				continue
 			}
-			if conds != nil {
-				compressionConfig.Conds = conds
-			}
+			compressionConfig.Conds = conds
 		}
 
 		configJSON, err := json.Marshal(compressionConfig)

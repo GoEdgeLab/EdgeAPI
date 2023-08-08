@@ -232,7 +232,7 @@ Loop:
 
 // CreateHTTPAccessLog 写入单条访问日志
 func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLogDAO, accessLog *pb.HTTPAccessLog) error {
-	var day = ""
+	var day string
 	// 注意：如果你修改了 TimeISO8601 的逻辑，这里也需要同步修改
 	if len(accessLog.TimeISO8601) > 10 {
 		day = strings.ReplaceAll(accessLog.TimeISO8601[:10], "-", "")
