@@ -435,6 +435,11 @@ func (this *EdgeDNSAPIProvider) doAPI(path string, params map[string]any, respPt
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("invalid response status code '" + types.String(resp.StatusCode) + "'")

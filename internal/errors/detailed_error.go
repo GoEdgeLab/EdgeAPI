@@ -13,9 +13,9 @@ func (this *DetailedError) Code() string {
 	return this.code
 }
 
-func NewDetailedError(code string, error string) *DetailedError {
+func NewDetailedError(code string, errString string) *DetailedError {
 	return &DetailedError{
-		msg:  error,
+		msg:  errString,
 		code: code,
 	}
 }

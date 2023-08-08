@@ -201,7 +201,7 @@ func (this *CustomHTTPProvider) post(params maps.Map) (respData []byte, err erro
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("status should be 200, but got '" + strconv.Itoa(resp.StatusCode) + "'")
 	}
 	return io.ReadAll(resp.Body)
