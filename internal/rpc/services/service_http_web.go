@@ -425,6 +425,9 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	if len(req.PagesJSON) > 0 {
 		var pages = []*serverconfigs.HTTPPageConfig{}
 		err = json.Unmarshal(req.PagesJSON, &pages)
+		if err != nil {
+			return nil, err
+		}
 
 		for _, page := range pages {
 			err = page.Init()

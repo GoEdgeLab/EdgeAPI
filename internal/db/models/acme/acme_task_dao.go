@@ -2,6 +2,7 @@ package acme
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	acmeutils "github.com/TeaOSLab/EdgeAPI/internal/acme"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
@@ -434,7 +435,7 @@ func (this *ACMETaskDAO) runTaskWithoutLog(tx *dbs.Tx, taskId int64) (isOk bool,
 		CertData: certData,
 		KeyData:  keyData,
 	}
-	err = sslConfig.Init(nil)
+	err = sslConfig.Init(context.Background())
 	if err != nil {
 		errMsg = "证书生成成功，但是分析证书信息时发生错误：" + err.Error()
 		return

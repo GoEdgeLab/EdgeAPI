@@ -70,7 +70,7 @@ func TestServerDomainHourlyStatDAO_FindTopDomainStats(t *testing.T) {
 
 func TestServerDomainHourlyStatDAO_Clean(t *testing.T) {
 	var dao = NewServerDomainHourlyStatDAO()
-	err := dao.Clean(nil, 10)
+	err := dao.CleanDays(nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}

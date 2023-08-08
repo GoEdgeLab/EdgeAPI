@@ -346,6 +346,9 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 		Options: nil,
 	}
 	reverseProxyScheduleJSON, err := json.Marshal(reverseProxyScheduleConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	var primaryOrigins = []*serverconfigs.OriginRef{}
 	for _, originAddr := range req.OriginAddrs {
@@ -615,6 +618,9 @@ func (this *ServerService) CreateBasicTCPServer(ctx context.Context, req *pb.Cre
 		Options: nil,
 	}
 	reverseProxyScheduleJSON, err := json.Marshal(reverseProxyScheduleConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	var primaryOrigins = []*serverconfigs.OriginRef{}
 	for _, originAddr := range req.OriginAddrs {
