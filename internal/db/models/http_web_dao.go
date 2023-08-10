@@ -101,7 +101,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 
 	// root
 	if IsNotNull(web.Root) {
-		var rootConfig = &serverconfigs.HTTPRootConfig{}
+		var rootConfig = serverconfigs.NewHTTPRootConfig()
 		err = json.Unmarshal(web.Root, rootConfig)
 		if err != nil {
 			return nil, err
