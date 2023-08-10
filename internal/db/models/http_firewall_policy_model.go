@@ -23,6 +23,8 @@ const (
 	HTTPFirewallPolicyField_SynFlood           dbs.FieldName = "synFlood"           // SynFlood防御设置
 	HTTPFirewallPolicyField_Log                dbs.FieldName = "log"                // 日志配置
 	HTTPFirewallPolicyField_MaxRequestBodySize dbs.FieldName = "maxRequestBodySize" // 可以检查的最大请求内容尺寸
+	HTTPFirewallPolicyField_DenyCountryHTML    dbs.FieldName = "denyCountryHTML"    // 区域封禁提示
+	HTTPFirewallPolicyField_DenyProvinceHTML   dbs.FieldName = "denyProvinceHTML"   // 省份封禁提示
 )
 
 // HTTPFirewallPolicy HTTP防火墙
@@ -47,6 +49,8 @@ type HTTPFirewallPolicy struct {
 	SynFlood           dbs.JSON `field:"synFlood"`           // SynFlood防御设置
 	Log                dbs.JSON `field:"log"`                // 日志配置
 	MaxRequestBodySize uint32   `field:"maxRequestBodySize"` // 可以检查的最大请求内容尺寸
+	DenyCountryHTML    string   `field:"denyCountryHTML"`    // 区域封禁提示
+	DenyProvinceHTML   string   `field:"denyProvinceHTML"`   // 省份封禁提示
 }
 
 type HTTPFirewallPolicyOperator struct {
@@ -70,6 +74,8 @@ type HTTPFirewallPolicyOperator struct {
 	SynFlood           any // SynFlood防御设置
 	Log                any // 日志配置
 	MaxRequestBodySize any // 可以检查的最大请求内容尺寸
+	DenyCountryHTML    any // 区域封禁提示
+	DenyProvinceHTML   any // 省份封禁提示
 }
 
 func NewHTTPFirewallPolicyOperator() *HTTPFirewallPolicyOperator {

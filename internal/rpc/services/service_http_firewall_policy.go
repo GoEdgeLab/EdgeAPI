@@ -305,7 +305,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 		req.MaxRequestBodySize = 0
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.CaptchaOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig, logConfig, req.MaxRequestBodySize)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicy(tx, req.HttpFirewallPolicyId, req.IsOn, req.Name, req.Description, inboundConfigJSON, outboundConfigJSON, req.BlockOptionsJSON, req.CaptchaOptionsJSON, req.Mode, req.UseLocalFirewall, synFloodConfig, logConfig, req.MaxRequestBodySize, req.DenyCountryHTML, req.DenyProvinceHTML)
 	if err != nil {
 		return nil, err
 	}
