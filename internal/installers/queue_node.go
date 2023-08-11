@@ -167,7 +167,7 @@ func (this *NodeQueue) InstallNode(nodeId int64, installStatus *models.NodeInsta
 	for _, apiNode := range apiNodes {
 		addrConfigs, err := apiNode.DecodeAccessAddrs()
 		if err != nil {
-			return errors.New("decode api node access addresses failed: " + err.Error())
+			return fmt.Errorf("decode api node access addresses failed: %w", err)
 		}
 		for _, addrConfig := range addrConfigs {
 			apiEndpoints = append(apiEndpoints, addrConfig.FullAddresses()...)
@@ -320,7 +320,7 @@ func (this *NodeQueue) StartNode(nodeId int64) error {
 	// 执行start
 	_, stderr, err := installer.client.Exec("sudo " + exe + " start")
 	if err != nil {
-		return errors.New("start failed: " + err.Error())
+		return fmt.Errorf("start failed: %w", err)
 	}
 	if len(stderr) > 0 {
 		return errors.New("start failed: " + stderr)
@@ -427,7 +427,7 @@ func (this *NodeQueue) StopNode(nodeId int64) error {
 	// 执行stop
 	_, stderr, err := installer.client.Exec(exe + " stop")
 	if err != nil {
-		return errors.New("stop failed: " + err.Error())
+		return fmt.Errorf("stop failed: %w", err)
 	}
 	if len(stderr) > 0 {
 		return errors.New("stop failed: " + stderr)

@@ -2,8 +2,8 @@ package setup
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -68,7 +68,7 @@ func (this *SQLExecutor) Run(showLog bool) error {
 	var sqlResult = &SQLDumpResult{}
 	err = json.Unmarshal(sqlData, sqlResult)
 	if err != nil {
-		return errors.New("decode sql data failed: " + err.Error())
+		return fmt.Errorf("decode sql data failed: %w", err)
 	}
 
 	_, err = sqlDump.Apply(db, sqlResult, showLog)
@@ -227,7 +227,7 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 	/// 检查是否有集群数字
 	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeNodeClusters")
 	if err != nil {
-		return errors.New("query clusters failed: " + err.Error())
+		return fmt.Errorf("query clusters failed: %w", err)
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -235,7 +235,7 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 
 	col, err := stmt.FindCol(0)
 	if err != nil {
-		return errors.New("query clusters failed: " + err.Error())
+		return fmt.Errorf("query clusters failed: %w", err)
 	}
 	count := types.Int(col)
 	if count > 0 {
@@ -311,7 +311,7 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 func (this *SQLExecutor) checkIPList(db *dbs.DB) error {
 	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeIPLists")
 	if err != nil {
-		return errors.New("query ip lists failed: " + err.Error())
+		return fmt.Errorf("query ip lists failed: %w", err)
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -319,7 +319,7 @@ func (this *SQLExecutor) checkIPList(db *dbs.DB) error {
 
 	col, err := stmt.FindCol(0)
 	if err != nil {
-		return errors.New("query ip lists failed: " + err.Error())
+		return fmt.Errorf("query ip lists failed: %w", err)
 	}
 	count := types.Int(col)
 	if count > 0 {
@@ -508,7 +508,7 @@ func (this *SQLExecutor) checkClientAgents(db *dbs.DB) error {
 func (this *SQLExecutor) updateVersion(db *dbs.DB, version string) error {
 	stmt, err := db.Prepare("SELECT COUNT(*) FROM edgeVersions")
 	if err != nil {
-		return errors.New("query version failed: " + err.Error())
+		return fmt.Errorf("query version failed: %w", err)
 	}
 	defer func() {
 		_ = stmt.Close()
@@ -516,20 +516,20 @@ func (this *SQLExecutor) updateVersion(db *dbs.DB, version string) error {
 
 	col, err := stmt.FindCol(0)
 	if err != nil {
-		return errors.New("query version failed: " + err.Error())
+		return fmt.Errorf("query version failed: %w", err)
 	}
 	count := types.Int(col)
 	if count > 0 {
 		_, err = db.Exec("UPDATE edgeVersions SET version=?", version)
 		if err != nil {
-			return errors.New("update version failed: " + err.Error())
+			return fmt.Errorf("update version failed: %w", err)
 		}
 		return nil
 	}
 
 	_, err = db.Exec("INSERT edgeVersions (version) VALUES (?)", version)
 	if err != nil {
-		return errors.New("create version failed: " + err.Error())
+		return fmt.Errorf("create version failed: %w", err)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/edgeapi"
@@ -452,7 +453,7 @@ func (this *EdgeDNSAPIProvider) doAPI(path string, params map[string]any, respPt
 
 	err = json.Unmarshal(data, respPtr)
 	if err != nil {
-		return errors.New("decode response failed: " + err.Error() + ", JSON: " + string(data))
+		return fmt.Errorf("decode response failed: %w, JSON: %s", err, string(data))
 	}
 
 	if !respPtr.IsValid() {

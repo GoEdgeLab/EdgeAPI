@@ -1,9 +1,8 @@
 package dnsclients
 
 import (
-	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
-	"github.com/iwind/TeaGo/types"
 )
 
 type BaseProvider struct{}
@@ -24,5 +23,5 @@ func (this *BaseProvider) WrapError(err error, domain string, record *dnstypes.R
 	} else {
 		fullname = record.Name + "." + domain
 	}
-	return errors.New("record operation failed: '" + fullname + " " + record.Type + " " + record.Value + " " + types.String(record.TTL) + "': " + err.Error())
+	return fmt.Errorf("record operation failed: '%s %s %s %d': %w", fullname, record.Type, record.Value, record.TTL, err)
 }

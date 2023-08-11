@@ -1,6 +1,7 @@
 package acme
 
 import (
+	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/go-acme/lego/v4/certcrypto"
@@ -104,7 +105,7 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 				HmacEncoded:          this.task.Account.EABKey,
 			})
 			if err != nil {
-				return nil, nil, errors.New("register user failed: " + err.Error())
+				return nil, nil, fmt.Errorf("register user failed: %w", err)
 			}
 			err = this.task.User.Register(resource)
 			if err != nil {
@@ -134,7 +135,7 @@ func (this *Request) runDNS() (certData []byte, keyData []byte, err error) {
 	}
 	certResource, err := client.Certificate.Obtain(request)
 	if err != nil {
-		return nil, nil, errors.New("obtain cert failed: " + err.Error())
+		return nil, nil, fmt.Errorf("obtain cert failed: %w", err)
 	}
 
 	return certResource.Certificate, certResource.PrivateKey, nil
@@ -177,7 +178,7 @@ func (this *Request) runHTTP() (certData []byte, keyData []byte, err error) {
 				HmacEncoded:          this.task.Account.EABKey,
 			})
 			if err != nil {
-				return nil, nil, errors.New("register user failed: " + err.Error())
+				return nil, nil, fmt.Errorf("register user failed: %w", err)
 			}
 			err = this.task.User.Register(resource)
 			if err != nil {

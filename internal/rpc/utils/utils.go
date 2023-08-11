@@ -2,6 +2,7 @@ package rpcutils
 
 import (
 	"errors"
+	"fmt"
 )
 
 type UserType = string
@@ -27,5 +28,5 @@ func Wrap(description string, err error) error {
 	if err == nil {
 		return errors.New(description)
 	}
-	return errors.New(description + ": " + err.Error())
+	return fmt.Errorf("%s: %w", description, err)
 }

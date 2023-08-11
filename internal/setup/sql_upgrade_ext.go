@@ -5,7 +5,7 @@ package setup
 
 import (
 	"encoding/json"
-	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
@@ -79,7 +79,7 @@ func upgradeV0_4_9(db *dbs.DB) error {
 					config.DenySpiders = true
 					configJSON, err := json.Marshal(config)
 					if err != nil {
-						return errors.New("encode SecurityConfig failed: " + err.Error())
+						return fmt.Errorf("encode SecurityConfig failed: %w", err)
 					} else {
 						_, err := db.Exec("UPDATE edgeSysSettings SET value=? WHERE code=?", configJSON, systemconfigs.SettingCodeAdminSecurityConfig)
 						if err != nil {

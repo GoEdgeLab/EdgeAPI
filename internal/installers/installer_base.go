@@ -2,6 +2,7 @@ package installers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/Tea"
@@ -67,7 +68,7 @@ func (this *BaseInstaller) Login(credentials *Credentials) error {
 			signer, err = ssh.ParsePrivateKey([]byte(credentials.PrivateKey))
 		}
 		if err != nil {
-			return errors.New("parse private key: " + err.Error())
+			return fmt.Errorf("parse private key: %w", err)
 		}
 		authMethod := ssh.PublicKeys(signer)
 		methods = append(methods, authMethod)

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/cloudflare"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
@@ -337,7 +338,7 @@ func (this *CloudFlareProvider) doAPI(method string, apiPath string, args map[st
 
 	err = json.Unmarshal(data, respPtr)
 	if err != nil {
-		return errors.New("decode json failed: " + err.Error() + ", response text: " + string(data))
+		return fmt.Errorf("decode json failed: %w, response text: %s", err, string(data))
 	}
 
 	return nil

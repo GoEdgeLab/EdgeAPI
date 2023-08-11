@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/regions"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
@@ -299,7 +300,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	var libraryFile = one.(*IPLibraryFile)
 	template, err := iplibrary.NewTemplate(libraryFile.Template)
 	if err != nil {
-		return errors.New("create template from '" + libraryFile.Template + "' failed: " + err.Error())
+		return fmt.Errorf("create template from '%s' failed: %w", libraryFile.Template, err)
 	}
 
 	var fileId = int64(libraryFile.FileId)
@@ -314,17 +315,17 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 		if os.IsNotExist(err) {
 			err = os.Mkdir(dir, 0777)
 			if err != nil {
-				return errors.New("can not open dir '" + dir + "' to write: " + err.Error())
+				return fmt.Errorf("can not open dir '%s' to write: %w", dir, err)
 			}
 		} else {
-			return errors.New("can not open dir '" + dir + "' to write: " + err.Error())
+			return fmt.Errorf("can not open dir '%s' to write: %w", dir, err)
 		}
 	} else if !stat.IsDir() {
 		_ = os.Remove(dir)
 
 		err = os.Mkdir(dir, 0777)
 		if err != nil {
-			return errors.New("can not open dir '" + dir + "' to write: " + err.Error())
+			return fmt.Errorf("can not open dir '%s' to write: %w", dir, err)
 		}
 	}
 
@@ -428,7 +429,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 
 	err = writer.WriteMeta()
 	if err != nil {
-		return errors.New("write meta failed: " + err.Error())
+		return fmt.Errorf("write meta failed: %w", err)
 	}
 
 	chunkIds, err := SharedFileChunkDAO.FindAllFileChunkIds(tx, fileId)
@@ -503,7 +504,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 
 			err = writer.Write(ipFrom, ipTo, countryId, provinceId, cityId, townId, providerId)
 			if err != nil {
-				return errors.New("write failed: " + err.Error())
+				return fmt.Errorf("write failed: %w", err)
 			}
 
 			return nil
@@ -536,7 +537,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	// 将生成的内容写入到文件
 	stat, err = os.Stat(filePath)
 	if err != nil {
-		return errors.New("stat generated file failed: " + err.Error())
+		return fmt.Errorf("stat generated file failed: %w", err)
 	}
 	generatedFileId, err := SharedFileDAO.CreateFile(tx, 0, 0, "ipLibraryFile", "", libraryCode+".db", stat.Size(), "", false)
 	if err != nil {
@@ -545,7 +546,7 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 
 	fp, err := os.Open(filePath)
 	if err != nil {
-		return errors.New("open generated file failed: " + err.Error())
+		return fmt.Errorf("open generated file failed: %w", err)
 	}
 	var buf = make([]byte, 256*1024)
 	for {

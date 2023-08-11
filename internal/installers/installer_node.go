@@ -3,6 +3,7 @@ package installers
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"os"
@@ -24,7 +25,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	}
 	err := nodeParams.Validate()
 	if err != nil {
-		return errors.New("params validation: " + err.Error())
+		return fmt.Errorf("params validation: %w", err)
 	}
 
 	// 检查目标目录是否存在
@@ -33,7 +34,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 		err = this.client.MkdirAll(dir)
 		if err != nil {
 			installStatus.ErrorCode = "CREATE_ROOT_DIRECTORY_FAILED"
-			return errors.New("create directory  '" + dir + "' failed: " + err.Error())
+			return fmt.Errorf("create directory  '%s' failed: %w", dir, err)
 		}
 	}
 
@@ -74,7 +75,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 		}
 	}
 	if firstCopyErr != nil {
-		return errors.New("upload node file failed: " + firstCopyErr.Error())
+		return fmt.Errorf("upload node file failed: %w", firstCopyErr)
 	}
 
 	// 测试运行环境
@@ -82,7 +83,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 	if !nodeParams.IsUpgrading {
 		_, stderr, err := this.client.Exec(env.HelperPath + " -cmd=test")
 		if err != nil {
-			return errors.New("test failed: " + err.Error())
+			return fmt.Errorf("test failed: %w", err)
 		}
 		if len(stderr) > 0 {
 			return errors.New("test failed: " + stderr)
@@ -99,7 +100,7 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 			// 删除可执行文件防止冲突
 			err = this.client.Remove(exePath)
 			if err != nil && err != os.ErrNotExist {
-				return errors.New("remove old file failed: " + err.Error())
+				return fmt.Errorf("remove old file failed: %w", err)
 			}
 		}
 	}
@@ -133,7 +134,7 @@ secret: "${nodeSecret}"`)
 
 		_, err = this.client.WriteFile(configFile, data)
 		if err != nil {
-			return errors.New("write '" + configFile + "': " + err.Error())
+			return fmt.Errorf("write '%s': %w", configFile, err)
 		}
 	}
 
@@ -141,7 +142,7 @@ secret: "${nodeSecret}"`)
 	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node test")
 	if err != nil {
 		installStatus.ErrorCode = "TEST_FAILED"
-		return errors.New("test edge node failed: " + err.Error() + ", stderr: " + stderr)
+		return fmt.Errorf("test edge node failed:  %w, stderr: %s", err, stderr)
 	}
 	if len(stderr) > 0 {
 		if regexp.MustCompile(`(?i)rpc`).MatchString(stderr) {
@@ -154,7 +155,7 @@ secret: "${nodeSecret}"`)
 	// 启动
 	_, stderr, err = this.client.Exec(dir + "/edge-node/bin/edge-node start")
 	if err != nil {
-		return errors.New("start edge node failed: " + err.Error())
+		return fmt.Errorf("start edge node failed: %w", err)
 	}
 
 	if len(stderr) > 0 {

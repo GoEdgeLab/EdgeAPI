@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -285,7 +286,7 @@ func (this *APINode) listenRPC(listener net.Listener, tlsConfig *tls.Config) err
 	this.registerServices(rpcServer)
 	err := rpcServer.Serve(listener)
 	if err != nil {
-		return errors.New("[API_NODE]start rpc failed: " + err.Error())
+		return fmt.Errorf("[API_NODE]start rpc failed: %w", err)
 	}
 
 	return nil
@@ -354,23 +355,23 @@ func (this *APINode) autoUpgrade() error {
 	var config = &dbs.Config{}
 	configData, err := os.ReadFile(Tea.ConfigFile("db.yaml"))
 	if err != nil {
-		return errors.New("read database config file failed: " + err.Error())
+		return fmt.Errorf("read database config file failed: %w", err)
 	}
 	err = yaml.Unmarshal(configData, config)
 	if err != nil {
-		return errors.New("decode database config failed: " + err.Error())
+		return fmt.Errorf("decode database config failed: %w", err)
 	}
 	var dbConfig = config.DBs[Tea.Env]
 	db, err := dbs.NewInstanceFromConfig(dbConfig)
 	if err != nil {
-		return errors.New("load database failed: " + err.Error())
+		return fmt.Errorf("load database failed: %w", err)
 	}
 	defer func() {
 		_ = db.Close()
 	}()
 	one, err := db.FindOne("SELECT version FROM edgeVersions LIMIT 1")
 	if err != nil {
-		return errors.New("query version failed: " + err.Error())
+		return fmt.Errorf("query version failed: %w", err)
 	}
 	if one != nil {
 		// 如果是同样的版本，则直接认为是最新版本
@@ -384,7 +385,7 @@ func (this *APINode) autoUpgrade() error {
 	logs.Println("[API_NODE]upgrade database starting ...")
 	err = setup.NewSQLExecutor(dbConfig).Run(false)
 	if err != nil {
-		return errors.New("execute sql failed: " + err.Error())
+		return fmt.Errorf("execute sql failed: %w", err)
 	}
 	// 不使用remotelog
 	logs.Println("[API_NODE]upgrade database done")

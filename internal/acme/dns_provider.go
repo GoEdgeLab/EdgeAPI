@@ -1,6 +1,7 @@
 package acme
 
 import (
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
@@ -45,7 +46,7 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 	if !wasDeleted {
 		records, err := this.raw.QueryRecords(this.dnsDomain, recordName, dnstypes.RecordTypeTXT)
 		if err != nil {
-			return errors.New("query DNS record failed: " + err.Error())
+			return fmt.Errorf("query DNS record failed: %w", err)
 		}
 		for _, record := range records {
 			err = this.raw.DeleteRecord(this.dnsDomain, record)
@@ -67,7 +68,7 @@ func (this *DNSProvider) Present(domain, token, keyAuth string) error {
 		Route: this.raw.DefaultRoute(),
 	})
 	if err != nil {
-		return errors.New("create DNS record failed: " + err.Error())
+		return fmt.Errorf("create DNS record failed: %w", err)
 	}
 
 	return nil

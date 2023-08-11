@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
@@ -63,7 +64,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 	var maxTries = 5
 	certs, err := models.SharedSSLCertDAO.ListCertsToUpdateOCSP(tx, maxTries, size)
 	if err != nil {
-		return errors.New("list certs failed: " + err.Error())
+		return fmt.Errorf("list certs failed: %w", err)
 	}
 
 	if len(certs) == 0 {
@@ -74,7 +75,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 	for _, cert := range certs {
 		err := models.SharedSSLCertDAO.PrepareCertOCSPUpdating(tx, int64(cert.Id))
 		if err != nil {
-			return errors.New("prepare cert ocsp updating failed: " + err.Error())
+			return fmt.Errorf("prepare cert ocsp updating failed: %w", err)
 		}
 	}
 
@@ -90,7 +91,7 @@ func (this *SSLCertUpdateOCSPTask) Loop() error {
 		}
 		err = models.SharedSSLCertDAO.UpdateCertOCSP(tx, int64(cert.Id), ocspData, expiresAt, hasErr, errString)
 		if err != nil {
-			return errors.New("update ocsp failed: " + err.Error())
+			return fmt.Errorf("update ocsp failed: %w", err)
 		}
 	}
 

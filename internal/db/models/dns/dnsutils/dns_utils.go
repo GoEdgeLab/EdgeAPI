@@ -3,6 +3,7 @@
 package dnsutils
 
 import (
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
@@ -217,7 +218,7 @@ func FindDefaultDomainRoute(tx *dbs.Tx, domain *dns.DNSDomain) (string, error) {
 	}
 	paramsMap, err := provider.DecodeAPIParams()
 	if err != nil {
-		return "", errors.New("decode provider params failed: " + err.Error())
+		return "", fmt.Errorf("decode provider params failed: %w", err)
 	}
 	var dnsProvider = dnsclients.FindProvider(provider.Type, int64(provider.Id))
 	if dnsProvider == nil {

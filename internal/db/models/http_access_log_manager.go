@@ -41,7 +41,7 @@ func (this *HTTPAccessLogManager) FindTableNames(db *dbs.DB, day string) ([]stri
 	for _, prefix := range []string{"edgeHTTPAccessLogs_" + day + "%", "edgehttpaccesslogs_" + day + "%"} {
 		ones, columnNames, err := db.FindPreparedOnes(`SHOW TABLES LIKE '` + prefix + `'`)
 		if err != nil {
-			return nil, errors.New("query table names error: " + err.Error())
+			return nil, fmt.Errorf("query table names error: %w", err)
 		}
 
 		var columnName = columnNames[0]
@@ -88,7 +88,7 @@ func (this *HTTPAccessLogManager) FindTables(db *dbs.DB, day string) ([]*httpAcc
 	for _, prefix := range []string{"edgeHTTPAccessLogs_" + day + "%", "edgehttpaccesslogs_" + day + "%"} {
 		ones, columnNames, err := db.FindPreparedOnes(`SHOW TABLES LIKE '` + prefix + `'`)
 		if err != nil {
-			return nil, errors.New("query table names error: " + err.Error())
+			return nil, fmt.Errorf("query table names error: %w", err)
 		}
 
 		var columnName = columnNames[0]

@@ -2,6 +2,7 @@ package setup
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/configs"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
@@ -150,7 +151,7 @@ func (this *Setup) Run() error {
 		}
 		addrsJSON, err := json.Marshal([]*serverconfigs.NetworkAddressConfig{addr})
 		if err != nil {
-			return errors.New("json encode api node addr failed: " + err.Error())
+			return fmt.Errorf("json encode api node addr failed: %w", err)
 		}
 
 		var httpJSON []byte = nil
@@ -166,7 +167,7 @@ func (this *Setup) Run() error {
 			}
 			httpJSON, err = json.Marshal(httpConfig)
 			if err != nil {
-				return errors.New("json encode api node http config failed: " + err.Error())
+				return fmt.Errorf("json encode api node http config failed: %w", err)
 			}
 		}
 		if this.config.APINodeProtocol == "https" {
@@ -181,14 +182,14 @@ func (this *Setup) Run() error {
 			}
 			httpsJSON, err = json.Marshal(httpsConfig)
 			if err != nil {
-				return errors.New("json encode api node https config failed: " + err.Error())
+				return fmt.Errorf("json encode api node https config failed: %w", err)
 			}
 		}
 
 		// 创建API节点
 		nodeId, err := dao.CreateAPINode(nil, "默认API节点", "这是默认创建的第一个API节点", httpJSON, httpsJSON, false, nil, nil, addrsJSON, true)
 		if err != nil {
-			return errors.New("create api node in database failed: " + err.Error())
+			return fmt.Errorf("create api node in database failed: %w", err)
 		}
 		apiNodeId = nodeId
 	}
@@ -208,7 +209,7 @@ func (this *Setup) Run() error {
 	}
 	err = apiConfig.WriteFile(Tea.ConfigFile("api.yaml"))
 	if err != nil {
-		return errors.New("save config failed: " + err.Error())
+		return fmt.Errorf("save config failed: %w", err)
 	}
 
 	return nil

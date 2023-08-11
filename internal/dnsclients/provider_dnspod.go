@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnspod"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
@@ -380,7 +381,7 @@ func (this *DNSPodProvider) doAPI(path string, params map[string]string, respPtr
 
 	req, err := http.NewRequest(http.MethodPost, apiHost+path, strings.NewReader(query.Encode()))
 	if err != nil {
-		return errors.New("create request failed: " + err.Error())
+		return fmt.Errorf("create request failed: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "GoEdge-Client/1.0.0 (iwind.liu@gmail.com)")
