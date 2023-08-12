@@ -116,15 +116,14 @@ func (this *NodeInstaller) Install(dir string, params interface{}, installStatus
 
 	// 修改配置文件
 	{
-		configFile := dir + "/edge-node/configs/api.yaml"
+		var configFile = dir + "/edge-node/configs/api_node.yaml"
 
 		// sudo之后我们需要修改配置目录才能写入文件
 		if this.client.sudo {
 			_, _, _ = this.client.Exec("chown " + this.client.User() + " " + filepath.Dir(configFile))
 		}
 
-		var data = []byte(`rpc:
-  endpoints: [ ${endpoints} ]
+		var data = []byte(`rpc.endpoints: [ ${endpoints} ]
 nodeId: "${nodeId}"
 secret: "${nodeSecret}"`)
 
