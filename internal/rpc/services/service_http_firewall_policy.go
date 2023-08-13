@@ -177,7 +177,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicy(ctx context.Cont
 	var tx = this.NullTx()
 
 	// 已经有的数据
-	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, nil)
+	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +448,7 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicyConfig(ctx c
 
 	var tx = this.NullTx()
 
-	config, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, nil)
+	config, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -512,7 +512,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 
 	var tx = this.NullTx()
 
-	oldConfig, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, nil)
+	oldConfig, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -675,7 +675,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 	ipLong := utils.IP2Long(req.Ip)
 
 	var tx = this.NullTx()
-	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, nil)
+	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)
 	if err != nil {
 		return nil, err
 	}

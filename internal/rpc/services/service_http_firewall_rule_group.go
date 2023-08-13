@@ -101,7 +101,7 @@ func (this *HTTPFirewallRuleGroupService) FindEnabledHTTPFirewallRuleGroupConfig
 
 	var tx = this.NullTx()
 
-	groupConfig, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, req.FirewallRuleGroupId)
+	groupConfig, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, req.FirewallRuleGroupId, false)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (this *HTTPFirewallRuleGroupService) AddHTTPFirewallRuleGroupSet(ctx contex
 	var tx = this.NullTx()
 
 	// 已经有的规则
-	config, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, req.FirewallRuleGroupId)
+	config, err := models.SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, req.FirewallRuleGroupId, false)
 	if err != nil {
 		return nil, err
 	}

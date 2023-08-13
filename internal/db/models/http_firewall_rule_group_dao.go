@@ -81,7 +81,7 @@ func (this *HTTPFirewallRuleGroupDAO) FindHTTPFirewallRuleGroupName(tx *dbs.Tx, 
 }
 
 // ComposeFirewallRuleGroup 组合配置
-func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, groupId int64) (*firewallconfigs.HTTPFirewallRuleGroup, error) {
+func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, groupId int64, forNode bool) (*firewallconfigs.HTTPFirewallRuleGroup, error) {
 	group, err := this.FindEnabledHTTPFirewallRuleGroup(tx, groupId)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	if group == nil {
 		return nil, nil
 	}
-	config := &firewallconfigs.HTTPFirewallRuleGroup{}
+	var config = &firewallconfigs.HTTPFirewallRuleGroup{}
 	config.Id = int64(group.Id)
 	config.IsOn = group.IsOn
 	config.Name = group.Name
@@ -98,7 +98,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 	config.IsTemplate = group.IsTemplate
 
 	if IsNotNull(group.Sets) {
-		setRefs := []*firewallconfigs.HTTPFirewallRuleSetRef{}
+		var setRefs = []*firewallconfigs.HTTPFirewallRuleSetRef{}
 		err = json.Unmarshal(group.Sets, &setRefs)
 		if err != nil {
 			return nil, err
@@ -108,7 +108,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 			if err != nil {
 				return nil, err
 			}
-			if setConfig != nil {
+			if setConfig != nil && (!forNode || setConfig.IsOn) {
 				config.SetRefs = append(config.SetRefs, setRef)
 				config.Sets = append(config.Sets, setConfig)
 			}

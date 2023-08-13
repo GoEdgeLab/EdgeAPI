@@ -301,7 +301,7 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 
 			// 自定义防火墙设置
 			if firewallRef.FirewallPolicyId > 0 {
-				firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId, cacheMap)
+				firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, firewallRef.FirewallPolicyId, forNode, cacheMap)
 				if err != nil {
 					return nil, err
 				}

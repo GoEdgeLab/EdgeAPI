@@ -1117,7 +1117,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		// 防火墙
 		var httpFirewallPolicyId = int64(nodeCluster.HttpFirewallPolicyId)
 		if httpFirewallPolicyId > 0 {
-			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId, cacheMap)
+			firewallPolicy, err := SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, httpFirewallPolicyId, true, cacheMap)
 			if err != nil {
 				return nil, err
 			}

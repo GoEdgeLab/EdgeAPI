@@ -399,7 +399,7 @@ func (this *HTTPFirewallPolicyDAO) ListEnabledFirewallPolicies(tx *dbs.Tx, clust
 }
 
 // ComposeFirewallPolicy 组合策略配置
-func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId int64, cacheMap *utils.CacheMap) (*firewallconfigs.HTTPFirewallPolicy, error) {
+func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId int64, forNode bool, cacheMap *utils.CacheMap) (*firewallconfigs.HTTPFirewallPolicy, error) {
 	if cacheMap == nil {
 		cacheMap = utils.NewCacheMap()
 	}
@@ -433,18 +433,18 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	config.Mode = policy.Mode
 
 	// Inbound
-	inbound := &firewallconfigs.HTTPFirewallInboundConfig{}
+	var inbound = &firewallconfigs.HTTPFirewallInboundConfig{}
 	if IsNotNull(policy.Inbound) {
 		err = json.Unmarshal(policy.Inbound, inbound)
 		if err != nil {
 			return nil, err
 		}
 		if len(inbound.GroupRefs) > 0 {
-			resultGroupRefs := []*firewallconfigs.HTTPFirewallRuleGroupRef{}
-			resultGroups := []*firewallconfigs.HTTPFirewallRuleGroup{}
+			var resultGroupRefs = []*firewallconfigs.HTTPFirewallRuleGroupRef{}
+			var resultGroups = []*firewallconfigs.HTTPFirewallRuleGroup{}
 
 			for _, groupRef := range inbound.GroupRefs {
-				groupConfig, err := SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, groupRef.GroupId)
+				groupConfig, err := SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, groupRef.GroupId, forNode)
 				if err != nil {
 					return nil, err
 				}
@@ -461,18 +461,18 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 	config.Inbound = inbound
 
 	// Outbound
-	outbound := &firewallconfigs.HTTPFirewallOutboundConfig{}
+	var outbound = &firewallconfigs.HTTPFirewallOutboundConfig{}
 	if IsNotNull(policy.Outbound) {
 		err = json.Unmarshal(policy.Outbound, outbound)
 		if err != nil {
 			return nil, err
 		}
 		if len(outbound.GroupRefs) > 0 {
-			resultGroupRefs := []*firewallconfigs.HTTPFirewallRuleGroupRef{}
-			resultGroups := []*firewallconfigs.HTTPFirewallRuleGroup{}
+			var resultGroupRefs = []*firewallconfigs.HTTPFirewallRuleGroupRef{}
+			var resultGroups = []*firewallconfigs.HTTPFirewallRuleGroup{}
 
 			for _, groupRef := range outbound.GroupRefs {
-				groupConfig, err := SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, groupRef.GroupId)
+				groupConfig, err := SharedHTTPFirewallRuleGroupDAO.ComposeFirewallRuleGroup(tx, groupRef.GroupId, forNode)
 				if err != nil {
 					return nil, err
 				}
