@@ -61,11 +61,12 @@ func (this *DNSTaskDAO) CreateDNSTask(tx *dbs.Tx, clusterId int64, serverId int6
 		"error":      "",
 		"version":    time.Now().UnixNano(),
 	}, maps.Map{
-		"updatedAt": time.Now().Unix(),
-		"isDone":    false,
-		"isOk":      false,
-		"error":     "",
-		"version":   time.Now().UnixNano(),
+		"updatedAt":  time.Now().Unix(),
+		"isDone":     false,
+		"isOk":       false,
+		"error":      "",
+		"version":    time.Now().UnixNano(),
+		"countFails": 0,
 	})
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func (this *DNSTaskDAO) CreateDomainTask(tx *dbs.Tx, domainId int64, taskType DN
 // FindAllDoingTasks 查找所有正在执行的任务
 func (this *DNSTaskDAO) FindAllDoingTasks(tx *dbs.Tx) (result []*DNSTask, err error) {
 	_, err = this.Query(tx).
-		Attr("isDone", 0).
+		Where("(isDone=0 OR (isDone=1 AND isOk=0 AND countFails<3))"). // 3 = retry times
 		Asc("version").
 		AscPk().
 		Slice(&result).
@@ -171,6 +172,7 @@ func (this *DNSTaskDAO) UpdateDNSTaskError(tx *dbs.Tx, taskId int64, err string)
 	op.IsDone = true
 	op.Error = err
 	op.IsOk = false
+	op.CountFails = dbs.SQL("countFails+1")
 	return this.Save(tx, op)
 }
 
@@ -197,6 +199,7 @@ func (this *DNSTaskDAO) UpdateDNSTaskDone(tx *dbs.Tx, taskId int64, taskVersion 
 	op.Id = taskId
 	op.IsDone = true
 	op.IsOk = true
+	op.CountFails = 0
 	op.Error = ""
 	return this.Save(tx, op)
 }
@@ -219,6 +222,7 @@ func (this *DNSTaskDAO) UpdateClusterDNSTasksDone(tx *dbs.Tx, clusterId int64, m
 		Set("isDone", true).
 		Set("isOk", true).
 		Set("error", "").
+		Set("countFails", 0).
 		UpdateQuickly()
 }
 
