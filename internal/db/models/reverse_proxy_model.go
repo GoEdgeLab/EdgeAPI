@@ -2,6 +2,34 @@ package models
 
 import "github.com/iwind/TeaGo/dbs"
 
+const (
+	ReverseProxyField_Id                       dbs.FieldName = "id"                       // ID
+	ReverseProxyField_AdminId                  dbs.FieldName = "adminId"                  // 管理员ID
+	ReverseProxyField_UserId                   dbs.FieldName = "userId"                   // 用户ID
+	ReverseProxyField_TemplateId               dbs.FieldName = "templateId"               // 模版ID
+	ReverseProxyField_IsOn                     dbs.FieldName = "isOn"                     // 是否启用
+	ReverseProxyField_Scheduling               dbs.FieldName = "scheduling"               // 调度算法
+	ReverseProxyField_PrimaryOrigins           dbs.FieldName = "primaryOrigins"           // 主要源站
+	ReverseProxyField_BackupOrigins            dbs.FieldName = "backupOrigins"            // 备用源站
+	ReverseProxyField_StripPrefix              dbs.FieldName = "stripPrefix"              // 去除URL前缀
+	ReverseProxyField_RequestHostType          dbs.FieldName = "requestHostType"          // 请求Host类型
+	ReverseProxyField_RequestHost              dbs.FieldName = "requestHost"              // 请求Host
+	ReverseProxyField_RequestHostExcludingPort dbs.FieldName = "requestHostExcludingPort" // 移除请求Host中的域名
+	ReverseProxyField_RequestURI               dbs.FieldName = "requestURI"               // 请求URI
+	ReverseProxyField_AutoFlush                dbs.FieldName = "autoFlush"                // 是否自动刷新缓冲区
+	ReverseProxyField_AddHeaders               dbs.FieldName = "addHeaders"               // 自动添加的Header列表
+	ReverseProxyField_State                    dbs.FieldName = "state"                    // 状态
+	ReverseProxyField_CreatedAt                dbs.FieldName = "createdAt"                // 创建时间
+	ReverseProxyField_ConnTimeout              dbs.FieldName = "connTimeout"              // 连接超时时间
+	ReverseProxyField_ReadTimeout              dbs.FieldName = "readTimeout"              // 读取超时时间
+	ReverseProxyField_IdleTimeout              dbs.FieldName = "idleTimeout"              // 空闲超时时间
+	ReverseProxyField_MaxConns                 dbs.FieldName = "maxConns"                 // 最大并发连接数
+	ReverseProxyField_MaxIdleConns             dbs.FieldName = "maxIdleConns"             // 最大空闲连接数
+	ReverseProxyField_ProxyProtocol            dbs.FieldName = "proxyProtocol"            // Proxy Protocol配置
+	ReverseProxyField_FollowRedirects          dbs.FieldName = "followRedirects"          // 回源跟随
+	ReverseProxyField_Retry50X                 dbs.FieldName = "retry50X"                 // 启用50X重试
+)
+
 // ReverseProxy 反向代理配置
 type ReverseProxy struct {
 	Id                       uint32   `field:"id"`                       // ID
@@ -28,33 +56,35 @@ type ReverseProxy struct {
 	MaxIdleConns             uint32   `field:"maxIdleConns"`             // 最大空闲连接数
 	ProxyProtocol            dbs.JSON `field:"proxyProtocol"`            // Proxy Protocol配置
 	FollowRedirects          uint8    `field:"followRedirects"`          // 回源跟随
+	Retry50X                 bool     `field:"retry50X"`                 // 启用50X重试
 }
 
 type ReverseProxyOperator struct {
-	Id                       interface{} // ID
-	AdminId                  interface{} // 管理员ID
-	UserId                   interface{} // 用户ID
-	TemplateId               interface{} // 模版ID
-	IsOn                     interface{} // 是否启用
-	Scheduling               interface{} // 调度算法
-	PrimaryOrigins           interface{} // 主要源站
-	BackupOrigins            interface{} // 备用源站
-	StripPrefix              interface{} // 去除URL前缀
-	RequestHostType          interface{} // 请求Host类型
-	RequestHost              interface{} // 请求Host
-	RequestHostExcludingPort interface{} // 移除请求Host中的域名
-	RequestURI               interface{} // 请求URI
-	AutoFlush                interface{} // 是否自动刷新缓冲区
-	AddHeaders               interface{} // 自动添加的Header列表
-	State                    interface{} // 状态
-	CreatedAt                interface{} // 创建时间
-	ConnTimeout              interface{} // 连接超时时间
-	ReadTimeout              interface{} // 读取超时时间
-	IdleTimeout              interface{} // 空闲超时时间
-	MaxConns                 interface{} // 最大并发连接数
-	MaxIdleConns             interface{} // 最大空闲连接数
-	ProxyProtocol            interface{} // Proxy Protocol配置
-	FollowRedirects          interface{} // 回源跟随
+	Id                       any // ID
+	AdminId                  any // 管理员ID
+	UserId                   any // 用户ID
+	TemplateId               any // 模版ID
+	IsOn                     any // 是否启用
+	Scheduling               any // 调度算法
+	PrimaryOrigins           any // 主要源站
+	BackupOrigins            any // 备用源站
+	StripPrefix              any // 去除URL前缀
+	RequestHostType          any // 请求Host类型
+	RequestHost              any // 请求Host
+	RequestHostExcludingPort any // 移除请求Host中的域名
+	RequestURI               any // 请求URI
+	AutoFlush                any // 是否自动刷新缓冲区
+	AddHeaders               any // 自动添加的Header列表
+	State                    any // 状态
+	CreatedAt                any // 创建时间
+	ConnTimeout              any // 连接超时时间
+	ReadTimeout              any // 读取超时时间
+	IdleTimeout              any // 空闲超时时间
+	MaxConns                 any // 最大并发连接数
+	MaxIdleConns             any // 最大空闲连接数
+	ProxyProtocol            any // Proxy Protocol配置
+	FollowRedirects          any // 回源跟随
+	Retry50X                 any // 启用50X重试
 }
 
 func NewReverseProxyOperator() *ReverseProxyOperator {

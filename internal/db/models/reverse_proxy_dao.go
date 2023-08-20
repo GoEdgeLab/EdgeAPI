@@ -99,7 +99,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 		return nil, nil
 	}
 
-	var config = &serverconfigs.ReverseProxyConfig{}
+	var config = serverconfigs.NewReverseProxyConfig()
 	config.Id = int64(reverseProxy.Id)
 	config.IsOn = reverseProxy.IsOn
 	config.RequestHostType = types.Int8(reverseProxy.RequestHostType)
@@ -109,6 +109,7 @@ func (this *ReverseProxyDAO) ComposeReverseProxyConfig(tx *dbs.Tx, reverseProxyI
 	config.StripPrefix = reverseProxy.StripPrefix
 	config.AutoFlush = reverseProxy.AutoFlush == 1
 	config.FollowRedirects = reverseProxy.FollowRedirects == 1
+	config.Retry50X = reverseProxy.Retry50X
 
 	var schedulingConfig = &serverconfigs.SchedulingConfig{}
 	if IsNotNull(reverseProxy.Scheduling) {
@@ -218,6 +219,7 @@ func (this *ReverseProxyDAO) CreateReverseProxy(tx *dbs.Tx, adminId int64, userI
 	op.AdminId = adminId
 	op.UserId = userId
 	op.RequestHostType = serverconfigs.RequestHostTypeProxyServer
+	op.Retry50X = true
 
 	defaultHeaders := []string{"X-Real-IP", "X-Forwarded-For", "X-Forwarded-By", "X-Forwarded-Host", "X-Forwarded-Proto"}
 	defaultHeadersJSON, err := json.Marshal(defaultHeaders)
@@ -425,7 +427,8 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	maxConns int32,
 	maxIdleConns int32,
 	proxyProtocolJSON []byte,
-	followRedirects bool) error {
+	followRedirects bool,
+	retry50X bool) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
@@ -489,6 +492,8 @@ func (this *ReverseProxyDAO) UpdateReverseProxy(tx *dbs.Tx,
 	if len(proxyProtocolJSON) > 0 {
 		op.ProxyProtocol = proxyProtocolJSON
 	}
+
+	op.Retry50X = retry50X
 
 	err = this.Save(tx, op)
 	if err != nil {
