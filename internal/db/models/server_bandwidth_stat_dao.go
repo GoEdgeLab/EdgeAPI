@@ -380,7 +380,7 @@ func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serv
 }
 
 // FindMonthlyPercentile 获取某月内百分位
-func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int, useAvg bool, noPlan bool) (result int64, err error) {
+func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int, useAvg bool, noPlan bool, minSamples int) (result int64, err error) {
 	if percentile <= 0 {
 		percentile = 95
 	}
@@ -415,7 +415,7 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	if err != nil {
 		return 0, err
 	}
-	if total == 0 {
+	if total == 0 || total < int64(minSamples) {
 		return 0, nil
 	}
 
