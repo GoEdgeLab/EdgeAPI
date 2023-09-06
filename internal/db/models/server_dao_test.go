@@ -242,7 +242,7 @@ func TestServerDAO_FindEnabledServerWithDomain(t *testing.T) {
 	}
 }
 
-func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
+func TestServerDAO_RenewServerTrafficLimitStatus(t *testing.T) {
 	dbs.NotifyReady()
 
 	var tx *dbs.Tx
@@ -250,7 +250,7 @@ func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
 	defer func() {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
-	err := models.NewServerDAO().UpdateServerTrafficLimitStatus(tx, &serverconfigs.TrafficLimitConfig{
+	err := models.NewServerDAO().RenewServerTrafficLimitStatus(tx, &serverconfigs.TrafficLimitConfig{
 		IsOn:           true,
 		DailySize:      &shared.SizeCapacity{Count: 1, Unit: "mb"},
 		MonthlySize:    &shared.SizeCapacity{Count: 10, Unit: "mb"},
@@ -263,39 +263,14 @@ func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
 	t.Log("ok")
 }
 
-func TestServerDAO_CalculateServerTrafficLimitConfig(t *testing.T) {
+func TestServerDAO_UpdateServerTrafficLimitStatus(t *testing.T) {
 	dbs.NotifyReady()
 
+	var dao = models.NewServerDAO()
 	var tx *dbs.Tx
-	before := time.Now()
-	defer func() {
-		t.Log(time.Since(before).Seconds()*1000, "ms")
-	}()
-
-	var cacheMap = utils.NewCacheMap()
-	config, err := models.SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
+	err := dao.UpdateServerTrafficLimitStatus(tx, 23, timeutil.Format("Ymd", time.Now().AddDate(0, 0, 20)), 14, "day")
 	if err != nil {
 		t.Fatal(err)
-	}
-	logs.PrintAsJSON(config, t)
-}
-
-func TestServerDAO_CalculateServerTrafficLimitConfig_Cache(t *testing.T) {
-	dbs.NotifyReady()
-
-	var tx *dbs.Tx
-	before := time.Now()
-	defer func() {
-		t.Log(time.Since(before).Seconds()*1000, "ms")
-	}()
-
-	var cacheMap = utils.NewCacheMap()
-	for i := 0; i < 10; i++ {
-		config, err := models.SharedServerDAO.CalculateServerTrafficLimitConfig(tx, 23, cacheMap)
-		if err != nil {
-			t.Fatal(err)
-		}
-		_ = config
 	}
 }
 

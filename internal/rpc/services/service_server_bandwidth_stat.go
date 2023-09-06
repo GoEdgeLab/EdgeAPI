@@ -63,16 +63,30 @@ func init() {
 					}
 
 					for _, stat := range m {
-						// 更新服务的带宽峰值
+						// 更新网站的带宽峰值
 						if stat.ServerId > 0 {
-							err = models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
+							// 更新带宽统计
+							err = models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.NodeRegionId, stat.UserPlanId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
 							if err != nil {
 								remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
 							}
 
+							// 更新网站的bandwidth字段，方便快速排序
 							err = models.SharedServerDAO.UpdateServerBandwidth(tx, stat.ServerId, stat.Day+stat.TimeAt, stat.Bytes, stat.CountRequests, stat.CountAttackRequests)
 							if err != nil {
 								remotelogs.Error("ServerBandwidthStatService", "update server bandwidth failed: "+err.Error())
+							}
+
+							// 套餐统计
+							if stat.UserPlanId > 0 {
+								// 总体统计
+								err = models.SharedUserPlanStatDAO.IncreaseUserPlanStat(tx, stat.UserPlanId, stat.TotalBytes, stat.CountRequests)
+								if err != nil {
+									remotelogs.Error("ServerBandwidthStatService", "IncreaseUserPlanStat: "+err.Error())
+								}
+
+								// 分时统计
+								err = models.SharedUserPlanBandwidthStatDAO.UpdateUserPlanBandwidth(tx, stat.UserId, stat.UserPlanId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
 							}
 						}
 
@@ -147,6 +161,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 				CountRequests:       stat.CountRequests,
 				CountCachedRequests: stat.CountCachedRequests,
 				CountAttackRequests: stat.CountAttackRequests,
+				UserPlanId:          stat.UserPlanId,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()

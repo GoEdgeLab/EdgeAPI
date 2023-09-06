@@ -119,7 +119,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 
 		// 更新流量限制状态
 		if stat.CheckTrafficLimiting {
-			trafficLimitConfig, err := SharedServerDAO.CalculateServerTrafficLimitConfig(tx, stat.ServerId, cacheMap)
+			trafficLimitConfig, err := SharedServerDAO.FindServerTrafficLimitConfig(tx, stat.ServerId, cacheMap)
 			if err != nil {
 				return err
 			}
@@ -129,7 +129,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 					return err
 				}
 
-				err = SharedServerDAO.UpdateServerTrafficLimitStatus(tx, trafficLimitConfig, stat.ServerId, false)
+				err = SharedServerDAO.RenewServerTrafficLimitStatus(tx, trafficLimitConfig, stat.ServerId, false)
 				if err != nil {
 					return err
 				}
@@ -139,6 +139,7 @@ func (this *ServerDailyStatDAO) SaveStats(tx *dbs.Tx, stats []*pb.ServerDailySta
 
 	return nil
 }
+
 
 // SumCurrentDailyStat 查找当前时刻的数据统计
 func (this *ServerDailyStatDAO) SumCurrentDailyStat(tx *dbs.Tx, serverId int64) (*ServerDailyStat, error) {
@@ -164,7 +165,7 @@ func (this *ServerDailyStatDAO) SumServerMonthlyWithRegion(tx *dbs.Tx, serverId 
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
-	return query.Between("day", month+"01", month+"32").
+	return query.Between("day", month+"01", month+"31").
 		Attr("serverId", serverId).
 		SumInt64("bytes", 0)
 }
@@ -178,7 +179,7 @@ func (this *ServerDailyStatDAO) SumUserMonthlyWithoutPlan(tx *dbs.Tx, userId int
 	}
 	return query.
 		Attr("planId", 0).
-		Between("day", month+"01", month+"32").
+		Between("day", month+"01", month+"31").
 		Attr("userId", userId).
 		SumInt64("bytes", 0)
 }
@@ -190,7 +191,7 @@ func (this *ServerDailyStatDAO) SumUserMonthlyPeek(tx *dbs.Tx, userId int64, reg
 	if regionId > 0 {
 		query.Attr("regionId", regionId)
 	}
-	max, err := query.Between("day", month+"01", month+"32").
+	max, err := query.Between("day", month+"01", month+"31").
 		Attr("userId", userId).
 		Max("bytes", 0)
 	if err != nil {
@@ -644,7 +645,7 @@ func (this *ServerDailyStatDAO) FindStatsBetweenDays(tx *dbs.Tx, userId int64, s
 // month YYYYMM
 func (this *ServerDailyStatDAO) FindMonthlyStatsWithPlan(tx *dbs.Tx, month string) (result []*ServerDailyStat, err error) {
 	_, err = this.Query(tx).
-		Between("day", month+"01", month+"32").
+		Between("day", month+"01", month+"31").
 		Gt("planId", 0).
 		Slice(&result).
 		FindAll()

@@ -61,15 +61,28 @@ func (this *PlanDAO) DisablePlan(tx *dbs.Tx, id int64) error {
 }
 
 // FindEnabledPlan 查找启用中的条目
-func (this *PlanDAO) FindEnabledPlan(tx *dbs.Tx, id int64) (*Plan, error) {
+func (this *PlanDAO) FindEnabledPlan(tx *dbs.Tx, planId int64, cacheMap *utils.CacheMap) (*Plan, error) {
+	var cacheKey = this.Table + ":FindEnabledPlan:" + types.String(planId)
+	if cacheMap != nil {
+		cache, _ := cacheMap.Get(cacheKey)
+		if cache != nil {
+			return cache.(*Plan), nil
+		}
+	}
+
 	result, err := this.Query(tx).
-		Pk(id).
+		Pk(planId).
 		Attr("state", PlanStateEnabled).
 		Find()
 	if result == nil {
 		return nil, err
 	}
-	return result.(*Plan), err
+
+	if cacheMap != nil {
+		cacheMap.Put(cacheKey, result)
+	}
+
+	return result.(*Plan), nil
 }
 
 // FindPlanName 根据主键查找名称

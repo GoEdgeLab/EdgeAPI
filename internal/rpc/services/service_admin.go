@@ -549,7 +549,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	result.CountServers = countServers
 
 	this.BeginTag(ctx, "SharedServerDAO.CountAllEnabledServersMatch")
-	countAuditingServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", 0, 0, configutils.BoolStateYes, nil)
+	countAuditingServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", 0, 0, configutils.BoolStateYes, nil, 0)
 	this.EndTag(ctx, "SharedServerDAO.CountAllEnabledServersMatch")
 	if err != nil {
 		return nil, err

@@ -25,7 +25,7 @@ import (
 type ServerBandwidthStatDAO dbs.DAO
 
 const (
-	ServerBandwidthStatTablePartials = 20 // 分表数量
+	ServerBandwidthStatTablePartitions = 20 // 分表数量
 )
 
 func init() {
@@ -63,15 +63,15 @@ func init() {
 }
 
 // UpdateServerBandwidth 写入数据
-// 暂时不使用region区分
-func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, regionId int64, day string, timeAt string, bytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64) error {
+// 现在不需要把 userPlanId 加入到数据表unique key中，因为只会影响5分钟统计，影响非常有限
+func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, regionId int64, userPlanId int64, day string, timeAt string, bandwidthBytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64) error {
 	if serverId <= 0 {
 		return errors.New("invalid server id '" + types.String(serverId) + "'")
 	}
 
 	return this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Param("bytes", bytes).
+		Param("bytes", bandwidthBytes).
 		Param("totalBytes", totalBytes).
 		Param("cachedBytes", cachedBytes).
 		Param("attackBytes", attackBytes).
@@ -84,7 +84,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 			"regionId":            regionId,
 			"day":                 day,
 			"timeAt":              timeAt,
-			"bytes":               bytes,
+			"bytes":               bandwidthBytes,
 			"totalBytes":          totalBytes,
 			"avgBytes":            totalBytes / 300,
 			"cachedBytes":         cachedBytes,
@@ -92,6 +92,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 			"countRequests":       countRequests,
 			"countCachedRequests": countCachedRequests,
 			"countAttackRequests": countAttackRequests,
+			"userPlanId":          userPlanId,
 		}, maps.Map{
 			"bytes":               dbs.SQL("bytes+:bytes"),
 			"avgBytes":            dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
@@ -379,14 +380,18 @@ func (this *ServerBandwidthStatDAO) FindAllServerStatsWithMonth(tx *dbs.Tx, serv
 }
 
 // FindMonthlyPercentile 获取某月内百分位
-func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int, useAvg bool) (result int64, err error) {
+func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId int64, month string, percentile int, useAvg bool, noPlan bool) (result int64, err error) {
 	if percentile <= 0 {
 		percentile = 95
 	}
 
 	// 如果是100%以上，则快速返回
 	if percentile >= 100 {
-		result, err = this.Query(tx).
+		var query = this.Query(tx)
+		if noPlan {
+			query.Attr("userPlanId", 0)
+		}
+		result, err = query.
 			Table(this.partialTable(serverId)).
 			Attr("serverId", serverId).
 			Result(this.bytesField(useAvg)).
@@ -398,7 +403,11 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	}
 
 	// 总数量
-	total, err := this.Query(tx).
+	var totalQuery = this.Query(tx)
+	if noPlan {
+		totalQuery.Attr("userPlanId", 0)
+	}
+	total, err := totalQuery.
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Between("day", month+"01", month+"31").
@@ -417,7 +426,11 @@ func (this *ServerBandwidthStatDAO) FindMonthlyPercentile(tx *dbs.Tx, serverId i
 	}
 
 	// 查询 nth 位置
-	result, err = this.Query(tx).
+	var query = this.Query(tx)
+	if noPlan {
+		query.Attr("userPlanId", 0)
+	}
+	result, err = query.
 		Table(this.partialTable(serverId)).
 		Attr("serverId", serverId).
 		Result(this.bytesField(useAvg)).
@@ -745,6 +758,74 @@ func (this *ServerBandwidthStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, reg
 	return
 }
 
+// SumMonthlyBytes 统计某个网站单月总流量
+func (this *ServerBandwidthStatDAO) SumMonthlyBytes(tx *dbs.Tx, serverId int64, month string, noPlan bool) (int64, error) {
+	if !regexputils.YYYYMM.MatchString(month) {
+		return 0, errors.New("invalid month '" + month + "'")
+	}
+
+	// 兼容以往版本
+	hasFullData, err := this.HasFullData(tx, serverId, month)
+	if err != nil {
+		return 0, err
+	}
+	if !hasFullData {
+		return SharedServerDailyStatDAO.SumMonthlyBytes(tx, serverId, month)
+	}
+
+	var query = this.Query(tx)
+	if noPlan {
+		query.Attr("userPlanId", 0)
+	}
+	return query.
+		Table(this.partialTable(serverId)).
+		Between("day", month+"01", month+"31").
+		Attr("serverId", serverId).
+		SumInt64("totalBytes", 0)
+}
+
+// SumServerMonthlyWithRegion 根据服务计算某月合计
+// month 格式为YYYYMM
+func (this *ServerBandwidthStatDAO) SumServerMonthlyWithRegion(tx *dbs.Tx, serverId int64, regionId int64, month string, noPlan bool) (int64, error) {
+	var query = this.Query(tx)
+	query.Table(this.partialTable(serverId))
+	if regionId > 0 {
+		query.Attr("regionId", regionId)
+	}
+	if noPlan {
+		query.Attr("userPlanId", 0)
+	}
+	return query.Between("day", month+"01", month+"31").
+		Attr("serverId", serverId).
+		SumInt64("totalBytes", 0)
+}
+
+// FindDistinctServerIdsWithoutPlanAtPartition 查找没有绑定套餐的有流量网站
+func (this *ServerBandwidthStatDAO) FindDistinctServerIdsWithoutPlanAtPartition(tx *dbs.Tx, partitionIndex int, month string) (serverIds []int64, err error) {
+	ones, err := this.Query(tx).
+		Table(this.partialTable(int64(partitionIndex))).
+		Between("day", month+"01", month+"31").
+		Attr("userPlanId", 0). // 没有绑定套餐
+		Result("DISTINCT serverId").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		var serverId = int64(one.(*ServerBandwidthStat).ServerId)
+		if serverId <= 0 {
+			continue
+		}
+		serverIds = append(serverIds, serverId)
+	}
+	return
+}
+
+// CountPartitions 查看分区数量
+func (this *ServerBandwidthStatDAO) CountPartitions() int {
+	return ServerBandwidthStatTablePartitions
+}
+
 // CleanDays 清理过期数据
 func (this *ServerBandwidthStatDAO) CleanDays(tx *dbs.Tx, days int) error {
 	var day = timeutil.Format("Ymd", time.Now().AddDate(0, 0, -days)) // 保留大约3个月的数据
@@ -777,9 +858,9 @@ func (this *ServerBandwidthStatDAO) CleanDefaultDays(tx *dbs.Tx, defaultDays int
 func (this *ServerBandwidthStatDAO) runBatch(f func(table string, locker *sync.Mutex) error) error {
 	var locker = &sync.Mutex{}
 	var wg = sync.WaitGroup{}
-	wg.Add(ServerBandwidthStatTablePartials)
+	wg.Add(ServerBandwidthStatTablePartitions)
 	var resultErr error
-	for i := 0; i < ServerBandwidthStatTablePartials; i++ {
+	for i := 0; i < ServerBandwidthStatTablePartitions; i++ {
 		var table = this.partialTable(int64(i))
 		go func(table string) {
 			defer wg.Done()
@@ -796,7 +877,7 @@ func (this *ServerBandwidthStatDAO) runBatch(f func(table string, locker *sync.M
 
 // 获取分区表
 func (this *ServerBandwidthStatDAO) partialTable(serverId int64) string {
-	return this.Table + "_" + types.String(serverId%int64(ServerBandwidthStatTablePartials))
+	return this.Table + "_" + types.String(serverId%int64(ServerBandwidthStatTablePartitions))
 }
 
 // 获取字节字段

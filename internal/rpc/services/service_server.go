@@ -10,6 +10,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/domainutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/sslconfigs"
@@ -147,7 +148,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 
 		// 套餐
-		plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+		plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -1076,6 +1077,12 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		}
 	}
 
+	// 套餐额度限制
+	err = models.SharedServerDAO.CheckServerPlanQuota(tx, req.ServerId, len(serverconfigs.PlainServerNames(serverNameConfigs)))
+	if err != nil {
+		return nil, err
+	}
+
 	// 检查用户
 	if userId > 0 {
 		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
@@ -1278,7 +1285,7 @@ func (this *ServerService) CountAllEnabledServersMatch(ctx context.Context, req 
 
 	var tx = this.NullTx()
 
-	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), utils.SplitStrings(req.ProtocolFamily, ","))
+	count, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, req.ServerGroupId, req.Keyword, req.UserId, req.NodeClusterId, types.Int8(req.AuditingFlag), utils.SplitStrings(req.ProtocolFamily, ","), req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
@@ -2019,6 +2026,52 @@ func (this *ServerService) FindAllEnabledServerNamesWithUserId(ctx context.Conte
 	return &pb.FindAllEnabledServerNamesWithUserIdResponse{ServerNames: serverNames}, nil
 }
 
+// CountAllServerNamesWithUserId 计算一个用户下的所有域名数量
+func (this *ServerService) CountAllServerNamesWithUserId(ctx context.Context, req *pb.CountAllServerNamesWithUserIdRequest) (*pb.RPCCountResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
+	count, err := models.SharedServerDAO.CountAllServerNamesWithUserId(tx, req.UserId, req.UserPlanId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.SuccessCount(count)
+}
+
+// CountServerNames 计算某个网站下的域名数量
+func (this *ServerService) CountServerNames(ctx context.Context, req *pb.CountServerNamesRequest) (*pb.RPCCountResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid 'serverId'")
+	}
+
+	var tx = this.NullTx()
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	count, err := models.SharedServerDAO.CountServerNames(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	return this.SuccessCount(count)
+}
+
 // FindAllUserServers 查找一个用户下的所有服务
 func (this *ServerService) FindAllUserServers(ctx context.Context, req *pb.FindAllUserServersRequest) (*pb.FindAllUserServersResponse, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, true)
@@ -2049,6 +2102,26 @@ func (this *ServerService) FindAllUserServers(ctx context.Context, req *pb.FindA
 	return &pb.FindAllUserServersResponse{
 		Servers: pbServers,
 	}, nil
+}
+
+// CountAllUserServers 计算一个用户下的所有网站数量
+func (this *ServerService) CountAllUserServers(ctx context.Context, req *pb.CountAllUserServersRequest) (*pb.RPCCountResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
+	countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", req.UserId, 0, configutils.BoolStateAll, nil, req.UserPlanId)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.SuccessCount(countServers)
 }
 
 // ComposeAllUserServersConfig 查找某个用户下的服务配置
@@ -2644,7 +2717,7 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 	}
 
 	if req.UserPlanId > 0 {
-		userId, err := models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		userId, err = models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
@@ -2662,14 +2735,47 @@ func (this *ServerService) UpdateServerUserPlan(ctx context.Context, req *pb.Upd
 		if int64(userPlan.UserId) != userId {
 			return nil, errors.New("can not find user plan with id '" + types.String(req.UserPlanId) + "'")
 		}
+		if userPlan.IsExpired() {
+			return nil, fmt.Errorf("the user plan %q has been expired", types.String(req.UserPlanId))
+		}
 
-		// 检查是否已经被别的服务所使用
-		serverId, err := models.SharedServerDAO.FindEnabledServerIdWithUserPlanId(tx, req.UserPlanId)
+		// 检查限制
+		plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId), nil)
 		if err != nil {
 			return nil, err
 		}
-		if serverId > 0 && serverId != req.ServerId {
-			return nil, errors.New("the user plan is used by other server")
+		if plan == nil {
+			return nil, errors.New("can not find plan with id '" + types.String(userPlan.PlanId) + "'")
+		}
+
+		if plan.TotalServers > 0 {
+			countServers, err := models.SharedServerDAO.CountAllEnabledServersMatch(tx, 0, "", userId, 0, configutils.BoolStateAll, nil, req.UserPlanId)
+			if err != nil {
+				return nil, err
+			}
+			if countServers+1 > int64(plan.TotalServers) {
+				return nil, errors.New("total servers over quota")
+			}
+		}
+
+		countServerNames, err := models.SharedServerDAO.CountServerNames(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		if plan.TotalServerNamesPerServer > 0 {
+			if countServerNames > int64(plan.TotalServerNamesPerServer) {
+				return nil, errors.New("total server names per server over quota")
+			}
+		}
+
+		totalServerNames, err := models.SharedServerDAO.CountAllServerNamesWithUserId(tx, userId, req.UserPlanId)
+		if err != nil {
+			return nil, err
+		}
+		if plan.TotalServerNames > 0 {
+			if totalServerNames+countServerNames > int64(plan.TotalServerNames) {
+				return nil, errors.New("total server names over quota")
+			}
 		}
 	}
 
@@ -2714,7 +2820,7 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 		return &pb.FindServerUserPlanResponse{UserPlan: nil}, nil
 	}
 
-	plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId))
+	plan, err := models.SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2732,11 +2838,14 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 			DayTo:  userPlan.DayTo,
 			User:   nil,
 			Plan: &pb.Plan{
-				Id:               int64(plan.Id),
-				Name:             plan.Name,
-				PriceType:        plan.PriceType,
-				TrafficPriceJSON: plan.TrafficPrice,
-				TrafficLimitJSON: plan.TrafficLimit,
+				Id:                        int64(plan.Id),
+				Name:                      plan.Name,
+				PriceType:                 plan.PriceType,
+				TrafficPriceJSON:          plan.TrafficPrice,
+				TrafficLimitJSON:          plan.TrafficLimit,
+				TotalServers:              types.Int32(plan.TotalServers),
+				TotalServerNames:          types.Int32(plan.TotalServerNames),
+				TotalServerNamesPerServer: types.Int32(plan.TotalServerNamesPerServer),
 			},
 		},
 	}, nil
