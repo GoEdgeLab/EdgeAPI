@@ -44,9 +44,10 @@ func TestSeverBandwidthStatDAO_InsertManyStats(t *testing.T) {
 func TestServerBandwidthStatDAO_FindMonthlyPercentile(t *testing.T) {
 	var dao = models.NewServerBandwidthStatDAO()
 	var tx *dbs.Tx
-	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, false, false))
-	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, true, false))
-	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, true, true))
+	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, false, false, 0))
+	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, true, false, 0))
+	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, true, false, 100))
+	t.Log(dao.FindMonthlyPercentile(tx, 23, timeutil.Format("Ym"), 95, true, true, 0))
 }
 
 func TestServerBandwidthStatDAO_FindAllServerStatsWithMonth(t *testing.T) {
