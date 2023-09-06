@@ -749,24 +749,3 @@ func upgradeV1_2_1(db *dbs.DB) error {
 	}
 	return nil
 }
-
-// v1.2.9
-func upgradeV1_2_9(db *dbs.DB) error {
-	// 升级套餐网站数限制
-	{
-		_, err := db.Exec("UPDATE edgePlans SET totalServers=1 WHERE totalServers=0")
-		if err != nil {
-			return err
-		}
-	}
-
-	// 升级网站流量限制状态
-	{
-		_, err := db.Exec("UPDATE edgeServers SET trafficLimitStatus=NULL WHERE trafficLimitStatus IS NOT NULL")
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}

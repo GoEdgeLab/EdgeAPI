@@ -270,22 +270,3 @@ func TestUpgradeSQLData_v1_2_1(t *testing.T) {
 	}
 	t.Log("ok")
 }
-
-func TestUpgradeSQLData_v1_2_9(t *testing.T) {
-	db, err := dbs.NewInstanceFromConfig(&dbs.DBConfig{
-		Driver: "mysql",
-		Dsn:    "root:123456@tcp(127.0.0.1:3306)/db_edge?charset=utf8mb4&timeout=30s",
-		Prefix: "edge",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		_ = db.Close()
-	}()
-	err = upgradeV1_2_9(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("ok")
-}

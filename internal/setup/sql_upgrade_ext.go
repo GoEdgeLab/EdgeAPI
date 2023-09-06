@@ -213,3 +213,8 @@ func upgradeV0_5_8(db *dbs.DB) error {
 
 	return nil
 }
+
+// v1.2.9
+func upgradeV1_2_9(db *dbs.DB) error {
+	return nil
+}
