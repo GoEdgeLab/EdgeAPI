@@ -20,6 +20,8 @@ const (
 	PlanField_TotalServers              dbs.FieldName = "totalServers"              // 可以绑定的网站数量
 	PlanField_TotalServerNamesPerServer dbs.FieldName = "totalServerNamesPerServer" // 每个网站可以绑定的域名数量
 	PlanField_TotalServerNames          dbs.FieldName = "totalServerNames"          // 总域名数量
+	PlanField_MonthlyRequests           dbs.FieldName = "monthlyRequests"           // 每月访问量额度
+	PlanField_DailyRequests             dbs.FieldName = "dailyRequests"             // 每日访问量额度
 )
 
 // Plan 用户套餐
@@ -41,6 +43,8 @@ type Plan struct {
 	TotalServers              uint32   `field:"totalServers"`              // 可以绑定的网站数量
 	TotalServerNamesPerServer uint32   `field:"totalServerNamesPerServer"` // 每个网站可以绑定的域名数量
 	TotalServerNames          uint32   `field:"totalServerNames"`          // 总域名数量
+	MonthlyRequests           uint64   `field:"monthlyRequests"`           // 每月访问量额度
+	DailyRequests             uint64   `field:"dailyRequests"`             // 每日访问量额度
 }
 
 type PlanOperator struct {
@@ -61,6 +65,8 @@ type PlanOperator struct {
 	TotalServers              any // 可以绑定的网站数量
 	TotalServerNamesPerServer any // 每个网站可以绑定的域名数量
 	TotalServerNames          any // 总域名数量
+	MonthlyRequests           any // 每月访问量额度
+	DailyRequests             any // 每日访问量额度
 }
 
 func NewPlanOperator() *PlanOperator {

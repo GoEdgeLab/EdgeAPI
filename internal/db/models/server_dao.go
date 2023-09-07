@@ -2420,8 +2420,9 @@ func (this *ServerDAO) RenewServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCon
 	var isChanged = oldStatus.UntilDay != untilDay
 	if isChanged {
 		statusJSON, err := json.Marshal(&serverconfigs.TrafficLimitStatus{
-			UntilDay: untilDay,
-			DateType: dateType,
+			UntilDay:   untilDay,
+			DateType:   dateType,
+			TargetType: serverconfigs.TrafficLimitTargetTraffic,
 		})
 		if err != nil {
 			return err
@@ -2444,7 +2445,7 @@ func (this *ServerDAO) RenewServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitCon
 }
 
 // UpdateServerTrafficLimitStatus 修改网站的流量限制状态
-func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64, day string, planId int64, dateType string) error {
+func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64, day string, planId int64, dateType string, targetType string) error {
 	if !regexputils.YYYYMMDD.MatchString(day) {
 		return errors.New("invalid 'day' format")
 	}
@@ -2475,9 +2476,10 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64
 	}
 
 	var status = &serverconfigs.TrafficLimitStatus{
-		UntilDay: day,
-		PlanId:   planId,
-		DateType: dateType,
+		UntilDay:   day,
+		PlanId:     planId,
+		DateType:   dateType,
+		TargetType: targetType,
 	}
 	statusJSON, err = json.Marshal(status)
 	if err != nil {
@@ -2494,7 +2496,7 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64
 }
 
 // UpdateServersTrafficLimitStatusWithUserPlanId 修改某个套餐下的网站的流量限制状态
-func (this *ServerDAO) UpdateServersTrafficLimitStatusWithUserPlanId(tx *dbs.Tx, userPlanId int64, day string, planId int64, dateType string) error {
+func (this *ServerDAO) UpdateServersTrafficLimitStatusWithUserPlanId(tx *dbs.Tx, userPlanId int64, day string, planId int64, dateType string, targetType serverconfigs.TrafficLimitTarget) error {
 	if userPlanId <= 0 {
 		return nil
 	}
@@ -2509,7 +2511,7 @@ func (this *ServerDAO) UpdateServersTrafficLimitStatusWithUserPlanId(tx *dbs.Tx,
 	}
 	for _, server := range servers {
 		var serverId = int64(server.(*Server).Id)
-		err = this.UpdateServerTrafficLimitStatus(tx, serverId, day, planId, dateType)
+		err = this.UpdateServerTrafficLimitStatus(tx, serverId, day, planId, dateType, targetType)
 		if err != nil {
 			return err
 		}
