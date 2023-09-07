@@ -576,6 +576,7 @@ func (this *HTTPWebDAO) CreateWeb(tx *dbs.Tx, adminId int64, userId int64, rootJ
 	var remoteAddrConfig = &serverconfigs.HTTPRemoteAddrConfig{
 		IsOn:  true,
 		Value: "${rawRemoteAddr}",
+		Type:  serverconfigs.HTTPRemoteAddrTypeDefault,
 	}
 	remoteAddrConfigJSON, err := json.Marshal(remoteAddrConfig)
 	if err != nil {
