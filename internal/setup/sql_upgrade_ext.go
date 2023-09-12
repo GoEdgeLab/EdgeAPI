@@ -216,5 +216,13 @@ func upgradeV0_5_8(db *dbs.DB) error {
 
 // v1.2.9
 func upgradeV1_2_9(db *dbs.DB) error {
+	// 升级WAF规则
+	{
+		_, err := db.Exec("UPDATE edgeHTTPFirewallRules SET value=? WHERE value=? AND param='${userAgent}'", "python|pycurl|http-client|httpclient|apachebench|nethttp|http_request|java|perl|ruby|scrapy|php\\b|rust", "python|pycurl|http-client|httpclient|apachebench|nethttp|http_request|java|perl|ruby|scrapy|php|rust")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
