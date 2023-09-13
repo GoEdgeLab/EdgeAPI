@@ -11,6 +11,7 @@ import (
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
+	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -61,12 +62,16 @@ func (this *IPListDAO) EnableIPList(tx *dbs.Tx, id int64) error {
 }
 
 // DisableIPList 禁用条目
-func (this *IPListDAO) DisableIPList(tx *dbs.Tx, id int64) error {
+func (this *IPListDAO) DisableIPList(tx *dbs.Tx, listId int64) error {
 	_, err := this.Query(tx).
-		Pk(id).
+		Pk(listId).
 		Set("state", IPListStateDisabled).
 		Update()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, listId, NodeTaskTypeIPListDeleted+"@"+string(maps.Map{"listId": listId}.AsJSON()))
 }
 
 // FindEnabledIPList 查找启用中的条目
@@ -258,11 +263,35 @@ func (this *IPListDAO) ExistsEnabledIPList(tx *dbs.Tx, listId int64) (bool, erro
 
 // NotifyUpdate 通知更新
 func (this *IPListDAO) NotifyUpdate(tx *dbs.Tx, listId int64, taskType NodeTaskType) error {
+	// WAF策略中的
 	httpFirewallPolicyIds, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdsWithIPListId(tx, listId)
 	if err != nil {
 		return err
 	}
-	resultClusterIds := []int64{}
+
+	// 规则集动作中使用此名单的策略
+	ruleSetIds, err := SharedHTTPFirewallRuleSetDAO.FindAllEnabledRuleSetIdsWithIPListId(tx, listId)
+	if err != nil {
+		return err
+	}
+	for _, ruleSetId := range ruleSetIds {
+		ruleGroupId, err := SharedHTTPFirewallRuleGroupDAO.FindRuleGroupIdWithRuleSetId(tx, ruleSetId)
+		if err != nil {
+			return err
+		}
+		if ruleGroupId > 0 {
+			policyId, err := SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyIdWithRuleGroupId(tx, ruleGroupId)
+			if err != nil {
+				return err
+			}
+			if policyId > 0 && !lists.ContainsInt64(httpFirewallPolicyIds, policyId) {
+				httpFirewallPolicyIds = append(httpFirewallPolicyIds, policyId)
+			}
+		}
+	}
+
+	// 查找集群
+	var resultClusterIds = []int64{}
 	for _, policyId := range httpFirewallPolicyIds {
 		// 集群
 		clusterIds, err := SharedNodeClusterDAO.FindAllEnabledNodeClusterIdsWithHTTPFirewallPolicyId(tx, policyId)

@@ -92,7 +92,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 	if set == nil {
 		return nil, nil
 	}
-	config := &firewallconfigs.HTTPFirewallRuleSet{}
+	var config = &firewallconfigs.HTTPFirewallRuleSet{}
 	config.Id = int64(set.Id)
 	config.IsOn = set.IsOn
 	config.Name = set.Name
@@ -102,7 +102,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 	config.IgnoreLocal = set.IgnoreLocal == 1
 
 	if IsNotNull(set.Rules) {
-		ruleRefs := []*firewallconfigs.HTTPFirewallRuleRef{}
+		var ruleRefs = []*firewallconfigs.HTTPFirewallRuleRef{}
 		err = json.Unmarshal(set.Rules, &ruleRefs)
 		if err != nil {
 			return nil, err
@@ -126,6 +126,22 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 			return nil, err
 		}
 		config.Actions = actionConfigs
+	}
+
+	// 检查各个选项
+	for _, actionConfig := range actionConfigs {
+		if actionConfig.Code == firewallconfigs.HTTPFirewallActionRecordIP { // 记录IP动作
+			if actionConfig.Options != nil {
+				var ipListId = actionConfig.Options.GetInt64("ipListId")
+				exists, err := SharedIPListDAO.ExistsEnabledIPList(tx, ipListId)
+				if err != nil {
+					return nil, err
+				}
+				if !exists {
+					actionConfig.Options["ipListIsDeleted"] = true
+				}
+			}
+		}
 	}
 
 	return config, nil
@@ -210,6 +226,28 @@ func (this *HTTPFirewallRuleSetDAO) FindEnabledRuleSetIdWithRuleId(tx *dbs.Tx, r
 		Param("jsonQuery", maps.Map{"ruleId": ruleId}.AsJSON()).
 		ResultPk().
 		FindInt64Col(0)
+}
+
+// FindAllEnabledRuleSetIdsWithIPListId 根据IP名单ID查找对应动作的WAF规则集
+func (this *HTTPFirewallRuleSetDAO) FindAllEnabledRuleSetIdsWithIPListId(tx *dbs.Tx, ipListId int64) (setIds []int64, err error) {
+	ones, err := this.Query(tx).
+		State(HTTPFirewallRuleStateEnabled).
+		Where("JSON_CONTAINS(actions, :jsonQuery)").
+		Param("jsonQuery", maps.Map{
+			"code": firewallconfigs.HTTPFirewallActionRecordIP,
+			"options": maps.Map{
+				"ipListId": ipListId,
+			},
+		}.AsJSON()).
+		ResultPk().
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, one := range ones {
+		setIds = append(setIds, int64(one.(*HTTPFirewallRuleSet).Id))
+	}
+	return
 }
 
 // CheckUserRuleSet 检查用户
