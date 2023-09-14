@@ -54,3 +54,12 @@ func TestNodeTaskDAO_FindDoingNodeTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestNodeTaskDAO_UpdateNodeTaskDone(t *testing.T) {
+	var tx *dbs.Tx
+	var dao = models.NewNodeTaskDAO()
+	err := dao.UpdateNodeTaskDone(tx, 1741, true, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+}

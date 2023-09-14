@@ -8,6 +8,7 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"strings"
 	"time"
 )
 
@@ -19,18 +20,18 @@ const (
 	NodeTaskTypeConfigChanged             NodeTaskType = "configChanged"             // 节点整体配置变化
 	NodeTaskTypeDDosProtectionChanged     NodeTaskType = "ddosProtectionChanged"     // 节点DDoS配置变更
 	NodeTaskTypeGlobalServerConfigChanged NodeTaskType = "globalServerConfigChanged" // 全局服务设置变化
-	NodeTaskTypeIPListDeleted             NodeTaskType = "ipListDeleted"
-	NodeTaskTypeIPItemChanged             NodeTaskType = "ipItemChanged"           // IP条目变更
-	NodeTaskTypeNodeVersionChanged        NodeTaskType = "nodeVersionChanged"      // 节点版本变化
-	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"          // 脚本配置变化
-	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"        // 节点级别变化
-	NodeTaskTypeUserServersStateChanged   NodeTaskType = "userServersStateChanged" // 用户服务状态变化
-	NodeTaskTypeUAMPolicyChanged          NodeTaskType = "uamPolicyChanged"        // UAM策略变化
-	NodeTaskTypeHTTPPagesPolicyChanged    NodeTaskType = "httpPagesPolicyChanged"  // 自定义页面变化
-	NodeTaskTypeHTTPCCPolicyChanged       NodeTaskType = "httpCCPolicyChanged"     // CC策略变化
-	NodeTaskTypeHTTP3PolicyChanged        NodeTaskType = "http3PolicyChanged"      // HTTP3策略变化
-	NodeTaskTypeUpdatingServers           NodeTaskType = "updatingServers"         // 更新一组服务
-	NodeTaskTypeTOAChanged                NodeTaskType = "toaChanged"              // TOA配置变化
+	NodeTaskTypeIPListDeleted             NodeTaskType = "ipListDeleted"             // IPList被删除
+	NodeTaskTypeIPItemChanged             NodeTaskType = "ipItemChanged"             // IP条目变更
+	NodeTaskTypeNodeVersionChanged        NodeTaskType = "nodeVersionChanged"        // 节点版本变化
+	NodeTaskTypeScriptsChanged            NodeTaskType = "scriptsChanged"            // 脚本配置变化
+	NodeTaskTypeNodeLevelChanged          NodeTaskType = "nodeLevelChanged"          // 节点级别变化
+	NodeTaskTypeUserServersStateChanged   NodeTaskType = "userServersStateChanged"   // 用户服务状态变化
+	NodeTaskTypeUAMPolicyChanged          NodeTaskType = "uamPolicyChanged"          // UAM策略变化
+	NodeTaskTypeHTTPPagesPolicyChanged    NodeTaskType = "httpPagesPolicyChanged"    // 自定义页面变化
+	NodeTaskTypeHTTPCCPolicyChanged       NodeTaskType = "httpCCPolicyChanged"       // CC策略变化
+	NodeTaskTypeHTTP3PolicyChanged        NodeTaskType = "http3PolicyChanged"        // HTTP3策略变化
+	NodeTaskTypeUpdatingServers           NodeTaskType = "updatingServers"           // 更新一组服务
+	NodeTaskTypeTOAChanged                NodeTaskType = "toaChanged"                // TOA配置变化
 
 	// NS相关
 
@@ -266,6 +267,23 @@ func (this *NodeTaskDAO) FindDoingNodeTasks(tx *dbs.Tx, role string, nodeId int6
 
 // UpdateNodeTaskDone 修改节点任务的完成状态
 func (this *NodeTaskDAO) UpdateNodeTaskDone(tx *dbs.Tx, taskId int64, isOk bool, errorMessage string) error {
+	if isOk {
+		// 特殊任务删除
+		taskType, err := this.Query(tx).
+			Pk(taskId).
+			Result("type").
+			FindStringCol("")
+		if err != nil {
+			return err
+		}
+		if strings.HasPrefix(taskType, NodeTaskTypeIPListDeleted+"@") {
+			return this.Query(tx).
+				Pk(taskId).
+				DeleteQuickly()
+		}
+	}
+
+	// 其他任务标记为完成
 	var query = this.Query(tx).
 		Pk(taskId)
 	if !isOk {
@@ -275,8 +293,9 @@ func (this *NodeTaskDAO) UpdateNodeTaskDone(tx *dbs.Tx, taskId int64, isOk bool,
 		}
 		query.Set("version", version)
 	}
+
 	_, err := query.
-		Set("isDone", 1).
+		Set("isDone", true).
 		Set("isOk", isOk).
 		Set("error", errorMessage).
 		Update()
