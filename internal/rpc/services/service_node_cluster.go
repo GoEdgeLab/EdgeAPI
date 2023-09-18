@@ -963,15 +963,21 @@ func (this *NodeClusterService) FindFreePortInNodeCluster(ctx context.Context, r
 	}
 
 	var tx = this.NullTx()
-	globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+
+	// 检查端口
+	globalServerConfig, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, req.NodeClusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	// 检查端口
-	portMin := globalConfig.TCPAll.PortRangeMin
-	portMax := globalConfig.TCPAll.PortRangeMax
-	denyPorts := globalConfig.TCPAll.DenyPorts
+	var portMin, portMax int
+	var denyPorts []int
+
+	if globalServerConfig != nil {
+		portMin = globalServerConfig.TCPAll.PortRangeMin
+		portMax = globalServerConfig.TCPAll.PortRangeMax
+		denyPorts = globalServerConfig.TCPAll.DenyPorts
+	}
 
 	if portMin == 0 && portMax == 0 {
 		portMin = 10_000

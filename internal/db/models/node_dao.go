@@ -18,7 +18,6 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ddosconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
-	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -1055,30 +1054,6 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		if server.IsOn && server.SupportCNAME == 1 {
 			config.SupportCNAME = true
 		}
-	}
-
-	// 全局设置
-	// TODO 根据用户的不同读取不同的全局设置
-	var settingCacheKey = "SharedSysSettingDAO:" + systemconfigs.SettingCodeServerGlobalConfig
-	settingJSONCache, ok := cacheMap.Get(settingCacheKey)
-	var settingJSON []byte
-	if ok {
-		settingJSON = settingJSONCache.([]byte)
-	} else {
-		settingJSON, err = SharedSysSettingDAO.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
-		if err != nil {
-			return nil, err
-		}
-		cacheMap.Put(settingCacheKey, settingJSON)
-	}
-
-	if len(settingJSON) > 0 {
-		globalConfig := &serverconfigs.GlobalConfig{}
-		err = json.Unmarshal(settingJSON, globalConfig)
-		if err != nil {
-			return nil, err
-		}
-		config.GlobalConfig = globalConfig
 	}
 
 	var clusterIndex = 0

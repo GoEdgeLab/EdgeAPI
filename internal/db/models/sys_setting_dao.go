@@ -7,7 +7,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -124,23 +123,6 @@ func (this *SysSettingDAO) CompareInt64Setting(tx *dbs.Tx, code string, anotherV
 		return -1, nil
 	}
 	return 0, nil
-}
-
-// ReadGlobalConfig 读取全局配置
-func (this *SysSettingDAO) ReadGlobalConfig(tx *dbs.Tx) (*serverconfigs.GlobalConfig, error) {
-	globalConfigData, err := this.ReadSetting(tx, systemconfigs.SettingCodeServerGlobalConfig)
-	if err != nil {
-		return nil, err
-	}
-	if len(globalConfigData) == 0 {
-		return &serverconfigs.GlobalConfig{}, nil
-	}
-	config := &serverconfigs.GlobalConfig{}
-	err = json.Unmarshal(globalConfigData, config)
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
 }
 
 // ReadAdminUIConfig 读取管理员界面配置

@@ -792,8 +792,14 @@ func upgradeV1_2_10(db *dbs.DB) error {
 						if err != nil {
 							return err
 						}
+
 						globalServerConfig.HTTPAll.DomainAuditingIsOn = oldGlobalConfig.HTTPAll.DomainAuditingIsOn
 						globalServerConfig.HTTPAll.DomainAuditingPrompt = oldGlobalConfig.HTTPAll.DomainAuditingPrompt
+
+						globalServerConfig.TCPAll.DenyPorts = oldGlobalConfig.TCPAll.DenyPorts
+						globalServerConfig.TCPAll.PortRangeMin = oldGlobalConfig.TCPAll.PortRangeMin
+						globalServerConfig.TCPAll.PortRangeMax = oldGlobalConfig.TCPAll.PortRangeMax
+
 						globalServerConfigJSON, err := json.Marshal(globalServerConfig)
 						if err != nil {
 							return err
