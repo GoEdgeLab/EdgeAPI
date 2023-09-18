@@ -118,12 +118,12 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	var auditingServerNamesJSON = []byte("[]")
 	if userId > 0 {
 		// 如果域名不为空的时候需要审核
-		if len(serverNamesJSON) > 0 && string(serverNamesJSON) != "[]" {
-			globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+		if len(serverNamesJSON) > 0 && string(serverNamesJSON) != "[]" && req.NodeClusterId > 0 {
+			globalServerConfig, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, req.NodeClusterId)
 			if err != nil {
 				return nil, err
 			}
-			if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
+			if globalServerConfig != nil && globalServerConfig.HTTPAll.DomainAuditingIsOn {
 				isAuditing = true
 				serverNamesJSON = []byte("[]")
 				auditingServerNamesJSON = req.ServerNamesJSON
@@ -259,11 +259,12 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 	if userId > 0 {
 		// 如果域名不为空的时候需要审核
 		if len(serverNamesJSON) > 0 && string(serverNamesJSON) != "[]" {
-			globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+			globalServerConfig, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, req.NodeClusterId)
 			if err != nil {
 				return nil, err
 			}
-			if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
+
+			if globalServerConfig != nil && globalServerConfig.HTTPAll.DomainAuditingIsOn {
 				isAuditing = true
 				serverNamesJSON = []byte("[]")
 				auditingServerNamesJSON = serverNamesJSON
@@ -1091,22 +1092,31 @@ func (this *ServerService) UpdateServerNames(ctx context.Context, req *pb.Update
 		}
 
 		// 是否需要审核
-		globalConfig, err := models.SharedSysSettingDAO.ReadGlobalConfig(tx)
+		clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
 		if err != nil {
 			return nil, err
 		}
-		if globalConfig != nil && globalConfig.HTTPAll.DomainAuditingIsOn {
-			err = models.SharedServerDAO.UpdateAuditingServerNames(tx, req.ServerId, true, req.ServerNamesJSON)
+		if clusterId > 0 {
+			globalServerConfig, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, clusterId)
 			if err != nil {
 				return nil, err
 			}
+			if globalServerConfig != nil && globalServerConfig.HTTPAll.DomainAuditingIsOn {
+				err = models.SharedServerDAO.UpdateAuditingServerNames(tx, req.ServerId, true, req.ServerNamesJSON)
+				if err != nil {
+					return nil, err
+				}
 
-			// 发送审核通知
-			err = models.SharedMessageDAO.CreateMessage(tx, 0, 0, models.MessageTypeServerNamesRequireAuditing, models.MessageLevelWarning, "有新的网站域名需要审核", "有新的网站域名需要审核", maps.Map{
-				"serverId": req.ServerId,
-			}.AsJSON())
+				// 发送审核通知
+				err = models.SharedMessageDAO.CreateMessage(tx, 0, 0, models.MessageTypeServerNamesRequireAuditing, models.MessageLevelWarning, "有新的网站域名需要审核", "有新的网站域名需要审核", maps.Map{
+					"serverId": req.ServerId,
+				}.AsJSON())
+				if err != nil {
+					return nil, err
+				}
 
-			return this.Success()
+				return this.Success()
+			}
 		}
 	}
 
@@ -3042,4 +3052,44 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 	}
 
 	return this.Success()
+}
+
+// FindServerAuditingPrompt 获取域名审核时的提示文字
+func (this *ServerService) FindServerAuditingPrompt(ctx context.Context, req *pb.FindServerAuditingPromptRequest) (*pb.FindServerAuditingPromptResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	clusterId, err := models.SharedServerDAO.FindServerClusterId(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if clusterId <= 0 {
+		return &pb.FindServerAuditingPromptResponse{
+			PromptText: "",
+		}, nil
+	}
+
+	globalServerConfig, err := models.SharedNodeClusterDAO.FindClusterGlobalServerConfig(tx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	if globalServerConfig != nil {
+		return &pb.FindServerAuditingPromptResponse{
+			PromptText: globalServerConfig.HTTPAll.DomainAuditingPrompt,
+		}, nil
+	}
+
+	return &pb.FindServerAuditingPromptResponse{
+		PromptText: "",
+	}, nil
 }

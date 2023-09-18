@@ -98,6 +98,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"1.2.9", upgradeV1_2_9,
 	},
+	{
+		"1.2.10", upgradeV1_2_10,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -747,5 +750,63 @@ func upgradeV1_2_1(db *dbs.DB) error {
 			}
 		}
 	}
+	return nil
+}
+
+// 1.2.10
+func upgradeV1_2_10(db *dbs.DB) error {
+	{
+		type OldGlobalConfig struct {
+			// HTTP & HTTPS相关配置
+			HTTPAll struct {
+				DomainAuditingIsOn   bool   `yaml:"domainAuditingIsOn" json:"domainAuditingIsOn"`     // 域名是否需要审核
+				DomainAuditingPrompt string `yaml:"domainAuditingPrompt" json:"domainAuditingPrompt"` // 域名审核的提示
+			} `yaml:"httpAll" json:"httpAll"`
+
+			TCPAll struct {
+				PortRangeMin int   `yaml:"portRangeMin" json:"portRangeMin"` // 最小端口
+				PortRangeMax int   `yaml:"portRangeMax" json:"portRangeMax"` // 最大端口
+				DenyPorts    []int `yaml:"denyPorts" json:"denyPorts"`       // 禁止使用的端口
+			} `yaml:"tcpAll" json:"tcpAll"`
+		}
+
+		globalConfigValue, err := db.FindCol(0, "SELECT value FROM edgeSysSettings WHERE code='serverGlobalConfig'")
+		if err != nil {
+			return err
+		}
+		var globalConfigString = types.String(globalConfigValue)
+		if len(globalConfigString) > 0 {
+			var oldGlobalConfig = &OldGlobalConfig{}
+			err = json.Unmarshal([]byte(globalConfigString), oldGlobalConfig)
+			if err == nil { // we ignore error
+				ones, _, err := db.FindOnes("SELECT id,globalServerConfig FROM edgeNodeClusters")
+				if err != nil {
+					return err
+				}
+				for _, one := range ones {
+					var id = one.GetInt64("id")
+					var globalServerConfigData = []byte(one.GetString("globalServerConfig"))
+					if len(globalServerConfigData) > 32 {
+						var globalServerConfig = &serverconfigs.GlobalServerConfig{}
+						err = json.Unmarshal(globalServerConfigData, globalServerConfig)
+						if err != nil {
+							return err
+						}
+						globalServerConfig.HTTPAll.DomainAuditingIsOn = oldGlobalConfig.HTTPAll.DomainAuditingIsOn
+						globalServerConfig.HTTPAll.DomainAuditingPrompt = oldGlobalConfig.HTTPAll.DomainAuditingPrompt
+						globalServerConfigJSON, err := json.Marshal(globalServerConfig)
+						if err != nil {
+							return err
+						}
+						_, err = db.Exec("UPDATE edgeNodeClusters SET globalServerConfig=? WHERE id=?", globalServerConfigJSON, id)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
