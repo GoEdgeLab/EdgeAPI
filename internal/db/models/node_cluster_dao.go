@@ -950,11 +950,12 @@ func (this *NodeClusterDAO) GenUniqueId(tx *dbs.Tx) (string, error) {
 
 // FindLatestNodeClusters 查询最近访问的集群
 func (this *NodeClusterDAO) FindLatestNodeClusters(tx *dbs.Tx, size int64) (result []*NodeCluster, err error) {
-	itemTable := SharedLatestItemDAO.Table
-	itemType := LatestItemTypeCluster
+	var itemTable = SharedLatestItemDAO.Table
+	var itemType = LatestItemTypeCluster
 	_, err = this.Query(tx).
 		Result(this.Table+".id", this.Table+".name").
 		Join(SharedLatestItemDAO, dbs.QueryJoinRight, this.Table+".id="+itemTable+".itemId AND "+itemTable+".itemType='"+itemType+"'").
+		Where(itemTable + ".updatedAt<=UNIX_TIMESTAMP()").                           // VERY IMPORTANT
 		Asc("CEIL((UNIX_TIMESTAMP() - " + itemTable + ".updatedAt) / (7 * 86400))"). // 优先一个星期以内的
 		Desc(itemTable + ".count").
 		State(NodeClusterStateEnabled).
