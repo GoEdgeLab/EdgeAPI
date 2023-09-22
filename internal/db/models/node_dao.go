@@ -26,6 +26,7 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -2103,6 +2104,12 @@ func (this *NodeDAO) FindParentNodeConfigs(tx *dbs.Tx, nodeId int64, groupId int
 					Addrs:      addrStrings,
 					SecretHash: secretHash,
 				})
+
+				// 排序
+				sort.Slice(parentNodeConfigs, func(i, j int) bool {
+					return parentNodeConfigs[i].Id < parentNodeConfigs[j].Id
+				})
+
 				result[clusterId] = parentNodeConfigs
 			}
 		}
