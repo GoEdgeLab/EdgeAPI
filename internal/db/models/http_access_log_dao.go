@@ -461,6 +461,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 	var protoReg = regexp.MustCompile(`proto:(\S+)`)
 	var schemeReg = regexp.MustCompile(`scheme:(\S+)`)
 	var methodReg = regexp.MustCompile(`(?:method|requestMethod):(\S+)`)
+	var refererReg = regexp.MustCompile(`referer:(\S+)`)
 
 	var count = len(tableQueries)
 	var wg = &sync.WaitGroup{}
@@ -613,6 +614,11 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					var matches = methodReg.FindStringSubmatch(keyword)
 					query.Where("JSON_EXTRACT(content, '$.requestMethod')=:keyword").
 						Param("keyword", strings.ToUpper(matches[1]))
+				} else if refererReg.MatchString(keyword) {
+					isSpecialKeyword = true
+					var matches = refererReg.FindStringSubmatch(keyword)
+					query.Where("JSON_EXTRACT(content, '$.referer') LIKE :keyword").
+						Param("keyword", dbutils.QuoteLike(matches[1]))
 				}
 				if !isSpecialKeyword {
 					if regexp.MustCompile(`^ip:.+`).MatchString(keyword) {
