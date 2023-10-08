@@ -43,6 +43,7 @@ const (
 	NodeClusterField_HttpPages            dbs.FieldName = "httpPages"            // 自定义页面设置
 	NodeClusterField_Cc                   dbs.FieldName = "cc"                   // CC设置
 	NodeClusterField_Http3                dbs.FieldName = "http3"                // HTTP3设置
+	NodeClusterField_AutoSystemTuning     dbs.FieldName = "autoSystemTuning"     // 是否自动调整系统参数
 )
 
 // NodeCluster 节点集群
@@ -87,6 +88,7 @@ type NodeCluster struct {
 	HttpPages            dbs.JSON `field:"httpPages"`            // 自定义页面设置
 	Cc                   dbs.JSON `field:"cc"`                   // CC设置
 	Http3                dbs.JSON `field:"http3"`                // HTTP3设置
+	AutoSystemTuning     bool     `field:"autoSystemTuning"`     // 是否自动调整系统参数
 }
 
 type NodeClusterOperator struct {
@@ -130,6 +132,7 @@ type NodeClusterOperator struct {
 	HttpPages            any // 自定义页面设置
 	Cc                   any // CC设置
 	Http3                any // HTTP3设置
+	AutoSystemTuning     any // 是否自动调整系统参数
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

@@ -1218,6 +1218,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 		// 自动安装nftables
 		if clusterIndex == 0 {
 			config.AutoInstallNftables = nodeCluster.AutoInstallNftables
+			config.AutoSystemTuning = nodeCluster.AutoSystemTuning
 		}
 
 		clusterIndex++
