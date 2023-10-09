@@ -65,7 +65,7 @@ func (this *ACMETaskService) CountAllEnabledACMETasks(ctx context.Context, req *
 		req.UserId = userId
 	}
 
-	count, err := acmemodels.SharedACMETaskDAO.CountAllEnabledACMETasks(tx, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword)
+	count, err := acmemodels.SharedACMETaskDAO.CountAllEnabledACMETasks(tx, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (this *ACMETaskService) ListEnabledACMETasks(ctx context.Context, req *pb.L
 		req.UserId = userId
 	}
 
-	tasks, err := acmemodels.SharedACMETaskDAO.ListEnabledACMETasks(tx, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.Offset, req.Size)
+	tasks, err := acmemodels.SharedACMETaskDAO.ListEnabledACMETasks(tx, req.UserId, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, req.UserOnly, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (this *ACMETaskService) UpdateACMETask(ctx context.Context, req *pb.UpdateA
 
 	var tx = this.NullTx()
 
-	canAccess, err := acmemodels.SharedACMETaskDAO.CheckACMETask(tx, userId, req.AcmeTaskId)
+	canAccess, err := acmemodels.SharedACMETaskDAO.CheckUserACMETask(tx, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +279,7 @@ func (this *ACMETaskService) DeleteACMETask(ctx context.Context, req *pb.DeleteA
 
 	var tx = this.NullTx()
 
-	canAccess, err := acmemodels.SharedACMETaskDAO.CheckACMETask(tx, userId, req.AcmeTaskId)
+	canAccess, err := acmemodels.SharedACMETaskDAO.CheckUserACMETask(tx, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (this *ACMETaskService) RunACMETask(ctx context.Context, req *pb.RunACMETas
 
 	var tx = this.NullTx()
 
-	canAccess, err := acmemodels.SharedACMETaskDAO.CheckACMETask(tx, userId, req.AcmeTaskId)
+	canAccess, err := acmemodels.SharedACMETaskDAO.CheckUserACMETask(tx, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +329,7 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 
 	var tx = this.NullTx()
 
-	canAccess, err := acmemodels.SharedACMETaskDAO.CheckACMETask(tx, userId, req.AcmeTaskId)
+	canAccess, err := acmemodels.SharedACMETaskDAO.CheckUserACMETask(tx, userId, req.AcmeTaskId)
 	if err != nil {
 		return nil, err
 	}
@@ -439,4 +439,41 @@ func (this *ACMETaskService) FindEnabledACMETask(ctx context.Context, req *pb.Fi
 		AuthURL:     task.AuthURL,
 		SslCert:     pbCert,
 	}}, nil
+}
+
+// FindACMETaskUser 查找任务所属用户
+func (this *ACMETaskService) FindACMETaskUser(ctx context.Context, req *pb.FindACMETaskUserRequest) (*pb.FindACMETaskUserResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	userId, err := acmemodels.SharedACMETaskDAO.FindACMETaskUserId(tx, req.AcmeTaskId)
+	if err != nil {
+		return nil, err
+	}
+	if userId <= 0 {
+		return &pb.FindACMETaskUserResponse{User: nil}, nil
+	}
+
+	user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, userId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return &pb.FindACMETaskUserResponse{
+			User: &pb.User{
+				Id: userId,
+			},
+		}, nil
+	}
+
+	return &pb.FindACMETaskUserResponse{
+		User: &pb.User{
+			Id:       userId,
+			Username: user.Username,
+			Fullname: user.Fullname,
+		},
+	}, nil
 }
