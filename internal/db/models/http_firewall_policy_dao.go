@@ -279,6 +279,31 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInbound(tx *dbs.Tx, polic
 	return this.NotifyUpdate(tx, policyId)
 }
 
+// UpdateFirewallPolicyInboundRegion 修改入站封禁区域设置
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundRegion(tx *dbs.Tx, policyId int64, regionConfig *firewallconfigs.HTTPFirewallRegionConfig) error {
+	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	inboundJSON, err := this.Query(tx).
+		Pk(policyId).
+		Result("inbound").
+		FindJSONCol()
+	if err != nil {
+		return err
+	}
+	if IsNotNull(inboundJSON) {
+		err = json.Unmarshal(inboundJSON, inboundConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	inboundConfig.Region = regionConfig
+	newInboundJSON, err := json.Marshal(inboundConfig)
+	if err != nil {
+		return err
+	}
+	return this.UpdateFirewallPolicyInbound(tx, policyId, newInboundJSON)
+}
+
 // UpdateFirewallPolicy 修改策略
 func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	policyId int64,

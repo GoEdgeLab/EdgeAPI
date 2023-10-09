@@ -2997,7 +2997,7 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 				}
 			}
 		}
-		err = models.SharedServerDAO.CopyServerConfigToServers(tx, req.ServerId, req.TargetServerIds, req.ConfigCode)
+		err = models.SharedServerDAO.CopyServerConfigToServers(tx, req.ServerId, req.TargetServerIds, req.ConfigCode, req.WafCopyRegions)
 		if err != nil {
 			return nil, err
 		}
@@ -3014,7 +3014,7 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 				}
 			}
 		}
-		err = models.SharedServerDAO.CopyServerConfigToGroups(tx, req.ServerId, req.TargetServerGroupIds, req.ConfigCode)
+		err = models.SharedServerDAO.CopyServerConfigToGroups(tx, req.ServerId, req.TargetServerGroupIds, req.ConfigCode, req.WafCopyRegions)
 		if err != nil {
 			return nil, err
 		}
@@ -3026,7 +3026,7 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 		if req.TargetClusterId <= 0 {
 			return this.Success()
 		}
-		err = models.SharedServerDAO.CopyServerConfigToCluster(tx, req.ServerId, req.TargetClusterId, req.ConfigCode)
+		err = models.SharedServerDAO.CopyServerConfigToCluster(tx, req.ServerId, req.TargetClusterId, req.ConfigCode, req.WafCopyRegions)
 		if err != nil {
 			return nil, err
 		}
@@ -3045,7 +3045,7 @@ func (this *ServerService) CopyServerConfig(ctx context.Context, req *pb.CopySer
 			// 只能同步到自己的网站
 			req.TargetUserId = userId
 		}
-		err = models.SharedServerDAO.CopyServerConfigToUser(tx, req.ServerId, req.TargetUserId, req.ConfigCode)
+		err = models.SharedServerDAO.CopyServerConfigToUser(tx, req.ServerId, req.TargetUserId, req.ConfigCode, req.WafCopyRegions)
 		if err != nil {
 			return nil, err
 		}
