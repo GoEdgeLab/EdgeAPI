@@ -285,7 +285,7 @@ func (this *SSLCertDAO) ComposeCertConfig(tx *dbs.Tx, certId int64, ignoreData b
 }
 
 // CountCerts 计算符合条件的证书数量
-func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string) (int64, error) {
+func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string, userOnly bool) (int64, error) {
 	var query = this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
@@ -308,8 +308,12 @@ func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isEx
 	if userId > 0 {
 		query.Attr("userId", userId)
 	} else {
-		// 只查询管理员上传的
-		query.Attr("userId", 0)
+		if userOnly {
+			query.Gt("userId", 0)
+		} else {
+			// 只查询管理员上传的
+			query.Attr("userId", 0)
+		}
 	}
 
 	// 域名
@@ -322,7 +326,7 @@ func (this *SSLCertDAO) CountCerts(tx *dbs.Tx, isCA bool, isAvailable bool, isEx
 }
 
 // ListCertIds 列出符合条件的证书
-func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string, offset int64, size int64) (certIds []int64, err error) {
+func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isExpired bool, expiringDays int64, keyword string, userId int64, domains []string, userOnly bool, offset int64, size int64) (certIds []int64, err error) {
 	var query = this.Query(tx).
 		State(SSLCertStateEnabled)
 	if isCA {
@@ -345,8 +349,12 @@ func (this *SSLCertDAO) ListCertIds(tx *dbs.Tx, isCA bool, isAvailable bool, isE
 	if userId > 0 {
 		query.Attr("userId", userId)
 	} else {
-		// 只查询管理员上传的
-		query.Attr("userId", 0)
+		if userOnly {
+			query.Gt("userId", 0)
+		} else {
+			// 只查询管理员上传的
+			query.Attr("userId", 0)
+		}
 	}
 
 	// 域名
@@ -432,6 +440,14 @@ func (this *SSLCertDAO) CheckUserCert(tx *dbs.Tx, certId int64, userId int64) er
 		return errors.New("not found")
 	}
 	return nil
+}
+
+// FindCertUserId 查找证书所属用户ID
+func (this *SSLCertDAO) FindCertUserId(tx *dbs.Tx, certId int64) (userId int64, err error) {
+	return this.Query(tx).
+		Pk(certId).
+		Result("userId").
+		FindInt64Col(0)
 }
 
 // UpdateCertUser 修改证书所属用户

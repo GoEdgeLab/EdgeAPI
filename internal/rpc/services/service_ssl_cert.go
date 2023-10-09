@@ -191,7 +191,7 @@ func (this *SSLCertService) CountSSLCerts(ctx context.Context, req *pb.CountSSLC
 		return nil, errors.New("invalid user")
 	}
 
-	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Domains)
+	count, err := models.SharedSSLCertDAO.CountCerts(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Domains, req.UserOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (this *SSLCertService) ListSSLCerts(ctx context.Context, req *pb.ListSSLCer
 
 	var tx = this.NullTx()
 
-	certIds, err := models.SharedSSLCertDAO.ListCertIds(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Domains, req.Offset, req.Size)
+	certIds, err := models.SharedSSLCertDAO.ListCertIds(tx, req.IsCA, req.IsAvailable, req.IsExpired, int64(req.ExpiringDays), req.Keyword, userId, req.Domains, req.UserOnly, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -366,5 +366,42 @@ func (this *SSLCertService) ListUpdatedSSLCertOCSP(ctx context.Context, req *pb.
 
 	return &pb.ListUpdatedSSLCertOCSPResponse{
 		SslCertOCSP: result,
+	}, nil
+}
+
+// FindSSLCertUser 查找证书所属用户
+func (this *SSLCertService) FindSSLCertUser(ctx context.Context, req *pb.FindSSLCertUserRequest) (*pb.FindSSLCertUserResponse, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	userId, err := models.SharedSSLCertDAO.FindCertUserId(tx, req.SslCertId)
+	if err != nil {
+		return nil, err
+	}
+	if userId <= 0 {
+		return &pb.FindSSLCertUserResponse{User: nil}, nil
+	}
+
+	user, err := models.SharedUserDAO.FindEnabledBasicUser(tx, userId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return &pb.FindSSLCertUserResponse{
+			User: &pb.User{
+				Id: userId,
+			},
+		}, nil
+	}
+
+	return &pb.FindSSLCertUserResponse{
+		User: &pb.User{
+			Id:       userId,
+			Username: user.Username,
+			Fullname: user.Fullname,
+		},
 	}, nil
 }
