@@ -34,7 +34,7 @@ func init() {
 	})
 }
 
-// 启用条目
+// EnableMessageMedia 启用条目
 func (this *MessageMediaDAO) EnableMessageMedia(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -43,7 +43,7 @@ func (this *MessageMediaDAO) EnableMessageMedia(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 禁用条目
+// DisableMessageMedia 禁用条目
 func (this *MessageMediaDAO) DisableMessageMedia(tx *dbs.Tx, id int64) error {
 	_, err := this.Query(tx).
 		Pk(id).
@@ -52,7 +52,7 @@ func (this *MessageMediaDAO) DisableMessageMedia(tx *dbs.Tx, id int64) error {
 	return err
 }
 
-// 查找启用中的条目
+// FindEnabledMessageMedia 查找启用中的条目
 func (this *MessageMediaDAO) FindEnabledMessageMedia(tx *dbs.Tx, id int64) (*MessageMedia, error) {
 	result, err := this.Query(tx).
 		Pk(id).
@@ -83,19 +83,19 @@ func (this *MessageMediaDAO) FindAllEnabledMessageMedias(tx *dbs.Tx) (result []*
 	return
 }
 
-// 设置当前所有可用的媒介
+// UpdateMessageMedias 设置当前所有可用的媒介
 func (this *MessageMediaDAO) UpdateMessageMedias(tx *dbs.Tx, mediaMaps []maps.Map) error {
 	// 新的媒介信息
-	mediaTypes := []string{}
+	var mediaTypes = []string{}
 	for index, m := range mediaMaps {
-		order := len(mediaMaps) - index
-		mediaType := m.GetString("type")
+		var order = len(mediaMaps) - index
+		var mediaType = m.GetString("code")
 		mediaTypes = append(mediaTypes, mediaType)
 
-		name := m.GetString("name")
-		description := m.GetString("description")
-		userDescription := m.GetString("userDescription")
-		isOn := m.GetBool("isOn")
+		var name = m.GetString("name")
+		var description = m.GetString("description")
+		var userDescription = m.GetString("user")
+		var isOn = m.GetBool("isOn")
 
 		mediaId, err := this.Query(tx).
 			ResultPk().
@@ -128,7 +128,7 @@ func (this *MessageMediaDAO) UpdateMessageMedias(tx *dbs.Tx, mediaMaps []maps.Ma
 		return err
 	}
 	for _, one := range ones {
-		mediaType := one.(*MessageMedia).Type
+		var mediaType = one.(*MessageMedia).Type
 		if !lists.ContainsString(mediaTypes, mediaType) {
 			err := this.Query(tx).
 				Pk(one.(*MessageMedia).Id).
@@ -142,7 +142,7 @@ func (this *MessageMediaDAO) UpdateMessageMedias(tx *dbs.Tx, mediaMaps []maps.Ma
 	return nil
 }
 
-// 根据类型查找媒介
+// FindEnabledMediaWithType 根据类型查找媒介
 func (this *MessageMediaDAO) FindEnabledMediaWithType(tx *dbs.Tx, mediaType string) (*MessageMedia, error) {
 	one, err := this.Query(tx).
 		Attr("type", mediaType).

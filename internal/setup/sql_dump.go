@@ -60,6 +60,11 @@ var recordsTables = []*SQLRecordsTable{
 		UniqueFields: []string{"agentId", "ip"},
 		IgnoreId:     true,
 	},
+	{
+		TableName:    "edgeMessageMedias",
+		UniqueFields: []string{"type"},
+		IgnoreId:     true,
+	},
 }
 
 type sqlItem struct {

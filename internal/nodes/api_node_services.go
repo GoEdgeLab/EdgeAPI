@@ -455,11 +455,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.MonitorNodeService{}).(*services.MonitorNodeService)
-		pb.RegisterMonitorNodeServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		var instance = this.serviceInstance(&services.AuthorityNodeService{}).(*services.AuthorityNodeService)
 		pb.RegisterAuthorityNodeServiceServer(server, instance)
 		this.rest(instance)

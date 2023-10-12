@@ -95,12 +95,6 @@ func (this *BaseService) ValidateUserNode(ctx context.Context, canRest bool) (us
 	return
 }
 
-// ValidateMonitorNode 校验监控节点
-func (this *BaseService) ValidateMonitorNode(ctx context.Context) (nodeId int64, err error) {
-	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeMonitor)
-	return
-}
-
 // ValidateAuthorityNode 校验认证节点
 func (this *BaseService) ValidateAuthorityNode(ctx context.Context) (nodeId int64, err error) {
 	_, _, nodeId, err = rpcutils.ValidateRequest(ctx, rpcutils.UserTypeAuthority)
@@ -111,7 +105,7 @@ func (this *BaseService) ValidateAuthorityNode(ctx context.Context) (nodeId int6
 func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.UserType) (role rpcutils.UserType, nodeIntId int64, err error) {
 	// 默认包含大部分节点
 	if len(roles) == 0 {
-		roles = []rpcutils.UserType{rpcutils.UserTypeNode, rpcutils.UserTypeCluster, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeDNS, rpcutils.UserTypeReport, rpcutils.UserTypeMonitor, rpcutils.UserTypeLog, rpcutils.UserTypeAPI}
+		roles = []rpcutils.UserType{rpcutils.UserTypeNode, rpcutils.UserTypeCluster, rpcutils.UserTypeAdmin, rpcutils.UserTypeUser, rpcutils.UserTypeDNS, rpcutils.UserTypeReport, rpcutils.UserTypeLog, rpcutils.UserTypeAPI}
 	}
 
 	if ctx == nil {
@@ -195,8 +189,6 @@ func (this *BaseService) ValidateNodeId(ctx context.Context, roles ...rpcutils.U
 		nodeIntId, err = models.SharedUserNodeDAO.FindEnabledUserNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeAdmin:
 		nodeIntId = 0
-	case rpcutils.UserTypeMonitor:
-		nodeIntId, err = models.SharedMonitorNodeDAO.FindEnabledMonitorNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeDNS:
 		nodeIntId, err = models.SharedNSNodeDAO.FindEnabledNodeIdWithUniqueId(nil, nodeId)
 	case rpcutils.UserTypeReport:

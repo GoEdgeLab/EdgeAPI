@@ -7,6 +7,8 @@ const (
 	ProcessName   = "edge-api"
 	ProductNameZH = "Edge"
 
+	GlobalProductName = "GoEdge"
+
 	Role = "api"
 
 	EncryptKey    = "8f983f4d69b83aaa0d74b21a212f6967"

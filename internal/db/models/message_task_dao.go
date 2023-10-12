@@ -210,7 +210,7 @@ func (this *MessageTaskDAO) CreateMessageTasks(tx *dbs.Tx, role nodeconfigs.Node
 	if err != nil {
 		return err
 	}
-	allRecipientIds := []int64{}
+	var allRecipientIds = []int64{}
 	for _, receiver := range receivers {
 		if receiver.RecipientId > 0 {
 			allRecipientIds = append(allRecipientIds, int64(receiver.RecipientId))
@@ -223,7 +223,7 @@ func (this *MessageTaskDAO) CreateMessageTasks(tx *dbs.Tx, role nodeconfigs.Node
 		}
 	}
 
-	sentMap := map[int64]bool{} // recipientId => bool 用来检查是否已经发送，防止重复发送给某个接收人
+	var sentMap = map[int64]bool{} // recipientId => bool 用来检查是否已经发送，防止重复发送给某个接收人
 	for _, recipientId := range allRecipientIds {
 		_, ok := sentMap[recipientId]
 		if ok {

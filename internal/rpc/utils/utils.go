@@ -14,7 +14,6 @@ const (
 	UserTypeProvider  = "provider"
 	UserTypeNode      = "node"
 	UserTypeCluster   = "cluster"
-	UserTypeMonitor   = "monitor"
 	UserTypeStat      = "stat"
 	UserTypeDNS       = "dns"
 	UserTypeLog       = "log"
