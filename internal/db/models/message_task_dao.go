@@ -16,16 +16,9 @@ import (
 	"time"
 )
 
-type MessageTaskStatus = int
-
 const (
 	MessageTaskStateEnabled  = 1 // 已启用
 	MessageTaskStateDisabled = 0 // 已禁用
-
-	MessageTaskStatusNone    MessageTaskStatus = 0 // 普通状态
-	MessageTaskStatusSending MessageTaskStatus = 1 // 发送中
-	MessageTaskStatusSuccess MessageTaskStatus = 2 // 发送成功
-	MessageTaskStatusFailed  MessageTaskStatus = 3 // 发送失败
 )
 
 type MessageTaskDAO dbs.DAO
