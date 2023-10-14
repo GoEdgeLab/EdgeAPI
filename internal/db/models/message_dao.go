@@ -27,6 +27,8 @@ const (
 type MessageType = string
 
 const (
+	MessageTypeAll MessageType = "*"
+
 	// 这里的命名问题（首字母大写）为历史遗留问题，暂不修改
 
 	MessageTypeHealthCheckFailed          MessageType = "HealthCheckFailed"          // 节点健康检查失败

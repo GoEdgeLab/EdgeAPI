@@ -98,24 +98,6 @@ func (this *MessageReceiverDAO) CreateReceiver(tx *dbs.Tx, role string, clusterI
 	return this.SaveInt64(tx, op)
 }
 
-// FindAllEnabledReceivers 查询接收人
-func (this *MessageReceiverDAO) FindAllEnabledReceivers(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType string) (result []*MessageReceiver, err error) {
-	query := this.Query(tx)
-	if len(messageType) > 0 {
-		query.Attr("type", []string{"*", messageType}) // *表示所有的
-	}
-	_, err = query.
-		Attr("role", role).
-		Attr("clusterId", clusterId).
-		Attr("nodeId", nodeId).
-		Attr("serverId", serverId).
-		State(MessageReceiverStateEnabled).
-		AscPk().
-		Slice(&result).
-		FindAll()
-	return
-}
-
 // CountAllEnabledReceivers 计算接收人数量
 func (this *MessageReceiverDAO) CountAllEnabledReceivers(tx *dbs.Tx, role string, clusterId int64, nodeId int64, serverId int64, messageType string) (int64, error) {
 	query := this.Query(tx)

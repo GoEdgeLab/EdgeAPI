@@ -190,36 +190,6 @@ func (this *APINode) registerServices(server *grpc.Server) {
 		this.rest(instance)
 	}
 	{
-		var instance = this.serviceInstance(&services.MessageRecipientService{}).(*services.MessageRecipientService)
-		pb.RegisterMessageRecipientServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.MessageReceiverService{}).(*services.MessageReceiverService)
-		pb.RegisterMessageReceiverServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.MessageRecipientGroupService{}).(*services.MessageRecipientGroupService)
-		pb.RegisterMessageRecipientGroupServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.MessageMediaInstanceService{}).(*services.MessageMediaInstanceService)
-		pb.RegisterMessageMediaInstanceServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.MessageTaskService{}).(*services.MessageTaskService)
-		pb.RegisterMessageTaskServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
-		var instance = this.serviceInstance(&services.MessageTaskLogService{}).(*services.MessageTaskLogService)
-		pb.RegisterMessageTaskLogServiceServer(server, instance)
-		this.rest(instance)
-	}
-	{
 		var instance = this.serviceInstance(&services.NodeGroupService{}).(*services.NodeGroupService)
 		pb.RegisterNodeGroupServiceServer(server, instance)
 		this.rest(instance)
