@@ -104,7 +104,7 @@ func (this *HTTPFirewallRuleGroupDAO) ComposeFirewallRuleGroup(tx *dbs.Tx, group
 			return nil, err
 		}
 		for _, setRef := range setRefs {
-			setConfig, err := SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, setRef.SetId)
+			setConfig, err := SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, setRef.SetId, forNode)
 			if err != nil {
 				return nil, err
 			}

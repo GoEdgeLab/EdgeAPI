@@ -86,7 +86,7 @@ func (this *HTTPFirewallRuleSetService) FindEnabledHTTPFirewallRuleSetConfig(ctx
 
 	var tx = this.NullTx()
 
-	config, err := models.SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, req.FirewallRuleSetId)
+	config, err := models.SharedHTTPFirewallRuleSetDAO.ComposeFirewallRuleSet(tx, req.FirewallRuleSetId, false)
 	if err != nil {
 		return nil, err
 	}

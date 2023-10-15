@@ -84,7 +84,7 @@ func (this *HTTPFirewallRuleSetDAO) FindHTTPFirewallRuleSetName(tx *dbs.Tx, id i
 }
 
 // ComposeFirewallRuleSet 组合配置
-func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int64) (*firewallconfigs.HTTPFirewallRuleSet, error) {
+func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int64, forNode bool) (*firewallconfigs.HTTPFirewallRuleSet, error) {
 	set, err := this.FindEnabledHTTPFirewallRuleSet(tx, setId)
 	if err != nil {
 		return nil, err
@@ -133,12 +133,19 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 		if actionConfig.Code == firewallconfigs.HTTPFirewallActionRecordIP { // 记录IP动作
 			if actionConfig.Options != nil {
 				var ipListId = actionConfig.Options.GetInt64("ipListId")
-				exists, err := SharedIPListDAO.ExistsEnabledIPList(tx, ipListId)
-				if err != nil {
-					return nil, err
-				}
-				if !exists {
-					actionConfig.Options["ipListIsDeleted"] = true
+				if ipListId <= 0 { // default list id
+					if forNode {
+						actionConfig.Options["ipListId"] = firewallconfigs.GlobalListId
+					}
+					actionConfig.Options["ipListIsDeleted"] = false
+				} else {
+					exists, err := SharedIPListDAO.ExistsEnabledIPList(tx, ipListId)
+					if err != nil {
+						return nil, err
+					}
+					if !exists {
+						actionConfig.Options["ipListIsDeleted"] = true
+					}
 				}
 			}
 		}
