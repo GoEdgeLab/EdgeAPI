@@ -118,7 +118,7 @@ func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, role string, clusterId 
 	}
 
 	// 发送给媒介接收人
-	err = SharedMessageTaskDAO.CreateMessageTasks(tx, role, 0, 0, 0, messageType, subject, body)
+	err = SharedMessageTaskDAO.CreateMessageTasks(tx, role, clusterId, 0, 0, messageType, subject, body)
 	if err != nil {
 		return err
 	}

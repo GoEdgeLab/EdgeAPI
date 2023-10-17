@@ -128,6 +128,8 @@ func (this *MessageReceiverDAO) FindEnabledBestFitReceivers(tx *dbs.Tx, role str
 	} else if nodeId > 0 {
 		query.Attr("nodeId", nodeId)
 	} else if clusterId > 0 {
+		query.Attr("serverId", 0)
+		query.Attr("nodeId", 0)
 		query.Attr("clusterId", clusterId)
 	}
 	_, err = query.
