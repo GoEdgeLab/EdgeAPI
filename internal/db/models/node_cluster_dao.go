@@ -1021,7 +1021,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning", "networkSecurity").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err
@@ -1269,6 +1269,57 @@ func (this *NodeClusterDAO) FindClusterHTTP3Policy(tx *dbs.Tx, clusterId int64, 
 	return policy, nil
 }
 
+// UpdateClusterNetworkSecurityPolicy 修改网络安全策略设置
+func (this *NodeClusterDAO) UpdateClusterNetworkSecurityPolicy(tx *dbs.Tx, clusterId int64, networkSecurityPolicy *nodeconfigs.NetworkSecurityPolicy) error {
+	if networkSecurityPolicy == nil {
+		networkSecurityPolicy = nodeconfigs.NewNetworkSecurityPolicy()
+	}
+
+	networkSecurityPolicyJSON, err := json.Marshal(networkSecurityPolicy)
+	if err != nil {
+		return err
+	}
+	err = this.Query(tx).
+		Pk(clusterId).
+		Set("networkSecurity", networkSecurityPolicyJSON).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyNetworkSecurityUpdate(tx, clusterId)
+}
+
+// FindClusterNetworkSecurityPolicy 查询网络安全策略设置
+func (this *NodeClusterDAO) FindClusterNetworkSecurityPolicy(tx *dbs.Tx, clusterId int64, cacheMap *utils.CacheMap) (*nodeconfigs.NetworkSecurityPolicy, error) {
+	var cacheKey = this.Table + ":FindClusterNetworkSecurityPolicy:" + types.String(clusterId)
+	if cacheMap != nil {
+		cache, ok := cacheMap.Get(cacheKey)
+		if ok {
+			return cache.(*nodeconfigs.NetworkSecurityPolicy), nil
+		}
+	}
+
+	networkSecurityPolicyJSON, err := this.Query(tx).
+		Pk(clusterId).
+		Result("networkSecurity").
+		FindJSONCol()
+	if err != nil {
+		return nil, err
+	}
+
+	if IsNull(networkSecurityPolicyJSON) {
+		return nodeconfigs.NewNetworkSecurityPolicy(), nil
+	}
+
+	var policy = nodeconfigs.NewNetworkSecurityPolicy()
+	err = json.Unmarshal(networkSecurityPolicyJSON, policy)
+	if err != nil {
+		return nil, err
+	}
+	return policy, nil
+}
+
 // UpdateClusterHTTPPagesPolicy 修改自定义页面设置
 func (this *NodeClusterDAO) UpdateClusterHTTPPagesPolicy(tx *dbs.Tx, clusterId int64, httpPagesPolicy *nodeconfigs.HTTPPagesPolicy) error {
 	if httpPagesPolicy == nil {
@@ -1450,6 +1501,11 @@ func (this *NodeClusterDAO) NotifyHTTPCCUpdate(tx *dbs.Tx, clusterId int64) erro
 // NotifyHTTP3Update 通知HTTP3更新
 func (this *NodeClusterDAO) NotifyHTTP3Update(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeHTTP3PolicyChanged)
+}
+
+// NotifyNetworkSecurityUpdate 通知网络安全策略更新
+func (this *NodeClusterDAO) NotifyNetworkSecurityUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeNetworkSecurityPolicyChanged)
 }
 
 // NotifyHTTPPagesPolicyUpdate 通知HTTP Pages更新

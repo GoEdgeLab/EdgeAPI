@@ -1197,6 +1197,9 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 		result.Http3IsOn = http3Policy.IsOn
 	}
 
+	// 网络安全策略
+	result.HasNetworkSecurityPolicy = cluster.HasNetworkSecurityPolicy()
+
 	return result, nil
 }
 

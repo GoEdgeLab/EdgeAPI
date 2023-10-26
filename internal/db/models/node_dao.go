@@ -1221,6 +1221,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			config.AutoSystemTuning = nodeCluster.AutoSystemTuning
 		}
 
+		// 安全设置
+		if clusterIndex == 0 {
+			config.NetworkSecurityPolicy = nodeCluster.DecodeNetworkSecurityPolicy()
+		}
+
 		clusterIndex++
 	}
 

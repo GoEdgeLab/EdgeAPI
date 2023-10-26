@@ -52,3 +52,8 @@ func (this *NodeService) CopyNodeActionsToNodeCluster(ctx context.Context, req *
 func (this *NodeService) FindNodeTOAConfig(ctx context.Context, req *pb.FindNodeTOAConfigRequest) (*pb.FindNodeTOAConfigResponse, error) {
 	return nil, this.NotImplementedYet()
 }
+
+// FindNodeNetworkSecurityPolicy 查找节点的网络安全策略
+func (this *NodeService) FindNodeNetworkSecurityPolicy(ctx context.Context, req *pb.FindNodeNetworkSecurityPolicyRequest) (*pb.FindNodeNetworkSecurityPolicyResponse, error) {
+	return nil, this.NotImplementedYet()
+}

@@ -414,6 +414,17 @@ func (this *ServerStatBoardService) ComposeServerStatNodeBoard(ctx context.Conte
 		})
 	}
 
+	networkPacketsValues, err := models.SharedNodeValueDAO.ListValues(tx, "node", req.NodeId, nodeconfigs.NodeValueItemNetworkPackets, nodeconfigs.NodeValueRangeMinute)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range networkPacketsValues {
+		result.NetworkPacketsValues = append(result.NetworkPacketsValues, &pb.NodeValue{
+			ValueJSON: v.Value,
+			CreatedAt: int64(v.CreatedAt),
+		})
+	}
+
 	cacheDirValues, err := models.SharedNodeValueDAO.ListValues(tx, "node", req.NodeId, nodeconfigs.NodeValueItemCacheDir, nodeconfigs.NodeValueRangeMinute)
 	if err != nil {
 		return nil, err

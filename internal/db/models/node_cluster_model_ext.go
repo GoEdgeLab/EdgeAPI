@@ -37,13 +37,34 @@ func (this *NodeCluster) DecodeDDoSProtection() *ddosconfigs.ProtectionConfig {
 	return result
 }
 
-// HasDDoSProtection 检查是否有DDOS设置
+// HasDDoSProtection 检查是否有DDoS设置
 func (this *NodeCluster) HasDDoSProtection() bool {
 	var config = this.DecodeDDoSProtection()
 	if config != nil {
 		return config.IsOn()
 	}
 	return false
+}
+
+// HasNetworkSecurityPolicy 检查是否有安全策略设置
+func (this *NodeCluster) HasNetworkSecurityPolicy() bool {
+	var policy = this.DecodeNetworkSecurityPolicy()
+	if policy != nil {
+		return policy.IsOn()
+	}
+	return false
+}
+
+// DecodeNetworkSecurityPolicy 解析安全策略设置
+func (this *NodeCluster) DecodeNetworkSecurityPolicy() *nodeconfigs.NetworkSecurityPolicy {
+	var policy = nodeconfigs.NewNetworkSecurityPolicy()
+	if IsNotNull(this.NetworkSecurity) {
+		err := json.Unmarshal(this.NetworkSecurity, policy)
+		if err != nil {
+			remotelogs.Error("NodeCluster.DecodeNetworkSecurityPolicy()", err.Error())
+		}
+	}
+	return policy
 }
 
 // DecodeClock 解析时钟配置
