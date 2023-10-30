@@ -12,5 +12,5 @@ dbs:
 
 
 fields:
-  bool: [ "uamIsOn", "followPort", "requestHostExcludingPort", "autoRemoteStart", "autoInstallNftables", "enableIPLists", "detectAgents", "checkingPorts", "enableRecordHealthCheck", "offlineIsNotified", "http2Enabled", "http3Enabled", "enableHTTP2", "retry50X", "autoSystemTuning" ]
+  bool: [ "uamIsOn", "followPort", "requestHostExcludingPort", "autoRemoteStart", "autoInstallNftables", "enableIPLists", "detectAgents", "checkingPorts", "enableRecordHealthCheck", "offlineIsNotified", "http2Enabled", "http3Enabled", "enableHTTP2", "retry50X", "autoSystemTuning", "disableDefaultDB" ]
 

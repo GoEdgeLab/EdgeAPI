@@ -107,7 +107,7 @@ func (this *HTTPAccessLogPolicyDAO) FindAllEnabledAndOnPolicies(tx *dbs.Tx) (res
 }
 
 // CreatePolicy 创建策略
-func (this *HTTPAccessLogPolicyDAO) CreatePolicy(tx *dbs.Tx, name string, policyType string, optionsJSON []byte, condsJSON []byte, isPublic bool, firewallOnly bool) (policyId int64, err error) {
+func (this *HTTPAccessLogPolicyDAO) CreatePolicy(tx *dbs.Tx, name string, policyType string, optionsJSON []byte, condsJSON []byte, isPublic bool, firewallOnly bool, disableDefaultDB bool) (policyId int64, err error) {
 	var op = NewHTTPAccessLogPolicyOperator()
 	op.Name = name
 	op.Type = policyType
@@ -120,12 +120,13 @@ func (this *HTTPAccessLogPolicyDAO) CreatePolicy(tx *dbs.Tx, name string, policy
 	op.IsPublic = isPublic
 	op.IsOn = true
 	op.FirewallOnly = firewallOnly
+	op.DisableDefaultDB = disableDefaultDB
 	op.State = HTTPAccessLogPolicyStateEnabled
 	return this.SaveInt64(tx, op)
 }
 
 // UpdatePolicy 修改策略
-func (this *HTTPAccessLogPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, name string, optionsJSON []byte, condsJSON []byte, isPublic bool, firewallOnly bool, isOn bool) error {
+func (this *HTTPAccessLogPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, name string, optionsJSON []byte, condsJSON []byte, isPublic bool, firewallOnly bool, disableDefaultDB bool, isOn bool) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
@@ -159,6 +160,7 @@ func (this *HTTPAccessLogPolicyDAO) UpdatePolicy(tx *dbs.Tx, policyId int64, nam
 
 	op.IsPublic = isPublic
 	op.FirewallOnly = firewallOnly
+	op.DisableDefaultDB = disableDefaultDB
 	op.IsOn = isOn
 	return this.Save(tx, op)
 }

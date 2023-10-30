@@ -31,9 +31,11 @@ func (this *HTTPAccessLogService) CreateHTTPAccessLogs(ctx context.Context, req 
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.HttpAccessLogs)
-	if err != nil {
-		return nil, err
+	if this.canWriteAccessLogsToDB() {
+		err = models.SharedHTTPAccessLogDAO.CreateHTTPAccessLogs(tx, req.HttpAccessLogs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = this.writeAccessLogsToPolicy(req.HttpAccessLogs)
