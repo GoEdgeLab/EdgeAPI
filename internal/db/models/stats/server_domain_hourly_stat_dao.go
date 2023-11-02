@@ -83,7 +83,7 @@ func (this *ServerDomainHourlyStatDAO) IncreaseHourlyStat(tx *dbs.Tx, clusterId 
 	if len(hour) != 10 {
 		return errors.New("invalid hour '" + hour + "'")
 	}
-	if len(domain) == 0 {
+	if len(domain) == 0 || len(domain) > 64 {
 		return nil
 	}
 	err := this.Query(tx).
