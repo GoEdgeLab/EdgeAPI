@@ -2066,7 +2066,7 @@ func (this *NodeService) FindEnabledNodeConfigInfo(ctx context.Context, req *pb.
 	}
 
 	// thresholds
-	countThresholds, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, nodeconfigs.NodeRoleNode, 0, req.NodeId)
+	countThresholds, err := models.SharedNodeThresholdDAO.CountAllEnabledThresholds(tx, nodeconfigs.NodeRoleNode, int64(node.ClusterId), req.NodeId)
 	if err != nil {
 		return nil, err
 	}
