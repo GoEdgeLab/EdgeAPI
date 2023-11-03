@@ -111,8 +111,11 @@ func (this *MessageDAO) FindEnabledMessage(tx *dbs.Tx, id int64) (*Message, erro
 }
 
 // CreateClusterMessage 创建集群消息
-func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, role string, clusterId int64, messageType MessageType, level string, subject string, body string, paramsJSON []byte) error {
-	_, err := this.createMessage(tx, role, clusterId, 0, messageType, level, subject, body, paramsJSON)
+func (this *MessageDAO) CreateClusterMessage(tx *dbs.Tx, role string, clusterId int64, messageType MessageType, level string, subject string, shortBody string, body string, paramsJSON []byte) error {
+	if len(shortBody) == 0 {
+		shortBody = body
+	}
+	_, err := this.createMessage(tx, role, clusterId, 0, messageType, level, subject, shortBody, paramsJSON)
 	if err != nil {
 		return err
 	}

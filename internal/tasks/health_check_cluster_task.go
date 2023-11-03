@@ -10,6 +10,8 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/maps"
+	"github.com/iwind/TeaGo/types"
+	"strings"
 	"time"
 )
 
@@ -127,8 +129,32 @@ func (this *HealthCheckClusterTask) Loop() error {
 			if err != nil {
 				return err
 			}
-			var message = "有" + numberutils.FormatInt(len(failedResults)) + "个节点IP在健康检查中出现问题"
-			err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, message, message, failedResultsJSON)
+			var subject = "有" + numberutils.FormatInt(len(failedResults)) + "个节点IP在健康检查中出现问题"
+			var message = "有" + numberutils.FormatInt(len(failedResults)) + "个节点IP在健康检查中出现问题："
+			var failedDescriptions = []string{}
+			var failedIndex int
+			for _, result := range results {
+				if result.IsOk || result.Node == nil {
+					continue
+				}
+				failedIndex++
+				failedDescriptions = append(failedDescriptions, "节点"+types.String(failedIndex)+"："+result.Node.Name+"，IP："+result.NodeAddr)
+			}
+
+			const maxNodeDescriptions = 10
+			var isOverMax = false
+			if len(failedDescriptions) > maxNodeDescriptions {
+				failedDescriptions = failedDescriptions[:maxNodeDescriptions]
+				isOverMax = true
+			}
+			message += strings.Join(failedDescriptions, "；")
+			if isOverMax {
+				message += " ..."
+			} else {
+				message += "。"
+			}
+
+			err = models.NewMessageDAO().CreateClusterMessage(nil, nodeconfigs.NodeRoleNode, this.clusterId, models.MessageTypeHealthCheckFailed, models.MessageLevelError, subject, subject, message, failedResultsJSON)
 			if err != nil {
 				return err
 			}

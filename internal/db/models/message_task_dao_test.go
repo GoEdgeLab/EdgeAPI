@@ -8,20 +8,6 @@ import (
 	"testing"
 )
 
-func TestMessageTaskDAO_FindSendingMessageTasks(t *testing.T) {
-	dbs.NotifyReady()
-
-	var tx *dbs.Tx
-	tasks, err := models.NewMessageTaskDAO().FindSendingMessageTasks(tx, 100)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(len(tasks), "tasks")
-	for _, task := range tasks {
-		t.Log("task:", task.Id, "recipient:", task.RecipientId)
-	}
-}
-
 func TestMessageTaskDAO_CleanExpiredMessageTasks(t *testing.T) {
 	var dao = models.NewMessageTaskDAO()
 	var tx *dbs.Tx

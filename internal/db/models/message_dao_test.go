@@ -12,7 +12,7 @@ func TestMessageDAO_CreateClusterMessage(t *testing.T) {
 	var tx *dbs.Tx
 
 	dao := NewMessageDAO()
-	err := dao.CreateClusterMessage(tx, nodeconfigs.NodeRoleNode, 1, "test", "error", "123", "123", []byte("456"))
+	err := dao.CreateClusterMessage(tx, nodeconfigs.NodeRoleNode, 1, "test", "error", "123", "123", "123", []byte("456"))
 	if err != nil {
 		t.Fatal(err)
 	}
