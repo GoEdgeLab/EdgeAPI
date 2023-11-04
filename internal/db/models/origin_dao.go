@@ -227,6 +227,8 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 			return err
 		}
 		op.Oss = ossConfigJSON
+	} else {
+		op.Oss = dbs.SQL("NULL")
 	}
 
 	op.Description = description
@@ -400,6 +402,7 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *
 	}
 
 	// addr
+	var isOSS = false
 	if IsNotNull(origin.Addr) {
 		var addr = &serverconfigs.NetworkAddressConfig{}
 		err = json.Unmarshal(origin.Addr, addr)
@@ -407,10 +410,11 @@ func (this *OriginDAO) ComposeOriginConfig(tx *dbs.Tx, originId int64, dataMap *
 			return nil, err
 		}
 		config.Addr = addr
+		isOSS = ossconfigs.IsOSSProtocol(string(addr.Protocol))
 	}
 
 	// oss
-	if IsNotNull(origin.Oss) {
+	if isOSS && IsNotNull(origin.Oss) {
 		var ossConfig = ossconfigs.NewOSSConfig()
 		err = json.Unmarshal(origin.Oss, ossConfig)
 		if err != nil {
