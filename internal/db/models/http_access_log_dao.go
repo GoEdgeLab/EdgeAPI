@@ -863,8 +863,4 @@ func (this *HTTPAccessLogDAO) SetupQueue() {
 		oldAccessLogQueue = accessLogQueue
 		accessLogQueue = make(chan *pb.HTTPAccessLog, config.MaxLength)
 	}
-
-	if Tea.IsTesting() {
-		remotelogs.Println("HTTP_ACCESS_LOG_QUEUE", "change queue "+string(configJSON))
-	}
 }
