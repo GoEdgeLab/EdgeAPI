@@ -8,7 +8,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/dbs"
 )
 
@@ -365,7 +364,7 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 		}
 
 		switch shutdownConfig.BodyType {
-		case shared.BodyTypeURL:
+		case serverconfigs.HTTPPageBodyTypeURL:
 			if len(shutdownConfig.URL) > maxURLLength {
 				return nil, errors.New("'url' too long")
 			}
@@ -376,7 +375,18 @@ func (this *HTTPWebService) UpdateHTTPWebShutdown(ctx context.Context, req *pb.U
 			if len(shutdownConfig.Body) > maxBodyLength { // we keep short body for user experience
 				shutdownConfig.Body = ""
 			}
-		case shared.BodyTypeHTML:
+		case serverconfigs.HTTPPageBodyTypeRedirectURL:
+			if len(shutdownConfig.URL) > maxURLLength {
+				return nil, errors.New("'url' too long")
+			}
+			if shutdownConfig.IsOn /** validate when it's on **/ && !regexputils.HTTPProtocol.MatchString(shutdownConfig.URL) {
+				return nil, errors.New("invalid 'url' format")
+			}
+
+			if len(shutdownConfig.Body) > maxBodyLength { // we keep short body for user experience
+				shutdownConfig.Body = ""
+			}
+		case serverconfigs.HTTPPageBodyTypeHTML:
 			if len(shutdownConfig.Body) > maxBodyLength {
 				return nil, errors.New("'body' too long")
 			}

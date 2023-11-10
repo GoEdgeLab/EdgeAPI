@@ -7,7 +7,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -30,7 +30,7 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 	const maxBodyLength = 32 * 1024
 
 	switch req.BodyType {
-	case shared.BodyTypeURL:
+	case serverconfigs.HTTPPageBodyTypeURL:
 		if len(req.Url) > maxURLLength {
 			return nil, errors.New("'url' too long")
 		}
@@ -41,7 +41,18 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 		if len(req.Body) > maxBodyLength { // we keep short body for user experience
 			req.Body = ""
 		}
-	case shared.BodyTypeHTML:
+	case serverconfigs.HTTPPageBodyTypeRedirectURL:
+		if len(req.Url) > maxURLLength {
+			return nil, errors.New("'url' too long")
+		}
+		if !regexputils.HTTPProtocol.MatchString(req.Url) {
+			return nil, errors.New("invalid 'url' format")
+		}
+
+		if len(req.Body) > maxBodyLength { // we keep short body for user experience
+			req.Body = ""
+		}
+	case serverconfigs.HTTPPageBodyTypeHTML:
 		if len(req.Body) > maxBodyLength {
 			return nil, errors.New("'body' too long")
 		}
@@ -82,7 +93,7 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 	const maxBodyLength = 32 * 1024
 
 	switch req.BodyType {
-	case shared.BodyTypeURL:
+	case serverconfigs.HTTPPageBodyTypeURL:
 		if len(req.Url) > maxURLLength {
 			return nil, errors.New("'url' too long")
 		}
@@ -93,7 +104,18 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 		if len(req.Body) > maxBodyLength { // we keep short body for user experience
 			req.Body = ""
 		}
-	case shared.BodyTypeHTML:
+	case serverconfigs.HTTPPageBodyTypeRedirectURL:
+		if len(req.Url) > maxURLLength {
+			return nil, errors.New("'url' too long")
+		}
+		if !regexputils.HTTPProtocol.MatchString(req.Url) {
+			return nil, errors.New("invalid 'url' format")
+		}
+
+		if len(req.Body) > maxBodyLength { // we keep short body for user experience
+			req.Body = ""
+		}
+	case serverconfigs.HTTPPageBodyTypeHTML:
 		if len(req.Body) > maxBodyLength {
 			return nil, errors.New("'body' too long")
 		}

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -77,7 +76,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 }
 
 // CreatePage 创建Page
-func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) (pageId int64, err error) {
+func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int) (pageId int64, err error) {
 	var op = NewHTTPPageOperator()
 	op.UserId = userId
 	op.IsOn = true
@@ -103,7 +102,7 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []strin
 }
 
 // UpdatePage 修改Page
-func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, bodyType shared.BodyType, url string, body string, newStatus int) error {
+func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int) error {
 	if pageId <= 0 {
 		return errors.New("invalid pageId")
 	}
@@ -188,7 +187,7 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 	config.BodyType = page.BodyType
 
 	if len(page.BodyType) == 0 {
-		page.BodyType = shared.BodyTypeURL
+		page.BodyType = serverconfigs.HTTPPageBodyTypeURL
 	}
 
 	if len(page.StatusList) > 0 {
