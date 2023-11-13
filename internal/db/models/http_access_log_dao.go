@@ -245,7 +245,7 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 		return err
 	}
 
-	fields := map[string]interface{}{}
+	var fields = map[string]any{}
 	fields["serverId"] = accessLog.ServerId
 	fields["nodeId"] = accessLog.NodeId
 	fields["status"] = accessLog.Status
@@ -265,7 +265,11 @@ func (this *HTTPAccessLogDAO) CreateHTTPAccessLog(tx *dbs.Tx, dao *HTTPAccessLog
 		fields["remoteAddr"] = accessLog.RemoteAddr
 	}
 	if tableDef.HasDomain {
-		fields["domain"] = accessLog.Host
+		if len(accessLog.Host) > 128 {
+			fields["domain"] = accessLog.Host[:128]
+		} else {
+			fields["domain"] = accessLog.Host
+		}
 	}
 
 	content, err := json.Marshal(accessLog)
