@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/iwind/TeaGo/types"
 )
 
@@ -64,7 +66,35 @@ func (this *HTTPPageService) CreateHTTPPage(ctx context.Context, req *pb.CreateH
 		return nil, errors.New("invalid 'bodyType': " + req.BodyType)
 	}
 
-	pageId, err := models.SharedHTTPPageDAO.CreatePage(tx, userId, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus))
+	var exceptURLPatterns = []*shared.URLPattern{}
+	if len(req.ExceptURLPatternsJSON) > 0 {
+		err = json.Unmarshal(req.ExceptURLPatternsJSON, &exceptURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		for _, pattern := range exceptURLPatterns {
+			err = pattern.Init()
+			if err != nil {
+				return nil, fmt.Errorf("validate url pattern '"+pattern.Pattern+"' failed: %w", err)
+			}
+		}
+	}
+
+	var onlyURLPatterns = []*shared.URLPattern{}
+	if len(req.OnlyURLPatternsJSON) > 0 {
+		err = json.Unmarshal(req.OnlyURLPatternsJSON, &onlyURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		for _, pattern := range onlyURLPatterns {
+			err = pattern.Init()
+			if err != nil {
+				return nil, fmt.Errorf("validate url pattern '"+pattern.Pattern+"' failed: %w", err)
+			}
+		}
+	}
+
+	pageId, err := models.SharedHTTPPageDAO.CreatePage(tx, userId, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus), exceptURLPatterns, onlyURLPatterns)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +157,35 @@ func (this *HTTPPageService) UpdateHTTPPage(ctx context.Context, req *pb.UpdateH
 		return nil, errors.New("invalid 'bodyType': " + req.BodyType)
 	}
 
-	err = models.SharedHTTPPageDAO.UpdatePage(tx, req.HttpPageId, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus))
+	var exceptURLPatterns = []*shared.URLPattern{}
+	if len(req.ExceptURLPatternsJSON) > 0 {
+		err = json.Unmarshal(req.ExceptURLPatternsJSON, &exceptURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		for _, pattern := range exceptURLPatterns {
+			err = pattern.Init()
+			if err != nil {
+				return nil, fmt.Errorf("validate url pattern '"+pattern.Pattern+"' failed: %w", err)
+			}
+		}
+	}
+
+	var onlyURLPatterns = []*shared.URLPattern{}
+	if len(req.OnlyURLPatternsJSON) > 0 {
+		err = json.Unmarshal(req.OnlyURLPatternsJSON, &onlyURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		for _, pattern := range onlyURLPatterns {
+			err = pattern.Init()
+			if err != nil {
+				return nil, fmt.Errorf("validate url pattern '"+pattern.Pattern+"' failed: %w", err)
+			}
+		}
+	}
+
+	err = models.SharedHTTPPageDAO.UpdatePage(tx, req.HttpPageId, req.StatusList, req.BodyType, req.Url, req.Body, types.Int(req.NewStatus), exceptURLPatterns, onlyURLPatterns)
 	if err != nil {
 		return nil, err
 	}

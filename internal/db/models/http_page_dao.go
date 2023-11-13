@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -76,7 +77,7 @@ func (this *HTTPPageDAO) FindEnabledHTTPPage(tx *dbs.Tx, id int64) (*HTTPPage, e
 }
 
 // CreatePage 创建Page
-func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int) (pageId int64, err error) {
+func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int, exceptURLPatterns []*shared.URLPattern, onlyURLPatterns []*shared.URLPattern) (pageId int64, err error) {
 	var op = NewHTTPPageOperator()
 	op.UserId = userId
 	op.IsOn = true
@@ -93,6 +94,29 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []strin
 	op.Url = url
 	op.Body = body
 	op.NewStatus = newStatus
+
+	{
+		if exceptURLPatterns == nil {
+			exceptURLPatterns = []*shared.URLPattern{}
+		}
+		exceptURLPatternsJSON, err := json.Marshal(exceptURLPatterns)
+		if err != nil {
+			return 0, err
+		}
+		op.ExceptURLPatterns = exceptURLPatternsJSON
+	}
+
+	{
+		if onlyURLPatterns == nil {
+			onlyURLPatterns = []*shared.URLPattern{}
+		}
+		onlyURLPatternsJSON, err := json.Marshal(onlyURLPatterns)
+		if err != nil {
+			return 0, err
+		}
+		op.OnlyURLPatterns = onlyURLPatternsJSON
+	}
+
 	err = this.Save(tx, op)
 	if err != nil {
 		return 0, err
@@ -102,7 +126,7 @@ func (this *HTTPPageDAO) CreatePage(tx *dbs.Tx, userId int64, statusList []strin
 }
 
 // UpdatePage 修改Page
-func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int) error {
+func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []string, bodyType serverconfigs.HTTPPageBodyType, url string, body string, newStatus int, exceptURLPatterns []*shared.URLPattern, onlyURLPatterns []*shared.URLPattern) error {
 	if pageId <= 0 {
 		return errors.New("invalid pageId")
 	}
@@ -125,6 +149,29 @@ func (this *HTTPPageDAO) UpdatePage(tx *dbs.Tx, pageId int64, statusList []strin
 	op.Url = url
 	op.Body = body
 	op.NewStatus = newStatus
+
+	{
+		if exceptURLPatterns == nil {
+			exceptURLPatterns = []*shared.URLPattern{}
+		}
+		exceptURLPatternsJSON, err := json.Marshal(exceptURLPatterns)
+		if err != nil {
+			return err
+		}
+		op.ExceptURLPatterns = exceptURLPatternsJSON
+	}
+
+	{
+		if onlyURLPatterns == nil {
+			onlyURLPatterns = []*shared.URLPattern{}
+		}
+		onlyURLPatternsJSON, err := json.Marshal(onlyURLPatterns)
+		if err != nil {
+			return err
+		}
+		op.OnlyURLPatterns = onlyURLPatternsJSON
+	}
+
 	err = this.Save(tx, op)
 	if err != nil {
 		return err
@@ -155,6 +202,14 @@ func (this *HTTPPageDAO) ClonePage(tx *dbs.Tx, fromPageId int64) (newPageId int6
 	op.Body = page.Body
 	op.BodyType = page.BodyType
 	op.State = page.State
+
+	if len(page.ExceptURLPatterns) > 0 {
+		op.ExceptURLPatterns = page.ExceptURLPatterns
+	}
+	if len(page.OnlyURLPatterns) > 0 {
+		op.OnlyURLPatterns = page.OnlyURLPatterns
+	}
+
 	return this.SaveInt64(tx, op)
 }
 
@@ -178,7 +233,7 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 		return nil, nil
 	}
 
-	config := &serverconfigs.HTTPPageConfig{}
+	var config = &serverconfigs.HTTPPageConfig{}
 	config.Id = int64(page.Id)
 	config.IsOn = page.IsOn
 	config.NewStatus = int(page.NewStatus)
@@ -198,6 +253,28 @@ func (this *HTTPPageDAO) ComposePageConfig(tx *dbs.Tx, pageId int64, cacheMap *u
 		}
 		if len(statusList) > 0 {
 			config.Status = statusList
+		}
+	}
+
+	if len(page.ExceptURLPatterns) > 0 {
+		var exceptURLPatterns = []*shared.URLPattern{}
+		err = json.Unmarshal(page.ExceptURLPatterns, &exceptURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		if len(exceptURLPatterns) > 0 {
+			config.ExceptURLPatterns = exceptURLPatterns
+		}
+	}
+
+	if len(page.OnlyURLPatterns) > 0 {
+		var onlyURLPatterns = []*shared.URLPattern{}
+		err = json.Unmarshal(page.OnlyURLPatterns, &onlyURLPatterns)
+		if err != nil {
+			return nil, err
+		}
+		if len(onlyURLPatterns) > 0 {
+			config.OnlyURLPatterns = onlyURLPatterns
 		}
 	}
 
