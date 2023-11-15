@@ -216,7 +216,7 @@ func (this *ReverseProxyService) UpdateReverseProxy(ctx context.Context, req *pb
 		}
 	}
 
-	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestHostExcludingPort, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.ProxyProtocolJSON, req.FollowRedirects, req.Retry50X)
+	err = models.SharedReverseProxyDAO.UpdateReverseProxy(tx, req.ReverseProxyId, types.Int8(req.RequestHostType), req.RequestHost, req.RequestHostExcludingPort, req.RequestURI, req.StripPrefix, req.AutoFlush, req.AddHeaders, connTimeout, readTimeout, idleTimeout, req.MaxConns, req.MaxIdleConns, req.ProxyProtocolJSON, req.FollowRedirects, req.Retry50X, req.Retry40X)
 	if err != nil {
 		return nil, err
 	}

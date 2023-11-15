@@ -28,6 +28,7 @@ const (
 	ReverseProxyField_ProxyProtocol            dbs.FieldName = "proxyProtocol"            // Proxy Protocol配置
 	ReverseProxyField_FollowRedirects          dbs.FieldName = "followRedirects"          // 回源跟随
 	ReverseProxyField_Retry50X                 dbs.FieldName = "retry50X"                 // 启用50X重试
+	ReverseProxyField_Retry40X                 dbs.FieldName = "retry40X"                 // 启用40X重试
 )
 
 // ReverseProxy 反向代理配置
@@ -57,6 +58,7 @@ type ReverseProxy struct {
 	ProxyProtocol            dbs.JSON `field:"proxyProtocol"`            // Proxy Protocol配置
 	FollowRedirects          uint8    `field:"followRedirects"`          // 回源跟随
 	Retry50X                 bool     `field:"retry50X"`                 // 启用50X重试
+	Retry40X                 bool     `field:"retry40X"`                 // 启用40X重试
 }
 
 type ReverseProxyOperator struct {
@@ -85,6 +87,7 @@ type ReverseProxyOperator struct {
 	ProxyProtocol            any // Proxy Protocol配置
 	FollowRedirects          any // 回源跟随
 	Retry50X                 any // 启用50X重试
+	Retry40X                 any // 启用40X重试
 }
 
 func NewReverseProxyOperator() *ReverseProxyOperator {
