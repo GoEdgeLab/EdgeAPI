@@ -428,6 +428,20 @@ func (this *UserDAO) CheckUserEmailPassword(tx *dbs.Tx, verifiedEmail string, en
 		FindInt64Col(0)
 }
 
+// CheckUserMobilePassword 检查邮箱+密码
+func (this *UserDAO) CheckUserMobilePassword(tx *dbs.Tx, verifiedEmail string, encryptedPassword string) (int64, error) {
+	if len(verifiedEmail) == 0 || len(encryptedPassword) == 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		Attr("verifiedMobile", verifiedEmail).
+		Attr("password", encryptedPassword).
+		Attr("state", UserStateEnabled).
+		Attr("isOn", true).
+		ResultPk().
+		FindInt64Col(0)
+}
+
 // FindUserClusterId 查找用户所在集群
 func (this *UserDAO) FindUserClusterId(tx *dbs.Tx, userId int64) (int64, error) {
 	return this.Query(tx).
@@ -663,12 +677,24 @@ func (this *UserDAO) RenewUserServersState(tx *dbs.Tx, userId int64) (bool, erro
 // FindUserIdWithVerifiedEmail 使用验证后Email查找用户ID
 func (this *UserDAO) FindUserIdWithVerifiedEmail(tx *dbs.Tx, verifiedEmail string) (int64, error) {
 	if len(verifiedEmail) == 0 {
-
+		return 0, nil
 	}
 	return this.Query(tx).
 		ResultPk().
 		State(UserStateEnabled).
 		Attr("verifiedEmail", verifiedEmail).
+		FindInt64Col(0)
+}
+
+// FindUserIdWithVerifiedMobile 使用验证后手机号码查找用户ID
+func (this *UserDAO) FindUserIdWithVerifiedMobile(tx *dbs.Tx, verifiedMobile string) (int64, error) {
+	if len(verifiedMobile) == 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		ResultPk().
+		State(UserStateEnabled).
+		Attr("verifiedMobile", verifiedMobile).
 		FindInt64Col(0)
 }
 
@@ -681,6 +707,18 @@ func (this *UserDAO) UpdateUserVerifiedEmail(tx *dbs.Tx, userId int64, verifiedE
 		Pk(userId).
 		Set("verifiedEmail", verifiedEmail).
 		Set("emailIsVerified", true).
+		UpdateQuickly()
+}
+
+// UpdateUserVerifiedMobile 修改已激活手机号码
+func (this *UserDAO) UpdateUserVerifiedMobile(tx *dbs.Tx, userId int64, verifiedMobile string) error {
+	if userId <= 0 {
+		return nil
+	}
+	return this.Query(tx).
+		Pk(userId).
+		Set("verifiedMobile", verifiedMobile).
+		Set("mobileIsVerified", true).
 		UpdateQuickly()
 }
 

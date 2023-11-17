@@ -241,28 +241,31 @@ func (this *UserService) FindEnabledUser(ctx context.Context, req *pb.FindEnable
 		}
 	}
 
-	return &pb.FindEnabledUserResponse{User: &pb.User{
-		Id:                     int64(user.Id),
-		Username:               user.Username,
-		Fullname:               user.Fullname,
-		Mobile:                 user.Mobile,
-		Tel:                    user.Tel,
-		Email:                  user.Email,
-		VerifiedEmail:          user.VerifiedEmail,
-		Remark:                 user.Remark,
-		IsOn:                   user.IsOn,
-		CreatedAt:              int64(user.CreatedAt),
-		RegisteredIP:           user.RegisteredIP,
-		IsVerified:             user.IsVerified,
-		IsRejected:             user.IsRejected,
-		RejectReason:           user.RejectReason,
-		NodeCluster:            pbCluster,
-		IsIndividualIdentified: isIndividualIdentified,
-		IsEnterpriseIdentified: isEnterpriseIdentified,
-		BandwidthAlgo:          user.BandwidthAlgo,
-		OtpLogin:               pbOtpAuth,
-		Lang:                   user.Lang,
-	}}, nil
+	return &pb.FindEnabledUserResponse{
+		User: &pb.User{
+			Id:                     int64(user.Id),
+			Username:               user.Username,
+			Fullname:               user.Fullname,
+			Mobile:                 user.Mobile,
+			Tel:                    user.Tel,
+			Email:                  user.Email,
+			VerifiedEmail:          user.VerifiedEmail,
+			VerifiedMobile:         user.VerifiedMobile,
+			Remark:                 user.Remark,
+			IsOn:                   user.IsOn,
+			CreatedAt:              int64(user.CreatedAt),
+			RegisteredIP:           user.RegisteredIP,
+			IsVerified:             user.IsVerified,
+			IsRejected:             user.IsRejected,
+			RejectReason:           user.RejectReason,
+			NodeCluster:            pbCluster,
+			IsIndividualIdentified: isIndividualIdentified,
+			IsEnterpriseIdentified: isEnterpriseIdentified,
+			BandwidthAlgo:          user.BandwidthAlgo,
+			OtpLogin:               pbOtpAuth,
+			Lang:                   user.Lang,
+		},
+	}, nil
 }
 
 // CheckUserUsername 检查用户名是否存在
@@ -312,14 +315,40 @@ func (this *UserService) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 	var tx = this.NullTx()
 
 	// 邮箱登录
+	var registerConfig *userconfigs.UserRegisterConfig
 	if strings.Contains(req.Username, "@") {
 		// 是否允许
-		registerConfig, err := models.SharedSysSettingDAO.ReadUserRegisterConfig(tx)
-		if err != nil {
-			return nil, err
+		if registerConfig == nil {
+			registerConfig, err = models.SharedSysSettingDAO.ReadUserRegisterConfig(tx)
+			if err != nil {
+				return nil, err
+			}
 		}
 		if registerConfig != nil && registerConfig.EmailVerification.CanLogin {
 			userId, err := models.SharedUserDAO.CheckUserEmailPassword(tx, req.Username, req.Password)
+			if err != nil {
+				return nil, err
+			}
+			if userId > 0 {
+				return &pb.LoginUserResponse{
+					UserId: userId,
+					IsOk:   true,
+				}, nil
+			}
+		}
+	}
+
+	// 手机号登录
+	if utils.IsValidMobile(req.Username) {
+		// 是否允许
+		if registerConfig == nil {
+			registerConfig, err = models.SharedSysSettingDAO.ReadUserRegisterConfig(tx)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if registerConfig != nil && registerConfig.MobileVerification.CanLogin {
+			userId, err := models.SharedUserDAO.CheckUserMobilePassword(tx, req.Username, req.Password)
 			if err != nil {
 				return nil, err
 			}
@@ -838,6 +867,28 @@ func (this *UserService) CheckUserEmail(ctx context.Context, req *pb.CheckUserEm
 		return &pb.CheckUserEmailResponse{Exists: true}, nil
 	}
 	return &pb.CheckUserEmailResponse{Exists: false}, nil
+}
+
+// CheckUserMobile 检查手机号码是否被使用
+func (this *UserService) CheckUserMobile(ctx context.Context, req *pb.CheckUserMobileRequest) (*pb.CheckUserMobileResponse, error) {
+	userId, err := this.ValidateUserNode(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Mobile) == 0 {
+		return nil, errors.New("'mobile' required")
+	}
+
+	var tx = this.NullTx()
+	mobileOwnerUserId, err := models.SharedUserDAO.FindUserIdWithVerifiedMobile(tx, req.Mobile)
+	if err != nil {
+		return nil, err
+	}
+	if mobileOwnerUserId > 0 && userId != mobileOwnerUserId {
+		return &pb.CheckUserMobileResponse{Exists: true}, nil
+	}
+	return &pb.CheckUserMobileResponse{Exists: false}, nil
 }
 
 // FindUserVerifiedEmailWithUsername 根据用户名查询用户绑定的邮箱
