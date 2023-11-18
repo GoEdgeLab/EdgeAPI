@@ -256,6 +256,32 @@ func (this *NodeIPAddressDAO) FindAllEnabledAddressesWithNode(tx *dbs.Tx, nodeId
 	return
 }
 
+// FindAllEnabledAddressStringsWithNode 查找节点的所有的IP地址地府传
+func (this *NodeIPAddressDAO) FindAllEnabledAddressStringsWithNode(tx *dbs.Tx, nodeId int64, role nodeconfigs.NodeRole) (result []string, err error) {
+	if len(role) == 0 {
+		role = nodeconfigs.NodeRoleNode
+	}
+	ones, err := this.Query(tx).
+		Attr("nodeId", nodeId).
+		Attr("role", role).
+		State(NodeIPAddressStateEnabled).
+		Result("ip", "backupIP").
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, one := range ones {
+		var addr = one.(*NodeIPAddress)
+		result = append(result, addr.Ip)
+		if len(addr.BackupIP) > 0 {
+			result = append(result, addr.BackupIP)
+		}
+	}
+
+	return
+}
+
 // FindFirstNodeAccessIPAddress 查找节点的第一个可访问的IP地址
 func (this *NodeIPAddressDAO) FindFirstNodeAccessIPAddress(tx *dbs.Tx, nodeId int64, mustUp bool, role nodeconfigs.NodeRole) (ip string, addrId int64, err error) {
 	if len(role) == 0 {

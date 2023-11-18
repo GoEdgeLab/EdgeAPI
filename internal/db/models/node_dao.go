@@ -1018,6 +1018,13 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 	}
 	config.AllowedIPs = append(config.AllowedIPs, apiNodeIPs...)
 
+	// 当前的节点IP地址
+	nodeNodeIPs, err := SharedNodeIPAddressDAO.FindAllEnabledAddressStringsWithNode(tx, nodeId, nodeconfigs.NodeRoleNode)
+	if err != nil {
+		return nil, err
+	}
+	config.IPAddresses = nodeNodeIPs
+
 	// 所属集群
 	var primaryClusterId = int64(node.ClusterId)
 	var clusterIds = []int64{primaryClusterId}
@@ -1076,7 +1083,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			continue
 		}
 
-		// 节点IP地址
+		// 所有节点IP地址
 		nodeIPAddresses, err := SharedNodeIPAddressDAO.FindAllAccessibleIPAddressesWithClusterId(tx, nodeconfigs.NodeRoleNode, clusterId, cacheMap)
 		if err != nil {
 			return nil, err
