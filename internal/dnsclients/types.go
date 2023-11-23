@@ -26,7 +26,7 @@ func FindAllProviderTypes() []maps.Map {
 			"description": "阿里云提供的DNS服务。",
 		},
 		{
-			"name":        "DNSPod",
+			"name":        "腾讯云DNSPod",
 			"code":        ProviderTypeDNSPod,
 			"description": "DNSPod提供的DNS服务。",
 		},

@@ -32,8 +32,6 @@ var dnsPodHTTPClient = &http.Client{
 }
 
 // DNSPodProvider DNSPod服务商
-// TODO 考虑支持线路ID
-// TODO 支持自定义线路
 type DNSPodProvider struct {
 	BaseProvider
 
@@ -42,19 +40,30 @@ type DNSPodProvider struct {
 	region   string
 	apiId    string
 	apiToken string
+
+	tencentDNSProvider *TencentDNSProvider
 }
 
 // Auth 认证
 func (this *DNSPodProvider) Auth(params maps.Map) error {
-	this.apiId = params.GetString("id")
-	this.apiToken = params.GetString("token")
-	this.region = params.GetString("region")
+	// 兼容腾讯云API
+	var apiType = params.GetString("apiType")
 
-	if len(this.apiId) == 0 {
-		return errors.New("'id' should be not empty")
-	}
-	if len(this.apiToken) == 0 {
-		return errors.New("'token' should not be empty")
+	switch apiType {
+	case "tencentDNS":
+		this.tencentDNSProvider = NewTencentDNSProvider()
+		return this.tencentDNSProvider.Auth(params)
+	default:
+		this.apiId = params.GetString("id")
+		this.apiToken = params.GetString("token")
+		this.region = params.GetString("region")
+
+		if len(this.apiId) == 0 {
+			return errors.New("'id' should be not empty")
+		}
+		if len(this.apiToken) == 0 {
+			return errors.New("'token' should not be empty")
+		}
 	}
 
 	return nil
@@ -62,6 +71,10 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 
 // GetDomains 获取所有域名列表
 func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.GetDomains()
+	}
+
 	var offset = 0
 	var size = 3000
 
@@ -92,6 +105,10 @@ func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 
 // GetRecords 获取域名列表
 func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Record, err error) {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.GetRecords(domain)
+	}
+
 	var offset = 0
 	var size = 3000
 	for {
@@ -135,6 +152,10 @@ func (this *DNSPodProvider) GetRecords(domain string) (records []*dnstypes.Recor
 
 // GetRoutes 读取线路数据
 func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, err error) {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.GetRoutes(domain)
+	}
+
 	var domainInfoResp = new(dnspod.DomainInfoResponse)
 	err = this.doAPI("/Domain.Info", map[string]string{
 		"domain": domain,
@@ -217,6 +238,10 @@ func (this *DNSPodProvider) GetRoutes(domain string) (routes []*dnstypes.Route, 
 
 // QueryRecord 查询单个记录
 func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType dnstypes.RecordType) (*dnstypes.Record, error) {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.QueryRecord(domain, name, recordType)
+	}
+
 	// 从缓存中读取
 	if this.ProviderId > 0 {
 		record, hasRecords, _ := sharedDomainRecordsCache.QueryDomainRecord(this.ProviderId, domain, name, recordType)
@@ -239,6 +264,10 @@ func (this *DNSPodProvider) QueryRecord(domain string, name string, recordType d
 
 // QueryRecords 查询多个记录
 func (this *DNSPodProvider) QueryRecords(domain string, name string, recordType dnstypes.RecordType) ([]*dnstypes.Record, error) {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.QueryRecords(domain, name, recordType)
+	}
+
 	// 从缓存中读取
 	if this.ProviderId > 0 {
 		records, hasRecords, _ := sharedDomainRecordsCache.QueryDomainRecords(this.ProviderId, domain, name, recordType)
@@ -262,6 +291,10 @@ func (this *DNSPodProvider) QueryRecords(domain string, name string, recordType 
 
 // AddRecord 设置记录
 func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record) error {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.AddRecord(domain, newRecord)
+	}
+
 	if newRecord == nil {
 		return errors.New("invalid new record")
 	}
@@ -298,6 +331,10 @@ func (this *DNSPodProvider) AddRecord(domain string, newRecord *dnstypes.Record)
 
 // UpdateRecord 修改记录
 func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record, newRecord *dnstypes.Record) error {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.UpdateRecord(domain, record, newRecord)
+	}
+
 	if record == nil {
 		return errors.New("invalid record")
 	}
@@ -339,6 +376,10 @@ func (this *DNSPodProvider) UpdateRecord(domain string, record *dnstypes.Record,
 
 // DeleteRecord 删除记录
 func (this *DNSPodProvider) DeleteRecord(domain string, record *dnstypes.Record) error {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.DeleteRecord(domain, record)
+	}
+
 	if record == nil {
 		return errors.New("invalid record to delete")
 	}
@@ -412,6 +453,10 @@ func (this *DNSPodProvider) doAPI(path string, params map[string]string, respPtr
 
 // DefaultRoute 默认线路
 func (this *DNSPodProvider) DefaultRoute() string {
+	if this.tencentDNSProvider != nil {
+		return this.tencentDNSProvider.DefaultRoute()
+	}
+
 	if this.isInternational() {
 		return "Default"
 	}
