@@ -89,7 +89,9 @@ func (this *NodeGrantDAO) CreateGrant(tx *dbs.Tx, adminId int64, name string, me
 		op.PrivateKey = privateKey
 		op.Passphrase = passphrase
 	}
-	op.Su = su
+	if username != "root" { // only for non-root user
+		op.Su = su
+	}
 	op.Description = description
 	op.NodeId = nodeId
 	op.State = NodeGrantStateEnabled
@@ -117,7 +119,11 @@ func (this *NodeGrantDAO) UpdateGrant(tx *dbs.Tx, grantId int64, name string, me
 		op.PrivateKey = privateKey
 		op.Passphrase = passphrase
 	}
-	op.Su = su
+	if username != "root" { // only for non-root user
+		op.Su = su
+	} else {
+		op.Su = false
+	}
 	op.Description = description
 	op.NodeId = nodeId
 	err := this.Save(tx, op)
