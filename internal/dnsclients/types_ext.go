@@ -10,10 +10,6 @@ import (
 // FindProvider 查找服务商实例
 func FindProvider(providerType ProviderType, providerId int64) ProviderInterface {
 	switch providerType {
-	case ProviderTypeTencentDNS:
-		return &TencentDNSProvider{
-			ProviderId: providerId,
-		}
 	case ProviderTypeDNSPod:
 		return &DNSPodProvider{
 			ProviderId: providerId,
