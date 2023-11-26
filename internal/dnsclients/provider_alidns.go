@@ -128,7 +128,7 @@ func (this *AliDNSProvider) GetRoutes(domain string) (routes []*dnstypes.Route, 
 	}
 	for _, line := range resp.RecordLines.RecordLine {
 		routes = append(routes, &dnstypes.Route{
-			Name: line.LineName,
+			Name: line.LineDisplayName,
 			Code: line.LineCode,
 		})
 	}
