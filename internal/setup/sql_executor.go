@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
@@ -259,7 +260,16 @@ func (this *SQLExecutor) checkCluster(db *dbs.DB) error {
 		return err
 	}
 
-	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret, dns) VALUES (?, ?, ?, ?, ?, ?)", "默认集群", 1, 1, uniqueId, secret, string(clusterDNSConfigJSON))
+	var defaultDNSName = "g" + rands.HexString(6) + ".cdn"
+	{
+		var b = make([]byte, 3)
+		_, err = rand.Read(b)
+		if err == nil {
+			defaultDNSName = fmt.Sprintf("g%x.cdn", b)
+		}
+	}
+
+	_, err = db.Exec("INSERT INTO edgeNodeClusters (name, useAllAPINodes, state, uniqueId, secret, dns, dnsName) VALUES (?, ?, ?, ?, ?, ?, ?)", "默认集群", 1, 1, uniqueId, secret, string(clusterDNSConfigJSON), defaultDNSName)
 	if err != nil {
 		return err
 	}
