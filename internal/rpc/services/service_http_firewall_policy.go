@@ -33,7 +33,7 @@ func (this *HTTPFirewallPolicyService) FindAllEnabledHTTPFirewallPolicies(ctx co
 		return nil, err
 	}
 
-	result := []*pb.HTTPFirewallPolicy{}
+	var result = []*pb.HTTPFirewallPolicy{}
 	for _, p := range policies {
 		result = append(result, &pb.HTTPFirewallPolicy{
 			Id:               int64(p.Id),
@@ -395,7 +395,7 @@ func (this *HTTPFirewallPolicyService) ListEnabledHTTPFirewallPolicies(ctx conte
 		return nil, err
 	}
 
-	result := []*pb.HTTPFirewallPolicy{}
+	var result = []*pb.HTTPFirewallPolicy{}
 	for _, p := range policies {
 		result = append(result, &pb.HTTPFirewallPolicy{
 			Id:               int64(p.Id),
@@ -488,17 +488,21 @@ func (this *HTTPFirewallPolicyService) FindEnabledHTTPFirewallPolicy(ctx context
 	if policy == nil {
 		return &pb.FindEnabledHTTPFirewallPolicyResponse{HttpFirewallPolicy: nil}, nil
 	}
-	return &pb.FindEnabledHTTPFirewallPolicyResponse{HttpFirewallPolicy: &pb.HTTPFirewallPolicy{
-		Id:           int64(policy.Id),
-		ServerId:     int64(policy.ServerId),
-		Name:         policy.Name,
-		Description:  policy.Description,
-		IsOn:         policy.IsOn,
-		InboundJSON:  policy.Inbound,
-		OutboundJSON: policy.Outbound,
-		Mode:         policy.Mode,
-		SynFloodJSON: policy.SynFlood,
-	}}, nil
+	return &pb.FindEnabledHTTPFirewallPolicyResponse{
+		HttpFirewallPolicy: &pb.HTTPFirewallPolicy{
+			Id:                 int64(policy.Id),
+			ServerId:           int64(policy.ServerId),
+			Name:               policy.Name,
+			Description:        policy.Description,
+			IsOn:               policy.IsOn,
+			InboundJSON:        policy.Inbound,
+			OutboundJSON:       policy.Outbound,
+			Mode:               policy.Mode,
+			SynFloodJSON:       policy.SynFlood,
+			BlockOptionsJSON:   policy.BlockOptions,
+			CaptchaOptionsJSON: policy.CaptchaOptions,
+		},
+	}, nil
 }
 
 // ImportHTTPFirewallPolicy 导入策略数据
