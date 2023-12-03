@@ -33,7 +33,7 @@ func TestZero_Map(t *testing.T) {
 
 	var stat2 = &runtime.MemStats{}
 	runtime.ReadMemStats(stat2)
-	t.Log((stat2.HeapInuse-stat1.HeapInuse)/1024/1024, "MB")
+	t.Log((stat2.HeapInuse-stat1.HeapInuse)/1024/1024, "MiB")
 	t.Log(len(m))
 
 	_, ok := m[1024]
