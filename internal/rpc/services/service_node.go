@@ -2257,3 +2257,39 @@ func (this *NodeService) UpdateNodeAPIConfig(ctx context.Context, req *pb.Update
 
 	return this.Success()
 }
+
+// FindNodeWebPPolicies 查找节点的WebP策略
+func (this *NodeService) FindNodeWebPPolicies(ctx context.Context, req *pb.FindNodeWebPPoliciesRequest) (*pb.FindNodeWebPPoliciesResponse, error) {
+	nodeId, err := this.ValidateNode(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	clusterIds, err := models.SharedNodeDAO.FindEnabledAndOnNodeClusterIds(tx, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbPolicies = []*pb.FindNodeWebPPoliciesResponse_WebPPolicy{}
+	for _, clusterId := range clusterIds {
+		policy, err := models.SharedNodeClusterDAO.FindClusterWebPPolicy(tx, clusterId, nil)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		policyJSON, err := json.Marshal(policy)
+		if err != nil {
+			return nil, err
+		}
+		pbPolicies = append(pbPolicies, &pb.FindNodeWebPPoliciesResponse_WebPPolicy{
+			NodeClusterId:  clusterId,
+			WebPPolicyJSON: policyJSON,
+		})
+	}
+	return &pb.FindNodeWebPPoliciesResponse{
+		WebPPolicies: pbPolicies,
+	}, nil
+}

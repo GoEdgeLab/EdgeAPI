@@ -31,6 +31,7 @@ const (
 	NodeTaskTypeHTTPCCPolicyChanged          NodeTaskType = "httpCCPolicyChanged"          // CC策略变化
 	NodeTaskTypeHTTP3PolicyChanged           NodeTaskType = "http3PolicyChanged"           // HTTP3策略变化
 	NodeTaskTypeNetworkSecurityPolicyChanged NodeTaskType = "networkSecurityPolicyChanged" // 网络安全策略变化
+	NodeTaskTypeWebPPolicyChanged            NodeTaskType = "webPPolicyChanged"            // WebP策略变化
 	NodeTaskTypeUpdatingServers              NodeTaskType = "updatingServers"              // 更新一组服务
 	NodeTaskTypeTOAChanged                   NodeTaskType = "toaChanged"                   // TOA配置变化
 

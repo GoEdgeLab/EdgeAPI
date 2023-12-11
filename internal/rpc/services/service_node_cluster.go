@@ -1126,14 +1126,14 @@ func (this *NodeClusterService) FindEnabledNodeClusterConfigInfo(ctx context.Con
 
 	// webp
 	if models.IsNotNull(cluster.Webp) {
-		var webpPolicy = &nodeconfigs.WebPImagePolicy{}
+		var webpPolicy = nodeconfigs.NewWebPImagePolicy()
 		err = json.Unmarshal(cluster.Webp, webpPolicy)
 		if err != nil {
 			return nil, err
 		}
-		result.WebpIsOn = webpPolicy.IsOn
+		result.WebPIsOn = webpPolicy.IsOn
 	} else {
-		result.WebpIsOn = nodeconfigs.DefaultWebPImagePolicy.IsOn
+		result.WebPIsOn = nodeconfigs.DefaultWebPImagePolicy.IsOn
 	}
 
 	// UAM
@@ -1247,8 +1247,8 @@ func (this *NodeClusterService) UpdateNodeClusterWebPPolicy(ctx context.Context,
 		return nil, err
 	}
 
-	var webpPolicy = &nodeconfigs.WebPImagePolicy{}
-	err = json.Unmarshal(req.WebpPolicyJSON, webpPolicy)
+	var webpPolicy = nodeconfigs.NewWebPImagePolicy()
+	err = json.Unmarshal(req.WebPPolicyJSON, webpPolicy)
 	if err != nil {
 		return nil, err
 	}

@@ -1151,7 +1151,7 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 
 		// webp
 		if IsNotNull(nodeCluster.Webp) {
-			var webpPolicy = &nodeconfigs.WebPImagePolicy{}
+			var webpPolicy = nodeconfigs.NewWebPImagePolicy()
 			err = json.Unmarshal(nodeCluster.Webp, webpPolicy)
 			if err != nil {
 				return nil, err

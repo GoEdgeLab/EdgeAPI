@@ -1043,7 +1043,7 @@ func (this *NodeClusterDAO) UpdateClusterWebPPolicy(tx *dbs.Tx, clusterId int64,
 			return err
 		}
 
-		return this.NotifyUpdate(tx, clusterId)
+		return this.NotifyWebPPolicyUpdate(tx, clusterId)
 	}
 
 	webpPolicyJSON, err := json.Marshal(webpPolicy)
@@ -1058,7 +1058,7 @@ func (this *NodeClusterDAO) UpdateClusterWebPPolicy(tx *dbs.Tx, clusterId int64,
 		return err
 	}
 
-	return this.NotifyUpdate(tx, clusterId)
+	return this.NotifyWebPPolicyUpdate(tx, clusterId)
 }
 
 // FindClusterWebPPolicy 查询WebP设置
@@ -1083,7 +1083,7 @@ func (this *NodeClusterDAO) FindClusterWebPPolicy(tx *dbs.Tx, clusterId int64, c
 		return nodeconfigs.DefaultWebPImagePolicy, nil
 	}
 
-	var policy = &nodeconfigs.WebPImagePolicy{}
+	var policy = nodeconfigs.NewWebPImagePolicy()
 	err = json.Unmarshal(webpJSON, policy)
 	if err != nil {
 		return nil, err
@@ -1516,6 +1516,11 @@ func (this *NodeClusterDAO) NotifyHTTPPagesPolicyUpdate(tx *dbs.Tx, clusterId in
 // NotifyTOAUpdate 通知TOA变化
 func (this *NodeClusterDAO) NotifyTOAUpdate(tx *dbs.Tx, clusterId int64) error {
 	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeTOAChanged)
+}
+
+// NotifyWebPPolicyUpdate 通知WebP策略更新
+func (this *NodeClusterDAO) NotifyWebPPolicyUpdate(tx *dbs.Tx, clusterId int64) error {
+	return SharedNodeTaskDAO.CreateClusterTask(tx, nodeconfigs.NodeRoleNode, clusterId, 0, 0, NodeTaskTypeWebPPolicyChanged)
 }
 
 // NotifyDNSUpdate 通知DNS更新
