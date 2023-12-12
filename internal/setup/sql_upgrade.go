@@ -101,6 +101,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"1.2.10", upgradeV1_2_10,
 	},
+	{
+		"1.3.1.1", upgradeV1_3_2, // 1.3.2
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -809,6 +812,341 @@ func upgradeV1_2_10(db *dbs.DB) error {
 							return err
 						}
 					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// 1.3.2
+func upgradeV1_3_2(db *dbs.DB) error {
+	// waf
+	{
+		var disableSet = func(setId int64) error {
+			_, err := db.Exec("UPDATE edgeHTTPFirewallRuleSets SET state=0 WHERE id=?", setId)
+			return err
+		}
+
+		var addRuleToGroup = func(groupId int64, setCode string, setName string, actions []*firewallconfigs.HTTPFirewallActionConfig, ruleParam string, ruleOperator string, value string) error {
+			actionsJSON, err := json.Marshal(actions)
+			if err != nil {
+				return err
+			}
+
+			// rule
+			ruleResult, err := db.Exec("INSERT INTO edgeHTTPFirewallRules (isOn, param, operator, value, isCaseInsensitive, state) VALUES (1, ?, ?, ?, 0, 1)", ruleParam, ruleOperator, value)
+			if err != nil {
+				return err
+			}
+			ruleId, err := ruleResult.LastInsertId()
+			if err != nil {
+				return err
+			}
+			var ruleRefs = []*firewallconfigs.HTTPFirewallRuleRef{
+				{
+					IsOn:   true,
+					RuleId: ruleId,
+				},
+			}
+			ruleRefsJSON, err := json.Marshal(ruleRefs)
+			if err != nil {
+				return err
+			}
+
+			// set
+			setResult, err := db.Exec("INSERT INTO edgeHTTPFirewallRuleSets (isOn, code, name, rules, connector, state, actions) VALUES (1, ?, ?, ?, 'or', 1, ?)", setCode, setName, ruleRefsJSON, actionsJSON)
+			if err != nil {
+				return err
+			}
+			setId, err := setResult.LastInsertId()
+			if err != nil {
+				return err
+			}
+			var setRefs = []*firewallconfigs.HTTPFirewallRuleSetRef{
+				{
+					IsOn:  true,
+					SetId: setId,
+				},
+			}
+			setRefsJSON, err := json.Marshal(setRefs)
+			if err != nil {
+				return err
+			}
+
+			// group
+			_, err = db.Exec("UPDATE edgeHTTPFirewallRuleGroups SET sets=? WHERE id=?", setRefsJSON, groupId)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+		// sql injection
+		{
+			ruleGroups, _, err := db.FindOnes("SELECT id, sets FROM edgeHTTPFirewallRuleGroups WHERE code='sqlInjection' AND state=1")
+			if err != nil {
+				return err
+			}
+			for _, ruleGroup := range ruleGroups {
+				var setsJSON = ruleGroup.GetBytes("sets")
+				if len(setsJSON) == 0 {
+					continue
+				}
+
+				var setRefs = []*firewallconfigs.HTTPFirewallRuleSetRef{}
+				err = json.Unmarshal(setsJSON, &setRefs)
+				if err != nil {
+					continue
+				}
+				if len(setRefs) != 5 {
+					continue
+				}
+
+				var isChanged = false
+				for setIndex, setRef := range setRefs {
+					set, setErr := db.FindOne("SELECT id, rules, isOn, actions FROM edgeHTTPFirewallRuleSets WHERE id=? AND state=1", setRef.SetId)
+					if setErr != nil {
+						return setErr
+					}
+					if set == nil {
+						isChanged = true
+						break
+					}
+					var rulesJSON = set.GetBytes("rules")
+					if len(rulesJSON) == 0 {
+						isChanged = true
+						break
+					}
+					var ruleRefs = []*firewallconfigs.HTTPFirewallRuleRef{}
+					err = json.Unmarshal(rulesJSON, &ruleRefs)
+					if err != nil {
+						return err
+					}
+					if len(ruleRefs) < 1 {
+						isChanged = true
+						break
+					}
+
+					var actionsJSON = set.GetBytes("actions")
+					if len(actionsJSON) == 0 {
+						isChanged = true
+						break
+					}
+					var actions = []*firewallconfigs.HTTPFirewallActionConfig{}
+					err = json.Unmarshal(actionsJSON, &actions)
+					if err != nil {
+						return err
+					}
+					if !(len(actions) == 1 && actions[0].Code == firewallconfigs.HTTPFirewallActionBlock) {
+						isChanged = true
+						break
+					}
+
+					var rules = []maps.Map{}
+					for _, ruleRef := range ruleRefs {
+						rule, ruleErr := db.FindOne("SELECT * FROM edgeHTTPFirewallRules WHERE id=? AND state=1", ruleRef.RuleId)
+						if ruleErr != nil {
+							return ruleErr
+						}
+						if rule == nil {
+							isChanged = true
+							break
+						}
+						rules = append(rules, rule)
+					}
+					if isChanged {
+						break
+					}
+					if len(rules) < 1 {
+						isChanged = true
+						break
+					}
+
+					switch setIndex {
+					case 0:
+						var rule = rules[0]
+						if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `union[\s/\*]+select`) {
+							isChanged = true
+						}
+					case 1:
+						var rule = rules[0]
+						if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `/\*(!|\x00)`) {
+							isChanged = true
+						}
+					case 2:
+						if len(rules) != 4 {
+							isChanged = true
+						} else {
+							{
+								var rule = rules[0]
+								if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `\s(and|or|rlike)\s+(if|updatexml)\s*\(`) {
+									isChanged = true
+								}
+							}
+
+							{
+								var rule = rules[1]
+								if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `\s+(and|or|rlike)\s+(select|case)\s+`) {
+									isChanged = true
+								}
+							}
+
+							{
+								var rule = rules[2]
+								if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `\s+(and|or|procedure)\s+[\w\p{L}]+\s*=\s*[\w\p{L}]+(\s|$|--|#)`) {
+									isChanged = true
+								}
+							}
+
+							{
+								var rule = rules[3]
+								if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `\(\s*case\s+when\s+[\w\p{L}]+\s*=\s*[\w\p{L}]+\s+then\s+`) {
+									isChanged = true
+								}
+							}
+						}
+					case 3:
+						var rule = rules[0]
+						if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `\b(updatexml|extractvalue|ascii|ord|char|chr|count|concat|rand|floor|substr|length|len|user|database|benchmark|analyse)\s*\(.*\)`) {
+							isChanged = true
+						}
+					case 4:
+						var rule = rules[0]
+						if !(rule.GetString("param") == "${requestAll}" && rule.GetString("operator") == "match" && rule.GetString("value") == `;\s*(declare|use|drop|create|exec|delete|update|insert)\s`) {
+							isChanged = true
+						}
+					}
+				}
+				if isChanged {
+					continue
+				}
+
+				for _, setRef := range setRefs {
+					err = disableSet(setRef.SetId)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = addRuleToGroup(ruleGroup.GetInt64("id"), "7010", "SQL注入检测", []*firewallconfigs.HTTPFirewallActionConfig{
+					{
+						Code:    firewallconfigs.HTTPFirewallActionPage,
+						Options: maps.Map{"status": 403, "body": ""},
+					},
+				}, "${requestAll}", firewallconfigs.HTTPFirewallRuleOperatorContainsSQLInjection, "")
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// xss
+		{
+			ruleGroups, _, err := db.FindOnes("SELECT id, sets FROM edgeHTTPFirewallRuleGroups WHERE code='xss' AND state=1")
+			if err != nil {
+				return err
+			}
+			for _, ruleGroup := range ruleGroups {
+				var setsJSON = ruleGroup.GetBytes("sets")
+				if len(setsJSON) == 0 {
+					continue
+				}
+
+				var setRefs = []*firewallconfigs.HTTPFirewallRuleSetRef{}
+				err = json.Unmarshal(setsJSON, &setRefs)
+				if err != nil {
+					continue
+				}
+				if len(setRefs) != 3 {
+					continue
+				}
+
+				var isChanged = false
+				for setIndex, setRef := range setRefs {
+					set, setErr := db.FindOne("SELECT id, rules, isOn, actions FROM edgeHTTPFirewallRuleSets WHERE id=? AND state=1", setRef.SetId)
+					if setErr != nil {
+						return setErr
+					}
+					if set == nil {
+						isChanged = true
+						break
+					}
+					var rulesJSON = set.GetBytes("rules")
+					if len(rulesJSON) == 0 {
+						isChanged = true
+						break
+					}
+					var ruleRefs = []*firewallconfigs.HTTPFirewallRuleRef{}
+					err = json.Unmarshal(rulesJSON, &ruleRefs)
+					if err != nil {
+						return err
+					}
+					if len(ruleRefs) != 1 {
+						isChanged = true
+						break
+					}
+
+					var actionsJSON = set.GetBytes("actions")
+					if len(actionsJSON) == 0 {
+						isChanged = true
+						break
+					}
+					var actions = []*firewallconfigs.HTTPFirewallActionConfig{}
+					err = json.Unmarshal(actionsJSON, &actions)
+					if err != nil {
+						return err
+					}
+					if !(len(actions) == 1 && actions[0].Code == firewallconfigs.HTTPFirewallActionBlock) {
+						isChanged = true
+						break
+					}
+
+					rule, ruleErr := db.FindOne("SELECT * FROM edgeHTTPFirewallRules WHERE id=? AND state=1", ruleRefs[0].RuleId)
+					if ruleErr != nil {
+						return ruleErr
+					}
+					if rule == nil {
+						isChanged = true
+						break
+					}
+
+					switch setIndex {
+					case 0:
+						if !(rule.GetString("param") == "${requestURI}" && rule.GetString("operator") == "match" && rule.GetString("value") == `(onmouseover|onmousemove|onmousedown|onmouseup|onerror|onload|onclick|ondblclick|onkeydown|onkeyup|onkeypress)\s*=`) {
+							isChanged = true
+						}
+					case 1:
+						if !(rule.GetString("param") == "${requestURI}" && rule.GetString("operator") == "match" && rule.GetString("value") == `(alert|eval|prompt|confirm)\s*\(`) {
+							isChanged = true
+						}
+					case 2:
+						if !(rule.GetString("param") == "${requestURI}" && rule.GetString("operator") == "match" && rule.GetString("value") == `<(script|iframe|link)`) {
+							isChanged = true
+						}
+					}
+				}
+				if isChanged {
+					continue
+				}
+
+				for _, setRef := range setRefs {
+					err = disableSet(setRef.SetId)
+					if err != nil {
+						return err
+					}
+				}
+
+				err = addRuleToGroup(ruleGroup.GetInt64("id"), "1010", "XSS攻击检测", []*firewallconfigs.HTTPFirewallActionConfig{
+					{
+						Code:    firewallconfigs.HTTPFirewallActionPage,
+						Options: maps.Map{"status": 403, "body": ""},
+					},
+				}, "${requestAll}", firewallconfigs.HTTPFirewallRuleOperatorContainsXSS, "")
+				if err != nil {
+					return err
 				}
 			}
 		}
