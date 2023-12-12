@@ -260,7 +260,7 @@ func (this *AdminDAO) FindAllAdminModules(tx *dbs.Tx) (result []*Admin, err erro
 	_, err = this.Query(tx).
 		State(AdminStateEnabled).
 		Attr("isOn", true).
-		Result("id", "modules", "isSuper", "fullname", "theme").
+		Result("id", "modules", "isSuper", "fullname", "theme", "lang").
 		Slice(&result).
 		FindAll()
 	return
