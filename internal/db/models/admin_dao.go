@@ -313,6 +313,14 @@ func (this *AdminDAO) UpdateAdminTheme(tx *dbs.Tx, adminId int64, theme string) 
 		UpdateQuickly()
 }
 
+// UpdateAdminLang 设置管理员语言
+func (this *AdminDAO) UpdateAdminLang(tx *dbs.Tx, adminId int64, langCode string) error {
+	return this.Query(tx).
+		Pk(adminId).
+		Set("lang", langCode).
+		UpdateQuickly()
+}
+
 // CheckSuperAdmin 检查管理员是否为超级管理员
 func (this *AdminDAO) CheckSuperAdmin(tx *dbs.Tx, adminId int64) (bool, error) {
 	if adminId <= 0 {

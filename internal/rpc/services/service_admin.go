@@ -740,3 +740,18 @@ func (this *AdminService) UpdateAdminTheme(ctx context.Context, req *pb.UpdateAd
 	}
 	return this.Success()
 }
+
+// UpdateAdminLang 修改管理员使用的语言
+func (this *AdminService) UpdateAdminLang(ctx context.Context, req *pb.UpdateAdminLangRequest) (*pb.RPCSuccess, error) {
+	adminId, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var tx = this.NullTx()
+
+	err = models.SharedAdminDAO.UpdateAdminLang(tx, adminId, req.LangCode)
+	if err != nil {
+		return nil, err
+	}
+	return this.Success()
+}
