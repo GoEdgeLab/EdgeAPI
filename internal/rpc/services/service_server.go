@@ -2414,7 +2414,7 @@ func (this *ServerService) UploadServerHTTPRequestStat(ctx context.Context, req 
 	return this.Success()
 }
 
-// CheckServerNameDuplicationInNodeCluster 检查域名是否已经存在
+// CheckServerNameDuplicationInNodeCluster 检查域名是否在集群中已经存在
 func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.Context, req *pb.CheckServerNameDuplicationInNodeClusterRequest) (*pb.CheckServerNameDuplicationInNodeClusterResponse, error) {
 	_, _, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
@@ -2439,6 +2439,47 @@ func (this *ServerService) CheckServerNameDuplicationInNodeCluster(ctx context.C
 	}
 
 	return &pb.CheckServerNameDuplicationInNodeClusterResponse{DuplicatedServerNames: duplicatedServerNames}, nil
+}
+
+// CheckServerNameInServer 检查域名是否在网站中已经绑定
+func (this *ServerService) CheckServerNameInServer(ctx context.Context, req *pb.CheckServerNameInServerRequest) (*pb.CheckServerNameInServerResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("invalid serverId '" + types.String(req.ServerId) + "'")
+	}
+
+	var tx = this.NullTx()
+
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(req.ServerName) == 0 {
+		return &pb.CheckServerNameInServerResponse{
+			Exists: false,
+		}, nil
+	}
+
+	serverNamesJSON, _, _, _, _, err := models.SharedServerDAO.FindServerServerNames(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	var serverNames = []*serverconfigs.ServerNameConfig{}
+	err = json.Unmarshal(serverNamesJSON, &serverNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CheckServerNameInServerResponse{
+		Exists: lists.ContainsString(serverconfigs.PlainServerNames(serverNames), req.ServerName),
+	}, nil
 }
 
 // FindLatestServers 查找最近访问的服务

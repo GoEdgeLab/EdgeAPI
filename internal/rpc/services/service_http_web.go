@@ -3,12 +3,16 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
+	"github.com/TeaOSLab/EdgeAPI/internal/utils/domainutils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/iwind/TeaGo/dbs"
+	"github.com/iwind/TeaGo/lists"
+	"strings"
 )
 
 type HTTPWebService struct {
@@ -532,6 +536,49 @@ func (this *HTTPWebService) UpdateHTTPWebCache(ctx context.Context, req *pb.Upda
 
 	var tx = this.NullTx()
 
+	var cacheConfig = &serverconfigs.HTTPCacheConfig{}
+	if len(req.CacheJSON) > 0 {
+		err = json.Unmarshal(req.CacheJSON, cacheConfig)
+		if err != nil {
+			return nil, err
+		}
+		err = cacheConfig.Init()
+		if err != nil {
+			return nil, fmt.Errorf("validate cache config failed: %w", err)
+		}
+	}
+
+	// validate host
+	if cacheConfig.Key != nil && cacheConfig.Key.IsOn {
+		if cacheConfig.Key.Scheme != "http" && cacheConfig.Key.Scheme != "https" {
+			return nil, errors.New("key scheme must be 'http' or 'https'")
+		}
+
+		cacheConfig.Key.Host = strings.ToLower(cacheConfig.Key.Host)
+		if !domainutils.ValidateDomainFormat(cacheConfig.Key.Host) {
+			return nil, errors.New("key host must be a valid domain")
+		}
+
+		serverId, err := models.SharedHTTPWebDAO.FindWebServerId(tx, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+		if serverId > 0 {
+			serverNamesJSON, _, _, _, _, err := models.SharedServerDAO.FindServerServerNames(tx, serverId)
+			if err != nil {
+				return nil, err
+			}
+			var serverNames = []*serverconfigs.ServerNameConfig{}
+			err = json.Unmarshal(serverNamesJSON, &serverNames)
+			if err != nil {
+				return nil, err
+			}
+			if !lists.ContainsString(serverconfigs.PlainServerNames(serverNames), cacheConfig.Key.Host) {
+				return nil, errors.New("key host '" + cacheConfig.Key.Host + "' not exists in server names")
+			}
+		}
+	}
+
 	err = models.SharedHTTPWebDAO.UpdateWebCache(tx, req.HttpWebId, req.CacheJSON)
 	if err != nil {
 		return nil, err
@@ -1028,4 +1075,31 @@ func (this *HTTPWebService) FindHTTPWebUserAgent(ctx context.Context, req *pb.Fi
 	return &pb.FindHTTPWebUserAgentResponse{
 		UserAgentJSON: configJSON,
 	}, nil
+}
+
+// FindServerIdWithHTTPWebId 根据WebId查找ServerId
+func (this *HTTPWebService) FindServerIdWithHTTPWebId(ctx context.Context, req *pb.FindServerIdWithHTTPWebIdRequest) (*pb.FindServerIdWithHTTPWebIdResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.HttpWebId <= 0 {
+		return nil, errors.New("invalid 'httpWebId'")
+	}
+
+	var tx = this.NullTx()
+	serverId, err := models.SharedHTTPWebDAO.FindWebServerId(tx, req.HttpWebId)
+	if err != nil {
+		return nil, err
+	}
+
+	if serverId > 0 && userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &pb.FindServerIdWithHTTPWebIdResponse{ServerId: serverId}, nil
 }
