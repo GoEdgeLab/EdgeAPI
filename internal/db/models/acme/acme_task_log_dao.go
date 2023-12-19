@@ -1,6 +1,7 @@
 package acme
 
 import (
+	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -31,7 +32,7 @@ func init() {
 func (this *ACMETaskLogDAO) CreateACMETaskLog(tx *dbs.Tx, taskId int64, isOk bool, errMsg string) error {
 	var op = NewACMETaskLogOperator()
 	op.TaskId = taskId
-	op.Error = errMsg
+	op.Error = utils.LimitString(errMsg, 1024)
 	op.IsOk = isOk
 	err := this.Save(tx, op)
 	return err
