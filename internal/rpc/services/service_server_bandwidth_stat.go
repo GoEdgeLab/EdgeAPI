@@ -80,13 +80,13 @@ func init() {
 							// 套餐统计
 							if stat.UserPlanId > 0 {
 								// 总体统计
-								err = models.SharedUserPlanStatDAO.IncreaseUserPlanStat(tx, stat.UserPlanId, stat.TotalBytes, stat.CountRequests)
+								err = models.SharedUserPlanStatDAO.IncreaseUserPlanStat(tx, stat.UserPlanId, stat.TotalBytes, stat.CountRequests, stat.CountWebsocketConnections)
 								if err != nil {
 									remotelogs.Error("ServerBandwidthStatService", "IncreaseUserPlanStat: "+err.Error())
 								}
 
 								// 分时统计
-								err = models.SharedUserPlanBandwidthStatDAO.UpdateUserPlanBandwidth(tx, stat.UserId, stat.UserPlanId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
+								err = models.SharedUserPlanBandwidthStatDAO.UpdateUserPlanBandwidth(tx, stat.UserId, stat.UserPlanId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests, stat.CountWebsocketConnections)
 							}
 						}
 
@@ -146,22 +146,24 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 			oldStat.CountRequests += stat.CountRequests
 			oldStat.CountCachedRequests += stat.CountCachedRequests
 			oldStat.CountAttackRequests += stat.CountAttackRequests
+			oldStat.CountWebsocketConnections += stat.CountWebsocketConnections
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
-				Id:                  0,
-				NodeRegionId:        stat.NodeRegionId,
-				UserId:              stat.UserId,
-				ServerId:            stat.ServerId,
-				Day:                 stat.Day,
-				TimeAt:              stat.TimeAt,
-				Bytes:               stat.Bytes,
-				TotalBytes:          stat.TotalBytes,
-				CachedBytes:         stat.CachedBytes,
-				AttackBytes:         stat.AttackBytes,
-				CountRequests:       stat.CountRequests,
-				CountCachedRequests: stat.CountCachedRequests,
-				CountAttackRequests: stat.CountAttackRequests,
-				UserPlanId:          stat.UserPlanId,
+				Id:                        0,
+				NodeRegionId:              stat.NodeRegionId,
+				UserId:                    stat.UserId,
+				ServerId:                  stat.ServerId,
+				Day:                       stat.Day,
+				TimeAt:                    stat.TimeAt,
+				Bytes:                     stat.Bytes,
+				TotalBytes:                stat.TotalBytes,
+				CachedBytes:               stat.CachedBytes,
+				AttackBytes:               stat.AttackBytes,
+				CountRequests:             stat.CountRequests,
+				CountCachedRequests:       stat.CountCachedRequests,
+				CountAttackRequests:       stat.CountAttackRequests,
+				CountWebsocketConnections: stat.CountWebsocketConnections,
+				UserPlanId:                stat.UserPlanId,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()

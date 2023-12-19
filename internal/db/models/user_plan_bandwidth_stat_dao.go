@@ -59,7 +59,7 @@ func init() {
 
 // UpdateUserPlanBandwidth 写入数据
 // 暂时不使用region区分
-func (this *UserPlanBandwidthStatDAO) UpdateUserPlanBandwidth(tx *dbs.Tx, userId int64, userPlanId int64, regionId int64, day string, timeAt string, bandwidthBytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64) error {
+func (this *UserPlanBandwidthStatDAO) UpdateUserPlanBandwidth(tx *dbs.Tx, userId int64, userPlanId int64, regionId int64, day string, timeAt string, bandwidthBytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64, countWebsocketConnections int64) error {
 	if userId <= 0 || userPlanId <= 0 {
 		return nil
 	}
@@ -73,29 +73,32 @@ func (this *UserPlanBandwidthStatDAO) UpdateUserPlanBandwidth(tx *dbs.Tx, userId
 		Param("countRequests", countRequests).
 		Param("countCachedRequests", countCachedRequests).
 		Param("countAttackRequests", countAttackRequests).
+		Param("countWebsocketConnections", countWebsocketConnections).
 		InsertOrUpdateQuickly(maps.Map{
-			"userId":              userId,
-			"userPlanId":          userPlanId,
-			"regionId":            regionId,
-			"day":                 day,
-			"timeAt":              timeAt,
-			"bytes":               bandwidthBytes,
-			"totalBytes":          totalBytes,
-			"avgBytes":            totalBytes / 300,
-			"cachedBytes":         cachedBytes,
-			"attackBytes":         attackBytes,
-			"countRequests":       countRequests,
-			"countCachedRequests": countCachedRequests,
-			"countAttackRequests": countAttackRequests,
+			"userId":                    userId,
+			"userPlanId":                userPlanId,
+			"regionId":                  regionId,
+			"day":                       day,
+			"timeAt":                    timeAt,
+			"bytes":                     bandwidthBytes,
+			"totalBytes":                totalBytes,
+			"avgBytes":                  totalBytes / 300,
+			"cachedBytes":               cachedBytes,
+			"attackBytes":               attackBytes,
+			"countRequests":             countRequests,
+			"countCachedRequests":       countCachedRequests,
+			"countAttackRequests":       countAttackRequests,
+			"countWebsocketConnections": countWebsocketConnections,
 		}, maps.Map{
-			"bytes":               dbs.SQL("bytes+:bytes"),
-			"avgBytes":            dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
-			"totalBytes":          dbs.SQL("totalBytes+:totalBytes"),
-			"cachedBytes":         dbs.SQL("cachedBytes+:cachedBytes"),
-			"attackBytes":         dbs.SQL("attackBytes+:attackBytes"),
-			"countRequests":       dbs.SQL("countRequests+:countRequests"),
-			"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
-			"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
+			"bytes":                     dbs.SQL("bytes+:bytes"),
+			"avgBytes":                  dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
+			"totalBytes":                dbs.SQL("totalBytes+:totalBytes"),
+			"cachedBytes":               dbs.SQL("cachedBytes+:cachedBytes"),
+			"attackBytes":               dbs.SQL("attackBytes+:attackBytes"),
+			"countRequests":             dbs.SQL("countRequests+:countRequests"),
+			"countCachedRequests":       dbs.SQL("countCachedRequests+:countCachedRequests"),
+			"countAttackRequests":       dbs.SQL("countAttackRequests+:countAttackRequests"),
+			"countWebsocketConnections": dbs.SQL("countWebsocketConnections+:countWebsocketConnections"),
 		})
 }
 
