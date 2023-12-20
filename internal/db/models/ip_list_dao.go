@@ -339,3 +339,16 @@ func (this *IPListDAO) NotifyUpdate(tx *dbs.Tx, listId int64, taskType NodeTaskT
 
 	return nil
 }
+
+// FindServerIdWithListId 查找IP名单对应的网站ID
+func (this *IPListDAO) FindServerIdWithListId(tx *dbs.Tx, listId int64) (serverId int64, err error) {
+	if listId <= 0 {
+		return
+	}
+
+	serverId, err = this.Query(tx).
+		Pk(listId).
+		Result("serverId").
+		FindInt64Col(0)
+	return
+}

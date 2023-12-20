@@ -862,3 +862,29 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 		RegionProvince: nil,
 	}, nil
 }
+
+// FindServerIdWithHTTPFirewallPolicyId 获取防火墙对应的网站ID
+func (this *HTTPFirewallPolicyService) FindServerIdWithHTTPFirewallPolicyId(ctx context.Context, req *pb.FindServerIdWithHTTPFirewallPolicyIdRequest) (*pb.FindServerIdWithHTTPFirewallPolicyIdResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	serverId, err := models.SharedHTTPFirewallPolicyDAO.FindServerIdWithFirewallPolicyId(tx, req.HttpFirewallPolicyId)
+	if err != nil {
+		return nil, err
+	}
+
+	// check user
+	if serverId > 0 && userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &pb.FindServerIdWithHTTPFirewallPolicyIdResponse{
+		ServerId: serverId,
+	}, nil
+}

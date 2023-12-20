@@ -782,3 +782,38 @@ func (this *IPItemService) UpdateIPItemsRead(ctx context.Context, req *pb.Update
 	}
 	return this.Success()
 }
+
+// FindServerIdWithIPItemId 查找IP对应的名单所属网站ID
+func (this *IPItemService) FindServerIdWithIPItemId(ctx context.Context, req *pb.FindServerIdWithIPItemIdRequest) (*pb.FindServerIdWithIPItemIdResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	listId, err := models.SharedIPItemDAO.FindItemListId(tx, req.IpItemId)
+	if err != nil {
+		return nil, err
+	}
+
+	if listId > 0 {
+		var serverId int64
+		serverId, err = models.SharedIPListDAO.FindServerIdWithListId(tx, listId)
+		if err != nil {
+			return nil, err
+		}
+
+		if serverId > 0 {
+			// check user
+			if userId > 0 {
+				err = models.SharedServerDAO.CheckUserServer(tx, userId, serverId)
+				if err != nil {
+					return nil, err
+				}
+			}
+			return &pb.FindServerIdWithIPItemIdResponse{ServerId: serverId}, nil
+		}
+	}
+
+	return &pb.FindServerIdWithIPItemIdResponse{ServerId: 0}, nil
+}

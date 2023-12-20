@@ -618,31 +618,6 @@ func (this *UserService) UpdateAllUsersFeatures(ctx context.Context, req *pb.Upd
 	return this.Success()
 }
 
-// FindUserFeatures 获取用户所有的功能列表
-func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
-	_, userId, err := this.ValidateAdminAndUser(ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	if userId > 0 {
-		req.UserId = userId
-	}
-
-	var tx = this.NullTx()
-
-	features, err := models.SharedUserDAO.FindUserFeatures(tx, req.UserId)
-	if err != nil {
-		return nil, err
-	}
-
-	result := []*pb.UserFeature{}
-	for _, feature := range features {
-		result = append(result, feature.ToPB())
-	}
-
-	return &pb.FindUserFeaturesResponse{Features: result}, nil
-}
-
 // FindAllUserFeatureDefinitions 获取所有的功能定义
 func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req *pb.FindAllUserFeatureDefinitionsRequest) (*pb.FindAllUserFeatureDefinitionsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)
@@ -650,8 +625,8 @@ func (this *UserService) FindAllUserFeatureDefinitions(ctx context.Context, req 
 		return nil, err
 	}
 
-	features := userconfigs.FindAllUserFeatures()
-	result := []*pb.UserFeature{}
+	var features = userconfigs.FindAllUserFeatures()
+	var result = []*pb.UserFeature{}
 	for _, feature := range features {
 		result = append(result, feature.ToPB())
 	}

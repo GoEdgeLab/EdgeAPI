@@ -9,6 +9,7 @@ const (
 	PlanField_ClusterId                   dbs.FieldName = "clusterId"                   // 集群ID
 	PlanField_TrafficLimit                dbs.FieldName = "trafficLimit"                // 流量限制
 	PlanField_Features                    dbs.FieldName = "features"                    // 允许的功能
+	PlanField_HasFullFeatures             dbs.FieldName = "hasFullFeatures"             // 是否有完整的功能
 	PlanField_TrafficPrice                dbs.FieldName = "trafficPrice"                // 流量价格设定
 	PlanField_BandwidthPrice              dbs.FieldName = "bandwidthPrice"              // 带宽价格
 	PlanField_MonthlyPrice                dbs.FieldName = "monthlyPrice"                // 月付
@@ -34,6 +35,7 @@ type Plan struct {
 	ClusterId                   uint32   `field:"clusterId"`                   // 集群ID
 	TrafficLimit                dbs.JSON `field:"trafficLimit"`                // 流量限制
 	Features                    dbs.JSON `field:"features"`                    // 允许的功能
+	HasFullFeatures             bool     `field:"hasFullFeatures"`             // 是否有完整的功能
 	TrafficPrice                dbs.JSON `field:"trafficPrice"`                // 流量价格设定
 	BandwidthPrice              dbs.JSON `field:"bandwidthPrice"`              // 带宽价格
 	MonthlyPrice                float64  `field:"monthlyPrice"`                // 月付
@@ -58,6 +60,7 @@ type PlanOperator struct {
 	ClusterId                   any // 集群ID
 	TrafficLimit                any // 流量限制
 	Features                    any // 允许的功能
+	HasFullFeatures             any // 是否有完整的功能
 	TrafficPrice                any // 流量价格设定
 	BandwidthPrice              any // 带宽价格
 	MonthlyPrice                any // 月付

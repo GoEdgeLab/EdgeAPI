@@ -89,3 +89,28 @@ func (this *UserService) RegisterUser(ctx context.Context, req *pb.RegisterUserR
 		RequireEmailVerification: requireEmailVerification,
 	}, nil
 }
+
+// FindUserFeatures 获取用户所有的功能列表
+func (this *UserService) FindUserFeatures(ctx context.Context, req *pb.FindUserFeaturesRequest) (*pb.FindUserFeaturesResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	if userId > 0 {
+		req.UserId = userId
+	}
+
+	var tx = this.NullTx()
+
+	features, err := models.SharedUserDAO.FindUserFeatures(tx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*pb.UserFeature{}
+	for _, feature := range features {
+		result = append(result, feature.ToPB())
+	}
+
+	return &pb.FindUserFeaturesResponse{Features: result}, nil
+}

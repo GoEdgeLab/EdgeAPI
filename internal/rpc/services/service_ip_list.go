@@ -224,3 +224,29 @@ func (this *IPListService) FindEnabledIPListContainsIP(ctx context.Context, req 
 	}
 	return &pb.FindEnabledIPListContainsIPResponse{IpLists: pbLists}, nil
 }
+
+// FindServerIdWithIPListId 查找IP名单对应的网站ID
+func (this *IPListService) FindServerIdWithIPListId(ctx context.Context, req *pb.FindServerIdWithIPListIdRequest) (*pb.FindServerIdWithIPListIdResponse, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	serverId, err := models.SharedIPListDAO.FindServerIdWithListId(tx, req.IpListId)
+	if err != nil {
+		return nil, err
+	}
+
+	// check user
+	if serverId > 0 && userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, serverId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &pb.FindServerIdWithIPListIdResponse{
+		ServerId: serverId,
+	}, nil
+}

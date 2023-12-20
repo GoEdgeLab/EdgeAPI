@@ -2890,6 +2890,7 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 			User:   nil,
 			Plan: &pb.Plan{
 				Id:                        int64(plan.Id),
+				IsOn:                      plan.IsOn,
 				Name:                      plan.Name,
 				PriceType:                 plan.PriceType,
 				TrafficPriceJSON:          plan.TrafficPrice,
@@ -2897,6 +2898,8 @@ func (this *ServerService) FindServerUserPlan(ctx context.Context, req *pb.FindS
 				TotalServers:              types.Int32(plan.TotalServers),
 				TotalServerNames:          types.Int32(plan.TotalServerNames),
 				TotalServerNamesPerServer: types.Int32(plan.TotalServerNamesPerServer),
+				HasFullFeatures:           plan.HasFullFeatures,
+				FeaturesJSON:              plan.Features,
 			},
 		},
 	}, nil

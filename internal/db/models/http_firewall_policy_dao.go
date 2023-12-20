@@ -444,6 +444,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	var config = &firewallconfigs.HTTPFirewallPolicy{}
 	config.Id = int64(policy.Id)
+	config.ServerId = int64(policy.ServerId)
 	config.IsOn = policy.IsOn
 	config.Name = policy.Name
 	config.Description = policy.Description
@@ -665,6 +666,19 @@ func (this *HTTPFirewallPolicyDAO) FindFirewallPolicyIdsWithServerId(tx *dbs.Tx,
 		result = append(result, int64(one.(*HTTPFirewallPolicy).Id))
 	}
 	return result, nil
+}
+
+// FindServerIdWithFirewallPolicyId 根据策略查找网站ID
+func (this *HTTPFirewallPolicyDAO) FindServerIdWithFirewallPolicyId(tx *dbs.Tx, policyId int64) (serverId int64, err error) {
+	if policyId <= 0 {
+		return
+	}
+
+	serverId, err = this.Query(tx).
+		Pk(policyId).
+		Result("serverId").
+		FindInt64Col(0)
+	return
 }
 
 // NotifyUpdate 通知更新
