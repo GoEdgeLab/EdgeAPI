@@ -11,12 +11,14 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/userconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	stringutil "github.com/iwind/TeaGo/utils/string"
+	"strconv"
 	"strings"
 )
 
@@ -102,7 +104,7 @@ var upgradeFuncs = []*upgradeVersion{
 		"1.2.10", upgradeV1_2_10,
 	},
 	{
-		"1.3.1.1", upgradeV1_3_2, // 1.3.2
+		"1.3.1.3", upgradeV1_3_2, // 1.3.2
 	},
 }
 
@@ -1149,6 +1151,80 @@ func upgradeV1_3_2(db *dbs.DB) error {
 					return err
 				}
 			}
+		}
+	}
+
+	// user register config
+
+	var newAddedFeatureCodes = []string{
+		userconfigs.UserFeatureCodeServerOptimization,
+		userconfigs.UserFeatureCodeServerAuth,
+		userconfigs.UserFeatureCodeServerWebsocket,
+		userconfigs.UserFeatureCodeServerHTTP3,
+		userconfigs.UserFeatureCodeServerCC,
+		userconfigs.UserFeatureCodeServerReferers,
+		userconfigs.UserFeatureCodeServerUserAgent,
+		userconfigs.UserFeatureCodeServerRequestLimit,
+		userconfigs.UserFeatureCodeServerCompression,
+		userconfigs.UserFeatureCodeServerRewriteRules,
+		userconfigs.UserFeatureCodeServerHostRedirects,
+		userconfigs.UserFeatureCodeServerHTTPHeaders,
+		userconfigs.UserFeatureCodeServerPages,
+	}
+
+	{
+		value, err := db.FindCol(0, "SELECT value FROM edgeSysSettings WHERE code=?", systemconfigs.SettingCodeUserRegisterConfig)
+		if err != nil {
+			return err
+		}
+		if value != nil {
+			var valueString = types.String(value)
+			if valueString != "null" && len(valueString) > 0 {
+				var registerConfig = &userconfigs.UserRegisterConfig{}
+				err = json.Unmarshal([]byte(valueString), registerConfig)
+				if err != nil {
+					return err
+				}
+
+				if len(registerConfig.Features) > 0 {
+					var newFeatureCodes = registerConfig.Features
+					var changed = false
+					for _, featureCode := range newAddedFeatureCodes {
+						if !lists.ContainsString(newFeatureCodes, featureCode) {
+							newFeatureCodes = append(newFeatureCodes, featureCode)
+							changed = true
+						}
+					}
+
+					if changed {
+						registerConfig.Features = newFeatureCodes
+						registerConfigJSON, err := json.Marshal(registerConfig)
+						if err != nil {
+							return err
+						}
+						_, err = db.Exec("UPDATE edgeSysSettings SET value=? WHERE code=?", registerConfigJSON, systemconfigs.SettingCodeUserRegisterConfig)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// user features
+	{
+		var sqlPieces []string
+		for _, featureCode := range newAddedFeatureCodes {
+			if strings.Contains(featureCode, "'") {
+				continue
+			}
+			sqlPieces = append(sqlPieces, "'$', '"+featureCode+"'")
+		}
+
+		_, err := db.Exec("UPDATE edgeUsers SET features=JSON_ARRAY_APPEND(features," + strings.Join(sqlPieces, ",") + ") WHERE features IS NOT NULL AND JSON_LENGTH(features)>0 AND NOT JSON_CONTAINS(features, '" + strconv.Quote(newAddedFeatureCodes[0]) + "')")
+		if err != nil {
+			return err
 		}
 	}
 
