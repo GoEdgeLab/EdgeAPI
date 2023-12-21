@@ -6,6 +6,7 @@ const (
 	PlanField_Id                          dbs.FieldName = "id"                          // ID
 	PlanField_IsOn                        dbs.FieldName = "isOn"                        // 是否启用
 	PlanField_Name                        dbs.FieldName = "name"                        // 套餐名
+	PlanField_Description                 dbs.FieldName = "description"                 // 描述
 	PlanField_ClusterId                   dbs.FieldName = "clusterId"                   // 集群ID
 	PlanField_TrafficLimit                dbs.FieldName = "trafficLimit"                // 流量限制
 	PlanField_Features                    dbs.FieldName = "features"                    // 允许的功能
@@ -32,6 +33,7 @@ type Plan struct {
 	Id                          uint32   `field:"id"`                          // ID
 	IsOn                        bool     `field:"isOn"`                        // 是否启用
 	Name                        string   `field:"name"`                        // 套餐名
+	Description                 string   `field:"description"`                 // 描述
 	ClusterId                   uint32   `field:"clusterId"`                   // 集群ID
 	TrafficLimit                dbs.JSON `field:"trafficLimit"`                // 流量限制
 	Features                    dbs.JSON `field:"features"`                    // 允许的功能
@@ -57,6 +59,7 @@ type PlanOperator struct {
 	Id                          any // ID
 	IsOn                        any // 是否启用
 	Name                        any // 套餐名
+	Description                 any // 描述
 	ClusterId                   any // 集群ID
 	TrafficLimit                any // 流量限制
 	Features                    any // 允许的功能
