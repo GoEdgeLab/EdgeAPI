@@ -48,3 +48,8 @@ func (this *PlanService) ListEnabledPlans(ctx context.Context, req *pb.ListEnabl
 func (this *PlanService) SortPlans(ctx context.Context, req *pb.SortPlansRequest) (*pb.RPCSuccess, error) {
 	return this.Success()
 }
+
+// FindAllAvailablePlans 列出所有可用的套餐
+func (this *PlanService) FindAllAvailablePlans(ctx context.Context, req *pb.FindAllAvailablePlansRequest) (*pb.FindAllAvailablePlansResponse, error) {
+	return nil, this.NotImplementedYet()
+}
