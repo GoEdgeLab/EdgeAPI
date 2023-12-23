@@ -27,3 +27,8 @@ func (this *HTTPWebService) UpdateHTTPWebCC(ctx context.Context, req *pb.UpdateH
 func (this *HTTPWebService) FindHTTPWebCC(ctx context.Context, req *pb.FindHTTPWebCCRequest) (*pb.FindHTTPWebCCResponse, error) {
 	return nil, this.NotImplementedYet()
 }
+
+// UpdateHTTPWebRequestScripts 修改请求脚本
+func (this *HTTPWebService) UpdateHTTPWebRequestScripts(ctx context.Context, req *pb.UpdateHTTPWebRequestScriptsRequest) (*pb.RPCSuccess, error) {
+	return nil, this.NotImplementedYet()
+}

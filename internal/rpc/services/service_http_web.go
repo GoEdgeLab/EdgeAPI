@@ -898,28 +898,6 @@ func (this *HTTPWebService) FindHTTPWebRequestLimit(ctx context.Context, req *pb
 	return &pb.FindHTTPWebRequestLimitResponse{RequestLimitJSON: configJSON}, nil
 }
 
-// UpdateHTTPWebRequestScripts 修改请求脚本
-func (this *HTTPWebService) UpdateHTTPWebRequestScripts(ctx context.Context, req *pb.UpdateHTTPWebRequestScriptsRequest) (*pb.RPCSuccess, error) {
-	_, err := this.ValidateAdmin(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var tx = this.NullTx()
-	var config = &serverconfigs.HTTPRequestScriptsConfig{}
-	err = json.Unmarshal(req.RequestScriptsJSON, config)
-	if err != nil {
-		return nil, err
-	}
-
-	err = models.SharedHTTPWebDAO.UpdateWebRequestScripts(tx, req.HttpWebId, config)
-	if err != nil {
-		return nil, err
-	}
-
-	return this.Success()
-}
-
 // FindHTTPWebRequestScripts 查找请求脚本
 func (this *HTTPWebService) FindHTTPWebRequestScripts(ctx context.Context, req *pb.FindHTTPWebRequestScriptsRequest) (*pb.FindHTTPWebRequestScriptsResponse, error) {
 	_, err := this.ValidateAdmin(ctx)

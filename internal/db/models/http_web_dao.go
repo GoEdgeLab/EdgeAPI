@@ -1299,6 +1299,61 @@ func (this *HTTPWebDAO) UpdateWebRequestScripts(tx *dbs.Tx, webId int64, config 
 	return this.NotifyUpdate(tx, webId)
 }
 
+// UpdateWebRequestScriptsAsPassed 设置请求脚本为审核通过
+func (this *HTTPWebDAO) UpdateWebRequestScriptsAsPassed(tx *dbs.Tx, webId int64, codeMD5 string) error {
+	if webId <= 0 || len(codeMD5) == 0 {
+		return nil
+	}
+
+	configString, err := this.Query(tx).
+		Pk(webId).
+		Result("requestScripts").
+		FindStringCol("")
+	if err != nil {
+		return nil
+	}
+
+	var config = &serverconfigs.HTTPRequestScriptsConfig{}
+	if len(configString) == 0 {
+		return nil
+	}
+	err = json.Unmarshal([]byte(configString), config)
+	if err != nil {
+		return err
+	}
+
+	var found bool
+
+	for _, group := range config.AllGroups() {
+		for _, script := range group.Scripts {
+			if script.AuditingCodeMD5 == codeMD5 {
+				script.Code = script.AuditingCode
+				script.AuditingCode = ""
+				script.AuditingCodeMD5 = ""
+
+				found = true
+			}
+		}
+	}
+
+	if found {
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return err
+		}
+		err = this.Query(tx).
+			Pk(webId).
+			Set("requestScripts", configJSON).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+		return this.NotifyUpdate(tx, webId)
+	}
+
+	return nil
+}
+
 // FindWebRequestScripts 查找服务的脚本设置
 func (this *HTTPWebDAO) FindWebRequestScripts(tx *dbs.Tx, webId int64) (*serverconfigs.HTTPRequestScriptsConfig, error) {
 	configString, err := this.Query(tx).
