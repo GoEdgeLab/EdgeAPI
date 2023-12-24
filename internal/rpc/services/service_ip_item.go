@@ -768,6 +768,29 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 	return &pb.ListAllEnabledIPItemsResponse{Results: results}, nil
 }
 
+// ListAllIPItemIds 列出所有名单中的IP ID
+func (this *IPItemService) ListAllIPItemIds(ctx context.Context, req *pb.ListAllIPItemIdsRequest) (*pb.ListAllIPItemIdsResponse, error) {
+	adminId, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if adminId > 0 {
+		userId = req.UserId
+	}
+
+	var tx = this.NullTx()
+	var listId int64 = 0
+	if req.GlobalOnly {
+		listId = firewallconfigs.GlobalListId
+	}
+	itemIds, err := models.SharedIPItemDAO.ListAllIPItemIds(tx, userId, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ListAllIPItemIdsResponse{IpItemIds: itemIds}, nil
+}
+
 // UpdateIPItemsRead 设置所有为已读
 func (this *IPItemService) UpdateIPItemsRead(ctx context.Context, req *pb.UpdateIPItemsReadRequest) (*pb.RPCSuccess, error) {
 	_, userId, err := this.ValidateAdminAndUser(ctx, true)

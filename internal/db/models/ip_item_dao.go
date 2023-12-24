@@ -582,6 +582,62 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 	return
 }
 
+// ListAllIPItemIds 搜索所有IP Id列表
+func (this *IPItemDAO) ListAllIPItemIds(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, offset int64, size int64) (itemIds []int64, err error) {
+	var query = this.Query(tx)
+	if sourceUserId > 0 {
+		if listId <= 0 {
+			query.Where("((listId=" + types.String(firewallconfigs.GlobalListId) + " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			query.Param("sourceUserId", sourceUserId)
+		} else if listId == firewallconfigs.GlobalListId {
+			query.Attr("sourceUserId", sourceUserId)
+			query.UseIndex("sourceUserId")
+		}
+	}
+	if len(keyword) > 0 {
+		if net.ParseIP(keyword) != nil { // 是一个IP地址
+			query.Attr("ipFrom", keyword)
+		} else {
+			query.Like("ipFrom", dbutils.QuoteLike(keyword))
+		}
+	}
+	if len(ip) > 0 {
+		query.Attr("ipFrom", ip)
+	}
+	if listId > 0 {
+		query.Attr("listId", listId)
+	} else {
+		if len(listType) > 0 {
+			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			query.Param("listType", listType)
+		} else {
+			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+		}
+	}
+	if unread {
+		query.Attr("isRead", 0)
+	}
+	if len(eventLevel) > 0 {
+		query.Attr("eventLevel", eventLevel)
+	}
+	result, err := query.
+		ResultPk().
+		State(IPItemStateEnabled).
+		Where("(expiredAt=0 OR expiredAt>:expiredAt)").
+		Param("expiredAt", time.Now().Unix()).
+		DescPk().
+		Offset(offset).
+		Size(size).
+		FindAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, itemOne := range result {
+		itemIds = append(itemIds, int64(itemOne.(*IPItem).Id))
+	}
+	return
+}
+
 // UpdateItemsRead 设置所有未已读
 func (this *IPItemDAO) UpdateItemsRead(tx *dbs.Tx, sourceUserId int64) error {
 	var query = this.Query(tx).
