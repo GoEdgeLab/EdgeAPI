@@ -177,18 +177,955 @@ func (this *HuaweiDNSProvider) GetRoutes(domain string) (routes []*dnstypes.Rout
 
 		{
 			Code: "Pengboshi",
-
 			Name: "鹏博士",
 		},
 
 		{
 			Code: "CN",
-			Name: "中国",
+			Name: "中国大陆",
 		},
 
 		{
 			Code: "Abroad",
 			Name: "全球",
+		},
+	}...)
+
+	// 运营商线路细分
+	routes = append(routes, []*dnstypes.Route{
+		{
+			Code: "Dianxin_Huabei",
+			Name: "电信_华北地区",
+		},
+		{
+
+			Code: "Dianxin_Dongbei",
+			Name: "电信_东北地区",
+		},
+		{
+
+			Code: "Dianxin_Huadong",
+			Name: "电信_华东地区",
+		},
+		{
+
+			Code: "Dianxin_Huazhong",
+			Name: "电信_华中地区",
+		},
+		{
+
+			Code: "Dianxin_Huanan",
+			Name: "电信_华南地区",
+		},
+		{
+
+			Code: "Dianxin_Xinan",
+			Name: "电信_西南地区",
+		},
+		{
+
+			Code: "Dianxin_Xibei",
+			Name: "电信_西北地区",
+		},
+		{
+
+			Code: "Dianxin_Beijing",
+			Name: "电信_北京",
+		},
+
+		{
+			Code: "Dianxin_Hebei",
+			Name: "电信_河北",
+		},
+		{
+
+			Code: "Dianxin_Tianjin",
+			Name: "电信_天津",
+		},
+		{
+			Code: "Dianxin_Shanxi",
+			Name: "电信_山西",
+		},
+		{
+			Code: "Dianxin_Neimenggu",
+			Name: "电信_内蒙古",
+		},
+		{
+			Code: "Dianxin_Heilongjiang",
+			Name: "电信_黑龙江",
+		},
+		{
+			Code: "Dianxin_Jilin",
+			Name: "电信_吉林",
+		},
+		{
+			Code: "Dianxin_Liaoning",
+			Name: "电信_辽宁",
+		},
+		{
+			Code: "Dianxin_Jiangsu",
+			Name: "电信_江苏",
+		},
+		{
+			Code: "Dianxin_Shanghai",
+			Name: "电信_上海",
+		},
+		{
+			Code: "Dianxin_Zhejiang",
+			Name: "电信_浙江",
+		},
+		{
+			Code: "Dianxin_Anhui",
+			Name: "电信_安徽",
+		},
+		{
+			Code: "Dianxin_Fujian",
+			Name: "电信_福建",
+		},
+		{
+			Code: "Dianxin_Jiangxi",
+			Name: "电信_江西",
+		},
+		{
+			Code: "Dianxin_Shandong",
+			Name: "电信_山东",
+		},
+		{
+			Code: "Dianxin_Hubei",
+			Name: "电信_湖北",
+		},
+		{
+			Code: "Dianxin_Hunan",
+			Name: "电信_湖南",
+		},
+		{
+			Code: "Dianxin_Henan",
+			Name: "电信_河南",
+		},
+		{
+			Code: "Dianxin_Guangdong",
+			Name: "电信_广东",
+		},
+		{
+			Code: "Dianxin_Guangxi",
+			Name: "电信_广西",
+		},
+		{
+			Code: "Dianxin_Hainan",
+			Name: "电信_海南",
+		},
+		{
+			Code: "Dianxin_Sichuan",
+			Name: "电信_四川",
+		},
+		{
+			Code: "Dianxin_Xizang",
+			Name: "电信_西藏",
+		},
+		{
+			Code: "Dianxin_Chongqing",
+			Name: "电信_重庆",
+		},
+		{
+			Code: "Dianxin_Yunnan",
+			Name: "电信_云南",
+		},
+		{
+			Code: "Dianxin_Guizhou",
+			Name: "电信_贵州",
+		},
+		{
+			Code: "Dianxin_Gansu",
+			Name: "电信_甘肃",
+		},
+		{
+			Code: "Dianxin_Xinjiang",
+			Name: "电信_新疆",
+		},
+		{
+			Code: "Dianxin_Shaanxi",
+			Name: "电信_陕西",
+		},
+		{
+			Code: "Dianxin_Qinghai",
+			Name: "电信_青海",
+		},
+		{
+			Code: "Dianxin_Ningxia",
+			Name: "电信_宁夏",
+		},
+		{
+			Code: "Yidong_Huabei",
+			Name: "移动_华北地区",
+		},
+		{
+			Code: "Yidong_Dongbei",
+			Name: "移动_东北地区",
+		},
+		{
+			Code: "Yidong_Huadong",
+			Name: "移动_华东地区",
+		},
+		{
+			Code: "Yidong_Huazhong",
+			Name: "移动_华中地区",
+		},
+		{
+			Code: "Yidong_Huanan",
+			Name: "移动_华南地区",
+		},
+		{
+			Code: "Yidong_Xinan",
+			Name: "移动_西南地区",
+		},
+		{
+			Code: "Yidong_Xibei",
+			Name: "移动_西北地区",
+		},
+		{
+			Code: "Yidong_Beijing",
+			Name: "移动_北京",
+		},
+		{
+			Code: "Yidong_Hebei",
+			Name: "移动_河北",
+		},
+		{
+			Code: "Yidong_Tianjin",
+			Name: "移动_天津",
+		},
+		{
+			Code: "Yidong_Shanxi",
+			Name: "移动_山西",
+		},
+		{
+			Code: "Yidong_Neimenggu",
+			Name: "移动_内蒙古",
+		},
+		{
+			Code: "Yidong_Heilongjiang",
+			Name: "移动_黑龙江",
+		},
+		{
+			Code: "Yidong_Jilin",
+			Name: "移动_吉林",
+		},
+		{
+			Code: "Yidong_Liaoning",
+			Name: "移动_辽宁",
+		},
+		{
+			Code: "Yidong_Jiangsu",
+			Name: "移动_江苏",
+		},
+		{
+			Code: "Yidong_Shanghai",
+			Name: "移动_上海",
+		},
+		{
+			Code: "Yidong_Zhejiang",
+			Name: "移动_浙江",
+		},
+		{
+			Code: "Yidong_Anhui",
+			Name: "移动_安徽",
+		},
+		{
+			Code: "Yidong_Fujian",
+			Name: "移动_福建",
+		},
+		{
+			Code: "Yidong_Jiangxi",
+			Name: "移动_江西",
+		},
+		{
+			Code: "Yidong_Shandong",
+			Name: "移动_山东",
+		},
+		{
+			Code: "Yidong_Hubei",
+			Name: "移动_湖北",
+		},
+		{
+			Code: "Yidong_Hunan",
+			Name: "移动_湖南",
+		},
+		{
+			Code: "Yidong_Henan",
+			Name: "移动_河南",
+		},
+		{
+			Code: "Yidong_Guangdong",
+			Name: "移动_广东",
+		},
+		{
+			Code: "Yidong_Guangxi",
+			Name: "移动_广西",
+		},
+		{
+			Code: "Yidong_Hainan",
+			Name: "移动_海南",
+		},
+		{
+			Code: "Yidong_Sichuan",
+			Name: "移动_四川",
+		},
+		{
+			Code: "Yidong_Xizang",
+			Name: "移动_西藏",
+		},
+		{
+			Code: "Yidong_Chongqing",
+			Name: "移动_重庆",
+		},
+		{
+			Code: "Yidong_Yunnan",
+			Name: "移动_云南",
+		},
+		{
+			Code: "Yidong_Guizhou",
+			Name: "移动_贵州",
+		},
+		{
+			Code: "Yidong_Gansu",
+			Name: "移动_甘肃",
+		},
+		{
+			Code: "Yidong_Xinjiang",
+			Name: "移动_新疆",
+		},
+		{
+			Code: "Yidong_Shaanxi",
+			Name: "移动_陕西",
+		},
+		{
+			Code: "Yidong_Qinghai",
+			Name: "移动_青海",
+		},
+		{
+			Code: "Yidong_Ningxia",
+			Name: "移动_宁夏",
+		},
+		{
+			Code: "Liantong_Huabei",
+			Name: "联通_华北地区",
+		},
+		{
+			Code: "Liantong_Dongbei",
+			Name: "联通_东北地区",
+		},
+		{
+			Code: "Liantong_Huadong",
+			Name: "联通_华东地区",
+		},
+		{
+			Code: "Liantong_Huazhong",
+			Name: "联通_华中地区",
+		},
+		{
+			Code: "Liantong_Huanan",
+			Name: "联通_华南地区",
+		},
+		{
+			Code: "Liantong_Xinan",
+			Name: "联通_西南地区",
+		},
+		{
+			Code: "Liantong_Xibei",
+			Name: "联通_西北地区",
+		},
+		{
+			Code: "Liantong_Beijing",
+			Name: "联通_北京",
+		},
+		{
+			Code: "Liantong_Hebei",
+			Name: "联通_河北",
+		},
+		{
+			Code: "Liantong_Tianjin",
+			Name: "联通_天津",
+		},
+		{
+			Code: "Liantong_Shanxi",
+			Name: "联通_山西",
+		},
+		{
+			Code: "Liantong_Neimenggu",
+			Name: "联通_内蒙古",
+		},
+		{
+			Code: "Liantong_Heilongjiang",
+			Name: "联通_黑龙江",
+		},
+		{
+			Code: "Liantong_Jilin",
+			Name: "联通_吉林",
+		},
+		{
+			Code: "Liantong_Liaoning",
+			Name: "联通_辽宁",
+		},
+		{
+			Code: "Liantong_Jiangsu",
+			Name: "联通_江苏",
+		},
+		{
+			Code: "Liantong_Shanghai",
+			Name: "联通_上海",
+		},
+		{
+			Code: "Liantong_Zhejiang",
+			Name: "联通_浙江",
+		},
+		{
+			Code: "Liantong_Anhui",
+			Name: "联通_安徽",
+		},
+		{
+			Code: "Liantong_Fujian",
+			Name: "联通_福建",
+		},
+		{
+			Code: "Liantong_Jiangxi",
+			Name: "联通_江西",
+		},
+		{
+			Code: "Liantong_Shandong",
+			Name: "联通_山东",
+		},
+		{
+			Code: "Liantong_Hubei",
+			Name: "联通_湖北",
+		},
+		{
+			Code: "Liantong_Hunan",
+			Name: "联通_湖南",
+		},
+		{
+			Code: "Liantong_Henan",
+			Name: "联通_河南",
+		},
+		{
+			Code: "Liantong_Guangdong",
+			Name: "联通_广东",
+		},
+		{
+			Code: "Liantong_Guangxi",
+			Name: "联通_广西",
+		},
+		{
+			Code: "Liantong_Hainan",
+			Name: "联通_海南",
+		},
+		{
+			Code: "Liantong_Sichuan",
+			Name: "联通_四川",
+		},
+		{
+			Code: "Liantong_Xizang",
+			Name: "联通_西藏",
+		},
+		{
+			Code: "Liantong_Chongqing",
+			Name: "联通_重庆",
+		},
+		{
+			Code: "Liantong_Yunnan",
+			Name: "联通_云南",
+		},
+		{
+			Code: "Liantong_Guizhou",
+			Name: "联通_贵州",
+		},
+		{
+			Code: "Liantong_Gansu",
+			Name: "联通_甘肃",
+		},
+		{
+			Code: "Liantong_Xinjiang",
+			Name: "联通_新疆",
+		},
+		{
+			Code: "Liantong_Shaanxi",
+			Name: "联通_陕西",
+		},
+		{
+			Code: "Liantong_Qinghai",
+			Name: "联通_青海",
+		},
+		{
+			Code: "Liantong_Ningxia",
+			Name: "联通_宁夏",
+		},
+		{
+			Code: "Jiaoyuwang",
+			Name: "教育网默认",
+		},
+		{
+			Code: "Jiaoyuwang_Huabei",
+			Name: "教育网_华北地区",
+		},
+		{
+			Code: "Jiaoyuwang_Dongbei",
+			Name: "教育网_东北地区",
+		},
+		{
+			Code: "Jiaoyuwang_Huadong",
+			Name: "教育网_华东地区",
+		},
+		{
+			Code: "Jiaoyuwang_Huazhong",
+			Name: "教育网_华中地区",
+		},
+		{
+			Code: "Jiaoyuwang_Huanan",
+			Name: "教育网_华南地区",
+		},
+		{
+			Code: "Jiaoyuwang_Xinan",
+			Name: "教育网_西南地区",
+		},
+		{
+			Code: "Jiaoyuwang_Xibei",
+			Name: "教育网_西北地区",
+		},
+		{
+			Code: "Jiaoyuwang_Beijing",
+			Name: "教育网_北京",
+		},
+		{
+			Code: "Jiaoyuwang_Hebei",
+			Name: "教育网_河北",
+		},
+		{
+			Code: "Jiaoyuwang_Tianjin",
+			Name: "教育网_天津",
+		},
+		{
+			Code: "Jiaoyuwang_Shanxi",
+			Name: "教育网_山西",
+		},
+		{
+			Code: "Jiaoyuwang_Neimenggu",
+			Name: "教育网_内蒙古",
+		},
+		{
+			Code: "Jiaoyuwang_Heilongjiang",
+			Name: "教育网_黑龙江",
+		},
+		{
+			Code: "Jiaoyuwang_Jilin",
+			Name: "教育网_吉林",
+		},
+		{
+			Code: "Jiaoyuwang_Liaoning",
+			Name: "教育网_辽宁",
+		},
+		{
+			Code: "Jiaoyuwang_Jiangsu",
+			Name: "教育网_江苏",
+		},
+		{
+			Code: "Jiaoyuwang_Shanghai",
+			Name: "教育网_上海",
+		},
+		{
+			Code: "Jiaoyuwang_Zhejiang",
+			Name: "教育网_浙江",
+		},
+		{
+			Code: "Jiaoyuwang_Anhui",
+			Name: "教育网_安徽",
+		},
+		{
+			Code: "Jiaoyuwang_Fujian",
+			Name: "教育网_福建",
+		},
+		{
+			Code: "Jiaoyuwang_Jiangxi",
+			Name: "教育网_江西",
+		},
+		{
+			Code: "Jiaoyuwang_Shandong",
+			Name: "教育网_山东",
+		},
+		{
+			Code: "Jiaoyuwang_Hubei",
+			Name: "教育网_湖北",
+		},
+		{
+			Code: "Jiaoyuwang_Hunan",
+			Name: "教育网_湖南",
+		},
+		{
+			Code: "Jiaoyuwang_Henan",
+			Name: "教育网_河南",
+		},
+		{
+			Code: "Jiaoyuwang_Guangdong",
+			Name: "教育网_广东",
+		},
+		{
+			Code: "Jiaoyuwang_Guangxi",
+			Name: "教育网_广西",
+		},
+		{
+			Code: "Jiaoyuwang_Hainan",
+			Name: "教育网_海南",
+		},
+		{
+			Code: "Jiaoyuwang_Sichuan",
+			Name: "教育网_四川",
+		},
+		{
+			Code: "Jiaoyuwang_Xizang",
+			Name: "教育网_西藏",
+		},
+		{
+			Code: "Jiaoyuwang_Chongqing",
+			Name: "教育网_重庆",
+		},
+		{
+			Code: "Jiaoyuwang_Yunnan",
+			Name: "教育网_云南",
+		},
+		{
+			Code: "Jiaoyuwang_Guizhou",
+			Name: "教育网_贵州",
+		},
+		{
+			Code: "Jiaoyuwang_Gansu",
+			Name: "教育网_甘肃",
+		},
+		{
+			Code: "Jiaoyuwang_Xinjiang",
+			Name: "教育网_新疆",
+		},
+		{
+			Code: "Jiaoyuwang_Shaanxi",
+			Name: "教育网_陕西",
+		},
+		{
+			Code: "Jiaoyuwang_Qinghai",
+			Name: "教育网_青海",
+		},
+		{
+			Code: "Jiaoyuwang_Ningxia",
+			Name: "教育网_宁夏",
+		},
+		{
+			Code: "Pengboshi",
+			Name: "鹏博士默认",
+		},
+		{
+			Code: "Pengboshi_Huabei",
+			Name: "鹏博士_华北地区",
+		},
+		{
+			Code: "Pengboshi_Dongbei",
+			Name: "鹏博士_东北地区",
+		},
+		{
+			Code: "Pengboshi_Huadong",
+			Name: "鹏博士_华东地区",
+		},
+		{
+			Code: "Pengboshi_Huazhong",
+			Name: "鹏博士_华中地区",
+		},
+		{
+			Code: "Pengboshi_Huanan",
+			Name: "鹏博士_华南地区",
+		},
+		{
+			Code: "Pengboshi_Xinan",
+			Name: "鹏博士_西南",
+		},
+		{
+			Code: "Pengboshi_Xibei",
+			Name: "鹏博士_西北",
+		},
+		{
+			Code: "Pengboshi_Beijing",
+			Name: "鹏博士_北京",
+		},
+		{
+			Code: "Pengboshi_Hebei",
+			Name: "鹏博士_河北",
+		},
+		{
+			Code: "Pengboshi_Tianjin",
+			Name: "鹏博士_天津",
+		},
+		{
+			Code: "Pengboshi_Shanxi",
+			Name: "鹏博士_山西",
+		},
+		{
+			Code: "Pengboshi_Neimenggu",
+			Name: "鹏博士_内蒙古",
+		},
+		{
+			Code: "Pengboshi_Heilongjiang",
+			Name: "鹏博士_黑龙江",
+		},
+		{
+			Code: "Pengboshi_Jilin",
+			Name: "鹏博士_吉林",
+		},
+		{
+			Code: "Pengboshi_Liaoning",
+			Name: "鹏博士_辽宁",
+		},
+		{
+			Code: "Pengboshi_Jiangsu",
+			Name: "鹏博士_江苏",
+		},
+		{
+			Code: "Pengboshi_Shanghai",
+			Name: "鹏博士_上海",
+		},
+		{
+			Code: "Pengboshi_Zhejiang",
+			Name: "鹏博士_浙江",
+		},
+		{
+			Code: "Pengboshi_Anhui",
+			Name: "鹏博士_安徽",
+		},
+		{
+			Code: "Pengboshi_Fujian",
+			Name: "鹏博士_福建",
+		},
+		{
+			Code: "Pengboshi_Jiangxi",
+			Name: "鹏博士_江西",
+		},
+		{
+			Code: "Pengboshi_Shandong",
+			Name: "鹏博士_山东",
+		},
+		{
+			Code: "Pengboshi_Hubei",
+			Name: "鹏博士_湖北",
+		},
+		{
+			Code: "Pengboshi_Hunan",
+			Name: "鹏博士_湖南",
+		},
+		{
+			Code: "Pengboshi_Henan",
+			Name: "鹏博士_河南",
+		},
+		{
+			Code: "Pengboshi_Guangdong",
+			Name: "鹏博士_广东",
+		},
+		{
+			Code: "Pengboshi_Guangxi",
+			Name: "鹏博士_广西",
+		},
+		{
+			Code: "Pengboshi_Hainan",
+			Name: "鹏博士_海南",
+		},
+		{
+			Code: "Pengboshi_Sichuan",
+			Name: "鹏博士_四川",
+		},
+		{
+			Code: "Pengboshi_Xizang",
+			Name: "鹏博士_西藏",
+		},
+		{
+			Code: "Pengboshi_Chongqing",
+			Name: "鹏博士_重庆",
+		},
+		{
+			Code: "Pengboshi_Yunnan",
+			Name: "鹏博士_云南",
+		},
+		{
+			Code: "Pengboshi_Guizhou",
+			Name: "鹏博士_贵州",
+		},
+		{
+			Code: "Pengboshi_Gansu",
+			Name: "鹏博士_甘肃",
+		},
+		{
+			Code: "Pengboshi_Xinjiang",
+			Name: "鹏博士_新疆",
+		},
+		{
+			Code: "Pengboshi_Shaanxi",
+			Name: "鹏博士_陕西",
+		},
+		{
+			Code: "Pengboshi_Qinghai",
+			Name: "鹏博士_青海",
+		},
+		{
+			Code: "Pengboshi_Ningxia",
+			Name: "鹏博士_宁夏",
+		},
+		{
+			Code: "Tietong",
+			Name: "铁通默认",
+		},
+		{
+			Code: "Tietong_Huabei",
+			Name: "铁通_华北地区",
+		},
+		{
+			Code: "Tietong_Dongbei",
+			Name: "铁通_东北地区",
+		},
+		{
+			Code: "Tietong_Huadong",
+			Name: "铁通_华东地区",
+		},
+		{
+			Code: "Tietong_Huazhong",
+			Name: "铁通_华中地区",
+		},
+		{
+			Code: "Tietong_Huanan",
+			Name: "铁通_华南地区",
+		},
+		{
+			Code: "Tietong_Xinan",
+			Name: "铁通_西南地区",
+		},
+		{
+			Code: "Tietong_Xibei",
+			Name: "铁通_西北地区",
+		},
+		{
+			Code: "Tietong_Beijing",
+			Name: "铁通_北京",
+		},
+		{
+			Code: "Tietong_Hebei",
+			Name: "铁通_河北",
+		},
+		{
+			Code: "Tietong_Tianjin",
+			Name: "铁通_天津",
+		},
+		{
+			Code: "Tietong_Shanxi",
+			Name: "铁通_山西",
+		},
+		{
+			Code: "Tietong_Neimenggu",
+			Name: "铁通_内蒙古",
+		},
+		{
+			Code: "Tietong_Heilongjiang",
+			Name: "铁通_黑龙江",
+		},
+		{
+			Code: "Tietong_Jilin",
+			Name: "铁通_吉林",
+		},
+		{
+			Code: "Tietong_Liaoning",
+			Name: "铁通_辽宁",
+		},
+		{
+			Code: "Tietong_Jiangsu",
+			Name: "铁通_江苏",
+		},
+		{
+			Code: "Tietong_Shanghai",
+			Name: "铁通_上海",
+		},
+		{
+			Code: "Tietong_Zhejiang",
+			Name: "铁通_浙江",
+		},
+		{
+			Code: "Tietong_Anhui",
+			Name: "铁通_安徽",
+		},
+		{
+			Code: "Tietong_Fujian",
+			Name: "铁通_福建",
+		},
+		{
+			Code: "Tietong_Jiangxi",
+			Name: "铁通_江西",
+		},
+		{
+			Code: "Tietong_Shandong",
+			Name: "铁通_山东",
+		},
+		{
+			Code: "Tietong_Hubei",
+			Name: "铁通_湖北",
+		},
+		{
+			Code: "Tietong_Hunan",
+			Name: "铁通_湖南",
+		},
+		{
+			Code: "Tietong_Henan",
+			Name: "铁通_河南",
+		},
+		{
+			Code: "Tietong_Guangdong",
+			Name: "铁通_广东",
+		},
+		{
+			Code: "Tietong_Guangxi",
+			Name: "铁通_广西",
+		},
+		{
+			Code: "Tietong_Hainan",
+			Name: "铁通_海南",
+		},
+		{
+			Code: "Tietong_Sichuan",
+			Name: "铁通_四川",
+		},
+		{
+			Code: "Tietong_Xizang",
+			Name: "铁通_西藏",
+		},
+		{
+			Code: "Tietong_Chongqing",
+			Name: "铁通_重庆",
+		},
+		{
+			Code: "Tietong_Yunnan",
+			Name: "铁通_云南",
+		},
+		{
+			Code: "Tietong_Guizhou",
+			Name: "铁通_贵州",
+		},
+		{
+			Code: "Tietong_Gansu",
+			Name: "铁通_甘肃",
+		},
+		{
+			Code: "Tietong_Xinjiang",
+			Name: "铁通_新疆",
+		},
+		{
+			Code: "Tietong_Shaanxi",
+			Name: "铁通_陕西",
+		},
+		{
+			Code: "Tietong_Qinghai",
+			Name: "铁通_青海",
+		},
+
+		{
+			Code: "Tietong_Ningxia",
+			Name: "铁通_宁夏",
 		},
 	}...)
 
