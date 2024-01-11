@@ -1462,7 +1462,7 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 	return &pb.ListEnabledServersMatchResponse{Servers: result}, nil
 }
 
-// DeleteServer 禁用某服务
+// DeleteServer 删除某网站
 func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServerRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
 	_, userId, err := this.ValidateAdminAndUser(ctx, true)
@@ -1479,12 +1479,43 @@ func (this *ServerService) DeleteServer(ctx context.Context, req *pb.DeleteServe
 		}
 	}
 
-	// 禁用服务
+	// 禁用网站
 	err = models.SharedServerDAO.DisableServer(tx, req.ServerId)
 	if err != nil {
 		return nil, err
 	}
 
+	return this.Success()
+}
+
+// DeleteServers 删除一组网站
+func (this *ServerService) DeleteServers(ctx context.Context, req *pb.DeleteServersRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	for _, serverId := range req.ServerIds {
+		if serverId <= 0 {
+			continue
+		}
+
+		// 检查权限
+		if userId > 0 {
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, serverId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// 禁用网站
+		err = models.SharedServerDAO.DisableServer(tx, serverId)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return this.Success()
 }
 
