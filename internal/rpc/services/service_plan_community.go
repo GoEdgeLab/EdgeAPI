@@ -1,6 +1,5 @@
 // Copyright 2021 Liuxiangchao iwind.liu@gmail.com. All rights reserved.
 //go:build !plus
-// +build !plus
 
 package services
 
@@ -51,5 +50,10 @@ func (this *PlanService) SortPlans(ctx context.Context, req *pb.SortPlansRequest
 
 // FindAllAvailablePlans 列出所有可用的套餐
 func (this *PlanService) FindAllAvailablePlans(ctx context.Context, req *pb.FindAllAvailablePlansRequest) (*pb.FindAllAvailablePlansResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
+// FindAllAvailableBasicPlans 列出所有可用的套餐的基本信息
+func (this *PlanService) FindAllAvailableBasicPlans(ctx context.Context, req *pb.FindAllAvailableBasicPlansRequest) (*pb.FindAllAvailableBasicPlansResponse, error) {
 	return nil, this.NotImplementedYet()
 }

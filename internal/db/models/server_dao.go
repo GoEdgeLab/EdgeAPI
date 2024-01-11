@@ -1322,28 +1322,10 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			}
 
 			// 套餐是否依然有效
-			plan, err := SharedPlanDAO.FindEnabledPlan(tx, int64(userPlan.PlanId), cacheMap)
-			if err != nil {
-				return nil, err
-			}
-			if plan != nil {
-				config.UserPlan = &serverconfigs.UserPlanConfig{
-					Id:    int64(userPlan.Id),
-					DayTo: userPlan.DayTo,
-					Plan: &serverconfigs.PlanConfig{
-						Id:   int64(plan.Id),
-						Name: plan.Name,
-					},
-				}
-
-				if len(plan.TrafficLimit) > 0 && (config.TrafficLimit == nil || !config.TrafficLimit.IsOn) {
-					var trafficLimitConfig = &serverconfigs.TrafficLimitConfig{}
-					err = json.Unmarshal(plan.TrafficLimit, trafficLimitConfig)
-					if err != nil {
-						return nil, err
-					}
-					config.TrafficLimit = trafficLimitConfig
-				}
+			config.UserPlan = &serverconfigs.UserPlanConfig{
+				Id:     int64(userPlan.Id),
+				DayTo:  userPlan.DayTo,
+				PlanId: int64(userPlan.PlanId),
 			}
 		}
 	}
@@ -2358,8 +2340,36 @@ func (this *ServerDAO) UpdateServerTrafficLimitConfig(tx *dbs.Tx, serverId int64
 
 // RenewServerTrafficLimitStatus 根据限流配置更新网站的流量限制状态
 func (this *ServerDAO) RenewServerTrafficLimitStatus(tx *dbs.Tx, trafficLimitConfig *serverconfigs.TrafficLimitConfig, serverId int64, isUpdatingConfig bool) error {
+	if serverId <= 0 {
+		return nil
+	}
+
 	if !trafficLimitConfig.IsOn {
 		if isUpdatingConfig {
+			var oldStatus = &serverconfigs.TrafficLimitStatus{}
+			trafficLimitStatus, err := this.Query(tx).
+				Pk(serverId).
+				Result("trafficLimitStatus").
+				FindJSONCol()
+			if err != nil {
+				return err
+			}
+			if IsNotNull(trafficLimitStatus) {
+				err = json.Unmarshal(trafficLimitStatus, oldStatus)
+				if err != nil {
+					return err
+				}
+				if oldStatus.PlanId == 0 /** 说明是网站自行设置的限制 **/ {
+					err = this.Query(tx).
+						Pk(serverId).
+						Set("trafficLimitStatus", dbs.SQL("NULL")).
+						UpdateQuickly()
+					if err != nil {
+						return err
+					}
+				}
+			}
+
 			return this.NotifyUpdate(tx, serverId)
 		}
 		return nil
@@ -2470,7 +2480,9 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64
 		if err != nil {
 			return err
 		}
-		if len(oldStatus.UntilDay) > 0 && oldStatus.UntilDay >= day /** 如果已经限制，且比当前日期长，则无需重复 **/ {
+		if len(oldStatus.UntilDay) > 0 &&
+			oldStatus.UntilDay >= day /** 如果已经限制，且比当前日期长，则无需重复 **/ &&
+			oldStatus.PlanId == planId /** 套餐无变化 **/ {
 			// no need to change
 			return nil
 		}

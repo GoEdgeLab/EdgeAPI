@@ -34,6 +34,7 @@ const (
 	NodeTaskTypeWebPPolicyChanged            NodeTaskType = "webPPolicyChanged"            // WebP策略变化
 	NodeTaskTypeUpdatingServers              NodeTaskType = "updatingServers"              // 更新一组服务
 	NodeTaskTypeTOAChanged                   NodeTaskType = "toaChanged"                   // TOA配置变化
+	NodeTaskTypePlanChanged                  NodeTaskType = "planChanged"                  // 套餐变化
 
 	// NS相关
 

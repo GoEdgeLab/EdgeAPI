@@ -49,7 +49,12 @@ func (this *PlanDAO) EnablePlan(tx *dbs.Tx, id uint32) error {
 
 // DisablePlan 禁用条目
 func (this *PlanDAO) DisablePlan(tx *dbs.Tx, id int64) error {
-	_, err := this.Query(tx).
+	clusterId, err := this.FindPlanClusterId(tx, id)
+	if err != nil {
+		return err
+	}
+
+	_, err = this.Query(tx).
 		Pk(id).
 		Set("state", PlanStateDisabled).
 		Update()
@@ -57,7 +62,7 @@ func (this *PlanDAO) DisablePlan(tx *dbs.Tx, id int64) error {
 		return err
 	}
 
-	return this.NotifyUpdate(tx, id)
+	return this.NotifyUpdate(tx, id, clusterId)
 }
 
 // FindEnabledPlan 查找启用中的条目
@@ -175,18 +180,18 @@ func (this *PlanDAO) FindEnabledPlanTrafficLimit(tx *dbs.Tx, planId int64, cache
 	return config, nil
 }
 
-// NotifyUpdate 通知变更
-func (this *PlanDAO) NotifyUpdate(tx *dbs.Tx, planId int64) error {
-	// 这里不要加入状态参数，因为需要适应删除后的更新
-	clusterId, err := this.Query(tx).
+// FindPlanClusterId 查找套餐所属集群
+func (this *PlanDAO) FindPlanClusterId(tx *dbs.Tx, planId int64) (clusterId int64, err error) {
+	return this.Query(tx).
 		Pk(planId).
 		Result("clusterId").
 		FindInt64Col(0)
-	if err != nil {
-		return err
+}
+
+// NotifyUpdate 通知变更
+func (this *PlanDAO) NotifyUpdate(tx *dbs.Tx, planId int64, clusterId int64) error {
+	if clusterId <= 0 {
+		return nil
 	}
-	if clusterId > 0 {
-		return SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
-	}
-	return nil
+	return SharedNodeClusterDAO.NotifyUpdate(tx, clusterId)
 }
