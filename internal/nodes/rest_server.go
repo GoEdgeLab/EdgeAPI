@@ -201,7 +201,11 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(io.LimitReader(req.Body, 32*sizes.M))
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte(err.Error()))
+		this.writeJSON(writer, maps.Map{
+			"code":    400,
+			"message": err.Error(),
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
@@ -215,7 +219,11 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, reqValue)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte("Decode request failed: " + err.Error() + ". Request body should be a valid JSON data"))
+		this.writeJSON(writer, maps.Map{
+			"code":    400,
+			"message": "Decode request failed: " + err.Error() + ". Request body should be a valid JSON data",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
