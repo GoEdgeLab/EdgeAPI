@@ -695,6 +695,218 @@ func (this *ServerService) CreateBasicTCPServer(ctx context.Context, req *pb.Cre
 	return &pb.CreateBasicTCPServerResponse{ServerId: serverId}, nil
 }
 
+// AddServerOrigin 为网站添加源站
+func (this *ServerService) AddServerOrigin(ctx context.Context, req *pb.AddServerOriginRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("require 'serverId'")
+	}
+	if req.OriginId <= 0 {
+		return nil, errors.New("require 'originId'")
+	}
+
+	var tx = this.NullTx()
+
+	// check user
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedOriginDAO.CheckUserOrigin(tx, userId, req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// check server
+		existsServer, err := models.SharedServerDAO.ExistsServer(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		if !existsServer {
+			return nil, errors.New("server '" + types.String(req.ServerId) + "' not found")
+		}
+
+		// check origin
+		existsOrigin, err := models.SharedOriginDAO.ExistsOrigin(tx, req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+		if !existsOrigin {
+			return nil, errors.New("origin '" + types.String(req.OriginId) + "' not found")
+		}
+	}
+
+	reverseProxyRef, err := models.SharedServerDAO.FindServerReverseProxyRef(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if reverseProxyRef == nil || reverseProxyRef.ReverseProxyId <= 0 {
+		reverseProxyId, err := models.SharedServerDAO.CreateServerReverseProxyRef(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		reverseProxyRef = &serverconfigs.ReverseProxyRef{
+			IsPrior:        false,
+			IsOn:           true,
+			ReverseProxyId: reverseProxyId,
+		}
+	}
+
+	reverseProxy, err := models.SharedReverseProxyDAO.FindEnabledReverseProxy(tx, reverseProxyRef.ReverseProxyId)
+	if err != nil {
+		return nil, err
+	}
+	if reverseProxy == nil {
+		return nil, errors.New("can not found reverse proxy")
+	}
+
+	if req.IsPrimary {
+		var refs = reverseProxy.DecodePrimaryOrigins()
+		refs = append(refs, &serverconfigs.OriginRef{
+			IsOn:     true,
+			OriginId: req.OriginId,
+		})
+		refsJSON, err := json.Marshal(refs)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedReverseProxyDAO.UpdateReverseProxyPrimaryOrigins(tx, int64(reverseProxy.Id), refsJSON)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var refs = reverseProxy.DecodeBackupOrigins()
+		refs = append(refs, &serverconfigs.OriginRef{
+			IsOn:     true,
+			OriginId: req.OriginId,
+		})
+		refsJSON, err := json.Marshal(refs)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedReverseProxyDAO.UpdateReverseProxyBackupOrigins(tx, int64(reverseProxy.Id), refsJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return this.Success()
+}
+
+// DeleteServerOrigin 从网站中删除某个源站
+func (this *ServerService) DeleteServerOrigin(ctx context.Context, req *pb.DeleteServerOriginRequest) (*pb.RPCSuccess, error) {
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ServerId <= 0 {
+		return nil, errors.New("require 'serverId'")
+	}
+	if req.OriginId <= 0 {
+		return nil, errors.New("require 'originId'")
+	}
+
+	var tx = this.NullTx()
+
+	// check user
+	if userId > 0 {
+		err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = models.SharedOriginDAO.CheckUserOrigin(tx, userId, req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// check server
+		existsServer, err := models.SharedServerDAO.ExistsServer(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
+		if !existsServer {
+			return nil, errors.New("server '" + types.String(req.ServerId) + "' not found")
+		}
+
+		// check origin
+		existsOrigin, err := models.SharedOriginDAO.ExistsOrigin(tx, req.OriginId)
+		if err != nil {
+			return nil, err
+		}
+		if !existsOrigin {
+			return nil, errors.New("origin '" + types.String(req.OriginId) + "' not found")
+		}
+	}
+
+	reverseProxyRef, err := models.SharedServerDAO.FindServerReverseProxyRef(tx, req.ServerId)
+	if err != nil {
+		return nil, err
+	}
+	if reverseProxyRef == nil || reverseProxyRef.ReverseProxyId <= 0 {
+		return this.Success()
+	}
+
+	reverseProxy, err := models.SharedReverseProxyDAO.FindEnabledReverseProxy(tx, reverseProxyRef.ReverseProxyId)
+	if err != nil {
+		return nil, err
+	}
+	if reverseProxy == nil {
+		return this.Success()
+	}
+
+	var primaryOrigins = reverseProxy.DecodePrimaryOrigins()
+	var newPrimaryOrigins = []*serverconfigs.OriginRef{}
+	var found = false
+	for _, origin := range primaryOrigins {
+		if origin.OriginId == req.OriginId {
+			found = true
+			continue
+		}
+		newPrimaryOrigins = append(newPrimaryOrigins, origin)
+	}
+	if found {
+		newPrimaryOriginsJSON, err := json.Marshal(newPrimaryOrigins)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedReverseProxyDAO.UpdateReverseProxyPrimaryOrigins(tx, int64(reverseProxy.Id), newPrimaryOriginsJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var backupOrigins = reverseProxy.DecodeBackupOrigins()
+	var newBackupOrigins = []*serverconfigs.OriginRef{}
+	found = false
+	for _, origin := range backupOrigins {
+		if origin.OriginId == req.OriginId {
+			found = true
+			continue
+		}
+		newBackupOrigins = append(newBackupOrigins, origin)
+	}
+	if found {
+		newBackupOriginsJSON, err := json.Marshal(newBackupOrigins)
+		if err != nil {
+			return nil, err
+		}
+		err = models.SharedReverseProxyDAO.UpdateReverseProxyBackupOrigins(tx, int64(reverseProxy.Id), newBackupOriginsJSON)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return this.Success()
+}
+
 // UpdateServerBasic 修改服务基本信息
 func (this *ServerService) UpdateServerBasic(ctx context.Context, req *pb.UpdateServerBasicRequest) (*pb.RPCSuccess, error) {
 	// 校验请求
@@ -1001,7 +1213,7 @@ func (this *ServerService) UpdateServerReverseProxy(ctx context.Context, req *pb
 	}
 
 	// 修改配置
-	err = models.SharedServerDAO.UpdateServerReverseProxy(tx, req.ServerId, req.ReverseProxyJSON)
+	err = models.SharedServerDAO.UpdateServerReverseProxyRef(tx, req.ServerId, req.ReverseProxyJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -1705,7 +1917,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 
 	var tx = this.NullTx()
 
-	reverseProxyRef, err := models.SharedServerDAO.FindReverseProxyRef(tx, req.ServerId)
+	reverseProxyRef, err := models.SharedServerDAO.FindServerReverseProxyRef(tx, req.ServerId)
 	if err != nil {
 		return nil, err
 	}
@@ -1724,7 +1936,7 @@ func (this *ServerService) FindAndInitServerReverseProxyConfig(ctx context.Conte
 		if err != nil {
 			return nil, err
 		}
-		err = models.SharedServerDAO.UpdateServerReverseProxy(tx, req.ServerId, refJSON)
+		err = models.SharedServerDAO.UpdateServerReverseProxyRef(tx, req.ServerId, refJSON)
 		if err != nil {
 			return nil, err
 		}

@@ -757,20 +757,42 @@ func (this *ServerDAO) UpdateServerAuditing(tx *dbs.Tx, serverId int64, result *
 	return this.NotifyDNSUpdate(tx, serverId)
 }
 
-// UpdateServerReverseProxy 修改反向代理配置
-func (this *ServerDAO) UpdateServerReverseProxy(tx *dbs.Tx, serverId int64, config []byte) error {
+// UpdateServerReverseProxyRef 修改反向代理配置
+func (this *ServerDAO) UpdateServerReverseProxyRef(tx *dbs.Tx, serverId int64, reverseProxyRefJSON []byte) error {
 	if serverId <= 0 {
 		return errors.New("serverId should not be smaller than 0")
 	}
 	var op = NewServerOperator()
 	op.Id = serverId
-	op.ReverseProxy = JSONBytes(config)
+	op.ReverseProxy = JSONBytes(reverseProxyRefJSON)
 	err := this.Save(tx, op)
 	if err != nil {
 		return err
 	}
 
 	return this.NotifyUpdate(tx, serverId)
+}
+
+// CreateServerReverseProxyRef 创建反向代理配置
+func (this *ServerDAO) CreateServerReverseProxyRef(tx *dbs.Tx, userId int64, serverId int64) (reverseProxyId int64, err error) {
+	reverseProxyId, err = SharedReverseProxyDAO.CreateReverseProxy(tx, 0, userId, nil, []byte("[]"), []byte("[]"))
+	if err != nil {
+		return 0, err
+	}
+	var reverseProxyRef = &serverconfigs.ReverseProxyRef{
+		IsPrior:        false,
+		IsOn:           true,
+		ReverseProxyId: reverseProxyId,
+	}
+	reverseProxyRefJSON, err := json.Marshal(reverseProxyRef)
+	if err != nil {
+		return 0, err
+	}
+	err = this.UpdateServerReverseProxyRef(tx, serverId, reverseProxyRefJSON)
+	if err != nil {
+		return 0, err
+	}
+	return reverseProxyId, nil
 }
 
 // CountAllEnabledServers 计算所有可用服务数量
@@ -1362,8 +1384,8 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 	return config, nil
 }
 
-// FindReverseProxyRef 根据条件获取反向代理配置
-func (this *ServerDAO) FindReverseProxyRef(tx *dbs.Tx, serverId int64) (*serverconfigs.ReverseProxyRef, error) {
+// FindServerReverseProxyRef 根据条件获取反向代理配置
+func (this *ServerDAO) FindServerReverseProxyRef(tx *dbs.Tx, serverId int64) (*serverconfigs.ReverseProxyRef, error) {
 	reverseProxy, err := this.Query(tx).
 		Pk(serverId).
 		Result("reverseProxy").
@@ -1374,7 +1396,7 @@ func (this *ServerDAO) FindReverseProxyRef(tx *dbs.Tx, serverId int64) (*serverc
 	if len(reverseProxy) == 0 || reverseProxy == "null" {
 		return nil, nil
 	}
-	config := &serverconfigs.ReverseProxyRef{}
+	var config = &serverconfigs.ReverseProxyRef{}
 	err = json.Unmarshal([]byte(reverseProxy), config)
 	return config, err
 }
@@ -2996,6 +3018,17 @@ func (this *ServerDAO) CheckServerPlanQuota(tx *dbs.Tx, serverId int64, countSer
 		}
 	}
 	return nil
+}
+
+// ExistsServer 检查网站是否存在
+func (this *ServerDAO) ExistsServer(tx *dbs.Tx, serverId int64) (bool, error) {
+	if serverId <= 0 {
+		return false, nil
+	}
+	return this.Query(tx).
+		Pk(serverId).
+		State(ServerStateEnabled).
+		Exist()
 }
 
 // NotifyUpdate 同步服务所在的集群

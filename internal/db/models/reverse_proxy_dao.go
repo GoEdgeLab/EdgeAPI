@@ -376,14 +376,14 @@ func (this *ReverseProxyDAO) UpdateReverseProxyScheduling(tx *dbs.Tx, reversePro
 }
 
 // UpdateReverseProxyPrimaryOrigins 修改主要源站
-func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, reverseProxyId int64, origins []byte) error {
+func (this *ReverseProxyDAO) UpdateReverseProxyPrimaryOrigins(tx *dbs.Tx, reverseProxyId int64, originRefs []byte) error {
 	if reverseProxyId <= 0 {
 		return errors.New("invalid reverseProxyId")
 	}
 	var op = NewReverseProxyOperator()
 	op.Id = reverseProxyId
-	if len(origins) > 0 {
-		op.PrimaryOrigins = origins
+	if len(originRefs) > 0 {
+		op.PrimaryOrigins = originRefs
 	} else {
 		op.PrimaryOrigins = "[]"
 	}

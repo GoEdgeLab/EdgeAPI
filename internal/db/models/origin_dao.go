@@ -538,6 +538,17 @@ func (this *OriginDAO) CheckUserOrigin(tx *dbs.Tx, userId int64, originId int64)
 	return SharedReverseProxyDAO.CheckUserReverseProxy(tx, userId, reverseProxyId)
 }
 
+// ExistsOrigin 检查源站是否存在
+func (this *OriginDAO) ExistsOrigin(tx *dbs.Tx, originId int64) (bool, error) {
+	if originId <= 0 {
+		return false, nil
+	}
+	return this.Query(tx).
+		Pk(originId).
+		State(OriginStateEnabled).
+		Exist()
+}
+
 // NotifyUpdate 通知更新
 func (this *OriginDAO) NotifyUpdate(tx *dbs.Tx, originId int64) error {
 	reverseProxyId, err := SharedReverseProxyDAO.FindReverseProxyContainsOriginId(tx, originId)
