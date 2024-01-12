@@ -67,6 +67,11 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	var matches = servicePathReg.FindStringSubmatch(path)
 	if len(matches) != 3 {
 		writer.WriteHeader(http.StatusNotFound)
+		this.writeJSON(writer, maps.Map{
+			"code":    "404",
+			"message": "invalid api path '" + path + "'",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
@@ -76,11 +81,21 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 	serviceType, ok := restServicesMap[serviceName]
 	if !ok {
 		writer.WriteHeader(http.StatusNotFound)
+		this.writeJSON(writer, maps.Map{
+			"code":    "404",
+			"message": "service '" + serviceName + "' not found",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
 	if len(methodName) == 0 {
 		writer.WriteHeader(http.StatusNotFound)
+		this.writeJSON(writer, maps.Map{
+			"code":    "404",
+			"message": "method '" + methodName + "' not found",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
@@ -94,19 +109,39 @@ func (this *RestServer) handle(writer http.ResponseWriter, req *http.Request) {
 			method = serviceType.MethodByName(methodName)
 			if !method.IsValid() {
 				writer.WriteHeader(http.StatusNotFound)
+				this.writeJSON(writer, maps.Map{
+					"code":    "404",
+					"message": "method '" + methodName + "' not found",
+					"data":    maps.Map{},
+				}, shouldPretty)
 				return
 			}
 		} else {
 			writer.WriteHeader(http.StatusNotFound)
+			this.writeJSON(writer, maps.Map{
+				"code":    "404",
+				"message": "method '" + methodName + "' not found",
+				"data":    maps.Map{},
+			}, shouldPretty)
 			return
 		}
 	}
 	if method.Type().NumIn() != 2 || method.Type().NumOut() != 2 {
 		writer.WriteHeader(http.StatusNotFound)
+		this.writeJSON(writer, maps.Map{
+			"code":    "404",
+			"message": "method '" + methodName + "' not found",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 	if method.Type().In(0).Name() != "Context" {
 		writer.WriteHeader(http.StatusNotFound)
+		this.writeJSON(writer, maps.Map{
+			"code":    "404",
+			"message": "method '" + methodName + "' not found (or invalid context)",
+			"data":    maps.Map{},
+		}, shouldPretty)
 		return
 	}
 
