@@ -41,6 +41,7 @@ const (
 	HTTPWebField_Referers           dbs.FieldName = "referers"           // 防盗链设置
 	HTTPWebField_UserAgent          dbs.FieldName = "userAgent"          // UserAgent设置
 	HTTPWebField_Optimization       dbs.FieldName = "optimization"       // 页面优化配置
+	HTTPWebField_Hls                dbs.FieldName = "hls"                // HLS设置
 )
 
 // HTTPWeb HTTP Web
@@ -83,6 +84,7 @@ type HTTPWeb struct {
 	Referers           dbs.JSON `field:"referers"`           // 防盗链设置
 	UserAgent          dbs.JSON `field:"userAgent"`          // UserAgent设置
 	Optimization       dbs.JSON `field:"optimization"`       // 页面优化配置
+	Hls                dbs.JSON `field:"hls"`                // HLS设置
 }
 
 type HTTPWebOperator struct {
@@ -124,6 +126,7 @@ type HTTPWebOperator struct {
 	Referers           any // 防盗链设置
 	UserAgent          any // UserAgent设置
 	Optimization       any // 页面优化配置
+	Hls                any // HLS设置
 }
 
 func NewHTTPWebOperator() *HTTPWebOperator {

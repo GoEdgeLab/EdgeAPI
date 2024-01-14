@@ -33,6 +33,11 @@ func (this *PlanService) FindEnabledPlan(ctx context.Context, req *pb.FindEnable
 	return &pb.FindEnabledPlanResponse{Plan: nil}, nil
 }
 
+// FindBasicPlan 查找套餐基本信息
+func (this *PlanService) FindBasicPlan(ctx context.Context, req *pb.FindBasicPlanRequest) (*pb.FindBasicPlanResponse, error) {
+	return nil, this.NotImplementedYet()
+}
+
 // CountAllEnabledPlans 计算套餐数量
 func (this *PlanService) CountAllEnabledPlans(ctx context.Context, req *pb.CountAllEnabledPlansRequest) (*pb.RPCCountResponse, error) {
 	return this.SuccessCount(0)

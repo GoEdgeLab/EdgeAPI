@@ -554,6 +554,18 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 		}
 	}
 
+	// hls
+	if IsNotNull(web.Hls) {
+		var hlsConfig = &serverconfigs.HLSConfig{}
+		err = json.Unmarshal(web.Hls, hlsConfig)
+		if err != nil {
+			return nil, err
+		}
+		if this.shouldCompose(isLocationOrGroup, forNode, hlsConfig.IsPrior, true) {
+			config.HLS = hlsConfig
+		}
+	}
+
 	if cacheMap != nil {
 		cacheMap.Put(cacheKey, config)
 	}
@@ -1464,6 +1476,10 @@ func (this *HTTPWebDAO) FindWebReferers(tx *dbs.Tx, webId int64) ([]byte, error)
 
 // UpdateWebUserAgent 修改User-Agent设置
 func (this *HTTPWebDAO) UpdateWebUserAgent(tx *dbs.Tx, webId int64, userAgentConfig *serverconfigs.UserAgentConfig) error {
+	if webId <= 0 {
+		return errors.New("require 'webId'")
+	}
+
 	if userAgentConfig == nil {
 		return nil
 	}

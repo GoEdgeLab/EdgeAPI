@@ -32,3 +32,13 @@ func (this *HTTPWebService) FindHTTPWebCC(ctx context.Context, req *pb.FindHTTPW
 func (this *HTTPWebService) UpdateHTTPWebRequestScripts(ctx context.Context, req *pb.UpdateHTTPWebRequestScriptsRequest) (*pb.RPCSuccess, error) {
 	return nil, this.NotImplementedYet()
 }
+
+// UpdateHTTPWebHLS 修改HLS设置
+func (this *HTTPWebService) UpdateHTTPWebHLS(ctx context.Context, req *pb.UpdateHTTPWebHLSRequest) (*pb.RPCSuccess, error) {
+	return nil, this.NotImplementedYet()
+}
+
+// FindHTTPWebHLS 查找HLS设置
+func (this *HTTPWebService) FindHTTPWebHLS(ctx context.Context, req *pb.FindHTTPWebHLSRequest) (*pb.FindHTTPWebHLSResponse, error) {
+	return nil, this.NotImplementedYet()
+}
