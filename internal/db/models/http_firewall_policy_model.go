@@ -16,8 +16,9 @@ const (
 	HTTPFirewallPolicyField_Description        dbs.FieldName = "description"        // 描述
 	HTTPFirewallPolicyField_Inbound            dbs.FieldName = "inbound"            // 入站规则
 	HTTPFirewallPolicyField_Outbound           dbs.FieldName = "outbound"           // 出站规则
-	HTTPFirewallPolicyField_BlockOptions       dbs.FieldName = "blockOptions"       // BLOCK选项
-	HTTPFirewallPolicyField_CaptchaOptions     dbs.FieldName = "captchaOptions"     // 验证码选项
+	HTTPFirewallPolicyField_BlockOptions       dbs.FieldName = "blockOptions"       // BLOCK动作选项
+	HTTPFirewallPolicyField_PageOptions        dbs.FieldName = "pageOptions"        // PAGE动作选项
+	HTTPFirewallPolicyField_CaptchaOptions     dbs.FieldName = "captchaOptions"     // 验证码动作选项
 	HTTPFirewallPolicyField_Mode               dbs.FieldName = "mode"               // 模式
 	HTTPFirewallPolicyField_UseLocalFirewall   dbs.FieldName = "useLocalFirewall"   // 是否自动使用本地防火墙
 	HTTPFirewallPolicyField_SynFlood           dbs.FieldName = "synFlood"           // SynFlood防御设置
@@ -42,8 +43,9 @@ type HTTPFirewallPolicy struct {
 	Description        string   `field:"description"`        // 描述
 	Inbound            dbs.JSON `field:"inbound"`            // 入站规则
 	Outbound           dbs.JSON `field:"outbound"`           // 出站规则
-	BlockOptions       dbs.JSON `field:"blockOptions"`       // BLOCK选项
-	CaptchaOptions     dbs.JSON `field:"captchaOptions"`     // 验证码选项
+	BlockOptions       dbs.JSON `field:"blockOptions"`       // BLOCK动作选项
+	PageOptions        dbs.JSON `field:"pageOptions"`        // PAGE动作选项
+	CaptchaOptions     dbs.JSON `field:"captchaOptions"`     // 验证码动作选项
 	Mode               string   `field:"mode"`               // 模式
 	UseLocalFirewall   uint8    `field:"useLocalFirewall"`   // 是否自动使用本地防火墙
 	SynFlood           dbs.JSON `field:"synFlood"`           // SynFlood防御设置
@@ -67,8 +69,9 @@ type HTTPFirewallPolicyOperator struct {
 	Description        any // 描述
 	Inbound            any // 入站规则
 	Outbound           any // 出站规则
-	BlockOptions       any // BLOCK选项
-	CaptchaOptions     any // 验证码选项
+	BlockOptions       any // BLOCK动作选项
+	PageOptions        any // PAGE动作选项
+	CaptchaOptions     any // 验证码动作选项
 	Mode               any // 模式
 	UseLocalFirewall   any // 是否自动使用本地防火墙
 	SynFlood           any // SynFlood防御设置

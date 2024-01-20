@@ -149,6 +149,14 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 		}
 		op.BlockOptions = blockOptionsJSON
 
+		// page options
+		var pageOptions = firewallconfigs.DefaultHTTPFirewallPageAction()
+		pageOptionsJSON, err := json.Marshal(pageOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.PageOptions = pageOptionsJSON
+
 		// captcha options
 		var captchaOptions = firewallconfigs.DefaultHTTPFirewallCaptchaAction()
 		captchaOptionsJSON, err := json.Marshal(captchaOptions)
@@ -313,6 +321,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	inboundJSON []byte,
 	outboundJSON []byte,
 	blockOptionsJSON []byte,
+	pageOptionsJSON []byte,
 	captchaOptionsJSON []byte,
 	mode firewallconfigs.FirewallMode,
 	useLocalFirewall bool,
@@ -342,6 +351,9 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	}
 	if IsNotNull(blockOptionsJSON) {
 		op.BlockOptions = blockOptionsJSON
+	}
+	if IsNotNull(pageOptionsJSON) {
+		op.PageOptions = pageOptionsJSON
 	}
 	if IsNotNull(captchaOptionsJSON) {
 		op.CaptchaOptions = captchaOptionsJSON
@@ -522,6 +534,16 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 			return config, err
 		}
 		config.BlockOptions = blockAction
+	}
+
+	// Page动作配置
+	if IsNotNull(policy.PageOptions) {
+		var pageAction = firewallconfigs.DefaultHTTPFirewallPageAction()
+		err = json.Unmarshal(policy.PageOptions, pageAction)
+		if err != nil {
+			return config, err
+		}
+		config.PageOptions = pageAction
 	}
 
 	// Captcha动作配置
