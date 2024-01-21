@@ -882,9 +882,28 @@ func (this *NodeDAO) FindNodeStatus(tx *dbs.Tx, nodeId int64) (*nodeconfigs.Node
 	return status, nil
 }
 
+// UpdateNodeIsOn 修改节点启用状态
+func (this *NodeDAO) UpdateNodeIsOn(tx *dbs.Tx, nodeId int64, isOn bool) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	err := this.Query(tx).
+		Pk(nodeId).
+		Set("isOn", isOn).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyDNSUpdate(tx, nodeId)
+}
+
 // UpdateNodeIsActive 更改节点在线状态
 func (this *NodeDAO) UpdateNodeIsActive(tx *dbs.Tx, nodeId int64, isActive bool) error {
-	b := "true"
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
+	var b = "true"
 	if !isActive {
 		b = "false"
 	}
@@ -898,6 +917,9 @@ func (this *NodeDAO) UpdateNodeIsActive(tx *dbs.Tx, nodeId int64, isActive bool)
 
 // UpdateNodeIsInstalled 设置节点安装状态
 func (this *NodeDAO) UpdateNodeIsInstalled(tx *dbs.Tx, nodeId int64, isInstalled bool) error {
+	if nodeId <= 0 {
+		return errors.New("invalid nodeId")
+	}
 	_, err := this.Query(tx).
 		Pk(nodeId).
 		Set("isInstalled", isInstalled).

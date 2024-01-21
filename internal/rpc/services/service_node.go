@@ -2293,3 +2293,19 @@ func (this *NodeService) FindNodeWebPPolicies(ctx context.Context, req *pb.FindN
 		WebPPolicies: pbPolicies,
 	}, nil
 }
+
+// UpdateNodeIsOn 修改节点的启用状态
+func (this *NodeService) UpdateNodeIsOn(ctx context.Context, req *pb.UpdateNodeIsOnRequest) (*pb.RPCSuccess, error) {
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedNodeDAO.UpdateNodeIsOn(tx, req.NodeId, req.IsOn)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
