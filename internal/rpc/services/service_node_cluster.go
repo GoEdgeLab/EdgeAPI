@@ -349,12 +349,12 @@ func (this *NodeClusterService) ListEnabledNodeClusters(ctx context.Context, req
 
 	var tx = this.NullTx()
 
-	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, req.Keyword, req.Offset, req.Size)
+	clusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, req.Keyword, req.IdDesc, req.IdAsc, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []*pb.NodeCluster{}
+	var result = []*pb.NodeCluster{}
 	for _, cluster := range clusters {
 		result = append(result, &pb.NodeCluster{
 			Id:          int64(cluster.Id),

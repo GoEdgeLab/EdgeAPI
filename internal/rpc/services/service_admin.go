@@ -503,7 +503,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 
 	// 默认集群
 	this.BeginTag(ctx, "SharedNodeClusterDAO.ListEnabledClusters")
-	nodeClusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, "", 0, 1)
+	nodeClusters, err := models.SharedNodeClusterDAO.ListEnabledClusters(tx, "", true, false, 0, 1)
 	this.EndTag(ctx, "SharedNodeClusterDAO.ListEnabledClusters")
 	if err != nil {
 		return nil, err
