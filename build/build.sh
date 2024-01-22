@@ -115,7 +115,11 @@ function build() {
 	fi
 
 	# building api node
-	env GOOS="$OS" GOARCH="$ARCH" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$DIST"/bin/edge-api "$ROOT"/../cmd/edge-api/main.go
+	env GOOS="$OS" GOARCH="$ARCH" go build -trimpath -tags $TAG --ldflags="-s -w" -o "$DIST/bin/$NAME" "$ROOT"/../cmd/edge-api/main.go
+	if [ ! -f "${DIST}/bin/${NAME}" ]; then
+		echo "build failed!"
+		exit
+	fi
 
 	# delete hidden files
 	find "$DIST" -name ".DS_Store" -delete
