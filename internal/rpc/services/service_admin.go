@@ -104,6 +104,39 @@ func (this *AdminService) CheckAdminUsername(ctx context.Context, req *pb.CheckA
 	return &pb.CheckAdminUsernameResponse{Exists: exists}, nil
 }
 
+// FindAdminWithUsername 使用用管理员户名查找管理员信息
+func (this *AdminService) FindAdminWithUsername(ctx context.Context, req *pb.FindAdminWithUsernameRequest) (*pb.FindAdminWithUsernameResponse, error) {
+	// 校验请求
+	_, err := this.ValidateAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	if len(req.Username) == 0 {
+		return nil, errors.New("require 'username'")
+	}
+	admin, err := models.SharedAdminDAO.FindAdminWithUsername(tx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if admin == nil {
+		return &pb.FindAdminWithUsernameResponse{Admin: nil}, nil
+	}
+
+	return &pb.FindAdminWithUsernameResponse{
+		Admin: &pb.Admin{
+			Id:       int64(admin.Id),
+			Fullname: admin.Fullname,
+			Username: admin.Username,
+			IsOn:     admin.IsOn,
+			IsSuper:  admin.IsSuper,
+			CanLogin: admin.CanLogin,
+		},
+	}, nil
+}
+
 // FindAdminFullname 获取管理员名称
 func (this *AdminService) FindAdminFullname(ctx context.Context, req *pb.FindAdminFullnameRequest) (*pb.FindAdminFullnameResponse, error) {
 	// 校验请求

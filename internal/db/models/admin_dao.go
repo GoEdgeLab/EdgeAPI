@@ -130,6 +130,19 @@ func (this *AdminDAO) FindAdminIdWithUsername(tx *dbs.Tx, username string) (int6
 	return int64(one.(*Admin).Id), nil
 }
 
+// FindAdminWithUsername 根据用户名查询管理员信息
+func (this *AdminDAO) FindAdminWithUsername(tx *dbs.Tx, username string) (*Admin, error) {
+	one, err := this.Query(tx).
+		Attr("username", username).
+		State(AdminStateEnabled).
+		ResultPk().
+		Find()
+	if err != nil || one == nil {
+		return nil, err
+	}
+	return one.(*Admin), nil
+}
+
 // UpdateAdminPassword 更改管理员密码
 func (this *AdminDAO) UpdateAdminPassword(tx *dbs.Tx, adminId int64, password string) error {
 	if adminId <= 0 {
@@ -212,7 +225,7 @@ func (this *AdminDAO) UpdateAdmin(tx *dbs.Tx, adminId int64, username string, ca
 	return nil
 }
 
-// CheckAdminUsername 检查用户名是否存在
+// CheckAdminUsername 检查管理员用户名是否存在
 func (this *AdminDAO) CheckAdminUsername(tx *dbs.Tx, adminId int64, username string) (bool, error) {
 	query := this.Query(tx).
 		State(AdminStateEnabled).
