@@ -14,6 +14,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
 	"github.com/iwind/TeaGo"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -494,6 +495,14 @@ func (this *Instance) SetupDB() error {
 		}
 	}
 
+	// 设置未初始化
+	{
+		err := models.SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeStandaloneInstanceInitialized, []byte("0"))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -948,6 +957,11 @@ func (this *Instance) setupDAO(db *dbs.DB) {
 	{
 		models.SharedReverseProxyDAO = models.NewReverseProxyDAO()
 		models.SharedReverseProxyDAO.Instance = db
+	}
+
+	{
+		models.SharedSysSettingDAO = models.NewSysSettingDAO()
+		models.SharedSysSettingDAO.Instance = db
 	}
 }
 
