@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
@@ -60,8 +61,8 @@ func CheckSQLErrCode(err error, code uint16) bool {
 	}
 
 	// 快速判断错误方法
-	mysqlErr, ok := err.(*mysql.MySQLError)
-	if ok && mysqlErr.Number == code { // Error 1050: Table 'xxx' already exists
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == code { // Error 1050: Table 'xxx' already exists
 		return true
 	}
 
@@ -86,6 +87,6 @@ func IsMySQLError(err error) bool {
 	if err == nil {
 		return false
 	}
-	_, ok := err.(*mysql.MySQLError)
-	return ok
+	var mysqlErr *mysql.MySQLError
+	return errors.As(err, &mysqlErr)
 }

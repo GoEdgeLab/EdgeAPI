@@ -5,7 +5,6 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
-	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -759,10 +758,5 @@ func (this *MetricStatDAO) canIgnore(err error) bool {
 	}
 
 	// 忽略 Error 1213: Deadlock found 错误
-	mysqlErr, ok := err.(*mysql.MySQLError)
-	if ok && mysqlErr.Number == 1213 {
-		return true
-	}
-
-	return false
+	return CheckSQLErrCode(err, 1213)
 }
