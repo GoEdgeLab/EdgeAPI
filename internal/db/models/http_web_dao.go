@@ -1466,7 +1466,7 @@ func (this *HTTPWebDAO) UpdateWebReferers(tx *dbs.Tx, webId int64, referersConfi
 	return this.NotifyUpdate(tx, webId)
 }
 
-// FindWebReferers 查找服务的防盗链配置
+// FindWebReferers 查找网站的防盗链配置
 func (this *HTTPWebDAO) FindWebReferers(tx *dbs.Tx, webId int64) ([]byte, error) {
 	return this.Query(tx).
 		Pk(webId).

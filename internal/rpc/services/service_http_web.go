@@ -972,18 +972,13 @@ func (this *HTTPWebService) FindHTTPWebReferers(ctx context.Context, req *pb.Fin
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.FindWebReferers(tx, req.HttpWebId)
-	if err != nil {
-		return nil, err
-	}
-
-	configJSON, err := json.Marshal(config)
+	referersJSON, err := models.SharedHTTPWebDAO.FindWebReferers(tx, req.HttpWebId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.FindHTTPWebReferersResponse{
-		ReferersJSON: configJSON,
+		ReferersJSON: referersJSON,
 	}, nil
 }
 
@@ -1040,18 +1035,13 @@ func (this *HTTPWebService) FindHTTPWebUserAgent(ctx context.Context, req *pb.Fi
 		}
 	}
 
-	config, err := models.SharedHTTPWebDAO.FindWebUserAgent(tx, req.HttpWebId)
-	if err != nil {
-		return nil, err
-	}
-
-	configJSON, err := json.Marshal(config)
+	userAgentJSON, err := models.SharedHTTPWebDAO.FindWebUserAgent(tx, req.HttpWebId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.FindHTTPWebUserAgentResponse{
-		UserAgentJSON: configJSON,
+		UserAgentJSON: userAgentJSON,
 	}, nil
 }
 
