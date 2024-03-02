@@ -3,6 +3,7 @@
 package instances
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -76,6 +77,15 @@ func (this *Instance) SetupDB() error {
 		defer func() {
 			_ = db.Close()
 		}()
+
+		// 等待连接成功
+		for i := 0; i < 30; i++ {
+			err := db.Raw().PingContext(context.Background())
+			if err == nil {
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
 
 		_, err := db.Exec("USE `" + this.options.DB.Name + "`")
 		if err != nil {

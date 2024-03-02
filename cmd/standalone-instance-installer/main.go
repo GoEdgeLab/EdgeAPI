@@ -8,16 +8,21 @@ import (
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/lists"
 	"os"
-	"strings"
 )
 
 func main() {
-	dbPasswordData, err := os.ReadFile("/usr/local/mysql/generated-password.txt")
-	if err != nil {
-		fmt.Println("[ERROR]read mysql password failed: " + err.Error())
-		return
+	var dbHost = "127.0.0.1"
+	var dbPassword = "123456"
+
+	envDBHost, _ := os.LookupEnv("DB_HOST")
+	if len(envDBHost) > 0 {
+		dbHost = envDBHost
 	}
-	var dbPassword = strings.TrimSpace(string(dbPasswordData))
+
+	envDBPassword, _ := os.LookupEnv("DB_PASSWORD")
+	if len(envDBPassword) > 0 {
+		dbPassword = envDBPassword
+	}
 
 	var isTesting = lists.ContainsString(os.Args, "-test") || lists.ContainsString(os.Args, "--test")
 	if isTesting {
@@ -27,7 +32,7 @@ func main() {
 	var instance = instances.NewInstance(instances.Options{
 		IsTesting: isTesting,
 		Verbose:   lists.ContainsString(os.Args, "-v"),
-		Cacheable: true,
+		Cacheable: false,
 		WorkDir:   "",
 		SrcDir:    "/usr/local/goedge/src",
 		DB: struct {
@@ -37,7 +42,7 @@ func main() {
 			Password string
 			Name     string
 		}{
-			Host:     "127.0.0.1",
+			Host:     dbHost,
 			Port:     3306,
 			Username: "root",
 			Password: dbPassword,
@@ -56,7 +61,7 @@ func main() {
 			RestHTTPPort: 8002,
 		},
 		Node: struct{ HTTPPort int }{
-			HTTPPort: 8080,
+			HTTPPort: 80,
 		},
 		UserNode: struct {
 			HTTPPort int
@@ -64,7 +69,7 @@ func main() {
 			HTTPPort: 7799,
 		},
 	})
-	err = instance.SetupAll()
+	err := instance.SetupAll()
 	if err != nil {
 		fmt.Println("[ERROR]setup failed: " + err.Error())
 		return
