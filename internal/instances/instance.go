@@ -64,7 +64,7 @@ func (this *Instance) SetupAll() error {
 
 func (this *Instance) SetupDB() error {
 	if this.options.Verbose {
-		log.Println("setup db ...")
+		log.Println("setup db " + this.options.DB.Host + ":" + types.String(this.options.DB.Port) + "/" + this.options.DB.Name + " ...")
 	}
 
 	// 检查数据库名

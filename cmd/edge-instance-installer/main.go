@@ -7,21 +7,39 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/instances"
 	_ "github.com/iwind/TeaGo/bootstrap"
 	"github.com/iwind/TeaGo/lists"
+	"log"
 	"os"
 )
 
 func main() {
+	var verbose = lists.ContainsString(os.Args, "-v")
+
 	var dbHost = "127.0.0.1"
 	var dbPassword = "123456"
+	var dbName = "edges"
 
-	envDBHost, _ := os.LookupEnv("DB_HOST")
+	envDBHost, _ := os.LookupEnv("EDGE_DB_HOST")
 	if len(envDBHost) > 0 {
 		dbHost = envDBHost
+		if verbose {
+			log.Println("env EDGE_DB_HOST=" + envDBHost)
+		}
 	}
 
-	envDBPassword, _ := os.LookupEnv("DB_PASSWORD")
+	envDBPassword, _ := os.LookupEnv("EDGE_DB_PASSWORD")
 	if len(envDBPassword) > 0 {
 		dbPassword = envDBPassword
+		if verbose {
+			log.Println("env EDGE_DB_PASSWORD=" + envDBPassword)
+		}
+	}
+
+	envDBName, _ := os.LookupEnv("EDGE_DB_NAME")
+	if len(envDBName) > 0 {
+		dbName = envDBName
+		if verbose {
+			log.Println("env EDGE_DB_NAME=" + envDBName)
+		}
 	}
 
 	var isTesting = lists.ContainsString(os.Args, "-test") || lists.ContainsString(os.Args, "--test")
@@ -31,7 +49,7 @@ func main() {
 
 	var instance = instances.NewInstance(instances.Options{
 		IsTesting: isTesting,
-		Verbose:   lists.ContainsString(os.Args, "-v"),
+		Verbose:   verbose,
 		Cacheable: false,
 		WorkDir:   "",
 		SrcDir:    "/usr/local/goedge/src",
@@ -46,7 +64,7 @@ func main() {
 			Port:     3306,
 			Username: "root",
 			Password: dbPassword,
-			Name:     "edges",
+			Name:     dbName,
 		},
 		AdminNode: struct {
 			Port int
