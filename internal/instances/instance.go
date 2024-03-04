@@ -497,6 +497,20 @@ func (this *Instance) SetupDB() error {
 		}
 	}
 
+	// 数据库清理
+	{
+		var config = systemconfigs.NewDatabaseConfig()
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return fmt.Errorf("encode database config failed: %w", err)
+		}
+
+		err = models.SharedSysSettingDAO.UpdateSetting(tx, systemconfigs.SettingCodeDatabaseConfigSetting, configJSON)
+		if err != nil {
+			return err
+		}
+	}
+
 	// 删除任务
 	{
 		err := models.SharedNodeTaskDAO.DeleteAllNodeTasks(tx)
