@@ -177,10 +177,10 @@ func (this *SysSettingDAO) ReadUserUIConfig(tx *dbs.Tx) (*systemconfigs.UserUICo
 		return nil, err
 	}
 	if len(valueJSON) == 0 {
-		return systemconfigs.DefaultUserUIConfig(), nil
+		return systemconfigs.NewUserUIConfig(), nil
 	}
 
-	var config = systemconfigs.DefaultUserUIConfig()
+	var config = systemconfigs.NewUserUIConfig()
 	err = json.Unmarshal(valueJSON, config)
 	if err != nil {
 		return nil, err
