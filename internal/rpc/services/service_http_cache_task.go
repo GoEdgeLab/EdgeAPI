@@ -353,14 +353,28 @@ func (this *HTTPCacheTaskService) FindEnabledHTTPCacheTask(ctx context.Context, 
 			key.Errors = nil
 		}
 
+		// 集群信息
+		var pbNodeCluster *pb.NodeCluster
+		if !isFromUser && key.ClusterId > 0 {
+			clusterName, findClusterErr := models.SharedNodeClusterDAO.FindNodeClusterName(tx, int64(key.ClusterId))
+			if findClusterErr != nil {
+				return nil, findClusterErr
+			}
+			pbNodeCluster = &pb.NodeCluster{
+				Id:   int64(key.ClusterId),
+				Name: clusterName,
+			}
+		}
+
 		pbKeys = append(pbKeys, &pb.HTTPCacheTaskKey{
-			Id:         int64(key.Id),
-			TaskId:     int64(key.TaskId),
-			Key:        key.Key,
-			KeyType:    key.KeyType,
-			IsDone:     key.IsDone,
-			IsDoing:    !key.IsDone && len(key.DecodeNodes()) > 0,
-			ErrorsJSON: key.Errors,
+			Id:          int64(key.Id),
+			TaskId:      int64(key.TaskId),
+			Key:         key.Key,
+			KeyType:     key.KeyType,
+			IsDone:      key.IsDone,
+			IsDoing:     !key.IsDone && len(key.DecodeNodes()) > 0,
+			ErrorsJSON:  key.Errors,
+			NodeCluster: pbNodeCluster,
 		})
 	}
 
