@@ -77,6 +77,14 @@ func (this *RegionProvinceDAO) FindRegionProvinceName(tx *dbs.Tx, id int64) (str
 		FindStringCol("")
 }
 
+// FindRegionCountryId 获取省份对应的国家|地区
+func (this *RegionProvinceDAO) FindRegionCountryId(tx *dbs.Tx, provinceId int64) (int64, error) {
+	return this.Query(tx).
+		Attr("valueId", provinceId).
+		Result("countryId").
+		FindInt64Col(0)
+}
+
 // FindProvinceIdWithDataId 根据数据ID查找省份
 func (this *RegionProvinceDAO) FindProvinceIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).

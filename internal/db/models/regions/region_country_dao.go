@@ -98,6 +98,14 @@ func (this *RegionCountryDAO) FindRegionCountryName(tx *dbs.Tx, id int64) (strin
 	return name, nil
 }
 
+// FindRegionCountryRouteCode 查找国家｜地区线路代号
+func (this *RegionCountryDAO) FindRegionCountryRouteCode(tx *dbs.Tx, countryId int64) (string, error) {
+	return this.Query(tx).
+		Attr("valueId", countryId).
+		Result("routeCode").
+		FindStringCol("")
+}
+
 // FindCountryIdWithDataId 根据数据ID查找国家
 func (this *RegionCountryDAO) FindCountryIdWithDataId(tx *dbs.Tx, dataId string) (int64, error) {
 	return this.Query(tx).

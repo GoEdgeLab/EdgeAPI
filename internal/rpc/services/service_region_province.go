@@ -88,9 +88,9 @@ func (this *RegionProvinceService) FindAllRegionProvincesWithRegionCountryId(ctx
 	if err != nil {
 		return nil, err
 	}
-	var result = []*pb.RegionProvince{}
+	var pbProvinces = []*pb.RegionProvince{}
 	for _, province := range provinces {
-		result = append(result, &pb.RegionProvince{
+		pbProvinces = append(pbProvinces, &pb.RegionProvince{
 			Id:          int64(province.ValueId),
 			Name:        province.Name,
 			Codes:       province.DecodeCodes(),
@@ -101,7 +101,61 @@ func (this *RegionProvinceService) FindAllRegionProvincesWithRegionCountryId(ctx
 	}
 
 	return &pb.FindAllRegionProvincesWithRegionCountryIdResponse{
-		RegionProvinces: result,
+		RegionProvinces: pbProvinces,
+	}, nil
+}
+
+// FindAllRegionProvinces 查找所有国家|地区的所有省份
+func (this *RegionProvinceService) FindAllRegionProvinces(ctx context.Context, req *pb.FindAllRegionProvincesRequest) (*pb.FindAllRegionProvincesResponse, error) {
+	_, _, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx = this.NullTx()
+	provinces, err := regions.SharedRegionProvinceDAO.FindAllEnabledProvinces(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbProvinces = []*pb.RegionProvince{}
+	var countryRouteCodeCache = map[int64]string{} // countryId => routeCode
+	for _, province := range provinces {
+		// 国家|地区ID
+		var countryId = int64(province.CountryId)
+		if countryId <= 0 {
+			continue
+		}
+
+		// 国家|地区线路
+		countryRouteCode, ok := countryRouteCodeCache[countryId]
+		if !ok {
+			countryRouteCode, err = regions.SharedRegionCountryDAO.FindRegionCountryRouteCode(tx, countryId)
+			if err != nil {
+				return nil, err
+			}
+			countryRouteCodeCache[countryId] = countryRouteCode
+		}
+		if len(countryRouteCode) == 0 {
+			continue
+		}
+
+		pbProvinces = append(pbProvinces, &pb.RegionProvince{
+			Id:              int64(province.ValueId),
+			Name:            province.Name,
+			Codes:           province.DecodeCodes(),
+			CustomName:      province.CustomName,
+			CustomCodes:     province.DecodeCustomCodes(),
+			DisplayName:     province.DisplayName(),
+			RegionCountryId: countryId,
+			RegionCountry: &pb.RegionCountry{
+				Id:        countryId,
+				RouteCode: countryRouteCode,
+			},
+		})
+	}
+	return &pb.FindAllRegionProvincesResponse{
+		RegionProvinces: pbProvinces,
 	}, nil
 }
 
