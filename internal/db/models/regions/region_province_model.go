@@ -12,11 +12,12 @@ const (
 	RegionProvinceField_CustomCodes dbs.FieldName = "customCodes" // 自定义代号
 	RegionProvinceField_State       dbs.FieldName = "state"       // 状态
 	RegionProvinceField_DataId      dbs.FieldName = "dataId"      // 原始数据ID
+	RegionProvinceField_RouteCode   dbs.FieldName = "routeCode"   // 线路代号
 )
 
 // RegionProvince 区域-省份
 type RegionProvince struct {
-	Id1          uint32   `field:"id"`          // ID
+	Id          uint32   `field:"id"`          // ID
 	ValueId     uint32   `field:"valueId"`     // 实际ID
 	CountryId   uint32   `field:"countryId"`   // 国家ID
 	Name        string   `field:"name"`        // 名称
@@ -25,6 +26,7 @@ type RegionProvince struct {
 	CustomCodes dbs.JSON `field:"customCodes"` // 自定义代号
 	State       uint8    `field:"state"`       // 状态
 	DataId      string   `field:"dataId"`      // 原始数据ID
+	RouteCode   string   `field:"routeCode"`   // 线路代号
 }
 
 type RegionProvinceOperator struct {
@@ -37,6 +39,7 @@ type RegionProvinceOperator struct {
 	CustomCodes any // 自定义代号
 	State       any // 状态
 	DataId      any // 原始数据ID
+	RouteCode   any // 线路代号
 }
 
 func NewRegionProvinceOperator() *RegionProvinceOperator {

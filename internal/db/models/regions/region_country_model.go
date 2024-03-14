@@ -14,11 +14,12 @@ const (
 	RegionCountryField_DataId      dbs.FieldName = "dataId"      // 原始数据ID
 	RegionCountryField_Pinyin      dbs.FieldName = "pinyin"      // 拼音
 	RegionCountryField_IsCommon    dbs.FieldName = "isCommon"    // 是否常用
+	RegionCountryField_RouteCode   dbs.FieldName = "routeCode"   // 线路代号
 )
 
 // RegionCountry 区域-国家/地区
 type RegionCountry struct {
-	Id1          uint32   `field:"id"`          // ID
+	Id          uint32   `field:"id"`          // ID
 	ValueId     uint32   `field:"valueId"`     // 实际ID
 	ValueCode   string   `field:"valueCode"`   // 值代号
 	Name        string   `field:"name"`        // 名称
@@ -29,6 +30,7 @@ type RegionCountry struct {
 	DataId      string   `field:"dataId"`      // 原始数据ID
 	Pinyin      dbs.JSON `field:"pinyin"`      // 拼音
 	IsCommon    bool     `field:"isCommon"`    // 是否常用
+	RouteCode   string   `field:"routeCode"`   // 线路代号
 }
 
 type RegionCountryOperator struct {
@@ -43,6 +45,7 @@ type RegionCountryOperator struct {
 	DataId      any // 原始数据ID
 	Pinyin      any // 拼音
 	IsCommon    any // 是否常用
+	RouteCode   any // 线路代号
 }
 
 func NewRegionCountryOperator() *RegionCountryOperator {
