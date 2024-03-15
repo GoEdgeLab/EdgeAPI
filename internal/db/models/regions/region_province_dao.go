@@ -11,12 +11,15 @@ import (
 	"github.com/iwind/TeaGo/types"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 const (
 	RegionProvinceStateEnabled  = 1 // 已启用
 	RegionProvinceStateDisabled = 0 // 已禁用
 )
+
+var RegionProvinceSuffixes = []string{"省", "州", "区", "大区", "特区", "港", "岛", "环礁", "谷地", "山", "口岸", "郡", "县", "城", "河", "河畔", "市"}
 
 type RegionProvinceDAO dbs.DAO
 
@@ -95,6 +98,37 @@ func (this *RegionProvinceDAO) FindProvinceIdWithDataId(tx *dbs.Tx, dataId strin
 
 // FindProvinceIdWithName 根据省份名查找省份ID
 func (this *RegionProvinceDAO) FindProvinceIdWithName(tx *dbs.Tx, countryId int64, provinceName string) (int64, error) {
+	{
+		provinceId, err := this.findProvinceIdWithExactName(tx, countryId, provinceName)
+		if err != nil {
+			return 0, err
+		}
+		if provinceId > 0 {
+			return provinceId, nil
+		}
+	}
+
+	// 候选词
+	for _, suffix := range RegionProvinceSuffixes {
+		var name string
+		if strings.HasSuffix(provinceName, suffix) {
+			name = strings.TrimSuffix(provinceName, suffix)
+		} else {
+			name = provinceName + suffix
+		}
+		provinceId, err := this.findProvinceIdWithExactName(tx, countryId, name)
+		if err != nil {
+			return 0, err
+		}
+		if provinceId > 0 {
+			return provinceId, nil
+		}
+	}
+
+	return 0, nil
+}
+
+func (this *RegionProvinceDAO) findProvinceIdWithExactName(tx *dbs.Tx, countryId int64, provinceName string) (int64, error) {
 	return this.Query(tx).
 		Attr("countryId", countryId).
 		Where("(name=:provinceName OR customName=:provinceName OR JSON_CONTAINS(codes, :provinceNameJSON) OR JSON_CONTAINS(customCodes, :provinceNameJSON))").

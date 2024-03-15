@@ -26,6 +26,25 @@ func TestRegionProvinceDAO_FindProvinceIdWithName(t *testing.T) {
 	}
 }
 
+func TestRegionProvinceDAO_FindProvinceIdWithName_Suffix(t *testing.T) {
+	dbs.NotifyReady()
+
+	var tx *dbs.Tx
+	for _, name := range []string{
+		"维埃纳",
+		"维埃纳省",
+		"维埃纳大区",
+		"维埃纳市",
+		"维埃纳小区", // expect 0
+	} {
+		provinceId, err := SharedRegionProvinceDAO.FindProvinceIdWithName(tx, 74, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(name, "=>", provinceId)
+	}
+}
+
 func TestRegionProvinceDAO_FindSimilarProvinces(t *testing.T) {
 	dbs.NotifyReady()
 

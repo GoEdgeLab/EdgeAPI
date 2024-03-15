@@ -13,6 +13,7 @@ import (
 	"github.com/iwind/TeaGo/types"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -449,6 +450,14 @@ func (this *IPLibraryFileDAO) GenerateIPLibrary(tx *dbs.Tx, libraryFileId int64)
 	for _, province := range dbProvinces {
 		for _, code := range province.AllCodes() {
 			provinceMap[types.String(province.CountryId)+"_"+code] = int64(province.ValueId)
+
+			for _, suffix := range regions.RegionProvinceSuffixes {
+				if strings.HasSuffix(code, suffix) {
+					provinceMap[types.String(province.CountryId)+"_"+strings.TrimSuffix(code, suffix)] = int64(province.ValueId)
+				} else {
+					provinceMap[types.String(province.CountryId)+"_"+(code+suffix)] = int64(province.ValueId)
+				}
+			}
 		}
 	}
 
