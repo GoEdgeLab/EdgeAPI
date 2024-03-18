@@ -135,39 +135,15 @@ func (this *LoginSessionDAO) WriteSessionValue(tx *dbs.Tx, sid string, key strin
 		sessionOp.UserId = userId
 
 		if isNewSession {
-			// 删除此用户之前创建的SESSION，防止单个用户SESSION过多
-			// TODO 将来改成按照活跃时间排序
-			const maxSessionsPerUser = 10
-			oldOnes, err := this.Query(tx).
+			// 删除此用户之前创建的SESSION，不再保存以往的SESSION，避免安全问题
+			err = this.Query(tx).
 				ResultPk().
 				Attr("adminId", adminId).
 				Attr("userId", userId).
-				Asc("createdAt").
-				FindAll()
+				Neq("sid", sid).
+				DeleteQuickly()
 			if err != nil {
 				return err
-			}
-			var countOldOnes = len(oldOnes)
-			if countOldOnes > maxSessionsPerUser {
-				var countDeleted int
-				for _, oldOne := range oldOnes {
-					var oldSessionId = int64(oldOne.(*LoginSession).Id)
-					if oldSessionId == sessionId {
-						continue
-					}
-
-					if countDeleted < countOldOnes-maxSessionsPerUser {
-						err = this.Query(tx).
-							Pk(oldSessionId).
-							DeleteQuickly()
-						if err != nil {
-							return err
-						}
-						countDeleted++
-					} else {
-						break
-					}
-				}
 			}
 		}
 	}

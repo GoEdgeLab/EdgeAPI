@@ -106,6 +106,9 @@ var upgradeFuncs = []*upgradeVersion{
 	{
 		"1.3.2", upgradeV1_3_2,
 	},
+	{
+		"1.3.4", upgradeV1_3_4,
+	},
 }
 
 // UpgradeSQLData 升级SQL数据
@@ -1226,6 +1229,16 @@ func upgradeV1_3_2(db *dbs.DB) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// 1.3.4
+func upgradeV1_3_4(db *dbs.DB) error {
+	_, err := db.Exec("DELETE FROM edgeLoginSessions WHERE adminId>0")
+	if err != nil {
+		return err
 	}
 
 	return nil
