@@ -10,6 +10,8 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"golang.org/x/crypto/ssh"
 	"net"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -47,6 +49,25 @@ func (this *NodeGrantService) UpdateNodeGrant(ctx context.Context, req *pb.Updat
 	}
 
 	var tx = this.NullTx()
+
+	// 从掩码中恢复密码和私钥
+	grant, err := models.SharedNodeGrantDAO.FindEnabledNodeGrant(tx, req.NodeGrantId)
+	if err != nil {
+		return nil, err
+	}
+	if grant == nil {
+		// do nothing here
+		return this.Success()
+	}
+
+	var maskReg = regexp.MustCompile(`^\*+$`)
+	if len(req.Password) > 0 && maskReg.MatchString(req.Password) {
+		req.Password = grant.Password
+	}
+
+	if len(req.PrivateKey) > 0 && strings.HasSuffix(req.PrivateKey, "********") {
+		req.PrivateKey = grant.PrivateKey
+	}
 
 	err = models.SharedNodeGrantDAO.UpdateGrant(tx, req.NodeGrantId, req.Name, req.Method, req.Username, req.Password, req.PrivateKey, req.Passphrase, req.Description, req.NodeId, req.Su)
 	return this.Success()
