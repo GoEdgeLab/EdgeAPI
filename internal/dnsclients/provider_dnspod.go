@@ -69,6 +69,19 @@ func (this *DNSPodProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// MaskParams 对参数进行掩码
+func (this *DNSPodProvider) MaskParams(params maps.Map) {
+	if params == nil {
+		return
+	}
+
+	if params.GetString("apiType") == "tencentDNS" {
+		params["accessKeySecret"] = MaskString(params.GetString("accessKeySecret"))
+	} else {
+		params["token"] = MaskString(params.GetString("token"))
+	}
+}
+
 // GetDomains 获取所有域名列表
 func (this *DNSPodProvider) GetDomains() (domains []string, err error) {
 	if this.tencentDNSProvider != nil {

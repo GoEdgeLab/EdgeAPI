@@ -71,6 +71,14 @@ func (this *EdgeDNSAPIProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// MaskParams 对参数进行掩码
+func (this *EdgeDNSAPIProvider) MaskParams(params maps.Map) {
+	if params == nil {
+		return
+	}
+	params["accessKeySecret"] = MaskString(params.GetString("accessKeySecret"))
+}
+
 // GetDomains 获取所有域名列表
 func (this *EdgeDNSAPIProvider) GetDomains() (domains []string, err error) {
 	var offset = 0

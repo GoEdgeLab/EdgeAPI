@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/dns"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
+	"github.com/iwind/TeaGo/maps"
 )
 
 // DNSProviderService DNS服务商相关服务
@@ -41,6 +43,21 @@ func (this *DNSProviderService) UpdateDNSProvider(ctx context.Context, req *pb.U
 	// TODO 校验权限
 
 	var tx = this.NullTx()
+
+	provider, err := dns.SharedDNSProviderDAO.FindEnabledDNSProvider(tx, req.DnsProviderId)
+	if err != nil {
+		return nil, err
+	}
+	if provider == nil {
+		// do nothing here
+		return this.Success()
+	}
+
+	// 恢复被掩码的数据
+	req.ApiParamsJSON, err = dnsclients.UnmaskAPIParams(provider.ApiParams, req.ApiParamsJSON)
+	if err != nil {
+		return nil, err
+	}
 
 	err = dns.SharedDNSProviderDAO.UpdateDNSProvider(tx, req.DnsProviderId, req.Name, req.ApiParamsJSON)
 	if err != nil {
@@ -175,14 +192,34 @@ func (this *DNSProviderService) FindEnabledDNSProvider(ctx context.Context, req 
 		return &pb.FindEnabledDNSProviderResponse{DnsProvider: nil}, nil
 	}
 
-	return &pb.FindEnabledDNSProviderResponse{DnsProvider: &pb.DNSProvider{
-		Id:            int64(provider.Id),
-		Name:          provider.Name,
-		Type:          provider.Type,
-		TypeName:      dnsclients.FindProviderTypeName(provider.Type),
-		ApiParamsJSON: provider.ApiParams,
-		DataUpdatedAt: int64(provider.DataUpdatedAt),
-	}}, nil
+	if req.MaskParams {
+		var providerObj = dnsclients.FindProvider(provider.Type, int64(provider.Id))
+		if providerObj != nil {
+			var paramsMap = maps.Map{}
+			if len(provider.ApiParams) > 0 {
+				err = json.Unmarshal(provider.ApiParams, &paramsMap)
+				if err != nil {
+					return nil, err
+				}
+				providerObj.MaskParams(paramsMap)
+				provider.ApiParams, err = json.Marshal(paramsMap)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	return &pb.FindEnabledDNSProviderResponse{
+		DnsProvider: &pb.DNSProvider{
+			Id:            int64(provider.Id),
+			Name:          provider.Name,
+			Type:          provider.Type,
+			TypeName:      dnsclients.FindProviderTypeName(provider.Type),
+			ApiParamsJSON: provider.ApiParams,
+			DataUpdatedAt: int64(provider.DataUpdatedAt),
+		},
+	}, nil
 }
 
 // FindAllDNSProviderTypes 取得所有服务商类型

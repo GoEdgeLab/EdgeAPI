@@ -10,6 +10,9 @@ type ProviderInterface interface {
 	// Auth 认证
 	Auth(params maps.Map) error
 
+	// MaskParams 对参数进行掩码
+	MaskParams(params maps.Map)
+
 	// GetDomains 获取所有域名列表
 	GetDomains() (domains []string, err error)
 

@@ -53,6 +53,11 @@ func (this *CustomHTTPProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// MaskParams 对参数进行掩码
+func (this *CustomHTTPProvider) MaskParams(params maps.Map) {
+	// 这里暂时不要掩码，避免用户忘记
+}
+
 // GetDomains 获取所有域名列表
 func (this *CustomHTTPProvider) GetDomains() (domains []string, err error) {
 	resp, err := this.post(maps.Map{

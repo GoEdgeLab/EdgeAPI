@@ -66,6 +66,14 @@ func (this *CloudFlareProvider) Auth(params maps.Map) error {
 	return nil
 }
 
+// MaskParams 对参数进行掩码
+func (this *CloudFlareProvider) MaskParams(params maps.Map) {
+	if params == nil {
+		return
+	}
+	params["apiKey"] = MaskString(params.GetString("apiKey"))
+}
+
 // GetDomains 获取所有域名列表
 func (this *CloudFlareProvider) GetDomains() (domains []string, err error) {
 	for page := 1; page <= 500; page++ {
