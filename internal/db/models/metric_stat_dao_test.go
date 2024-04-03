@@ -41,7 +41,7 @@ func TestMetricStatDAO_DeleteNodeItemStats(t *testing.T) {
 	defer func() {
 		t.Log(time.Since(before).Seconds()*1000, "ms")
 	}()
-	err := dao.DeleteNodeItemStats(nil, 1, 0, 1, timeutil.Format("Ymd"))
+	err := dao.DeleteNodeItemStats(nil, 1, 0, 1, timeutil.Format("Ymd"), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

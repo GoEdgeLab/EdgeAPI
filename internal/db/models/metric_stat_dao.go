@@ -13,8 +13,10 @@ import (
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,6 +40,8 @@ func init() {
 }
 
 const MetricStatTablePartials = 20 // 表格Partial数量
+
+var metricHashRegexp = regexp.MustCompile(`^\w+$`)
 
 func NewMetricStatDAO() *MetricStatDAO {
 	return dbs.NewDAO(&MetricStatDAO{
@@ -123,18 +127,30 @@ func (this *MetricStatDAO) DeleteItemStats(tx *dbs.Tx, itemId int64) error {
 }
 
 // DeleteNodeItemStats 删除某个节点的统计数据
-func (this *MetricStatDAO) DeleteNodeItemStats(tx *dbs.Tx, nodeId int64, serverId int64, itemId int64, time string) error {
+func (this *MetricStatDAO) DeleteNodeItemStats(tx *dbs.Tx, nodeId int64, serverId int64, itemId int64, time string, keepKeys []string) error {
 	if serverId > 0 {
-		_, err := this.Query(tx).
+		var query = this.Query(tx).
 			Table(this.partialTable(serverId)).
 			Attr("nodeId", nodeId).
 			Attr("serverId", serverId).
 			Attr("itemId", itemId).
-			Attr("time", time).
-			Delete()
-		if this.canIgnore(err) {
+			Attr("time", time)
+		if len(keepKeys) > 0 {
+			query.Reuse(false)
+			var s []string
+			for _, k := range keepKeys {
+				if metricHashRegexp.MatchString(k) {
+					s = append(s, "'"+k+"@"+types.String(nodeId)+"'")
+				}
+			}
+			query.Where("hash NOT IN (" + strings.Join(s, ",") + ")")
+		}
+		err := query.
+			DeleteQuickly()
+		if err == nil || this.canIgnore(err) {
 			return nil
 		}
+
 		return err
 	}
 
