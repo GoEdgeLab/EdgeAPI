@@ -45,6 +45,7 @@ const (
 	NodeClusterField_Http3                dbs.FieldName = "http3"                // HTTP3设置
 	NodeClusterField_AutoSystemTuning     dbs.FieldName = "autoSystemTuning"     // 是否自动调整系统参数
 	NodeClusterField_NetworkSecurity      dbs.FieldName = "networkSecurity"      // 网络安全策略
+	NodeClusterField_AutoTrimDisks        dbs.FieldName = "autoTrimDisks"        // 是否自动执行TRIM
 )
 
 // NodeCluster 节点集群
@@ -91,6 +92,7 @@ type NodeCluster struct {
 	Http3                dbs.JSON `field:"http3"`                // HTTP3设置
 	AutoSystemTuning     bool     `field:"autoSystemTuning"`     // 是否自动调整系统参数
 	NetworkSecurity      dbs.JSON `field:"networkSecurity"`      // 网络安全策略
+	AutoTrimDisks        bool     `field:"autoTrimDisks"`        // 是否自动执行TRIM
 }
 
 type NodeClusterOperator struct {
@@ -136,6 +138,7 @@ type NodeClusterOperator struct {
 	Http3                any // HTTP3设置
 	AutoSystemTuning     any // 是否自动调整系统参数
 	NetworkSecurity      any // 网络安全策略
+	AutoTrimDisks        any // 是否自动执行TRIM
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {

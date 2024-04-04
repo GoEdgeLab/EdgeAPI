@@ -80,7 +80,7 @@ func (this *NodeClusterService) CreateNodeCluster(ctx context.Context, req *pb.C
 			req.DnsTTL = 0
 		}
 
-		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.DnsTTL, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices, serverGlobalConfig, req.AutoInstallNftables, req.AutoSystemTuning)
+		clusterId, err = models.SharedNodeClusterDAO.CreateCluster(tx, adminId, req.Name, req.NodeGrantId, req.InstallDir, req.DnsDomainId, req.DnsName, req.DnsTTL, req.HttpCachePolicyId, req.HttpFirewallPolicyId, systemServices, serverGlobalConfig, req.AutoInstallNftables, req.AutoSystemTuning, req.AutoTrimDisks)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (this *NodeClusterService) UpdateNodeCluster(ctx context.Context, req *pb.U
 		}
 	}
 
-	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig, req.AutoRemoteStart, req.AutoInstallNftables, sshParams, req.AutoSystemTuning)
+	err = models.SharedNodeClusterDAO.UpdateCluster(tx, req.NodeClusterId, req.Name, req.NodeGrantId, req.InstallDir, req.TimeZone, req.NodeMaxThreads, req.AutoOpenPorts, clockConfig, req.AutoRemoteStart, req.AutoInstallNftables, sshParams, req.AutoSystemTuning, req.AutoTrimDisks)
 	if err != nil {
 		return nil, err
 	}
@@ -234,6 +234,7 @@ func (this *NodeClusterService) FindEnabledNodeCluster(ctx context.Context, req 
 		AutoRemoteStart:      cluster.AutoRemoteStart,
 		AutoInstallNftables:  cluster.AutoInstallNftables,
 		AutoSystemTuning:     cluster.AutoSystemTuning,
+		AutoTrimDisks:        cluster.AutoTrimDisks,
 	}}, nil
 }
 

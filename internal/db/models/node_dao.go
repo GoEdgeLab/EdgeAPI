@@ -1244,10 +1244,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			}
 		}
 
-		// 自动安装nftables
+		// 自动安装nftables等集群配置
 		if clusterIndex == 0 {
 			config.AutoInstallNftables = nodeCluster.AutoInstallNftables
 			config.AutoSystemTuning = nodeCluster.AutoSystemTuning
+			config.AutoTrimDisks = nodeCluster.AutoTrimDisks
 		}
 
 		// 安全设置
