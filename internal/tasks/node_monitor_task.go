@@ -161,7 +161,7 @@ func (this *NodeMonitorTask) MonitorCluster(cluster *models.NodeCluster) error {
 		}
 	}
 
-	// 检查CPU、内存、磁盘不足节点
+	// 检查CPU、内存、硬盘不足节点
 	// TODO 需要实现
 
 	return nil
