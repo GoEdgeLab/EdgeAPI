@@ -23,7 +23,7 @@ const (
 var listTypeCacheMap = map[int64]*IPList{} // listId => *IPList
 var DefaultGlobalIPList = &IPList{
 	Id:       uint32(firewallconfigs.GlobalListId),
-	Name:     "全局封锁名单",
+	Name:     "系统黑名单",
 	IsPublic: true,
 	IsGlobal: true,
 	Type:     "black",
