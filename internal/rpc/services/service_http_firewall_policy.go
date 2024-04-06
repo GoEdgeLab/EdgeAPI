@@ -2,10 +2,10 @@ package services
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
@@ -670,14 +670,17 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 	}
 
 	// 校验IP
-	ip := net.ParseIP(req.Ip)
+	var ip = net.ParseIP(req.Ip)
 	if len(ip) == 0 {
 		return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
 			IsOk:  false,
 			Error: "请输入正确的IP",
 		}, nil
 	}
-	ipLong := utils.IP2Long(req.Ip)
+	var ipLong uint64
+	if ip.To4() != nil {
+		ipLong = uint64(binary.BigEndian.Uint32(ip.To4()))
+	}
 
 	var tx = this.NullTx()
 	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)

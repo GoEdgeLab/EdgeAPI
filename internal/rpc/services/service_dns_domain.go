@@ -10,9 +10,9 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/numberutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/iwind/TeaGo/dbs"
@@ -547,7 +547,7 @@ func (this *DNSDomainService) findClusterDNSChanges(cluster *models.NodeCluster,
 				record, ok := nodeRecordMapping[key]
 				if !ok {
 					var recordType = dnstypes.RecordTypeA
-					if utils.IsIPv6(ip) {
+					if iputils.IsIPv6(ip) {
 						recordType = dnstypes.RecordTypeAAAA
 					}
 

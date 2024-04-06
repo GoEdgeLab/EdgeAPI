@@ -6,7 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
@@ -269,8 +269,18 @@ func upgradeV0_0_10(db *dbs.DB) error {
 		return err
 	}
 	for _, one := range ones {
-		ipFromLong := utils.IP2Long(one.GetString("ipFrom"))
-		ipToLong := utils.IP2Long(one.GetString("ipTo"))
+		var ipFrom = one.GetString("ipFrom")
+		var ipTo = one.GetString("ipTo")
+		var ipFromLong string
+		var ipToLong string
+
+		// TODO 支持IPv6
+		if iputils.IsIPv4(ipFrom) {
+			ipFromLong = iputils.ToLong(ipFrom)
+		}
+		if iputils.IsIPv4(ipTo) {
+			ipToLong = iputils.ToLong(ipTo)
+		}
 		_, err = db.Exec("UPDATE edgeIPItems SET ipFromLong=?, ipToLong=? WHERE id=?", ipFromLong, ipToLong, one.GetInt64("id"))
 		if err != nil {
 			return err

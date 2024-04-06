@@ -7,8 +7,8 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeAPI/internal/zero"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/shared"
@@ -520,14 +520,14 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 			// keyword
 			if len(ip) > 0 {
-				// TODO 支持IP范围
+				// TODO 支持IPv6范围
 				if tableQuery.hasRemoteAddrField {
 					// IP格式
 					if strings.Contains(ip, ",") || strings.Contains(ip, "-") {
 						rangeConfig, err := shared.ParseIPRange(ip)
 						if err == nil {
 							if len(rangeConfig.IPFrom) > 0 && len(rangeConfig.IPTo) > 0 {
-								query.Between("INET_ATON(remoteAddr)", utils.IP2Long(rangeConfig.IPFrom), utils.IP2Long(rangeConfig.IPTo))
+								query.Between("INET_ATON(remoteAddr)", iputils.ToLong(rangeConfig.IPFrom), iputils.ToLong(rangeConfig.IPTo))
 							}
 						}
 					} else {
@@ -580,7 +580,7 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 					if len(pieces) == 1 || len(pieces[1]) == 0 || pieces[0] == pieces[1] {
 						query.Attr("remoteAddr", pieces[0])
 					} else {
-						query.Between("INET_ATON(remoteAddr)", utils.IP2Long(pieces[0]), utils.IP2Long(pieces[1]))
+						query.Between("INET_ATON(remoteAddr)", iputils.ToLong(pieces[0]), iputils.ToLong(pieces[1]))
 					}
 				} else if statusRangeReg.MatchString(keyword) { // status:200-400
 					isSpecialKeyword = true

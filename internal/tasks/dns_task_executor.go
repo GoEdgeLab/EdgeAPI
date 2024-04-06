@@ -7,8 +7,8 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients"
 	"github.com/TeaOSLab/EdgeAPI/internal/dnsclients/dnstypes"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/dnsconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
@@ -434,7 +434,7 @@ func (this *DNSTaskExecutor) doCluster(taskId int64, taskVersion int64, clusterI
 				}
 
 				var recordType = dnstypes.RecordTypeA
-				if utils.IsIPv6(ip) {
+				if iputils.IsIPv6(ip) {
 					recordType = dnstypes.RecordTypeAAAA
 				}
 

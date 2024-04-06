@@ -7,8 +7,8 @@ import (
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/configutils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeutils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs"
@@ -259,7 +259,7 @@ func (this *HealthCheckExecutor) runNode(healthCheckConfig *serverconfigs.Health
 // 检查单个节点
 func (this *HealthCheckExecutor) runNodeOnce(healthCheckConfig *serverconfigs.HealthCheckConfig, result *HealthCheckResult) error {
 	// 支持IPv6
-	if utils.IsIPv6(result.NodeAddr) {
+	if iputils.IsIPv6(result.NodeAddr) {
 		result.NodeAddr = configutils.QuoteIP(result.NodeAddr)
 	}
 

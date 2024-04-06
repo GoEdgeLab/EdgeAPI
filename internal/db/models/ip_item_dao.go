@@ -5,7 +5,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
-	"github.com/TeaOSLab/EdgeAPI/internal/utils"
+	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/nodeconfigs"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
 	_ "github.com/go-sql-driver/mysql"
@@ -263,8 +263,15 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	op.ListId = listId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
-	op.IpFromLong = utils.IP2Long(ipFrom)
-	op.IpToLong = utils.IP2Long(ipTo)
+
+	// TODO 支持IPv6
+	if iputils.IsIPv4(ipFrom) {
+		op.IpFromLong = iputils.ToLong(ipFrom)
+	}
+	if iputils.IsIPv4(ipTo) {
+		op.IpToLong = iputils.ToLong(ipTo)
+	}
+
 	op.Reason = reason
 	op.Type = itemType
 	op.EventLevel = eventLevel
@@ -345,8 +352,15 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	op.Id = itemId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
-	op.IpFromLong = utils.IP2Long(ipFrom)
-	op.IpToLong = utils.IP2Long(ipTo)
+
+	// TODO 支持IPv6
+	if iputils.IsIPv4(ipFrom) {
+		op.IpFromLong = iputils.ToLong(ipFrom)
+	}
+	if iputils.IsIPv4(ipTo) {
+		op.IpToLong = iputils.ToLong(ipTo)
+	}
+
 	op.Reason = reason
 	op.Type = itemType
 	op.EventLevel = eventLevel
