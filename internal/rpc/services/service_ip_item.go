@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/binary"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	rpcutils "github.com/TeaOSLab/EdgeAPI/internal/rpc/utils"
@@ -492,10 +491,6 @@ func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckI
 			Error: "请输入正确的IP",
 		}, nil
 	}
-	var ipLong uint64
-	if ip.To4() != nil {
-		ipLong = uint64(binary.BigEndian.Uint32(ip.To4()))
-	}
 
 	var tx = this.NullTx()
 
@@ -513,7 +508,7 @@ func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckI
 	var isAllowed = list.Type == "white"
 
 	// 检查IP名单
-	item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, req.IpListId, ipLong)
+	item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, req.IpListId, req.Ip)
 	if err != nil {
 		return nil, err
 	}

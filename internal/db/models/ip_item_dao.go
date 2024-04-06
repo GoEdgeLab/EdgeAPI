@@ -13,7 +13,6 @@ import (
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
-	"math"
 	"net"
 	"time"
 )
@@ -264,14 +263,6 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
 
-	// TODO 支持IPv6
-	if iputils.IsIPv4(ipFrom) {
-		op.IpFromLong = iputils.ToLong(ipFrom)
-	}
-	if iputils.IsIPv4(ipTo) {
-		op.IpToLong = iputils.ToLong(ipTo)
-	}
-
 	op.Reason = reason
 	op.Type = itemType
 	op.EventLevel = eventLevel
@@ -352,14 +343,6 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 	op.Id = itemId
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
-
-	// TODO 支持IPv6
-	if iputils.IsIPv4(ipFrom) {
-		op.IpFromLong = iputils.ToLong(ipFrom)
-	}
-	if iputils.IsIPv4(ipTo) {
-		op.IpToLong = iputils.ToLong(ipTo)
-	}
 
 	op.Reason = reason
 	op.Type = itemType
@@ -457,16 +440,21 @@ func (this *IPItemDAO) FindItemListId(tx *dbs.Tx, itemId int64) (int64, error) {
 }
 
 // FindEnabledItemContainsIP 查找包含某个IP的Item
-func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip uint64) (*IPItem, error) {
-	query := this.Query(tx).
+func (this *IPItemDAO) FindEnabledItemContainsIP(tx *dbs.Tx, listId int64, ip string) (*IPItem, error) {
+	var query = this.Query(tx).
 		Attr("listId", listId).
 		State(IPItemStateEnabled)
-	if ip > math.MaxUint32 {
-		query.Where("(type='all' OR ipFromLong=:ip)")
-	} else {
-		query.Where("(type='all' OR ipFromLong=:ip OR (ipToLong>0 AND ipFromLong<=:ip AND ipToLong>=:ip))").
+
+	if iputils.IsIPv4(ip) {
+		query.Where("(type='all' OR ipFrom =:ip OR INET_ATON(:ip) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
 			Param("ip", ip)
+	} else if iputils.IsIPv6(ip) {
+		query.Where("(type='all' OR ipFrom =:ip OR HEX(INET6_ATON(:ip)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
+			Param("ip", ip)
+	} else {
+		return nil, nil
 	}
+
 	one, err := query.Find()
 	if err != nil {
 		return nil, err
