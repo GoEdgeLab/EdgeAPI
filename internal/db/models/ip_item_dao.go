@@ -514,17 +514,19 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 	}
 	if len(keyword) > 0 {
 		if net.ParseIP(keyword) != nil { // 是一个IP地址
-			// TODO 支持IPv6
-			query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
-				Param("ipKeyword", keyword)
+			if iputils.IsIPv4(keyword) {
+				query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
+					Param("ipKeyword", keyword)
+			} else if iputils.IsIPv6(keyword) {
+				query.Where("(ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
+					Param("ipKeyword", keyword)
+			}
 		} else {
 			query.Like("ipFrom", dbutils.QuoteLike(keyword))
 		}
 	}
 	if len(ip) > 0 {
-		// TODO 支持IPv6
-		query.Where("(ipFrom =:ip OR INET_ATON(:ip) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
-			Param("ip", ip)
+		query.Attr("ipFrom", ip)
 	}
 	if listId > 0 {
 		query.Attr("listId", listId)
@@ -564,17 +566,19 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 	}
 	if len(keyword) > 0 {
 		if net.ParseIP(keyword) != nil { // 是一个IP地址
-			// TODO 支持IPv6
-			query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
-				Param("ipKeyword", keyword)
+			if iputils.IsIPv4(keyword) {
+				query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
+					Param("ipKeyword", keyword)
+			} else if iputils.IsIPv6(keyword) {
+				query.Where("(ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
+					Param("ipKeyword", keyword)
+			}
 		} else {
 			query.Like("ipFrom", dbutils.QuoteLike(keyword))
 		}
 	}
 	if len(ip) > 0 {
-		// TODO 支持IPv6
-		query.Where("(ipFrom =:ip OR INET_ATON(:ip) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
-			Param("ip", ip)
+		query.Attr("ipFrom", ip)
 	}
 	if listId > 0 {
 		query.Attr("listId", listId)
