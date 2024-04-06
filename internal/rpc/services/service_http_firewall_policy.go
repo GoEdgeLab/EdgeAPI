@@ -663,9 +663,22 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 
 // CheckHTTPFirewallPolicyIPStatus 检查IP状态
 func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx context.Context, req *pb.CheckHTTPFirewallPolicyIPStatusRequest) (*pb.CheckHTTPFirewallPolicyIPStatusResponse, error) {
-	_, err := this.ValidateAdmin(ctx)
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
 	if err != nil {
 		return nil, err
+	}
+
+	var tx = this.NullTx()
+
+	// 检查权限
+	if req.HttpFirewallPolicyId <= 0 {
+		return nil, errors.New("invalid 'httpFirewallPolicyId'")
+	}
+	if userId > 0 {
+		err = models.SharedHTTPFirewallPolicyDAO.CheckUserFirewallPolicy(tx, userId, req.HttpFirewallPolicyId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 校验IP
@@ -677,7 +690,6 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 		}, nil
 	}
 
-	var tx = this.NullTx()
 	firewallPolicy, err := models.SharedHTTPFirewallPolicyDAO.ComposeFirewallPolicy(tx, req.HttpFirewallPolicyId, false, nil)
 	if err != nil {
 		return nil, err
