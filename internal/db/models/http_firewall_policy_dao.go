@@ -134,7 +134,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 
 	if userId <= 0 && serverGroupId <= 0 && serverId <= 0 {
 		// synFlood
-		var synFloodConfig = firewallconfigs.DefaultSYNFloodConfig()
+		var synFloodConfig = firewallconfigs.NewSYNFloodConfig()
 		synFloodJSON, err := json.Marshal(synFloodConfig)
 		if err != nil {
 			return 0, err
@@ -142,7 +142,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 		op.SynFlood = synFloodJSON
 
 		// block options
-		var blockOptions = firewallconfigs.DefaultHTTPFirewallBlockAction()
+		var blockOptions = firewallconfigs.NewHTTPFirewallBlockAction()
 		blockOptionsJSON, err := json.Marshal(blockOptions)
 		if err != nil {
 			return 0, err
@@ -150,7 +150,7 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 		op.BlockOptions = blockOptionsJSON
 
 		// page options
-		var pageOptions = firewallconfigs.DefaultHTTPFirewallPageAction()
+		var pageOptions = firewallconfigs.NewHTTPFirewallPageAction()
 		pageOptionsJSON, err := json.Marshal(pageOptions)
 		if err != nil {
 			return 0, err
@@ -158,12 +158,20 @@ func (this *HTTPFirewallPolicyDAO) CreateFirewallPolicy(tx *dbs.Tx, userId int64
 		op.PageOptions = pageOptionsJSON
 
 		// captcha options
-		var captchaOptions = firewallconfigs.DefaultHTTPFirewallCaptchaAction()
+		var captchaOptions = firewallconfigs.NewHTTPFirewallCaptchaAction()
 		captchaOptionsJSON, err := json.Marshal(captchaOptions)
 		if err != nil {
 			return 0, err
 		}
 		op.CaptchaOptions = captchaOptionsJSON
+
+		// jscookie options
+		var jsCookieOptions = firewallconfigs.NewHTTPFirewallJavascriptCookieAction()
+		jsCookieOptionsJSON, err := json.Marshal(jsCookieOptions)
+		if err != nil {
+			return 0, err
+		}
+		op.JsCookieOptions = jsCookieOptionsJSON
 	}
 
 	err := this.Save(tx, op)
@@ -323,6 +331,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	blockOptionsJSON []byte,
 	pageOptionsJSON []byte,
 	captchaOptionsJSON []byte,
+	jsCookieOptionsJSON []byte,
 	mode firewallconfigs.FirewallMode,
 	useLocalFirewall bool,
 	synFloodConfig *firewallconfigs.SYNFloodConfig,
@@ -357,6 +366,9 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicy(tx *dbs.Tx,
 	}
 	if IsNotNull(captchaOptionsJSON) {
 		op.CaptchaOptions = captchaOptionsJSON
+	}
+	if IsNotNull(jsCookieOptionsJSON) {
+		op.JsCookieOptions = jsCookieOptionsJSON
 	}
 
 	if synFloodConfig != nil {
@@ -528,7 +540,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	// Block动作配置
 	if IsNotNull(policy.BlockOptions) {
-		var blockAction = &firewallconfigs.HTTPFirewallBlockAction{}
+		var blockAction = firewallconfigs.NewHTTPFirewallBlockAction()
 		err = json.Unmarshal(policy.BlockOptions, blockAction)
 		if err != nil {
 			return config, err
@@ -538,7 +550,7 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	// Page动作配置
 	if IsNotNull(policy.PageOptions) {
-		var pageAction = firewallconfigs.DefaultHTTPFirewallPageAction()
+		var pageAction = firewallconfigs.NewHTTPFirewallPageAction()
 		err = json.Unmarshal(policy.PageOptions, pageAction)
 		if err != nil {
 			return config, err
@@ -548,12 +560,22 @@ func (this *HTTPFirewallPolicyDAO) ComposeFirewallPolicy(tx *dbs.Tx, policyId in
 
 	// Captcha动作配置
 	if IsNotNull(policy.CaptchaOptions) {
-		var captchaAction = &firewallconfigs.HTTPFirewallCaptchaAction{}
+		var captchaAction = firewallconfigs.NewHTTPFirewallCaptchaAction()
 		err = json.Unmarshal(policy.CaptchaOptions, captchaAction)
 		if err != nil {
 			return config, err
 		}
 		config.CaptchaOptions = captchaAction
+	}
+
+	// JSCookie动作配置
+	if IsNotNull(policy.JsCookieOptions) {
+		var jsCookieAction = firewallconfigs.NewHTTPFirewallJavascriptCookieAction()
+		err = json.Unmarshal(policy.JsCookieOptions, jsCookieAction)
+		if err != nil {
+			return config, err
+		}
+		config.JSCookieOptions = jsCookieAction
 	}
 
 	// syn flood

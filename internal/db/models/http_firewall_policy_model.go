@@ -19,6 +19,7 @@ const (
 	HTTPFirewallPolicyField_BlockOptions       dbs.FieldName = "blockOptions"       // BLOCK动作选项
 	HTTPFirewallPolicyField_PageOptions        dbs.FieldName = "pageOptions"        // PAGE动作选项
 	HTTPFirewallPolicyField_CaptchaOptions     dbs.FieldName = "captchaOptions"     // 验证码动作选项
+	HTTPFirewallPolicyField_JsCookieOptions    dbs.FieldName = "jsCookieOptions"    // JSCookie动作选项
 	HTTPFirewallPolicyField_Mode               dbs.FieldName = "mode"               // 模式
 	HTTPFirewallPolicyField_UseLocalFirewall   dbs.FieldName = "useLocalFirewall"   // 是否自动使用本地防火墙
 	HTTPFirewallPolicyField_SynFlood           dbs.FieldName = "synFlood"           // SynFlood防御设置
@@ -46,6 +47,7 @@ type HTTPFirewallPolicy struct {
 	BlockOptions       dbs.JSON `field:"blockOptions"`       // BLOCK动作选项
 	PageOptions        dbs.JSON `field:"pageOptions"`        // PAGE动作选项
 	CaptchaOptions     dbs.JSON `field:"captchaOptions"`     // 验证码动作选项
+	JsCookieOptions    dbs.JSON `field:"jsCookieOptions"`    // JSCookie动作选项
 	Mode               string   `field:"mode"`               // 模式
 	UseLocalFirewall   uint8    `field:"useLocalFirewall"`   // 是否自动使用本地防火墙
 	SynFlood           dbs.JSON `field:"synFlood"`           // SynFlood防御设置
@@ -72,6 +74,7 @@ type HTTPFirewallPolicyOperator struct {
 	BlockOptions       any // BLOCK动作选项
 	PageOptions        any // PAGE动作选项
 	CaptchaOptions     any // 验证码动作选项
+	JsCookieOptions    any // JSCookie动作选项
 	Mode               any // 模式
 	UseLocalFirewall   any // 是否自动使用本地防火墙
 	SynFlood           any // SynFlood防御设置

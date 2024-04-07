@@ -513,7 +513,7 @@ func upgradeV0_3_7(db *dbs.DB) error {
 // v0.4.0
 func upgradeV0_4_0(db *dbs.DB) error {
 	// 升级SYN Flood配置
-	synFloodJSON, err := json.Marshal(firewallconfigs.DefaultSYNFloodConfig())
+	synFloodJSON, err := json.Marshal(firewallconfigs.NewSYNFloodConfig())
 	if err == nil {
 		_, err := db.Exec("UPDATE edgeHTTPFirewallPolicies SET synFlood=? WHERE synFlood IS NULL AND state=1", string(synFloodJSON))
 		if err != nil {
