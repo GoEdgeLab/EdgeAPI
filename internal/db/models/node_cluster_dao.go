@@ -1030,7 +1030,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning", "networkSecurity", "autoTrimDisks").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning", "networkSecurity", "autoTrimDisks", "secret").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err

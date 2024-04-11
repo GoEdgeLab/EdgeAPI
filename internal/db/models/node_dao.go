@@ -1105,6 +1105,11 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			continue
 		}
 
+		// 集群密钥
+		if len(config.ClusterSecret) == 0 {
+			config.ClusterSecret = nodeCluster.Secret
+		}
+
 		// 所有节点IP地址
 		nodeIPAddresses, err := SharedNodeIPAddressDAO.FindAllAccessibleIPAddressesWithClusterId(tx, nodeconfigs.NodeRoleNode, clusterId, cacheMap)
 		if err != nil {
