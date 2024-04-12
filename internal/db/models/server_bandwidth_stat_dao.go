@@ -64,7 +64,7 @@ func init() {
 
 // UpdateServerBandwidth 写入数据
 // 现在不需要把 userPlanId 加入到数据表unique key中，因为只会影响5分钟统计，影响非常有限
-func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, regionId int64, userPlanId int64, day string, timeAt string, bandwidthBytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64) error {
+func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int64, serverId int64, regionId int64, userPlanId int64, day string, timeAt string, bandwidthBytes int64, totalBytes int64, cachedBytes int64, attackBytes int64, countRequests int64, countCachedRequests int64, countAttackRequests int64, countIPs int64) error {
 	if serverId <= 0 {
 		return errors.New("invalid server id '" + types.String(serverId) + "'")
 	}
@@ -78,6 +78,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 		Param("countRequests", countRequests).
 		Param("countCachedRequests", countCachedRequests).
 		Param("countAttackRequests", countAttackRequests).
+		Param("countIPs", countIPs).
 		InsertOrUpdateQuickly(maps.Map{
 			"userId":              userId,
 			"serverId":            serverId,
@@ -93,6 +94,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 			"countCachedRequests": countCachedRequests,
 			"countAttackRequests": countAttackRequests,
 			"userPlanId":          userPlanId,
+			"countIPs":            countIPs,
 		}, maps.Map{
 			"bytes":               dbs.SQL("bytes+:bytes"),
 			"avgBytes":            dbs.SQL("(totalBytes+:totalBytes)/300"), // 因为生成SQL语句时会自动将avgBytes排在totalBytes之前，所以这里不用担心先后顺序的问题
@@ -102,6 +104,7 @@ func (this *ServerBandwidthStatDAO) UpdateServerBandwidth(tx *dbs.Tx, userId int
 			"countRequests":       dbs.SQL("countRequests+:countRequests"),
 			"countCachedRequests": dbs.SQL("countCachedRequests+:countCachedRequests"),
 			"countAttackRequests": dbs.SQL("countAttackRequests+:countAttackRequests"),
+			"countIPs":            dbs.SQL("countIPs+:countIPs"),
 		})
 }
 
@@ -726,7 +729,7 @@ func (this *ServerBandwidthStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, reg
 
 	var query = this.Query(tx).
 		Table(this.partialTable(serverId)).
-		Result("SUM(totalBytes) AS totalBytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes")
+		Result("SUM(totalBytes) AS totalBytes, SUM(cachedBytes) AS cachedBytes, SUM(countRequests) AS countRequests, SUM(countCachedRequests) AS countCachedRequests, SUM(countAttackRequests) AS countAttackRequests, SUM(attackBytes) AS attackBytes, SUM(countIPs) AS countIPs")
 
 	query.Attr("serverId", serverId)
 
@@ -755,6 +758,7 @@ func (this *ServerBandwidthStatDAO) SumDailyStat(tx *dbs.Tx, serverId int64, reg
 	stat.CountCachedRequests = one.GetInt64("countCachedRequests")
 	stat.CountAttackRequests = one.GetInt64("countAttackRequests")
 	stat.AttackBytes = one.GetInt64("attackBytes")
+	stat.CountIPs = one.GetInt64("countIPs")
 	return
 }
 

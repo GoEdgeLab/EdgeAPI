@@ -18,6 +18,7 @@ const (
 	ServerBandwidthStatField_CountCachedRequests dbs.FieldName = "countCachedRequests" // 缓存的请求数
 	ServerBandwidthStatField_CountAttackRequests dbs.FieldName = "countAttackRequests" // 攻击请求数
 	ServerBandwidthStatField_TotalBytes          dbs.FieldName = "totalBytes"          // 总流量
+	ServerBandwidthStatField_CountIPs            dbs.FieldName = "countIPs"            // 独立IP
 )
 
 // ServerBandwidthStat 服务峰值带宽统计
@@ -37,6 +38,7 @@ type ServerBandwidthStat struct {
 	CountCachedRequests uint64 `field:"countCachedRequests"` // 缓存的请求数
 	CountAttackRequests uint64 `field:"countAttackRequests"` // 攻击请求数
 	TotalBytes          uint64 `field:"totalBytes"`          // 总流量
+	CountIPs            uint64 `field:"countIPs"`            // 独立IP
 }
 
 type ServerBandwidthStatOperator struct {
@@ -55,6 +57,7 @@ type ServerBandwidthStatOperator struct {
 	CountCachedRequests any // 缓存的请求数
 	CountAttackRequests any // 攻击请求数
 	TotalBytes          any // 总流量
+	CountIPs            any // 独立IP
 }
 
 func NewServerBandwidthStatOperator() *ServerBandwidthStatOperator {

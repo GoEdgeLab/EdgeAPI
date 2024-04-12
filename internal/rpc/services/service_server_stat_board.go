@@ -471,6 +471,17 @@ func (this *ServerStatBoardService) ComposeServerStatBoard(ctx context.Context, 
 		}
 	}
 
+	// 当日统计
+	{
+		var day = timeutil.Format("Ymd")
+		stat, err := models.SharedServerBandwidthStatDAO.SumDailyStat(tx, req.ServerId, 0, day, day)
+		if err != nil {
+			return nil, err
+		}
+		result.DailyCountIPs = stat.CountIPs
+		result.DailyTrafficBytes = stat.Bytes
+	}
+
 	// 带宽统计
 	{
 		var month = timeutil.Format("Ym")

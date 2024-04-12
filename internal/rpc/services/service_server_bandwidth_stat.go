@@ -66,7 +66,7 @@ func init() {
 						// 更新网站的带宽峰值
 						if stat.ServerId > 0 {
 							// 更新带宽统计
-							err = models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.NodeRegionId, stat.UserPlanId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
+							err = models.SharedServerBandwidthStatDAO.UpdateServerBandwidth(tx, stat.UserId, stat.ServerId, stat.NodeRegionId, stat.UserPlanId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests, stat.CountIPs)
 							if err != nil {
 								remotelogs.Error("ServerBandwidthStatService", "dump bandwidth stats failed: "+err.Error())
 							}
@@ -147,6 +147,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 			oldStat.CountCachedRequests += stat.CountCachedRequests
 			oldStat.CountAttackRequests += stat.CountAttackRequests
 			oldStat.CountWebsocketConnections += stat.CountWebsocketConnections
+			oldStat.CountIPs += stat.CountIPs
 		} else {
 			serverBandwidthStatsMap[key] = &pb.ServerBandwidthStat{
 				Id:                        0,
@@ -164,6 +165,7 @@ func (this *ServerBandwidthStatService) UploadServerBandwidthStats(ctx context.C
 				CountAttackRequests:       stat.CountAttackRequests,
 				CountWebsocketConnections: stat.CountWebsocketConnections,
 				UserPlanId:                stat.UserPlanId,
+				CountIPs:                  stat.CountIPs,
 			}
 		}
 		serverBandwidthStatsLocker.Unlock()
