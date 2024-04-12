@@ -2504,7 +2504,7 @@ func (this *ServerDAO) UpdateServerTrafficLimitStatus(tx *dbs.Tx, serverId int64
 		}
 		if len(oldStatus.UntilDay) > 0 &&
 			oldStatus.UntilDay >= day /** 如果已经限制，且比当前日期长，则无需重复 **/ &&
-			oldStatus.PlanId == planId /** 套餐无变化 **/ {
+			oldStatus.PlanId == planId {
 			// no need to change
 			return nil
 		}
@@ -2555,7 +2555,7 @@ func (this *ServerDAO) UpdateServersTrafficLimitStatusWithUserPlanId(tx *dbs.Tx,
 	return nil
 }
 
-// ResetServersTrafficLimitStatusWithPlanId 重置网站限流状态
+// ResetServersTrafficLimitStatusWithPlanId 重置某个套餐相关网站限流状态
 func (this *ServerDAO) ResetServersTrafficLimitStatusWithPlanId(tx *dbs.Tx, planId int64) error {
 	return this.Query(tx).
 		Where("JSON_EXTRACT(trafficLimitStatus, '$.planId')=:planId").
@@ -2632,13 +2632,17 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 		return errors.New("serverId should not be smaller than 0")
 	}
 
-	oldClusterId, err := this.Query(tx).
+	oldServerOne, queryErr := SharedServerDAO.
+		Query(tx).
 		Pk(serverId).
-		Result("clusterId").
-		FindInt64Col(0)
-	if err != nil {
-		return err
+		Result("clusterId", "userPlanId").
+		Find()
+	if queryErr != nil || oldServerOne == nil {
+		return queryErr
 	}
+	var oldServer = oldServerOne.(*Server)
+	var oldClusterId = int64(oldServer.ClusterId)
+	var oldUserPlanId = int64(oldServer.UserPlanId)
 
 	// 取消套餐
 	if userPlanId <= 0 {
@@ -2670,6 +2674,15 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 		if err != nil {
 			return err
 		}
+
+		// 重置以往的用户套餐状态
+		if oldUserPlanId > 0 {
+			err = SharedUserPlanStatDAO.ResetUserPlanStatsWithUserPlanId(tx, oldUserPlanId)
+			if err != nil {
+				return err
+			}
+		}
+
 		err = this.NotifyUpdate(tx, serverId)
 		if err != nil {
 			return err
@@ -2717,6 +2730,21 @@ func (this *ServerDAO) UpdateServerUserPlanId(tx *dbs.Tx, serverId int64, userPl
 	if err != nil {
 		return err
 	}
+
+	// 重置以往的用户套餐统计状态
+	if oldUserPlanId > 0 {
+		err = SharedUserPlanStatDAO.ResetUserPlanStatsWithUserPlanId(tx, oldUserPlanId)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 重置当前用户套餐统计状态
+	err = SharedUserPlanStatDAO.ResetUserPlanStatsWithUserPlanId(tx, userPlanId)
+	if err != nil {
+		return err
+	}
+
 	err = this.NotifyUpdate(tx, serverId)
 	if err != nil {
 		return err
