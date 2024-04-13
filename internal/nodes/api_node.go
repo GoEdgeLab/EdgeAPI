@@ -35,11 +35,13 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	// grpc decompression
@@ -91,6 +93,9 @@ func (this *APINode) Start() {
 		this.addStartIssue("sock", errString, "")
 		return
 	}
+
+	// 监听信号
+	this.listenSignals()
 
 	// 启动IP库
 	this.setProgress("IP_LIBRARY", "开始初始化IP库")
@@ -920,4 +925,17 @@ func (this *APINode) setupTimeZone() {
 			time.Local = location
 		}
 	}
+}
+
+// 监听一些信号
+func (this *APINode) listenSignals() {
+	var queue = make(chan os.Signal, 8)
+	signal.Notify(queue, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGQUIT)
+	goman.New(func() {
+		for range queue {
+			events.Notify(events.EventQuit)
+			os.Exit(0)
+			return
+		}
+	})
 }

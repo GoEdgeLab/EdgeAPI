@@ -4,16 +4,21 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils/regexputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/systemconfigs"
+	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
 	"github.com/iwind/TeaGo/types"
 	timeutil "github.com/iwind/TeaGo/utils/time"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +28,29 @@ var serverBandwidthStatsMap = map[string]*pb.ServerBandwidthStat{} // server key
 var serverBandwidthStatsLocker = &sync.Mutex{}
 
 func init() {
+	// 数据缓存
+	if teaconst.IsMain {
+		var cacheFile = Tea.Root + "/data/server_bandwidth_stats.cache"
+
+		{
+			data, err := os.ReadFile(cacheFile)
+			if err == nil {
+				_ = os.Remove(cacheFile)
+				serverBandwidthStatsLocker.Lock()
+				_ = json.Unmarshal(data, &serverBandwidthStatsMap)
+				serverBandwidthStatsLocker.Unlock()
+			}
+		}
+
+		events.On(events.EventQuit, func() {
+			serverBandwidthStatsMapJSON, err := json.Marshal(serverBandwidthStatsMap)
+			if err == nil {
+				_ = os.WriteFile(cacheFile, serverBandwidthStatsMapJSON, 0666)
+			}
+		})
+	}
+
+	// 定时处理数据
 	var ticker = time.NewTicker(1 * time.Minute)
 	var useTx = true
 
