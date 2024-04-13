@@ -51,7 +51,8 @@ func TestIPItemDAO_CreateManyIPs(t *testing.T) {
 	var dao = models.NewIPItemDAO()
 	var n = 10
 	for i := 0; i < n; i++ {
-		itemId, err := dao.CreateIPItem(tx, firewallconfigs.GlobalListId, "192."+types.String(rands.Int(0, 255))+"."+types.String(rands.Int(0, 255))+"."+types.String(rands.Int(0, 255)), "", time.Now().Unix()+86400, "test", models.IPItemTypeIPv4, "warning", 0, 0, 0, 0, 0, 0, 0, false)
+		var ip = "192." + types.String(rands.Int(0, 255)) + "." + types.String(rands.Int(0, 255)) + "." + types.String(rands.Int(0, 255))
+		itemId, err := dao.CreateIPItem(tx, firewallconfigs.GlobalListId, ip, ip, "", time.Now().Unix()+86400, "test", models.IPItemTypeIPv4, "warning", 0, 0, 0, 0, 0, 0, 0, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -73,4 +74,17 @@ func TestIPItemDAO_DisableIPItemsWithIP(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok")
+}
+
+func TestIPItemDAO_ParseIPValue(t *testing.T) {
+	var dao = models.NewIPItemDAO()
+	t.Log(dao.ParseIPValue("192.168.1.100"))
+	t.Log(dao.ParseIPValue("192.168.1.100-192.168.1.200"))
+	t.Log(dao.ParseIPValue("192.168.1.200-192.168.1.100"))
+	t.Log(dao.ParseIPValue("192.168.1.100/24"))
+	t.Log(dao.ParseIPValue("::1"))
+	t.Log(dao.ParseIPValue("192.168.1.100-::2"))
+	t.Log(dao.ParseIPValue("192"))
+	t.Log(dao.ParseIPValue("192.168.1.200/256"))
+	t.Log(dao.ParseIPValue("192.168.1.200-"))
 }

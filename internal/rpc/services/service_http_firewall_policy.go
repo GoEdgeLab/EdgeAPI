@@ -743,6 +743,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 					IpList:    &pb.IPList{Name: listName, Id: listId},
 					IpItem: &pb.IPItem{
 						Id:         int64(item.Id),
+						Value:      item.ComposeValue(),
 						IpFrom:     item.IpFrom,
 						IpTo:       item.IpTo,
 						ExpiredAt:  int64(item.ExpiredAt),
@@ -798,6 +799,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 					IpList:    &pb.IPList{Name: listName, Id: listId},
 					IpItem: &pb.IPItem{
 						Id:         int64(item.Id),
+						Value:      item.ComposeValue(),
 						IpFrom:     item.IpFrom,
 						IpTo:       item.IpTo,
 						ExpiredAt:  int64(item.ExpiredAt),

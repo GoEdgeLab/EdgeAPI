@@ -5,6 +5,7 @@ import "github.com/iwind/TeaGo/dbs"
 const (
 	IPItemField_Id                            dbs.FieldName = "id"                            // ID
 	IPItemField_ListId                        dbs.FieldName = "listId"                        // 所属名单ID
+	IPItemField_Value                         dbs.FieldName = "value"                         // 原始值
 	IPItemField_Type                          dbs.FieldName = "type"                          // 类型
 	IPItemField_IpFrom                        dbs.FieldName = "ipFrom"                        // 开始IP
 	IPItemField_IpTo                          dbs.FieldName = "ipTo"                          // 结束IP
@@ -32,6 +33,7 @@ const (
 type IPItem struct {
 	Id                            uint64 `field:"id"`                            // ID
 	ListId                        uint32 `field:"listId"`                        // 所属名单ID
+	Value                         string `field:"value"`                         // 原始值
 	Type                          string `field:"type"`                          // 类型
 	IpFrom                        string `field:"ipFrom"`                        // 开始IP
 	IpTo                          string `field:"ipTo"`                          // 结束IP
@@ -58,6 +60,7 @@ type IPItem struct {
 type IPItemOperator struct {
 	Id                            any // ID
 	ListId                        any // 所属名单ID
+	Value                         any // 原始值
 	Type                          any // 类型
 	IpFrom                        any // 开始IP
 	IpTo                          any // 结束IP

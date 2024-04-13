@@ -14,6 +14,7 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/types"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -155,6 +156,59 @@ func (this *IPItemDAO) DisableIPItemsWithIP(tx *dbs.Tx, ipFrom string, ipTo stri
 	return nil
 }
 
+// DisableIPItemsWithIPValue 禁用某个IP相关条目
+func (this *IPItemDAO) DisableIPItemsWithIPValue(tx *dbs.Tx, value string, sourceUserId int64, listId int64) error {
+	if len(value) == 0 {
+		return errors.New("invalid 'value'")
+	}
+
+	var query = this.Query(tx).
+		Result("id", "listId").
+		Attr("value", value).
+		State(IPItemStateEnabled)
+
+	if listId > 0 {
+		query.Attr("listId", listId)
+	}
+
+	if sourceUserId > 0 {
+		query.Attr("sourceUserId", sourceUserId)
+	}
+
+	ones, err := query.FindAll()
+	if err != nil {
+		return err
+	}
+
+	var itemIds = []int64{}
+	for _, one := range ones {
+		var item = one.(*IPItem)
+		var itemId = int64(item.Id)
+		itemIds = append(itemIds, itemId)
+	}
+
+	for _, itemId := range itemIds {
+		version, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return err
+		}
+
+		_, err = this.Query(tx).
+			Pk(itemId).
+			Set("state", IPItemStateDisabled).
+			Set("version", version).
+			Update()
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(itemIds) > 0 {
+		return this.NotifyUpdate(tx, itemIds[len(itemIds)-1])
+	}
+	return nil
+}
+
 // DisableIPItemsWithListId 禁用某个IP名单内的所有IP
 func (this *IPItemDAO) DisableIPItemsWithListId(tx *dbs.Tx, listId int64) error {
 	for {
@@ -236,9 +290,46 @@ func (this *IPItemDAO) DeleteOldItem(tx *dbs.Tx, listId int64, ipFrom string, ip
 	return nil
 }
 
+// DeleteOldItemWithValue 根据IP删除以前的旧记录
+func (this *IPItemDAO) DeleteOldItemWithValue(tx *dbs.Tx, listId int64, value string) error {
+	if len(value) == 0 {
+		return nil
+	}
+	ones, err := this.Query(tx).
+		ResultPk().
+		UseIndex("ipFrom").
+		Attr("listId", listId).
+		Attr("value", value).
+		Attr("state", IPItemStateEnabled).
+		FindAll()
+	if err != nil {
+		return err
+	}
+
+	for _, one := range ones {
+		var itemId = int64(one.(*IPItem).Id)
+		version, err := SharedIPListDAO.IncreaseVersion(tx)
+		if err != nil {
+			return err
+		}
+
+		err = this.Query(tx).
+			Pk(itemId).
+			Set("version", version).
+			Set("state", IPItemStateDisabled).
+			UpdateQuickly()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // CreateIPItem 创建IP
 func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	listId int64,
+	value string,
 	ipFrom string,
 	ipTo string,
 	expiredAt int64,
@@ -253,6 +344,15 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 	sourceHTTPFirewallRuleGroupId int64,
 	sourceHTTPFirewallRuleSetId int64,
 	shouldNotify bool) (int64, error) {
+	// generate 'itemType'
+	if itemType != IPItemTypeAll && len(ipFrom) > 0 {
+		if iputils.IsIPv4(ipFrom) {
+			itemType = IPItemTypeIPv4
+		} else if iputils.IsIPv6(ipFrom) {
+			itemType = IPItemTypeIPv6
+		}
+	}
+
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return 0, err
@@ -260,6 +360,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 
 	var op = NewIPItemOperator()
 	op.ListId = listId
+	op.Value = value
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
 
@@ -318,9 +419,18 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 }
 
 // UpdateIPItem 修改IP
-func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) error {
+func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, value string, ipFrom string, ipTo string, expiredAt int64, reason string, itemType IPItemType, eventLevel string) error {
 	if itemId <= 0 {
 		return errors.New("invalid itemId")
+	}
+
+	// generate 'itemType'
+	if itemType != IPItemTypeAll && len(ipFrom) > 0 {
+		if iputils.IsIPv4(ipFrom) {
+			itemType = IPItemTypeIPv4
+		} else if iputils.IsIPv6(ipFrom) {
+			itemType = IPItemTypeIPv6
+		}
 	}
 
 	listId, err := this.Query(tx).
@@ -341,6 +451,7 @@ func (this *IPItemDAO) UpdateIPItem(tx *dbs.Tx, itemId int64, ipFrom string, ipT
 
 	var op = NewIPItemOperator()
 	op.Id = itemId
+	op.Value = value
 	op.IpFrom = ipFrom
 	op.IpTo = ipTo
 
@@ -709,6 +820,60 @@ func (this *IPItemDAO) CleanExpiredIPItems(tx *dbs.Tx) error {
 	}
 
 	return nil
+}
+
+// ParseIPValue 解析IP值
+func (this *IPItemDAO) ParseIPValue(value string) (newValue string, ipFrom string, ipTo string, ok bool) {
+	if len(value) == 0 {
+		return
+	}
+
+	newValue = value
+
+	// ip1-ip2
+	if strings.Contains(value, "-") {
+		var pieces = strings.Split(value, "-")
+		if len(pieces) != 2 {
+			return
+		}
+
+		ipFrom = strings.TrimSpace(pieces[0])
+		ipTo = strings.TrimSpace(pieces[1])
+
+		if !iputils.IsValid(ipFrom) || !iputils.IsValid(ipTo) {
+			return
+		}
+
+		if !iputils.IsSameVersion(ipFrom, ipTo) {
+			return
+		}
+
+		if iputils.CompareIP(ipFrom, ipTo) > 0 {
+			ipFrom, ipTo = ipTo, ipFrom
+			newValue = ipFrom + "-" + ipTo
+		}
+
+		ok = true
+		return
+	}
+
+	// ip/mask
+	if strings.Contains(value, "/") {
+		cidr, err := iputils.ParseCIDR(value)
+		if err != nil {
+			return
+		}
+		return newValue, cidr.From().String(), cidr.To().String(), true
+	}
+
+	// single value
+	if iputils.IsValid(value) {
+		ipFrom = value
+		ok = true
+		return
+	}
+
+	return
 }
 
 // NotifyUpdate 通知更新
