@@ -158,7 +158,6 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	httpsJSON []byte,
 	tcpJSON []byte,
 	tlsJSON []byte,
-	unixJSON []byte,
 	udpJSON []byte,
 	webId int64,
 	reverseProxyJSON []byte,
@@ -205,9 +204,6 @@ func (this *ServerDAO) CreateServer(tx *dbs.Tx,
 	}
 	if IsNotNull(tlsJSON) {
 		op.Tls = tlsJSON
-	}
-	if IsNotNull(unixJSON) {
-		op.Unix = unixJSON
 	}
 	if IsNotNull(udpJSON) {
 		op.Udp = udpJSON
@@ -1233,18 +1229,6 @@ func (this *ServerDAO) ComposeServerConfig(tx *dbs.Tx, server *Server, ignoreCer
 			}
 
 			config.TLS = tlsConfig
-		}
-	}
-
-	// Unix
-	if IsNotNull(server.Unix) {
-		var unixConfig = &serverconfigs.UnixProtocolConfig{}
-		err := json.Unmarshal(server.Unix, unixConfig)
-		if err != nil {
-			return nil, err
-		}
-		if !forNode || unixConfig.IsOn {
-			config.Unix = unixConfig
 		}
 	}
 

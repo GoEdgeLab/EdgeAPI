@@ -181,7 +181,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		}
 	}
 
-	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UnixJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, req.IncludeNodesJSON, req.ExcludeNodesJSON, req.ServerGroupIds, req.UserPlanId)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, req.IncludeNodesJSON, req.ExcludeNodesJSON, req.ServerGroupIds, req.UserPlanId)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +451,7 @@ func (this *ServerService) CreateBasicHTTPServer(ctx context.Context, req *pb.Cr
 	}
 
 	// finally, we create ...
-	serverId, err := models.SharedServerDAO.CreateServer(tx, adminId, req.UserId, serverconfigs.ServerTypeHTTPProxy, req.Domains[0], "", serverNamesJSON, isAuditing, auditingServerNamesJSON, httpJSON, httpsJSON, nil, nil, nil, nil, webId, reverseProxyJSON, req.NodeClusterId, nil, nil, nil, 0)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, adminId, req.UserId, serverconfigs.ServerTypeHTTPProxy, req.Domains[0], "", serverNamesJSON, isAuditing, auditingServerNamesJSON, httpJSON, httpsJSON, nil, nil, nil, webId, reverseProxyJSON, req.NodeClusterId, nil, nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -687,7 +687,7 @@ func (this *ServerService) CreateBasicTCPServer(ctx context.Context, req *pb.Cre
 	}
 
 	// finally, we create ...
-	serverId, err := models.SharedServerDAO.CreateServer(tx, adminId, req.UserId, serverconfigs.ServerTypeTCPProxy, "TCP Service", "", nil, false, nil, nil, nil, tcpJSON, tlsJSON, nil, nil, 0, reverseProxyJSON, req.NodeClusterId, nil, nil, nil, 0)
+	serverId, err := models.SharedServerDAO.CreateServer(tx, adminId, req.UserId, serverconfigs.ServerTypeTCPProxy, "TCP Service", "", nil, false, nil, nil, nil, tcpJSON, tlsJSON, nil, 0, reverseProxyJSON, req.NodeClusterId, nil, nil, nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1109,29 +1109,6 @@ func (this *ServerService) UpdateServerTLS(ctx context.Context, req *pb.UpdateSe
 
 	// 修改配置
 	err = models.SharedServerDAO.UpdateServerTLS(tx, req.ServerId, req.TlsJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	return this.Success()
-}
-
-// UpdateServerUnix 修改Unix服务
-func (this *ServerService) UpdateServerUnix(ctx context.Context, req *pb.UpdateServerUnixRequest) (*pb.RPCSuccess, error) {
-	// 校验请求
-	_, err := this.ValidateAdmin(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.ServerId <= 0 {
-		return nil, errors.New("invalid serverId")
-	}
-
-	var tx = this.NullTx()
-
-	// 修改配置
-	err = models.SharedServerDAO.UpdateServerUnix(tx, req.ServerId, req.UnixJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -1645,7 +1622,6 @@ func (this *ServerService) ListEnabledServersMatch(ctx context.Context, req *pb.
 			HttpsJSON:               server.Https,
 			TcpJSON:                 server.Tcp,
 			TlsJSON:                 server.Tls,
-			UnixJSON:                server.Unix,
 			UdpJSON:                 server.Udp,
 			IncludeNodes:            server.IncludeNodes,
 			ExcludeNodes:            server.ExcludeNodes,
@@ -1830,7 +1806,6 @@ func (this *ServerService) FindEnabledServer(ctx context.Context, req *pb.FindEn
 		HttpsJSON:        server.Https,
 		TcpJSON:          server.Tcp,
 		TlsJSON:          server.Tls,
-		UnixJSON:         server.Unix,
 		UdpJSON:          server.Udp,
 		WebId:            int64(server.WebId),
 		ReverseProxyJSON: server.ReverseProxy,
