@@ -16,7 +16,6 @@ import (
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/rands"
 	"github.com/iwind/TeaGo/types"
-	stringutil "github.com/iwind/TeaGo/utils/string"
 	"strconv"
 	"strings"
 )
@@ -116,10 +115,10 @@ func UpgradeSQLData(db *dbs.DB) error {
 	if err != nil {
 		return err
 	}
-	versionString := types.String(version)
+	var versionString = types.String(version)
 	if len(versionString) > 0 {
 		for _, f := range upgradeFuncs {
-			if stringutil.VersionCompare(versionString, f.version) >= 0 {
+			if CompareVersion(versionString, f.version) >= 0 {
 				continue
 			}
 			err = f.f(db)

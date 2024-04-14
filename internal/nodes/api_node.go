@@ -25,7 +25,6 @@ import (
 	"github.com/iwind/TeaGo/logs"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
-	stringutil "github.com/iwind/TeaGo/utils/string"
 	"github.com/iwind/gosock/pkg/gosock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -381,7 +380,7 @@ func (this *APINode) autoUpgrade() error {
 	if one != nil {
 		// 如果是同样的版本，则直接认为是最新版本
 		var version = one.GetString("version")
-		if stringutil.VersionCompare(version, setup.ComposeSQLVersion()) >= 0 {
+		if setup.CompareVersion(version, setup.ComposeSQLVersion()) >= 0 {
 			return nil
 		}
 	}
