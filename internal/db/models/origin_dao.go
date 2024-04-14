@@ -305,6 +305,19 @@ func (this *OriginDAO) UpdateOrigin(tx *dbs.Tx,
 	return this.NotifyUpdate(tx, originId)
 }
 
+// UpdateOriginIsOn 修改源站是否启用
+func (this *OriginDAO) UpdateOriginIsOn(tx *dbs.Tx, originId int64, isOn bool) error {
+	err := this.Query(tx).
+		Pk(originId).
+		Set("isOn", isOn).
+		UpdateQuickly()
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, originId)
+}
+
 // CloneOrigin 复制源站
 func (this *OriginDAO) CloneOrigin(tx *dbs.Tx, fromOriginId int64) (newOriginId int64, err error) {
 	if fromOriginId <= 0 {
