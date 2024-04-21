@@ -27,9 +27,9 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.801
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/dnspod v1.0.801
 	github.com/volcengine/volc-sdk-golang v1.0.124
-	golang.org/x/crypto v0.21.0
-	golang.org/x/net v0.21.0
-	golang.org/x/sys v0.18.0
+	golang.org/x/crypto v0.22.0
+	golang.org/x/net v0.24.0
+	golang.org/x/sys v0.19.0
 	google.golang.org/grpc v1.62.0
 	gopkg.in/yaml.v3 v3.0.1
 )
