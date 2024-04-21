@@ -614,10 +614,10 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 	if len(keyword) > 0 {
 		if net.ParseIP(keyword) != nil { // 是一个IP地址
 			if iputils.IsIPv4(keyword) {
-				query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
+				query.Where("(type='all' OR ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
 					Param("ipKeyword", keyword)
 			} else if iputils.IsIPv6(keyword) {
-				query.Where("(ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
+				query.Where("(type='all' OR ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
 					Param("ipKeyword", keyword)
 			}
 		} else {
@@ -666,10 +666,10 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 	if len(keyword) > 0 {
 		if net.ParseIP(keyword) != nil { // 是一个IP地址
 			if iputils.IsIPv4(keyword) {
-				query.Where("(ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
+				query.Where("(type='all' OR ipFrom =:ipKeyword OR INET_ATON(:ipKeyword) BETWEEN INET_ATON(ipFrom) AND INET_ATON(ipTo))").
 					Param("ipKeyword", keyword)
 			} else if iputils.IsIPv6(keyword) {
-				query.Where("(ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
+				query.Where("(type='all' OR ipFrom =:ipKeyword OR HEX(INET6_ATON(:ipKeyword)) BETWEEN HEX(INET6_ATON(ipFrom)) AND HEX(INET6_ATON(ipTo)))").
 					Param("ipKeyword", keyword)
 			}
 		} else {
