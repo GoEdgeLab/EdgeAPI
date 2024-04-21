@@ -490,7 +490,7 @@ func (this *Instance) SetupDB() error {
 				return err
 			}
 
-			_, err = models.SharedServerDAO.CreateServer(tx, 0, userId, serverconfigs.ServerTypeHTTPProxy, "First Site", "Created by system", []byte(`[{"name": "example.org", "type":"full"}]`), false, nil, httpConfigJSON, nil, nil, nil, nil, nil, webId, reverseProxyRefJSON, clusterId, nil, nil, nil, 0)
+			_, err = models.SharedServerDAO.CreateServer(tx, 0, userId, serverconfigs.ServerTypeHTTPProxy, "First Site", "Created by system", []byte(`[{"name": "example.org", "type":"full"}]`), false, nil, httpConfigJSON, nil, nil, nil, nil, webId, reverseProxyRefJSON, clusterId, nil, nil, nil, 0)
 			if err != nil {
 				return fmt.Errorf("create server failed: %w", err)
 			}
