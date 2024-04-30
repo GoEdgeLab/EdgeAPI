@@ -1254,6 +1254,8 @@ func (this *NodeDAO) ComposeNodeConfig(tx *dbs.Tx, nodeId int64, dataMap *shared
 			config.AutoInstallNftables = nodeCluster.AutoInstallNftables
 			config.AutoSystemTuning = nodeCluster.AutoSystemTuning
 			config.AutoTrimDisks = nodeCluster.AutoTrimDisks
+			config.MaxConcurrentReads = int(nodeCluster.MaxConcurrentReads)
+			config.MaxConcurrentWrites = int(nodeCluster.MaxConcurrentWrites)
 		}
 
 		// 安全设置

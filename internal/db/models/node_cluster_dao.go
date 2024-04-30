@@ -126,7 +126,7 @@ func (this *NodeClusterDAO) FindAllEnableClusterIds(tx *dbs.Tx) (result []int64,
 }
 
 // CreateCluster 创建集群
-func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, dnsTTL int32, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map, globalServerConfig *serverconfigs.GlobalServerConfig, autoInstallNftables bool, autoSystemTuning bool, autoTrimDisks bool) (clusterId int64, err error) {
+func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string, grantId int64, installDir string, dnsDomainId int64, dnsName string, dnsTTL int32, cachePolicyId int64, httpFirewallPolicyId int64, systemServices map[string]maps.Map, globalServerConfig *serverconfigs.GlobalServerConfig, autoInstallNftables bool, autoSystemTuning bool, autoTrimDisks bool, maxConcurrentReads int32, maxConcurrentWrites int32) (clusterId int64, err error) {
 	uniqueId, err := this.GenUniqueId(tx)
 	if err != nil {
 		return 0, err
@@ -191,6 +191,14 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 	op.AutoInstallNftables = autoInstallNftables
 	op.AutoSystemTuning = autoSystemTuning
 	op.AutoTrimDisks = autoTrimDisks
+
+	if maxConcurrentReads > 0 {
+		op.MaxConcurrentReads = maxConcurrentReads
+	}
+	if maxConcurrentWrites > 0 {
+		op.MaxConcurrentWrites = maxConcurrentWrites
+	}
+
 	op.State = NodeClusterStateEnabled
 	err = this.Save(tx, op)
 	if err != nil {
@@ -201,7 +209,7 @@ func (this *NodeClusterDAO) CreateCluster(tx *dbs.Tx, adminId int64, name string
 }
 
 // UpdateCluster 修改集群
-func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig, autoRemoteStart bool, autoInstallTables bool, sshParams *nodeconfigs.SSHParams, autoSystemTuning bool, autoTrimDisks bool) error {
+func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name string, grantId int64, installDir string, timezone string, nodeMaxThreads int32, autoOpenPorts bool, clockConfig *nodeconfigs.ClockConfig, autoRemoteStart bool, autoInstallTables bool, sshParams *nodeconfigs.SSHParams, autoSystemTuning bool, autoTrimDisks bool, maxConcurrentReads int32, maxConcurrentWrites int32) error {
 	if clusterId <= 0 {
 		return errors.New("invalid clusterId")
 	}
@@ -230,6 +238,13 @@ func (this *NodeClusterDAO) UpdateCluster(tx *dbs.Tx, clusterId int64, name stri
 	op.AutoInstallNftables = autoInstallTables
 	op.AutoSystemTuning = autoSystemTuning
 	op.AutoTrimDisks = autoTrimDisks
+
+	if maxConcurrentReads >= 0 {
+		op.MaxConcurrentReads = maxConcurrentReads
+	}
+	if maxConcurrentWrites >= 0 {
+		op.MaxConcurrentWrites = maxConcurrentWrites
+	}
 
 	if sshParams != nil {
 		sshParamsJSON, err := json.Marshal(sshParams)
@@ -1030,7 +1045,7 @@ func (this *NodeClusterDAO) FindClusterBasicInfo(tx *dbs.Tx, clusterId int64, ca
 	cluster, err := this.Query(tx).
 		Pk(clusterId).
 		State(NodeClusterStateEnabled).
-		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning", "networkSecurity", "autoTrimDisks", "secret").
+		Result("id", "name", "timeZone", "nodeMaxThreads", "cachePolicyId", "httpFirewallPolicyId", "autoOpenPorts", "webp", "uam", "cc", "httpPages", "http3", "isOn", "ddosProtection", "clock", "globalServerConfig", "autoInstallNftables", "autoSystemTuning", "networkSecurity", "autoTrimDisks", "maxConcurrentReads", "maxConcurrentWrites", "secret").
 		Find()
 	if err != nil || cluster == nil {
 		return nil, err

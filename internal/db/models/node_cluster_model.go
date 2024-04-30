@@ -46,6 +46,8 @@ const (
 	NodeClusterField_AutoSystemTuning     dbs.FieldName = "autoSystemTuning"     // 是否自动调整系统参数
 	NodeClusterField_NetworkSecurity      dbs.FieldName = "networkSecurity"      // 网络安全策略
 	NodeClusterField_AutoTrimDisks        dbs.FieldName = "autoTrimDisks"        // 是否自动执行TRIM
+	NodeClusterField_MaxConcurrentReads   dbs.FieldName = "maxConcurrentReads"   // 节点并发读限制
+	NodeClusterField_MaxConcurrentWrites  dbs.FieldName = "maxConcurrentWrites"  // 节点并发写限制
 )
 
 // NodeCluster 节点集群
@@ -93,6 +95,8 @@ type NodeCluster struct {
 	AutoSystemTuning     bool     `field:"autoSystemTuning"`     // 是否自动调整系统参数
 	NetworkSecurity      dbs.JSON `field:"networkSecurity"`      // 网络安全策略
 	AutoTrimDisks        bool     `field:"autoTrimDisks"`        // 是否自动执行TRIM
+	MaxConcurrentReads   uint32   `field:"maxConcurrentReads"`   // 节点并发读限制
+	MaxConcurrentWrites  uint32   `field:"maxConcurrentWrites"`  // 节点并发写限制
 }
 
 type NodeClusterOperator struct {
@@ -139,6 +143,8 @@ type NodeClusterOperator struct {
 	AutoSystemTuning     any // 是否自动调整系统参数
 	NetworkSecurity      any // 网络安全策略
 	AutoTrimDisks        any // 是否自动执行TRIM
+	MaxConcurrentReads   any // 节点并发读限制
+	MaxConcurrentWrites  any // 节点并发写限制
 }
 
 func NewNodeClusterOperator() *NodeClusterOperator {
