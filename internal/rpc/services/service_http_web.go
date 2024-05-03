@@ -468,6 +468,31 @@ func (this *HTTPWebService) UpdateHTTPWebPages(ctx context.Context, req *pb.Upda
 	return this.Success()
 }
 
+// UpdateHTTPWebGlobalPagesEnabled 更改系统自定义页面启用状态
+func (this *HTTPWebService) UpdateHTTPWebGlobalPagesEnabled(ctx context.Context, req *pb.UpdateHTTPWebGlobalPagesEnabledRequest) (*pb.RPCSuccess, error) {
+	// 校验请求
+	_, userId, err := this.ValidateAdminAndUser(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if userId > 0 {
+		// 检查用户权限
+		err = models.SharedHTTPWebDAO.CheckUserWeb(nil, userId, req.HttpWebId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var tx = this.NullTx()
+	err = models.SharedHTTPWebDAO.UpdateGlobalPagesEnabled(tx, req.HttpWebId, req.IsEnabled)
+	if err != nil {
+		return nil, err
+	}
+
+	return this.Success()
+}
+
 // UpdateHTTPWebAccessLog 更改访问日志配置
 func (this *HTTPWebService) UpdateHTTPWebAccessLog(ctx context.Context, req *pb.UpdateHTTPWebAccessLogRequest) (*pb.RPCSuccess, error) {
 	// 校验请求

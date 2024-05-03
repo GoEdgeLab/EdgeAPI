@@ -14,6 +14,7 @@ const (
 	HTTPWebField_Charset            dbs.FieldName = "charset"            // 字符集
 	HTTPWebField_Shutdown           dbs.FieldName = "shutdown"           // 临时关闭页面配置
 	HTTPWebField_Pages              dbs.FieldName = "pages"              // 特殊页面
+	HTTPWebField_EnableGlobalPages  dbs.FieldName = "enableGlobalPages"  // 是否启用系统配置的自定义页面
 	HTTPWebField_RedirectToHttps    dbs.FieldName = "redirectToHttps"    // 跳转到HTTPS设置
 	HTTPWebField_Indexes            dbs.FieldName = "indexes"            // 首页文件列表
 	HTTPWebField_MaxRequestBodySize dbs.FieldName = "maxRequestBodySize" // 最大允许的请求内容尺寸
@@ -57,6 +58,7 @@ type HTTPWeb struct {
 	Charset            dbs.JSON `field:"charset"`            // 字符集
 	Shutdown           dbs.JSON `field:"shutdown"`           // 临时关闭页面配置
 	Pages              dbs.JSON `field:"pages"`              // 特殊页面
+	EnableGlobalPages  bool     `field:"enableGlobalPages"`  // 是否启用系统配置的自定义页面
 	RedirectToHttps    dbs.JSON `field:"redirectToHttps"`    // 跳转到HTTPS设置
 	Indexes            dbs.JSON `field:"indexes"`            // 首页文件列表
 	MaxRequestBodySize dbs.JSON `field:"maxRequestBodySize"` // 最大允许的请求内容尺寸
@@ -99,6 +101,7 @@ type HTTPWebOperator struct {
 	Charset            any // 字符集
 	Shutdown           any // 临时关闭页面配置
 	Pages              any // 特殊页面
+	EnableGlobalPages  any // 是否启用系统配置的自定义页面
 	RedirectToHttps    any // 跳转到HTTPS设置
 	Indexes            any // 首页文件列表
 	MaxRequestBodySize any // 最大允许的请求内容尺寸

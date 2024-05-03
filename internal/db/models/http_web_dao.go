@@ -231,6 +231,8 @@ func (this *HTTPWebDAO) ComposeWebConfig(tx *dbs.Tx, webId int64, isLocationOrGr
 	}
 
 	// pages
+	config.EnableGlobalPages = web.EnableGlobalPages
+
 	// TODO 检查forNode参数
 	if IsNotNull(web.Pages) {
 		var pages = []*serverconfigs.HTTPPageConfig{}
@@ -751,6 +753,22 @@ func (this *HTTPWebDAO) UpdateWebPages(tx *dbs.Tx, webId int64, pagesJSON []byte
 	op.Id = webId
 	op.Pages = JSONBytes(pagesJSON)
 	err := this.Save(tx, op)
+	if err != nil {
+		return err
+	}
+
+	return this.NotifyUpdate(tx, webId)
+}
+
+// UpdateGlobalPagesEnabled 设置是否启用系统配置的自定义页面
+func (this *HTTPWebDAO) UpdateGlobalPagesEnabled(tx *dbs.Tx, webId int64, isEnabled bool) error {
+	if webId <= 0 {
+		return errors.New("invalid webId")
+	}
+	err := this.Query(tx).
+		Pk(webId).
+		Set(HTTPWebField_EnableGlobalPages, isEnabled).
+		UpdateQuickly()
 	if err != nil {
 		return err
 	}
