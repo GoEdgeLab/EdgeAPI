@@ -520,14 +520,27 @@ func (this *HTTPAccessLogDAO) listAccessLogs(tx *dbs.Tx,
 
 			// keyword
 			if len(ip) > 0 {
-				// TODO 支持IPv6范围
 				if tableQuery.hasRemoteAddrField {
 					// IP格式
 					if strings.Contains(ip, ",") || strings.Contains(ip, "-") {
-						rangeConfig, err := shared.ParseIPRange(ip)
-						if err == nil {
+						rangeConfig, parseErr := shared.ParseIPRange(ip)
+						if parseErr == nil {
 							if len(rangeConfig.IPFrom) > 0 && len(rangeConfig.IPTo) > 0 {
-								query.Between("INET_ATON(remoteAddr)", iputils.ToLong(rangeConfig.IPFrom), iputils.ToLong(rangeConfig.IPTo))
+								if iputils.IsIPv6(rangeConfig.IPFrom) || iputils.IsIPv6(rangeConfig.IPTo) {
+									var ipFromHex = iputils.ToHex(rangeConfig.IPFrom)
+									var ipToHex = iputils.ToHex(rangeConfig.IPTo)
+									if ipFromHex > ipToHex {
+										ipFromHex, ipToHex = ipToHex, ipFromHex
+									}
+									query.Between("HEX(INET6_ATON(remoteAddr))", ipFromHex, ipToHex)
+								} else {
+									var ipFromLong = iputils.ToLong(rangeConfig.IPFrom)
+									var ipToLong = iputils.ToLong(rangeConfig.IPTo)
+									if ipFromLong > ipToLong {
+										ipFromLong, ipToLong = ipToLong, ipFromLong
+									}
+									query.Between("INET_ATON(remoteAddr)", ipFromLong, ipToLong)
+								}
 							}
 						}
 					} else {
