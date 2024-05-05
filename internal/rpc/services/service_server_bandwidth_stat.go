@@ -8,6 +8,7 @@ import (
 	"errors"
 	teaconst "github.com/TeaOSLab/EdgeAPI/internal/const"
 	"github.com/TeaOSLab/EdgeAPI/internal/db/models"
+	"github.com/TeaOSLab/EdgeAPI/internal/db/models/stats"
 	"github.com/TeaOSLab/EdgeAPI/internal/events"
 	"github.com/TeaOSLab/EdgeAPI/internal/goman"
 	"github.com/TeaOSLab/EdgeAPI/internal/remotelogs"
@@ -115,6 +116,9 @@ func init() {
 
 								// 分时统计
 								err = models.SharedUserPlanBandwidthStatDAO.UpdateUserPlanBandwidth(tx, stat.UserId, stat.UserPlanId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests, stat.CountWebsocketConnections)
+								if err != nil {
+									remotelogs.Error("SharedUserPlanBandwidthStatDAO", "UpdateUserPlanBandwidth: " + err.Error())
+								}
 							}
 						}
 
@@ -122,7 +126,15 @@ func init() {
 						if stat.UserId > 0 {
 							err = models.SharedUserBandwidthStatDAO.UpdateUserBandwidth(tx, stat.UserId, stat.NodeRegionId, stat.Day, stat.TimeAt, stat.Bytes, stat.TotalBytes, stat.CachedBytes, stat.AttackBytes, stat.CountRequests, stat.CountCachedRequests, stat.CountAttackRequests)
 							if err != nil {
-								remotelogs.Error("SharedUserBandwidthStatDAO", "dump bandwidth stats failed: "+err.Error())
+								remotelogs.Error("SharedUserBandwidthStatDAO", "UpdateUserBandwidth: "+err.Error())
+							}
+						}
+
+						// 更新整体的独立IP统计
+						if stat.CountIPs > 0 {
+							err = stats.SharedTrafficDailyStatDAO.IncreaseIPs(tx, stat.Day, stat.CountIPs)
+							if err != nil {
+								remotelogs.Error("SharedTrafficDailyStatDAO", "IncreaseIPs: "+err.Error())
 							}
 						}
 					}

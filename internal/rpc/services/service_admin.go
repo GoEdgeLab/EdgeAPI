@@ -555,13 +555,15 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	result.CountNodeClusters = countClusters
 
 	// 节点数
-	this.BeginTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
-	countNodes, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
-	this.EndTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
-	if err != nil {
-		return nil, err
+	{
+		this.BeginTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
+		countNodes, err := models.SharedNodeDAO.CountAllEnabledNodes(tx)
+		this.EndTag(ctx, "SharedNodeDAO.CountAllEnabledNodes")
+		if err != nil {
+			return nil, err
+		}
+		result.CountNodes = countNodes
 	}
-	result.CountNodes = countNodes
 
 	// 离线节点
 	this.BeginTag(ctx, "SharedNodeDAO.CountAllEnabledOfflineNodes")
@@ -572,7 +574,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 	}
 	result.CountOfflineNodes = countOfflineNodes
 
-	// 服务数
+	// 网站数
 	this.BeginTag(ctx, "SharedServerDAO.CountAllEnabledServers")
 	countServers, err := models.SharedServerDAO.CountAllEnabledServers(tx)
 	this.EndTag(ctx, "SharedServerDAO.CountAllEnabledServers")
@@ -660,6 +662,7 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 			CountCachedRequests: int64(stat.CountCachedRequests),
 			CountAttackRequests: int64(stat.CountAttackRequests),
 			AttackBytes:         int64(stat.AttackBytes),
+			CountIPs:            int64(stat.CountIPs),
 		})
 	}
 
@@ -732,9 +735,6 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		topDomainStats = topDomainStatsCache.([]*stats.ServerDomainHourlyStat)
 	}
 	this.EndTag(ctx, "SharedServerDomainHourlyStatDAO.FindTopDomainStats")
-	if err != nil {
-		return nil, err
-	}
 	for _, stat := range topDomainStats {
 		result.TopDomainStats = append(result.TopDomainStats, &pb.ComposeAdminDashboardResponse_DomainStat{
 			ServerId:      int64(stat.ServerId),
@@ -752,9 +752,6 @@ func (this *AdminService) ComposeAdminDashboard(ctx context.Context, req *pb.Com
 		pbCharts = pbChartsCache.([]*pb.MetricDataChart)
 	}
 	this.EndTag(ctx, "findMetricDataCharts")
-	if err != nil {
-		return nil, err
-	}
 	result.MetricDataCharts = pbCharts
 
 	return result, nil

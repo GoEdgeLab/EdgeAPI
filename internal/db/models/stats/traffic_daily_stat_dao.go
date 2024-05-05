@@ -85,6 +85,22 @@ func (this *TrafficDailyStatDAO) IncreaseDailyStat(tx *dbs.Tx, day string, bytes
 	return nil
 }
 
+// IncreaseIPs 增加独立IP统计数据
+func (this *TrafficDailyStatDAO) IncreaseIPs(tx *dbs.Tx, day string, countIPs int64) error {
+	if len(day) != 8 {
+		return errors.New("invalid day '" + day + "'")
+	}
+
+	return this.Query(tx).
+		Param("countIPs", countIPs).
+		InsertOrUpdateQuickly(maps.Map{
+			"day":      day,
+			"countIPs": countIPs,
+		}, maps.Map{
+			"countIPs": dbs.SQL("countIPs+:countIPs"),
+		})
+}
+
 // FindDailyStats 获取日期之间统计
 func (this *TrafficDailyStatDAO) FindDailyStats(tx *dbs.Tx, dayFrom string, dayTo string) (result []*TrafficDailyStat, err error) {
 	ones, err := this.Query(tx).
