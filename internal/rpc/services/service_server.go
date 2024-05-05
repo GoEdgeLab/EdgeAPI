@@ -32,9 +32,9 @@ type ServerService struct {
 // CreateServer 创建服务
 func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
 	// 校验请求
-	_, userId, err := this.ValidateAdminAndUser(ctx, true)
-	if err != nil {
-		return nil, err
+	adminId, userId, validateErr := this.ValidateAdminAndUser(ctx, true)
+	if validateErr != nil {
+		return nil, validateErr
 	}
 
 	var tx = this.NullTx()
@@ -52,7 +52,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		// HTTPS
 		if len(req.HttpsJSON) > 0 {
 			var httpsConfig = &serverconfigs.HTTPSProtocolConfig{}
-			err = json.Unmarshal(req.HttpsJSON, httpsConfig)
+			err := json.Unmarshal(req.HttpsJSON, httpsConfig)
 			if err != nil {
 				return nil, err
 			}
@@ -67,7 +67,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 		// TLS
 		if len(req.TlsJSON) > 0 {
 			var tlsConfig = &serverconfigs.TLSProtocolConfig{}
-			err = json.Unmarshal(req.TlsJSON, tlsConfig)
+			err := json.Unmarshal(req.TlsJSON, tlsConfig)
 			if err != nil {
 				return nil, err
 			}
@@ -90,7 +90,7 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 
 		// 服务分组
 		for _, groupId := range req.ServerGroupIds {
-			err := models.SharedServerGroupDAO.CheckUserGroup(tx, userId, groupId)
+			err = models.SharedServerGroupDAO.CheckUserGroup(tx, userId, groupId)
 			if err != nil {
 				return nil, err
 			}
@@ -172,13 +172,22 @@ func (this *ServerService) CreateServer(ctx context.Context, req *pb.CreateServe
 	// 域名
 	if len(req.Name) == 0 && len(req.ServerNamesJSON) > 0 {
 		var serverNames = []*serverconfigs.ServerNameConfig{}
-		err = json.Unmarshal(req.ServerNamesJSON, &serverNames)
+		err := json.Unmarshal(req.ServerNamesJSON, &serverNames)
 		if err != nil {
 			return nil, errors.New("decode server names failed: " + err.Error())
 		}
 		if len(serverNames) > 0 {
 			req.Name = serverNames[0].FirstName()
 		}
+	}
+
+	// 自动创建WebId
+	if (req.Type == serverconfigs.ServerTypeHTTPWeb || req.Type == serverconfigs.ServerTypeHTTPProxy) && req.WebId <= 0 {
+		webId, err := models.SharedHTTPWebDAO.CreateWeb(tx, adminId, userId, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.WebId = webId
 	}
 
 	serverId, err := models.SharedServerDAO.CreateServer(tx, req.AdminId, req.UserId, req.Type, req.Name, req.Description, serverNamesJSON, isAuditing, auditingServerNamesJSON, req.HttpJSON, req.HttpsJSON, req.TcpJSON, req.TlsJSON, req.UdpJSON, req.WebId, req.ReverseProxyJSON, req.NodeClusterId, req.IncludeNodesJSON, req.ExcludeNodesJSON, req.ServerGroupIds, req.UserPlanId)
