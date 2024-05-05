@@ -597,7 +597,7 @@ func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckI
 			Error: "IP名单不存在",
 		}, nil
 	}
-	var isAllowed = list.Type == "white"
+	var isAllowed = list.Type == ipconfigs.IPListTypeWhite || list.Type == ipconfigs.IPListTypeGrey
 
 	// 检查IP名单
 	item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, req.IpListId, req.Ip)
@@ -620,6 +620,7 @@ func (this *IPItemService) CheckIPItemStatus(ctx context.Context, req *pb.CheckI
 				Reason:     item.Reason,
 				Type:       item.Type,
 				EventLevel: item.EventLevel,
+				ListType:   list.Type,
 			},
 		}, nil
 	}

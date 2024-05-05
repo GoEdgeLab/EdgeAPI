@@ -8,6 +8,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/iplibrary"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
 	"github.com/iwind/TeaGo/lists"
 	"net"
 )
@@ -747,7 +748,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 					Error:     "",
 					IsFound:   true,
 					IsAllowed: true,
-					IpList:    &pb.IPList{Name: listName, Id: listId},
+					IpList:    &pb.IPList{Name: listName, Id: listId, Type: ipconfigs.IPListTypeWhite},
 					IpItem: &pb.IPItem{
 						Id:         int64(item.Id),
 						Value:      item.ComposeValue(),
@@ -757,6 +758,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 						Reason:     item.Reason,
 						Type:       item.Type,
 						EventLevel: item.EventLevel,
+						ListType:   ipconfigs.IPListTypeWhite,
 					},
 					RegionCountry:  nil,
 					RegionProvince: nil,
@@ -803,7 +805,7 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 					Error:     "",
 					IsFound:   true,
 					IsAllowed: false,
-					IpList:    &pb.IPList{Name: listName, Id: listId},
+					IpList:    &pb.IPList{Name: listName, Id: listId, Type: ipconfigs.IPListTypeBlack},
 					IpItem: &pb.IPItem{
 						Id:         int64(item.Id),
 						Value:      item.ComposeValue(),
@@ -813,6 +815,64 @@ func (this *HTTPFirewallPolicyService) CheckHTTPFirewallPolicyIPStatus(ctx conte
 						Reason:     item.Reason,
 						Type:       item.Type,
 						EventLevel: item.EventLevel,
+						ListType:   ipconfigs.IPListTypeBlack,
+					},
+					RegionCountry:  nil,
+					RegionProvince: nil,
+				}, nil
+			}
+		}
+	}
+
+	// 检查灰名单
+	if firewallPolicy.Inbound != nil &&
+		firewallPolicy.Inbound.IsOn &&
+		firewallPolicy.Inbound.GreyListRef != nil &&
+		firewallPolicy.Inbound.GreyListRef.IsOn &&
+		firewallPolicy.Inbound.GreyListRef.ListId > 0 {
+		var listIds = []int64{}
+		if firewallPolicy.Inbound.GreyListRef.ListId > 0 {
+			listIds = append(listIds, firewallPolicy.Inbound.GreyListRef.ListId)
+		}
+		if len(firewallPolicy.Inbound.PublicGreyListRefs) > 0 {
+			for _, ref := range firewallPolicy.Inbound.PublicGreyListRefs {
+				if !ref.IsOn {
+					continue
+				}
+
+				listIds = append(listIds, ref.ListId)
+			}
+		}
+
+		for _, listId := range listIds {
+			item, err := models.SharedIPItemDAO.FindEnabledItemContainsIP(tx, listId, req.Ip)
+			if err != nil {
+				return nil, err
+			}
+			if item != nil {
+				listName, err := models.SharedIPListDAO.FindIPListName(tx, listId)
+				if err != nil {
+					return nil, err
+				}
+				if len(listName) == 0 {
+					listName = "灰名单"
+				}
+				return &pb.CheckHTTPFirewallPolicyIPStatusResponse{
+					IsOk:      true,
+					Error:     "",
+					IsFound:   true,
+					IsAllowed: true,
+					IpList:    &pb.IPList{Name: listName, Id: listId, Type: ipconfigs.IPListTypeGrey},
+					IpItem: &pb.IPItem{
+						Id:         int64(item.Id),
+						Value:      item.ComposeValue(),
+						IpFrom:     item.IpFrom,
+						IpTo:       item.IpTo,
+						ExpiredAt:  int64(item.ExpiredAt),
+						Reason:     item.Reason,
+						Type:       item.Type,
+						EventLevel: item.EventLevel,
+						ListType:   ipconfigs.IPListTypeGrey,
 					},
 					RegionCountry:  nil,
 					RegionProvince: nil,
