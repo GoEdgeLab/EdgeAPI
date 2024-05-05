@@ -6,6 +6,7 @@ import (
 	"github.com/TeaOSLab/EdgeAPI/internal/errors"
 	"github.com/TeaOSLab/EdgeAPI/internal/utils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/iwind/TeaGo/Tea"
 	"github.com/iwind/TeaGo/dbs"
@@ -238,7 +239,7 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 		return 0, err
 	}
 
-	err = this.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, inboundConfigJSON, outboundConfigJSON, false)
+	err = this.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, 0, 0, inboundConfigJSON, outboundConfigJSON, false)
 	if err != nil {
 		return 0, err
 	}
@@ -247,10 +248,60 @@ func (this *HTTPFirewallPolicyDAO) CreateDefaultFirewallPolicy(tx *dbs.Tx, name 
 }
 
 // UpdateFirewallPolicyInboundAndOutbound 修改策略的Inbound和Outbound
-func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *dbs.Tx, policyId int64, inboundJSON []byte, outboundJSON []byte, shouldNotify bool) error {
+func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *dbs.Tx, policyId int64, userId int64, serverId int64, inboundJSON []byte, outboundJSON []byte, shouldNotify bool) error {
 	if policyId <= 0 {
 		return errors.New("invalid policyId")
 	}
+
+	// 创建默认的Inbound
+	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	if inboundJSON != nil {
+		err := json.Unmarshal(inboundJSON, inboundConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	// IP名单
+	if inboundConfig.AllowListRef == nil {
+		listId, createListErr := SharedIPListDAO.CreateIPList(tx, userId, serverId, ipconfigs.IPListTypeWhite, "白名单", "", nil, "", false, false)
+		if createListErr != nil {
+			return createListErr
+		}
+		inboundConfig.AllowListRef = &ipconfigs.IPListRef{
+			IsOn:   true,
+			ListId: listId,
+		}
+	}
+
+	if inboundConfig.DenyListRef == nil {
+		listId, createListErr := SharedIPListDAO.CreateIPList(tx, userId, serverId, ipconfigs.IPListTypeBlack, "黑名单", "", nil, "", false, false)
+		if createListErr != nil {
+			return createListErr
+		}
+		inboundConfig.DenyListRef = &ipconfigs.IPListRef{
+			IsOn:   true,
+			ListId: listId,
+		}
+	}
+
+	if inboundConfig.GreyListRef == nil {
+		listId, createListErr := SharedIPListDAO.CreateIPList(tx, userId, serverId, ipconfigs.IPListTypeGrey, "灰名单", "", nil, "", false, false)
+		if createListErr != nil {
+			return createListErr
+		}
+		inboundConfig.GreyListRef = &ipconfigs.IPListRef{
+			IsOn:   true,
+			ListId: listId,
+		}
+	}
+
+	var err error
+	inboundJSON, err = json.Marshal(inboundConfig)
+	if err != nil {
+		return err
+	}
+
 	var op = NewHTTPFirewallPolicyOperator()
 	op.Id = policyId
 	if len(inboundJSON) > 0 {
@@ -263,7 +314,7 @@ func (this *HTTPFirewallPolicyDAO) UpdateFirewallPolicyInboundAndOutbound(tx *db
 	} else {
 		op.Outbound = "null"
 	}
-	err := this.Save(tx, op)
+	err = this.Save(tx, op)
 	if err != nil {
 		return err
 	}

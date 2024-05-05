@@ -65,9 +65,9 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 	}
 
 	// 初始化
-	inboundConfig := &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
-	outboundConfig := &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
-	templatePolicy := firewallconfigs.HTTPFirewallTemplate()
+	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	var outboundConfig = &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
+	var templatePolicy = firewallconfigs.HTTPFirewallTemplate()
 	if templatePolicy.Inbound != nil {
 		for _, group := range templatePolicy.Inbound.Groups {
 			isOn := lists.ContainsString(req.HttpFirewallGroupCodes, group.Code)
@@ -109,7 +109,7 @@ func (this *HTTPFirewallPolicyService) CreateHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, inboundConfigJSON, outboundConfigJSON, false)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, userId, req.ServerId, inboundConfigJSON, outboundConfigJSON, false)
 	if err != nil {
 		return nil, err
 	}
@@ -125,26 +125,33 @@ func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context
 		return nil, err
 	}
 
+	var tx = this.NullTx()
+
+	var sourceUserId = userId
 	if userId > 0 {
 		if req.ServerId > 0 {
-			err = models.SharedServerDAO.CheckUserServer(nil, userId, req.ServerId)
+			err = models.SharedServerDAO.CheckUserServer(tx, userId, req.ServerId)
 			if err != nil {
 				return nil, err
 			}
 		}
+	} else if req.ServerId > 0 {
+		sourceUserId, err = models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	var tx = this.NullTx()
-
-	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, userId, req.ServerGroupId, req.ServerId, req.IsOn, req.Name, req.Description, nil, nil)
+	policyId, err := models.SharedHTTPFirewallPolicyDAO.CreateFirewallPolicy(tx, sourceUserId, req.ServerGroupId, req.ServerId, req.IsOn, req.Name, req.Description, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	// 初始化
-	inboundConfig := &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
-	outboundConfig := &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
+	var inboundConfig = &firewallconfigs.HTTPFirewallInboundConfig{IsOn: true}
+	var outboundConfig = &firewallconfigs.HTTPFirewallOutboundConfig{IsOn: true}
 
+	// 准备保存
 	inboundConfigJSON, err := json.Marshal(inboundConfig)
 	if err != nil {
 		return nil, err
@@ -155,7 +162,7 @@ func (this *HTTPFirewallPolicyService) CreateEmptyHTTPFirewallPolicy(ctx context
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, inboundConfigJSON, outboundConfigJSON, false)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, policyId, sourceUserId, req.ServerId, inboundConfigJSON, outboundConfigJSON, false)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +336,7 @@ func (this *HTTPFirewallPolicyService) UpdateHTTPFirewallPolicyGroups(ctx contex
 
 	var tx = this.NullTx()
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, req.HttpFirewallPolicyId, req.InboundJSON, req.OutboundJSON, true)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, req.HttpFirewallPolicyId, userId, 0, req.InboundJSON, req.OutboundJSON, true)
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +660,7 @@ func (this *HTTPFirewallPolicyService) ImportHTTPFirewallPolicy(ctx context.Cont
 		return nil, err
 	}
 
-	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, req.HttpFirewallPolicyId, inboundJSON, outboundJSON, true)
+	err = models.SharedHTTPFirewallPolicyDAO.UpdateFirewallPolicyInboundAndOutbound(tx, req.HttpFirewallPolicyId, 0, 0, inboundJSON, outboundJSON, true)
 	if err != nil {
 		return nil, err
 	}
