@@ -50,6 +50,10 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 
 	// 检查代号
 	if len(req.Code) > 0 {
+		if len(req.Code) > 100 {
+			return nil, errors.New("too long 'code', should be short than 100 characters")
+		}
+
 		if !models.SharedIPListDAO.ValidateIPListCode(req.Code) {
 			return nil, errors.New("invalid 'code' format")
 		}
@@ -82,6 +86,10 @@ func (this *IPListService) UpdateIPList(ctx context.Context, req *pb.UpdateIPLis
 
 	// 检查代号
 	if len(req.Code) > 0 {
+		if len(req.Code) > 100 {
+			return nil, errors.New("too long 'code', should be short than 100 characters")
+		}
+
 		if !models.SharedIPListDAO.ValidateIPListCode(req.Code) {
 			return nil, errors.New("invalid 'code' format")
 		}
