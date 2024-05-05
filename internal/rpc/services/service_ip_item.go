@@ -9,6 +9,7 @@ import (
 	"github.com/TeaOSLab/EdgeCommon/pkg/iputils"
 	"github.com/TeaOSLab/EdgeCommon/pkg/rpc/pb"
 	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/firewallconfigs"
+	"github.com/TeaOSLab/EdgeCommon/pkg/serverconfigs/ipconfigs"
 	"net"
 	"time"
 )
@@ -255,7 +256,7 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	// 使用value删除
 	if len(req.Value) > 0 {
 		// 检查IP列表
-		if req.IpListId > 0 && userId > 0 && req.IpListId != firewallconfigs.GlobalListId {
+		if req.IpListId > 0 && userId > 0 && !firewallconfigs.IsGlobalListId(req.IpListId) {
 			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
 			if err != nil {
 				return nil, err
@@ -272,7 +273,7 @@ func (this *IPItemService) DeleteIPItem(ctx context.Context, req *pb.DeleteIPIte
 	// 如果是使用ipFrom+ipTo删除
 	if len(req.IpFrom) > 0 {
 		// 检查IP列表
-		if req.IpListId > 0 && userId > 0 && req.IpListId != firewallconfigs.GlobalListId {
+		if req.IpListId > 0 && userId > 0 && !firewallconfigs.IsGlobalListId(req.IpListId) {
 			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
 			if err != nil {
 				return nil, err
@@ -318,7 +319,7 @@ func (this *IPItemService) CountIPItemsWithListId(ctx context.Context, req *pb.C
 
 	if userId > 0 {
 		// 检查用户所属名单
-		if req.IpListId != firewallconfigs.GlobalListId {
+		if !firewallconfigs.IsGlobalListId(req.IpListId) {
 			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
 			if err != nil {
 				return nil, err
@@ -345,7 +346,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 
 	if userId > 0 {
 		// 检查用户所属名单
-		if req.IpListId != firewallconfigs.GlobalListId {
+		if !firewallconfigs.IsGlobalListId(req.IpListId) {
 			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
 			if err != nil {
 				return nil, err
@@ -357,7 +358,7 @@ func (this *IPItemService) ListIPItemsWithListId(ctx context.Context, req *pb.Li
 	if err != nil {
 		return nil, err
 	}
-	result := []*pb.IPItem{}
+	var result = []*pb.IPItem{}
 	for _, item := range items {
 		if len(item.Type) == 0 {
 			item.Type = models.IPItemTypeIPv4
@@ -502,12 +503,17 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 
 	var tx = this.NullTx()
 
-	result := []*pb.IPItem{}
+	var result = []*pb.IPItem{}
 	items, err := models.SharedIPItemDAO.ListIPItemsAfterVersion(tx, req.Version, req.Size)
 	if err != nil {
 		return nil, err
 	}
+
+	var latestVersion = req.Version
+
 	for _, item := range items {
+		latestVersion = int64(item.Version)
+
 		// 是否已过期
 		if item.ExpiredAt > 0 && int64(item.ExpiredAt) <= time.Now().Unix() {
 			item.State = models.IPItemStateDisabled
@@ -523,6 +529,11 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 			return nil, err
 		}
 		if list == nil {
+			continue
+		}
+
+		// 跳过灰名单
+		if list.Type == ipconfigs.IPListTypeGrey {
 			continue
 		}
 
@@ -551,7 +562,10 @@ func (this *IPItemService) ListIPItemsAfterVersion(ctx context.Context, req *pb.
 		})
 	}
 
-	return &pb.ListIPItemsAfterVersionResponse{IpItems: result}, nil
+	return &pb.ListIPItemsAfterVersionResponse{
+		IpItems: result,
+		Version: latestVersion,
+	}, nil
 }
 
 // CheckIPItemStatus 检查IP状态
@@ -646,11 +660,7 @@ func (this *IPItemService) CountAllEnabledIPItems(ctx context.Context, req *pb.C
 	}
 
 	var tx = this.NullTx()
-	var listId int64 = 0
-	if req.GlobalOnly {
-		listId = firewallconfigs.GlobalListId
-	}
-	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, userId, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType)
+	count, err := models.SharedIPItemDAO.CountAllEnabledIPItems(tx, userId, req.Keyword, req.Ip, 0, req.Unread, req.EventLevel, req.ListType, req.GlobalOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -670,11 +680,7 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 
 	var results = []*pb.ListAllEnabledIPItemsResponse_Result{}
 	var tx = this.NullTx()
-	var listId int64 = 0
-	if req.GlobalOnly {
-		listId = firewallconfigs.GlobalListId
-	}
-	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, userId, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
+	items, err := models.SharedIPItemDAO.ListAllEnabledIPItems(tx, userId, req.Keyword, req.Ip, 0, req.Unread, req.EventLevel, req.ListType, req.GlobalOnly, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -798,10 +804,10 @@ func (this *IPItemService) ListAllEnabledIPItems(ctx context.Context, req *pb.Li
 			IsGlobal: list.IsGlobal,
 		}
 
-		// 所属服务（注意同SourceServer不同）
+		// 所属服务（注意与SourceServer不同）
 		var pbFirewallServer *pb.Server
 
-		// 所属策略（注意同SourceHTTPFirewallPolicy不同）
+		// 所属策略（注意与SourceHTTPFirewallPolicy不同）
 		var pbFirewallPolicy *pb.HTTPFirewallPolicy
 		if !list.IsPublic {
 			policy, err := models.SharedHTTPFirewallPolicyDAO.FindEnabledFirewallPolicyWithIPListId(tx, int64(list.Id))
@@ -859,11 +865,7 @@ func (this *IPItemService) ListAllIPItemIds(ctx context.Context, req *pb.ListAll
 	}
 
 	var tx = this.NullTx()
-	var listId int64 = 0
-	if req.GlobalOnly {
-		listId = firewallconfigs.GlobalListId
-	}
-	itemIds, err := models.SharedIPItemDAO.ListAllIPItemIds(tx, userId, req.Keyword, req.Ip, listId, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
+	itemIds, err := models.SharedIPItemDAO.ListAllIPItemIds(tx, userId, req.Keyword, req.Ip, 0, req.Unread, req.EventLevel, req.ListType, req.Offset, req.Size)
 	if err != nil {
 		return nil, err
 	}

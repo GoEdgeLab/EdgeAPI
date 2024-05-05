@@ -645,7 +645,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 	ones, err := this.Query(tx).
 		ResultPk().
 		State(HTTPFirewallPolicyStateEnabled).
-		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.publicWhiteListRefs')  OR JSON_CONTAINS(inbound, :listQuery, '$.publicBlackListRefs'))").
+		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.publicWhiteListRefs')  OR JSON_CONTAINS(inbound, :listQuery, '$.publicBlackListRefs') OR JSON_CONTAINS(inbound, :listQuery, '$.publicGreyListRefs'))").
 		Param("listQuery", maps.Map{"isOn": true, "listId": ipListId}.AsJSON()).
 		FindAll()
 	if err != nil {
@@ -663,7 +663,7 @@ func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyIdsWithIPListId(tx *
 func (this *HTTPFirewallPolicyDAO) FindEnabledFirewallPolicyWithIPListId(tx *dbs.Tx, ipListId int64) (*HTTPFirewallPolicy, error) {
 	one, err := this.Query(tx).
 		State(HTTPFirewallPolicyStateEnabled).
-		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef'))").
+		Where("(JSON_CONTAINS(inbound, :listQuery, '$.whiteListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.blackListRef') OR JSON_CONTAINS(inbound, :listQuery, '$.greyListRef'))").
 		Param("listQuery", maps.Map{"isOn": true, "listId": ipListId}.AsJSON()).
 		Find()
 	if err != nil || one == nil {

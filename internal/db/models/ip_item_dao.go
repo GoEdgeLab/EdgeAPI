@@ -76,7 +76,7 @@ func (this *IPItemDAO) EnableIPItem(tx *dbs.Tx, id int64) error {
 }
 
 // DisableIPItem 禁用条目
-func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64, sourceUserId int64) error {
+func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, itemId int64, sourceUserId int64) error {
 	version, err := SharedIPListDAO.IncreaseVersion(tx)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64, sourceUserId int64) e
 	}
 
 	_, err = query.
-		Pk(id).
+		Pk(itemId).
 		Set("state", IPItemStateDisabled).
 		Set("version", version).
 		Update()
@@ -99,7 +99,7 @@ func (this *IPItemDAO) DisableIPItem(tx *dbs.Tx, id int64, sourceUserId int64) e
 	if err != nil {
 		return err
 	}
-	return this.NotifyUpdate(tx, id)
+	return this.NotifyUpdate(tx, itemId)
 }
 
 // DisableIPItemsWithIP 禁用某个IP相关条目
@@ -390,7 +390,7 @@ func (this *IPItemDAO) CreateIPItem(tx *dbs.Tx,
 		op.SourceUserId = userId
 	}
 
-	var autoAdded = listId == firewallconfigs.GlobalListId || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0
+	var autoAdded = firewallconfigs.IsGlobalListId(listId) || sourceNodeId > 0 || sourceServerId > 0 || sourceHTTPFirewallPolicyId > 0
 	if autoAdded {
 		op.IsRead = 0
 	}
@@ -477,7 +477,7 @@ func (this *IPItemDAO) CountIPItemsWithListId(tx *dbs.Tx, listId int64, sourceUs
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
 	if sourceUserId > 0 {
-		if listId <= 0 || listId == firewallconfigs.GlobalListId {
+		if listId <= 0 || firewallconfigs.IsGlobalListId(listId) {
 			query.Attr("sourceUserId", sourceUserId)
 		}
 	}
@@ -503,7 +503,7 @@ func (this *IPItemDAO) ListIPItemsWithListId(tx *dbs.Tx, listId int64, sourceUse
 		State(IPItemStateEnabled).
 		Attr("listId", listId)
 	if sourceUserId > 0 {
-		if listId <= 0 || listId == firewallconfigs.GlobalListId {
+		if listId <= 0 || firewallconfigs.IsGlobalListId(listId) {
 			query.Attr("sourceUserId", sourceUserId)
 		}
 	}
@@ -600,13 +600,25 @@ func (this *IPItemDAO) ExistsEnabledItem(tx *dbs.Tx, itemId int64) (bool, error)
 }
 
 // CountAllEnabledIPItems 计算数量
-func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string) (int64, error) {
+func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, isGlobal bool) (int64, error) {
 	var query = this.Query(tx)
+	var globalListIdStrings = strings.Join(firewallconfigs.FindGlobalListIdStrings(), ",")
+	if len(listType) > 0 {
+		var globalListId = firewallconfigs.FindGlobalListIdWithType(listType)
+		if globalListId > 0 {
+			globalListIdStrings = types.String(globalListId)
+		}
+	}
+
 	if sourceUserId > 0 {
 		if listId <= 0 {
-			query.Where("((listId=" + types.String(firewallconfigs.GlobalListId) + " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + ") AND sourceUserId=:sourceUserId)")
+			} else {
+				query.Where("((listId IN (" + globalListIdStrings + ") AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			}
 			query.Param("sourceUserId", sourceUserId)
-		} else if listId == firewallconfigs.GlobalListId {
+		} else if firewallconfigs.IsGlobalListId(listId) {
 			query.Attr("sourceUserId", sourceUserId)
 			query.UseIndex("sourceUserId")
 		}
@@ -631,10 +643,18 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 		query.Attr("listId", listId)
 	} else {
 		if len(listType) > 0 {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + "))")
+			} else {
+				query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			}
 			query.Param("listType", listType)
 		} else {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + "))")
+			} else {
+				query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+			}
 		}
 	}
 	if unread {
@@ -652,13 +672,25 @@ func (this *IPItemDAO) CountAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, ke
 }
 
 // ListAllEnabledIPItems 搜索所有IP
-func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, offset int64, size int64) (result []*IPItem, err error) {
+func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, isGlobal bool, offset int64, size int64) (result []*IPItem, err error) {
+	var globalListIdStrings = strings.Join(firewallconfigs.FindGlobalListIdStrings(), ",")
+	if len(listType) > 0 {
+		var globalListId = firewallconfigs.FindGlobalListIdWithType(listType)
+		if globalListId > 0 {
+			globalListIdStrings = types.String(globalListId)
+		}
+	}
+
 	var query = this.Query(tx)
 	if sourceUserId > 0 {
 		if listId <= 0 {
-			query.Where("((listId=" + types.String(firewallconfigs.GlobalListId) + " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + ") AND sourceUserId=:sourceUserId)")
+			} else {
+				query.Where("((listId IN (" + globalListIdStrings + ") AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			}
 			query.Param("sourceUserId", sourceUserId)
-		} else if listId == firewallconfigs.GlobalListId {
+		} else if firewallconfigs.IsGlobalListId(listId) {
 			query.Attr("sourceUserId", sourceUserId)
 			query.UseIndex("sourceUserId")
 		}
@@ -683,10 +715,18 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 		query.Attr("listId", listId)
 	} else {
 		if len(listType) > 0 {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + "))")
+			} else {
+				query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			}
 			query.Param("listType", listType)
 		} else {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+			if isGlobal {
+				query.Where("(listId IN (" + globalListIdStrings + "))")
+			} else {
+				query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+			}
 		}
 	}
 	if unread {
@@ -709,12 +749,20 @@ func (this *IPItemDAO) ListAllEnabledIPItems(tx *dbs.Tx, sourceUserId int64, key
 
 // ListAllIPItemIds 搜索所有IP Id列表
 func (this *IPItemDAO) ListAllIPItemIds(tx *dbs.Tx, sourceUserId int64, keyword string, ip string, listId int64, unread bool, eventLevel string, listType string, offset int64, size int64) (itemIds []int64, err error) {
+	var globalListIdStrings = strings.Join(firewallconfigs.FindGlobalListIdStrings(), ",")
+	if len(listType) > 0 {
+		var globalListId = firewallconfigs.FindGlobalListIdWithType(listType)
+		if globalListId > 0 {
+			globalListIdStrings = types.String(globalListId)
+		}
+	}
+
 	var query = this.Query(tx)
 	if sourceUserId > 0 {
 		if listId <= 0 {
-			query.Where("((listId=" + types.String(firewallconfigs.GlobalListId) + " AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
+			query.Where("((listId IN (" + globalListIdStrings + ") AND sourceUserId=:sourceUserId) OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE userId=:sourceUserId AND state=1))")
 			query.Param("sourceUserId", sourceUserId)
-		} else if listId == firewallconfigs.GlobalListId {
+		} else if firewallconfigs.IsGlobalListId(listId) {
 			query.Attr("sourceUserId", sourceUserId)
 			query.UseIndex("sourceUserId")
 		}
@@ -733,10 +781,10 @@ func (this *IPItemDAO) ListAllIPItemIds(tx *dbs.Tx, sourceUserId int64, keyword 
 		query.Attr("listId", listId)
 	} else {
 		if len(listType) > 0 {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
+			query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1 AND type=:listType))")
 			query.Param("listType", listType)
 		} else {
-			query.Where("(listId=" + types.String(firewallconfigs.GlobalListId) + " OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
+			query.Where("(listId IN (" + globalListIdStrings + ") OR listId IN (SELECT id FROM " + SharedIPListDAO.Table + " WHERE state=1))")
 		}
 	}
 	if unread {
@@ -888,7 +936,7 @@ func (this *IPItemDAO) NotifyUpdate(tx *dbs.Tx, itemId int64) error {
 		return nil
 	}
 
-	if listId == firewallconfigs.GlobalListId {
+	if firewallconfigs.IsGlobalListId(listId) {
 		sourceNodeId, err := this.Query(tx).
 			Pk(itemId).
 			Result("sourceNodeId").

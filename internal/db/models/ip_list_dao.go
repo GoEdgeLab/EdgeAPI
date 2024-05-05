@@ -22,12 +22,32 @@ const (
 )
 
 var listTypeCacheMap = map[int64]*IPList{} // listId => *IPList
-var DefaultGlobalIPList = &IPList{
-	Id:       uint32(firewallconfigs.GlobalListId),
+var DefaultGlobalBlackIPList = &IPList{
+	Id:       uint32(firewallconfigs.GlobalBlackListId),
 	Name:     "系统黑名单",
 	IsPublic: true,
 	IsGlobal: true,
 	Type:     "black",
+	State:    IPListStateEnabled,
+	IsOn:     true,
+}
+
+var DefaultGlobalWhiteIPList = &IPList{
+	Id:       uint32(firewallconfigs.GlobalWhiteListId),
+	Name:     "系统白名单",
+	IsPublic: true,
+	IsGlobal: true,
+	Type:     "white",
+	State:    IPListStateEnabled,
+	IsOn:     true,
+}
+
+var DefaultGlobalGreyIPList = &IPList{
+	Id:       uint32(firewallconfigs.GlobalGreyListId),
+	Name:     "系统灰名单",
+	IsPublic: true,
+	IsGlobal: true,
+	Type:     "grey",
 	State:    IPListStateEnabled,
 	IsOn:     true,
 }
@@ -79,8 +99,9 @@ func (this *IPListDAO) DisableIPList(tx *dbs.Tx, listId int64) error {
 
 // FindEnabledIPList 查找启用中的条目
 func (this *IPListDAO) FindEnabledIPList(tx *dbs.Tx, id int64, cacheMap *utils.CacheMap) (*IPList, error) {
-	if id == firewallconfigs.GlobalListId {
-		return DefaultGlobalIPList, nil
+	globalList, ok := this.findGlobalList(id)
+	if ok {
+		return globalList, nil
 	}
 
 	var cacheKey = this.Table + ":FindEnabledIPList:" + types.String(id)
@@ -116,9 +137,9 @@ func (this *IPListDAO) FindIPListName(tx *dbs.Tx, id int64) (string, error) {
 
 // FindIPListCacheable 获取名单
 func (this *IPListDAO) FindIPListCacheable(tx *dbs.Tx, listId int64) (*IPList, error) {
-	// 全局黑名单
-	if listId == firewallconfigs.GlobalListId {
-		return DefaultGlobalIPList, nil
+	globalList, ok := this.findGlobalList(listId)
+	if ok {
+		return globalList, nil
 	}
 
 	// 检查缓存
@@ -165,7 +186,21 @@ func (this *IPListDAO) CreateIPList(tx *dbs.Tx, userId int64, serverId int64, li
 	if err != nil {
 		return 0, err
 	}
-	return types.Int64(op.Id), nil
+	var newListId = types.Int64(op.Id)
+
+	// 防止和全局名单ID冲突
+	if lists.ContainsInt64(firewallconfigs.FindGlobalListIds(), newListId) {
+		// 先删除
+		err = this.Query(tx).Pk(newListId).DeleteQuickly()
+		if err != nil {
+			return 0, err
+		}
+
+		// 自动创建下一个
+		return this.CreateIPList(tx, userId, serverId, listType, name, code, timeoutJSON, description, isPublic, isGlobal)
+	}
+
+	return newListId, nil
 }
 
 // UpdateIPList 修改名单
@@ -371,4 +406,18 @@ func (this *IPListDAO) FindIPListIdWithCode(tx *dbs.Tx, listCode string) (int64,
 // ValidateIPListCode 校验IP名单代号格式
 func (this *IPListDAO) ValidateIPListCode(code string) bool {
 	return ipListCodeRegexp.MatchString(code)
+}
+
+// 查找ID对应的全局名单
+func (this *IPListDAO) findGlobalList(id int64) (list *IPList, ok bool) {
+	switch id {
+	case firewallconfigs.GlobalBlackListId:
+		return DefaultGlobalBlackIPList, true
+	case firewallconfigs.GlobalWhiteListId:
+		return DefaultGlobalWhiteIPList, true
+	case firewallconfigs.GlobalGreyListId:
+		return DefaultGlobalGreyIPList, true
+	}
+
+	return
 }

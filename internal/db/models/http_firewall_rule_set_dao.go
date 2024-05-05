@@ -135,7 +135,7 @@ func (this *HTTPFirewallRuleSetDAO) ComposeFirewallRuleSet(tx *dbs.Tx, setId int
 				var ipListId = actionConfig.Options.GetInt64("ipListId")
 				if ipListId <= 0 { // default list id
 					if forNode {
-						actionConfig.Options["ipListId"] = firewallconfigs.GlobalListId
+						actionConfig.Options["ipListId"] = firewallconfigs.FindGlobalListIdWithType(actionConfig.Options.GetString("type"))
 					}
 					actionConfig.Options["ipListIsDeleted"] = false
 				} else {

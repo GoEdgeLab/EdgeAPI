@@ -27,11 +27,12 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 	var tx = this.NullTx()
 
 	// 修正默认的代号
-	if req.Code == "white" || req.Code == "black" {
+	if req.Code == "white" || req.Code == "black" || req.Code == "grey" {
 		req.Code = req.Code + "-" + rands.HexString(8)
 	}
 
 	// 检查用户相关信息
+	var sourceUserId = userId
 	if userId > 0 {
 		// 检查网站ID
 		if req.ServerId > 0 {
@@ -39,6 +40,11 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 			if err != nil {
 				return nil, err
 			}
+		}
+	} else if req.ServerId > 0 {
+		sourceUserId, err = models.SharedServerDAO.FindServerUserId(tx, req.ServerId)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -57,7 +63,7 @@ func (this *IPListService) CreateIPList(ctx context.Context, req *pb.CreateIPLis
 		}
 	}
 
-	listId, err := models.SharedIPListDAO.CreateIPList(tx, userId, req.ServerId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic, req.IsGlobal)
+	listId, err := models.SharedIPListDAO.CreateIPList(tx, sourceUserId, req.ServerId, req.Type, req.Name, req.Code, req.TimeoutJSON, req.Description, req.IsPublic, req.IsGlobal)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +113,7 @@ func (this *IPListService) FindEnabledIPList(ctx context.Context, req *pb.FindEn
 	var tx = this.NullTx()
 	if userId > 0 {
 		// 检查用户所属名单
-		if req.IpListId != firewallconfigs.GlobalListId {
+		if !firewallconfigs.IsGlobalListId(req.IpListId) {
 			err = models.SharedIPListDAO.CheckUserIPList(tx, userId, req.IpListId)
 			if err != nil {
 				return nil, err
