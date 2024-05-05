@@ -13,6 +13,7 @@ import (
 	"github.com/iwind/TeaGo/lists"
 	"github.com/iwind/TeaGo/maps"
 	"github.com/iwind/TeaGo/types"
+	"regexp"
 )
 
 const (
@@ -30,6 +31,8 @@ var DefaultGlobalIPList = &IPList{
 	State:    IPListStateEnabled,
 	IsOn:     true,
 }
+
+var ipListCodeRegexp = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type IPListDAO dbs.DAO
 
@@ -351,4 +354,21 @@ func (this *IPListDAO) FindServerIdWithListId(tx *dbs.Tx, listId int64) (serverI
 		Result("serverId").
 		FindInt64Col(0)
 	return
+}
+
+// FindIPListIdWithCode 根据IP名单代号查找名单ID
+func (this *IPListDAO) FindIPListIdWithCode(tx *dbs.Tx, listCode string) (int64, error) {
+	if len(listCode) == 0 {
+		return 0, nil
+	}
+	return this.Query(tx).
+		ResultPk().
+		State(IPListStateEnabled).
+		Attr("code", listCode).
+		FindInt64Col(0)
+}
+
+// ValidateIPListCode 校验IP名单代号格式
+func (this *IPListDAO) ValidateIPListCode(code string) bool {
+	return ipListCodeRegexp.MatchString(code)
 }
